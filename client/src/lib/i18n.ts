@@ -3,8 +3,8 @@ export type Language = 'ar' | 'fr';
 export const translations = {
   ar: {
     // App
-    appName: 'المتجر',
-    tagline: 'مرحباً بكم',
+    appName: 'Orderium',
+    tagline: 'نقطة البيع',
     
     // Navigation
     home: 'الرئيسية',
@@ -13,28 +13,34 @@ export const translations = {
     orders: 'الطلبات',
     
     // Categories
+    all: 'الكل',
     allProducts: 'جميع المنتجات',
     products: 'المنتجات',
     services: 'الخدمات',
     
     // Product
+    add: 'أضف',
     addToCart: 'أضف للسلة',
     outOfStock: 'غير متوفر',
     description: 'الوصف',
     price: 'السعر',
+    remove: 'حذف',
     
     // Cart
-    yourCart: 'سلتك',
-    emptyCart: 'سلتك فارغة',
-    emptyCartMessage: 'أضف بعض المنتجات للبدء',
+    yourCart: 'السلة',
+    emptyCart: 'السلة فارغة',
+    emptyCartMessage: 'ابدأ بإضافة منتجات',
     continueShopping: 'تابع التسوق',
     subtotal: 'المجموع الفرعي',
     discount: 'الخصم',
-    total: 'المجموع',
-    checkout: 'إتمام الطلب',
+    total: 'المجموع الإجمالي',
+    totalItems: 'إجمالي المنتجات',
+    totalAmount: 'المبلغ الإجمالي',
+    checkout: 'تأكيد الطلب',
     clearCart: 'إفراغ السلة',
     items: 'عناصر',
     item: 'عنصر',
+    addedToCart: 'تمت الإضافة إلى السلة',
     
     // Checkout
     checkoutTitle: 'إتمام الطلب',
@@ -69,9 +75,14 @@ export const translations = {
     backToHome: 'العودة للرئيسية',
     
     // Search
-    search: 'بحث...',
+    search: 'ابحث',
     searchProducts: 'ابحث عن المنتجات',
+    searchPlaceholder: 'ابحث عن منتج، رمز أو باركود...',
     noResults: 'لا توجد نتائج',
+    noResultsMessage: 'جرب كلمة بحث أخرى',
+    noProductsInCategory: 'لا توجد منتجات في هذه الفئة',
+    tryDifferentCategory: 'جرب فئة أخرى أو ابحث بشكل مختلف',
+    productNotFound: 'المنتج غير موجود',
     
     // General
     currency: 'درهم',
@@ -96,8 +107,8 @@ export const translations = {
   },
   fr: {
     // App
-    appName: 'La Boutique',
-    tagline: 'Bienvenue',
+    appName: 'Orderium',
+    tagline: 'Point de Vente',
     
     // Navigation
     home: 'Accueil',
@@ -106,28 +117,34 @@ export const translations = {
     orders: 'Commandes',
     
     // Categories
+    all: 'Tout',
     allProducts: 'Tous les produits',
     products: 'Produits',
     services: 'Services',
     
     // Product
+    add: 'Ajouter',
     addToCart: 'Ajouter au panier',
     outOfStock: 'Rupture de stock',
     description: 'Description',
     price: 'Prix',
+    remove: 'Supprimer',
     
     // Cart
-    yourCart: 'Votre panier',
-    emptyCart: 'Votre panier est vide',
-    emptyCartMessage: 'Ajoutez des produits pour commencer',
+    yourCart: 'Panier',
+    emptyCart: 'Panier vide',
+    emptyCartMessage: 'Commencez à ajouter des produits',
     continueShopping: 'Continuer vos achats',
     subtotal: 'Sous-total',
     discount: 'Remise',
     total: 'Total',
-    checkout: 'Commander',
+    totalItems: 'Total produits',
+    totalAmount: 'Montant total',
+    checkout: 'Passer la commande',
     clearCart: 'Vider le panier',
     items: 'articles',
     item: 'article',
+    addedToCart: 'Ajouté au panier',
     
     // Checkout
     checkoutTitle: 'Finaliser la commande',
@@ -162,9 +179,14 @@ export const translations = {
     backToHome: 'Retour à l\'accueil',
     
     // Search
-    search: 'Rechercher...',
+    search: 'Rechercher',
     searchProducts: 'Rechercher des produits',
-    noResults: 'Aucun résultat',
+    searchPlaceholder: 'Rechercher un produit, code ou code-barres...',
+    noResults: 'Aucun résultat trouvé',
+    noResultsMessage: 'Essayez un autre terme de recherche',
+    noProductsInCategory: 'Aucun produit dans cette catégorie',
+    tryDifferentCategory: 'Essayez une autre catégorie ou recherche',
+    productNotFound: 'Produit non trouvé',
     
     // General
     currency: 'DH',
@@ -211,7 +233,7 @@ export const formatCurrency = (amount: number, lang: Language): string => {
   });
   
   if (lang === 'ar') {
-    return `${formatted} درهم`;
+    return `${formatted} د.م`;
   }
   return `${formatted} DH`;
 };

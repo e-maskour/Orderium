@@ -16,25 +16,15 @@ export const FloatingCartButton = ({ onClick }: FloatingCartButtonProps) => {
   if (itemCount === 0) return null;
 
   return (
-    <div className="fixed bottom-4 start-4 end-4 z-30 md:hidden" dir={dir}>
+    <div className="fixed bottom-6 end-6 z-30 lg:hidden" dir={dir}>
       <Button
-        variant="cart"
-        size="touchLg"
-        className="w-full shadow-medium"
         onClick={onClick}
+        className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 relative"
       >
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <ShoppingBag className="w-6 h-6" />
-              <span className="absolute -top-2 -end-2 min-w-[18px] h-[18px] bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
-                {itemCount}
-              </span>
-            </div>
-            <span>{t('cart')}</span>
-          </div>
-          <span className="font-bold">{formatCurrency(subtotal, language)}</span>
-        </div>
+        <ShoppingBag className="w-6 h-6" />
+        <span className="absolute -top-1 -end-1 min-w-[24px] h-6 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md animate-pulse">
+          {itemCount}
+        </span>
       </Button>
     </div>
   );

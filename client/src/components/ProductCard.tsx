@@ -4,8 +4,10 @@ import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
 import { productTranslations } from '@/data/mockProducts';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, ShoppingBag, Package } from 'lucide-react';
+import { Plus, Minus, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { ProductQuantityModal } from './ProductQuantityModal';
 
 interface ProductCardProps {
   product: Product;
@@ -14,16 +16,19 @@ interface ProductCardProps {
 export const ProductCard = ({ product }: ProductCardProps) => {
   const { language, t, dir } = useLanguage();
   const { addItem, removeItem, getItemQuantity, updateQuantity } = useCart();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const quantity = getItemQuantity(product.Id);
+  const isOutOfStock = product.Stock !== undefined && product.Stock <= 0;
   
   // Get translated name/description if available
   const translation = productTranslations[product.Id];
   const displayName = language === 'fr' && translation ? translation.name : product.Name;
-  const displayDescription = language === 'fr' && translation ? translation.description : product.Description;
 
   const handleAddToCart = () => {
-    addItem(product);
+    if (!isOutOfStock) {
+      addItem(product);
+    }
   };
 
   const handleIncrement = () => {
@@ -38,96 +43,119 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't open modal if clicking on quantity controls
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    if (!isOutOfStock) {
+      setIsModalOpen(true);
+    }
+  };
+
   return (
-    <div 
-      className={cn(
-        "group relative bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-medium transition-all duration-300",
-        "flex flex-col animate-fade-in"
-      )}
-      dir={dir}
-    >
+    <>
+      <ProductQuantityModal 
+        product={product}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+      
+      <div 
+        onClick={handleCardClick}
+        className={cn(
+          "group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col",
+          !isOutOfStock && "cursor-pointer active:scale-[0.98]",
+          isOutOfStock && "opacity-60"
+        )}
+        dir={dir}
+      >
       {/* Image */}
-      <div className="relative aspect-square bg-secondary overflow-hidden">
+      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={displayName}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className={cn(
+              "w-full h-full object-cover transition-transform duration-500",
+              !isOutOfStock && "group-hover:scale-105"
+            )}
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
-            <Package className="w-16 h-16 text-muted-foreground/40" />
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+            <Package className="w-8 h-8 text-gray-300" />
           </div>
         )}
         
-        {/* Service badge */}
-        {product.IsService && (
-          <span className="absolute top-3 start-3 px-2 py-1 bg-teal text-teal-foreground text-xs font-medium rounded-full">
-            {t('services')}
-          </span>
+        {/* Out of Stock Badge */}
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded shadow-lg">
+              {t('outOfStock')}
+            </span>
+          </div>
         )}
 
         {/* Quantity badge when in cart */}
-        {quantity > 0 && (
-          <div className="absolute top-3 end-3 w-8 h-8 bg-accent text-accent-foreground rounded-full flex items-center justify-center font-bold text-sm shadow-medium animate-scale-in">
+        {quantity > 0 && !isOutOfStock && (
+          <div className="absolute top-1 end-1 min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md">
             {quantity}
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4 flex flex-col gap-2">
-        <h3 className="font-semibold text-foreground line-clamp-2 leading-tight">
+      <div className="flex-1 p-1.5 flex flex-col">
+        <h3 className="font-medium text-gray-900 line-clamp-1 leading-tight mb-1 text-xs">
           {displayName}
         </h3>
-        
-        {displayDescription && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {displayDescription}
-          </p>
-        )}
 
-        <div className="mt-auto pt-3 flex items-center justify-between gap-2">
-          <span className="text-lg font-bold text-primary">
+        <div className="mt-auto flex items-center justify-between gap-1">
+          <span className="text-xs font-bold text-primary">
             {formatCurrency(product.Price, language)}
           </span>
 
           {quantity === 0 ? (
             <Button
-              variant="gold"
-              size="touch"
               onClick={handleAddToCart}
-              className="flex-shrink-0"
+              disabled={isOutOfStock}
+              className={cn(
+                "h-7 px-1.5 rounded-md font-medium transition-all flex-shrink-0 text-xs pointer-events-none",
+                isOutOfStock 
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-primary hover:bg-primary/90 text-white shadow-sm hover:shadow-md"
+              )}
             >
-              <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">{t('addToCart')}</span>
+              <Plus className="w-3 h-3" />
             </Button>
           ) : (
-            <div className="flex items-center gap-1 bg-secondary rounded-xl p-1">
+            <div className="flex items-center gap-0.5 bg-gray-100 rounded-md p-0.5 h-7" onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"
-                size="iconSm"
+                size="icon"
                 onClick={handleDecrement}
-                className="hover:bg-destructive/20 hover:text-destructive"
+                className="h-6 w-6 hover:bg-red-100 hover:text-red-600 rounded-sm p-0"
               >
-                <Minus className="w-4 h-4" />
+                <Minus className="w-2.5 h-2.5" />
               </Button>
-              <span className="w-8 text-center font-bold text-foreground">
+              <span className="w-6 text-center font-bold text-gray-900 text-xs">
                 {quantity}
               </span>
               <Button
                 variant="ghost"
-                size="iconSm"
+                size="icon"
                 onClick={handleIncrement}
-                className="hover:bg-primary/20 hover:text-primary"
+                disabled={product.Stock !== undefined && quantity >= product.Stock}
+                className="h-6 w-6 hover:bg-primary/10 hover:text-primary rounded-sm disabled:opacity-50 p-0"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-2.5 h-2.5" />
               </Button>
             </div>
           )}
         </div>
       </div>
     </div>
+    </>
   );
 };

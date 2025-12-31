@@ -34,3 +34,43 @@ export async function findProducts(
 
   return result.recordset;
 }
+
+export async function getTotalProductCount(search?: string): Promise<number> {
+  const pool = await getPool();
+  const request = pool.request();
+
+  let where = "WHERE IsEnabled = 1";
+
+  if (search) {
+    where += " AND Name LIKE @search";
+    request.input("search", `%${search}%`);
+  }
+
+  const result = await request.query(`
+    SELECT COUNT(*) as total
+    FROM Product
+    ${where}
+  `);
+
+  return result.recordset[0].total;
+}
+
+export async function getTotalProductCount(search?: string): Promise<number> {
+  const pool = await getPool();
+  const request = pool.request();
+
+  let where = "WHERE IsEnabled = 1";
+
+  if (search) {
+    where += " AND Name LIKE @search";
+    request.input("search", `%${search}%`);
+  }
+
+  const result = await request.query(`
+    SELECT COUNT(*) as total
+    FROM Product
+    ${where}
+  `);
+
+  return result.recordset[0].total;
+}

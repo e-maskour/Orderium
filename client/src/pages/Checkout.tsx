@@ -14,17 +14,14 @@ import { cn } from '@/lib/utils';
 
 interface FormData {
   name: string;
-  email: string;
   phone: string;
   address: string;
-  city: string;
-  postalCode: string;
 }
 
 interface FormErrors {
   name?: string;
-  email?: string;
   phone?: string;
+  address?: string;
 }
 
 const Checkout = () => {
@@ -36,11 +33,8 @@ const Checkout = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    email: '',
     phone: '',
     address: '',
-    city: '',
-    postalCode: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -59,8 +53,8 @@ const Checkout = () => {
       newErrors.phone = t('phoneInvalid');
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = t('emailInvalid');
+    if (!formData.address.trim()) {
+      newErrors.address = language === 'ar' ? 'العنوان مطلوب' : 'Adresse requise';
     }
 
     setErrors(newErrors);
@@ -187,69 +181,22 @@ const Checkout = () => {
                     )}
                   </div>
 
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email">{t('email')}</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => updateField('email', e.target.value)}
-                      placeholder={t('emailPlaceholder')}
-                      className={cn(
-                        'h-12',
-                        errors.email && 'border-destructive focus-visible:ring-destructive'
-                      )}
-                      dir="ltr"
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
-                  </div>
-
-                  {/* City */}
-                  <div className="space-y-2">
-                    <Label htmlFor="city">{t('city')}</Label>
-                    <Select
-                      value={formData.city}
-                      onValueChange={(value) => updateField('city', value)}
-                    >
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder={t('cityPlaceholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {moroccanCities.map((city) => (
-                          <SelectItem key={city.id} value={city.id}>
-                            {language === 'ar' ? city.ar : city.fr}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   {/* Address */}
                   <div className="space-y-2">
-                    <Label htmlFor="address">{t('address')}</Label>
+                    <Label htmlFor="address">{t('address')} *</Label>
                     <Input
                       id="address"
                       value={formData.address}
                       onChange={(e) => updateField('address', e.target.value)}
                       placeholder={t('addressPlaceholder')}
-                      className="h-12"
+                      className={cn(
+                        'h-12',
+                        errors.address && 'border-destructive focus-visible:ring-destructive'
+                      )}
                     />
-                  </div>
-
-                  {/* Postal code */}
-                  <div className="space-y-2">
-                    <Label htmlFor="postalCode">{t('postalCode')}</Label>
-                    <Input
-                      id="postalCode"
-                      value={formData.postalCode}
-                      onChange={(e) => updateField('postalCode', e.target.value)}
-                      placeholder={t('postalCodePlaceholder')}
-                      className="h-12 max-w-[150px]"
-                      dir="ltr"
-                    />
+                    {errors.address && (
+                      <p className="text-sm text-destructive">{errors.address}</p>
+                    )}
                   </div>
                 </div>
               </div>
