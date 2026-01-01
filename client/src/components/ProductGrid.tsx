@@ -108,7 +108,7 @@ export const ProductGrid = ({
               ) : (
                 <ChevronLeft className="w-5 h-5" />
               )}
-              <span>{language === 'ar' ? 'السابق' : 'Précédent'}</span>
+              <span>{t('previous')}</span>
             </button>
 
             {/* Page Numbers */}
@@ -152,7 +152,7 @@ export const ProductGrid = ({
               type="button"
               className="flex items-center gap-2 h-11 px-5 rounded-lg font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all"
             >
-              <span>{language === 'ar' ? 'التالي' : 'Suivant'}</span>
+              <span>{t('next')}</span>
               {dir === 'rtl' ? (
                 <ChevronLeft className="w-5 h-5" />
               ) : (

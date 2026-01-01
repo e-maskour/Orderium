@@ -92,7 +92,7 @@ const Checkout = () => {
         setShowOtherFields(true);
 
         toast({
-          title: language === 'ar' ? 'عميل موجود' : 'Client existant',
+          title: t('existingCustomer'),
           description: language === 'ar'
             ? `مرحباً بعودتك ${customer.name}!`
             : `Bon retour ${customer.name}!`,
@@ -117,7 +117,7 @@ const Checkout = () => {
         setShowOtherFields(true);
         
         toast({
-          title: language === 'ar' ? 'عميل جديد' : 'Nouveau client',
+          title: t('newCustomer'),
           description: language === 'ar'
             ? 'يرجى إدخال معلوماتك'
             : 'Veuillez saisir vos informations',
@@ -158,7 +158,7 @@ const Checkout = () => {
   const handleDetectLocation = async () => {
     if (!navigator.geolocation) {
       toast({
-        title: language === 'ar' ? 'غير مدعوم' : 'Non supporté',
+        title: t('notSupported'),
         description: language === 'ar' 
           ? 'المتصفح لا يدعم تحديد الموقع'
           : 'Votre navigateur ne supporte pas la géolocalisation',
@@ -243,7 +243,7 @@ const Checkout = () => {
           }
           
           toast({
-            title: language === 'ar' ? 'تم تحديد الموقع' : 'Position détectée',
+            title: t('locationDetected'),
             description: language === 'ar' 
               ? 'تم تحديد موقعك بنجاح'
               : 'Votre position a été détectée avec succès',
@@ -262,7 +262,7 @@ const Checkout = () => {
           }
           
           toast({
-            title: language === 'ar' ? 'تحذير' : 'Avertissement',
+            title: t('warning'),
             description: language === 'ar'
               ? 'تم حفظ الإحداثيات. يمكنك تعديل العنوان يدوياً'
               : 'Coordonnées sauvegardées. Vous pouvez modifier l\'adresse manuellement',
@@ -299,7 +299,7 @@ const Checkout = () => {
         }
         
         toast({
-          title: language === 'ar' ? 'خطأ' : 'Erreur',
+          title: t('error'),
           description: errorMessage,
           variant: 'destructive',
         });
@@ -322,7 +322,7 @@ const Checkout = () => {
     }
 
     if (!formData.address.trim()) {
-      newErrors.address = language === 'ar' ? 'العنوان مطلوب' : 'Adresse requise';
+      newErrors.address = t('addressRequired');
     }
 
     setErrors(newErrors);
@@ -439,12 +439,12 @@ const Checkout = () => {
                       {isSearchingCustomer && (
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          {language === 'ar' ? 'بحث...' : 'Recherche...'}
+                          {t('searching')}
                         </span>
                       )}
                       {existingCustomer && (
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                          {language === 'ar' ? 'عميل موجود' : 'Client existant'}
+                          {t('existingCustomer')}
                         </span>
                       )}
                     </div>
@@ -518,7 +518,7 @@ const Checkout = () => {
                         onClick={handleDetectLocation}
                         disabled={isDetectingLocation}
                         className="h-12 w-12 flex-shrink-0"
-                        title={language === 'ar' ? 'تحديد موقعي' : 'Détecter ma position'}
+                        title={t('detectMyLocation')}
                       >
                         {isDetectingLocation ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
@@ -551,7 +551,7 @@ const Checkout = () => {
                                 <SiGooglemaps className="w-4 h-4 text-white" />
                               </div>
                               <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                {language === 'ar' ? 'خرائط جوجل' : 'Google Maps'}
+                                {t('googleMaps')}
                               </span>
                             </a>
                           )}
@@ -566,7 +566,7 @@ const Checkout = () => {
                                 <SiWaze className="w-4 h-4 text-white" />
                               </div>
                               <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                {language === 'ar' ? 'ويز' : 'Waze'}
+                                {t('waze')}
                               </span>
                             </a>
                           )}

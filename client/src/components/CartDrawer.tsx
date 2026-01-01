@@ -19,7 +19,7 @@ interface CartDrawerProps {
 }
 
 const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item: CartItem) => void }) => {
-  const { language, dir } = useLanguage();
+  const { language, dir, t } = useLanguage();
   const { removeItem } = useCart();
   
   const translation = productTranslations[item.product.Id];
@@ -71,7 +71,7 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
         
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-            {language === 'ar' ? `الكمية: ${item.quantity}` : `Qté: ${item.quantity}`}
+            {t('quantityLabel')}: {item.quantity}
           </span>
           
           <span className="font-bold text-gray-900 text-xs">
@@ -135,7 +135,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
           </div>
           {itemCount > 0 && (
             <p className="text-sm text-gray-500">
-              {uniqueProductCount} {uniqueProductCount === 1 ? (language === 'ar' ? 'منتج' : 'produit') : (language === 'ar' ? 'منتجات' : 'produits')} - {itemCount} {itemCount === 1 ? (language === 'ar' ? 'قطعة' : 'article') : (language === 'ar' ? 'قطع' : 'articles')}
+              {uniqueProductCount} {uniqueProductCount === 1 ? t('product') : t('products')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')}
             </p>
           )}
         </div>
@@ -213,7 +213,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
               {t('yourCart')}
               {itemCount > 0 && (
                 <span className="text-sm font-normal text-gray-500">
-                  ({uniqueProductCount} {uniqueProductCount === 1 ? (language === 'ar' ? 'منتج' : 'produit') : (language === 'ar' ? 'منتجات' : 'produits')} - {itemCount} {itemCount === 1 ? (language === 'ar' ? 'قطعة' : 'article') : (language === 'ar' ? 'قطع' : 'articles')})
+                  ({uniqueProductCount} {uniqueProductCount === 1 ? t('product') : t('products')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')})
                 </span>
               )}
             </span>

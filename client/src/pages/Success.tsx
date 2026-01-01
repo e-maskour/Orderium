@@ -69,17 +69,14 @@ const Success = () => {
 
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       pdf.save(
-        `${documentType === 'invoice' 
-          ? (language === 'ar' ? 'وصل التسليم' : 'Bon_de_Livraison') 
-          : (language === 'ar' ? 'وصل' : 'Reçu')
-        }_${state.orderNumber}.pdf`
+        `${documentType === 'invoice' ? t('deliveryNote') : t('receipt')}_${state.orderNumber}.pdf`
       );
 
       // Hide preview again if it was hidden
       if (wasHidden) setShowPreview(false);
     } catch (error) {
       console.error('Failed to generate PDF:', error);
-      alert(language === 'ar' ? 'فشل في إنشاء الوثيقة' : 'Échec de génération du document');
+      alert(t('documentGenerationFailed'));
     } finally {
       setIsGenerating(false);
     }
@@ -123,7 +120,7 @@ const Success = () => {
           {/* Document Type Selection */}
           <div className="mb-8">
             <p className="text-sm font-semibold text-gray-700 mb-4">
-              {language === 'ar' ? 'اختر نوع الوثيقة:' : 'Choisir le type de document:'}
+              {t('chooseDocumentType')}
             </p>
             <div className="grid grid-cols-2 gap-4">
               <Button
@@ -138,7 +135,7 @@ const Success = () => {
               >
                 <ReceiptIcon className="w-6 h-6" />
                 <span className="text-sm font-semibold">
-                  {language === 'ar' ? 'وصل' : 'Reçu'}
+                  {t('receipt')}
                 </span>
               </Button>
               <Button
@@ -153,7 +150,7 @@ const Success = () => {
               >
                 <FileText className="w-6 h-6" />
                 <span className="text-sm font-semibold">
-                  {language === 'ar' ? 'وصل التسليم' : 'Bon de Livraison'}
+                  {t('deliveryNote')}
                 </span>
               </Button>
             </div>
@@ -167,10 +164,7 @@ const Success = () => {
               className="w-full h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
             >
               <Eye className="w-5 h-5 mr-2" />
-              {language === 'ar'
-                ? `معاينة ${documentType === 'invoice' ? 'وصل التسليم' : 'الوصل'}`
-                : `Aperçu ${documentType === 'invoice' ? 'Bon de Livraison' : 'Reçu'}`
-              }
+              {t('preview')} {documentType === 'invoice' ? t('deliveryNote') : t('receipt')}
             </Button>
 
             <Button
@@ -182,15 +176,12 @@ const Success = () => {
               {isGenerating ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  {language === 'ar' ? 'جاري الإنشاء...' : 'Génération...'}
+                  {t('generating')}
                 </>
               ) : (
                 <>
                   <Download className="w-5 h-5 mr-2" />
-                  {language === 'ar'
-                    ? `تحميل PDF`
-                    : `Télécharger PDF`
-                  }
+                  {t('download')} PDF
                 </>
               )}
             </Button>

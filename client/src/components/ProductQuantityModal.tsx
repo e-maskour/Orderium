@@ -117,12 +117,12 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
                 {formatCurrency(product.Price, language)}
               </span>
               <span className="text-sm text-gray-500">
-                {language === 'ar' ? '/ وحدة' : '/ unité'}
+                {t('perUnit')}
               </span>
             </div>
             {product.Code && (
               <p className="text-xs text-gray-500">
-                {language === 'ar' ? 'الرمز' : 'Code'}: {product.Code}
+                {t('code')}: {product.Code}
               </p>
             )}
           </div>
@@ -133,7 +133,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
           {/* Quantity Input */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700 block">
-              {language === 'ar' ? 'الكمية' : 'Quantité'}
+              {t('quantity')}
             </label>
             <input
               ref={inputRef}
@@ -162,7 +162,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
                 )}
               >
                 {num === 'C' ? (
-                  <span className="text-sm">{language === 'ar' ? 'مسح' : 'Effacer'}</span>
+                  <span className="text-sm">{t('clear')}</span>
                 ) : (
                   num
                 )}
@@ -174,7 +174,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
           {hasQuantity && (
             <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20">
               <span className="text-sm font-semibold text-gray-700">
-                {language === 'ar' ? 'المجموع' : 'Total'}
+                {t('total')}
               </span>
               <span className="text-xl font-bold text-primary">
                 {formatCurrency(totalPrice, language)}
@@ -198,8 +198,8 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
               {isOutOfStock 
                 ? t('outOfStock')
                 : currentCartQuantity > 0
-                  ? (language === 'ar' ? 'إضافة المزيد' : 'Ajouter plus')
-                  : (language === 'ar' ? 'أضف إلى السلة' : 'Ajouter au panier')
+                  ? t('addMore')
+                  : t('addToCart')
               }
             </Button>
           )}

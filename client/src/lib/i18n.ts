@@ -40,6 +40,10 @@ export const translations = {
     clearCart: 'إفراغ السلة',
     items: 'عناصر',
     item: 'عنصر',
+    products: 'منتجات',
+    product: 'منتج',
+    pieces: 'قطع',
+    piece: 'قطعة',
     addedToCart: 'تمت الإضافة إلى السلة',
     
     // Checkout
@@ -93,6 +97,43 @@ export const translations = {
     back: 'رجوع',
     close: 'إغلاق',
     
+    // Product Details
+    perUnit: '/ وحدة',
+    code: 'الرمز',
+    quantity: 'الكمية',
+    clear: 'مسح',
+    addMore: 'إضافة المزيد',
+    quantityLabel: 'الكمية',
+    
+    // Pagination
+    previous: 'السابق',
+    next: 'التالي',
+    
+    // Documents
+    receipt: 'وصل',
+    deliveryNote: 'وصل التسليم',
+    chooseDocumentType: 'اختر نوع الوثيقة:',
+    generating: 'جاري الإنشاء...',
+    documentGenerationFailed: 'فشل في إنشاء الوثيقة',
+    preview: 'معاينة',
+    download: 'تحميل',
+    
+    // Customer
+    existingCustomer: 'عميل موجود',
+    newCustomer: 'عميل جديد',
+    searching: 'بحث...',
+    
+    // Validation & Errors
+    addressRequired: 'العنوان مطلوب',
+    notSupported: 'غير مدعوم',
+    warning: 'تحذير',
+    
+    // Location
+    detectMyLocation: 'تحديد موقعي',
+    locationDetected: 'تم تحديد الموقع',
+    googleMaps: 'خرائط جوجل',
+    waze: 'ويز',
+    
     // Cities
     casablanca: 'الدار البيضاء',
     rabat: 'الرباط',
@@ -144,6 +185,10 @@ export const translations = {
     clearCart: 'Vider le panier',
     items: 'articles',
     item: 'article',
+    products: 'produits',
+    product: 'produit',
+    pieces: 'articles',
+    piece: 'article',
     addedToCart: 'Ajouté au panier',
     
     // Checkout
@@ -196,6 +241,43 @@ export const translations = {
     retry: 'Réessayer',
     back: 'Retour',
     close: 'Fermer',
+    
+    // Product Details
+    perUnit: '/ unité',
+    code: 'Code',
+    quantity: 'Quantité',
+    clear: 'Effacer',
+    addMore: 'Ajouter plus',
+    quantityLabel: 'Qté',
+    
+    // Pagination
+    previous: 'Précédent',
+    next: 'Suivant',
+    
+    // Documents
+    receipt: 'Reçu',
+    deliveryNote: 'Bon de Livraison',
+    chooseDocumentType: 'Choisir le type de document:',
+    generating: 'Génération...',
+    documentGenerationFailed: 'Échec de génération du document',
+    preview: 'Aperçu',
+    download: 'Télécharger',
+    
+    // Customer
+    existingCustomer: 'Client existant',
+    newCustomer: 'Nouveau client',
+    searching: 'Recherche...',
+    
+    // Validation & Errors
+    addressRequired: 'Adresse requise',
+    notSupported: 'Non supporté',
+    warning: 'Avertissement',
+    
+    // Location
+    detectMyLocation: 'Détecter ma position',
+    locationDetected: 'Position détectée',
+    googleMaps: 'Google Maps',
+    waze: 'Waze',
     
     // Cities
     casablanca: 'Casablanca',
