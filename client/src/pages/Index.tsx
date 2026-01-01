@@ -125,8 +125,8 @@ const Index = () => {
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col">
           {/* Sticky Search and Categories */}
-          <div className="sticky top-16 z-30 bg-white border-b border-gray-200 shadow-sm">
-            <div className="container mx-auto px-4 py-4 space-y-4">
+          <div className="sticky top-14 sm:top-16 z-30 bg-white border-b border-gray-200 shadow-sm">
+            <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 space-y-3 sm:space-y-4">
               {/* Search Bar */}
               <SearchBar value={filters.search} onChange={handleSearchChange} />
               
@@ -139,7 +139,7 @@ const Index = () => {
           </div>
 
           {/* Product Grid */}
-          <div className="flex-1 container mx-auto px-4 py-6 pb-24 lg:pb-8">
+          <div className="flex-1 container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 lg:pb-8">
             {loading && (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />

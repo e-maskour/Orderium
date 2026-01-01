@@ -117,6 +117,7 @@ export const translations = {
     documentGenerationFailed: 'فشل في إنشاء الوثيقة',
     preview: 'معاينة',
     download: 'تحميل',
+    shareWhatsApp: 'مشاركة عبر واتساب',
     
     // Customer
     existingCustomer: 'عميل موجود',
@@ -262,6 +263,7 @@ export const translations = {
     documentGenerationFailed: 'Échec de génération du document',
     preview: 'Aperçu',
     download: 'Télécharger',
+    shareWhatsApp: 'Partager via WhatsApp',
     
     // Customer
     existingCustomer: 'Client existant',

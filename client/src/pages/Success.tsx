@@ -3,7 +3,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { formatCurrency } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CheckCircle2, Home, Download, Eye, FileText, Receipt as ReceiptIcon, X } from 'lucide-react';
+import { CheckCircle2, Home, Download, Eye, FileText, Receipt as ReceiptIcon, X, Share2 } from 'lucide-react';
 import { Receipt } from '@/components/Receipt';
 import { Invoice } from '@/components/Invoice';
 import { CartItem } from '@/context/CartContext';
@@ -36,6 +36,15 @@ const Success = () => {
 
   const handlePreview = () => {
     setShowPreview(!showPreview);
+  };
+
+  const handleShareWhatsApp = () => {
+    const message = language === 'ar'
+      ? `تم تأكيد طلبك بنجاح!\n\nرقم الطلب: ${state.orderNumber}\nالعميل: ${state.customerName}\nالمبلغ الإجمالي: ${formatCurrency(state.total, language)}\n\nشكراً لتعاملك معنا!`
+      : `Votre commande a été confirmée avec succès!\n\nNuméro de commande: ${state.orderNumber}\nClient: ${state.customerName}\nMontant total: ${formatCurrency(state.total, language)}\n\nMerci pour votre confiance!`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleDownload = async () => {
@@ -83,19 +92,19 @@ const Success = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4" dir={dir}>
+    <div className="min-h-screen bg-background flex items-center justify-center p-3 sm:p-4" dir={dir}>
       <div className="max-w-4xl w-full text-center">
         {/* Success animation */}
-        <div className="relative mb-8">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mx-auto shadow-lg animate-scale-in">
-            <CheckCircle2 className="w-14 h-14 text-white" />
+        <div className="relative mb-6 sm:mb-8">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mx-auto shadow-lg animate-scale-in">
+            <CheckCircle2 className="w-12 h-12 sm:w-14 sm:h-14 text-white" />
           </div>
-          <div className="absolute inset-0 w-24 h-24 rounded-full bg-green-400/30 mx-auto animate-ping" />
+          <div className="absolute inset-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-green-400/30 mx-auto animate-ping" />
         </div>
 
         {/* Content */}
-        <div className="bg-card rounded-2xl p-8 shadow-medium animate-slide-up" style={{ animationDelay: '200ms' }}>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+        <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-medium animate-slide-up" style={{ animationDelay: '200ms' }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2">
             {t('orderSuccess')}
           </h1>
           
@@ -118,11 +127,11 @@ const Success = () => {
           </div>
 
           {/* Document Type Selection */}
-          <div className="mb-8">
-            <p className="text-sm font-semibold text-gray-700 mb-4">
+          <div className="mb-6 sm:mb-8">
+            <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 sm:mb-4">
               {t('chooseDocumentType')}
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <Button
                 variant={documentType === 'receipt' ? 'default' : 'outline'}
                 onClick={() => setDocumentType('receipt')}
@@ -157,13 +166,13 @@ const Success = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-3 mb-6">
+          <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
             <Button
               onClick={handlePreview}
               size="lg"
-              className="w-full h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+              className="w-full h-12 sm:h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
             >
-              <Eye className="w-5 h-5 mr-2" />
+              <Eye className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               {t('preview')} {documentType === 'invoice' ? t('deliveryNote') : t('receipt')}
             </Button>
 
@@ -171,19 +180,28 @@ const Success = () => {
               onClick={handleDownload}
               disabled={isGenerating}
               size="lg"
-              className="w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+              className="w-full h-12 sm:h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 text-sm sm:text-base"
             >
               {isGenerating ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   {t('generating')}
                 </>
               ) : (
                 <>
-                  <Download className="w-5 h-5 mr-2" />
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   {t('download')} PDF
                 </>
               )}
+            </Button>
+
+            <Button
+              onClick={handleShareWhatsApp}
+              size="lg"
+              className="w-full h-12 sm:h-14 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
+            >
+              <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              {t('shareWhatsApp')}
             </Button>
           </div>
 
@@ -191,9 +209,9 @@ const Success = () => {
             <Button
               variant="outline"
               size="lg"
-              className="w-full h-12 border-2 hover:bg-gray-100 hover:text-gray-900 font-semibold transition-all"
+              className="w-full h-11 sm:h-12 border-2 hover:bg-gray-100 hover:text-gray-900 font-semibold transition-all text-sm sm:text-base"
             >
-              <Home className="w-5 h-5 mr-2" />
+              <Home className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               {t('backToHome')}
             </Button>
           </Link>
@@ -201,16 +219,17 @@ const Success = () => {
 
         {/* Document Preview Modal */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">
+              <DialogTitle className="text-base sm:text-lg md:text-xl font-bold">
                 {language === 'ar'
                   ? `معاينة ${documentType === 'invoice' ? 'وصل التسليم' : 'الوصل'}`
                   : `Aperçu ${documentType === 'invoice' ? 'Bon de Livraison' : 'Reçu'}`
                 }
               </DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4 overflow-x-auto">
+              <div className="min-w-[300px] scale-90 sm:scale-95 md:scale-100 origin-top">
               {documentType === 'receipt' ? (
                 <Receipt
                   orderNumber={state.orderNumber}
@@ -232,6 +251,7 @@ const Success = () => {
                   orderDate={new Date()}
                 />
               )}
+              </div>
             </div>
           </DialogContent>
         </Dialog>

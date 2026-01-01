@@ -106,27 +106,27 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-1.5 flex flex-col">
-        <h3 className="font-medium text-gray-900 line-clamp-1 leading-tight mb-1 text-xs">
+      <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
+        <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
           {displayName}
         </h3>
 
         <div className="mt-auto flex items-center justify-between gap-1">
-          <span className="text-xs font-bold text-primary">
+          <span className="text-[11px] sm:text-xs font-bold text-primary">
             {formatCurrency(product.Price, language)}
           </span>
 
           {quantity > 0 && (
-            <div className="flex items-center gap-0.5 bg-gray-100 rounded-md p-0.5 h-7" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-0.5 bg-gray-100 rounded-md p-0.5 h-7 sm:h-8" onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleDecrement}
-                className="h-6 w-6 hover:bg-red-100 hover:text-red-600 rounded-sm p-0"
+                className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-red-100 hover:text-red-600 rounded-sm p-0"
               >
-                <Minus className="w-2.5 h-2.5" />
+                <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               </Button>
-              <span className="w-6 text-center font-bold text-gray-900 text-xs">
+              <span className="w-6 sm:w-7 text-center font-bold text-gray-900 text-[11px] sm:text-xs">
                 {quantity}
               </span>
               <Button
@@ -134,9 +134,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 size="icon"
                 onClick={handleIncrement}
                 disabled={product.Stock !== undefined && quantity >= product.Stock}
-                className="h-6 w-6 hover:bg-primary/10 hover:text-primary rounded-sm disabled:opacity-50 p-0"
+                className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-primary/10 hover:text-primary rounded-sm disabled:opacity-50 p-0"
               >
-                <Plus className="w-2.5 h-2.5" />
+                <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               </Button>
             </div>
           )}

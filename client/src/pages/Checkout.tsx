@@ -413,23 +413,23 @@ const Checkout = () => {
     <div className="min-h-screen bg-background" dir={dir}>
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 h-16 flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
+        <div className="container mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center gap-3 sm:gap-4">
+          <Button variant="ghost" size="icon" asChild className="h-9 w-9 sm:h-10 sm:w-10">
             <Link to="/">
-              <BackIcon className="w-5 h-5" />
+              <BackIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
           </Button>
-          <h1 className="text-xl font-bold text-foreground">{t('checkoutTitle')}</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-foreground">{t('checkoutTitle')}</h1>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-2 gap-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Form */}
-          <div className="order-2 lg:order-1">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="bg-card rounded-2xl p-6 shadow-card">
-                <h2 className="text-lg font-semibold text-foreground mb-4">{t('customerInfo')}</h2>
+          <div className="order-1 lg:order-1">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card">
+                <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">{t('customerInfo')}</h2>
                 
                 <div className="space-y-4">
                   {/* Phone - Always visible */}
@@ -585,18 +585,18 @@ const Checkout = () => {
                   type="submit"
                   variant="cart"
                   size="touchLg"
-                  className="w-full"
+                  className="w-full h-12 sm:h-14 text-sm sm:text-base"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                       {t('processing')}
                     </>
                   ) : (
                     <>
                       {t('placeOrder')}
-                      <span className="font-bold">{formatCurrency(subtotal, language)}</span>
+                      <span className="font-bold ml-2">{formatCurrency(subtotal, language)}</span>
                     </>
                   )}
                 </Button>
@@ -606,11 +606,11 @@ const Checkout = () => {
           </div>
 
           {/* Order summary */}
-          <div className="order-1 lg:order-2">
-            <div className="bg-card rounded-2xl p-6 shadow-card lg:sticky lg:top-24">
-              <h2 className="text-lg font-semibold text-foreground mb-4">{t('orderSummary')}</h2>
+          <div className="order-2 lg:order-2">
+            <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card lg:sticky lg:top-24">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">{t('orderSummary')}</h2>
               
-              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+              <div className="space-y-2 sm:space-y-3 max-h-[250px] sm:max-h-[300px] overflow-y-auto">
                 {items.map((item) => {
                   const translation = productTranslations[item.product.Id];
                   const displayName = language === 'fr' && translation 
@@ -618,8 +618,8 @@ const Checkout = () => {
                     : item.product.Name;
 
                   return (
-                    <div key={item.product.Id} className="flex gap-3 py-2">
-                      <div className="w-14 h-14 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                    <div key={item.product.Id} className="flex gap-2 sm:gap-3 py-2">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
                         {item.product.imageUrl ? (
                           <img
                             src={item.product.imageUrl}
@@ -628,17 +628,17 @@ const Checkout = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-6 h-6 text-muted-foreground/40" />
+                            <Package className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground/40" />
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground line-clamp-1">{displayName}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-foreground line-clamp-1 text-sm sm:text-base">{displayName}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {item.quantity} × {formatCurrency(item.product.Price, language)}
                         </p>
                       </div>
-                      <span className="font-semibold text-foreground">
+                      <span className="font-semibold text-foreground text-sm sm:text-base">
                         {formatCurrency(item.product.Price * item.quantity, language)}
                       </span>
                     </div>
@@ -646,10 +646,10 @@ const Checkout = () => {
                 })}
               </div>
 
-              <div className="border-t border-border mt-4 pt-4">
-                <div className="flex items-center justify-between text-lg">
-                  <span className="text-muted-foreground">{t('total')}</span>
-                  <span className="text-2xl font-bold text-foreground">
+              <div className="border-t border-border mt-3 sm:mt-4 pt-3 sm:pt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-base sm:text-lg">{t('total')}</span>
+                  <span className="text-xl sm:text-2xl font-bold text-foreground">
                     {formatCurrency(subtotal, language)}
                   </span>
                 </div>

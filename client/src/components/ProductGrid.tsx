@@ -78,9 +78,9 @@ export const ProductGrid = ({
   }
 
   return (
-    <div className="space-y-6" dir={dir}>
+    <div className="space-y-4 sm:space-y-6" dir={dir}>
       {/* Product Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
         {products.map((product, index) => (
           <div
             key={product.Id}
@@ -93,7 +93,7 @@ export const ProductGrid = ({
       </div>
 
       {/* Pagination Controls - Show info even with 1 page */}
-      <div className="flex items-center justify-center gap-3 border-t border-gray-200 pt-6 pb-2">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 border-t border-gray-200 pt-4 sm:pt-6 pb-2">
         {totalPages > 1 && (
           <>
             {/* Previous Button */}
@@ -101,14 +101,14 @@ export const ProductGrid = ({
               onClick={handlePrevPage}
               disabled={currentPage === 1}
               type="button"
-              className="flex items-center gap-2 h-11 px-5 rounded-lg font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all"
+              className="flex items-center gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-5 rounded-lg text-sm sm:text-base font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all min-w-[80px] sm:min-w-0 justify-center"
             >
               {dir === 'rtl' ? (
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
-              <span>{t('previous')}</span>
+              <span className="hidden xs:inline">{t('previous')}</span>
             </button>
 
             {/* Page Numbers */}
@@ -133,7 +133,7 @@ export const ProductGrid = ({
                       onPageChange(pageNum);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`w-10 h-10 rounded-lg font-semibold transition-all ${
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base font-semibold transition-all ${
                       currentPage === pageNum
                         ? 'bg-primary text-white shadow-md'
                         : 'bg-white border border-gray-300 text-gray-700 hover:border-primary hover:bg-gray-50'
@@ -150,13 +150,13 @@ export const ProductGrid = ({
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
               type="button"
-              className="flex items-center gap-2 h-11 px-5 rounded-lg font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all"
+              className="flex items-center gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-5 rounded-lg text-sm sm:text-base font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all min-w-[80px] sm:min-w-0 justify-center"
             >
-              <span>{t('next')}</span>
+              <span className="hidden xs:inline">{t('next')}</span>
               {dir === 'rtl' ? (
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           </>
