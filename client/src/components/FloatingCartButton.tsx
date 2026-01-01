@@ -11,7 +11,9 @@ interface FloatingCartButtonProps {
 
 export const FloatingCartButton = ({ onClick }: FloatingCartButtonProps) => {
   const { language, t, dir } = useLanguage();
-  const { itemCount, subtotal } = useCart();
+  const { items, itemCount, subtotal } = useCart();
+  
+  const uniqueProductCount = items.length;
 
   if (itemCount === 0) return null;
 
@@ -23,7 +25,7 @@ export const FloatingCartButton = ({ onClick }: FloatingCartButtonProps) => {
       >
         <ShoppingBag className="w-6 h-6" />
         <span className="absolute -top-1 -end-1 min-w-[24px] h-6 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md animate-pulse">
-          {itemCount}
+          {uniqueProductCount}
         </span>
       </Button>
     </div>

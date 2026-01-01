@@ -1,10 +1,50 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { Product } from '@/types/database';
 
 export interface CartItem {
   product: Product;
   quantity: number;
 }
+
+interface CartData {
+  items: CartItem[];
+  expiresAt: number; // Timestamp
+}
+
+const CART_STORAGE_KEY = 'orderium_cart';
+const CART_EXPIRY_DAYS = 7;
+
+// Helper functions for localStorage
+const saveCartToStorage = (items: CartItem[]) => {
+  const expiresAt = Date.now() + CART_EXPIRY_DAYS * 24 * 60 * 60 * 1000; // 7 days
+  const cartData: CartData = { items, expiresAt };
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartData));
+};
+
+const loadCartFromStorage = (): CartItem[] => {
+  try {
+    const stored = localStorage.getItem(CART_STORAGE_KEY);
+    if (!stored) return [];
+
+    const cartData: CartData = JSON.parse(stored);
+    
+    // Check if cart has expired
+    if (Date.now() > cartData.expiresAt) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      return [];
+    }
+
+    return cartData.items || [];
+  } catch (error) {
+    console.error('Failed to load cart from storage:', error);
+    return [];
+  }
+};
+
+const clearCartStorage = () => {
+  localStorage.removeItem(CART_STORAGE_KEY);
+};
 
 interface CartContextType {
   items: CartItem[];
@@ -20,7 +60,19 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => {
+    // Initialize from localStorage on mount
+    return loadCartFromStorage();
+  });
+
+  // Save to localStorage whenever items change
+  useEffect(() => {
+    if (items.length > 0) {
+      saveCartToStorage(items);
+    } else {
+      clearCartStorage();
+    }
+  }, [items]);
 
   const addItem = useCallback((product: Product, quantity = 1) => {
     setItems(prev => {

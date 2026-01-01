@@ -116,20 +116,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             {formatCurrency(product.Price, language)}
           </span>
 
-          {quantity === 0 ? (
-            <Button
-              onClick={handleAddToCart}
-              disabled={isOutOfStock}
-              className={cn(
-                "h-7 px-1.5 rounded-md font-medium transition-all flex-shrink-0 text-xs pointer-events-none",
-                isOutOfStock 
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-primary hover:bg-primary/90 text-white shadow-sm hover:shadow-md"
-              )}
-            >
-              <Plus className="w-3 h-3" />
-            </Button>
-          ) : (
+          {quantity > 0 && (
             <div className="flex items-center gap-0.5 bg-gray-100 rounded-md p-0.5 h-7" onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Product } from '@/types/database';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
@@ -20,6 +20,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
   const { language, t, dir } = useLanguage();
   const { addItem, updateQuantity, getItemQuantity } = useCart();
   const [quantity, setQuantity] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Set initial quantity when modal opens
   useEffect(() => {
@@ -27,6 +28,13 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
       setQuantity(initialQuantity.toString());
     } else if (isOpen) {
       setQuantity('');
+    }
+    
+    // Auto-focus input when modal opens
+    if (isOpen && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }, [isOpen, initialQuantity]);
 
@@ -128,12 +136,15 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
               {language === 'ar' ? 'الكمية' : 'Quantité'}
             </label>
             <input
-              type="text"
-              inputMode="none"
+              ref={inputRef}
+              type="number"
+              inputMode="numeric"
               value={quantity}
               onChange={handleInputChange}
-              className="w-full h-14 text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-              placeholder=""
+              autoFocus
+              className="w-full h-14 text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              min="0"
+              max={maxQuantity}
             />
           </div>
 

@@ -92,6 +92,8 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [initialQuantity, setInitialQuantity] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const uniqueProductCount = items.length;
 
   const handleItemClick = (item: CartItem) => {
     setSelectedProduct(item.product);
@@ -133,7 +135,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
           </div>
           {itemCount > 0 && (
             <p className="text-sm text-gray-500">
-              {itemCount} {itemCount === 1 ? t('item') : t('items')}
+              {uniqueProductCount} {uniqueProductCount === 1 ? (language === 'ar' ? 'منتج' : 'produit') : (language === 'ar' ? 'منتجات' : 'produits')} - {itemCount} {itemCount === 1 ? (language === 'ar' ? 'قطعة' : 'article') : (language === 'ar' ? 'قطع' : 'articles')}
             </p>
           )}
         </div>
@@ -211,7 +213,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
               {t('yourCart')}
               {itemCount > 0 && (
                 <span className="text-sm font-normal text-gray-500">
-                  ({itemCount} {itemCount === 1 ? t('item') : t('items')})
+                  ({uniqueProductCount} {uniqueProductCount === 1 ? (language === 'ar' ? 'منتج' : 'produit') : (language === 'ar' ? 'منتجات' : 'produits')} - {itemCount} {itemCount === 1 ? (language === 'ar' ? 'قطعة' : 'article') : (language === 'ar' ? 'قطع' : 'articles')})
                 </span>
               )}
             </span>

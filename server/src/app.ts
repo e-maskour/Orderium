@@ -5,7 +5,9 @@ import { env } from "./config/env";
 import { apiRateLimit } from "./middlewares/rateLimit";
 import { notFound, errorHandler } from "./middlewares/error";
 import { getPool } from "./db/pool";
+import "./db/sqlite"; // Initialize SQLite database
 import productRoutes from "./modules/products/product.routes";
+import customerRoutes from "./modules/customers/customer.routes";
 
 export function createApp() {
     const app = express();
@@ -33,6 +35,7 @@ export function createApp() {
 
     // Register other routes
     app.use("/api/products", productRoutes);
+    app.use("/api/customers", customerRoutes);
     app.use(notFound);
     app.use(errorHandler);
     
