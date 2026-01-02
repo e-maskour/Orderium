@@ -1,0 +1,97 @@
+import { Router, Request, Response } from 'express';
+import { orderService } from './order.service';
+import { createOrderSchema } from './order.validators';
+import { logger } from '../../utils/logger';
+
+const router = Router();
+
+// Create new order
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    const data = createOrderSchema.parse(req.body);
+    const order = await orderService.createOrder(data);
+    
+    res.status(201).json({ 
+      success: true,
+      order,
+      documentNumber: order.Document.Number,
+    });
+  } catch (error) {
+    logger.error(error, 'Failed to create order');
+    if (error instanceof Error && error.name === 'ZodError') {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid order data', 
+        details: error 
+      });
+    }
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to create order',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get order by ID
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid order ID' 
+      });
+    }
+    
+    const order = await orderService.getOrderById(id);
+    
+    if (!order) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Order not found' 
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      order 
+    });
+  } catch (error) {
+    logger.error(error, 'Failed to fetch order');
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch order' 
+    });
+  }
+});
+
+// Get customer orders
+router.get('/customer/:customerId', async (req: Request, res: Response) => {
+  try {
+    const customerId = parseInt(req.params.customerId);
+    if (isNaN(customerId)) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid customer ID' 
+      });
+    }
+    
+    const limit = parseInt(req.query.limit as string) || 50;
+    const orders = await orderService.getCustomerOrders(customerId, limit);
+    
+    res.json({ 
+      success: true,
+      orders,
+      count: orders.length 
+    });
+  } catch (error) {
+    logger.error(error, 'Failed to fetch customer orders');
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch customer orders' 
+    });
+  }
+});
+
+export default router;

@@ -22,7 +22,7 @@ export const Receipt = ({
   subtotal,
   orderDate,
 }: ReceiptProps) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const isArabic = language === 'ar';
 
   // Calculate items count
@@ -55,7 +55,7 @@ export const Receipt = ({
       {/* Receipt Number */}
       <div className="mt-3 mb-2" style={{ fontSize: '13px' }}>
         <p className="font-bold mb-1">
-          {isArabic ? 'رقم الوصل:' : 'Receipt No.:'} {orderNumber}
+          {t('receiptNo')} {orderNumber}
         </p>
         <p className="mb-0">
           {orderDate.toLocaleString(isArabic ? 'ar-MA' : 'fr-FR', {
@@ -67,8 +67,8 @@ export const Receipt = ({
             second: '2-digit',
           })}
         </p>
-        <p className="mb-0">{isArabic ? 'العميل:' : 'User:'} {customerName}</p>
-        <p className="mb-0">{isArabic ? 'الهاتف:' : 'Phone:'} {customerPhone}</p>
+        <p className="mb-0">{t('user')} {customerName}</p>
+        <p className="mb-0">{t('phone')} {customerPhone}</p>
       </div>
 
       {/* Separator */}
@@ -101,30 +101,30 @@ export const Receipt = ({
 
       {/* Items Count */}
       <div className="mb-2">
-        <p className="mb-0">{isArabic ? 'عدد المنتجات:' : 'Items count:'} {itemsCount}</p>
+        <p className="mb-0">{t('itemsCount')} {itemsCount}</p>
       </div>
 
       {/* Subtotal */}
       <div className="flex justify-between mb-1">
-        <span>{isArabic ? 'المجموع الفرعي:' : 'Subtotal:'}</span>
+        <span>{t('subtotal')}</span>
         <span>{formatCurrency(subtotal, language)}</span>
       </div>
 
       {/* Total */}
       <div className="flex justify-between mb-2 font-bold" style={{ fontSize: '15px' }}>
-        <span>{isArabic ? 'المجموع:' : 'TOTAL:'}</span>
+        <span>{t('total').toUpperCase()}</span>
         <span>{formatCurrency(subtotal, language)}</span>
       </div>
 
       {/* Payment Method */}
       <div className="flex justify-between mb-1">
-        <span>{isArabic ? 'نقداً:' : 'Cash:'}</span>
+        <span>{t('cash')}</span>
         <span>{formatCurrency(subtotal, language)}</span>
       </div>
 
       {/* Paid Amount */}
       <div className="flex justify-between mb-1">
-        <span>{isArabic ? 'المبلغ المدفوع:' : 'Paid amount:'}</span>
+        <span>{t('paidAmount')}</span>
         <span>{formatCurrency(subtotal, language)}</span>
       </div>
 
@@ -133,7 +133,7 @@ export const Receipt = ({
 
       {/* Change */}
       <div className="flex justify-between mb-3">
-        <span>{isArabic ? 'الباقي:' : 'Change:'}</span>
+        <span>{t('change')}</span>
         <span>0,00</span>
       </div>
 

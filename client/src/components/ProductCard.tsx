@@ -11,9 +11,10 @@ import { ProductQuantityModal } from './ProductQuantityModal';
 
 interface ProductCardProps {
   product: Product;
+  viewMode?: 'grid' | 'list';
 }
 
-export const ProductCard = ({ product }: ProductCardProps) => {
+export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
   const { language, t, dir } = useLanguage();
   const { addItem, removeItem, getItemQuantity, updateQuantity } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,12 +54,86 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     }
   };
 
+  // List view layout
+  if (viewMode === 'list') {
+    return (
+      <>
+        <ProductQuantityModal 
+          product={product}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          initialQuantity={quantity}
+        />
+        
+        <div 
+          onClick={handleCardClick}
+          className={cn(
+            "group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex gap-2 p-1.5 sm:p-2",
+            !isOutOfStock && "cursor-pointer active:scale-[0.99]",
+            isOutOfStock && "opacity-60",
+            quantity > 0 && "ring-2 ring-primary bg-primary/5"
+          )}
+          dir={dir}
+        >
+          {/* Image */}
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={displayName}
+                className={cn(
+                  "w-full h-full object-cover transition-transform duration-500",
+                  !isOutOfStock && "group-hover:scale-105"
+                )}
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                <Package className="w-8 h-8 text-gray-300" />
+              </div>
+            )}
+            
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded shadow-lg">
+                  {t('outOfStock')}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 flex flex-col justify-between min-w-0">
+            <div>
+              <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight mb-1 text-sm sm:text-base">
+                {displayName}
+              </h3>
+              <div className="flex items-center gap-2">
+                <p className="text-base sm:text-lg font-bold text-primary">
+                  {formatCurrency(product.Price, language)}
+                </p>
+                {quantity > 0 && (
+                  <span className="px-2 py-0.5 bg-primary text-white text-xs font-semibold rounded-full">
+                    {quantity}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Grid view layout (existing)
+
   return (
     <>
       <ProductQuantityModal 
         product={product}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        initialQuantity={quantity}
       />
       
       <div 
@@ -66,7 +141,8 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         className={cn(
           "group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col",
           !isOutOfStock && "cursor-pointer active:scale-[0.98]",
-          isOutOfStock && "opacity-60"
+          isOutOfStock && "opacity-60",
+          quantity > 0 && "ring-2 ring-primary bg-primary/5"
         )}
         dir={dir}
       >
@@ -111,35 +187,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           {displayName}
         </h3>
 
-        <div className="mt-auto flex items-center justify-between gap-1">
+        <div className="mt-auto">
           <span className="text-[11px] sm:text-xs font-bold text-primary">
             {formatCurrency(product.Price, language)}
           </span>
-
-          {quantity > 0 && (
-            <div className="flex items-center gap-0.5 bg-gray-100 rounded-md p-0.5 h-7 sm:h-8" onClick={(e) => e.stopPropagation()}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleDecrement}
-                className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-red-100 hover:text-red-600 rounded-sm p-0"
-              >
-                <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              </Button>
-              <span className="w-6 sm:w-7 text-center font-bold text-gray-900 text-[11px] sm:text-xs">
-                {quantity}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleIncrement}
-                disabled={product.Stock !== undefined && quantity >= product.Stock}
-                className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-primary/10 hover:text-primary rounded-sm disabled:opacity-50 p-0"
-              >
-                <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     </div>

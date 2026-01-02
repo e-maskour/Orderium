@@ -9,6 +9,8 @@ import { ProductGrid } from '@/components/ProductGrid';
 import { CartDrawer } from '@/components/CartDrawer';
 import { FloatingCartButton } from '@/components/FloatingCartButton';
 import { useCart } from '@/context/CartContext';
+import { Button } from '@/components/ui/button';
+import { Grid3x3, List } from 'lucide-react';
 
 const Index = () => {
   const { t, dir } = useLanguage();
@@ -16,6 +18,7 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
   const [isResizing, setIsResizing] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filters, setFilters] = useState<ProductFilters>({
     category: 'all',
     search: '',
@@ -130,11 +133,35 @@ const Index = () => {
               {/* Search Bar */}
               <SearchBar value={filters.search} onChange={handleSearchChange} />
               
-              {/* Category Chips */}
-              <CategoryChips
-                activeCategory={filters.category}
-                onCategoryChange={handleCategoryChange}
-              />
+              {/* Category Chips and View Toggle */}
+              <div className="flex items-center justify-between gap-3">
+                <CategoryChips
+                  activeCategory={filters.category}
+                  onCategoryChange={handleCategoryChange}
+                />
+                
+                {/* View Toggle */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="h-9 px-3 min-w-[100px]"
+                  >
+                    <Grid3x3 className="w-4 h-4 me-2" />
+                    <span className="text-xs sm:text-sm whitespace-nowrap">{t('gridView')}</span>
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="h-9 px-3 min-w-[100px]"
+                  >
+                    <List className="w-4 h-4 me-2" />
+                    <span className="text-xs sm:text-sm whitespace-nowrap">{t('listView')}</span>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -167,6 +194,8 @@ const Index = () => {
                 totalPages={totalPages}
                 totalCount={totalCount}
                 onPageChange={handlePageChange}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
               />
             )}
           </div>

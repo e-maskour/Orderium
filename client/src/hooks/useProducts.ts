@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Product } from "@/types/database";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+import { productService } from "@/services";
 
 interface UseProductsParams {
   page?: number;
@@ -26,17 +25,12 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
 
   useEffect(() => {
     setLoading(true);
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      pageSize: pageSize.toString(),
+    
+    productService.getAll({
+      page,
+      pageSize,
       ...(search && { search }),
-    });
-
-    fetch(`${API_URL}/api/products?${queryParams}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load products");
-        return res.json();
-      })
+    })
       .then(data => {
         // Assuming API returns { products: Product[], total: number } or just Product[]
         if (Array.isArray(data)) {

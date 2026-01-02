@@ -222,10 +222,7 @@ const Success = () => {
           <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
             <DialogHeader>
               <DialogTitle className="text-base sm:text-lg md:text-xl font-bold">
-                {language === 'ar'
-                  ? `معاينة ${documentType === 'invoice' ? 'وصل التسليم' : 'الوصل'}`
-                  : `Aperçu ${documentType === 'invoice' ? 'Bon de Livraison' : 'Reçu'}`
-                }
+                {`${t('previewDocument')} ${documentType === 'invoice' ? t('deliveryNote') : t('receipt')}`}
               </DialogTitle>
             </DialogHeader>
             <div className="mt-3 sm:mt-4 overflow-x-auto">

@@ -5,9 +5,12 @@ import { env } from "./config/env";
 import { apiRateLimit } from "./middlewares/rateLimit";
 import { notFound, errorHandler } from "./middlewares/error";
 import { getPool } from "./db/pool";
-import "./db/sqlite"; // Initialize SQLite database
 import productRoutes from "./modules/products/product.routes";
 import customerRoutes from "./modules/customers/customer.routes";
+import orderRoutes from "./modules/orders/order.routes";
+import portalRoutes from "./modules/portal/portal.routes";
+import { customerService } from "./modules/customers/customer.service";
+import { portalRepository } from "./modules/portal/portal.repo";
 
 export function createApp() {
     const app = express();
@@ -21,6 +24,16 @@ export function createApp() {
     }));
 
     app.use(apiRateLimit);
+
+    // Initialize customer service (add missing columns)
+    customerService.initialize().catch(err => {
+        console.error("Failed to initialize customer service:", err);
+    });
+
+    // Initialize portal table
+    portalRepository.initialize().catch(err => {
+        console.error("Failed to initialize portal:", err);
+    });
 
     // Health check endpoint
     app.get("/health", async (_req, res, next) => {
@@ -36,6 +49,8 @@ export function createApp() {
     // Register other routes
     app.use("/api/products", productRoutes);
     app.use("/api/customers", customerRoutes);
+    app.use("/api/orders", orderRoutes);
+    app.use("/api/portal", portalRoutes);
     app.use(notFound);
     app.use(errorHandler);
     

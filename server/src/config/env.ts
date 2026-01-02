@@ -21,4 +21,12 @@ export const env = {
     jwtSecret: must("JWT_SECRET"),
 
     corsOrigin: must("CORS_ORIGIN"), // Allowed origin for CORS
+
+    defaults: {
+        userId: Number(process.env.DEFAULT_USER_ID ?? 2),
+        cashRegisterId: Number(process.env.DEFAULT_CASH_REGISTER_ID ?? 1),
+        warehouseId: Number(process.env.DEFAULT_WAREHOUSE_ID ?? 1),
+        documentTypeId: Number(process.env.DEFAULT_DOCUMENT_TYPE_ID ?? 2), // 2 = sales
+        paidStatus: Number(process.env.DEFAULT_PAID_STATUS ?? 2), // 2 = paid
+    },
 };

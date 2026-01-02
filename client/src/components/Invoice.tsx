@@ -1,5 +1,5 @@
-import { useLanguage } from '@/context/LanguageContext';
 import { formatCurrency } from '@/lib/i18n';
+import { useLanguage } from '@/context/LanguageContext';
 import { CartItem } from '@/context/CartContext';
 import { productTranslations } from '@/data/mockProducts';
 
@@ -22,7 +22,7 @@ export const Invoice = ({
   subtotal,
   orderDate,
 }: InvoiceProps) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const isArabic = language === 'ar';
 
   const discount = 0;
@@ -37,14 +37,14 @@ export const Invoice = ({
       {/* Header */}
       <div className="mb-12">
         <h1 className="text-2xl font-bold mb-8">
-          {isArabic ? 'وصل التسليم' : 'BON DE LIVRAISON'}
+          {t('deliveryNote')}
         </h1>
 
         {/* Bill To and Invoice Details */}
         <div className="flex justify-between items-start pt-8" style={{ borderTop: '1px solid #e5e7eb' }}>
           <div>
             <p className="text-sm font-bold mb-2">
-              {isArabic ? 'الفاتورة إلى:' : 'Bill To:'}
+              {t('billTo')}
             </p>
             <p className="text-sm" style={{ color: '#3b82f6' }}>{customerName}</p>
             {customerPhone && (
@@ -58,13 +58,13 @@ export const Invoice = ({
           <div className="text-right">
             <div className="mb-2">
               <p className="text-sm font-bold inline-block" style={{ width: '120px', textAlign: 'left' }}>
-                {isArabic ? 'رقم الفاتورة:' : 'Invoice No.:'}
+                {t('invoiceNo')}
               </p>
               <span className="text-sm">20-200-{orderNumber}</span>
             </div>
             <div className="mb-2">
               <p className="text-sm font-bold inline-block" style={{ width: '120px', textAlign: 'left' }}>
-                {isArabic ? 'التاريخ:' : 'Date:'}
+                {t('date')}
               </p>
               <span className="text-sm">
                 {orderDate.toLocaleDateString(isArabic ? 'ar-MA' : 'en-US', {
@@ -76,7 +76,7 @@ export const Invoice = ({
             </div>
             <div className="mb-2">
               <p className="text-sm font-bold inline-block" style={{ width: '120px', textAlign: 'left' }}>
-                {isArabic ? 'تاريخ الاستحقاق:' : 'Due date:'}
+                {t('dueDate')}
               </p>
               <span className="text-sm">
                 {orderDate.toLocaleDateString(isArabic ? 'ar-MA' : 'en-US', {
@@ -88,9 +88,9 @@ export const Invoice = ({
             </div>
             <div>
               <p className="text-sm font-bold inline-block" style={{ width: '120px', textAlign: 'left' }}>
-                {isArabic ? 'حالة الدفع:' : 'Payment status:'}
+                {t('paymentStatus')}
               </p>
-              <span className="text-sm font-bold">{isArabic ? 'مدفوعة' : 'Paid'}</span>
+              <span className="text-sm font-bold">{t('paid')}</span>
             </div>
           </div>
         </div>
@@ -102,19 +102,19 @@ export const Invoice = ({
           <thead>
             <tr style={{ backgroundColor: '#f3f4f6' }}>
               <th className="text-left p-3 text-sm font-bold border-b border-gray-300" style={{ width: '50px' }}>
-                {isArabic ? 'رقم' : 'No.'}
+                {t('no')}
               </th>
               <th className="text-left p-3 text-sm font-bold border-b border-gray-300">
-                {isArabic ? 'المنتج' : 'Item'}
+                {t('item')}
               </th>
               <th className="text-center p-3 text-sm font-bold border-b border-gray-300" style={{ width: '100px' }}>
-                {isArabic ? 'الكمية' : 'Quantity'}
+                {t('quantity')}
               </th>
               <th className="text-right p-3 text-sm font-bold border-b border-gray-300" style={{ width: '120px' }}>
-                {isArabic ? 'سعر الوحدة' : 'Unit price'}
+                {t('unitPrice')}
               </th>
               <th className="text-right p-3 text-sm font-bold border-b border-gray-300" style={{ width: '120px' }}>
-                {isArabic ? 'المجموع' : 'Total'}
+                {t('total')}
               </th>
             </tr>
           </thead>

@@ -21,6 +21,7 @@ export const translations = {
     // Product
     add: 'أضف',
     addToCart: 'أضف للسلة',
+    updateQty: 'تحديث الكمية',
     outOfStock: 'غير متوفر',
     description: 'الوصف',
     price: 'السعر',
@@ -57,8 +58,6 @@ export const translations = {
     phonePlaceholder: '06XXXXXXXX',
     address: 'العنوان',
     addressPlaceholder: 'أدخل عنوانك',
-    city: 'المدينة',
-    cityPlaceholder: 'اختر مدينتك',
     postalCode: 'الرمز البريدي',
     postalCodePlaceholder: 'XXXXX',
     orderSummary: 'ملخص الطلب',
@@ -108,6 +107,8 @@ export const translations = {
     // Pagination
     previous: 'السابق',
     next: 'التالي',
+    gridView: 'عرض شبكي',
+    listView: 'عرض قائمة',
     
     // Documents
     receipt: 'وصل',
@@ -135,17 +136,82 @@ export const translations = {
     googleMaps: 'خرائط جوجل',
     waze: 'ويز',
     
-    // Cities
-    casablanca: 'الدار البيضاء',
-    rabat: 'الرباط',
-    marrakech: 'مراكش',
-    fes: 'فاس',
-    tangier: 'طنجة',
-    agadir: 'أكادير',
-    meknes: 'مكناس',
-    oujda: 'وجدة',
-    kenitra: 'القنيطرة',
-    tetouan: 'تطوان',
+    // Profile
+    profile: 'الملف الشخصي',
+    phoneNumber: 'رقم الهاتف',
+    phoneCannotBeChanged: 'لا يمكن تغيير رقم الهاتف',
+    enterYourName: 'أدخل اسمك',
+    enterYourAddress: 'أدخل عنوانك',
+    saveChanges: 'حفظ التغييرات',
+    saving: 'جاري الحفظ...',
+    saved: 'تم الحفظ',
+    profileUpdated: 'تم تحديث معلوماتك بنجاح',
+    updateFailed: 'فشل تحديث المعلومات',
+    logout: 'تسجيل الخروج',
+    coordinates: 'الإحداثيات',
+    
+    // Login
+    phoneNumberRequired: 'رقم الهاتف مطلوب',
+    phoneNumberInvalidFormat: 'رقم الهاتف غير صحيح (مثال: 0612345678)',
+    passwordRequired: 'كلمة المرور مطلوبة',
+    passwordMinLength: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+    loginSuccess: 'تم تسجيل الدخول بنجاح',
+    welcome: 'مرحباً بك!',
+    accountCreatedSuccess: 'تم إنشاء الحساب بنجاح',
+    loginFailed: 'فشل تسجيل الدخول',
+    registrationFailed: 'فشل إنشاء الحساب',
+    incorrectPassword: 'كلمة المرور غير صحيحة',
+    errorOccurred: 'حدث خطأ، يرجى المحاولة مجدداً',
+    verifying: 'جاري التحقق...',
+    createNewAccount: 'إنشاء حساب جديد',
+    login: 'تسجيل الدخول',
+    appAccess: 'الوصول إلى التطبيق',
+    createPasswordForNewAccount: 'أنشئ كلمة مرور لحسابك الجديد',
+    enterPasswordToContinue: 'أدخل كلمة المرور للمتابعة',
+    enterPhoneToStart: 'أدخل رقم هاتفك للبدء',
+    createPassword: 'إنشاء كلمة مرور',
+    password: 'كلمة المرور',
+    createAccount: 'إنشاء الحساب',
+    signIn: 'تسجيل الدخول',
+    passwordMinLengthHint: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
+    enterValidMoroccanPhone: 'أدخل رقم هاتف مغربي صحيح (مثال: 0612345678)',
+    yourInfoIsSecure: 'معلوماتك آمنة ولن تتم مشاركتها.',
+    disconnect: 'تسجيل الخروج',
+    
+    // Invoice
+    billTo: 'الفاتورة إلى:',
+    invoiceNo: 'رقم الفاتورة:',
+    date: 'التاريخ:',
+    dueDate: 'تاريخ الاستحقاق:',
+    paymentStatus: 'حالة الدفع:',
+    paid: 'مدفوعة',
+    no: 'رقم',
+    item: 'المنتج',
+    unitPrice: 'سعر الوحدة',
+    previewDocument: 'معاينة',
+    orderCreationError: 'حدث خطأ أثناء إنشاء الطلب، يرجى المحاولة مجدداً',
+    
+    // Receipt
+    receiptNo: 'رقم الوصل:',
+    user: 'العميل:',
+    itemsCount: 'عدد المنتجات:',
+    cash: 'نقداً:',
+    paidAmount: 'المبلغ المدفوع:',
+    change: 'الباقي:',
+    
+    // Language Toggle
+    switchToFrench: 'Changer en français',
+    switchToArabic: 'التبديل للعربية',
+    
+    // Location errors
+    geolocationNotSupported: 'المتصفح لا يدعم تحديد الموقع',
+    locationDetectionFailed: 'فشل تحديد الموقع',
+    permissionDenied: 'يرجى السماح بالوصول إلى الموقع من إعدادات المتصفح',
+    positionUnavailable: 'الموقع غير متاح. تأكد من تفعيل خدمات الموقع',
+    timeout: 'انتهت مهلة تحديد الموقع. يرجى المحاولة مرة أخرى',
+    locationError: 'خطأ في تحديد الموقع',
+    coordinatesSaved: 'تم حفظ الإحداثيات. يمكنك تعديل العنوان يدوياً',
+    locationSuccess: 'تم تحديد موقعك بنجاح',
   },
   fr: {
     // App
@@ -167,6 +233,7 @@ export const translations = {
     // Product
     add: 'Ajouter',
     addToCart: 'Ajouter au panier',
+    updateQty: 'Modifier la quantité',
     outOfStock: 'Rupture de stock',
     description: 'Description',
     price: 'Prix',
@@ -203,8 +270,6 @@ export const translations = {
     phonePlaceholder: '06XXXXXXXX',
     address: 'Adresse',
     addressPlaceholder: 'Entrez votre adresse',
-    city: 'Ville',
-    cityPlaceholder: 'Choisissez votre ville',
     postalCode: 'Code postal',
     postalCodePlaceholder: 'XXXXX',
     orderSummary: 'Résumé de la commande',
@@ -254,6 +319,8 @@ export const translations = {
     // Pagination
     previous: 'Précédent',
     next: 'Suivant',
+    gridView: 'Vue grille',
+    listView: 'Vue liste',
     
     // Documents
     receipt: 'Reçu',
@@ -281,34 +348,86 @@ export const translations = {
     googleMaps: 'Google Maps',
     waze: 'Waze',
     
-    // Cities
-    casablanca: 'Casablanca',
-    rabat: 'Rabat',
-    marrakech: 'Marrakech',
-    fes: 'Fès',
-    tangier: 'Tanger',
-    agadir: 'Agadir',
-    meknes: 'Meknès',
-    oujda: 'Oujda',
-    kenitra: 'Kénitra',
-    tetouan: 'Tétouan',
+    // Profile
+    profile: 'Profil',
+    phoneNumber: 'Numéro de téléphone',
+    phoneCannotBeChanged: 'Le numéro de téléphone ne peut pas être modifié',
+    enterYourName: 'Entrez votre nom',
+    enterYourAddress: 'Entrez votre adresse',
+    saveChanges: 'Enregistrer les modifications',
+    saving: 'Enregistrement...',
+    saved: 'Enregistré',
+    profileUpdated: 'Vos informations ont été mises à jour',
+    updateFailed: 'Échec de mise à jour',
+    logout: 'Se déconnecter',
+    coordinates: 'Coordonnées',
+    
+    // Login
+    phoneNumberRequired: 'Numéro de téléphone requis',
+    phoneNumberInvalidFormat: 'Numéro invalide (ex: 0612345678)',
+    passwordRequired: 'Mot de passe requis',
+    passwordMinLength: 'Le mot de passe doit contenir au moins 6 caractères',
+    loginSuccess: 'Connexion réussie',
+    welcome: 'Bienvenue!',
+    accountCreatedSuccess: 'Compte créé avec succès',
+    loginFailed: 'Échec de connexion',
+    registrationFailed: 'Échec de création',
+    incorrectPassword: 'Mot de passe incorrect',
+    errorOccurred: 'Une erreur est survenue',
+    verifying: 'Vérification...',
+    createNewAccount: 'Créer un compte',
+    login: 'Connexion',
+    appAccess: "Accès à l'application",
+    createPasswordForNewAccount: 'Créez un mot de passe pour votre nouveau compte',
+    enterPasswordToContinue: 'Entrez votre mot de passe pour continuer',
+    enterPhoneToStart: 'Entrez votre numéro pour commencer',
+    createPassword: 'Créer un mot de passe',
+    password: 'Mot de passe',
+    createAccount: 'Créer le compte',
+    signIn: 'Se connecter',
+    passwordMinLengthHint: 'Le mot de passe doit contenir au moins 6 caractères',
+    enterValidMoroccanPhone: 'Entrez un numéro marocain valide (ex: 0612345678)',
+    yourInfoIsSecure: "Votre informations est sécurisée et ne sera pas partagée.",
+    disconnect: 'Se déconnecter',
+    
+    // Invoice
+    billTo: 'Bill To:',
+    invoiceNo: 'Invoice No.:',
+    date: 'Date:',
+    dueDate: 'Due date:',
+    paymentStatus: 'Payment status:',
+    paid: 'Paid',
+    no: 'No.',
+    item: 'Item',
+    unitPrice: 'Unit price',
+    previewDocument: 'Aperçu',
+    orderCreationError: 'Erreur lors de la création de la commande',
+    
+    // Receipt
+    receiptNo: 'Receipt No.:',
+    user: 'User:',
+    itemsCount: 'Items count:',
+    cash: 'Cash:',
+    paidAmount: 'Paid amount:',
+    change: 'Change:',
+    
+    // Language Toggle
+    switchToFrench: 'Changer en français',
+    switchToArabic: 'التبديل للعربية',
+    
+    // Location errors
+    geolocationNotSupported: 'Le navigateur ne supporte pas la géolocalisation',
+    locationDetectionFailed: 'Échec de localisation',
+    permissionDenied: 'Veuillez autoriser l\'accès à la position dans les paramètres du navigateur',
+    positionUnavailable: 'Position non disponible. Vérifiez que les services de localisation sont activés',
+    timeout: 'Délai d\'attente dépassé. Veuillez réessayer',
+    locationError: 'Erreur de localisation',
+    coordinatesSaved: 'Coordonnées sauvegardées. Vous pouvez modifier l\'adresse manuellement',
+    locationSuccess: 'Votre position a été détectée avec succès',
   },
 };
 
 export type TranslationKey = keyof typeof translations.ar;
-
-export const moroccanCities = [
-  { id: 'casablanca', ar: 'الدار البيضاء', fr: 'Casablanca' },
-  { id: 'rabat', ar: 'الرباط', fr: 'Rabat' },
-  { id: 'marrakech', ar: 'مراكش', fr: 'Marrakech' },
-  { id: 'fes', ar: 'فاس', fr: 'Fès' },
-  { id: 'tangier', ar: 'طنجة', fr: 'Tanger' },
-  { id: 'agadir', ar: 'أكادير', fr: 'Agadir' },
-  { id: 'meknes', ar: 'مكناس', fr: 'Meknès' },
-  { id: 'oujda', ar: 'وجدة', fr: 'Oujda' },
-  { id: 'kenitra', ar: 'القنيطرة', fr: 'Kénitra' },
-  { id: 'tetouan', ar: 'تطوان', fr: 'Tétouan' },
-];
 
 export const formatCurrency = (amount: number, lang: Language): string => {
   const formatted = amount.toLocaleString('fr-MA', {

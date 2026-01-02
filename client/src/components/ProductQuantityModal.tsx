@@ -24,10 +24,13 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
 
   // Set initial quantity when modal opens
   useEffect(() => {
-    if (isOpen && initialQuantity > 0) {
-      setQuantity(initialQuantity.toString());
-    } else if (isOpen) {
-      setQuantity('');
+    if (isOpen) {
+      const currentQty = initialQuantity || getItemQuantity(product?.Id || '');
+      if (currentQty > 0) {
+        setQuantity(currentQty.toString());
+      } else {
+        setQuantity('');
+      }
     }
     
     // Auto-focus input when modal opens
@@ -36,7 +39,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
         inputRef.current?.focus();
       }, 100);
     }
-  }, [isOpen, initialQuantity]);
+  }, [isOpen, initialQuantity, product, getItemQuantity]);
 
   if (!product) return null;
 
@@ -73,11 +76,9 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
 
   const handleAddToCart = () => {
     const qty = parseInt(quantity);
-    // If initialQuantity was provided, we're updating an existing cart item
-    if (initialQuantity > 0) {
+    // Always update to the exact quantity entered
+    if (currentCartQuantity > 0) {
       updateQuantity(product.Id, qty);
-    } else if (currentCartQuantity > 0) {
-      updateQuantity(product.Id, currentCartQuantity + qty);
     } else {
       for (let i = 0; i < qty; i++) {
         addItem(product);
@@ -198,7 +199,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
               {isOutOfStock 
                 ? t('outOfStock')
                 : currentCartQuantity > 0
-                  ? t('addMore')
+                  ? t('updateQty')
                   : t('addToCart')
               }
             </Button>

@@ -4,6 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { productTranslations } from '@/data/mockProducts';
 import { Package, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo } from 'react';
+import { Button } from './ui/button';
 
 interface ProductGridProps {
   products: Product[];
@@ -13,6 +14,8 @@ interface ProductGridProps {
   totalPages: number;
   totalCount: number;
   onPageChange: (page: number) => void;
+  viewMode?: 'grid' | 'list';
+  onViewModeChange?: (mode: 'grid' | 'list') => void;
 }
 
 export const ProductGrid = ({ 
@@ -22,7 +25,9 @@ export const ProductGrid = ({
   currentPage, 
   totalPages, 
   totalCount,
-  onPageChange 
+  onPageChange,
+  viewMode = 'grid',
+  onViewModeChange
 }: ProductGridProps) => {
   const { language, t, dir } = useLanguage();
 
@@ -79,18 +84,32 @@ export const ProductGrid = ({
 
   return (
     <div className="space-y-4 sm:space-y-6" dir={dir}>
-      {/* Product Grid */}
-      <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
-        {products.map((product, index) => (
-          <div
-            key={product.Id}
-            style={{ animationDelay: `${index * 20}ms` }}
-            className="animate-fade-in"
-          >
-            <ProductCard product={product} />
-          </div>
-        ))}
-      </div>
+      {/* Product Grid/List */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
+          {products.map((product, index) => (
+            <div
+              key={product.Id}
+              style={{ animationDelay: `${index * 20}ms` }}
+              className="animate-fade-in"
+            >
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2 sm:space-y-3">
+          {products.map((product, index) => (
+            <div
+              key={product.Id}
+              style={{ animationDelay: `${index * 20}ms` }}
+              className="animate-fade-in"
+            >
+              <ProductCard product={product} viewMode="list" />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Pagination Controls - Show info even with 1 page */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 border-t border-gray-200 pt-4 sm:pt-6 pb-2">

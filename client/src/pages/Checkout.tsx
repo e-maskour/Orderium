@@ -2,18 +2,19 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
-import { formatCurrency, moroccanCities, validateMoroccanPhone } from '@/lib/i18n';
+import { useAuth } from '@/context/AuthContext';
+import { formatCurrency, validateMoroccanPhone } from '@/lib/i18n';
 import { productTranslations } from '@/data/mockProducts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, ArrowRight, Package, Loader2, MapPin, Navigation } from 'lucide-react';
-import { SiGooglemaps, SiWaze } from 'react-icons/si';
+import { ArrowLeft, ArrowRight, Package, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { api } from '@/lib/api';
+import { customerService, orderService } from '@/services';
 import { Customer } from '@/types/customer';
+import { AddressInput } from '@/components/AddressInput';
 
 interface FormData {
   name: string;
@@ -33,18 +34,17 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { language, t, dir } = useLanguage();
   const { items, subtotal, clearCart } = useCart();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
   const [existingCustomer, setExistingCustomer] = useState<Customer | null>(null);
-  const [showOtherFields, setShowOtherFields] = useState(false);
   const [mapsLink, setMapsLink] = useState<string | null>(null);
   const [wazeLink, setWazeLink] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    phone: '',
+    phone: user?.PhoneNumber || '',
     address: '',
     latitude: undefined,
     longitude: undefined,
@@ -53,20 +53,19 @@ const Checkout = () => {
 
   const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
-  // Search customer by phone (debounced)
+  // Search customer by phone
   const searchCustomerByPhone = useCallback(async (phone: string) => {
     const cleanPhone = phone.replace(/[\s\-()]/g, '');
     
     // Only search if we have at least 10 digits (full Moroccan phone)
     if (cleanPhone.length < 10) {
       setExistingCustomer(null);
-      setShowOtherFields(false);
       return;
     }
 
     setIsSearchingCustomer(true);
     try {
-      const result = await api.searchCustomers(cleanPhone);
+      const result = await customerService.searchByPhone(cleanPhone);
       
       if (result.customers && result.customers.length > 0) {
         const customer = result.customers[0];
@@ -75,30 +74,20 @@ const Checkout = () => {
         // Auto-fill form with customer data
         setFormData(prev => ({
           ...prev,
-          name: customer.name,
-          address: customer.address || '',
-          latitude: customer.latitude,
-          longitude: customer.longitude,
+          name: customer.Name,
+          address: customer.Address || '',
+          latitude: customer.Latitude,
+          longitude: customer.Longitude,
         }));
 
         // Set map links if available
-        if (customer.googleMapsUrl) setMapsLink(customer.googleMapsUrl);
-        if (customer.wazeUrl) setWazeLink(customer.wazeUrl);
+        if (customer.GoogleMapsUrl) setMapsLink(customer.GoogleMapsUrl);
+        if (customer.WazeUrl) setWazeLink(customer.WazeUrl);
 
         // Clear errors
         setErrors({});
-        
-        // Show other fields
-        setShowOtherFields(true);
-
-        toast({
-          title: t('existingCustomer'),
-          description: language === 'ar'
-            ? `مرحباً بعودتك ${customer.name}!`
-            : `Bon retour ${customer.name}!`,
-        });
       } else {
-        // New customer - show empty fields
+        // New customer - clear fields
         setExistingCustomer(null);
         
         // Clear form fields for new customer
@@ -113,199 +102,37 @@ const Checkout = () => {
         // Clear map links
         setMapsLink(null);
         setWazeLink(null);
-        
-        setShowOtherFields(true);
-        
-        toast({
-          title: t('newCustomer'),
-          description: language === 'ar'
-            ? 'يرجى إدخال معلوماتك'
-            : 'Veuillez saisir vos informations',
-        });
       }
     } catch (error) {
       console.error('Customer search failed:', error);
       setExistingCustomer(null);
-      // Show fields even on error
-      setShowOtherFields(true);
     } finally {
       setIsSearchingCustomer(false);
     }
-  }, [language, toast]);
+  }, [language, toast, t]);
 
-  // Debounce customer search
+  // Auto-search customer on mount if user phone is available
   useEffect(() => {
-    if (!formData.phone) {
-      setShowOtherFields(false);
-      return;
+    if (user?.PhoneNumber) {
+      searchCustomerByPhone(user.PhoneNumber);
     }
+  }, [user?.PhoneNumber, searchCustomerByPhone]);
 
-    const cleanPhone = formData.phone.replace(/[\s\-()]/g, '');
-    
-    // Auto-search when user completes phone number (10 digits)
-    if (cleanPhone.length === 10) {
-      const timer = setTimeout(() => {
-        searchCustomerByPhone(formData.phone);
-      }, 300); // Wait 300ms after user stops typing
-
-      return () => clearTimeout(timer);
-    } else if (cleanPhone.length > 10) {
-      // If more than 10 digits, search immediately
-      searchCustomerByPhone(formData.phone);
+  const handleAddressChange = (address: string, latitude?: number, longitude?: number) => {
+    setFormData(prev => ({
+      ...prev,
+      address,
+      latitude,
+      longitude,
+    }));
+    if (errors.address) {
+      setErrors(prev => ({ ...prev, address: undefined }));
     }
-  }, [formData.phone, searchCustomerByPhone]);
+  };
 
-  const handleDetectLocation = async () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: t('notSupported'),
-        description: language === 'ar' 
-          ? 'المتصفح لا يدعم تحديد الموقع'
-          : 'Votre navigateur ne supporte pas la géolocalisation',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsDetectingLocation(true);
-
-    // Try with high accuracy first, then fallback to lower accuracy
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0
-    };
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        
-        // Create Google Maps and Waze links
-        const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-        const wazeUrl = `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`;
-        setMapsLink(googleMapsUrl);
-        setWazeLink(wazeUrl);
-        
-        try {
-          // Use OpenStreetMap Nominatim for reverse geocoding - get full address
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=${language}&addressdetails=1`,
-            {
-              headers: {
-                'User-Agent': 'Orderium POS'
-              }
-            }
-          );
-          
-          if (!response.ok) {
-            throw new Error('Geocoding failed');
-          }
-          
-          const data = await response.json();
-          
-          // Build complete address with all available details
-          const addressParts = [];
-          if (data.address) {
-            // Street number and name
-            if (data.address.house_number) addressParts.push(data.address.house_number);
-            if (data.address.road) addressParts.push(data.address.road);
-            
-            // Neighborhood/Quarter
-            if (data.address.neighbourhood || data.address.suburb || data.address.quarter) {
-              addressParts.push(data.address.neighbourhood || data.address.suburb || data.address.quarter);
-            }
-            
-            // City
-            if (data.address.city || data.address.town || data.address.village) {
-              addressParts.push(data.address.city || data.address.town || data.address.village);
-            }
-            
-            // Postal code
-            if (data.address.postcode) addressParts.push(data.address.postcode);
-            
-            // Country
-            if (data.address.country) addressParts.push(data.address.country);
-          }
-          
-          const formattedAddress = addressParts.length > 0 
-            ? addressParts.join(', ') 
-            : data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-          
-          setFormData((prev) => ({
-            ...prev,
-            address: formattedAddress,
-            latitude,
-            longitude,
-          }));
-          
-          if (errors.address) {
-            setErrors((prev) => ({ ...prev, address: undefined }));
-          }
-          
-          toast({
-            title: t('locationDetected'),
-            description: language === 'ar' 
-              ? 'تم تحديد موقعك بنجاح'
-              : 'Votre position a été détectée avec succès',
-          });
-        } catch (error) {
-          // Still save coordinates even if geocoding fails
-          setFormData((prev) => ({
-            ...prev,
-            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-            latitude,
-            longitude,
-          }));
-          
-          if (errors.address) {
-            setErrors((prev) => ({ ...prev, address: undefined }));
-          }
-          
-          toast({
-            title: t('warning'),
-            description: language === 'ar'
-              ? 'تم حفظ الإحداثيات. يمكنك تعديل العنوان يدوياً'
-              : 'Coordonnées sauvegardées. Vous pouvez modifier l\'adresse manuellement',
-          });
-        } finally {
-          setIsDetectingLocation(false);
-        }
-      },
-      async (error) => {
-        setIsDetectingLocation(false);
-        
-        let errorMessage = '';
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = language === 'ar'
-              ? 'يرجى السماح بالوصول إلى الموقع من إعدادات المتصفح'
-              : 'Veuillez autoriser l\'accès à la position dans les paramètres du navigateur';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = language === 'ar'
-              ? 'الموقع غير متاح. تأكد من تفعيل خدمات الموقع'
-              : 'Position non disponible. Vérifiez que les services de localisation sont activés';
-            break;
-          case error.TIMEOUT:
-            errorMessage = language === 'ar'
-              ? 'انتهت مهلة تحديد الموقع. يرجى المحاولة مرة أخرى'
-              : 'Délai d\'attente dépassé. Veuillez réessayer';
-            break;
-          default:
-            errorMessage = language === 'ar'
-              ? 'خطأ في تحديد الموقع'
-              : 'Erreur de localisation';
-        }
-        
-        toast({
-          title: t('error'),
-          description: errorMessage,
-          variant: 'destructive',
-        });
-      },
-      options
-    );
+  const handleMapsLinksChange = (googleMaps: string | null, waze: string | null) => {
+    setMapsLink(googleMaps);
+    setWazeLink(waze);
   };
 
   const validateForm = (): boolean => {
@@ -337,47 +164,59 @@ const Checkout = () => {
 
     setIsSubmitting(true);
 
-    // Save or update customer in database
     try {
-      await api.upsertCustomer({
-        phone: formData.phone,
-        name: formData.name,
-        address: formData.address,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        googleMapsUrl: mapsLink || undefined,
-        wazeUrl: wazeLink || undefined,
+      // 1. Save or update customer in database
+      let customerId: number | undefined;
+      try {
+        const customerResult = await customerService.upsert({
+          PhoneNumber: formData.phone,
+          Name: formData.name,
+          Address: formData.address,
+          Latitude: formData.latitude,
+          Longitude: formData.longitude,
+          GoogleMapsUrl: mapsLink || undefined,
+          WazeUrl: wazeLink || undefined,
+        });
+        customerId = customerResult.customer.Id;
+      } catch (error) {
+        console.error('Failed to save customer:', error);
+        // Continue with order even if customer save fails
+      }
+
+      // 2. Create order in database
+      const orderResult = await orderService.create({
+        CustomerId: customerId,
+        CustomerPhone: formData.phone,
+        Items: items.map(item => ({
+          ProductId: item.product.Id,
+          Quantity: item.quantity,
+          Price: item.product.Price,
+          Discount: 0,
+          DiscountType: 0,
+        })),
+        Note: formData.address,
       });
-    } catch (error) {
-      console.error('Failed to save customer:', error);
-      // Continue with order even if customer save fails
-    }
 
-    // Simulate API call - in production, this would POST to /orders
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Generate order number
-      const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
-
-      // Navigate to success with order data (before clearing cart)
+      // 3. Navigate to success with order data (before clearing cart)
       navigate('/success', { 
         state: { 
-          orderNumber,
+          orderNumber: orderResult.documentNumber,
           total: subtotal,
           customerName: formData.name,
           customerPhone: formData.phone,
           customerAddress: formData.address,
-          items: items, // Pass items before clearing cart
+          items: items,
         } 
       });
       
-      // Clear cart after navigation
+      // 4. Clear cart after navigation
       clearCart();
+      
     } catch (error) {
+      console.error('Order creation failed:', error);
       toast({
         title: t('error'),
-        description: dir === 'rtl' ? 'حدث خطأ، يرجى المحاولة مجدداً' : 'Une erreur est survenue',
+        description: t('orderCreationError'),
         variant: 'destructive',
       });
     } finally {
@@ -455,12 +294,13 @@ const Checkout = () => {
                       onChange={(e) => updateField('phone', e.target.value)}
                       placeholder={t('phonePlaceholder')}
                       className={cn(
-                        'h-12',
+                        'h-12 bg-gray-100',
                         errors.phone && 'border-destructive focus-visible:ring-destructive',
                         existingCustomer && 'border-green-500'
                       )}
                       dir="ltr"
                       autoFocus
+                      disabled
                     />
                     {errors.phone && (
                       <p className="text-sm text-destructive">{errors.phone}</p>
@@ -476,111 +316,42 @@ const Checkout = () => {
                     )}
                   </div>
 
-                  {/* Name - Show after phone lookup */}
-                  {showOtherFields && (
-                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <Label htmlFor="name">{t('name')} *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => updateField('name', e.target.value)}
-                        placeholder={t('namePlaceholder')}
-                        className={cn(
-                          'h-12',
-                          errors.name && 'border-destructive focus-visible:ring-destructive'
-                        )}
-                      />
-                      {errors.name && (
-                        <p className="text-sm text-destructive">{errors.name}</p>
+                  {/* Name - Always visible */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name">{t('name')} *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => updateField('name', e.target.value)}
+                      placeholder={t('namePlaceholder')}
+                      className={cn(
+                        'h-12',
+                        errors.name && 'border-destructive focus-visible:ring-destructive'
                       )}
-                    </div>
-                  )}
-
-                  {/* Address - Show after phone lookup */}
-                  {showOtherFields && (
-                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <Label htmlFor="address">{t('address')} *</Label>
-                      <div className="flex gap-2">
-                      <Input
-                        id="address"
-                        value={formData.address}
-                        onChange={(e) => updateField('address', e.target.value)}
-                        placeholder={t('addressPlaceholder')}
-                        className={cn(
-                          'h-12 flex-1',
-                          errors.address && 'border-destructive focus-visible:ring-destructive'
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={handleDetectLocation}
-                        disabled={isDetectingLocation}
-                        className="h-12 w-12 flex-shrink-0"
-                        title={t('detectMyLocation')}
-                      >
-                        {isDetectingLocation ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <MapPin className="w-5 h-5" />
-                        )}
-                      </Button>
-                    </div>
-                    {errors.address && (
-                      <p className="text-sm text-destructive">{errors.address}</p>
-                    )}
-                    {formData.latitude && formData.longitude && (
-                      <div className="space-y-2 mt-2">
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {language === 'ar' 
-                            ? `الإحداثيات: ${formData.latitude.toFixed(6)}, ${formData.longitude.toFixed(6)}`
-                            : `Coordonnées: ${formData.latitude.toFixed(6)}, ${formData.longitude.toFixed(6)}`
-                          }
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {mapsLink && (
-                            <a
-                              href={mapsLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 flex items-center justify-center gap-2 transition-colors shadow-sm group"
-                            >
-                              <div className="w-8 h-8 bg-[#4285F4] rounded-full flex items-center justify-center">
-                                <SiGooglemaps className="w-4 h-4 text-white" />
-                              </div>
-                              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                {t('googleMaps')}
-                              </span>
-                            </a>
-                          )}
-                          {wazeLink && (
-                            <a
-                              href={wazeLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 flex items-center justify-center gap-2 transition-colors shadow-sm group"
-                            >
-                              <div className="w-8 h-8 bg-[#33CCFF] rounded-full flex items-center justify-center">
-                                <SiWaze className="w-4 h-4 text-white" />
-                              </div>
-                              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                {t('waze')}
-                              </span>
-                            </a>
-                          )}
-                        </div>
-                      </div>
+                    />
+                    {errors.name && (
+                      <p className="text-sm text-destructive">{errors.name}</p>
                     )}
                   </div>
-                  )}
+
+                  {/* Address - Always visible */}
+                  <div className="space-y-2">
+                    <Label htmlFor="address">{t('address')} *</Label>
+                    <AddressInput
+                      value={formData.address}
+                      onChange={handleAddressChange}
+                      onMapsLinksChange={handleMapsLinksChange}
+                      error={errors.address}
+                      placeholder={t('addressPlaceholder')}
+                      googleMapsUrl={mapsLink}
+                      wazeUrl={wazeLink}
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Submit button (mobile) */}
-              {showOtherFields && (
-                <div className="lg:hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="lg:hidden">
                 <Button
                   type="submit"
                   variant="cart"
@@ -601,7 +372,6 @@ const Checkout = () => {
                   )}
                 </Button>
               </div>
-              )}
             </form>
           </div>
 
@@ -656,27 +426,25 @@ const Checkout = () => {
               </div>
 
               {/* Submit button (desktop) */}
-              {showOtherFields && (
-                <div className="hidden lg:block mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <Button
-                    type="submit"
-                    variant="cart"
-                    size="touchLg"
-                    className="w-full"
-                    disabled={isSubmitting}
-                    onClick={handleSubmit}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        {t('processing')}
-                      </>
-                    ) : (
-                      t('placeOrder')
-                    )}
-                  </Button>
-                </div>
-              )}
+              <div className="hidden lg:block mt-6">
+                <Button
+                  type="submit"
+                  variant="cart"
+                  size="touchLg"
+                  className="w-full"
+                  disabled={isSubmitting}
+                  onClick={handleSubmit}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      {t('processing')}
+                    </>
+                  ) : (
+                    t('placeOrder')
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

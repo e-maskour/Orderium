@@ -1,9 +1,18 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { LanguageToggle } from './LanguageToggle';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface HeaderProps {
   onCartClick: () => void;
@@ -12,6 +21,7 @@ interface HeaderProps {
 export const Header = ({ onCartClick }: HeaderProps) => {
   const { t, dir } = useLanguage();
   const { itemCount } = useCart();
+  const { user, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
@@ -29,6 +39,33 @@ export const Header = ({ onCartClick }: HeaderProps) => {
         {/* Right actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <LanguageToggle />
+          
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 sm:h-11 sm:w-11 hover:bg-gray-100"
+              >
+                <User className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={dir === 'rtl' ? 'start' : 'end'}>
+              <DropdownMenuLabel>
+                {user?.CustomerName || user?.PhoneNumber}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+                <User className="mr-2 h-4 w-4" />
+                {t('profile')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={logout} className="text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                {t('disconnect')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           {/* Mobile Cart Button */}
           <Button

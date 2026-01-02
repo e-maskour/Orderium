@@ -28,11 +28,11 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
   return (
     <div 
       onClick={() => onItemClick(item)}
-      className="flex gap-2 py-2 border-b border-gray-200 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors rounded-md px-2 -mx-2" 
+      className="flex gap-2 py-1.5 border-b border-gray-200 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors rounded-md px-2 -mx-2" 
       dir={dir}
     >
       {/* Image */}
-      <div className="w-12 h-12 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
+      <div className="w-10 h-10 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
         {item.product.imageUrl ? (
           <img
             src={item.product.imageUrl}
@@ -41,7 +41,7 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Package className="w-5 h-5 text-gray-300" />
+            <Package className="w-4 h-4 text-gray-300" />
           </div>
         )}
       </div>
@@ -65,14 +65,13 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
           </Button>
         </div>
         
-        <p className="text-[10px] text-gray-500 mb-1">
-          {formatCurrency(item.product.Price, language)} × {item.quantity}
-        </p>
-        
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-            {t('quantityLabel')}: {item.quantity}
-          </span>
+          <p className="text-[10px] text-gray-500 flex items-center gap-1">
+            {formatCurrency(item.product.Price, language)} × 
+            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-primary text-white rounded-full text-[8px] font-bold">
+              {item.quantity}
+            </span>
+          </p>
           
           <span className="font-bold text-gray-900 text-xs">
             {formatCurrency(item.product.Price * item.quantity, language)}
