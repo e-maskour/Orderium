@@ -47,11 +47,16 @@ export default function Orders() {
       <header className="bg-card border-b border-border sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">{t('myDeliveries')}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('welcomeBack')}, {deliveryPerson?.Name}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-md flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl font-bold text-white">O</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">{t('myDeliveries')}</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t('welcomeBack')}, {deliveryPerson?.Name}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <LanguageToggle />

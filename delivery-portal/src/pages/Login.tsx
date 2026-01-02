@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Truck, Loader2, LogIn } from 'lucide-react';
+import { Loader2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,11 +38,14 @@ export default function Login() {
         <LanguageToggle />
       </div>
       <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center">
-            <Truck className="w-8 h-8 text-white" />
+        <CardHeader className="space-y-4 text-center">
+          <div className="mx-auto w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-xl flex items-center justify-center">
+            <span className="text-6xl font-bold text-white">O</span>
           </div>
-          <CardTitle className="text-2xl font-bold">{t('appName')} {t('tagline')}</CardTitle>
+          <div>
+            <CardTitle className="text-3xl font-bold text-gray-900">{t('appName')}</CardTitle>
+            <CardDescription className="text-base mt-1">{t('tagline')}</CardDescription>
+          </div>
           <CardDescription>{t('welcomeBack')}</CardDescription>
         </CardHeader>
         <CardContent>
