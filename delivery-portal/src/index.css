@@ -1,0 +1,230 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Moroccan-inspired palette */
+    --background: 35 30% 97%;
+    --foreground: 25 40% 15%;
+
+    --card: 35 25% 95%;
+    --card-foreground: 25 40% 15%;
+
+    --popover: 35 30% 97%;
+    --popover-foreground: 25 40% 15%;
+
+    /* Terracotta primary */
+    --primary: 15 65% 50%;
+    --primary-foreground: 35 30% 98%;
+
+    /* Warm sand secondary */
+    --secondary: 35 35% 88%;
+    --secondary-foreground: 25 40% 20%;
+
+    /* Muted warm gray */
+    --muted: 35 20% 90%;
+    --muted-foreground: 25 20% 45%;
+
+    /* Gold accent */
+    --accent: 42 85% 55%;
+    --accent-foreground: 25 40% 12%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 35 25% 85%;
+    --input: 35 25% 88%;
+    --ring: 15 65% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens */
+    --teal: 175 45% 35%;
+    --teal-foreground: 175 45% 95%;
+    --gold: 42 85% 55%;
+    --gold-dark: 38 75% 45%;
+    --terracotta: 15 65% 50%;
+    --terracotta-dark: 12 60% 40%;
+    --sand: 35 35% 88%;
+    --sand-dark: 35 30% 75%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(15 65% 50%), hsl(25 60% 55%));
+    --gradient-gold: linear-gradient(135deg, hsl(42 85% 55%), hsl(38 75% 50%));
+    --gradient-hero: linear-gradient(180deg, hsl(35 30% 97%) 0%, hsl(35 35% 92%) 100%);
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(25 40% 15% / 0.1);
+    --shadow-medium: 0 8px 30px -8px hsl(25 40% 15% / 0.15);
+    --shadow-card: 0 2px 12px -2px hsl(25 40% 15% / 0.08);
+
+    --sidebar-background: 35 25% 95%;
+    --sidebar-foreground: 25 40% 20%;
+    --sidebar-primary: 15 65% 50%;
+    --sidebar-primary-foreground: 35 30% 98%;
+    --sidebar-accent: 35 35% 90%;
+    --sidebar-accent-foreground: 25 40% 20%;
+    --sidebar-border: 35 25% 85%;
+    --sidebar-ring: 15 65% 50%;
+  }
+
+  .dark {
+    --background: 25 35% 10%;
+    --foreground: 35 25% 95%;
+
+    --card: 25 30% 14%;
+    --card-foreground: 35 25% 95%;
+
+    --popover: 25 30% 12%;
+    --popover-foreground: 35 25% 95%;
+
+    --primary: 15 60% 55%;
+    --primary-foreground: 25 35% 8%;
+
+    --secondary: 25 25% 20%;
+    --secondary-foreground: 35 25% 90%;
+
+    --muted: 25 20% 18%;
+    --muted-foreground: 35 15% 60%;
+
+    --accent: 42 80% 50%;
+    --accent-foreground: 25 35% 8%;
+
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 25 20% 22%;
+    --input: 25 20% 22%;
+    --ring: 15 60% 55%;
+
+    --sidebar-background: 25 30% 12%;
+    --sidebar-foreground: 35 25% 90%;
+    --sidebar-primary: 15 60% 55%;
+    --sidebar-primary-foreground: 25 35% 8%;
+    --sidebar-accent: 25 25% 18%;
+    --sidebar-accent-foreground: 35 25% 90%;
+    --sidebar-border: 25 20% 22%;
+    --sidebar-ring: 15 60% 55%;
+  }
+
+  /* RTL Support */
+  [dir="rtl"] {
+    font-family: 'Noto Sans Arabic', sans-serif;
+  }
+
+  [dir="ltr"] {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Outfit', 'Noto Sans Arabic', sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-gold {
+    background: var(--gradient-gold);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Moroccan pattern overlay */
+  .moroccan-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30L30 0z' fill='none' stroke='%23d4a574' stroke-width='0.5' opacity='0.15'/%3E%3C/svg%3E");
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Price animation */
+  .price-bounce {
+    animation: priceBounce 0.3s ease-out;
+  }
+
+  @keyframes priceBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  /* Fade in animation */
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slide in from right (LTR) or left (RTL) */
+  .slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  [dir="rtl"] .slide-in {
+    animation: slideInRtl 0.3s ease-out;
+  }
+
+  @keyframes slideInRtl {
+    from {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}

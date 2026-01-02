@@ -31,12 +31,30 @@ export class PortalRepository {
             IsDelivery BIT NOT NULL DEFAULT 0,
             DeliveryId INT NULL,
             DateCreated DATETIME NOT NULL DEFAULT GETDATE(),
-            DateUpdated DATETIME NOT NULL DEFAULT GETDATE(),
-            CONSTRAINT FK_Portal_Customer FOREIGN KEY (CustomerId) REFERENCES Customer(Id)
+            DateUpdated DATETIME NOT NULL DEFAULT GETDATE()
           )
         `);
         
         logger.info('Portal table created successfully');
+      } else {
+        // Check if DeliveryId column exists
+        const deliveryIdExists = await pool.request()
+          .query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = 'Portal' 
+            AND COLUMN_NAME = 'DeliveryId'
+          `);
+        
+        if (deliveryIdExists.recordset.length === 0) {
+          // Add DeliveryId and IsDelivery columns
+          await pool.request().query(`
+            ALTER TABLE Portal
+            ADD DeliveryId INT NULL,
+                IsDelivery BIT NOT NULL DEFAULT 0
+          `);
+          logger.info('Added DeliveryId and IsDelivery columns to Portal table');
+        }
       }
     } catch (err) {
       logger.error(err, 'Failed to initialize Portal table');

@@ -5,6 +5,27 @@ import { logger } from '../../utils/logger';
 
 const router = Router();
 
+// Get all orders (for admin panel)
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const orders = await orderService.getAllOrders(limit);
+    
+    res.json({ 
+      success: true,
+      orders,
+      count: orders.length 
+    });
+  } catch (error) {
+    logger.error(error, 'Failed to fetch orders');
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch orders',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Create new order
 router.post('/', async (req: Request, res: Response) => {
   try {

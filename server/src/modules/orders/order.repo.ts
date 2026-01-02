@@ -266,6 +266,30 @@ export class OrderRepository {
       throw err;
     }
   }
+
+  // Get all orders (for admin panel)
+  async getAllOrders(limit = 100): Promise<Document[]> {
+    try {
+      const pool = await getPool();
+      const result = await pool.request()
+        .input('limit', sql.Int, limit)
+        .query(`
+          SELECT TOP (@limit) 
+            d.*,
+            c.Name as CustomerName,
+            c.PhoneNumber as CustomerPhone,
+            c.Address as CustomerAddress
+          FROM Document d
+          LEFT JOIN Customer c ON d.CustomerId = c.Id
+          ORDER BY d.DateCreated DESC
+        `);
+      
+      return result.recordset;
+    } catch (err) {
+      logger.error(err, 'Failed to get all orders');
+      throw err;
+    }
+  }
 }
 
 export const orderRepo = new OrderRepository();

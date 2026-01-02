@@ -2,6 +2,11 @@ import { orderRepo } from './order.repo';
 import { CreateOrderDTO, OrderWithItems, Document } from './order.model';
 
 export class OrderService {
+  // Get all orders (for admin)
+  async getAllOrders(limit = 100): Promise<Document[]> {
+    return orderRepo.getAllOrders(limit);
+  }
+
   // Create new order
   async createOrder(data: CreateOrderDTO): Promise<OrderWithItems> {
     // Validate items
