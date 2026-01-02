@@ -170,9 +170,33 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4" dir={dir}>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center">
-            <ShoppingCart className="w-8 h-8 text-white" />
+          {/* Professional Shopping Logo */}
+          <div className="mx-auto relative w-32 h-32">
+            {/* Animated route path background */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-full h-1 bg-gradient-to-r from-transparent via-slate-300 to-transparent rounded-full opacity-40"></div>
+              <div className="absolute w-2 h-2 bg-slate-400 rounded-full animate-ping" style={{left: '20%'}}></div>
+              <div className="absolute w-2 h-2 bg-slate-500 rounded-full animate-pulse" style={{right: '20%'}}></div>
+            </div>
+            
+            {/* Main Orderium O Logo */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 shadow-2xl flex items-center justify-center relative overflow-hidden">
+                {/* Subtle shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
+                {/* Large O */}
+                <span className="text-5xl font-bold text-white relative z-10">O</span>
+              </div>
+            </div>
+            
+            {/* Shopping Cart Icon Badge */}
+            <div className="absolute bottom-0 right-0 w-12 h-12 bg-white rounded-xl shadow-lg border-2 border-slate-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+                <ShoppingCart className="w-5 h-5 text-white" />
+              </div>
+            </div>
           </div>
+          
           <CardTitle className="text-2xl font-bold">
             {isCheckingPhone
               ? t('verifying')

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Loader2, LogIn } from 'lucide-react';
+import { Loader2, LogIn, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,9 +39,33 @@ export default function Login() {
       </div>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-xl flex items-center justify-center">
-            <span className="text-6xl font-bold text-white">O</span>
+          {/* Professional Delivery Logo */}
+          <div className="mx-auto relative w-32 h-32">
+            {/* Animated route path background */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-full h-1 bg-gradient-to-r from-transparent via-orange-300 to-transparent rounded-full opacity-40"></div>
+              <div className="absolute w-2 h-2 bg-orange-400 rounded-full animate-ping" style={{left: '20%'}}></div>
+              <div className="absolute w-2 h-2 bg-orange-500 rounded-full animate-pulse" style={{right: '20%'}}></div>
+            </div>
+            
+            {/* Main Orderium O Logo */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-2xl flex items-center justify-center relative overflow-hidden">
+                {/* Subtle shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
+                {/* Large O */}
+                <span className="text-5xl font-bold text-white relative z-10">O</span>
+              </div>
+            </div>
+            
+            {/* Delivery Truck Icon Badge */}
+            <div className="absolute bottom-0 right-0 w-12 h-12 bg-white rounded-xl shadow-lg border-2 border-orange-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                <Truck className="w-5 h-5 text-white" />
+              </div>
+            </div>
           </div>
+          
           <div>
             <CardTitle className="text-3xl font-bold text-gray-900">{t('appName')}</CardTitle>
             <CardDescription className="text-base mt-1">{t('tagline')}</CardDescription>
