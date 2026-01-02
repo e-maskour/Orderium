@@ -308,10 +308,7 @@ const Checkout = () => {
                     {existingCustomer && (
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <Package className="w-3 h-3" />
-                        {language === 'ar' 
-                          ? `${existingCustomer.totalOrders} طلبية سابقة`
-                          : `${existingCustomer.totalOrders} commande(s) précédente(s)`
-                        }
+                        {`${existingCustomer.totalOrders} ${t('previousOrders')}`}
                       </p>
                     )}
                   </div>

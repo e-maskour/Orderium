@@ -247,6 +247,46 @@ export class OrderRepository {
     }
   }
 
+  // Get order by order number
+  async getOrderByNumber(orderNumber: string): Promise<OrderWithItems | null> {
+    try {
+      const pool = await getPool();
+      const result = await pool.request()
+        .input('orderNumber', sql.VarChar, orderNumber)
+        .query(`
+          SELECT 
+            d.Id, d.Number, d.UserId, d.CustomerId, d.CashRegisterId, d.OrderNumber,
+            d.Date, d.StockDate, d.Total, d.IsClockedOut, d.DocumentTypeId,
+            d.WarehouseId, d.ReferenceDocumentNumber, d.InternalNote, d.Note,
+            d.DueDate, d.Discount, d.DiscountType, d.PaidStatus, d.DateCreated,
+            d.DateUpdated, d.DiscountApplyRule, d.ServiceType, d.DeliveryPersonId,
+            od.Status as DeliveryStatus,
+            od.ConfirmedAt,
+            od.PickedUpAt,
+            od.DeliveredAt,
+            od.CanceledAt
+          FROM Document d
+          LEFT JOIN OrdersDelivery od ON d.Id = od.DocumentId
+          WHERE d.Number = @orderNumber
+        `);
+      
+      if (result.recordset.length === 0) return null;
+      
+      const document = result.recordset[0];
+      const itemsResult = await pool.request()
+        .input('documentId', sql.Int, document.Id)
+        .query('SELECT * FROM DocumentItem WHERE DocumentId = @documentId');
+      
+      return {
+        Document: document,
+        Items: itemsResult.recordset,
+      };
+    } catch (err) {
+      logger.error(err, 'Failed to get order by number');
+      throw err;
+    }
+  }
+
   // Get orders by customer ID
   async getOrdersByCustomerId(customerId: number, limit = 50): Promise<Document[]> {
     try {
@@ -255,9 +295,21 @@ export class OrderRepository {
         .input('customerId', sql.Int, customerId)
         .input('limit', sql.Int, limit)
         .query(`
-          SELECT TOP (@limit) * FROM Document 
-          WHERE CustomerId = @customerId 
-          ORDER BY DateCreated DESC
+          SELECT TOP (@limit) 
+            d.Id, d.Number, d.UserId, d.CustomerId, d.CashRegisterId, d.OrderNumber,
+            d.Date, d.StockDate, d.Total, d.IsClockedOut, d.DocumentTypeId,
+            d.WarehouseId, d.ReferenceDocumentNumber, d.InternalNote, d.Note,
+            d.DueDate, d.Discount, d.DiscountType, d.PaidStatus, d.DateCreated,
+            d.DateUpdated, d.DiscountApplyRule, d.ServiceType, d.DeliveryPersonId,
+            od.Status as DeliveryStatus,
+            od.ConfirmedAt,
+            od.PickedUpAt,
+            od.DeliveredAt,
+            od.CanceledAt
+          FROM Document d
+          LEFT JOIN OrdersDelivery od ON d.Id = od.DocumentId
+          WHERE d.CustomerId = @customerId 
+          ORDER BY d.DateCreated DESC
         `);
       
       return result.recordset;

@@ -87,6 +87,50 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// Get order by order number (with customer verification)
+router.get('/number/:orderNumber', async (req: Request, res: Response) => {
+  try {
+    const orderNumber = req.params.orderNumber;
+    const customerId = parseInt(req.query.customerId as string);
+    
+    // Require customerId for security
+    if (!customerId || isNaN(customerId)) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Customer ID is required' 
+      });
+    }
+    
+    const order = await orderService.getOrderByNumber(orderNumber);
+    
+    if (!order) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Order not found' 
+      });
+    }
+    
+    // Verify order belongs to the customer
+    if (order.Document.CustomerId !== customerId) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Order not found' 
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      order 
+    });
+  } catch (error) {
+    logger.error(error, 'Failed to fetch order by number');
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch order' 
+    });
+  }
+});
+
 // Get customer orders
 router.get('/customer/:customerId', async (req: Request, res: Response) => {
   try {

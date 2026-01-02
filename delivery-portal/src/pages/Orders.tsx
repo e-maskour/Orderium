@@ -1,21 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { deliveryService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageToggle } from '../components/LanguageToggle';
 import OrderCard from '../components/OrderCard';
-import { Loader2, Package, LogOut } from 'lucide-react';
+import { Loader2, Package, LogOut, Search } from 'lucide-react';
 import type { Order } from '../types';
 
 export default function Orders() {
   const { deliveryPerson, logout } = useAuth();
   const { t } = useLanguage();
   const [statusFilter, setStatusFilter] = useState<'all' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('to_delivery');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const { data: orders, isLoading, error } = useQuery({
-    queryKey: ['orders', deliveryPerson?.Id],
-    queryFn: () => deliveryPerson ? deliveryService.getMyOrders(deliveryPerson.Id) : Promise.resolve([]),
+    queryKey: ['orders', deliveryPerson?.Id, searchQuery],
+    queryFn: () => deliveryPerson ? deliveryService.getMyOrders(deliveryPerson.Id, searchQuery) : Promise.resolve([]),
     enabled: !!deliveryPerson,
   });
 
@@ -72,10 +83,23 @@ export default function Orders() {
         </div>
       </header>
 
-      {/* Filter Tabs */}
+      {/* Search and Filter */}
       <div className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder={t('searchOrders')}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {[
               { key: 'all', label: t('allOrders') },
               { key: 'to_delivery', label: t('toDelivery') },

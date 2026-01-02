@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deliveryPersonService } from '../services/api';
 import { DeliveryPerson } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 import { Link } from 'react-router-dom';
 import { UserPlus, Edit2, Trash2, Truck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ import {
 } from '../components/ui/alert-dialog';
 
 export default function DeliveryPersons() {
+  const { t } = useLanguage();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -39,11 +41,11 @@ export default function DeliveryPersons() {
     mutationFn: deliveryPersonService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveryPersons'] });
-      toast.success('Delivery person created successfully');
+      toast.success(t('deliveryPersonCreated'));
       resetForm();
     },
     onError: (error: Error) => {
-      toast.error(`Failed to create: ${error.message}`);
+      toast.error(`${t('failedToCreate')}: ${error.message}`);
     },
   });
 
@@ -52,11 +54,11 @@ export default function DeliveryPersons() {
       deliveryPersonService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveryPersons'] });
-      toast.success('Delivery person updated successfully');
+      toast.success(t('deliveryPersonUpdated'));
       resetForm();
     },
     onError: (error: Error) => {
-      toast.error(`Failed to update: ${error.message}`);
+      toast.error(`${t('failedToUpdate')}: ${error.message}`);
     },
   });
 
@@ -64,11 +66,11 @@ export default function DeliveryPersons() {
     mutationFn: deliveryPersonService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveryPersons'] });
-      toast.success('Delivery person deleted successfully');
+      toast.success(t('deliveryPersonDeleted'));
       setDeleteId(null);
     },
     onError: (error: Error) => {
-      toast.error(`Failed to delete: ${error.message}`);
+      toast.error(`${t('failedToDelete')}: ${error.message}`);
     },
   });
 
@@ -91,7 +93,7 @@ export default function DeliveryPersons() {
       });
     } else {
       if (!formData.Password) {
-        toast.error('Password is required for new delivery persons');
+        toast.error(t('passwordRequired'));
         return;
       }
       createMutation.mutate({
@@ -121,9 +123,9 @@ export default function DeliveryPersons() {
             <div className="flex items-center gap-4">
               <Link to="/dashboard" className="text-foreground hover:text-primary font-semibold flex items-center gap-2 transition-colors">
                 <Truck className="w-5 h-5" />
-                ← Dashboard
+                ← {t('dashboard')}
               </Link>
-              <h1 className="text-xl font-bold text-foreground">Delivery Persons</h1>
+              <h1 className="text-xl font-bold text-foreground">{t('deliveryPersons')}</h1>
             </div>
             <div className="flex items-center">
               <button
@@ -134,7 +136,7 @@ export default function DeliveryPersons() {
                 className="gradient-primary text-white px-4 py-2 rounded-lg font-medium hover:shadow-soft transition-all flex items-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
-                {showForm ? 'Cancel' : 'Add Delivery Person'}
+                {showForm ? t('cancel') : t('addDeliveryPerson')}
               </button>
             </div>
           </div>
@@ -145,12 +147,12 @@ export default function DeliveryPersons() {
         {showForm && (
           <div className="bg-card shadow-card rounded-xl p-6 mb-6 border border-border">
             <h2 className="text-lg font-semibold mb-4 text-foreground">
-              {editingId ? 'Edit' : 'Add'} Delivery Person
+              {editingId ? t('edit') : t('add')} {t('deliveryPerson')}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Name *</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">{t('name')} *</label>
                   <input
                     type="text"
                     value={formData.Name}
@@ -160,7 +162,7 @@ export default function DeliveryPersons() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Phone Number *</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">{t('phoneNumber')} *</label>
                   <input
                     type="tel"
                     value={formData.PhoneNumber}
@@ -171,7 +173,7 @@ export default function DeliveryPersons() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Email</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">{t('email')}</label>
                   <input
                     type="email"
                     value={formData.Email}
@@ -181,14 +183,14 @@ export default function DeliveryPersons() {
                 </div>
                 {!editingId && (
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-foreground">Password *</label>
+                    <label className="block text-sm font-medium mb-2 text-foreground">{t('password')} *</label>
                     <input
                       type="password"
                       value={formData.Password}
                       onChange={(e) => setFormData({ ...formData, Password: e.target.value })}
                       className="w-full px-4 py-2 border border-input rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
                       required={!editingId}
-                      placeholder="Min. 6 characters"
+                      placeholder={t('minSixCharacters')}
                     />
                   </div>
                 )}
@@ -198,9 +200,9 @@ export default function DeliveryPersons() {
                       type="checkbox"
                       checked={formData.IsActive}
                       onChange={(e) => setFormData({ ...formData, IsActive: e.target.checked })}
-                      className="w-4 h-4 text-primary border-border rounded focus:ring-primary mr-3"
+                      className="w-4 h-4 text-primary border-border rounded focus:ring-primary mr-3 rtl:ml-3 rtl:mr-0"
                     />
-                    <span className="text-sm font-medium text-foreground">Active</span>
+                    <span className="text-sm font-medium text-foreground">{t('active')}</span>
                   </label>
                 </div>
               </div>
@@ -209,14 +211,14 @@ export default function DeliveryPersons() {
                   type="submit"
                   className="gradient-primary text-white px-6 py-2 rounded-lg font-medium hover:shadow-soft transition-all"
                 >
-                  {editingId ? 'Update' : 'Create'}
+                  {editingId ? t('update') : t('create')}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
                   className="bg-muted text-muted-foreground px-6 py-2 rounded-lg font-medium hover:bg-muted/80 transition-all"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
               </div>
             </form>
@@ -230,7 +232,7 @@ export default function DeliveryPersons() {
         ) : deliveryPersons.length === 0 ? (
           <div className="bg-card rounded-lg shadow-card p-12 text-center border border-border">
             <Truck className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-foreground font-medium">No delivery persons found</p>
+            <p className="text-foreground font-medium">{t('noDeliveryPersonsFound')}</p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -245,7 +247,7 @@ export default function DeliveryPersons() {
                         ? 'bg-green-100 text-green-700 border-green-200'
                         : 'bg-red-100 text-red-700 border-red-200'
                     }`}>
-                      {person.IsActive ? 'Active' : 'Inactive'}
+                      {person.IsActive ? t('active') : t('inactive')}
                     </span>
                   </div>
                 </div>
@@ -285,14 +287,14 @@ export default function DeliveryPersons() {
                       className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-medium hover:bg-primary/20 transition-colors"
                     >
                       <Edit2 className="w-3 h-3" />
-                      Edit
+                      {t('edit')}
                     </button>
                     <button
                       onClick={() => setDeleteId(person.Id)}
                       className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-destructive/10 text-destructive rounded-lg text-xs font-medium hover:bg-destructive/20 transition-colors"
                     >
                       <Trash2 className="w-3 h-3" />
-                      Delete
+                      {t('delete')}
                     </button>
                   </div>
                 </div>
@@ -305,15 +307,15 @@ export default function DeliveryPersons() {
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Delivery Person</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDeliveryPerson')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this delivery person? This action cannot be undone.
+              {t('deleteDeliveryPersonConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={() => deleteId && deleteMutation.mutate(deleteId)}>
-              Delete
+              {t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

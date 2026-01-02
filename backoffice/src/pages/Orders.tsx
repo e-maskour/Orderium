@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderService, deliveryPersonService } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
-import { Package, Phone, MapPin, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Package, Phone, MapPin, X, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -16,12 +17,25 @@ import {
 } from '../components/ui/alert-dialog';
 
 export default function Orders() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [unassignOrderId, setUnassignOrderId] = useState<number | null>(null);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unassigned' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: orderService.getAll,
+    queryKey: ['orders', searchQuery],
+    queryFn: () => orderService.getAll(searchQuery),
   });
 
   const { data: deliveryPersons = [] } = useQuery({
@@ -34,10 +48,10 @@ export default function Orders() {
       orderService.assignToDelivery(orderId, deliveryPersonId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast.success('Order assigned successfully');
+      toast.success(t('orderAssigned'));
     },
     onError: (error: Error) => {
-      toast.error(`Failed to assign order: ${error.message}`);
+      toast.error(`${t('failedToAssign')}: ${error.message}`);
     },
   });
 
@@ -45,11 +59,11 @@ export default function Orders() {
     mutationFn: (orderId: number) => orderService.unassignOrder(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast.success('Order unassigned successfully');
+      toast.success(t('orderUnassigned'));
       setUnassignOrderId(null);
     },
     onError: (error: Error) => {
-      toast.error(`Failed to unassign order: ${error.message}`);
+      toast.error(`${t('failedToUnassign')}: ${error.message}`);
     },
   });
 
@@ -86,12 +100,29 @@ export default function Orders() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'to_delivery': return 'To Delivery';
-      case 'in_delivery': return 'In Delivery';
-      case 'delivered': return 'Delivered';
-      case 'canceled': return 'Canceled';
-      default: return status || 'Unassigned';
+      case 'to_delivery': return t('toDelivery');
+      case 'in_delivery': return t('inDelivery');
+      case 'delivered': return t('delivered');
+      case 'canceled': return t('canceled');
+      default: return status || t('unassigned');
     }
+  };
+
+  // Filter orders by status
+  const filteredOrders = orders.filter((order: any) => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'unassigned') return !order.Status;
+    return order.Status === statusFilter;
+  });
+
+  // Count orders by status
+  const statusCounts = {
+    all: orders.length,
+    unassigned: orders.filter((o: any) => !o.Status).length,
+    to_delivery: orders.filter((o: any) => o.Status === 'to_delivery').length,
+    in_delivery: orders.filter((o: any) => o.Status === 'in_delivery').length,
+    delivered: orders.filter((o: any) => o.Status === 'delivered').length,
+    canceled: orders.filter((o: any) => o.Status === 'canceled').length,
   };
 
   return (
@@ -102,34 +133,86 @@ export default function Orders() {
             <div className="flex items-center gap-4">
               <Link to="/dashboard" className="text-foreground hover:text-primary font-semibold flex items-center gap-2 transition-colors">
                 <Package className="w-5 h-5" />
-                ← Dashboard
+                ← {t('dashboard')}
               </Link>
-              <h1 className="text-xl font-bold text-foreground">Order Management</h1>
+              <h1 className="text-xl font-bold text-foreground">{t('orderManagement')}</h1>
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Search and Filter */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder={t('searchPlaceholder')}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full pl-10 rtl:pr-10 rtl:pl-4 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {[
+              { key: 'all', label: t('all') },
+              { key: 'unassigned', label: t('unassigned') },
+              { key: 'to_delivery', label: t('toDelivery') },
+              { key: 'in_delivery', label: t('inDelivery') },
+              { key: 'delivered', label: t('delivered') },
+              { key: 'canceled', label: t('canceled') }
+            ].map((filter) => (
+              <button
+                key={filter.key}
+                onClick={() => setStatusFilter(filter.key as any)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                  statusFilter === filter.key
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {filter.label}
+                <span className={`ml-2 rtl:mr-2 rtl:ml-0 px-2 py-0.5 rounded-full text-xs ${
+                  statusFilter === filter.key ? 'bg-primary-foreground/20' : 'bg-background'
+                }`}>
+                  {statusCounts[filter.key as keyof typeof statusCounts]}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {ordersLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : orders.length === 0 ? (
+        ) : filteredOrders.length === 0 ? (
           <div className="bg-card rounded-lg shadow-card p-12 text-center border border-border">
             <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-foreground font-medium">No orders found</p>
+            <p className="text-foreground font-medium">{t('noOrdersFound')}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {statusFilter === 'all' 
+                ? t('noOrdersFound')
+                : `${t('noOrdersFound')}`
+              }
+            </p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {orders.map((order: any) => (
+            {filteredOrders.map((order: any) => (
               <div key={order.OrderId} className="bg-card rounded-lg shadow-card border border-border overflow-hidden hover:shadow-medium transition-all">
                 {/* Card Header */}
                 <div className="p-2.5 border-b border-border bg-muted/50">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-muted-foreground">#{order.OrderNumber}</span>
-                    <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.Status)}`}>
-                      {getStatusIcon(order.Status)} {getStatusLabel(order.Status)}
+                    <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(order.Status)}`}>
+                      <span>{getStatusIcon(order.Status)}</span> <span>{getStatusLabel(order.Status)}</span>
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -166,15 +249,15 @@ export default function Orders() {
                   {/* Total */}
                   <div className="border-t border-border pt-2 mt-2">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-muted-foreground">Total Amount</span>
-                      <span className="text-primary">{order.TotalAmount?.toFixed(2)} DH</span>
+                      <span className="text-muted-foreground">{t('total')}</span>
+                      <span className="text-primary">{order.TotalAmount?.toFixed(2)} {t('currency')}</span>
                     </div>
                   </div>
 
                   {/* Assignment */}
                   <div className="border-t border-border pt-2 mt-2">
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                      Assign to Delivery
+                      {t('assignTo')}
                     </label>
                     <div className="flex items-center gap-2">
                       <select
@@ -183,7 +266,7 @@ export default function Orders() {
                         className="flex-1 border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:ring-2 focus:ring-ring focus:border-input text-foreground"
                         disabled={order.Status === 'delivered'}
                       >
-                        <option value="">Select person...</option>
+                        <option value="">{t('selectDeliveryPerson')}</option>
                         {deliveryPersons.filter((p: any) => p.IsActive).map((person: any) => (
                           <option key={person.Id} value={person.Id}>{person.Name}</option>
                         ))}
@@ -192,7 +275,7 @@ export default function Orders() {
                         <button
                           onClick={() => setUnassignOrderId(order.OrderId)}
                           className="bg-destructive hover:bg-destructive/90 text-destructive-foreground p-1.5 rounded-lg transition-colors"
-                          title="Unassign"
+                          title={t('unassign')}
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -209,14 +292,14 @@ export default function Orders() {
       <AlertDialog open={unassignOrderId !== null} onOpenChange={(open) => !open && setUnassignOrderId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unassign Order</AlertDialogTitle>
+            <AlertDialogTitle>{t('unassignOrder')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to unassign this order from the delivery person? This action cannot be undone.
+              {t('unassignOrderConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUnassign}>Unassign</AlertDialogAction>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUnassign}>{t('unassign')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

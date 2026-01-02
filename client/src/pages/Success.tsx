@@ -1,11 +1,13 @@
 import { useLocation, Link, Navigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CheckCircle2, Home, Download, Eye, FileText, Receipt as ReceiptIcon, X, Share2 } from 'lucide-react';
+import { CheckCircle2, Home, Download, Eye, FileText, Receipt as ReceiptIcon, X, Share2, MapPin, Package } from 'lucide-react';
 import { Receipt } from '@/components/Receipt';
 import { Invoice } from '@/components/Invoice';
+import { OrderTracking } from '@/components/OrderTracking';
 import { CartItem } from '@/context/CartContext';
 import { useState, useRef } from 'react';
 import jsPDF from 'jspdf';
@@ -23,9 +25,11 @@ interface SuccessState {
 const Success = () => {
   const location = useLocation();
   const { language, t, dir } = useLanguage();
+  const { user } = useAuth();
   const state = location.state as SuccessState | null;
   const receiptRef = useRef<HTMLDivElement>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showTracking, setShowTracking] = useState(false);
   const [documentType, setDocumentType] = useState<'receipt' | 'invoice'>('receipt');
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -124,6 +128,33 @@ const Success = () => {
                 {formatCurrency(state.total, language)}
               </span>
             </div>
+          </div>
+
+          {/* Order Tracking Button - Animated */}
+          <div className="mb-6">
+            <Button
+              onClick={() => setShowTracking(true)}
+              size="lg"
+              className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all relative overflow-hidden group"
+            >
+              {/* Animated background pulse */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
+              
+              {/* Icon with animation */}
+              <Package className="w-5 h-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
+              
+              {/* Text */}
+              <span className="relative z-10">
+                {t('trackYourOrder')}
+              </span>
+              
+              {/* Moving dot indicator */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1">
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+              </div>
+            </Button>
           </div>
 
           {/* Document Type Selection */}
@@ -249,6 +280,27 @@ const Success = () => {
                 />
               )}
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Order Tracking Modal */}
+        <Dialog open={showTracking} onOpenChange={setShowTracking}>
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                {t('trackOrder')}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <div className="bg-secondary/50 rounded-lg p-3 mb-4">
+                <p className="text-xs text-muted-foreground">{t('orderNumber')}</p>
+                <p className="font-mono font-bold text-primary">{state.orderNumber}</p>
+              </div>
+              {user?.CustomerId && (
+                <OrderTracking orderNumber={state.orderNumber} customerId={user.CustomerId} />
+              )}
             </div>
           </DialogContent>
         </Dialog>

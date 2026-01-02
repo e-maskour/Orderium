@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageToggle } from '../components/LanguageToggle';
 import { Shield, Loader2, LogIn } from 'lucide-react';
 
 export default function Login() {
@@ -8,6 +10,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,7 +22,7 @@ export default function Login() {
       await login(credentials);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials');
+      setError(err.message || t('invalidCredentials'));
     } finally {
       setIsLoading(false);
     }
@@ -56,14 +59,17 @@ export default function Login() {
             </div>
           </div>
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Orderium</h1>
-          <p className="text-base text-muted-foreground">Admin Backoffice</p>
-          <p className="text-sm text-muted-foreground mt-2">Welcome back</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">{t('appName')}</h1>
+          <p className="text-base text-muted-foreground">{t('adminBackoffice')}</p>
+          <p className="text-sm text-muted-foreground mt-2">{t('welcomeBack')}</p>
+          <div className="mt-3 flex justify-center">
+            <LanguageToggle />
+          </div>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Phone Number</label>
+            <label className="block text-sm font-medium text-foreground">{t('phoneNumber')}</label>
             <input
               type="tel"
               value={credentials.phoneNumber}
@@ -80,7 +86,7 @@ export default function Login() {
           </div>
           
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Password</label>
+            <label className="block text-sm font-medium text-foreground">{t('password')}</label>
             <input
               type="password"
               value={credentials.password}
@@ -90,7 +96,7 @@ export default function Login() {
               }}
               className="w-full px-3 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:border-transparent"
               style={{focusRingColor: '#235ae4'}}
-              placeholder="Enter your password"
+              placeholder={t('enterYourPassword')}
               required
               disabled={isLoading}
             />
@@ -111,12 +117,12 @@ export default function Login() {
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Logging in...
+                {t('loggingIn')}
               </>
             ) : (
               <>
                 <LogIn className="h-4 w-4" />
-                Login
+                {t('login')}
               </>
             )}
           </button>

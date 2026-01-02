@@ -51,8 +51,9 @@ export const deliveryPersonService = {
 };
 
 export const orderService = {
-  async getAll(): Promise<any[]> {
-    const response = await fetch(`${API_URL}/delivery/orders`);
+  async getAll(search?: string): Promise<any[]> {
+    const searchParam = search ? `?search=${encodeURIComponent(search)}` : '';
+    const response = await fetch(`${API_URL}/delivery/orders${searchParam}`);
     if (!response.ok) throw new Error('Failed to fetch orders');
     const data = await response.json();
     return data.orders || data;

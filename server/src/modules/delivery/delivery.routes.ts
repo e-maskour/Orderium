@@ -54,18 +54,21 @@ router.post('/login', async (req, res) => {
 // Get assigned orders for logged-in delivery person
 router.get('/orders', async (req, res) => {
   try {
-    const { deliveryPersonId } = req.query;
+    const { deliveryPersonId, search } = req.query;
 
     // If no deliveryPersonId, return all orders (admin view)
     if (!deliveryPersonId) {
-      const allOrders = await deliveryService.getAllOrders();
+      const allOrders = await deliveryService.getAllOrders(search as string);
       return res.json({
         success: true,
         orders: allOrders,
       });
     }
 
-    const orders = await deliveryService.getAssignedOrders(Number(deliveryPersonId));
+    const orders = await deliveryService.getAssignedOrders(
+      Number(deliveryPersonId), 
+      search as string
+    );
 
     res.json({
       success: true,

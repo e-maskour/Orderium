@@ -35,6 +35,7 @@ export const translations = {
     noOrdersFound: 'لا توجد طلبات',
     noOrdersMessage: 'لا توجد طلبات {status} في الوقت الحالي',
     noOrdersAssigned: 'لم يتم تعيين أي طلبات لك بعد',
+    searchOrders: 'ابحث برقم الطلب، اسم العميل أو رقم الهاتف',
     
     // Order Details
     orderNumber: 'رقم الطلب',
@@ -125,6 +126,7 @@ export const translations = {
     noOrdersFound: 'Aucune commande',
     noOrdersMessage: 'Aucune commande {status} pour le moment',
     noOrdersAssigned: 'Aucune commande ne vous a été assignée',
+    searchOrders: 'Rechercher par N° commande, nom client ou téléphone',
     
     // Order Details
     orderNumber: 'N° Commande',

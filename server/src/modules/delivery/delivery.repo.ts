@@ -36,6 +36,7 @@ class DeliveryRepository {
           ConfirmedAt DATETIME2 NULL,
           PickedUpAt DATETIME2 NULL,
           DeliveredAt DATETIME2 NULL,
+          CanceledAt DATETIME2 NULL,
           DateCreated DATETIME2 NOT NULL DEFAULT GETDATE(),
           DateUpdated DATETIME2 NOT NULL DEFAULT GETDATE(),
           CONSTRAINT FK_OrdersDelivery_Delivery FOREIGN KEY (DeliveryId) REFERENCES DeliveryPersons(Id)
@@ -66,6 +67,32 @@ class DeliveryRepository {
           ADD DeliveryPersonId INT NULL,
               DeliveryStatus NVARCHAR(20) NULL
         `);
+      }
+    }
+
+    // Check if OrdersDelivery table exists and add CanceledAt column if missing
+    const ordersDeliveryExists = await pool.request().query(`
+      SELECT COUNT(*) as TableCount
+      FROM INFORMATION_SCHEMA.TABLES 
+      WHERE TABLE_NAME = 'OrdersDelivery'
+    `);
+
+    if (ordersDeliveryExists.recordset[0].TableCount > 0) {
+      // Check if CanceledAt column exists in OrdersDelivery table
+      const canceledAtExists = await pool.request().query(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'OrdersDelivery' 
+        AND COLUMN_NAME = 'CanceledAt'
+      `);
+
+      if (canceledAtExists.recordset.length === 0) {
+        // Add CanceledAt column to OrdersDelivery table
+        await pool.request().query(`
+          ALTER TABLE OrdersDelivery
+          ADD CanceledAt DATETIME2 NULL
+        `);
+        console.log('CanceledAt column added to OrdersDelivery table');
       }
     }
 
@@ -169,7 +196,7 @@ class DeliveryRepository {
   }
 
   // Get orders assigned to a delivery person
-  async getAssignedOrders(deliveryPersonId: number): Promise<DeliveryOrder[]> {
+  async getAssignedOrders(deliveryPersonId: number, search?: string): Promise<DeliveryOrder[]> {
     const pool = await getPool();
     
     // Check if Document table exists
@@ -185,10 +212,26 @@ class DeliveryRepository {
       return [];
     }
 
+    // Build search condition
+    let searchCondition = '';
+    if (search && search.trim()) {
+      searchCondition = `
+        AND (
+          d.Number LIKE @Search 
+          OR c.Name LIKE @Search 
+          OR c.PhoneNumber LIKE @Search
+        )
+      `;
+    }
+
     // Get orders from OrdersDelivery table
-    const result = await pool.request()
-      .input('DeliveryId', sql.Int, deliveryPersonId)
-      .query(`
+    const request = pool.request().input('DeliveryId', sql.Int, deliveryPersonId);
+    
+    if (search && search.trim()) {
+      request.input('Search', sql.NVarChar, `%${search.trim()}%`);
+    }
+
+    const result = await request.query(`
         SELECT 
           od.Id as DeliveryId,
           od.DocumentId as OrderId,
@@ -196,6 +239,7 @@ class DeliveryRepository {
           od.ConfirmedAt,
           od.PickedUpAt,
           od.DeliveredAt,
+          od.CanceledAt,
           od.DateCreated as AssignedAt,
           d.Number as OrderNumber,
           c.Name as CustomerName,
@@ -211,6 +255,7 @@ class DeliveryRepository {
         LEFT JOIN Document d ON od.DocumentId = d.Id
         LEFT JOIN Customer c ON od.CustomerId = c.Id
         WHERE od.DeliveryId = @DeliveryId
+        ${searchCondition}
         ORDER BY d.DateCreated DESC
       `);
 
@@ -245,6 +290,7 @@ class DeliveryRepository {
         ConfirmedAt: row.ConfirmedAt,
         PickedUpAt: row.PickedUpAt,
         DeliveredAt: row.DeliveredAt,
+        CanceledAt: row.CanceledAt,
         CreatedAt: row.CreatedAt,
         AssignedAt: row.AssignedAt,
         Items: itemsResult.recordset.map(item => ({
@@ -259,7 +305,7 @@ class DeliveryRepository {
   }
 
   // Get all orders (admin view - includes both assigned and unassigned)
-  async getAllOrders(): Promise<DeliveryOrder[]> {
+  async getAllOrders(search?: string): Promise<DeliveryOrder[]> {
     const pool = await getPool();
     
     // Check if Document table exists
@@ -275,9 +321,27 @@ class DeliveryRepository {
       return [];
     }
 
+    // Build search condition
+    let searchCondition = '';
+    if (search && search.trim()) {
+      searchCondition = `
+        AND (
+          d.Number LIKE @Search 
+          OR c.Name LIKE @Search 
+          OR c.PhoneNumber LIKE @Search
+          OR dp.Name LIKE @Search
+        )
+      `;
+    }
+
     // Get all recent orders with delivery assignment info
-    const result = await pool.request()
-      .query(`
+    const request = pool.request();
+    
+    if (search && search.trim()) {
+      request.input('Search', sql.NVarChar, `%${search.trim()}%`);
+    }
+
+    const result = await request.query(`
         SELECT 
           d.Id as OrderId,
           d.Number as OrderNumber,
@@ -296,11 +360,14 @@ class DeliveryRepository {
           od.ConfirmedAt,
           od.PickedUpAt,
           od.DeliveredAt,
+          od.CanceledAt,
           od.DateCreated as AssignedAt
         FROM Document d
         LEFT JOIN Customer c ON d.CustomerId = c.Id
         LEFT JOIN OrdersDelivery od ON d.Id = od.DocumentId
+        LEFT JOIN DeliveryPersons dp ON od.DeliveryId = dp.Id
         WHERE d.DateCreated >= DATEADD(day, -30, GETDATE())
+        ${searchCondition}
         ORDER BY d.DateCreated DESC
       `);
 
@@ -336,6 +403,7 @@ class DeliveryRepository {
         ConfirmedAt: row.ConfirmedAt,
         PickedUpAt: row.PickedUpAt,
         DeliveredAt: row.DeliveredAt,
+        CanceledAt: row.CanceledAt,
         CreatedAt: row.CreatedAt,
         AssignedAt: row.AssignedAt,
         Items: itemsResult.recordset.map(item => ({
@@ -362,9 +430,18 @@ class DeliveryRepository {
       .input('DateUpdated', sql.DateTime2, now);
 
     // Set the appropriate timestamp based on status
-    if (status === 'delivered') {
+    if (status === 'to_delivery') {
+      updates.push('ConfirmedAt = @ConfirmedAt');
+      request.input('ConfirmedAt', sql.DateTime2, now);
+    } else if (status === 'in_delivery') {
+      updates.push('PickedUpAt = @PickedUpAt');
+      request.input('PickedUpAt', sql.DateTime2, now);
+    } else if (status === 'delivered') {
       updates.push('DeliveredAt = @DeliveredAt');
       request.input('DeliveredAt', sql.DateTime2, now);
+    } else if (status === 'canceled') {
+      updates.push('CanceledAt = @CanceledAt');
+      request.input('CanceledAt', sql.DateTime2, now);
     }
     
     const result = await request.query(`

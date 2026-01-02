@@ -37,8 +37,9 @@ export const deliveryService = {
     return data.deliveryPerson;
   },
 
-  async getMyOrders(deliveryPersonId: number): Promise<Order[]> {
-    const response = await fetch(`${API_URL}/orders?deliveryPersonId=${deliveryPersonId}`);
+  async getMyOrders(deliveryPersonId: number, search?: string): Promise<Order[]> {
+    const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+    const response = await fetch(`${API_URL}/orders?deliveryPersonId=${deliveryPersonId}${searchParam}`);
     if (!response.ok) throw new Error('Failed to fetch orders');
     const data: OrdersResponse = await response.json();
     return data.orders;

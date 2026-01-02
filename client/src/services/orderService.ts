@@ -41,6 +41,13 @@ export const orderService = {
   },
 
   /**
+   * Get order by order number
+   */
+  getByOrderNumber: (orderNumber: string, customerId: number) => {
+    return http<{ success: boolean; order: any }>(`/api/orders/number/${orderNumber}?customerId=${customerId}`);
+  },
+
+  /**
    * Get customer orders
    */
   getCustomerOrders: (customerId: number, limit = 50) => {

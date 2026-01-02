@@ -212,6 +212,54 @@ export const translations = {
     locationError: 'خطأ في تحديد الموقع',
     coordinatesSaved: 'تم حفظ الإحداثيات. يمكنك تعديل العنوان يدوياً',
     locationSuccess: 'تم تحديد موقعك بنجاح',
+    
+    // Order Tracking & Status
+    myOrders: 'طلباتي',
+    trackOrder: 'تتبع الطلب',
+    orderDetails: 'تفاصيل الطلب',
+    viewDetails: 'التفاصيل',
+    track: 'تتبع',
+    follow: 'تتبع',
+    cannotLoadOrders: 'لا يمكن تحميل الطلبات',
+    noCustomerId: 'لا يوجد معرف عميل مرتبط بحسابك',
+    noOrders: 'لا توجد طلبات',
+    noOrdersYet: 'لم تقم بأي طلب بعد',
+    trackAndManage: 'تتبع وإدارة جميع طلباتك',
+    placedOn: 'تاريخ الطلب',
+    orderNotFound: 'الطلب غير موجود',
+    checkNumberAndRetry: 'تحقق من رقم الطلب وحاول مرة أخرى',
+    noData: 'لا توجد بيانات',
+    failedToLoad: 'فشل تحميل بيانات الطلب',
+    currentStatus: 'الحالة الحالية',
+    orderCanceled: 'تم إلغاء الطلب',
+    orderWasCanceled: 'تم إلغاء هذا الطلب',
+    enterOrderNumber: 'أدخل رقم الطلب',
+    
+    // Order Status
+    statusPending: 'قيد الانتظار',
+    statusToDelivery: 'للتوصيل',
+    statusInDelivery: 'قيد التوصيل',
+    statusDelivered: 'تم التسليم',
+    statusCanceled: 'ملغي',
+    statusAssigned: 'تم التعيين',
+    
+    // Status Descriptions
+    orderReceived: 'تم استلام طلبك',
+    readyToDeliver: 'جاهز للتوصيل',
+    deliveryAssigned: 'تم تعيين مندوب التوصيل',
+    onTheWay: 'في الطريق إليك',
+    deliveredSuccessfully: 'تم تسليم الطلب بنجاح',
+    
+    // Success Page
+    trackYourOrder: 'تتبع طلبك',
+    
+    // Not Found
+    pageNotFound: 'الصفحة غير موجودة',
+    oopsPageNotFound: 'عذراً! الصفحة غير موجودة',
+    returnToHome: 'العودة للصفحة الرئيسية',
+    
+    // Customer
+    previousOrders: 'طلبية سابقة',
   },
   fr: {
     // App
@@ -424,6 +472,54 @@ export const translations = {
     locationError: 'Erreur de localisation',
     coordinatesSaved: 'Coordonnées sauvegardées. Vous pouvez modifier l\'adresse manuellement',
     locationSuccess: 'Votre position a été détectée avec succès',
+    
+    // Order Tracking & Status
+    myOrders: 'Mes commandes',
+    trackOrder: 'Suivre commande',
+    orderDetails: 'Détails de commande',
+    viewDetails: 'Détails',
+    track: 'Suivre',
+    follow: 'Suivre',
+    cannotLoadOrders: 'Impossible de charger',
+    noCustomerId: 'Aucun ID client associé à votre compte',
+    noOrders: 'Aucune commande',
+    noOrdersYet: "Vous n'avez pas encore passé de commande",
+    trackAndManage: 'Suivez et gérez toutes vos commandes',
+    placedOn: 'Date de commande',
+    orderNotFound: 'Commande introuvable',
+    checkNumberAndRetry: 'Vérifiez le numéro et réessayez',
+    noData: 'Aucune donnée',
+    failedToLoad: 'Échec du chargement',
+    currentStatus: 'État actuel',
+    orderCanceled: 'Commande annulée',
+    orderWasCanceled: 'Cette commande a été annulée',
+    enterOrderNumber: 'Entrez le numéro',
+    
+    // Order Status
+    statusPending: 'En attente',
+    statusToDelivery: 'À livrer',
+    statusInDelivery: 'En livraison',
+    statusDelivered: 'Livré',
+    statusCanceled: 'Annulé',
+    statusAssigned: 'Assigné',
+    
+    // Status Descriptions
+    orderReceived: 'Commande reçue',
+    readyToDeliver: 'Prêt à livrer',
+    deliveryAssigned: 'Livreur assigné',
+    onTheWay: 'En route vers vous',
+    deliveredSuccessfully: 'Commande livrée avec succès',
+    
+    // Success Page
+    trackYourOrder: 'Suivre votre commande',
+    
+    // Not Found
+    pageNotFound: 'Page non trouvée',
+    oopsPageNotFound: 'Oops! Page non trouvée',
+    returnToHome: "Retour à l'accueil",
+    
+    // Customer
+    previousOrders: 'commande(s) précédente(s)',
   },
 };
 

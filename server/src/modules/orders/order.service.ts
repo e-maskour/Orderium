@@ -23,6 +23,11 @@ export class OrderService {
     return orderRepo.getOrderWithItems(id);
   }
 
+  // Get order by order number
+  async getOrderByNumber(orderNumber: string): Promise<OrderWithItems | null> {
+    return orderRepo.getOrderByNumber(orderNumber);
+  }
+
   // Get customer orders
   async getCustomerOrders(customerId: number, limit = 50): Promise<Document[]> {
     return orderRepo.getOrdersByCustomerId(customerId, limit);

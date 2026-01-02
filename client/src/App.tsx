@@ -11,6 +11,7 @@ import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,14 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-orders"
+                  element={
+                    <ProtectedRoute>
+                      <MyOrders />
                     </ProtectedRoute>
                   }
                 />

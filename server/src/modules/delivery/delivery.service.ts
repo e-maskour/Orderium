@@ -93,13 +93,13 @@ class DeliveryService {
   }
 
   // Get orders assigned to delivery person
-  async getAssignedOrders(deliveryPersonId: number): Promise<DeliveryOrder[]> {
-    return deliveryRepository.getAssignedOrders(deliveryPersonId);
+  async getAssignedOrders(deliveryPersonId: number, search?: string): Promise<DeliveryOrder[]> {
+    return deliveryRepository.getAssignedOrders(deliveryPersonId, search);
   }
 
   // Get all orders (admin view - includes unassigned and assigned)
-  async getAllOrders(): Promise<DeliveryOrder[]> {
-    return deliveryRepository.getAllOrders();
+  async getAllOrders(search?: string): Promise<DeliveryOrder[]> {
+    return deliveryRepository.getAllOrders(search);
   }
 
   // Update order status

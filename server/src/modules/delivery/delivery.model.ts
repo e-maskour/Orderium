@@ -17,6 +17,7 @@ export interface OrderDelivery {
   ConfirmedAt?: Date;
   PickedUpAt?: Date;
   DeliveredAt?: Date;
+  CanceledAt?: Date;
   DateCreated: Date;
   DateUpdated: Date;
 }
@@ -70,6 +71,7 @@ export interface DeliveryOrder {
   ConfirmedAt?: Date;
   PickedUpAt?: Date;
   DeliveredAt?: Date;
+  CanceledAt?: Date;
   CreatedAt: Date;
   AssignedAt?: Date;
   Items: DeliveryOrderItem[];
