@@ -306,7 +306,7 @@ class DeliveryRepository {
   }
 
   // Get all orders (admin view - includes both assigned and unassigned)
-  async getAllOrders(search?: string): Promise<DeliveryOrder[]> {
+  async getAllOrders(search?: string, startDate?: Date, endDate?: Date): Promise<DeliveryOrder[]> {
     const pool = await getPool();
     
     // Check if Document table exists
@@ -335,11 +335,22 @@ class DeliveryRepository {
       `;
     }
 
+    // Build date filter condition
+    let dateCondition = 'WHERE d.DateCreated >= DATEADD(day, -30, GETDATE())';
+    if (startDate && endDate) {
+      dateCondition = 'WHERE d.DateCreated >= @StartDate AND d.DateCreated <= @EndDate';
+    }
+
     // Get all recent orders with delivery assignment info
     const request = pool.request();
     
     if (search && search.trim()) {
       request.input('Search', sql.NVarChar, `%${search.trim()}%`);
+    }
+
+    if (startDate && endDate) {
+      request.input('StartDate', sql.DateTime2, startDate);
+      request.input('EndDate', sql.DateTime2, endDate);
     }
 
     const result = await request.query(`
@@ -367,7 +378,7 @@ class DeliveryRepository {
         LEFT JOIN Customer c ON d.CustomerId = c.Id
         LEFT JOIN OrdersDelivery od ON d.Id = od.DocumentId
         LEFT JOIN DeliveryPersons dp ON od.DeliveryId = dp.Id
-        WHERE d.DateCreated >= DATEADD(day, -30, GETDATE())
+        ${dateCondition}
         ${searchCondition}
         ORDER BY d.DateCreated DESC
       `);

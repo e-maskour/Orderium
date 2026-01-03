@@ -98,8 +98,8 @@ class DeliveryService {
   }
 
   // Get all orders (admin view - includes unassigned and assigned)
-  async getAllOrders(search?: string): Promise<DeliveryOrder[]> {
-    return deliveryRepository.getAllOrders(search);
+  async getAllOrders(search?: string, startDate?: Date, endDate?: Date): Promise<DeliveryOrder[]> {
+    return deliveryRepository.getAllOrders(search, startDate, endDate);
   }
 
   // Update order status

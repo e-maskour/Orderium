@@ -52,6 +52,14 @@ export const translations = {
     canceled: 'ملغي',
     all: 'الكل',
     
+    // Date Filters
+    today: 'اليوم',
+    yesterday: 'أمس',
+    thisWeek: 'هذا الأسبوع',
+    thisMonth: 'هذا الشهر',
+    thisYear: 'هذا العام',
+    selectDate: 'اختر تاريخاً',
+    
     // Form Fields
     name: 'الاسم',
     email: 'البريد الإلكتروني',
@@ -182,6 +190,14 @@ export const translations = {
     delivered: 'Livré',
     canceled: 'Annulé',
     all: 'Tout',
+    
+    // Date Filters
+    today: 'Aujourd\'hui',
+    yesterday: 'Hier',
+    thisWeek: 'Cette semaine',
+    thisMonth: 'Ce mois',
+    thisYear: 'Cette année',
+    selectDate: 'Sélectionner une date',
     
     // Form Fields
     name: 'Nom',

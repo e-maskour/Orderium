@@ -51,9 +51,14 @@ export const deliveryPersonService = {
 };
 
 export const orderService = {
-  async getAll(search?: string): Promise<any[]> {
-    const searchParam = search ? `?search=${encodeURIComponent(search)}` : '';
-    const response = await fetch(`${API_URL}/delivery/orders${searchParam}`);
+  async getAll(search?: string, startDate?: Date, endDate?: Date): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (startDate) params.append('startDate', startDate.toISOString());
+    if (endDate) params.append('endDate', endDate.toISOString());
+    
+    const queryString = params.toString();
+    const response = await fetch(`${API_URL}/delivery/orders${queryString ? `?${queryString}` : ''}`);
     if (!response.ok) throw new Error('Failed to fetch orders');
     const data = await response.json();
     return data.orders || data;
