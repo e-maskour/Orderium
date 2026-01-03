@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { deliveryService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { NotificationBell } from '../components/NotificationBell';
 import OrderCard from '../components/OrderCard';
 import { Loader2, Package, LogOut, Search } from 'lucide-react';
 import type { Order } from '../types';
@@ -14,6 +16,13 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('to_delivery');
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Enable real-time notifications
+  useOrderNotifications({
+    token: localStorage.getItem('authToken') || '',
+    deliveryPersonId: deliveryPerson?.Id,
+    enabled: !!deliveryPerson,
+  });
 
   // Debounce search input
   useEffect(() => {
@@ -70,6 +79,7 @@ export default function Orders() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <NotificationBell />
               <LanguageToggle />
               <button
                 onClick={logout}

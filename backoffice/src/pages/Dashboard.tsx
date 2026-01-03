@@ -1,12 +1,21 @@
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { NotificationBell } from '../components/NotificationBell';
 import { useNavigate, Link } from 'react-router-dom';
+import { useOrderNotifications } from '../hooks/useOrderNotifications';
 
 export default function Dashboard() {
   const { admin, logout } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  // Connect to real-time notifications
+  // Note: You'll need to get the actual admin token from your auth context
+  const { isConnected } = useOrderNotifications({
+    token: admin?.Token || localStorage.getItem('adminToken'),
+    enabled: !!admin,
+  });
 
   const handleLogout = () => {
     logout();
@@ -18,10 +27,17 @@ export default function Dashboard() {
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold">{t('appName')} {t('adminBackoffice')}</h1>
+              {isConnected && (
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+              )}
             </div>
             <div className="flex items-center space-x-4 gap-2">
+              <NotificationBell />
               <LanguageToggle />
               <span className="text-sm text-gray-700">{t('welcome')}, {admin?.Username}</span>
               <button

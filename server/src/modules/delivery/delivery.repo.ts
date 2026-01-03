@@ -1,6 +1,7 @@
 import { getPool } from '../../db/pool';
 import type { DeliveryPerson, CreateDeliveryPersonDTO, UpdateDeliveryPersonDTO, DeliveryOrder } from './delivery.model';
 import sql from 'mssql';
+import { emitOrderAssigned, emitOrderStatusChanged, emitOrderCancelled } from '../../socket/events/orderEvents';
 
 class DeliveryRepository {
   // Initialize DeliveryPersons table
@@ -451,7 +452,49 @@ class DeliveryRepository {
       AND DeliveryId = @DeliveryId
     `);
 
-    return result.rowsAffected[0] > 0;
+    const success = result.rowsAffected[0] > 0;
+
+    // Emit socket event if update was successful
+    if (success) {
+      // Get order details for the event
+      const orderResult = await pool.request()
+        .input('OrderId', sql.Int, orderId)
+        .query(`
+          SELECT 
+            d.Number as OrderNumber,
+            od.CustomerId,
+            od.DeliveryId
+          FROM Document d
+          JOIN OrdersDelivery od ON d.Id = od.DocumentId
+          WHERE d.Id = @OrderId
+        `);
+
+      if (orderResult.recordset.length > 0) {
+        const order = orderResult.recordset[0];
+        
+        if (status === 'canceled') {
+          await emitOrderCancelled({
+            orderId,
+            orderNumber: order.OrderNumber,
+            customerId: order.CustomerId,
+            deliveryPersonId: order.DeliveryId,
+            status,
+            timestamp: now,
+          });
+        } else {
+          await emitOrderStatusChanged({
+            orderId,
+            orderNumber: order.OrderNumber,
+            customerId: order.CustomerId,
+            deliveryPersonId: order.DeliveryId,
+            status,
+            timestamp: now,
+          });
+        }
+      }
+    }
+
+    return success;
   }
 
   // Assign order to delivery person
@@ -475,7 +518,7 @@ class DeliveryRepository {
     const docResult = await pool.request()
       .input('OrderId', sql.Int, orderId)
       .query(`
-        SELECT CustomerId FROM Document WHERE Id = @OrderId
+        SELECT CustomerId, Number FROM Document WHERE Id = @OrderId
       `);
 
     if (docResult.recordset.length === 0) {
@@ -484,6 +527,7 @@ class DeliveryRepository {
     }
 
     const customerId = docResult.recordset[0].CustomerId;
+    const orderNumber = docResult.recordset[0].Number;
 
     // Check if already assigned
     const existing = await pool.request()
@@ -491,6 +535,8 @@ class DeliveryRepository {
       .query(`
         SELECT Id FROM OrdersDelivery WHERE DocumentId = @DocumentId
       `);
+
+    let success = false;
 
     if (existing.recordset.length > 0) {
       // Update existing assignment
@@ -504,20 +550,33 @@ class DeliveryRepository {
               DateUpdated = GETDATE()
           WHERE DocumentId = @DocumentId
         `);
-      return result.rowsAffected[0] > 0;
+      success = result.rowsAffected[0] > 0;
+    } else {
+      // Create new order delivery record
+      const result = await pool.request()
+        .input('DocumentId', sql.Int, orderId)
+        .input('CustomerId', sql.Int, customerId)
+        .input('DeliveryId', sql.Int, deliveryPersonId)
+        .query(`
+          INSERT INTO OrdersDelivery (DocumentId, CustomerId, DeliveryId, Status)
+          VALUES (@DocumentId, @CustomerId, @DeliveryId, 'to_delivery')
+        `);
+      success = result.rowsAffected[0] > 0;
     }
-    
-    // Create new order delivery record
-    const result = await pool.request()
-      .input('DocumentId', sql.Int, orderId)
-      .input('CustomerId', sql.Int, customerId)
-      .input('DeliveryId', sql.Int, deliveryPersonId)
-      .query(`
-        INSERT INTO OrdersDelivery (DocumentId, CustomerId, DeliveryId, Status)
-        VALUES (@DocumentId, @CustomerId, @DeliveryId, 'to_delivery')
-      `);
 
-    return result.rowsAffected[0] > 0;
+    // Emit socket event if assignment was successful
+    if (success) {
+      await emitOrderAssigned({
+        orderId,
+        orderNumber,
+        customerId,
+        deliveryPersonId,
+        status: 'to_delivery',
+        timestamp: new Date(),
+      });
+    }
+
+    return success;
   }
 
   // Unassign order from delivery person

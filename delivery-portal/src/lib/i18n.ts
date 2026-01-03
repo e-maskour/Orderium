@@ -91,6 +91,24 @@ export const translations = {
     // Currency
     currency: 'د.م',
     dh: 'درهم',
+    
+    // Notifications
+    notifications: 'الإشعارات',
+    noNotifications: 'لا توجد إشعارات',
+    markAllRead: 'تعليم الكل كمقروء',
+    allNotificationsMarkedAsRead: 'تم تعليم جميع الإشعارات كمقروءة',
+    justNow: 'الآن',
+    minutesAgo: 'د',
+    hoursAgo: 'س',
+    daysAgo: 'ي',
+    'notifications.newOrder': 'طلب جديد',
+    'notifications.orderAssigned': 'تم تعيين الطلب',
+    'notifications.statusChanged': 'تحديث الحالة',
+    'notifications.orderCancelled': 'طلب ملغي',
+    'status.to_delivery': 'للتوصيل',
+    'status.in_delivery': 'قيد التوصيل',
+    'status.delivered': 'تم التسليم',
+    'status.canceled': 'ملغي',
   },
   fr: {
     // App
@@ -181,8 +199,24 @@ export const translations = {
     
     // Currency
     currency: 'DH',
-    dh: 'DH',
-  },
+    dh: 'DH',    
+    // Notifications
+    notifications: 'Notifications',
+    noNotifications: 'Aucune notification',
+    markAllRead: 'Tout marquer comme lu',
+    allNotificationsMarkedAsRead: 'Toutes les notifications marquées comme lues',
+    justNow: 'À l\'instant',
+    minutesAgo: 'min',
+    hoursAgo: 'h',
+    daysAgo: 'j',
+    'notifications.newOrder': 'Nouvelle commande',
+    'notifications.orderAssigned': 'Commande assignée',
+    'notifications.statusChanged': 'Mise à jour statut',
+    'notifications.orderCancelled': 'Commande annulée',
+    'status.to_delivery': 'À livrer',
+    'status.in_delivery': 'En livraison',
+    'status.delivered': 'Livrée',
+    'status.canceled': 'Annulée',  },
 };
 
 export type TranslationKey = keyof typeof translations.ar;

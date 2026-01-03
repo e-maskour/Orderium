@@ -39,10 +39,10 @@ export const translations = {
     totalAmount: 'المبلغ الإجمالي',
     checkout: 'تأكيد الطلب',
     clearCart: 'إفراغ السلة',
-    items: 'عناصر',
-    item: 'عنصر',
-    products: 'منتجات',
-    product: 'منتج',
+    cartItems: 'عناصر',
+    cartItem: 'عنصر',
+    cartProducts: 'منتجات',
+    cartProduct: 'منتج',
     pieces: 'قطع',
     piece: 'قطعة',
     addedToCart: 'تمت الإضافة إلى السلة',
@@ -186,7 +186,7 @@ export const translations = {
     paymentStatus: 'حالة الدفع:',
     paid: 'مدفوعة',
     no: 'رقم',
-    item: 'المنتج',
+    invoiceItem: 'المنتج',
     unitPrice: 'سعر الوحدة',
     previewDocument: 'معاينة',
     orderCreationError: 'حدث خطأ أثناء إنشاء الطلب، يرجى المحاولة مجدداً',
@@ -242,6 +242,10 @@ export const translations = {
     statusDelivered: 'تم التسليم',
     statusCanceled: 'ملغي',
     statusAssigned: 'تم التعيين',
+    statustodelivery: 'للتوصيل',
+    statusindelivery: 'قيد التوصيل',
+    statusdelivered: 'تم التسليم',
+    statuscanceled: 'ملغي',
     
     // Status Descriptions
     orderReceived: 'تم استلام طلبك',
@@ -260,6 +264,22 @@ export const translations = {
     
     // Customer
     previousOrders: 'طلبية سابقة',
+
+    // Notifications
+    notifications: 'الإشعارات',
+    notificationsNewOrder: 'طلب جديد',
+    notificationsOrderAssigned: 'تم تعيين الطلب',
+    notificationsStatusChanged: 'تم تحديث الحالة',
+    notificationsOrderCancelled: 'تم إلغاء الطلب',
+    noNotifications: 'لا توجد إشعارات',
+    markAllAsRead: 'وضع علامة مقروء للكل',
+    markAsRead: 'وضع علامة مقروء',
+    
+    // Time
+    justNow: 'الآن',
+    minutesAgo: 'منذ {minutes} دقيقة',
+    hoursAgo: 'منذ {hours} ساعة',
+    daysAgo: 'منذ {days} يوم',
   },
   fr: {
     // App
@@ -299,10 +319,10 @@ export const translations = {
     totalAmount: 'Montant total',
     checkout: 'Passer la commande',
     clearCart: 'Vider le panier',
-    items: 'articles',
-    item: 'article',
-    products: 'produits',
-    product: 'produit',
+    cartItems: 'articles',
+    cartItem: 'article',
+    cartProducts: 'produits',
+    cartProduct: 'produit',
     pieces: 'articles',
     piece: 'article',
     addedToCart: 'Ajouté au panier',
@@ -446,7 +466,7 @@ export const translations = {
     paymentStatus: 'Payment status:',
     paid: 'Paid',
     no: 'No.',
-    item: 'Item',
+    invoiceItem: 'Item',
     unitPrice: 'Unit price',
     previewDocument: 'Aperçu',
     orderCreationError: 'Erreur lors de la création de la commande',
@@ -502,6 +522,10 @@ export const translations = {
     statusDelivered: 'Livré',
     statusCanceled: 'Annulé',
     statusAssigned: 'Assigné',
+    statustodelivery: 'À livrer',
+    statusindelivery: 'En livraison',
+    statusdelivered: 'Livré',
+    statuscanceled: 'Annulé',
     
     // Status Descriptions
     orderReceived: 'Commande reçue',
@@ -520,6 +544,22 @@ export const translations = {
     
     // Customer
     previousOrders: 'commande(s) précédente(s)',
+
+    // Notifications
+    notifications: 'Notifications',
+    notificationsNewOrder: 'Nouvelle commande',
+    notificationsOrderAssigned: 'Commande assignée',
+    notificationsStatusChanged: 'État mis à jour',
+    notificationsOrderCancelled: 'Commande annulée',
+    noNotifications: 'Aucune notification',
+    markAllAsRead: 'Tout marquer comme lu',
+    markAsRead: 'Marquer comme lu',
+    
+    // Time
+    justNow: 'À l\'instant',
+    minutesAgo: 'Il y a {minutes} min',
+    hoursAgo: 'Il y a {hours} h',
+    daysAgo: 'Il y a {days} j',
   },
 };
 

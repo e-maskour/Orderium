@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderService, deliveryPersonService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Package, Phone, MapPin, X, Search } from 'lucide-react';
@@ -18,11 +20,18 @@ import {
 
 export default function Orders() {
   const { t } = useLanguage();
+  const { admin } = useAuth();
   const queryClient = useQueryClient();
   const [unassignOrderId, setUnassignOrderId] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'unassigned' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
+
+  // Enable real-time notifications
+  useOrderNotifications({
+    token: admin?.Token || localStorage.getItem('adminToken'),
+    enabled: !!admin,
+  });
 
   // Debounce search input
   useEffect(() => {

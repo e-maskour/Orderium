@@ -41,7 +41,6 @@ export const translations = {
     address: 'العنوان',
     total: 'المجموع',
     status: 'الحالة',
-    deliveryPerson: 'مندوب التوصيل',
     actions: 'الإجراءات',
     noOrdersFound: 'لا توجد طلبات',
     
@@ -107,6 +106,27 @@ export const translations = {
     item: 'عنصر',
     close: 'إغلاق',
     back: 'رجوع',
+    order: 'طلب',
+    
+    // Notifications
+    'notifications.newOrder': 'طلب جديد',
+    'notifications.orderAssigned': 'تم تعيين الطلب',
+    'notifications.statusChanged': 'تم تحديث حالة الطلب',
+    'notifications.orderCancelled': 'تم إلغاء الطلب',
+    notifications: 'الإشعارات',
+    noNotifications: 'لا توجد إشعارات',
+    markAllRead: 'تعليم الكل كمقروء',
+    allNotificationsMarkedAsRead: 'تم تعليم جميع الإشعارات كمقروءة',
+    justNow: 'الآن',
+    minutesAgo: 'د',
+    hoursAgo: 'س',
+    daysAgo: 'ي',
+    
+    // Status translations for notifications
+    'status.to_delivery': 'للتوصيل',
+    'status.in_delivery': 'قيد التوصيل',
+    'status.delivered': 'تم التوصيل',
+    'status.canceled': 'ملغي',
     
     // Currency
     currency: 'درهم',
@@ -152,7 +172,6 @@ export const translations = {
     address: 'Adresse',
     total: 'Total',
     status: 'Statut',
-    deliveryPerson: 'Livreur',
     actions: 'Actions',
     noOrdersFound: 'Aucune commande trouvée',
     
@@ -218,6 +237,27 @@ export const translations = {
     item: 'article',
     close: 'Fermer',
     back: 'Retour',
+    order: 'Commande',
+    
+    // Notifications
+    'notifications.newOrder': 'Nouvelle commande',
+    'notifications.orderAssigned': 'Commande assignée',
+    'notifications.statusChanged': 'Statut de commande mis à jour',
+    'notifications.orderCancelled': 'Commande annulée',
+    notifications: 'Notifications',
+    noNotifications: 'Aucune notification',
+    markAllRead: 'Tout marquer comme lu',
+    allNotificationsMarkedAsRead: 'Toutes les notifications marquées comme lues',
+    justNow: 'À l\'instant',
+    minutesAgo: 'min',
+    hoursAgo: 'h',
+    daysAgo: 'j',
+    
+    // Status translations for notifications
+    'status.to_delivery': 'À livrer',
+    'status.in_delivery': 'En livraison',
+    'status.delivered': 'Livré',
+    'status.canceled': 'Annulé',
     
     // Currency
     currency: 'DH',

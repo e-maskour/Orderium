@@ -2,6 +2,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { LanguageToggle } from './LanguageToggle';
+import { NotificationBell } from './NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { OrderTracking } from './OrderTracking';
@@ -76,6 +77,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {user?.CustomerId && <NotificationBell customerId={user.CustomerId} />}
           <LanguageToggle />
           
           {/* Track Order Button - Animated - Only show if there are active orders */}

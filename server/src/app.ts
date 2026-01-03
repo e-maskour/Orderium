@@ -10,9 +10,11 @@ import customerRoutes from "./modules/customers/customer.routes";
 import orderRoutes from "./modules/orders/order.routes";
 import portalRoutes from "./modules/portal/portal.routes";
 import deliveryRoutes from "./modules/delivery/delivery.routes";
+import notificationRoutes from "./modules/notifications/notification.routes";
 import { customerService } from "./modules/customers/customer.service";
 import { portalRepository } from "./modules/portal/portal.repo";
 import { deliveryService } from "./modules/delivery/delivery.service";
+import { notificationRepo } from "./modules/notifications/notification.repo";
 import { seedDeliveryPerson } from "./seeders/deliveryPersonSeeder";
 import { seedAdmin } from "./seeders/adminSeeder";
 
@@ -53,6 +55,11 @@ export function createApp() {
             console.error("Failed to initialize delivery service or seed data:", err);
         });
 
+    // Initialize notifications table
+    notificationRepo.initialize().catch(err => {
+        console.error("Failed to initialize notifications:", err);
+    });
+
     // Health check endpoint
     app.get("/health", async (_req, res, next) => {
         try {
@@ -70,6 +77,7 @@ export function createApp() {
     app.use("/api/orders", orderRoutes);
     app.use("/api/portal", portalRoutes);
     app.use("/api/delivery", deliveryRoutes);
+    app.use("/api/notifications", notificationRoutes);
     app.use(notFound);
     app.use(errorHandler);
     

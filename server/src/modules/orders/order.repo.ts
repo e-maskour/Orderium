@@ -3,6 +3,7 @@ import { Document, DocumentItem, CreateOrderDTO, CreateOrderItemDTO, OrderWithIt
 import { logger } from '../../utils/logger';
 import { env } from '../../config/env';
 import sql from 'mssql';
+import { emitOrderCreated } from '../../socket/events/orderEvents';
 
 export class OrderRepository {
   // Generate next document number for the year
@@ -199,6 +200,16 @@ export class OrderRepository {
       
       // Fetch created document
       const document = await this.getDocumentById(documentId);
+      
+      // Emit socket event for order creation
+      if (document && customerId) {
+        await emitOrderCreated({
+          orderId: documentId,
+          orderNumber: documentNumber,
+          customerId,
+          timestamp: now,
+        });
+      }
       
       return {
         Document: document!,
