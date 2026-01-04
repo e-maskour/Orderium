@@ -11,6 +11,8 @@ import orderRoutes from "./modules/orders/order.routes";
 import portalRoutes from "./modules/portal/portal.routes";
 import deliveryRoutes from "./modules/delivery/delivery.routes";
 import notificationRoutes from "./modules/notifications/notification.routes";
+import statisticsRoutes from "./modules/statistics/statistics.routes";
+import statisticsRoutes from "./modules/statistics/statistics.routes";
 import { customerService } from "./modules/customers/customer.service";
 import { portalRepository } from "./modules/portal/portal.repo";
 import { deliveryService } from "./modules/delivery/delivery.service";
@@ -78,6 +80,7 @@ export function createApp() {
     app.use("/api/portal", portalRoutes);
     app.use("/api/delivery", deliveryRoutes);
     app.use("/api/notifications", notificationRoutes);
+    app.use("/api/statistics", statisticsRoutes);
     app.use(notFound);
     app.use(errorHandler);
     

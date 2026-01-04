@@ -139,6 +139,29 @@ export const translations = {
     // Currency
     currency: 'درهم',
     currencyCode: 'MAD',
+
+    // KPIs & Statistics
+    totalOrders: 'إجمالي الطلبات',
+    ordersToday: 'طلبات اليوم',
+    pending: 'قيد الانتظار',
+    activeDeliveryPersons: 'مندوبين نشطين',
+    totalRevenue: 'إجمالي الإيرادات',
+    revenueToday: 'الإيرادات اليوم',
+    quickAccess: 'وصول سريع',
+
+    // POS
+    pos: 'نقطة البيع',
+    searchProducts: 'ابحث عن المنتجات...',
+    searchByNameOrPhone: 'ابحث بالاسم أو الهاتف...',
+    cart: 'السلة',
+    cartEmpty: 'السلة فارغة',
+    selectCustomer: 'يرجى اختيار عميل',
+    newCustomer: 'عميل جديد',
+    createOrder: 'إنشاء طلب',
+    orderCreated: 'تم إنشاء الطلب',
+    customerCreated: 'تم إنشاء العميل بنجاح',
+    change: 'تغيير',
+    noProductsFound: 'لا توجد منتجات',
   },
   fr: {
     // App & Branding
@@ -278,6 +301,29 @@ export const translations = {
     // Currency
     currency: 'DH',
     currencyCode: 'MAD',
+
+    // KPIs & Statistics
+    totalOrders: 'Total des commandes',
+    ordersToday: 'Commandes aujourd\'hui',
+    pending: 'En attente',
+    activeDeliveryPersons: 'Livreurs actifs',
+    totalRevenue: 'Revenu total',
+    revenueToday: 'Revenu aujourd\'hui',
+    quickAccess: 'Accès rapide',
+
+    // POS
+    pos: 'Point de vente',
+    searchProducts: 'Rechercher des produits...',
+    searchByNameOrPhone: 'Rechercher par nom ou téléphone...',
+    cart: 'Panier',
+    cartEmpty: 'Le panier est vide',
+    selectCustomer: 'Veuillez sélectionner un client',
+    newCustomer: 'Nouveau client',
+    createOrder: 'Créer une commande',
+    orderCreated: 'Commande créée',
+    customerCreated: 'Client créé avec succès',
+    change: 'Changer',
+    noProductsFound: 'Aucun produit trouvé',
   },
 };
 

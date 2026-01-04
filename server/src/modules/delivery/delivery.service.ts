@@ -116,6 +116,11 @@ class DeliveryService {
   async unassignOrder(orderId: number): Promise<boolean> {
     return deliveryRepository.unassignOrder(orderId);
   }
+
+  // Get statistics
+  async getStatistics(startDate?: Date, endDate?: Date) {
+    return deliveryRepository.getStatistics(startDate, endDate);
+  }
 }
 
 export const deliveryService = new DeliveryService();

@@ -83,3 +83,17 @@ export const orderService = {
     if (!response.ok) throw new Error('Failed to unassign order');
   },
 };
+
+export const statisticsService = {
+  async getStatistics(startDate?: Date, endDate?: Date): Promise<any> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate.toISOString());
+    if (endDate) params.append('endDate', endDate.toISOString());
+    
+    const queryString = params.toString();
+    const response = await fetch(`${API_URL}/statistics${queryString ? `?${queryString}` : ''}`);
+    if (!response.ok) throw new Error('Failed to fetch statistics');
+    const data = await response.json();
+    return data.statistics;
+  },
+};

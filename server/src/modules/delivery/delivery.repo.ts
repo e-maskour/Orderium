@@ -603,6 +603,36 @@ class DeliveryRepository {
 
     return result.rowsAffected[0] > 0;
   }
+
+  // Get statistics
+  async getStatistics(startDate?: Date, endDate?: Date) {
+    const pool = await getPool();
+    
+    let dateFilter = '';
+    const request = pool.request();
+    
+    if (startDate && endDate) {
+      dateFilter = 'WHERE d.DateCreated >= @StartDate AND d.DateCreated <= @EndDate';
+      request.input('StartDate', sql.DateTime2, startDate);
+      request.input('EndDate', sql.DateTime2, endDate);
+    }
+    
+    const result = await request.query(`
+        SELECT 
+          COUNT(*) as TotalOrders,
+          SUM(CASE WHEN od.Status IS NULL OR od.Status = 'to_delivery' THEN 1 ELSE 0 END) as PendingOrders,
+          SUM(CASE WHEN od.Status = 'in_delivery' THEN 1 ELSE 0 END) as InDeliveryOrders,
+          SUM(CASE WHEN od.Status = 'delivered' THEN 1 ELSE 0 END) as DeliveredOrders,
+          SUM(CASE WHEN od.Status = 'canceled' THEN 1 ELSE 0 END) as CanceledOrders,
+          SUM(CASE WHEN od.Status = 'delivered' THEN ISNULL(d.Total, 0) ELSE 0 END) as TotalRevenue,
+          (SELECT COUNT(*) FROM DeliveryPersons WHERE IsActive = 1) as ActiveDeliveryPersons
+        FROM Document d
+        LEFT JOIN OrdersDelivery od ON d.Id = od.DocumentId
+        ${dateFilter}
+      `);
+
+    return result.recordset[0];
+  }
 }
 
 export const deliveryRepository = new DeliveryRepository();
