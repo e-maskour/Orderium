@@ -6,8 +6,56 @@ import { formatCurrency } from '@/lib/i18n';
 import { productTranslations } from '@/data/mockProducts';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, X, Delete } from 'lucide-react';
+import { ShoppingCart, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// Keyframe animations for Apple-style entrance
+const backdropAnimation = `
+  @keyframes backdropFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
+const modalAnimation = `
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+`;
+
+const contentAnimation = `
+  @keyframes contentFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+// Inject keyframes
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = backdropAnimation + modalAnimation + contentAnimation;
+  if (!document.head.querySelector('[data-modal-animations]')) {
+    styleSheet.setAttribute('data-modal-animations', 'true');
+    document.head.appendChild(styleSheet);
+  }
+}
 
 interface ProductQuantityModalProps {
   product: Product | null;
@@ -25,7 +73,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
   // Set initial quantity when modal opens
   useEffect(() => {
     if (isOpen) {
-      const currentQty = initialQuantity || getItemQuantity(product?.Id || '');
+      const currentQty = initialQuantity || (product?.Id ? getItemQuantity(product.Id) : 0);
       if (currentQty > 0) {
         setQuantity(currentQty.toString());
       } else {
@@ -130,7 +178,12 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
         </div>
 
         {/* Content */}
-        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+        <div 
+          className="p-3 sm:p-4 space-y-3 sm:space-y-4"
+          style={{
+            animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
+          }}
+        >
           {/* Quantity Input */}
           <div className="space-y-2">
             <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
@@ -173,7 +226,12 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
 
           {/* Total Price */}
           {hasQuantity && (
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20">
+            <div 
+              className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20"
+              style={{
+                animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
+              }}
+            >
               <span className="text-sm font-semibold text-gray-700">
                 {t('total')}
               </span>
@@ -189,11 +247,14 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
               onClick={handleAddToCart}
               disabled={isOutOfStock}
               className={cn(
-                "w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all",
+                "w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98]",
                 isOutOfStock
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-primary hover:bg-primary/90 text-white hover:scale-[1.02]"
               )}
+              style={{
+                animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
+              }}
             >
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 me-2" />
               {isOutOfStock 

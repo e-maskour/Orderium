@@ -1,6 +1,54 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, ShoppingCart } from 'lucide-react';
 
+// Keyframe animations for Apple-style entrance
+const backdropAnimation = `
+  @keyframes backdropFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
+const modalAnimation = `
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+`;
+
+const contentAnimation = `
+  @keyframes contentFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+// Inject keyframes
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = backdropAnimation + modalAnimation + contentAnimation;
+  if (!document.head.querySelector('[data-modal-animations]')) {
+    styleSheet.setAttribute('data-modal-animations', 'true');
+    document.head.appendChild(styleSheet);
+  }
+}
+
 interface Product {
   Id: number;
   Name: string;
@@ -96,10 +144,18 @@ export const ProductQuantityModal = ({
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
+        style={{
+          animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
+        }}
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden animate-fade-in">
+      <div 
+        className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden"
+        style={{
+          animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+        }}
+      >
         {/* Header */}
         <div className="relative bg-gradient-to-br from-primary/10 to-primary/5 p-3 sm:p-4 border-b border-gray-200">
           <button
@@ -130,7 +186,12 @@ export const ProductQuantityModal = ({
         </div>
 
         {/* Content */}
-        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+        <div 
+          className="p-3 sm:p-4 space-y-3 sm:space-y-4"
+          style={{
+            animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
+          }}
+        >
           {/* Quantity Input */}
           <div className="space-y-2">
             <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
@@ -171,7 +232,12 @@ export const ProductQuantityModal = ({
 
           {/* Total Price */}
           {hasQuantity && (
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20">
+            <div 
+              className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20"
+              style={{
+                animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
+              }}
+            >
               <span className="text-sm font-semibold text-gray-700">
                 {t('total') || 'Total'}
               </span>
@@ -185,7 +251,10 @@ export const ProductQuantityModal = ({
           {hasQuantity && (
             <button
               onClick={handleAddToCart}
-              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90 text-white hover:scale-[1.02] flex items-center justify-center gap-2"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90 text-white hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+              style={{
+                animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
+              }}
             >
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
               {initialQuantity > 0 ? t('updateQty') || 'Update Quantity' : t('addToCart') || 'Add to Cart'}
