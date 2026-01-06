@@ -55,6 +55,7 @@ interface Product {
   Price: number;
   Stock?: number;
   Code?: string;
+  ImageUrl?: string;
 }
 
 interface ProductQuantityModalProps {

@@ -97,3 +97,51 @@ export const statisticsService = {
     return data.statistics;
   },
 };
+
+export const productsService = {
+  async getProducts({ search }: { search?: string } = {}): Promise<any> {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    
+    const queryString = params.toString();
+    const response = await fetch(`${API_URL}/products${queryString ? `?${queryString}` : ''}`);
+    if (!response.ok) throw new Error('Failed to fetch products');
+    return await response.json();
+  },
+
+  async createProduct(data: any): Promise<any> {
+    const response = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create product');
+    }
+    return await response.json();
+  },
+
+  async updateProduct(id: number, data: any): Promise<any> {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update product');
+    }
+    return await response.json();
+  },
+
+  async deleteProduct(id: number): Promise<void> {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete product');
+    }
+  },
+};

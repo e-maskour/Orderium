@@ -16,7 +16,7 @@ interface Product {
   Price: number;
   Cost?: number;
   CategoryId?: number;
-  imageUrl?: string;
+  ImageUrl?: string;
   IsEnabled?: boolean;
   IsService?: boolean;
   Stock?: number;
@@ -460,9 +460,9 @@ export default function POS() {
                     >
                       {/* Image */}
                       <div className="w-10 h-10 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
-                        {item.product.imageUrl ? (
+                        {item.product.ImageUrl ? (
                           <img
-                            src={item.product.imageUrl}
+                            src={item.product.ImageUrl}
                             alt={item.product.Name}
                             className="w-full h-full object-cover"
                           />
@@ -605,9 +605,9 @@ export default function POS() {
                     >
                       {/* Image */}
                       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                        {product.imageUrl ? (
+                        {product.ImageUrl ? (
                           <img
-                            src={product.imageUrl}
+                            src={product.ImageUrl}
                             alt={product.Name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             loading="lazy"

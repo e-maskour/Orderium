@@ -4,15 +4,24 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const modalAnimation = `
-  @keyframes modalSlideUp {
+const animations = `
+  @keyframes backdropFadeIn {
     from {
       opacity: 0;
-      transform: translate(-50%, calc(-50% + 10px)) scale(0.95);
     }
     to {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
     }
   }
 `;
@@ -20,7 +29,7 @@ const modalAnimation = `
 // Inject keyframes
 if (typeof document !== 'undefined') {
   const styleSheet = document.createElement('style');
-  styleSheet.textContent = modalAnimation;
+  styleSheet.textContent = animations;
   if (!document.head.querySelector('[data-dialog-modal-animation]')) {
     styleSheet.setAttribute('data-dialog-modal-animation', 'true');
     document.head.appendChild(styleSheet);
@@ -42,7 +51,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
+      "absolute inset-0 bg-black/50 backdrop-blur-sm",
       className,
     )}
     style={{
@@ -56,26 +65,29 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed z-50 w-full max-w-lg border bg-background shadow-lg sm:rounded-lg",
-        className,
-      )}
-      style={{
-        left: '50%',
-        top: '50%',
-        animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
-      }}
-      {...props}
-    >
-      {children}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
+>(({ className, children, style, ...props }, ref) => {
+  return (
+    <DialogPortal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          ref={ref}
+          className={cn(
+            "relative w-full max-w-lg bg-background shadow-xl rounded-2xl overflow-hidden",
+            className,
+          )}
+          style={{
+            animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+            ...style
+          }}
+          {...props}
+        >
+          {children}
+        </DialogPrimitive.Content>
+      </div>
+    </DialogPortal>
+  );
+});
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

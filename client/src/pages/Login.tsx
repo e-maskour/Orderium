@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { ShoppingCart, Loader2, UserPlus, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 export default function Login() {
   const { login, register, isAuthenticated } = useAuth();
@@ -167,8 +168,8 @@ export default function Login() {
   const isExistingAccount = phoneExists === true;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4" dir={dir}>
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-4" dir={dir}>
+      <Card className="w-full max-w-[95vw] sm:max-w-md shadow-xl">
         <CardHeader className="space-y-3 text-center">
           {/* Professional Shopping Logo */}
           <div className="mx-auto relative w-32 h-32">
@@ -229,7 +230,7 @@ export default function Login() {
                   setFormData({ ...formData, phone: e.target.value });
                   setErrors({ ...errors, phone: '' });
                 }}
-                className={errors.phone ? 'border-red-500' : ''}
+                className={cn('h-11 sm:h-10 text-base sm:text-sm', errors.phone && 'border-red-500')}
                 disabled={isLoading}
               />
               {errors.phone && (
@@ -263,7 +264,7 @@ export default function Login() {
                     setFormData({ ...formData, password: e.target.value });
                     setErrors({ ...errors, password: '' });
                   }}
-                  className={errors.password ? 'border-red-500' : ''}
+                  className={cn('h-11 sm:h-10 text-base sm:text-sm', errors.password && 'border-red-500')}
                   disabled={isLoading}
                 />
                 {errors.password && (
@@ -280,7 +281,7 @@ export default function Login() {
             {(isNewAccount || isExistingAccount) && (
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-11 sm:h-10 text-base sm:text-sm"
                 disabled={isLoading || isCheckingPhone}
               >
                 {isLoading ? (

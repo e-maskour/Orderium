@@ -129,7 +129,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50" dir={dir}>
-      <div className="container mx-auto px-4 py-6 max-w-2xl">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-2xl">
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -159,7 +159,7 @@ export default function Profile() {
                   type="tel"
                   value={user?.PhoneNumber || ''}
                   disabled
-                  className="bg-gray-100"
+                  className="bg-gray-100 h-11 sm:h-10 text-base sm:text-sm"
                 />
                 <p className="text-xs text-gray-500">
                   {t('phoneCannotBeChanged')}
@@ -177,6 +177,7 @@ export default function Profile() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder={t('enterYourName')}
+                  className="h-11 sm:h-10 text-base sm:text-sm"
                   required
                 />
               </div>
@@ -198,7 +199,7 @@ export default function Profile() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-11 sm:h-10 text-base sm:text-sm"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -215,7 +216,7 @@ export default function Profile() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="w-full h-11 sm:h-10 text-base sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
                 onClick={() => {
                   logout();
                   navigate('/login');

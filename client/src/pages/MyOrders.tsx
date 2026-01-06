@@ -130,7 +130,7 @@ export default function MyOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-6 px-4" dir={dir}>
+    <div className="min-h-screen bg-background py-4 sm:py-6 px-3 sm:px-4" dir={dir}>
       <div className="max-w-5xl mx-auto">
         {/* Header with Back Button */}
         <div className="mb-6">
@@ -142,7 +142,7 @@ export default function MyOrders() {
             <ArrowLeft className={`h-4 w-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
             <span className="ml-2">{t('backToHome')}</span>
           </Button>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground flex items-center gap-2 sm:gap-3">
             <ShoppingBag className="w-8 h-8 text-primary" />
             {t('myOrders')}
           </h1>
@@ -162,7 +162,7 @@ export default function MyOrders() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {orders.map((order) => {
               const status = getStatusLabel(order.DeliveryStatus);
               return (

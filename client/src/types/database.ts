@@ -29,7 +29,7 @@ export interface Product {
   DateCreated: string;
   DateUpdated: string;
   // Virtual field for UI
-  imageUrl?: string;
+  ImageUrl?: string;
 }
 
 export interface Order {

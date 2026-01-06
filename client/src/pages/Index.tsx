@@ -141,24 +141,24 @@ const Index = () => {
                 />
                 
                 {/* View Toggle */}
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className="h-9 px-3 min-w-[100px]"
+                    className="h-9 px-2 sm:px-3"
                   >
-                    <Grid3x3 className="w-4 h-4 me-2" />
-                    <span className="text-xs sm:text-sm whitespace-nowrap">{t('gridView')}</span>
+                    <Grid3x3 className="w-4 h-4 sm:me-2" />
+                    <span className="hidden sm:inline text-sm whitespace-nowrap">{t('gridView')}</span>
                   </Button>
                   <Button
                     variant={viewMode === 'list' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setViewMode('list')}
-                    className="h-9 px-3 min-w-[100px]"
+                    className="h-9 px-2 sm:px-3"
                   >
-                    <List className="w-4 h-4 me-2" />
-                    <span className="text-xs sm:text-sm whitespace-nowrap">{t('listView')}</span>
+                    <List className="w-4 h-4 sm:me-2" />
+                    <span className="hidden sm:inline text-sm whitespace-nowrap">{t('listView')}</span>
                   </Button>
                 </div>
               </div>

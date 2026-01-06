@@ -83,11 +83,11 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
 
   if (error || !orderStatus) {
     return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-          <Package className="w-8 h-8 text-muted-foreground" />
+      <div className="text-center py-8 sm:py-12">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <Package className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
           {error || t('noData')}
         </h3>
         <p className="text-sm text-muted-foreground">
@@ -140,11 +140,11 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
   if (orderStatus.status === 'canceled') {
     return (
       <div className="w-full">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-red-600" />
+        <div className="bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-4 sm:p-6 text-center">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
           </div>
-          <h3 className="text-lg font-semibold text-red-900 mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-red-900 mb-2">
             {t('orderCanceled')}
           </h3>
           <p className="text-sm text-red-700">
@@ -178,11 +178,11 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
           const StatusIcon = status.icon;
 
           return (
-            <div key={status.key} className="relative pb-8 last:pb-0">
+            <div key={status.key} className="relative pb-6 sm:pb-8 last:pb-0">
               {/* Connecting line */}
               {index < statuses.length - 1 && (
                 <div
-                  className={`absolute left-6 rtl:left-auto rtl:right-6 top-12 h-full w-0.5 -ml-px rtl:ml-0 rtl:-mr-px transition-all duration-500 ${
+                  className={`absolute left-5 sm:left-6 rtl:left-auto rtl:right-5 sm:rtl:right-6 top-10 sm:top-12 h-full w-0.5 -ml-px rtl:ml-0 rtl:-mr-px transition-all duration-500 ${
                     isCompleted ? 'bg-gradient-to-b from-primary to-primary/30' : 'bg-gray-200'
                   }`}
                   style={{
@@ -192,34 +192,34 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
               )}
 
               {/* Status item */}
-              <div className="relative flex items-start gap-4">
+              <div className="relative flex items-start gap-3 sm:gap-4">
                 {/* Icon */}
                 <div
-                  className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
+                  className={`relative z-10 flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
                     isCompleted
-                      ? `${status.bgColor} ${status.borderColor} shadow-lg scale-110`
+                      ? `${status.bgColor} ${status.borderColor} shadow-lg sm:scale-110`
                       : 'bg-white border-gray-300'
-                  } ${isCurrent ? 'animate-pulse ring-4 ring-primary/20' : ''}`}
+                  } ${isCurrent ? 'animate-pulse ring-2 sm:ring-4 ring-primary/20' : ''}`}
                 >
                   <StatusIcon
-                    className={`w-6 h-6 transition-colors duration-500 ${
+                    className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors duration-500 ${
                       isCompleted ? status.color : 'text-gray-400'
                     }`}
                   />
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0 pt-1">
-                  <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
+                  <div className="flex items-start sm:items-center justify-between gap-2">
                     <h3
-                      className={`text-base font-semibold transition-colors duration-500 ${
+                      className={`text-sm sm:text-base font-semibold transition-colors duration-500 ${
                         isCompleted ? 'text-foreground' : 'text-muted-foreground'
                       }`}
                     >
                       {status.label}
                     </h3>
                     {isCompleted && (
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                         {formatDate(
                           status.key === 'pending'
                             ? orderStatus.createdAt
@@ -237,7 +237,7 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
                     )}
                   </div>
                   <p
-                    className={`text-sm mt-1 transition-colors duration-500 ${
+                    className={`text-xs sm:text-sm mt-0.5 sm:mt-1 transition-colors duration-500 ${
                       isCompleted ? 'text-muted-foreground' : 'text-muted-foreground/60'
                     }`}
                   >
@@ -252,14 +252,14 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
 
       {/* Current Status Badge */}
       {currentStatusIndex >= 0 && (
-        <div className="mt-6 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
-          <div className="flex items-center gap-3">
-            <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg sm:rounded-xl border border-primary/20">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-xs sm:text-sm font-medium text-foreground">
                 {t('currentStatus')}
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
                 {statuses[currentStatusIndex].description}
               </p>
             </div>

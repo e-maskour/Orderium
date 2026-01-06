@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import DeliveryPersons from './pages/DeliveryPersons';
 import Orders from './pages/Orders';
 import POS from './pages/POS';
+import Products from './pages/Products';
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <POS />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/products"
+                element={
+                  <ProtectedRoute>
+                    <Products />
                   </ProtectedRoute>
                 }
               />

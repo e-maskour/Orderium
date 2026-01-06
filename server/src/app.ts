@@ -19,6 +19,7 @@ import { deliveryService } from "./modules/delivery/delivery.service";
 import { notificationRepo } from "./modules/notifications/notification.repo";
 import { seedDeliveryPerson } from "./seeders/deliveryPersonSeeder";
 import { seedAdmin } from "./seeders/adminSeeder";
+import { initializeProductTable } from "./modules/products/product.repo";
 
 export function createApp() {
     const app = express();
@@ -60,6 +61,11 @@ export function createApp() {
     // Initialize notifications table
     notificationRepo.initialize().catch(err => {
         console.error("Failed to initialize notifications:", err);
+    });
+
+    // Initialize product table columns
+    initializeProductTable().catch(err => {
+        console.error("Failed to initialize product table:", err);
     });
 
     // Health check endpoint

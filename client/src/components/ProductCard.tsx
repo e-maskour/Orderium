@@ -49,9 +49,8 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
-    if (!isOutOfStock) {
-      setIsModalOpen(true);
-    }
+    // Allow opening modal even for out of stock products (to view details)
+    setIsModalOpen(true);
   };
 
   // List view layout
@@ -68,18 +67,18 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
         <div 
           onClick={handleCardClick}
           className={cn(
-            "group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex gap-2 p-1.5 sm:p-2",
-            !isOutOfStock && "cursor-pointer active:scale-[0.99]",
+            "group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex gap-2 sm:gap-3 p-2 sm:p-2.5",
+            "cursor-pointer active:scale-[0.99]",
             isOutOfStock && "opacity-60",
             quantity > 0 && "ring-2 ring-primary bg-primary/5"
           )}
           dir={dir}
         >
           {/* Image */}
-          <div className="relative w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-            {product.imageUrl ? (
+          <div className="relative w-16 h-16 sm:w-18 sm:h-18 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+            {product.ImageUrl ? (
               <img
-                src={product.imageUrl}
+                src={product.ImageUrl}
                 alt={displayName}
                 className={cn(
                   "w-full h-full object-cover transition-transform duration-500",
@@ -105,11 +104,11 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
           {/* Content */}
           <div className="flex-1 flex flex-col justify-between min-w-0">
             <div>
-              <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight mb-1 text-sm sm:text-base">
+              <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight mb-1.5 text-sm sm:text-base">
                 {displayName}
               </h3>
               <div className="flex items-center gap-2">
-                <p className="text-base sm:text-lg font-bold text-primary">
+                <p className="text-sm sm:text-base font-bold text-primary">
                   {formatCurrency(product.Price, language)}
                 </p>
                 {quantity > 0 && (
@@ -140,7 +139,7 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
         onClick={handleCardClick}
         className={cn(
           "group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col",
-          !isOutOfStock && "cursor-pointer active:scale-[0.98]",
+          "cursor-pointer active:scale-[0.98]",
           isOutOfStock && "opacity-60",
           quantity > 0 && "ring-2 ring-primary bg-primary/5"
         )}
@@ -148,9 +147,9 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
       >
       {/* Image */}
       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-        {product.imageUrl ? (
+        {product.ImageUrl ? (
           <img
-            src={product.imageUrl}
+            src={product.ImageUrl}
             alt={displayName}
             className={cn(
               "w-full h-full object-cover transition-transform duration-500",
@@ -182,13 +181,13 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
-        <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
+      <div className="flex-1 p-2 sm:p-2.5 flex flex-col">
+        <h3 className="font-medium text-gray-900 line-clamp-2 leading-tight mb-1.5 text-xs sm:text-sm">
           {displayName}
         </h3>
 
         <div className="mt-auto">
-          <span className="text-[11px] sm:text-xs font-bold text-primary">
+          <span className="text-xs sm:text-sm font-bold text-primary">
             {formatCurrency(product.Price, language)}
           </span>
         </div>

@@ -28,14 +28,14 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
   return (
     <div 
       onClick={() => onItemClick(item)}
-      className="flex gap-2 py-1.5 border-b border-gray-200 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors rounded-md px-2 -mx-2" 
+      className="flex gap-2 sm:gap-2.5 py-2 sm:py-2.5 border-b border-gray-200 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors rounded-md px-2 -mx-2" 
       dir={dir}
     >
       {/* Image */}
-      <div className="w-10 h-10 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
-        {item.product.imageUrl ? (
+      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
+        {item.product.ImageUrl ? (
           <img
-            src={item.product.imageUrl}
+            src={item.product.ImageUrl}
             alt={displayName}
             className="w-full h-full object-cover"
           />
@@ -48,8 +48,8 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
 
       {/* Details */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between mb-0.5">
-          <h4 className="font-medium text-gray-900 line-clamp-1 leading-tight text-xs">
+        <div className="flex items-start justify-between mb-1">
+          <h4 className="font-medium text-gray-900 line-clamp-1 leading-tight text-sm sm:text-base">
             {displayName}
           </h4>
           <Button
@@ -66,14 +66,14 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
         </div>
         
         <div className="flex items-center justify-between">
-          <p className="text-[10px] text-gray-500 flex items-center gap-1">
+          <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
             {formatCurrency(item.product.Price, language)} × 
-            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-primary text-white rounded-full text-[8px] font-bold">
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-primary text-white rounded-full text-[9px] sm:text-[10px] font-bold">
               {item.quantity}
             </span>
           </p>
           
-          <span className="font-bold text-gray-900 text-xs">
+          <span className="font-bold text-gray-900 text-sm sm:text-base">
             {formatCurrency(item.product.Price * item.quantity, language)}
           </span>
         </div>
@@ -175,7 +175,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
             
             {/* Checkout Button */}
             <Button
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
               asChild
             >
               <Link to="/checkout" className="flex items-center justify-center gap-2">
@@ -257,24 +257,24 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
 
         {/* Summary Footer */}
         {items.length > 0 && (
-          <div className="border-t border-gray-200 p-4 bg-gray-50 space-y-3" dir={dir}>
+          <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-50 space-y-2.5 sm:space-y-3" dir={dir}>
             {/* Total Amount */}
             <div className="flex items-center justify-between">
-              <span className="text-base font-semibold text-gray-900">{t('totalAmount')}</span>
-              <span className="text-xl font-bold text-primary">
+              <span className="text-sm sm:text-base font-semibold text-gray-900">{t('totalAmount')}</span>
+              <span className="text-lg sm:text-xl font-bold text-primary">
                 {formatCurrency(subtotal, language)}
               </span>
             </div>
             
             {/* Checkout Button */}
             <Button
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
               asChild
               onClick={onClose}
             >
               <Link to="/checkout" className="flex items-center justify-center gap-2">
                 {t('checkout')}
-                <ArrowIcon className="w-5 h-5" />
+                <ArrowIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
             </Button>
           </div>

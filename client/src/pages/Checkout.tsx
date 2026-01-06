@@ -387,9 +387,9 @@ const Checkout = () => {
                   return (
                     <div key={item.product.Id} className="flex gap-2 sm:gap-3 py-2">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
-                        {item.product.imageUrl ? (
+                        {item.product.ImageUrl ? (
                           <img
-                            src={item.product.imageUrl}
+                            src={item.product.ImageUrl}
                             alt={displayName}
                             className="w-full h-full object-cover"
                           />

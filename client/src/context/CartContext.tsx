@@ -75,12 +75,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items]);
 
   const addItem = useCallback((product: Product, quantity = 1) => {
+    // Prevent adding out of stock products
+    if (product.Stock !== undefined && product.Stock <= 0) {
+      console.warn('Cannot add out of stock product to cart');
+      return;
+    }
+    
     setItems(prev => {
       const existing = prev.find(item => item.product.Id === product.Id);
       if (existing) {
+        // Check stock limit when updating quantity
+        const newQuantity = existing.quantity + quantity;
+        const maxStock = product.Stock ?? 999;
+        const finalQuantity = Math.min(newQuantity, maxStock);
+        
         return prev.map(item =>
           item.product.Id === product.Id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: finalQuantity }
             : item
         );
       }
@@ -97,10 +108,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeItem(productId);
       return;
     }
+    
     setItems(prev =>
-      prev.map(item =>
-        item.product.Id === productId ? { ...item, quantity } : item
-      )
+      prev.map(item => {
+        if (item.product.Id === productId) {
+          // Check stock limit
+          const maxStock = item.product.Stock ?? 999;
+          const finalQuantity = Math.min(quantity, maxStock);
+          return { ...item, quantity: finalQuantity };
+        }
+        return item;
+      })
     );
   }, [removeItem]);
 
