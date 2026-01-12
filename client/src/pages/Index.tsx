@@ -81,7 +81,7 @@ const Index = () => {
   // Pass pagination params to useProducts
   const { products, loading, error, totalCount, totalPages } = useProducts({
     page: currentPage,
-    pageSize: 18,
+    pageSize: 24,
     search: filters.search,
   });
 

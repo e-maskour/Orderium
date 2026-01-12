@@ -170,6 +170,43 @@
     display: none;
   }
 
+  /* Custom scrollbar positioning based on direction */
+  [dir="ltr"] .scrollbar-positioned {
+    overflow-y: scroll;
+    direction: ltr;
+  }
+
+  [dir="rtl"] .scrollbar-positioned {
+    overflow-y: scroll;
+    direction: rtl;
+  }
+
+  /* Scrollbar styling */
+  .scrollbar-positioned::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scrollbar-positioned::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  .scrollbar-positioned::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.5);
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  .scrollbar-positioned::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.7);
+  }
+
+  /* Firefox scrollbar */
+  .scrollbar-positioned {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.5) hsl(var(--muted));
+  }
+
   /* Price animation */
   .price-bounce {
     animation: priceBounce 0.3s ease-out;

@@ -17,7 +17,7 @@ interface UseProductsResult {
 }
 
 export function useProducts(params: UseProductsParams = {}): UseProductsResult {
-  const { page = 1, pageSize = 18, search = '' } = params;
+  const { page = 1, pageSize = 24, search = '' } = params;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
