@@ -27,6 +27,7 @@ export interface Customer {
   Longitude?: number;
   GoogleMapsUrl?: string;
   WazeUrl?: string;
+  totalOrders?: number;
 }
 
 export interface CustomerFormData {

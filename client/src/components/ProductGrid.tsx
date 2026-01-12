@@ -83,7 +83,7 @@ export const ProductGrid = ({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 scrollbar-positioned max-h-[calc(100vh-200px)] overflow-y-auto pr-6 pl-6 pt-4" dir={dir}>
+    <div className="space-y-4 sm:space-y-6 scrollbar-positioned max-h-[calc(100vh-200px)] overflow-y-auto pr-6 pl-6 pt-1" dir={dir}>
       {/* Product Grid/List */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">

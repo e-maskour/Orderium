@@ -305,12 +305,6 @@ const Checkout = () => {
                     {errors.phone && (
                       <p className="text-sm text-destructive">{errors.phone}</p>
                     )}
-                    {existingCustomer && (
-                      <p className="text-xs text-green-600 flex items-center gap-1">
-                        <Package className="w-3 h-3" />
-                        {`${existingCustomer.totalOrders} ${t('previousOrders')}`}
-                      </p>
-                    )}
                   </div>
 
                   {/* Name - Always visible */}
