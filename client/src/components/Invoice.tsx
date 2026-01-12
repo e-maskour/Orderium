@@ -85,38 +85,36 @@ export const Invoice = ({
 
           {/* Invoice Details - Right */}
           <div style={{ textAlign: 'right' }}>
-            <div style={{ marginBottom: '10px' }}>
-              <p style={{ 
+            <p style={{ fontSize: '13px', marginBottom: '6px', color: '#1f2937' }}>
+              <span style={{ 
                 fontSize: '11px', 
-                fontWeight: 'bold', 
-                marginBottom: '4px',
                 color: '#6b7280',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                marginRight: '8px'
               }}>
                 {t('invoiceNo')}
-              </p>
-              <p style={{ fontSize: '15px', fontWeight: 'bold', color: '#000000', marginBottom: '0' }}>
+              </span>
+              <span style={{ fontSize: '13px', color: '#000000' }}>
                 {orderNumber}
-              </p>
-            </div>
-            <div>
-              <p style={{ 
+              </span>
+            </p>
+            <p style={{ fontSize: '13px', marginBottom: '0', color: '#1f2937' }}>
+              <span style={{ 
                 fontSize: '11px', 
-                fontWeight: 'bold', 
-                marginBottom: '4px',
                 color: '#6b7280',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                marginRight: '8px'
               }}>
                 {t('date')}
-              </p>
-              <p style={{ fontSize: '13px', color: '#1f2937', marginBottom: '0' }}>
+              </span>
+              <span style={{ fontSize: '13px', color: '#1f2937' }}>
                 {orderDate.toLocaleDateString(isArabic ? 'ar-MA' : 'fr-FR', {
                   day: 'numeric',
                   month: 'numeric',
                   year: 'numeric',
                 })}
-              </p>
-            </div>
+              </span>
+            </p>
           </div>
         </div>
       </div>
@@ -126,15 +124,14 @@ export const Invoice = ({
         <table style={{ 
           width: '100%', 
           borderCollapse: 'collapse',
-          border: '2px solid #000000'
+          border: '1px solid #000000'
         }}>
           <thead>
             <tr style={{ 
               backgroundColor: '#ffffff',
-              borderBottom: '2px solid #000000'
+              borderBottom: '2px solid #000000',
             }}>
               <th style={{ 
-                padding: '4px',
                 fontSize: '12px', 
                 fontWeight: 'bold', 
                 width: '5%',
@@ -142,12 +139,13 @@ export const Invoice = ({
                 verticalAlign: 'middle',
                 borderRight: '1px solid #d1d5db',
                 color: '#000000',
-                lineHeight: '1'
+                lineHeight: '1.5',
+                padding: '8px',
+                height: '40px'
               }}>
                 {t('no')}
               </th>
               <th style={{ 
-                padding: '4px 8px',
                 fontSize: '12px', 
                 fontWeight: 'bold', 
                 width: '40%',
@@ -155,12 +153,13 @@ export const Invoice = ({
                 verticalAlign: 'middle',
                 borderRight: '1px solid #d1d5db',
                 color: '#000000',
-                lineHeight: '1'
+                lineHeight: '1.5',
+                padding: '8px',
+                height: '40px'
               }}>
                 {t('item')}
               </th>
               <th style={{ 
-                padding: '4px',
                 fontSize: '12px', 
                 fontWeight: 'bold', 
                 width: '10%',
@@ -168,12 +167,13 @@ export const Invoice = ({
                 verticalAlign: 'middle',
                 borderRight: '1px solid #d1d5db',
                 color: '#000000',
-                lineHeight: '1'
+                lineHeight: '1.5',
+                padding: '8px',
+                height: '40px'
               }}>
                 {t('quantity')}
               </th>
               <th style={{ 
-                padding: '4px',
                 fontSize: '12px', 
                 fontWeight: 'bold', 
                 width: '15%',
@@ -181,12 +181,13 @@ export const Invoice = ({
                 verticalAlign: 'middle',
                 borderRight: '1px solid #d1d5db',
                 color: '#000000',
-                lineHeight: '1'
+                lineHeight: '1.5',
+                padding: '8px',
+                height: '40px'
               }}>
                 {t('unitPrice')}
               </th>
               <th style={{ 
-                padding: '4px',
                 fontSize: '12px', 
                 fontWeight: 'bold', 
                 width: '12%',
@@ -194,19 +195,22 @@ export const Invoice = ({
                 verticalAlign: 'middle',
                 borderRight: '1px solid #d1d5db',
                 color: '#000000',
-                lineHeight: '1'
+                lineHeight: '1.5',
+                padding: '8px',
+                height: '40px'
               }}>
                 {t('discount')}
               </th>
               <th style={{ 
-                padding: '4px',
                 fontSize: '12px', 
                 fontWeight: 'bold', 
                 width: '18%',
                 textAlign: 'center',
                 verticalAlign: 'middle',
                 color: '#000000',
-                lineHeight: '1'
+                lineHeight: '1.5',
+                padding: '8px',
+                height: '40px'
               }}>
                 {t('total')}
               </th>
@@ -222,69 +226,75 @@ export const Invoice = ({
               return (
                 <tr key={index}>
                   <td style={{ 
-                    padding: '4px', 
+                    padding: '8px', 
                     fontSize: '12px', 
                     border: '1px solid #d1d5db',
                     textAlign: 'center',
                     verticalAlign: 'middle',
                     color: '#000000',
-                    lineHeight: '1'
+                    lineHeight: '1.5',
+                    height: '36px'
                   }}>
                     {index + 1}
                   </td>
                   <td style={{ 
-                    padding: '4px 8px', 
+                    padding: '8px', 
                     fontSize: '13px', 
                     border: '1px solid #d1d5db',
                     textAlign: 'left',
                     verticalAlign: 'middle',
                     color: '#000000',
-                    lineHeight: '1'
+                    lineHeight: '1.5',
+                    height: '36px'
                   }}>
                     {displayName}
                   </td>
                   <td style={{ 
-                    padding: '4px', 
+                    padding: '8px', 
                     fontSize: '12px', 
                     border: '1px solid #d1d5db',
                     textAlign: 'center',
                     verticalAlign: 'middle',
                     color: '#000000',
-                    lineHeight: '1'
+                    lineHeight: '1.5',
+                    height: '36px'
                   }}>
                     {item.quantity}
                   </td>
                   <td style={{ 
-                    padding: '4px', 
+                    padding: '8px', 
                     fontSize: '12px', 
                     border: '1px solid #d1d5db',
                     textAlign: 'right',
                     verticalAlign: 'middle',
                     color: '#000000',
-                    lineHeight: '1'
+                    lineHeight: '1.5',
+                    height: '36px'
                   }}>
                     {formatCurrency(item.product.Price, language)}
                   </td>
                   <td style={{ 
-                    padding: '4px', 
+                    padding: '8px', 
                     fontSize: '11px', 
                     border: '1px solid #d1d5db',
                     textAlign: 'center',
                     verticalAlign: 'middle',
                     color: '#6b7280',
-                    lineHeight: '1'
+                    lineHeight: '1.5',
+                    height: '36px'
                   }}>
                     0.00%
                   </td>
                   <td style={{ 
-                    padding: '4px', 
+                    padding: '8px', 
                     fontSize: '13px', 
                     border: '1px solid #d1d5db',
                     textAlign: 'right',
                     verticalAlign: 'middle',
                     color: '#000000',
                     backgroundColor: '#f9fafb',
-                    lineHeight: '1'
+                    lineHeight: '1.5',
+                    height: '36px'
                   }}>
                     {formatCurrency(itemTotal, language)}
                   </td>
