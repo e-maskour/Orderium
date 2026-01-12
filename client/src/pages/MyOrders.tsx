@@ -1,13 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
 import { orderService } from '@/services/orderService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { OrderTracking } from '@/components/OrderTracking';
-import { Package, Loader2, MapPin, Calendar, ArrowLeft, ShoppingBag, Eye } from 'lucide-react';
+import { Receipt } from '@/components/Receipt';
+import { Invoice } from '@/components/Invoice';
+import { Package, Loader2, MapPin, Calendar, ArrowLeft, ShoppingBag, Eye, Download, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { LanguageProvider } from '@/context/LanguageContext';
 
 interface Order {
   Id: number;
@@ -34,6 +40,8 @@ export default function MyOrders() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [selectedOrderItems, setSelectedOrderItems] = useState<{ order: Order; items: OrderItem[] } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const documentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -97,6 +105,128 @@ export default function MyOrders() {
       }
     } catch (error) {
       console.error('Failed to fetch order items:', error);
+    }
+  };
+
+  const handleDownload = async (documentType: 'receipt' | 'invoice') => {
+    if (!selectedOrderItems) return;
+
+    setIsGenerating(true);
+    try {
+      // Create off-screen container
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-99999px';
+      container.style.top = '0';
+      document.body.appendChild(container);
+
+      // Map items to CartItem format
+      const items = selectedOrderItems.items.map(item => ({
+        product: {
+          Id: item.ProductId,
+          Name: item.ProductName || `Product ${item.ProductId}`,
+          Price: item.Price,
+          Code: null,
+          Description: null,
+          Cost: 0,
+          IsService: false,
+          IsEnabled: true,
+          DateCreated: '',
+          DateUpdated: '',
+        },
+        quantity: item.Quantity
+      }));
+
+      // Render component
+      const root = createRoot(container);
+      
+      if (documentType === 'receipt') {
+        root.render(
+          <LanguageProvider>
+            <Receipt
+              orderNumber={selectedOrderItems.order.Number}
+              customerName={user?.Name || ''}
+              customerPhone={user?.PhoneNumber || ''}
+              items={items}
+              subtotal={selectedOrderItems.order.Total}
+              orderDate={new Date(selectedOrderItems.order.DateCreated)}
+            />
+          </LanguageProvider>
+        );
+      } else {
+        root.render(
+          <LanguageProvider>
+            <Invoice
+              orderNumber={selectedOrderItems.order.Number}
+              customerName={user?.Name || ''}
+              customerPhone={user?.PhoneNumber || ''}
+              customerAddress={''}
+              items={items}
+              subtotal={selectedOrderItems.order.Total}
+              orderDate={new Date(selectedOrderItems.order.DateCreated)}
+            />
+          </LanguageProvider>
+        );
+      }
+
+      // Wait for render
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Get element
+      const element = container.querySelector(documentType === 'receipt' ? '#receipt-content' : '#invoice-content') as HTMLElement;
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      // Capture as canvas
+      const canvas = await html2canvas(element, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+
+      // Create PDF with proper dimensions
+      if (documentType === 'receipt') {
+        const imgWidth = 80; // 80mm receipt width
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: [imgWidth, imgHeight],
+        });
+
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save(`${t('receipt')}_${selectedOrderItems.order.Number}.pdf`);
+      } else {
+        // Invoice: A5 size (148mm x 210mm)
+        const a5Width = 148;
+        const a5Height = 210;
+        const imgWidth = a5Width;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a5',
+        });
+
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save(`${t('deliveryNote')}_${selectedOrderItems.order.Number}.pdf`);
+      }
+
+      // Cleanup
+      root.unmount();
+      document.body.removeChild(container);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -340,7 +470,7 @@ export default function MyOrders() {
               </div>
 
               {/* Total - Fixed */}
-              <div className="px-4 sm:px-6 py-4 border-t border-border bg-background">
+              <div className="px-4 sm:px-6 py-4 border-t border-border bg-background space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-semibold text-foreground">
                     {t('total')}
@@ -348,6 +478,28 @@ export default function MyOrders() {
                   <span className="text-2xl font-bold text-primary">
                     {formatCurrency(selectedOrderItems.order.Total || 0, language)}
                   </span>
+                </div>
+
+                {/* Download Buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => handleDownload('receipt')}
+                    disabled={isGenerating}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                    {t('downloadReceipt')}
+                  </Button>
+                  <Button
+                    onClick={() => handleDownload('invoice')}
+                    disabled={isGenerating}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+                    {t('downloadDeliveryNote')}
+                  </Button>
                 </div>
               </div>
             </>

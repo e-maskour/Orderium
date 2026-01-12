@@ -22,7 +22,7 @@ export const Receipt = ({
   subtotal,
   orderDate,
 }: ReceiptProps) => {
-  const { language, t } = useLanguage();
+  const { language, t, dir } = useLanguage();
   const isArabic = language === 'ar';
 
   // Calculate items count
@@ -31,13 +31,18 @@ export const Receipt = ({
   return (
     <div
       id="receipt-content"
-      className="bg-white mx-auto"
+      dir={dir}
       style={{ 
         width: '80mm',
-        fontFamily: 'monospace',
+        fontFamily: isArabic ? 'Arial, "Helvetica Neue", sans-serif' : 'monospace',
         fontSize: '13px',
         padding: '8mm 5mm',
         lineHeight: '1.4',
+        backgroundColor: 'white',
+        margin: '0 auto',
+        minHeight: 'auto',
+        height: 'auto',
+        maxHeight: 'none',
       }}
     >
       {/* Header - Company Info */}
@@ -84,8 +89,8 @@ export const Receipt = ({
 
           return (
             <div key={index} className="mb-2">
-              <div className="mb-0">{displayName}</div>
-              <div className="flex justify-between">
+              <div className="mb-0" style={{ textAlign: dir === 'rtl' ? 'right' : 'left' }}>{displayName}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', direction: dir }}>
                 <span>
                   {item.quantity}x {formatCurrency(item.product.Price, language)}
                 </span>
@@ -101,44 +106,26 @@ export const Receipt = ({
 
       {/* Items Count */}
       <div className="mb-2">
-        <p className="mb-0">{t('itemsCount')} {itemsCount}</p>
+        <p style={{ marginBottom: 0, textAlign: dir === 'rtl' ? 'right' : 'left' }}>{t('itemsCount')} {itemsCount}</p>
       </div>
 
       {/* Subtotal */}
-      <div className="flex justify-between mb-1">
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', flexDirection: dir === 'rtl' ? 'row-reverse' : 'row' }}>
         <span>{t('subtotal')}</span>
         <span>{formatCurrency(subtotal, language)}</span>
       </div>
 
       {/* Total */}
-      <div className="flex justify-between mb-2 font-bold" style={{ fontSize: '15px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontWeight: 'bold', fontSize: '15px', flexDirection: dir === 'rtl' ? 'row-reverse' : 'row' }}>
         <span>{t('total').toUpperCase()}</span>
-        <span>{formatCurrency(subtotal, language)}</span>
-      </div>
-
-      {/* Payment Method */}
-      <div className="flex justify-between mb-1">
-        <span>{t('cash')}</span>
-        <span>{formatCurrency(subtotal, language)}</span>
-      </div>
-
-      {/* Paid Amount */}
-      <div className="flex justify-between mb-1">
-        <span>{t('paidAmount')}</span>
         <span>{formatCurrency(subtotal, language)}</span>
       </div>
 
       {/* Separator */}
       <div style={{ borderTop: '1px dashed #000', margin: '8px 0' }}></div>
 
-      {/* Change */}
-      <div className="flex justify-between mb-3">
-        <span>{t('change')}</span>
-        <span>0,00</span>
-      </div>
-
       {/* Barcode */}
-      <div className="text-center mt-4">
+      <div style={{ textAlign: 'center', marginTop: '16px' }}>
         <svg
           viewBox="0 0 200 60"
           style={{ width: '100%', height: '50px' }}
@@ -192,7 +179,7 @@ export const Receipt = ({
           <rect x="194" y="0" width="2" height="40" fill="black" />
           
           <text x="100" y="55" textAnchor="middle" fontSize="10" fill="black">
-            18-200-{orderNumber}
+            {orderNumber}
           </text>
         </svg>
       </div>

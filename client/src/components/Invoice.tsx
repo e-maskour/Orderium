@@ -22,98 +22,192 @@ export const Invoice = ({
   subtotal,
   orderDate,
 }: InvoiceProps) => {
-  const { language, t } = useLanguage();
+  const { language, t, dir } = useLanguage();
   const isArabic = language === 'ar';
-
-  const discount = 0;
-  const subtotalAfterDiscount = subtotal - discount;
 
   return (
     <div
       id="invoice-content"
-      className="bg-white p-12 max-w-4xl mx-auto"
-      style={{ fontFamily: 'Arial, sans-serif' }}
+      dir={dir}
+      style={{ 
+        fontFamily: isArabic ? 'Arial, "Helvetica Neue", sans-serif' : 'Arial, sans-serif',
+        backgroundColor: 'white',
+        padding: '30px 16px',
+        maxWidth: '148mm',
+        minHeight: '210mm',
+        margin: '0 auto',
+      }}
     >
       {/* Header */}
-      <div className="mb-12">
-        <h1 className="text-2xl font-bold mb-8">
-          {t('deliveryNote')}
+      <div style={{ marginBottom: '40px' }}>
+        {/* Title */}
+        <h1 style={{ 
+          fontSize: '28px', 
+          fontWeight: 'bold', 
+          marginBottom: '24px',
+          textAlign: 'center',
+          color: '#1f2937',
+          letterSpacing: '0.5px'
+        }}>
+          BON DE LIVRAISON
         </h1>
 
-        {/* Bill To and Invoice Details */}
-        <div className="flex justify-between items-start pt-8" style={{ borderTop: '1px solid #e5e7eb' }}>
-          <div>
-            <p className="text-sm font-bold mb-2">
+        {/* Info Section */}
+        <div style={{ 
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          borderTop: '3px solid #000000',
+          borderBottom: '1px solid #000000',
+          paddingTop: '20px',
+          paddingBottom: '20px',
+          marginBottom: '8px'
+        }}>
+          {/* Bill To Section - Left */}
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ 
+              fontSize: '11px', 
+              fontWeight: 'bold', 
+              marginBottom: '8px',
+              color: '#6b7280',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
               {t('billTo')}
             </p>
-            <p className="text-sm" style={{ color: '#3b82f6' }}>{customerName}</p>
+            <p style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '4px', color: '#1f2937' }}>
+              {customerName}
+            </p>
             {customerPhone && (
-              <p className="text-xs text-gray-600">{customerPhone}</p>
-            )}
-            {customerAddress && (
-              <p className="text-xs text-gray-600">{customerAddress}</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0' }}>{customerPhone}</p>
             )}
           </div>
 
-          <div className="text-right">
-            <div className="mb-2">
-              <p className="text-sm font-bold inline-block" style={{ width: '120px', textAlign: 'left' }}>
+          {/* Invoice Details - Right */}
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ marginBottom: '10px' }}>
+              <p style={{ 
+                fontSize: '11px', 
+                fontWeight: 'bold', 
+                marginBottom: '4px',
+                color: '#6b7280',
+                textTransform: 'uppercase'
+              }}>
                 {t('invoiceNo')}
               </p>
-              <span className="text-sm">20-200-{orderNumber}</span>
-            </div>
-            <div className="mb-2">
-              <p className="text-sm font-bold inline-block" style={{ width: '120px', textAlign: 'left' }}>
-                {t('date')}
+              <p style={{ fontSize: '15px', fontWeight: 'bold', color: '#000000', marginBottom: '0' }}>
+                {orderNumber}
               </p>
-              <span className="text-sm">
-                {orderDate.toLocaleDateString(isArabic ? 'ar-MA' : 'en-US', {
-                  month: 'numeric',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </span>
-            </div>
-            <div className="mb-2">
-              <p className="text-sm font-bold inline-block" style={{ width: '120px', textAlign: 'left' }}>
-                {t('dueDate')}
-              </p>
-              <span className="text-sm">
-                {orderDate.toLocaleDateString(isArabic ? 'ar-MA' : 'en-US', {
-                  month: 'numeric',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </span>
             </div>
             <div>
-              <p className="text-sm font-bold inline-block" style={{ width: '120px', textAlign: 'left' }}>
-                {t('paymentStatus')}
+              <p style={{ 
+                fontSize: '11px', 
+                fontWeight: 'bold', 
+                marginBottom: '4px',
+                color: '#6b7280',
+                textTransform: 'uppercase'
+              }}>
+                {t('date')}
               </p>
-              <span className="text-sm font-bold">{t('paid')}</span>
+              <p style={{ fontSize: '13px', color: '#1f2937', marginBottom: '0' }}>
+                {orderDate.toLocaleDateString(isArabic ? 'ar-MA' : 'fr-FR', {
+                  day: 'numeric',
+                  month: 'numeric',
+                  year: 'numeric',
+                })}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Items Table */}
-      <div className="mb-8">
-        <table className="w-full border-collapse">
+      <div style={{ marginBottom: '40px' }}>
+        <table style={{ 
+          width: '100%', 
+          borderCollapse: 'collapse',
+          border: '2px solid #000000'
+        }}>
           <thead>
-            <tr style={{ backgroundColor: '#f3f4f6' }}>
-              <th className="text-left p-3 text-sm font-bold border-b border-gray-300" style={{ width: '50px' }}>
+            <tr style={{ 
+              backgroundColor: '#ffffff',
+              borderBottom: '2px solid #000000'
+            }}>
+              <th style={{ 
+                padding: '4px',
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                width: '5%',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+                borderRight: '1px solid #d1d5db',
+                color: '#000000',
+                lineHeight: '1'
+              }}>
                 {t('no')}
               </th>
-              <th className="text-left p-3 text-sm font-bold border-b border-gray-300">
+              <th style={{ 
+                padding: '4px 8px',
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                width: '40%',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+                borderRight: '1px solid #d1d5db',
+                color: '#000000',
+                lineHeight: '1'
+              }}>
                 {t('item')}
               </th>
-              <th className="text-center p-3 text-sm font-bold border-b border-gray-300" style={{ width: '100px' }}>
+              <th style={{ 
+                padding: '4px',
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                width: '10%',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+                borderRight: '1px solid #d1d5db',
+                color: '#000000',
+                lineHeight: '1'
+              }}>
                 {t('quantity')}
               </th>
-              <th className="text-right p-3 text-sm font-bold border-b border-gray-300" style={{ width: '120px' }}>
+              <th style={{ 
+                padding: '4px',
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                width: '15%',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+                borderRight: '1px solid #d1d5db',
+                color: '#000000',
+                lineHeight: '1'
+              }}>
                 {t('unitPrice')}
               </th>
-              <th className="text-right p-3 text-sm font-bold border-b border-gray-300" style={{ width: '120px' }}>
+              <th style={{ 
+                padding: '4px',
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                width: '12%',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+                borderRight: '1px solid #d1d5db',
+                color: '#000000',
+                lineHeight: '1'
+              }}>
+                {t('discount')}
+              </th>
+              <th style={{ 
+                padding: '4px',
+                fontSize: '12px', 
+                fontWeight: 'bold', 
+                width: '18%',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+                color: '#000000',
+                lineHeight: '1'
+              }}>
                 {t('total')}
               </th>
             </tr>
@@ -127,13 +221,71 @@ export const Invoice = ({
 
               return (
                 <tr key={index}>
-                  <td className="p-3 text-sm border-b border-gray-200">{index + 1}</td>
-                  <td className="p-3 text-sm border-b border-gray-200">{displayName}</td>
-                  <td className="p-3 text-sm text-center border-b border-gray-200">{item.quantity}</td>
-                  <td className="p-3 text-sm text-right border-b border-gray-200">
+                  <td style={{ 
+                    padding: '4px', 
+                    fontSize: '12px', 
+                    border: '1px solid #d1d5db',
+                    textAlign: 'center',
+                    verticalAlign: 'middle',
+                    color: '#000000',
+                    lineHeight: '1'
+                  }}>
+                    {index + 1}
+                  </td>
+                  <td style={{ 
+                    padding: '4px 8px', 
+                    fontSize: '13px', 
+                    border: '1px solid #d1d5db',
+                    textAlign: 'left',
+                    verticalAlign: 'middle',
+                    color: '#000000',
+                    lineHeight: '1'
+                  }}>
+                    {displayName}
+                  </td>
+                  <td style={{ 
+                    padding: '4px', 
+                    fontSize: '12px', 
+                    border: '1px solid #d1d5db',
+                    textAlign: 'center',
+                    verticalAlign: 'middle',
+                    color: '#000000',
+                    lineHeight: '1'
+                  }}>
+                    {item.quantity}
+                  </td>
+                  <td style={{ 
+                    padding: '4px', 
+                    fontSize: '12px', 
+                    border: '1px solid #d1d5db',
+                    textAlign: 'right',
+                    verticalAlign: 'middle',
+                    color: '#000000',
+                    lineHeight: '1'
+                  }}>
                     {formatCurrency(item.product.Price, language)}
                   </td>
-                  <td className="p-3 text-sm text-right font-semibold border-b border-gray-200">
+                  <td style={{ 
+                    padding: '4px', 
+                    fontSize: '11px', 
+                    border: '1px solid #d1d5db',
+                    textAlign: 'center',
+                    verticalAlign: 'middle',
+                    color: '#6b7280',
+                    lineHeight: '1'
+                  }}>
+                    0.00%
+                  </td>
+                  <td style={{ 
+                    padding: '4px', 
+                    fontSize: '13px', 
+                    border: '1px solid #d1d5db',
+                    textAlign: 'right',
+                    verticalAlign: 'middle',
+                    color: '#000000',
+                    backgroundColor: '#f9fafb',
+                    lineHeight: '1'
+                  }}>
                     {formatCurrency(itemTotal, language)}
                   </td>
                 </tr>
@@ -144,18 +296,27 @@ export const Invoice = ({
       </div>
 
       {/* Totals Section */}
-      <div className="flex justify-end">
-        <div style={{ width: '400px' }}>
-          {/* Subtotal */}
-          <div className="flex justify-between items-center py-2 text-sm border-b border-gray-200">
-            <span className="font-bold">{isArabic ? 'المجموع الفرعي:' : 'Subtotal:'}</span>
-            <span className="font-bold">{formatCurrency(subtotal, language)}</span>
-          </div>
-
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'flex-end',
+        marginTop: '30px'
+      }}>
+        <div style={{ minWidth: '280px' }}>
           {/* Total */}
-          <div className="flex justify-between items-center py-2 text-sm border-b border-gray-200" style={{ backgroundColor: '#f3f4f6' }}>
-            <span className="font-bold">{isArabic ? 'المجموع:' : 'Total:'}</span>
-            <span className="font-bold">{formatCurrency(subtotal, language)}</span>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            padding: '12px 20px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            backgroundColor: '#f3f4f6',
+            color: '#000000',
+            border: '2px solid #000000',
+            borderRadius: '4px'
+          }}>
+            <span style={{ letterSpacing: '0.5px' }}>{t('total')}</span>
+            <span style={{ fontSize: '14px' }}>{formatCurrency(subtotal, language)}</span>
           </div>
         </div>
       </div>

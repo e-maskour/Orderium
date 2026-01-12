@@ -246,7 +246,14 @@ export class OrderRepository {
       const pool = await getPool();
       const itemsResult = await pool.request()
         .input('documentId', sql.Int, documentId)
-        .query('SELECT * FROM DocumentItem WHERE DocumentId = @documentId');
+        .query(`
+          SELECT 
+            di.*,
+            p.Name as ProductName
+          FROM DocumentItem di
+          LEFT JOIN Product p ON di.ProductId = p.Id
+          WHERE di.DocumentId = @documentId
+        `);
       
       return {
         Document: document,
@@ -286,7 +293,14 @@ export class OrderRepository {
       const document = result.recordset[0];
       const itemsResult = await pool.request()
         .input('documentId', sql.Int, document.Id)
-        .query('SELECT * FROM DocumentItem WHERE DocumentId = @documentId');
+        .query(`
+          SELECT 
+            di.*,
+            p.Name as ProductName
+          FROM DocumentItem di
+          LEFT JOIN Product p ON di.ProductId = p.Id
+          WHERE di.DocumentId = @documentId
+        `);
       
       return {
         Document: document,

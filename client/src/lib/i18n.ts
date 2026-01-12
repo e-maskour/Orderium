@@ -113,6 +113,8 @@ export const translations = {
     // Documents
     receipt: 'وصل',
     deliveryNote: 'وصل التسليم',
+    downloadReceipt: 'تحميل الوصل',
+    downloadDeliveryNote: 'تحميل وصل التسليم',
     chooseDocumentType: 'اختر نوع الوثيقة:',
     generating: 'جاري الإنشاء...',
     documentGenerationFailed: 'فشل في إنشاء الوثيقة',
@@ -190,7 +192,8 @@ export const translations = {
     unitPrice: 'سعر الوحدة',
     previewDocument: 'معاينة',
     orderCreationError: 'حدث خطأ أثناء إنشاء الطلب، يرجى المحاولة مجدداً',
-    
+    item: 'المنتج',
+
     // Receipt
     receiptNo: 'رقم الوصل:',
     user: 'العميل:',
@@ -393,6 +396,8 @@ export const translations = {
     // Documents
     receipt: 'Reçu',
     deliveryNote: 'Bon de Livraison',
+    downloadReceipt: 'Télécharger le reçu',
+    downloadDeliveryNote: 'Télécharger le bon de livraison',
     chooseDocumentType: 'Choisir le type de document:',
     generating: 'Génération...',
     documentGenerationFailed: 'Échec de génération du document',
@@ -459,7 +464,7 @@ export const translations = {
     disconnect: 'Se déconnecter',
     
     // Invoice
-    billTo: 'Bill To:',
+    billTo: 'Facturer à :',
     invoiceNo: 'Invoice No.:',
     date: 'Date:',
     dueDate: 'Due date:',
@@ -470,11 +475,12 @@ export const translations = {
     unitPrice: 'Unit price',
     previewDocument: 'Aperçu',
     orderCreationError: 'Erreur lors de la création de la commande',
-    
+    item: 'Produit',
+
     // Receipt
-    receiptNo: 'Receipt No.:',
-    user: 'User:',
-    itemsCount: 'Items count:',
+    receiptNo: 'N° de reçu:',
+    user: 'Client:',
+    itemsCount: 'Nombre d\'articles:',
     cash: 'Cash:',
     paidAmount: 'Paid amount:',
     change: 'Change:',
