@@ -151,11 +151,11 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 border-slate-200 shadow-xl" align="start">
         <div className="bg-slate-700 text-white p-4 rounded-t-lg">
-          <div className="text-sm text-slate-300 mb-1">Period</div>
+          <div className="text-sm text-slate-300 mb-1">{t('period')}</div>
           <div className="text-lg font-semibold">
             {tempRange.start && tempRange.end
               ? formatDateRange(tempRange)
-              : formatDateRange(tempRange) || "Select dates"}
+              : formatDateRange(tempRange) || t('selectDates')}
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
             {/* Calendars Section */}
             <div className="flex border-r border-slate-200">
               <div className="border-r border-slate-200">
-                <div className="text-sm font-semibold text-slate-600 px-4 pt-3 pb-2">Start</div>
+                <div className="text-sm font-semibold text-slate-600 px-4 pt-3 pb-2">{t('start')}</div>
                 <Calendar
                   mode="single"
                   selected={tempRange.start}
@@ -173,7 +173,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
                 />
               </div>
               <div>
-                <div className="text-sm font-semibold text-slate-600 px-4 pt-3 pb-2">End</div>
+                <div className="text-sm font-semibold text-slate-600 px-4 pt-3 pb-2">{t('end')}</div>
                 <Calendar
                   mode="single"
                   selected={tempRange.end}
@@ -185,7 +185,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
 
             {/* Predefined Periods Section */}
             <div className="w-64 p-4 flex flex-col">
-              <div className="text-sm font-semibold text-slate-600 mb-3">Predefined period</div>
+              <div className="text-sm font-semibold text-slate-600 mb-3">{t('predefinedPeriod')}</div>
               <div className="space-y-2 flex-1 pt-8">
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -217,7 +217,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
                     onClick={() => setPredefinedRange('lastWeek')}
                     className="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-slate-700"
                   >
-                    Last week
+                    {t('lastWeek')}
                   </button>
                 </div>
 
@@ -234,7 +234,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
                     onClick={() => setPredefinedRange('lastMonth')}
                     className="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-slate-700"
                   >
-                    Last month
+                    {t('lastMonth')}
                   </button>
                 </div>
 
@@ -251,7 +251,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
                     onClick={() => setPredefinedRange('lastYear')}
                     className="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-slate-700"
                   >
-                    Last Year
+                    {t('lastYear')}
                   </button>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
                   className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <Check className="w-4 h-4" />
-                  OK
+                  {t('ok')}
                 </button>
                 <button
                   type="button"
@@ -272,7 +272,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "S
                   className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <X className="w-4 h-4" />
-                  Cancel
+                  {t('cancel')}
                 </button>
               </div>
             </div>

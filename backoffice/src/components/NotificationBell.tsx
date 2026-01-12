@@ -110,7 +110,7 @@ export function NotificationBell() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toast.success(t('allNotificationsMarkedAsRead') || 'All notifications marked as read');
+      toast.success(t('allNotificationsMarkedAsRead'));
     },
   });
 
@@ -122,10 +122,10 @@ export function NotificationBell() {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return t('justNow') || 'Just now';
-    if (minutes < 60) return `${minutes} ${t('minutesAgo') || 'm ago'}`;
-    if (hours < 24) return `${hours} ${t('hoursAgo') || 'h ago'}`;
-    return `${days} ${t('daysAgo') || 'd ago'}`;
+    if (minutes < 1) return t('justNow');
+    if (minutes < 60) return `${minutes} ${t('minutesAgo')}`;
+    if (hours < 24) return `${hours} ${t('hoursAgo')}`;
+    return `${days} ${t('daysAgo')}`;
   };
 
   const getNotificationIcon = (type: string) => {
@@ -212,7 +212,7 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">{t('notifications') || 'Notifications'}</h3>
+          <h3 className="font-semibold">{t('notifications')}</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -221,14 +221,14 @@ export function NotificationBell() {
               className="h-8 text-xs"
             >
               <CheckCheck className="h-4 w-4 mr-1" />
-              {t('markAllRead') || 'Mark all read'}
+              {t('markAllRead')}
             </Button>
           )}
         </div>
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              {t('noNotifications') || 'No notifications'}
+              {t('noNotifications')}
             </div>
           ) : (
             <div className="divide-y">

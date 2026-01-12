@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, ShoppingCart } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 
 // Keyframe animations for Apple-style entrance
 const backdropAnimation = `
@@ -43,8 +43,8 @@ const contentAnimation = `
 if (typeof document !== 'undefined') {
   const styleSheet = document.createElement('style');
   styleSheet.textContent = backdropAnimation + modalAnimation + contentAnimation;
-  if (!document.head.querySelector('[data-modal-animations]')) {
-    styleSheet.setAttribute('data-modal-animations', 'true');
+  if (!document.head.querySelector('[data-price-modal-animations]')) {
+    styleSheet.setAttribute('data-price-modal-animations', 'true');
     document.head.appendChild(styleSheet);
   }
 }
@@ -53,91 +53,89 @@ interface Product {
   Id: number;
   Name: string;
   Price: number;
-  Stock?: number;
-  Code?: string;
   ImageUrl?: string;
+  Code?: string;
 }
 
-interface ProductQuantityModalProps {
+interface PriceConfirmModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
-  onAddToCart: (quantity: number) => void;
-  initialQuantity?: number;
+  onConfirm: (price: number) => void;
   language?: string;
   t: (key: string) => string;
 }
 
-export const ProductQuantityModal = ({ 
+export const PriceConfirmModal = ({ 
   product, 
   isOpen, 
   onClose, 
-  onAddToCart,
-  initialQuantity = 0,
+  onConfirm,
   t 
-}: ProductQuantityModalProps) => {
-  const [quantity, setQuantity] = useState('');
+}: PriceConfirmModalProps) => {
+  const [price, setPrice] = useState('');
+  const [decimalMode, setDecimalMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      if (initialQuantity > 0) {
-        setQuantity(initialQuantity.toString());
-      } else {
-        setQuantity('');
-      }
-      
+    if (isOpen && product) {
+      setPrice(product.Price.toFixed(2));
+      setDecimalMode(false);
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [isOpen, initialQuantity]);
+  }, [isOpen, product]);
 
   if (!product || !isOpen) return null;
 
-  const maxQuantity = product.Stock ?? 999;
-
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
-      setQuantity('');
-    } else {
-      const newValue = quantity === '' ? num : quantity + num;
-      const numValue = parseInt(newValue);
-      if (numValue <= maxQuantity && numValue > 0) {
-        setQuantity(newValue);
+      setPrice('');
+      setDecimalMode(false);
+    } else if (num === '.') {
+      if (!price.includes('.')) {
+        setPrice(price || '0' + '.');
+        setDecimalMode(true);
       }
+    } else {
+      const newValue = price === '' || price === '0' ? num : price + num;
+      // Limit to 2 decimal places
+      if (decimalMode) {
+        const parts = newValue.split('.');
+        if (parts[1] && parts[1].length > 2) return;
+      }
+      setPrice(newValue);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    if (value === '' || value === '0') {
-      setQuantity('');
-    } else {
-      const numValue = parseInt(value);
-      if (numValue <= maxQuantity) {
-        setQuantity(value);
-      }
+    const value = e.target.value;
+    // Allow numbers and one decimal point
+    if (/^\d*\.?\d{0,2}$/.test(value) || value === '') {
+      setPrice(value);
+      setDecimalMode(value.includes('.'));
     }
   };
 
-  const handleAddToCart = () => {
-    const qty = parseInt(quantity);
-    if (qty > 0) {
-      onAddToCart(qty);
-      setQuantity('');
+  const handleConfirm = () => {
+    const priceValue = parseFloat(price);
+    if (priceValue > 0) {
+      onConfirm(priceValue);
+      setPrice('');
+      setDecimalMode(false);
       onClose();
     }
   };
 
   const handleClose = () => {
-    setQuantity('');
+    setPrice('');
+    setDecimalMode(false);
     onClose();
   };
 
-  const totalPrice = product.Price * (parseInt(quantity) || 0);
-  const hasQuantity = quantity !== '' && parseInt(quantity) > 0;
-  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0'];
+  const hasValidPrice = price !== '' && parseFloat(price) > 0;
+  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'C'];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -168,16 +166,9 @@ export const ProductQuantityModal = ({
 
           <div className="space-y-1.5 sm:space-y-2 pr-10 sm:pr-12">
             <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
-              {product.Name}
+              {t('confirmPrice')}
             </h2>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl font-bold text-primary">
-                {product.Price.toFixed(2)} {t('currency')}
-              </span>
-              <span className="text-xs sm:text-sm text-gray-500">
-                {t('perUnit')}
-              </span>
-            </div>
+            <p className="text-sm text-gray-600">{product.Name}</p>
             {product.Code && (
               <p className="text-xs text-gray-500">
                 {t('code')}: {product.Code}
@@ -193,21 +184,22 @@ export const ProductQuantityModal = ({
             animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
           }}
         >
-          {/* Quantity Input */}
+          {/* Price Input */}
           <div className="space-y-2">
             <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
-              {t('quantity')}
+              {t('price')} ({t('currency')})
             </label>
             <input
               ref={inputRef}
-              type="number"
-              inputMode="numeric"
-              value={quantity}
+              type="text"
+              inputMode="decimal"
+              value={price}
               onChange={handleInputChange}
-              className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              min="0"
-              max={maxQuantity}
+              className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
+            <p className="text-xs text-gray-500 text-center">
+              {t('originalPrice')}: {product.Price.toFixed(2)} {t('currency')}
+            </p>
           </div>
 
           {/* Numeric Keypad */}
@@ -231,34 +223,17 @@ export const ProductQuantityModal = ({
             ))}
           </div>
 
-          {/* Total Price */}
-          {hasQuantity && (
-            <div 
-              className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20"
-              style={{
-                animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
-              }}
-            >
-              <span className="text-sm font-semibold text-gray-700">
-                {t('total')}
-              </span>
-              <span className="text-xl font-bold text-primary">
-                {totalPrice.toFixed(2)} {t('currency')}
-              </span>
-            </div>
-          )}
-
-          {/* Add to Cart Button */}
-          {hasQuantity && (
+          {/* Confirm Button */}
+          {hasValidPrice && (
             <button
-              onClick={handleAddToCart}
+              onClick={handleConfirm}
               className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90 text-white hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
               style={{
                 animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
               }}
             >
-              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-              {initialQuantity > 0 ? t('updateQty') : t('addToCart')}
+              <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+              {t('confirm')}
             </button>
           )}
         </div>

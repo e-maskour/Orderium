@@ -70,14 +70,11 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
   if (!product || !isOpen) return null;
 
   const currentCartQuantity = getItemQuantity(product.Id);
-  const isOutOfStock = product.Stock !== undefined && product.Stock <= 0;
-  const maxQuantity = product.Stock ?? 999;
+  const maxQuantity = 999;
   const translation = productTranslations[product.Id];
   const displayName = language === 'fr' && translation ? translation.name : product.Name;
 
   const handleNumberClick = (num: string) => {
-    if (isOutOfStock) return; // Prevent input if out of stock
-    
     if (num === 'C') {
       setQuantity('');
     } else {
@@ -90,8 +87,6 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isOutOfStock) return; // Prevent input if out of stock
-    
     const value = e.target.value.replace(/[^0-9]/g, '');
     if (value === '' || value === '0') {
       setQuantity('');
@@ -104,18 +99,13 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
   };
 
   const handleAddToCart = () => {
-    if (isOutOfStock) return; // Don't allow adding out of stock products
-    
     const qty = parseInt(quantity);
     if (!qty || qty <= 0) return;
     
-    // Validate against stock
-    const finalQty = Math.min(qty, maxQuantity);
-    
     if (currentCartQuantity > 0) {
-      updateQuantity(product.Id, finalQty);
+      updateQuantity(product.Id, qty);
     } else {
-      for (let i = 0; i < finalQty; i++) {
+      for (let i = 0; i < qty; i++) {
         addItem(product);
       }
     }
@@ -178,9 +168,9 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
             </div>
           )}
           {hasQuantity && (
-            <Button onClick={handleAddToCart} disabled={isOutOfStock} className={cn("w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98]", isOutOfStock ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-primary hover:bg-primary/90 text-white hover:scale-[1.02]")} style={{ animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}>
+            <Button onClick={handleAddToCart} className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 text-white hover:scale-[1.02]" style={{ animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}>
               <ShoppingCart className={cn("w-4 h-4 sm:w-5 sm:h-5", dir === 'rtl' ? 'ms-2' : 'me-2')} />
-              {isOutOfStock ? t('outOfStock') : currentCartQuantity > 0 ? t('updateQty') : t('addToCart')}
+              {currentCartQuantity > 0 ? t('updateQty') : t('addToCart')}
             </Button>
           )}
         </div>

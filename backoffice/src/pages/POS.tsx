@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, ShoppingBag, Trash2, User, MapPin, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProductQuantityModal } from '../components/ProductQuantityModal';
+import { PriceConfirmModal } from '../components/PriceConfirmModal';
 
 interface Product {
   Id: number;
@@ -21,6 +22,7 @@ interface Product {
   IsService?: boolean;
   Stock?: number;
   Code?: string;
+  IsPriceChangeAllowed?: boolean;
 }
 
 interface Customer {
@@ -52,6 +54,8 @@ export default function POS() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
+  const [confirmedPrice, setConfirmedPrice] = useState<number | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
   const [isResizing, setIsResizing] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
@@ -128,10 +132,10 @@ export default function POS() {
       setShowCustomerForm(false);
       setShowSuggestions(false);
       setCustomerSearch(customer.Name);
-      toast.success(t('customerCreated') || 'Customer created successfully');
+      toast.success(t('customerCreated'));
     },
     onError: () => {
-      toast.error(t('failedToCreate') || 'Failed to create customer');
+      toast.error(t('failedToCreate'));
     },
   });
 
@@ -147,7 +151,7 @@ export default function POS() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast.success(`${t('orderCreated') || 'Order created'}: ${data.documentNumber}`);
+      toast.success(`${t('orderCreated')}: ${data.documentNumber}`);
       setCart([]);
       setSelectedCustomer(null);
       setCustomerSearch('');
@@ -155,7 +159,7 @@ export default function POS() {
       queryClient.invalidateQueries({ queryKey: ['statistics'] });
     },
     onError: () => {
-      toast.error(t('failedToCreate') || 'Failed to create order');
+      toast.error(t('failedToCreate'));
     },
   });
 
@@ -169,22 +173,43 @@ export default function POS() {
 
   const openQuantityModal = (product: Product) => {
     setSelectedProduct(product);
+    
+    // If price change is allowed, show price confirmation modal first
+    if (product.IsPriceChangeAllowed) {
+      setIsPriceModalOpen(true);
+    } else {
+      // Otherwise, go directly to quantity modal
+      setConfirmedPrice(product.Price);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handlePriceConfirm = (price: number) => {
+    setConfirmedPrice(price);
+    setIsPriceModalOpen(false);
     setIsModalOpen(true);
   };
 
   const handleAddToCart = (quantity: number) => {
     if (!selectedProduct) return;
     
+    // Use confirmed price if available, otherwise use product's original price
+    const finalPrice = confirmedPrice !== null ? confirmedPrice : selectedProduct.Price;
+    const productWithPrice = { ...selectedProduct, Price: finalPrice };
+    
     const existing = cart.find(item => item.product.Id === selectedProduct.Id);
     if (existing) {
       setCart(cart.map(item =>
         item.product.Id === selectedProduct.Id
-          ? { ...item, quantity }
+          ? { ...item, quantity, product: productWithPrice }
           : item
       ));
     } else {
-      setCart([...cart, { product: selectedProduct, quantity }]);
+      setCart([...cart, { product: productWithPrice, quantity }]);
     }
+    
+    // Reset confirmed price
+    setConfirmedPrice(null);
   };
 
   const removeFromCart = (productId: number) => {
@@ -200,12 +225,12 @@ export default function POS() {
 
   const handleCheckout = () => {
     if (!selectedCustomer) {
-      toast.error(t('selectCustomer') || 'Please select a customer');
+      toast.error(t('selectCustomer'));
       return;
     }
     
     if (cart.length === 0) {
-      toast.error(t('cartEmpty') || 'Cart is empty');
+      toast.error(t('cartEmpty'));
       return;
     }
 
@@ -282,7 +307,7 @@ export default function POS() {
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm flex-shrink-0">
               <span className="text-white font-bold text-lg sm:text-xl">P</span>
             </div>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">{t('pos') || 'Point of Sale'}</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">{t('pos')}</h1>
           </div>
 
           {/* Right actions */}
@@ -299,6 +324,16 @@ export default function POS() {
           </div>
         </div>
       </header>
+
+      {/* Price Confirmation Modal */}
+      <PriceConfirmModal
+        product={selectedProduct}
+        isOpen={isPriceModalOpen}
+        onClose={() => setIsPriceModalOpen(false)}
+        onConfirm={handlePriceConfirm}
+        language={language}
+        t={(key: string) => t(key as any)}
+      />
 
       {/* Product Quantity Modal */}
       <ProductQuantityModal
@@ -330,7 +365,7 @@ export default function POS() {
                 <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400`} />
                 <input
                   type="text"
-                  placeholder={t('searchByNameOrPhone') || 'Search by name or phone...'}
+                  placeholder={t('searchByNameOrPhone')}
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
                   onFocus={() => customerSuggestions.length > 0 && setShowSuggestions(true)}
@@ -374,14 +409,14 @@ export default function POS() {
                     }}
                     className="mt-2 text-xs text-emerald-700 hover:text-emerald-900 font-medium"
                   >
-                    {t('change') || 'Change'}
+                    {t('change')}
                   </button>
                 </div>
               )}
 
               {showCustomerForm && !selectedCustomer && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-                  <p className="text-xs text-blue-700 font-medium">{t('newCustomer') || 'New Customer'}</p>
+                  <p className="text-xs text-blue-700 font-medium">{t('newCustomer')}</p>
                   <input
                     type="text"
                     placeholder={t('name')}
@@ -435,7 +470,7 @@ export default function POS() {
               </div>
               {cart.length > 0 && (
                 <p className="text-xs text-gray-500">
-                  {cart.length} {cart.length === 1 ? 'produit' : 'produits'} - {cartTotalItems} {cartTotalItems === 1 ? 'pièce' : 'pièces'}
+                  {cart.length} {cart.length === 1 ? t('cartProduct') : t('cartProducts')} - {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
                 </p>
               )}
             </div>
@@ -448,7 +483,7 @@ export default function POS() {
                     <ShoppingBag className="w-8 h-8 text-gray-300" />
                   </div>
                   <h3 className="text-sm font-semibold text-gray-900 mb-1">{t('cartEmpty')}</h3>
-                  <p className="text-xs text-gray-500">Ajoutez des produits pour commencer</p>
+                  <p className="text-xs text-gray-500">{t('emptyCartMessage')}</p>
                 </div>
               ) : (
                 <div className="py-2">
@@ -524,7 +559,7 @@ export default function POS() {
                   disabled={!selectedCustomer || cart.length === 0 || createOrderMutation.isPending}
                   className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {createOrderMutation.isPending ? t('loading') : (t('createOrder') || 'Create Order')}
+                  {createOrderMutation.isPending ? t('loading') : t('createOrder')}
                 </button>
               </div>
             )}
@@ -553,7 +588,7 @@ export default function POS() {
                 <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} />
                 <input
                   type="text"
-                  placeholder={t('searchProducts') || 'Search products...'}
+                  placeholder={t('searchProducts')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={`w-full ${dir === 'rtl' ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent`}
@@ -582,10 +617,10 @@ export default function POS() {
                   <Package className="w-12 h-12 text-gray-300" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {t('noProductsFound') || 'No products found'}
+                  {t('noProductsFound')}
                 </h3>
                 <p className="text-gray-500 max-w-md">
-                  {searchQuery ? 'Try adjusting your search' : 'No products available'}
+                  {searchQuery ? t('noResultsMessage') : t('noProductsInCategory')}
                 </p>
               </div>
             ) : (

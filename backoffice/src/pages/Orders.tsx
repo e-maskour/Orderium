@@ -238,7 +238,7 @@ export default function Orders() {
                   setDateFilterType('custom');
                 }
               }}
-              placeholder={t('selectDate') || 'Select date range'}
+              placeholder={t('selectDate')}
             />
           </div>
 
@@ -359,7 +359,7 @@ export default function Orders() {
                         }`}
                         disabled={order.Status === 'delivered'}
                       >
-                        <option value="">{order.DeliveryPersonId ? '✓ Assigned' : t('selectDeliveryPerson')}</option>
+                        <option value="">{order.DeliveryPersonId ? t('assigned') : t('selectDeliveryPerson')}</option>
                         {deliveryPersons.filter((p: any) => p.IsActive).map((person: any) => (
                           <option key={person.Id} value={person.Id}>{person.Name}</option>
                         ))}

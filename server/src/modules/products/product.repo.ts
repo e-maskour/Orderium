@@ -47,6 +47,19 @@ export async function initializeProductTable(): Promise<void> {
       await pool.request().query(`ALTER TABLE Product ADD Stock INT NULL`);
       logger.info('✅ Added Stock column to Product table');
     }
+
+    // Check if IsPriceChangeAllowed column exists
+    const checkPriceChange = await pool.request().query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_NAME = 'Product' 
+      AND COLUMN_NAME = 'IsPriceChangeAllowed'
+    `);
+    
+    if (checkPriceChange.recordset.length === 0) {
+      await pool.request().query(`ALTER TABLE Product ADD IsPriceChangeAllowed BIT NOT NULL DEFAULT 1`);
+      logger.info('✅ Added IsPriceChangeAllowed column to Product table with default value true');
+    }
   } catch (error) {
     logger.error('❌ Error initializing Product table:', error);
     throw error;
@@ -75,7 +88,7 @@ export async function findProducts(
   const result = await request.query(`
     SELECT
       Id, Name, Code, Description,
-      Price, Cost, IsService, IsEnabled,
+      Price, Cost, IsService, IsEnabled, IsPriceChangeAllowed,
       DateCreated, DateUpdated, ImageUrl, Stock
     FROM Product
     ${where}
@@ -114,7 +127,7 @@ export async function getProductById(id: number): Promise<Product | null> {
   const result = await request.query(`
     SELECT
       Id, Name, Code, Description,
-      Price, Cost, IsService, IsEnabled,
+      Price, Cost, IsService, IsEnabled, IsPriceChangeAllowed,
       DateCreated, DateUpdated, ImageUrl, Stock
     FROM Product
     WHERE Id = @id
@@ -134,14 +147,15 @@ export async function createProduct(data: CreateProductDTO): Promise<Product> {
     .input("stock", sql.Int, data.Stock || null)
     .input("isService", sql.Bit, data.IsService || false)
     .input("isEnabled", sql.Bit, data.IsEnabled !== false)
+    .input("isPriceChangeAllowed", sql.Bit, data.IsPriceChangeAllowed !== false)
     .input("imageUrl", sql.NVarChar, data.ImageUrl || null);
 
   const result = await request.query(`
-    INSERT INTO Product (Name, Code, Description, Price, Cost, Stock, IsService, IsEnabled, ImageUrl, DateCreated, DateUpdated)
+    INSERT INTO Product (Name, Code, Description, Price, Cost, Stock, IsService, IsEnabled, IsPriceChangeAllowed, ImageUrl, DateCreated, DateUpdated)
     OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.Code, INSERTED.Description,
            INSERTED.Price, INSERTED.Cost, INSERTED.Stock, INSERTED.IsService, 
-           INSERTED.IsEnabled, INSERTED.DateCreated, INSERTED.DateUpdated, INSERTED.ImageUrl
-    VALUES (@name, @code, @description, @price, @cost, @stock, @isService, @isEnabled, @imageUrl, GETDATE(), GETDATE())
+           INSERTED.IsEnabled, INSERTED.IsPriceChangeAllowed, INSERTED.DateCreated, INSERTED.DateUpdated, INSERTED.ImageUrl
+    VALUES (@name, @code, @description, @price, @cost, @stock, @isService, @isEnabled, @isPriceChangeAllowed, @imageUrl, GETDATE(), GETDATE())
   `);
 
   return result.recordset[0];
@@ -186,6 +200,10 @@ export async function updateProduct(id: number, data: UpdateProductDTO): Promise
     updates.push("IsEnabled = @isEnabled");
     request.input("isEnabled", sql.Bit, data.IsEnabled);
   }
+  if (data.IsPriceChangeAllowed !== undefined) {
+    updates.push("IsPriceChangeAllowed = @isPriceChangeAllowed");
+    request.input("isPriceChangeAllowed", sql.Bit, data.IsPriceChangeAllowed);
+  }
   if (data.ImageUrl !== undefined) {
     updates.push("ImageUrl = @imageUrl");
     request.input("imageUrl", sql.NVarChar, data.ImageUrl);
@@ -202,7 +220,7 @@ export async function updateProduct(id: number, data: UpdateProductDTO): Promise
     SET ${updates.join(", ")}
     OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.Code, INSERTED.Description,
            INSERTED.Price, INSERTED.Cost, INSERTED.Stock, INSERTED.IsService, 
-           INSERTED.IsEnabled, INSERTED.DateCreated, INSERTED.DateUpdated, INSERTED.ImageUrl
+           INSERTED.IsEnabled, INSERTED.IsPriceChangeAllowed, INSERTED.DateCreated, INSERTED.DateUpdated, INSERTED.ImageUrl
     WHERE Id = @id
   `);
 

@@ -8,6 +8,7 @@ export interface Product {
   Stock?: number | null;
   IsService: boolean;
   IsEnabled: boolean;
+  IsPriceChangeAllowed: boolean;
   DateCreated: Date;
   DateUpdated: Date;
   ImageUrl?: string | null;
@@ -22,6 +23,7 @@ export interface CreateProductDTO {
   Stock?: number | null;
   IsService?: boolean;
   IsEnabled?: boolean;
+  IsPriceChangeAllowed?: boolean;
   ImageUrl?: string | null;
 }
 
@@ -34,5 +36,6 @@ export interface UpdateProductDTO {
   Stock?: number | null;
   IsService?: boolean;
   IsEnabled?: boolean;
+  IsPriceChangeAllowed?: boolean;
   ImageUrl?: string | null;
 }

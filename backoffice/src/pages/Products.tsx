@@ -169,7 +169,7 @@ export default function Products() {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm(t('confirmDelete') || 'Are you sure you want to delete this product?')) {
+    if (window.confirm(t('confirmDelete'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -214,7 +214,7 @@ export default function Products() {
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder={t('searchProducts') || 'Search products...'}
+                placeholder={t('searchProducts')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full sm:w-64 ps-10 pe-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
@@ -407,14 +407,14 @@ export default function Products() {
                       {t('chooseImage')}
                     </label>
                     <p className="text-xs text-slate-500 mt-2">
-                      {t('imageDescription') || 'Upload a product image (JPG, PNG, max 5MB)'}
+                      {t('imageDescription')}
                     </p>
                   </div>
                 </div>
                 {/* Or paste image URL */}
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t('orImageUrl') || 'Or paste image URL'}
+                    {t('orImageUrl')}
                   </label>
                   <input
                     type="url"

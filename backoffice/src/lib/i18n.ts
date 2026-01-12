@@ -59,6 +59,15 @@ export const translations = {
     thisMonth: 'هذا الشهر',
     thisYear: 'هذا العام',
     selectDate: 'اختر تاريخاً',
+    lastWeek: 'الأسبوع الماضي',
+    lastMonth: 'الشهر الماضي',
+    lastYear: 'العام الماضي',
+    period: 'الفترة',
+    selectDates: 'اختر التواريخ',
+    start: 'البداية',
+    end: 'النهاية',
+    predefinedPeriod: 'فترة محددة مسبقاً',
+    ok: 'موافق',
     
     // Form Fields
     name: 'الاسم',
@@ -79,6 +88,7 @@ export const translations = {
     unassign: 'إلغاء التعيين',
     assignTo: 'تعيين إلى',
     selectDeliveryPerson: 'اختر مندوب التوصيل',
+    assigned: '✓ تم التعيين',
     
     // Notifications
     deliveryPersonCreated: 'تم إنشاء مندوب التوصيل بنجاح',
@@ -155,6 +165,7 @@ export const translations = {
     searchByNameOrPhone: 'ابحث بالاسم أو الهاتف...',
     cart: 'السلة',
     cartEmpty: 'السلة فارغة',
+    emptyCartMessage: 'ابدأ بإضافة المنتجات',
     selectCustomer: 'يرجى اختيار عميل',
     newCustomer: 'عميل جديد',
     createOrder: 'إنشاء طلب',
@@ -162,6 +173,20 @@ export const translations = {
     customerCreated: 'تم إنشاء العميل بنجاح',
     change: 'تغيير',
     noProductsFound: 'لا توجد منتجات',
+    noResultsMessage: 'جرب كلمة بحث أخرى',
+    noProductsInCategory: 'لا توجد منتجات متاحة',
+    cartProduct: 'منتج',
+    cartProducts: 'منتجات',
+    piece: 'قطعة',
+    pieces: 'قطع',
+    perUnit: '/ وحدة',
+    clear: 'مسح',
+    quantity: 'الكمية',
+    addToCart: 'أضف للسلة',
+    updateQty: 'تحديث الكمية',
+    confirmPrice: 'تأكيد السعر',
+    originalPrice: 'السعر الأصلي',
+    confirm: 'تأكيد',
 
     // Products Management
     products: 'المنتجات',
@@ -186,6 +211,16 @@ export const translations = {
     pointOfSale: 'نقطة البيع',
     createOrders: 'إنشاء الطلبات',
     code: 'الرمز',
+    
+    // Language Toggle
+    switchToFrench: 'Changer en français',
+    switchToArabic: 'التبديل للعربية',
+    
+    // Error Messages
+    loginFailed: 'فشل تسجيل الدخول',
+    accessDenied: 'تم رفض الوصول: مطلوب بيانات اعتماد المسؤول',
+    useAuthError: 'يجب استخدام useAuth داخل AuthProvider',
+    useLanguageError: 'يجب استخدام useLanguage داخل LanguageProvider',
   },
   fr: {
     // App & Branding
@@ -245,6 +280,15 @@ export const translations = {
     thisMonth: 'Ce mois',
     thisYear: 'Cette année',
     selectDate: 'Sélectionner une date',
+    lastWeek: 'Semaine dernière',
+    lastMonth: 'Mois dernier',
+    lastYear: 'Année dernière',
+    period: 'Période',
+    selectDates: 'Sélectionner les dates',
+    start: 'Début',
+    end: 'Fin',
+    predefinedPeriod: 'Période prédéfinie',
+    ok: 'OK',
     
     // Form Fields
     name: 'Nom',
@@ -265,6 +309,7 @@ export const translations = {
     unassign: 'Désassigner',
     assignTo: 'Assigner à',
     selectDeliveryPerson: 'Sélectionner un livreur',
+    assigned: '✓ Assigné',
     
     // Notifications
     deliveryPersonCreated: 'Livreur créé avec succès',
@@ -341,6 +386,7 @@ export const translations = {
     searchByNameOrPhone: 'Rechercher par nom ou téléphone...',
     cart: 'Panier',
     cartEmpty: 'Le panier est vide',
+    emptyCartMessage: 'Commencez à ajouter des produits',
     selectCustomer: 'Veuillez sélectionner un client',
     newCustomer: 'Nouveau client',
     createOrder: 'Créer une commande',
@@ -348,6 +394,20 @@ export const translations = {
     customerCreated: 'Client créé avec succès',
     change: 'Changer',
     noProductsFound: 'Aucun produit trouvé',
+    noResultsMessage: 'Essayez un autre terme de recherche',
+    noProductsInCategory: 'Aucun produit disponible',
+    cartProduct: 'produit',
+    cartProducts: 'produits',
+    piece: 'pièce',
+    pieces: 'pièces',
+    perUnit: '/ unité',
+    clear: 'Effacer',
+    quantity: 'Quantité',
+    addToCart: 'Ajouter au panier',
+    updateQty: 'Modifier la quantité',
+    confirmPrice: 'Confirmer le prix',
+    originalPrice: 'Prix original',
+    confirm: 'Confirmer',
 
     // Products Management
     products: 'Produits',
@@ -372,6 +432,16 @@ export const translations = {
     pointOfSale: 'Point de vente',
     createOrders: 'Créer des commandes',
     code: 'Code',
+    
+    // Language Toggle
+    switchToFrench: 'Changer en français',
+    switchToArabic: 'التبديل للعربية',
+    
+    // Error Messages
+    loginFailed: 'Échec de connexion',
+    accessDenied: 'Accès refusé: Identifiants administrateur requis',
+    useAuthError: 'useAuth doit être utilisé dans un AuthProvider',
+    useLanguageError: 'useLanguage doit être utilisé dans un LanguageProvider',
   },
 };
 

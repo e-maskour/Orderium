@@ -20,16 +20,13 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const quantity = getItemQuantity(product.Id);
-  const isOutOfStock = product.Stock !== undefined && product.Stock <= 0;
   
   // Get translated name/description if available
   const translation = productTranslations[product.Id];
   const displayName = language === 'fr' && translation ? translation.name : product.Name;
 
   const handleAddToCart = () => {
-    if (!isOutOfStock) {
-      addItem(product);
-    }
+    addItem(product);
   };
 
   const handleIncrement = () => {
@@ -49,7 +46,6 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
-    // Allow opening modal even for out of stock products (to view details)
     setIsModalOpen(true);
   };
 
@@ -69,7 +65,6 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
           className={cn(
             "group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex gap-2 sm:gap-3 p-2 sm:p-2.5",
             "cursor-pointer active:scale-[0.99]",
-            isOutOfStock && "opacity-60",
             quantity > 0 && "ring-2 ring-primary bg-primary/5"
           )}
           dir={dir}
@@ -80,23 +75,12 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
               <img
                 src={product.ImageUrl}
                 alt={displayName}
-                className={cn(
-                  "w-full h-full object-cover transition-transform duration-500",
-                  !isOutOfStock && "group-hover:scale-105"
-                )}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                 <Package className="w-8 h-8 text-gray-300" />
-              </div>
-            )}
-            
-            {isOutOfStock && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded shadow-lg">
-                  {t('outOfStock')}
-                </span>
               </div>
             )}
           </div>
@@ -140,7 +124,6 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
         className={cn(
           "group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col",
           "cursor-pointer active:scale-[0.98]",
-          isOutOfStock && "opacity-60",
           quantity > 0 && "ring-2 ring-primary bg-primary/5"
         )}
         dir={dir}
@@ -151,10 +134,7 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
           <img
             src={product.ImageUrl}
             alt={displayName}
-            className={cn(
-              "w-full h-full object-cover transition-transform duration-500",
-              !isOutOfStock && "group-hover:scale-105"
-            )}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
@@ -162,18 +142,9 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
             <Package className="w-8 h-8 text-gray-300" />
           </div>
         )}
-        
-        {/* Out of Stock Badge */}
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded shadow-lg">
-              {t('outOfStock')}
-            </span>
-          </div>
-        )}
 
         {/* Quantity badge when in cart */}
-        {quantity > 0 && !isOutOfStock && (
+        {quantity > 0 && (
           <div className="absolute top-1 end-1 min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md">
             {quantity}
           </div>
