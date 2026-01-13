@@ -1,7 +1,6 @@
 import { formatCurrency } from '@/lib/i18n';
 import { useLanguage } from '@/context/LanguageContext';
 import { CartItem } from '@/context/CartContext';
-import { productTranslations } from '@/data/mockProducts';
 
 interface InvoiceProps {
   orderNumber: string;
@@ -218,9 +217,7 @@ export const Invoice = ({
           </thead>
           <tbody>
             {items.map((item, index) => {
-              const translation = productTranslations[item.product.Id];
-              const displayName =
-                language === 'fr' && translation ? translation.name : item.product.Name;
+              const displayName = item.product.Name;
               const itemTotal = item.product.Price * item.quantity;
 
               return (

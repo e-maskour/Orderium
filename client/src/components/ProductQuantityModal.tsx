@@ -4,7 +4,6 @@ import { Product } from '@/types/database';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
-import { productTranslations } from '@/data/mockProducts';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -71,8 +70,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
 
   const currentCartQuantity = getItemQuantity(product.Id);
   const maxQuantity = 999;
-  const translation = productTranslations[product.Id];
-  const displayName = language === 'fr' && translation ? translation.name : product.Name;
+  const displayName = product.Name;
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {

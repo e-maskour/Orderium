@@ -2,7 +2,6 @@ import { Product } from '@/types/database';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
-import { productTranslations } from '@/data/mockProducts';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -21,9 +20,7 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
   
   const quantity = getItemQuantity(product.Id);
   
-  // Get translated name/description if available
-  const translation = productTranslations[product.Id];
-  const displayName = language === 'fr' && translation ? translation.name : product.Name;
+  const displayName = product.Name;
 
   const handleAddToCart = () => {
     addItem(product);

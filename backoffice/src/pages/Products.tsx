@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { LanguageToggle } from '../components/LanguageToggle';
-import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '../services/api';
 import { Plus, Edit, Trash2, Search, Package, Image as ImageIcon, X } from 'lucide-react';
+import { AdminLayout } from '../components/AdminLayout';
 
 interface Product {
   Id: number;
@@ -23,9 +21,7 @@ interface Product {
 }
 
 export default function Products() {
-  const { admin, logout } = useAuth();
   const { t, dir } = useLanguage();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -76,11 +72,6 @@ export default function Products() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const handleOpenModal = (product?: Product) => {
     if (product) {
@@ -175,31 +166,7 @@ export default function Products() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50" dir={dir}>
-      {/* Header */}
-      <nav className="bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center gap-3">
-              <Link to="/dashboard" className="text-xl font-bold text-slate-800 hover:text-primary transition-colors">
-                {t('appName')} {t('adminBackoffice')}
-              </Link>
-            </div>
-            <div className="flex items-center gap-4">
-              <LanguageToggle />
-              <span className="text-sm text-slate-600">{admin?.Username}</span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
-              >
-                {t('logout')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
+    <AdminLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header with Search and Add Button */}
         <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -559,6 +526,6 @@ export default function Products() {
           </div>
         </div>
       )}
-    </div>
+    </AdminLayout>
   );
 }

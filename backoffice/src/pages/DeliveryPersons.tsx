@@ -3,9 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deliveryPersonService } from '../services/api';
 import { DeliveryPerson } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { Link } from 'react-router-dom';
 import { UserPlus, Edit2, Trash2, Truck } from 'lucide-react';
 import { toast } from 'sonner';
+import { AdminLayout } from '../components/AdminLayout';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -116,34 +116,20 @@ export default function DeliveryPersons() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="text-slate-700 hover:text-amber-600 font-semibold flex items-center gap-2 transition-colors">
-                <Truck className="w-5 h-5" />
-                ← {t('dashboard')}
-              </Link>
-              <h1 className="text-xl font-bold text-slate-800">{t('deliveryPersons')}</h1>
-            </div>
-            <div className="flex items-center">
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowForm(!showForm);
-                }}
-                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-medium shadow-sm hover:shadow-md transition-all flex items-center gap-2"
-              >
-                <UserPlus className="w-4 h-4" />
-                {showForm ? t('cancel') : t('addDeliveryPerson')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <AdminLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => {
+              resetForm();
+              setShowForm(!showForm);
+            }}
+            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-medium shadow-sm hover:shadow-md transition-all flex items-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            {showForm ? t('cancel') : t('addDeliveryPerson')}
+          </button>
+        </div>
         {showForm && (
           <div className="bg-white shadow-sm rounded-2xl p-6 mb-6 border border-slate-200/60">
             <h2 className="text-lg font-bold mb-4 text-slate-800">
@@ -321,6 +307,6 @@ export default function DeliveryPersons() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AdminLayout>
   );
 }

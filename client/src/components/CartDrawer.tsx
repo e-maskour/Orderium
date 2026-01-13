@@ -1,7 +1,6 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart, CartItem } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
-import { productTranslations } from '@/data/mockProducts';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { QuantityStepper } from './QuantityStepper';
@@ -22,8 +21,7 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
   const { language, dir, t } = useLanguage();
   const { removeItem } = useCart();
   
-  const translation = productTranslations[item.product.Id];
-  const displayName = language === 'fr' && translation ? translation.name : item.product.Name;
+  const displayName = item.product.Name;
 
   return (
     <div 

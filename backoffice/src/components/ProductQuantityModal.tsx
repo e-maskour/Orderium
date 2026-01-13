@@ -93,6 +93,18 @@ export const ProductQuantityModal = ({
     }
   }, [isOpen, initialQuantity]);
 
+  // Keep focus on input
+  useEffect(() => {
+    if (isOpen) {
+      const interval = setInterval(() => {
+        if (document.activeElement !== inputRef.current) {
+          inputRef.current?.focus();
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
+
   if (!product || !isOpen) return null;
 
   const maxQuantity = product.Stock ?? 999;
@@ -107,6 +119,8 @@ export const ProductQuantityModal = ({
         setQuantity(newValue);
       }
     }
+    // Restore focus after button click
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

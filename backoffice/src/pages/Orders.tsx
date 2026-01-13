@@ -3,10 +3,10 @@ import { orderService, deliveryPersonService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
-import { Link } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
-import { Package, Phone, MapPin, X, Search } from 'lucide-react';
+import { Phone, MapPin, X, Search, Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { AdminLayout } from '../components/AdminLayout';
 import { DateRangePicker } from '../components/ui/date-range-picker';
 import {
   AlertDialog,
@@ -197,21 +197,7 @@ export default function Orders() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="text-slate-700 hover:text-amber-600 font-semibold flex items-center gap-2 transition-colors">
-                <Package className="w-5 h-5" />
-                ← {t('dashboard')}
-              </Link>
-              <h1 className="text-xl font-bold text-slate-800">{t('orderManagement')}</h1>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <AdminLayout>
       {/* Search and Filter */}
       <div className="bg-white border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
@@ -396,6 +382,6 @@ export default function Orders() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AdminLayout>
   );
 }

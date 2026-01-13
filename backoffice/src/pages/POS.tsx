@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { LanguageToggle } from '../components/LanguageToggle';
-import { NotificationBell } from '../components/NotificationBell';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, ShoppingBag, Trash2, User, MapPin, Package } from 'lucide-react';
+import { Search, ShoppingBag, Trash2, User, MapPin, Package, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProductQuantityModal } from '../components/ProductQuantityModal';
 import { PriceConfirmModal } from '../components/PriceConfirmModal';
+import { OrderSuccessModal } from '../components/OrderSuccessModal';
 
 interface Product {
   Id: number;
@@ -40,10 +38,9 @@ interface CartItem {
 }
 
 export default function POS() {
-  const { admin, logout } = useAuth();
   const { t, language, dir } = useLanguage();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
@@ -63,6 +60,15 @@ export default function POS() {
     PhoneNumber: '',
     Address: '',
   });
+  const [orderSuccessData, setOrderSuccessData] = useState<{
+    orderNumber: string;
+    customerName: string;
+    customerPhone: string;
+    customerAddress?: string;
+    items: CartItem[];
+    total: number;
+    orderDate: Date;
+  } | null>(null);
 
   const formatCurrency = (price: number) => {
     return language === 'ar' 
@@ -151,6 +157,19 @@ export default function POS() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Show success modal with order details
+      if (selectedCustomer) {
+        setOrderSuccessData({
+          orderNumber: data.documentNumber,
+          customerName: selectedCustomer.Name,
+          customerPhone: selectedCustomer.PhoneNumber,
+          customerAddress: selectedCustomer.Address,
+          items: cart,
+          total: total,
+          orderDate: new Date(),
+        });
+      }
+      
       toast.success(`${t('orderCreated')}: ${data.documentNumber}`);
       setCart([]);
       setSelectedCustomer(null);
@@ -253,11 +272,6 @@ export default function POS() {
     setShowCustomerForm(false);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   const startResizing = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -298,29 +312,25 @@ export default function POS() {
   }, [isResizing, dir]);
 
   return (
-    <div className="min-h-screen bg-gray-50" dir={dir}>
-      {/* Header - matching client Header component */}
-      <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
-        <div className="container mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm flex-shrink-0">
-              <span className="text-white font-bold text-lg sm:text-xl">P</span>
+    <div className="min-h-screen bg-slate-50" dir={dir}>
+      {/* Header with Back Button */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-full px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className={`w-4 h-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+                <span>{t('back')}</span>
+              </button>
+              <div className="h-8 w-px bg-slate-200"></div>
+              <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <ShoppingBag className="w-6 h-6 text-primary" />
+                {t('pointOfSale')}
+              </h1>
             </div>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">{t('pos')}</h1>
-          </div>
-
-          {/* Right actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <NotificationBell />
-            <LanguageToggle />
-            <span className="text-xs sm:text-sm text-gray-700 font-medium hidden md:inline">{admin?.PhoneNumber}</span>
-            <button
-              onClick={handleLogout}
-              className="text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
-            >
-              {t('logout')}
-            </button>
           </div>
         </div>
       </header>
@@ -346,11 +356,26 @@ export default function POS() {
         t={(key: string) => t(key as any)}
       />
 
+      {/* Order Success Modal */}
+      {orderSuccessData && (
+        <OrderSuccessModal
+          isOpen={!!orderSuccessData}
+          onClose={() => setOrderSuccessData(null)}
+          orderNumber={orderSuccessData.orderNumber}
+          customerName={orderSuccessData.customerName}
+          customerPhone={orderSuccessData.customerPhone}
+          customerAddress={orderSuccessData.customerAddress}
+          items={orderSuccessData.items}
+          total={orderSuccessData.total}
+          orderDate={orderSuccessData.orderDate}
+        />
+      )}
+
       {/* Main Layout - matching client 2-column layout */}
-      <div className="flex min-h-[calc(100vh-4rem)]">
+      <div className="flex h-[calc(100vh-64px)] overflow-hidden">
         {/* Desktop Cart Panel - Left Side */}
         <aside 
-          className={`hidden lg:flex lg:flex-col bg-white ${dir === 'rtl' ? 'border-s' : 'border-e'} border-gray-200 sticky top-16 h-[calc(100vh-4rem)] overflow-hidden relative`}
+          className={`hidden lg:flex lg:flex-col bg-white ${dir === 'rtl' ? 'border-s' : 'border-e'} border-gray-200 h-full overflow-hidden relative`}
           style={{ width: `${sidebarWidth}px` }}
         >
           {/* Customer Selection */}
@@ -453,7 +478,7 @@ export default function POS() {
           {/* Cart */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Cart Header */}
-            <div className="p-3 sm:p-4 border-b border-gray-200">
+            <div className="p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center justify-between mb-1">
                 <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                   <ShoppingBag className="w-4 h-4 text-primary" />
@@ -475,8 +500,8 @@ export default function POS() {
               )}
             </div>
 
-            {/* Cart Items */}
-            <div className="px-3 sm:px-4 max-h-[300px] overflow-y-auto">
+            {/* Cart Items - Scrollable */}
+            <div className="flex-1 px-3 sm:px-4 overflow-y-auto">
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
@@ -544,9 +569,9 @@ export default function POS() {
               )}
             </div>
 
-            {/* Cart Summary */}
+            {/* Cart Summary - Fixed at Bottom */}
             {cart.length > 0 && (
-              <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-50 space-y-3">
+              <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-50 space-y-3 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-gray-900">{t('total')}</span>
                   <span className="text-lg font-bold text-primary">
@@ -580,9 +605,9 @@ export default function POS() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col">
-          {/* Sticky Search Bar - matching client */}
-          <div className="sticky top-14 sm:top-16 z-30 bg-white border-b border-gray-200 shadow-sm">
+        <main className="flex-1 flex flex-col h-full overflow-hidden">
+          {/* Search Bar */}
+          <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
             <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
               <div className="relative">
                 <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} />
@@ -597,8 +622,9 @@ export default function POS() {
             </div>
           </div>
 
-          {/* Products Grid - matching client container */}
-          <div className="flex-1 container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 lg:pb-8">
+          {/* Products Grid - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
             {productsLoading ? (
               <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
                 {Array.from({ length: 12 }).map((_, i) => (
@@ -678,6 +704,7 @@ export default function POS() {
                 })}
               </div>
             )}
+            </div>
           </div>
         </main>
       </div>

@@ -1,7 +1,6 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { formatCurrency } from '@/lib/i18n';
 import { CartItem } from '@/context/CartContext';
-import { productTranslations } from '@/data/mockProducts';
 
 interface ReceiptProps {
   orderNumber: string;
@@ -82,9 +81,7 @@ export const Receipt = ({
       {/* Items */}
       <div className="mb-2">
         {items.map((item, index) => {
-          const translation = productTranslations[item.product.Id];
-          const displayName =
-            language === 'fr' && translation ? translation.name : item.product.Name;
+          const displayName = item.product.Name;
           const itemTotal = item.product.Price * item.quantity;
 
           return (

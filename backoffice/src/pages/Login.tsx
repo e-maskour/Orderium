@@ -77,8 +77,7 @@ export default function Login() {
                 setCredentials({ ...credentials, phoneNumber: e.target.value });
                 setError('');
               }}
-              className="w-full px-3 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:border-transparent"
-              style={{focusRingColor: '#235ae4'}}
+              className="w-full px-3 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="0600000000"
               required
               disabled={isLoading}
@@ -94,8 +93,7 @@ export default function Login() {
                 setCredentials({ ...credentials, password: e.target.value });
                 setError('');
               }}
-              className="w-full px-3 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:border-transparent"
-              style={{focusRingColor: '#235ae4'}}
+              className="w-full px-3 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('enterYourPassword')}
               required
               disabled={isLoading}

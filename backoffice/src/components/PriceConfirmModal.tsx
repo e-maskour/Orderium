@@ -53,6 +53,7 @@ interface Product {
   Id: number;
   Name: string;
   Price: number;
+  Cost?: number;
   ImageUrl?: string;
   Code?: string;
 }
@@ -87,6 +88,18 @@ export const PriceConfirmModal = ({
     }
   }, [isOpen, product]);
 
+  // Keep focus on input
+  useEffect(() => {
+    if (isOpen) {
+      const interval = setInterval(() => {
+        if (document.activeElement !== inputRef.current) {
+          inputRef.current?.focus();
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
+
   if (!product || !isOpen) return null;
 
   const handleNumberClick = (num: string) => {
@@ -95,18 +108,20 @@ export const PriceConfirmModal = ({
       setDecimalMode(false);
     } else if (num === '.') {
       if (!price.includes('.')) {
-        setPrice(price || '0' + '.');
+        setPrice((price || '0') + '.');
         setDecimalMode(true);
       }
     } else {
       const newValue = price === '' || price === '0' ? num : price + num;
       // Limit to 2 decimal places
-      if (decimalMode) {
+      if (newValue.includes('.')) {
         const parts = newValue.split('.');
         if (parts[1] && parts[1].length > 2) return;
       }
       setPrice(newValue);
     }
+    // Restore focus after button click
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,9 +212,16 @@ export const PriceConfirmModal = ({
               onChange={handleInputChange}
               className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
-            <p className="text-xs text-gray-500 text-center">
-              {t('originalPrice')}: {product.Price.toFixed(2)} {t('currency')}
-            </p>
+            <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
+              <span>
+                {t('originalPrice')}: {product.Price.toFixed(2)} {t('currency')}
+              </span>
+              {product.Cost != null && (
+                <span className="text-amber-600 font-medium">
+                  {t('cost')}: {product.Cost.toFixed(2)} {t('currency')}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Numeric Keypad */}

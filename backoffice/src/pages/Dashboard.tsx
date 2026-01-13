@@ -1,21 +1,19 @@
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { LanguageToggle } from '../components/LanguageToggle';
-import { NotificationBell } from '../components/NotificationBell';
-import { useNavigate, Link } from 'react-router-dom';
+import { AdminLayout } from '../components/AdminLayout';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '../services/api';
 import { Package, Truck, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
-  const { admin, logout } = useAuth();
+  const { admin } = useAuth();
   const { t } = useLanguage();
-  const navigate = useNavigate();
 
   // Connect to real-time notifications
-  const { isConnected } = useOrderNotifications({
-    token: admin?.token || localStorage.getItem('adminToken'),
+  useOrderNotifications({
+    token: localStorage.getItem('adminToken') || '',
     enabled: !!admin,
   });
 
@@ -33,43 +31,10 @@ export default function Dashboard() {
   const activeDeliveryPersons = statistics?.ActiveDeliveryPersons || 0;
   const totalRevenue = statistics?.TotalRevenue || 0;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200/60 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-slate-800">{t('appName')} {t('adminBackoffice')}</h1>
-              {isConnected && (
-                <span className="flex h-2 w-2 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-              )}
-            </div>
-            <div className="flex items-center space-x-4 gap-2">
-              <NotificationBell />
-              <LanguageToggle />
-              <span className="text-sm text-slate-700 font-medium">{t('welcome')}, {admin?.username}</span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
-              >
-                {t('logout')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 sm:px-0">
-          <h2 className="text-2xl font-bold text-slate-800 mb-6">{t('dashboard')}</h2>
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-2xl font-bold text-slate-800 mb-6">{t('dashboard')}</h2>
           
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
@@ -236,7 +201,6 @@ export default function Dashboard() {
             </Link>
           </div>
         </div>
-      </div>
-    </div>
-  );
+      </AdminLayout>
+    );
 }

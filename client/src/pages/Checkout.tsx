@@ -4,7 +4,6 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency, validateMoroccanPhone } from '@/lib/i18n';
-import { productTranslations } from '@/data/mockProducts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -373,10 +372,7 @@ const Checkout = () => {
               
               <div className="space-y-2 sm:space-y-3 max-h-[250px] sm:max-h-[300px] overflow-y-auto">
                 {items.map((item) => {
-                  const translation = productTranslations[item.product.Id];
-                  const displayName = language === 'fr' && translation 
-                    ? translation.name 
-                    : item.product.Name;
+                  const displayName = item.product.Name;
 
                   return (
                     <div key={item.product.Id} className="flex gap-2 sm:gap-3 py-2">

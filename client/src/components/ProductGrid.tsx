@@ -1,7 +1,6 @@
 import { Product, ProductFilters } from '@/types/database';
 import { ProductCard } from './ProductCard';
 import { useLanguage } from '@/context/LanguageContext';
-import { productTranslations } from '@/data/mockProducts';
 import { Package, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo } from 'react';
 import { Button } from './ui/button';
