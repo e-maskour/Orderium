@@ -72,7 +72,7 @@ export interface Invoice {
   Id: number;
   InvoiceNumber: string;
   CustomerId: number;
-  UserId: number;
+  AdminId?: number;
   Date: string;
   DueDate: string;
   Subtotal: number;
@@ -113,16 +113,11 @@ export interface InvoiceWithDetails {
     Address?: string;
     City?: string;
   };
-  User: {
-    Id: number;
-    Name: string;
-    Email?: string;
-  };
 }
 
 export interface CreateInvoiceDTO {
   CustomerId: number;
-  UserId?: number;
+  AdminId?: number;
   Date?: Date;
   DueDate?: Date;
   Items: {

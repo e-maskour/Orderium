@@ -69,6 +69,34 @@ class DeliveryRepository {
               DeliveryStatus NVARCHAR(20) NULL
         `);
       }
+      
+      // Migration: Rename UserId to AdminId if UserId exists
+      const userIdColumn = await pool.request().query(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'Document' AND COLUMN_NAME = 'UserId'
+      `);
+      
+      if (userIdColumn.recordset.length > 0) {
+        // Drop foreign key constraint if it exists
+        const fkConstraints = await pool.request()
+          .query(`
+            SELECT name
+            FROM sys.foreign_keys
+            WHERE parent_object_id = OBJECT_ID('Document')
+            AND name LIKE '%UserId%'
+          `);
+        
+        for (const fk of fkConstraints.recordset) {
+          await pool.request().query(`ALTER TABLE Document DROP CONSTRAINT ${fk.name}`);
+        }
+        
+        // Rename column
+        await pool.request().query(`
+          EXEC sp_rename 'Document.UserId', 'AdminId', 'COLUMN'
+        `);
+        console.log('✅ Renamed Document.UserId to Document.AdminId');
+      }
     }
 
     // Check if OrdersDelivery table exists and add CanceledAt column if missing

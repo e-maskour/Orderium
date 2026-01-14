@@ -194,13 +194,7 @@ export default function CreateInvoice() {
     onError: (error: any) => {
       console.error('Invoice creation error:', error);
       const errorMessage = error?.response?.data?.message || error?.message || t('invoice.createError');
-      
-      // Check for specific foreign key error
-      if (errorMessage.includes('FK__Invoice__UserId') || errorMessage.includes('FOREIGN KEY constraint')) {
-        toast.error('Database error: Admin user not properly configured. Please contact system administrator.');
-      } else {
-        toast.error(errorMessage);
-      }
+      toast.error(errorMessage);
     },
   });
 
@@ -365,14 +359,6 @@ export default function CreateInvoice() {
       return;
     }
 
-    if (!admin?.Id) {
-      toast.error('User not authenticated');
-      console.error('Admin ID is missing:', admin);
-      return;
-    }
-
-    console.log('Creating invoice with UserId:', admin.Id, 'Admin object:', admin);
-
     if (items.length === 0 || items.some(item => !item.productName || item.quantity <= 0 || item.unitPrice < 0)) {
       toast.error(t('invoice.validItemsRequired'));
       return;
@@ -399,8 +385,7 @@ export default function CreateInvoice() {
 
     const invoiceData: CreateInvoiceDTO = {
       CustomerId: customerId,
-      // Only include UserId if it exists and is valid
-      ...(admin?.Id ? { UserId: admin.Id } : {}),
+      AdminId: admin?.Id,
       Date: new Date(issueDate),
       DueDate: dueDate,
       Note: notes || undefined,
@@ -415,7 +400,6 @@ export default function CreateInvoice() {
       }))
     };
 
-    console.log('Invoice data being sent:', invoiceData);
     createMutation.mutate(invoiceData);
   };
 

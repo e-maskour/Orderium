@@ -1,17 +1,11 @@
 import React from 'react';
 import { InvoiceWithDetails } from '../types';
 import { 
-  Eye, 
-  Trash2, 
-  DollarSign, 
   CheckSquare, 
   Square, 
-  MoreHorizontal,
-  Calendar,
   User,
-  Edit,
-  Send,
-  CheckCircle2
+  Calendar,
+  AlertCircle
 } from 'lucide-react';
 
 interface InvoiceCardProps {
@@ -35,9 +29,6 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({
   isSelected,
   onToggleSelect,
   onView,
-  onRecordPayment,
-  onDelete,
-  onStatusChange,
   formatCurrency,
   formatDate,
   getStatusBadge,
@@ -45,176 +36,75 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({
   isOverdue,
   t
 }) => {
-  const canRecordPayment = invoice.Invoice.PaymentStatus !== 'paid' && invoice.Invoice.Status !== 'cancelled';
-  const canChangeStatus = invoice.Invoice.Status !== 'cancelled';
   const customer = invoice.Customer;
   
   return (
-    <div className={`bg-white rounded-lg shadow-sm border-2 transition-all duration-200 relative ${
-      isSelected ? 'border-blue-500 shadow-md' : 'border-slate-200 hover:border-slate-300'
-    } ${isOverdue ? 'border-l-4 border-l-red-500' : ''}`}>
+    <div 
+      onClick={onView}
+      className={`bg-white rounded-lg shadow-sm border-2 transition-all duration-200 hover:shadow-md cursor-pointer relative ${
+        isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-200 hover:border-blue-300'
+      } ${isOverdue ? 'border-l-4 border-l-red-500' : ''}`}
+    >
       {/* Selection Checkbox */}
-      <div className="absolute top-4 left-4 z-10">
-        <button
-          onClick={onToggleSelect}
-          className="w-6 h-6 rounded-md border-2 border-slate-300 flex items-center justify-center hover:border-blue-500 transition-colors bg-white"
-        >
+      <div 
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleSelect();
+        }}
+        className="absolute top-2 left-2 z-10"
+      >
+        <button className="w-5 h-5 rounded flex items-center justify-center hover:bg-slate-100 transition-colors">
           {isSelected ? (
             <CheckSquare className="w-5 h-5 text-blue-600" />
           ) : (
-            <Square className="w-5 h-5 text-transparent" />
+            <Square className="w-5 h-5 text-slate-400" />
           )}
         </button>
       </div>
 
-      {/* Status Badge */}
-      <div className="absolute top-4 right-4">
-        {getStatusBadge(invoice.Invoice.Status)}
-      </div>
-
-      <div className="p-6 pt-12">
-        {/* Invoice Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="font-semibold text-slate-900 text-lg">
-              {t('invoice.number')} #{invoice.Invoice.InvoiceNumber}
+      <div className="p-3 pt-8">
+        {/* Header: Invoice Number & Status */}
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-900 text-sm truncate">
+              #{invoice.Invoice.InvoiceNumber}
             </h3>
-            <p className="text-sm text-slate-500 mt-1">
-              {t('invoice.createdAt')} {formatDate(invoice.Invoice.CreatedAt)}
-            </p>
+          </div>
+          <div className="ml-2 flex-shrink-0">
+            {getStatusBadge(invoice.Invoice.Status)}
           </div>
         </div>
 
-        {/* Customer Info */}
+        {/* Customer Name */}
         {customer && (
-          <div className="flex items-center gap-2 mb-4 p-3 bg-slate-50 rounded-lg">
-            <User className="w-4 h-4 text-slate-500" />
-            <div>
-              <p className="font-medium text-slate-900 text-sm">{customer.Name}</p>
-              {customer.Email && (
-                <p className="text-xs text-slate-500">{customer.Email}</p>
-              )}
-            </div>
+          <div className="flex items-center gap-1.5 mb-2">
+            <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <p className="text-xs text-slate-600 truncate font-medium">{customer.Name}</p>
           </div>
         )}
 
-        {/* Financial Info */}
-        <div className="space-y-2 mb-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-slate-600">{t('invoice.total')}</span>
-            <span className="font-semibold text-slate-900">{formatCurrency(invoice.Invoice.Total)}</span>
+        {/* Amount & Payment Status */}
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <p className="text-lg font-bold text-slate-900">{formatCurrency(invoice.Invoice.Total)}</p>
+            {invoice.Invoice.PaidAmount > 0 && (
+              <p className="text-xs text-green-600">
+                {t('invoice.paid')}: {formatCurrency(invoice.Invoice.PaidAmount)}
+              </p>
+            )}
           </div>
-          
-          {invoice.Invoice.PaidAmount > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">{t('invoice.paid')}</span>
-              <span className="font-medium text-green-600">{formatCurrency(invoice.Invoice.PaidAmount)}</span>
-            </div>
-          )}
-          
-          {invoice.Invoice.Total - invoice.Invoice.PaidAmount > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">{t('invoice.remaining')}</span>
-              <span className={`font-medium ${isOverdue ? 'text-red-600' : 'text-orange-600'}`}>
-                {formatCurrency(invoice.Invoice.Total - invoice.Invoice.PaidAmount)}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Payment Status */}
-        <div className="mb-4">
-          {getPaymentBadge(invoice.Invoice.PaymentStatus)}
+          <div>
+            {getPaymentBadge(invoice.Invoice.PaymentStatus)}
+          </div>
         </div>
 
         {/* Due Date */}
-        <div className="flex items-center gap-2 mb-4 text-sm text-slate-600">
-          <Calendar className="w-4 h-4" />
-          <span>{t('invoice.dueDate')}: {formatDate(invoice.Invoice.DueDate)}</span>
+        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate">{formatDate(invoice.Invoice.DueDate)}</span>
           {isOverdue && (
-            <span className="text-red-600 font-medium">({t('invoice.overdue')})</span>
+            <AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
           )}
-        </div>
-
-        {/* Items Count */}
-        <div className="text-sm text-slate-500 mb-6">
-          {invoice.Items?.length || 0} {t('invoice.items')}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onView}
-            className="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-          >
-            <Eye className="w-4 h-4" />
-            {t('view')}
-          </button>
-          
-          {canRecordPayment && (
-            <button
-              onClick={onRecordPayment}
-              className="flex-1 px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-            >
-              <DollarSign className="w-4 h-4" />
-              {t('invoice.recordPayment')}
-            </button>
-          )}
-          
-          <div className="relative group">
-            <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-            
-            {/* Dropdown Menu */}
-            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div className="py-1">
-                {canChangeStatus && (
-                  <>
-                    {invoice.Invoice.Status === 'draft' && (
-                      <button
-                        onClick={() => onStatusChange('sent')}
-                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                      >
-                        <Send className="w-4 h-4" />
-                        {t('invoice.markAsSent')}
-                      </button>
-                    )}
-                    
-                    {invoice.Invoice.Status !== 'paid' && invoice.Invoice.PaymentStatus === 'paid' && (
-                      <button
-                        onClick={() => onStatusChange('paid')}
-                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        {t('invoice.markAsPaid')}
-                      </button>
-                    )}
-                    
-                    {invoice.Invoice.Status !== 'cancelled' && (
-                      <button
-                        onClick={() => onStatusChange('cancelled')}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                      >
-                        <Edit className="w-4 h-4" />
-                        {t('invoice.cancel')}
-                      </button>
-                    )}
-                  </>
-                )}
-                
-                <hr className="my-1" />
-                
-                <button
-                  onClick={onDelete}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {t('delete')}
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

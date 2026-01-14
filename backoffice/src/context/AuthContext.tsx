@@ -3,8 +3,10 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 interface Admin {
   Id: number;
   PhoneNumber: string;
+  FullName?: string;
   IsCustomer: boolean;
   IsDelivery: boolean;
+  IsAdmin: boolean;
 }
 
 interface AuthContextType {
@@ -51,8 +53,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await response.json();
       
-      // Verify it's an admin account (not customer or delivery)
-      if (data.user.IsCustomer || data.user.IsDelivery) {
+      // Verify it's an admin account
+      if (!data.user.IsAdmin) {
         throw new Error('Access denied: Admin credentials required');
       }
       

@@ -1,7 +1,7 @@
 export interface Document {
   Id: number;
   Number: string;
-  UserId: number;
+  AdminId?: number;
   CustomerId?: number;
   CashRegisterId?: number;
   OrderNumber?: string;
@@ -45,7 +45,7 @@ export interface DocumentItem {
 export interface CreateOrderDTO {
   CustomerId?: number;
   CustomerPhone?: string; // Used to lookup customer if CustomerId not provided
-  UserId?: number; // Default to 1 if not provided
+  AdminId?: number;
   CashRegisterId?: number; // Default to 1 if not provided
   WarehouseId?: number; // Default to 1 if not provided
   DocumentTypeId?: number; // Default to 2 (sales) if not provided

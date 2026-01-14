@@ -11,7 +11,7 @@ export const createOrderItemSchema = z.object({
 export const createOrderSchema = z.object({
   CustomerId: z.number().int().positive().optional(),
   CustomerPhone: z.string().optional(),
-  UserId: z.number().int().positive().optional(),
+  AdminId: z.number().int().positive().optional(),
   CashRegisterId: z.number().int().positive().optional(),
   WarehouseId: z.number().int().positive().optional(),
   DocumentTypeId: z.number().int().positive().optional(),

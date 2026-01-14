@@ -12,7 +12,7 @@ export const createInvoiceItemSchema = z.object({
 
 export const createInvoiceSchema = z.object({
   CustomerId: z.number().int().positive(),
-  UserId: z.number().int().positive().optional(),
+  AdminId: z.number().int().positive().optional(),
   Date: z.string().datetime().optional(),
   DueDate: z.string().datetime().optional(),
   Items: z.array(createInvoiceItemSchema).min(1, 'Invoice must have at least one item'),

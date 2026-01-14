@@ -54,20 +54,6 @@ export class OrderRepository {
     }
   }
 
-  // Get first available user ID
-  async getFirstUserId(): Promise<number | null> {
-    try {
-      const pool = await getPool();
-      const result = await pool.request()
-        .query('SELECT TOP 1 Id FROM [User] ORDER BY Id ASC');
-      
-      return result.recordset[0]?.Id || null;
-    } catch (err) {
-      logger.error(err, 'Failed to get first user');
-      return null;
-    }
-  }
-
   // Create order (document + items)
   async createOrder(data: CreateOrderDTO): Promise<OrderWithItems> {
     const pool = await getPool();
@@ -90,7 +76,7 @@ export class OrderRepository {
       }
       
       // Use default values from config
-      const userId = data.UserId || env.defaults.userId;
+      const adminId = data.AdminId || null;
       const cashRegisterId = data.CashRegisterId || env.defaults.cashRegisterId;
       const warehouseId = data.WarehouseId || env.defaults.warehouseId;
       const documentTypeId = data.DocumentTypeId || env.defaults.documentTypeId;
@@ -108,7 +94,7 @@ export class OrderRepository {
       // Insert document
       const documentResult = await transaction.request()
         .input('Number', sql.VarChar, documentNumber)
-        .input('UserId', sql.Int, userId)
+        .input('AdminId', sql.Int, adminId)
         .input('CustomerId', sql.Int, customerId || null)
         .input('CashRegisterId', sql.Int, cashRegisterId)
         .input('OrderNumber', sql.VarChar, documentNumber.split('-')[2])
@@ -130,14 +116,14 @@ export class OrderRepository {
         .input('ServiceType', sql.Int, 0)
         .query(`
           INSERT INTO Document (
-            Number, UserId, CustomerId, CashRegisterId, OrderNumber,
+            Number, AdminId, CustomerId, CashRegisterId, OrderNumber,
             [Date], StockDate, Total, IsClockedOut, DocumentTypeId, WarehouseId,
             Note, InternalNote, DueDate, Discount, DiscountType, PaidStatus,
             DateCreated, DateUpdated, DiscountApplyRule, ServiceType
           )
           OUTPUT INSERTED.Id
           VALUES (
-            @Number, @UserId, @CustomerId, @CashRegisterId, @OrderNumber,
+            @Number, @AdminId, @CustomerId, @CashRegisterId, @OrderNumber,
             @Date, @StockDate, @Total, @IsClockedOut, @DocumentTypeId, @WarehouseId,
             @Note, @InternalNote, @DueDate, @Discount, @DiscountType, @PaidStatus,
             @DateCreated, @DateUpdated, @DiscountApplyRule, @ServiceType
@@ -295,7 +281,7 @@ export class OrderRepository {
         .input('orderNumber', sql.VarChar, orderNumber)
         .query(`
           SELECT 
-            d.Id, d.Number, d.UserId, d.CustomerId, d.CashRegisterId, d.OrderNumber,
+            d.Id, d.Number, d.AdminId, d.CustomerId, d.CashRegisterId, d.OrderNumber,
             d.Date, d.StockDate, d.Total, d.IsClockedOut, d.DocumentTypeId,
             d.WarehouseId, d.ReferenceDocumentNumber, d.InternalNote, d.Note,
             d.DueDate, d.Discount, d.DiscountType, d.PaidStatus, d.DateCreated,
@@ -343,7 +329,7 @@ export class OrderRepository {
         .input('limit', sql.Int, limit)
         .query(`
           SELECT TOP (@limit) 
-            d.Id, d.Number, d.UserId, d.CustomerId, d.CashRegisterId, d.OrderNumber,
+            d.Id, d.Number, d.AdminId, d.CustomerId, d.CashRegisterId, d.OrderNumber,
             d.Date, d.StockDate, d.Total, d.IsClockedOut, d.DocumentTypeId,
             d.WarehouseId, d.ReferenceDocumentNumber, d.InternalNote, d.Note,
             d.DueDate, d.Discount, d.DiscountType, d.PaidStatus, d.DateCreated,

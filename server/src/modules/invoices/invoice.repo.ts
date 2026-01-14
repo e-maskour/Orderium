@@ -24,7 +24,7 @@ export class InvoiceRepository {
           Id INT IDENTITY(1,1) PRIMARY KEY,
           InvoiceNumber NVARCHAR(50) NOT NULL UNIQUE,
           CustomerId INT NOT NULL,
-          UserId INT NOT NULL,
+          AdminId INT NULL,
           Date DATETIME2 NOT NULL DEFAULT GETDATE(),
           DueDate DATETIME2 NOT NULL,
           Subtotal DECIMAL(18,2) NOT NULL DEFAULT 0,
@@ -38,8 +38,7 @@ export class InvoiceRepository {
           Terms NVARCHAR(MAX) NULL,
           CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
           UpdatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
-          FOREIGN KEY (CustomerId) REFERENCES Customer(Id),
-          FOREIGN KEY (UserId) REFERENCES [User](Id)
+          FOREIGN KEY (CustomerId) REFERENCES Customer(Id)
         )
         
         CREATE INDEX IX_Invoice_InvoiceNumber ON Invoice(InvoiceNumber)
@@ -49,6 +48,35 @@ export class InvoiceRepository {
         CREATE INDEX IX_Invoice_Date ON Invoice(Date)
       END
     `);
+
+    // Migration: Rename UserId to AdminId if UserId exists
+    const userIdColumn = await pool.request()
+      .query(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'Invoice' AND COLUMN_NAME = 'UserId'
+      `);
+    
+    if (userIdColumn.recordset.length > 0) {
+      // Drop foreign key constraint if it exists
+      const fkConstraints = await pool.request()
+        .query(`
+          SELECT name
+          FROM sys.foreign_keys
+          WHERE parent_object_id = OBJECT_ID('Invoice')
+          AND name LIKE '%UserId%'
+        `);
+      
+      for (const fk of fkConstraints.recordset) {
+        await pool.request().query(`ALTER TABLE Invoice DROP CONSTRAINT ${fk.name}`);
+      }
+      
+      // Rename column
+      await pool.request().query(`
+        EXEC sp_rename 'Invoice.UserId', 'AdminId', 'COLUMN'
+      `);
+      logger.info('✅ Renamed Invoice.UserId to Invoice.AdminId');
+    }
 
     // Create InvoiceItem table
     await pool.request().query(`
@@ -148,7 +176,7 @@ export class InvoiceRepository {
       const invoiceResult = await transaction.request()
         .input('invoiceNumber', sql.NVarChar, invoiceNumber)
         .input('customerId', sql.Int, data.CustomerId)
-        .input('userId', sql.Int, data.UserId || 1)
+        .input('adminId', sql.Int, data.AdminId || null)
         .input('date', sql.DateTime, data.Date || now)
         .input('dueDate', sql.DateTime, data.DueDate || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000))
         .input('subtotal', sql.Decimal(18, 2), subtotal)
@@ -160,13 +188,13 @@ export class InvoiceRepository {
         .input('terms', sql.NVarChar, data.Terms || null)
         .query(`
           INSERT INTO Invoice (
-            InvoiceNumber, CustomerId, UserId, Date, DueDate,
+            InvoiceNumber, CustomerId, AdminId, Date, DueDate,
             Subtotal, TaxAmount, DiscountAmount, Total, PaidAmount,
             Status, PaymentStatus, Note, Terms, CreatedAt, UpdatedAt
           )
           OUTPUT INSERTED.*
           VALUES (
-            @invoiceNumber, @customerId, @userId, @date, @dueDate,
+            @invoiceNumber, @customerId, @adminId, @date, @dueDate,
             @subtotal, @taxAmount, @discountAmount, @total, 0,
             @status, 'unpaid', @note, @terms, GETDATE(), GETDATE()
           )
@@ -236,11 +264,9 @@ export class InvoiceRepository {
         .query(`
           SELECT i.*, 
                  c.Name as CustomerName, c.Email as CustomerEmail, 
-                 c.PhoneNumber as CustomerPhone, c.Address as CustomerAddress, c.City as CustomerCity,
-                 u.FirstName + ' ' + u.LastName as UserName, u.Email as UserEmail
+                 c.PhoneNumber as CustomerPhone, c.Address as CustomerAddress, c.City as CustomerCity
           FROM Invoice i
           LEFT JOIN Customer c ON i.CustomerId = c.Id
-          LEFT JOIN [User] u ON i.UserId = u.Id
           WHERE i.Id = @id
         `);
       
@@ -265,7 +291,7 @@ export class InvoiceRepository {
           Id: invoice.Id,
           InvoiceNumber: invoice.InvoiceNumber,
           CustomerId: invoice.CustomerId,
-          UserId: invoice.UserId,
+          AdminId: invoice.AdminId,
           Date: invoice.Date,
           DueDate: invoice.DueDate,
           Subtotal: invoice.Subtotal,
@@ -288,11 +314,6 @@ export class InvoiceRepository {
           Phone: invoice.CustomerPhone,
           Address: invoice.CustomerAddress,
           City: invoice.CustomerCity
-        },
-        User: {
-          Id: invoice.UserId,
-          Name: invoice.UserName,
-          Email: invoice.UserEmail
         }
       };
     } catch (err) {
@@ -310,11 +331,9 @@ export class InvoiceRepository {
       let query = `
         SELECT i.*, 
                c.Name as CustomerName, c.Email as CustomerEmail,
-               c.PhoneNumber as CustomerPhone,
-               u.FirstName + ' ' + u.LastName as UserName
+               c.PhoneNumber as CustomerPhone
         FROM Invoice i
         LEFT JOIN Customer c ON i.CustomerId = c.Id
-        LEFT JOIN [User] u ON i.UserId = u.Id
         WHERE 1=1
       `;
       
@@ -370,7 +389,7 @@ export class InvoiceRepository {
             Id: invoice.Id,
             InvoiceNumber: invoice.InvoiceNumber,
             CustomerId: invoice.CustomerId,
-            UserId: invoice.UserId,
+            AdminId: invoice.AdminId,
             Date: invoice.Date,
             DueDate: invoice.DueDate,
             Subtotal: invoice.Subtotal,
@@ -393,11 +412,6 @@ export class InvoiceRepository {
             Phone: invoice.CustomerPhone,
             Address: invoice.CustomerAddress || undefined,
             City: invoice.CustomerCity || undefined
-          },
-          User: {
-            Id: invoice.UserId,
-            Name: invoice.UserName,
-            Email: invoice.UserEmail || undefined
           }
         });
       }

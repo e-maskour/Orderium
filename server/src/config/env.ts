@@ -23,7 +23,6 @@ export const env = {
     corsOrigin: must("CORS_ORIGIN"), // Allowed origin for CORS
 
     defaults: {
-        userId: Number(process.env.DEFAULT_USER_ID ?? 2),
         cashRegisterId: Number(process.env.DEFAULT_CASH_REGISTER_ID ?? 1),
         warehouseId: Number(process.env.DEFAULT_WAREHOUSE_ID ?? 1),
         documentTypeId: Number(process.env.DEFAULT_DOCUMENT_TYPE_ID ?? 2), // 2 = sales

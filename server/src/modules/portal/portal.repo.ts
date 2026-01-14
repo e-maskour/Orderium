@@ -26,9 +26,11 @@ export class PortalRepository {
             Id INT IDENTITY(1,1) PRIMARY KEY,
             PhoneNumber NVARCHAR(50) NOT NULL UNIQUE,
             Password NVARCHAR(255) NOT NULL,
+            FullName NVARCHAR(255) NULL,
             CustomerId INT NULL,
             IsCustomer BIT NOT NULL DEFAULT 0,
             IsDelivery BIT NOT NULL DEFAULT 0,
+            IsAdmin BIT NOT NULL DEFAULT 0,
             DeliveryId INT NULL,
             DateCreated DATETIME NOT NULL DEFAULT GETDATE(),
             DateUpdated DATETIME NOT NULL DEFAULT GETDATE()
@@ -54,6 +56,40 @@ export class PortalRepository {
                 IsDelivery BIT NOT NULL DEFAULT 0
           `);
           logger.info('Added DeliveryId and IsDelivery columns to Portal table');
+        }
+        
+        // Check if FullName column exists
+        const fullNameExists = await pool.request()
+          .query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = 'Portal' 
+            AND COLUMN_NAME = 'FullName'
+          `);
+        
+        if (fullNameExists.recordset.length === 0) {
+          await pool.request().query(`
+            ALTER TABLE Portal
+            ADD FullName NVARCHAR(255) NULL
+          `);
+          logger.info('Added FullName column to Portal table');
+        }
+        
+        // Check if IsAdmin column exists
+        const isAdminExists = await pool.request()
+          .query(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = 'Portal' 
+            AND COLUMN_NAME = 'IsAdmin'
+          `);
+        
+        if (isAdminExists.recordset.length === 0) {
+          await pool.request().query(`
+            ALTER TABLE Portal
+            ADD IsAdmin BIT NOT NULL DEFAULT 0
+          `);
+          logger.info('Added IsAdmin column to Portal table');
         }
       }
     } catch (err) {
@@ -82,16 +118,18 @@ export class PortalRepository {
       const result = await pool.request()
         .input('PhoneNumber', sql.NVarChar, data.PhoneNumber)
         .input('Password', sql.NVarChar, hashedPassword)
+        .input('FullName', sql.NVarChar, data.FullName || null)
         .input('CustomerId', sql.Int, data.CustomerId || null)
         .input('IsCustomer', sql.Bit, data.IsCustomer ?? false)
         .input('IsDelivery', sql.Bit, data.IsDelivery ?? false)
+        .input('IsAdmin', sql.Bit, data.IsAdmin ?? false)
         .input('DeliveryId', sql.Int, data.DeliveryId || null)
         .input('DateCreated', sql.DateTime, now)
         .input('DateUpdated', sql.DateTime, now)
         .query(`
-          INSERT INTO Portal (PhoneNumber, Password, CustomerId, IsCustomer, IsDelivery, DeliveryId, DateCreated, DateUpdated)
+          INSERT INTO Portal (PhoneNumber, Password, FullName, CustomerId, IsCustomer, IsDelivery, IsAdmin, DeliveryId, DateCreated, DateUpdated)
           OUTPUT INSERTED.*
-          VALUES (@PhoneNumber, @Password, @CustomerId, @IsCustomer, @IsDelivery, @DeliveryId, @DateCreated, @DateUpdated)
+          VALUES (@PhoneNumber, @Password, @FullName, @CustomerId, @IsCustomer, @IsDelivery, @IsAdmin, @DeliveryId, @DateCreated, @DateUpdated)
         `);
       
       return result.recordset[0];
@@ -145,10 +183,12 @@ export class PortalRepository {
       return {
         Id: portalUser.Id,
         PhoneNumber: portalUser.PhoneNumber,
+        FullName: portalUser.FullName,
         CustomerId: portalUser.CustomerId,
         CustomerName: customerName,
         IsCustomer: portalUser.IsCustomer,
         IsDelivery: portalUser.IsDelivery,
+        IsAdmin: portalUser.IsAdmin,
         DeliveryId: portalUser.DeliveryId,
       };
     } catch (err) {
@@ -189,7 +229,7 @@ export class PortalRepository {
         .input('PhoneNumber', sql.NVarChar, phoneNumber)
         .query(`
           SELECT 
-            p.Id, p.PhoneNumber, p.CustomerId, p.IsCustomer, p.IsDelivery, p.DeliveryId,
+            p.Id, p.PhoneNumber, p.FullName, p.CustomerId, p.IsCustomer, p.IsDelivery, p.IsAdmin, p.DeliveryId,
             c.Name as CustomerName
           FROM Portal p
           LEFT JOIN Customer c ON p.CustomerId = c.Id AND c.IsEnabled = 1

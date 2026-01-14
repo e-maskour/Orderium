@@ -19,7 +19,8 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
-  Clock
+  Clock,
+  Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
@@ -381,6 +382,68 @@ export default function Invoices() {
   // Floating actions
   const floatingActions: FloatingAction[] = [
     {
+      id: 'view',
+      label: t('invoice.viewSelected'),
+      icon: <Eye className="w-4 h-4" />,
+      onClick: () => {
+        if (selectedInvoices.length === 1) {
+          const invoice = invoices.find(inv => inv.Invoice.Id === selectedInvoices[0]);
+          if (invoice) handleViewInvoice(invoice);
+        }
+      },
+      variant: 'primary',
+      disabled: selectedInvoices.length !== 1,
+    },
+    {
+      id: 'record-payment',
+      label: t('invoice.recordPayment'),
+      icon: <DollarSign className="w-4 h-4" />,
+      onClick: () => {
+        if (selectedInvoices.length === 1) {
+          const invoice = invoices.find(inv => inv.Invoice.Id === selectedInvoices[0]);
+          if (invoice) handleRecordPayment(invoice);
+        }
+      },
+      variant: 'success',
+      disabled: selectedInvoices.length !== 1 || (selectedInvoices.length === 1 && invoices.find(inv => inv.Invoice.Id === selectedInvoices[0])?.Invoice.PaymentStatus === 'paid'),
+    },
+    {
+      id: 'mark-sent',
+      label: t('invoice.markAsSent'),
+      icon: <Send className="w-4 h-4" />,
+      onClick: () => {
+        selectedInvoices.forEach(id => {
+          const invoice = invoices.find(inv => inv.Invoice.Id === id);
+          if (invoice?.Invoice.Status === 'draft') {
+            handleStatusChange(id, 'sent');
+          }
+        });
+      },
+      variant: 'secondary',
+      disabled: selectedInvoices.length === 0 || selectedInvoices.every(id => {
+        const invoice = invoices.find(inv => inv.Invoice.Id === id);
+        return invoice?.Invoice.Status !== 'draft';
+      }),
+    },
+    {
+      id: 'mark-paid',
+      label: t('invoice.markAsPaid'),
+      icon: <CheckCircle2 className="w-4 h-4" />,
+      onClick: () => {
+        selectedInvoices.forEach(id => {
+          const invoice = invoices.find(inv => inv.Invoice.Id === id);
+          if (invoice?.Invoice.PaymentStatus === 'paid' && invoice?.Invoice.Status !== 'paid') {
+            handleStatusChange(id, 'paid');
+          }
+        });
+      },
+      variant: 'success',
+      disabled: selectedInvoices.length === 0 || selectedInvoices.every(id => {
+        const invoice = invoices.find(inv => inv.Invoice.Id === id);
+        return invoice?.Invoice.Status === 'paid' || invoice?.Invoice.PaymentStatus !== 'paid';
+      }),
+    },
+    {
       id: 'delete',
       label: t('invoice.deleteSelected'),
       icon: <Trash2 className="w-4 h-4" />,
@@ -646,7 +709,7 @@ export default function Invoices() {
               {Object.entries(activeFilters).map(([key, value]) => (
                 <div
                   key={key}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-200"
+                  className="flex items-cente2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4lue-700 rounded-full text-xs font-medium border border-blue-200"
                 >
                   <span>{getFilterLabel(key as keyof typeof activeFilters, value)}</span>
                   <button

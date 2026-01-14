@@ -8,18 +8,22 @@ export interface LoginRequest {
 export interface RegisterRequest {
   PhoneNumber: string;
   Password: string;
+  FullName?: string;
   CustomerId?: number;
   IsCustomer?: boolean;
   IsDelivery?: boolean;
+  IsAdmin?: boolean;
 }
 
 export interface PortalUser {
   Id: number;
   PhoneNumber: string;
+  FullName?: string;
   CustomerId?: number;
   CustomerName?: string;
   IsCustomer: boolean;
   IsDelivery: boolean;
+  IsAdmin: boolean;
   DeliveryId?: number;
 }
 
