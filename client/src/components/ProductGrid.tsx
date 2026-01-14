@@ -46,7 +46,7 @@ export const ProductGrid = ({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3" dir={dir}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3" dir={dir}>
         {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
             <div className="aspect-square bg-gray-200" />
@@ -82,10 +82,10 @@ export const ProductGrid = ({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 scrollbar-positioned max-h-[calc(100vh-200px)] overflow-y-auto pr-6 pl-6 pt-1" dir={dir}>
+    <div className="space-y-4 sm:space-y-6" dir={dir}>
       {/* Product Grid/List */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
           {products.map((product, index) => (
             <div
               key={product.Id}

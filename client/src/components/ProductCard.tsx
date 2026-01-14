@@ -126,7 +126,7 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
         dir={dir}
       >
       {/* Image */}
-      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+      <div className="relative aspect-square bg-gray-100 overflow-hidden">
         {product.ImageUrl ? (
           <img
             src={product.ImageUrl}
@@ -136,7 +136,7 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-            <Package className="w-8 h-8 text-gray-300" />
+            <Package className="w-6 h-6 text-gray-300" />
           </div>
         )}
 
@@ -149,13 +149,13 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-2 sm:p-2.5 flex flex-col">
-        <h3 className="font-medium text-gray-900 line-clamp-2 leading-tight mb-1.5 text-xs sm:text-sm">
+      <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
+        <h3 className="font-medium text-gray-900 line-clamp-2 leading-tight mb-1 text-[11px] sm:text-xs">
           {displayName}
         </h3>
 
         <div className="mt-auto">
-          <span className="text-xs sm:text-sm font-bold text-primary">
+          <span className="text-[11px] sm:text-xs font-bold text-primary">
             {formatCurrency(product.Price, language)}
           </span>
         </div>

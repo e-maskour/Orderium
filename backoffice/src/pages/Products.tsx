@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '../services/api';
-import { Plus, Edit, Trash2, Search, Package, Image as ImageIcon, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Package, Image as ImageIcon, X, Check, Grid3x3, List, CheckSquare, Square, Download, FileText, Upload } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
+import { FloatingActionBar } from '../components/FloatingActionBar';
 
 interface Product {
   Id: number;
@@ -15,6 +16,7 @@ interface Product {
   Stock?: number;
   IsService: boolean;
   IsEnabled: boolean;
+  IsPriceChangeAllowed: boolean;
   DateCreated: string;
   DateUpdated: string;
   ImageUrl?: string;
@@ -25,8 +27,19 @@ export default function Products() {
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(24);
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingRowId, setEditingRowId] = useState<number | null>(null);
+  const [editingValues, setEditingValues] = useState<{
+    Name: string;
+    Code: string;
+    Price: string;
+    Cost: string;
+  }>({ Name: '', Code: '', Price: '', Cost: '' });
   const [formData, setFormData] = useState({
     Name: '',
     Code: '',
@@ -36,16 +49,26 @@ export default function Products() {
     Stock: '',
     IsService: false,
     IsEnabled: true,
+    IsPriceChangeAllowed: true,
     ImageUrl: ''
   });
   const [imagePreview, setImagePreview] = useState<string>('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const bulkUploadInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch products
   const { data: products, isLoading } = useQuery({
-    queryKey: ['products', searchTerm],
-    queryFn: () => productsService.getProducts({ search: searchTerm }),
+    queryKey: ['products', searchTerm, currentPage, pageSize],
+    queryFn: () => productsService.getProducts({ search: searchTerm, page: currentPage, limit: pageSize }),
   });
+
+  // Get pagination metadata from server response
+  const productsList = products?.products || [];
+  const pagination = products?.pagination || {};
+  const totalCount = pagination.total || 0;
+  const totalPages = pagination.totalPages || 1;
+  const hasNextPage = pagination.hasNext || false;
+  const hasPrevPage = pagination.hasPrev || false;
 
   // Create product mutation
   const createMutation = useMutation({
@@ -73,6 +96,102 @@ export default function Products() {
     },
   });
 
+  const toggleSelectProduct = (id: number) => {
+    setSelectedProducts(prev => 
+      prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProducts.length === productsList.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(productsList.map((p: Product) => p.Id));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedProducts([]);
+  };
+
+  const handleBulkDelete = () => {
+    if (window.confirm(t('confirmDelete'))) {
+      selectedProducts.forEach(id => {
+        deleteMutation.mutate(id);
+      });
+      clearSelection();
+    }
+  };
+
+  const handleBulkEnable = () => {
+    if (selectedProducts.length === 0) return;
+    
+    const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+    if (!product) return;
+
+    const updatedData = {
+      Name: product.Name,
+      Code: product.Code || null,
+      Description: product.Description,
+      Price: product.Price,
+      Cost: product.Cost,
+      Stock: product.Stock,
+      IsService: product.IsService,
+      IsEnabled: true,
+      IsPriceChangeAllowed: product.IsPriceChangeAllowed,
+      ImageUrl: product.ImageUrl || null
+    };
+
+    updateMutation.mutate({ id: product.Id, data: updatedData });
+    clearSelection();
+  };
+
+  const handleBulkDisable = () => {
+    if (selectedProducts.length === 0) return;
+    
+    const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+    if (!product) return;
+
+    const updatedData = {
+      Name: product.Name,
+      Code: product.Code || null,
+      Description: product.Description,
+      Price: product.Price,
+      Cost: product.Cost,
+      Stock: product.Stock,
+      IsService: product.IsService,
+      IsEnabled: false,
+      IsPriceChangeAllowed: product.IsPriceChangeAllowed,
+      ImageUrl: product.ImageUrl || null
+    };
+
+    updateMutation.mutate({ id: product.Id, data: updatedData });
+    clearSelection();
+  };
+
+  const handleTogglePriceChangeAllowed = () => {
+    if (selectedProducts.length === 0) return;
+    
+    const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+    if (!product) return;
+
+    const updatedData = {
+      Name: product.Name,
+      Code: product.Code || null,
+      Description: product.Description,
+      Price: product.Price,
+      Cost: product.Cost,
+      Stock: product.Stock,
+      IsService: product.IsService,
+      IsEnabled: product.IsEnabled,
+      IsPriceChangeAllowed: !product.IsPriceChangeAllowed,
+      ImageUrl: product.ImageUrl || null
+    };
+
+    updateMutation.mutate({ id: product.Id, data: updatedData });
+    clearSelection();
+  };
+
   const handleOpenModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
@@ -85,6 +204,7 @@ export default function Products() {
         Stock: product.Stock?.toString() || '',
         IsService: product.IsService,
         IsEnabled: product.IsEnabled,
+        IsPriceChangeAllowed: product.IsPriceChangeAllowed,
         ImageUrl: product.ImageUrl || ''
       });
       setImagePreview(product.ImageUrl || '');
@@ -119,6 +239,7 @@ export default function Products() {
       Stock: '',
       IsService: false,
       IsEnabled: true,
+      IsPriceChangeAllowed: true,
       ImageUrl: ''
     });
     setImagePreview('');
@@ -149,6 +270,7 @@ export default function Products() {
       Stock: formData.Stock ? parseInt(formData.Stock) : null,
       IsService: formData.IsService,
       IsEnabled: formData.IsEnabled,
+      IsPriceChangeAllowed: formData.IsPriceChangeAllowed,
       ImageUrl: imagePreview || null
     };
 
@@ -165,17 +287,122 @@ export default function Products() {
     }
   };
 
+  const startInlineEdit = (product: Product) => {
+    setEditingRowId(product.Id);
+    setEditingValues({
+      Name: product.Name,
+      Code: product.Code || '',
+      Price: product.Price.toString(),
+      Cost: product.Cost.toString(),
+    });
+  };
+
+  const cancelInlineEdit = () => {
+    setEditingRowId(null);
+    setEditingValues({ Name: '', Code: '', Price: '', Cost: '' });
+  };
+
+  const saveInlineEdit = (product: Product) => {
+    const updatedData = {
+      Name: editingValues.Name,
+      Code: editingValues.Code || null,
+      Description: product.Description,
+      Price: parseFloat(editingValues.Price),
+      Cost: parseFloat(editingValues.Cost),
+      Stock: product.Stock,
+      IsService: product.IsService,
+      IsEnabled: product.IsEnabled,
+      IsPriceChangeAllowed: product.IsPriceChangeAllowed,
+      ImageUrl: product.ImageUrl || null
+    };
+    
+    updateMutation.mutate({ id: product.Id, data: updatedData });
+    setEditingRowId(null);
+  };
+
+  const handleBulkUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check if exactly one product is selected
+    if (selectedProducts.length !== 1) {
+      alert(t('selectOneProductForImageUpload'));
+      if (bulkUploadInputRef.current) {
+        bulkUploadInputRef.current.value = '';
+      }
+      return;
+    }
+
+    // Read the image file and convert to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const imageUrl = reader.result as string;
+      
+      // Find the selected product
+      const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+      if (!product) return;
+
+      // Update the product with the new image
+      const updatedData = {
+        Name: product.Name,
+        Code: product.Code || null,
+        Description: product.Description,
+        Price: product.Price,
+        Cost: product.Cost,
+        Stock: product.Stock,
+        IsService: product.IsService,
+        IsEnabled: product.IsEnabled,
+        IsPriceChangeAllowed: product.IsPriceChangeAllowed,
+        ImageUrl: imageUrl
+      };
+
+      updateMutation.mutate({ id: product.Id, data: updatedData });
+      clearSelection();
+    };
+
+    reader.readAsDataURL(file);
+    
+    // Reset the input
+    if (bulkUploadInputRef.current) {
+      bulkUploadInputRef.current.value = '';
+    }
+  };
+
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header with Search and Add Button */}
-        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('products')}</h1>
             <p className="text-slate-600">{t('manageProducts')}</p>
           </div>
 
           <div className="flex items-center gap-4 w-full sm:w-auto">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('card')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  viewMode === 'card'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Grid3x3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
             {/* Search */}
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -183,9 +410,20 @@ export default function Products() {
                 type="text"
                 placeholder={t('searchProducts')}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full sm:w-64 ps-10 pe-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full sm:w-80 ps-10 pe-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {/* Add Product Button */}
@@ -199,10 +437,397 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Products Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        {/* Products View */}
+        <div className={`flex-1 ${viewMode === 'card' ? 'bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col' : 'overflow-hidden flex flex-col'}`}>
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center bg-white rounded-lg">
+              <p className="text-slate-500">{t('loading')}...</p>
+            </div>
+          ) : viewMode === 'list' ? (
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 border border-slate-200/60 rounded-lg bg-white">
+              {/* Product Rows */}
+              {productsList && productsList.length > 0 ? (
+                productsList.map((product: Product) => {
+                  const isEditing = editingRowId === product.Id;
+                  return (
+                    <div
+                      key={product.Id}
+                      onClick={() => toggleSelectProduct(product.Id)}
+                      className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${
+                        selectedProducts.includes(product.Id)
+                          ? 'border-amber-500 ring-2 ring-amber-500/20'
+                          : 'border-slate-200/60 hover:border-slate-300/60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Checkbox */}
+                        <div className="w-12 flex items-center justify-center">
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSelectProduct(product.Id);
+                            }}
+                            className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
+                              selectedProducts.includes(product.Id)
+                                ? 'bg-amber-500 border-amber-500 text-white'
+                                : 'bg-white border-slate-300'
+                            }`}
+                          >
+                            {selectedProducts.includes(product.Id) && (
+                              <CheckSquare className="w-4 h-4" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Image */}
+                        <div className="w-10">
+                          {product.ImageUrl ? (
+                            <img
+                              src={product.ImageUrl}
+                              alt={product.Name}
+                              className="w-10 h-10 object-cover rounded-lg shadow-sm"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">
+                              <Package className="w-5 h-5 text-slate-400" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Name */}
+                        <div className="flex-1 min-w-0">
+                          {isEditing ? (
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('name')}</p>
+                              <input
+                                type="text"
+                                value={editingValues.Name}
+                                onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('name')}</p>
+                              <p className="text-sm font-semibold text-slate-800 truncate">{product.Name}</p>
+                              {product.Code && (
+                                <p className="text-xs text-slate-400 mt-0.5">{product.Code}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Price */}
+                        <div className="w-28">
+                          {isEditing ? (
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('price')}</p>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={editingValues.Price}
+                                onChange={(e) => setEditingValues({ ...editingValues, Price: e.target.value })}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
+                              />
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('price')}</p>
+                              <span className="text-sm font-semibold text-amber-600">
+                                {product.Price.toFixed(2)} {t('currency')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Cost */}
+                        <div className="w-28">
+                          {isEditing ? (
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('cost')}</p>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={editingValues.Cost}
+                                onChange={(e) => setEditingValues({ ...editingValues, Cost: e.target.value })}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
+                              />
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('cost')}</p>
+                              <span className="text-sm text-slate-600">
+                                {product.Cost.toFixed(2)} {t('currency')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Stock */}
+                        <div className="w-20 text-center">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('stock')}</p>
+                          <span className="text-sm text-slate-700 font-medium">
+                            {product.Stock !== null && product.Stock !== undefined ? product.Stock : '-'}
+                          </span>
+                        </div>
+
+                        {/* Status */}
+                        <div className="w-24 flex flex-col items-center">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
+                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            product.IsEnabled
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.IsEnabled ? t('active') : t('inactive')}
+                          </span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="w-16 flex justify-center">
+                          {isEditing ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveInlineEdit(product);
+                                }}
+                                className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
+                                title={t('save')}
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cancelInlineEdit();
+                                }}
+                                className="p-1.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                                title={t('cancel')}
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startInlineEdit(product);
+                              }}
+                              className="p-1.5 text-primary hover:text-primary/80 hover:bg-primary/10 rounded-lg transition-colors"
+                              title={t('edit')}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 px-4 py-12 text-center text-slate-500">
+                  {t('noProductsFound')}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="grid gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+                {productsList && productsList.length > 0 ? (
+                  productsList.map((product: Product) => (
+                    <div
+                      key={product.Id}
+                      onClick={() => toggleSelectProduct(product.Id)}
+                      className={`relative bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${
+                        selectedProducts.includes(product.Id)
+                          ? 'border-amber-500 ring-2 ring-amber-500/20'
+                          : 'border-slate-200/60 hover:border-slate-300/60'
+                      }`}
+                    >
+                      {/* Selection Checkbox */}
+                      <div className="absolute top-1.5 left-1.5 z-10">
+                        <div
+                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                            selectedProducts.includes(product.Id)
+                              ? 'bg-amber-500 border-amber-500 text-white'
+                              : 'bg-white border-slate-300'
+                          }`}
+                        >
+                          {selectedProducts.includes(product.Id) && (
+                            <CheckSquare className="w-4 h-4" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Product Image */}
+                      <div className="relative h-32 overflow-hidden rounded-t-xl">
+                        {product.ImageUrl ? (
+                          <img
+                            src={product.ImageUrl}
+                            alt={product.Name}
+                            className="w-full h-full object-cover opacity-90 drop-shadow-lg hover:scale-105 hover:opacity-100 transition-all duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                            <Package className="w-16 h-16 text-slate-300" />
+                          </div>
+                        )}
+                        {/* Status Badge */}
+                        <div className="absolute top-1.5 right-1.5">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold shadow-md ${
+                            product.IsEnabled
+                              ? 'bg-green-500 text-white'
+                              : 'bg-red-500 text-white'
+                          }`}>
+                            {product.IsEnabled ? t('active') : t('inactive')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="p-2 space-y-1">
+                        <div className="pb-1">
+                          {editingRowId === product.Id ? (
+                            <input
+                              type="text"
+                              value={editingValues.Name}
+                              onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full px-1.5 py-0.5 text-[10px] border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
+                              autoFocus
+                            />
+                          ) : (
+                            <h3 className="text-[10px] font-bold text-slate-800 truncate leading-tight pb-1" title={product.Name}>
+                              {product.Name}
+                            </h3>
+                          )}
+                          {product.Code && (
+                            <p className="text-[9px] text-slate-400 mt-0.5 px-0.5">{t('code')}: {product.Code}</p>
+                          )}
+                        </div>
+
+                        {product.Description && (
+                          <p className="text-[10px] text-slate-500 line-clamp-2 min-h-[2rem]" title={product.Description}>
+                            {product.Description}
+                          </p>
+                        )}
+
+                        {/* Price & Cost */}
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                          <div className="flex-1">
+                            <p className="text-[8px] text-slate-500 uppercase tracking-wide">{t('price')}</p>
+                            {editingRowId === product.Id ? (
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={editingValues.Price}
+                                onChange={(e) => setEditingValues({ ...editingValues, Price: e.target.value })}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full px-1.5 py-0.5 text-xs border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
+                              />
+                            ) : (
+                              <p className="text-xs font-bold text-amber-600">
+                                {product.Price.toFixed(2)} <span className="text-[8px]">{t('currency')}</span>
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right flex-1">
+                            <p className="text-[8px] text-slate-500 uppercase tracking-wide">{t('cost')}</p>
+                            {editingRowId === product.Id ? (
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={editingValues.Cost}
+                                onChange={(e) => setEditingValues({ ...editingValues, Cost: e.target.value })}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full px-1.5 py-0.5 text-[9px] border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
+                              />
+                            ) : (
+                              <p className="text-[9px] text-slate-600">
+                                {product.Cost.toFixed(2)} {t('currency')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Stock */}
+                        {!product.IsService && (
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="text-slate-500">{t('stock')}:</span>
+                            <span className="font-semibold text-slate-700">
+                              {product.Stock !== null && product.Stock !== undefined ? product.Stock : '-'}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-0.5 pt-1 border-t border-slate-100">
+                          {editingRowId === product.Id ? (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveInlineEdit(product);
+                                }}
+                                className="flex-1 px-1.5 py-0.5 text-[9px] text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors flex items-center justify-center gap-0.5"
+                              >
+                                <Check className="w-2.5 h-2.5" />
+                                {t('save')}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cancelInlineEdit();
+                                }}
+                                className="px-1.5 py-0.5 text-[9px] text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startInlineEdit(product);
+                              }}
+                              className="flex-1 px-1.5 py-0.5 text-[9px] text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors flex items-center justify-center gap-0.5"
+                            >
+                              <Edit className="w-2.5 h-2.5" />
+                              {t('edit')}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full flex items-center justify-center py-12">
+                    <p className="text-slate-500">{t('noProductsFound')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {/* Old Table View - Hidden */}
+          {false && (
+            <>
+          <div className="overflow-x-auto flex-shrink-0 hidden">
+            <table className="w-full table-fixed">
+              <colgroup>
+                <col className="w-20" />
+                <col className="w-auto" />
+                <col className="w-32" />
+                <col className="w-32" />
+                <col className="w-32" />
+                <col className="w-24" />
+                <col className="w-28" />
+                <col className="w-36" />
+              </colgroup>
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -231,6 +856,22 @@ export default function Products() {
                   </th>
                 </tr>
               </thead>
+            </table>
+          </div>
+
+          {/* Table Body - Scrollable */}
+          <div className="flex-1 overflow-x-auto overflow-y-auto">
+            <table className="w-full table-fixed">
+              <colgroup>
+                <col className="w-20" />
+                <col className="w-auto" />
+                <col className="w-32" />
+                <col className="w-32" />
+                <col className="w-32" />
+                <col className="w-24" />
+                <col className="w-28" />
+                <col className="w-36" />
+              </colgroup>
               <tbody className="bg-white divide-y divide-slate-200">
                 {isLoading ? (
                   <tr>
@@ -238,65 +879,144 @@ export default function Products() {
                       {t('loading')}...
                     </td>
                   </tr>
-                ) : products?.products && products.products.length > 0 ? (
-                  products.products.map((product: Product) => (
-                    <tr key={product.Id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {product.ImageUrl ? (
-                          <img
-                            src={product.ImageUrl}
-                            alt={product.Name}
-                            className="w-12 h-12 object-cover rounded-lg"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
-                            <Package className="w-6 h-6 text-slate-400" />
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-slate-900">{product.Name}</div>
-                        {product.Description && (
-                          <div className="text-sm text-slate-500 truncate max-w-xs">{product.Description}</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {product.Code || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                        {product.Price.toFixed(2)} {t('currency')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {product.Cost.toFixed(2)} {t('currency')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {product.Stock !== null && product.Stock !== undefined ? product.Stock : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.IsEnabled
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {product.IsEnabled ? t('active') : t('inactive')}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                        <button
-                          onClick={() => handleOpenModal(product)}
-                          className="text-primary hover:text-primary/80 me-4"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.Id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                ) : productsList && productsList.length > 0 ? (
+                  productsList.map((product: Product) => {
+                    const isEditing = editingRowId === product.Id;
+                    
+                    return (
+                      <tr key={product.Id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {product.ImageUrl ? (
+                            <img
+                              src={product.ImageUrl}
+                              alt={product.Name}
+                              className="w-12 h-12 object-cover rounded-lg"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
+                              <Package className="w-6 h-6 text-slate-400" />
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={editingValues.Name}
+                              onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                              className="w-full px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary/50 outline-none"
+                              autoFocus
+                            />
+                          ) : (
+                            <div>
+                              <div className="text-sm font-medium text-slate-900">{product.Name}</div>
+                              {product.Description && (
+                                <div className="text-sm text-slate-500 truncate max-w-xs">{product.Description}</div>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={editingValues.Code}
+                              onChange={(e) => setEditingValues({ ...editingValues, Code: e.target.value })}
+                              className="w-full px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary/50 outline-none"
+                            />
+                          ) : (
+                            <span className="text-sm text-slate-500">{product.Code || '-'}</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editingValues.Price}
+                              onChange={(e) => setEditingValues({ ...editingValues, Price: e.target.value })}
+                              className="w-24 px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary/50 outline-none"
+                            />
+                          ) : (
+                            <span className="text-sm font-medium text-slate-900">
+                              {product.Price.toFixed(2)} {t('currency')}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editingValues.Cost}
+                              onChange={(e) => setEditingValues({ ...editingValues, Cost: e.target.value })}
+                              className="w-24 px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary/50 outline-none"
+                            />
+                          ) : (
+                            <span className="text-sm text-slate-500">
+                              {product.Cost.toFixed(2)} {t('currency')}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                          {product.Stock !== null && product.Stock !== undefined ? product.Stock : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            product.IsEnabled
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.IsEnabled ? t('active') : t('inactive')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                          {isEditing ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => saveInlineEdit(product)}
+                                className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                                title={t('save')}
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={cancelInlineEdit}
+                                className="p-1.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
+                                title={t('cancel')}
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => startInlineEdit(product)}
+                                className="p-1.5 text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors"
+                                title={t('edit')}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleOpenModal(product)}
+                                className="p-1.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
+                                title={t('details')}
+                              >
+                                <Package className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(product.Id)}
+                                className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                title={t('delete')}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
@@ -307,28 +1027,249 @@ export default function Products() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination - Fixed at bottom */}
+          {productsList && productsList.length > 0 && (
+            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Page info and size selector */}
+                <div className="flex items-center gap-4">
+                  <p className="text-sm text-slate-600">
+                    {t('showing')} <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> {t('to')}{' '}
+                    <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')}{' '}
+                    <span className="font-medium">{totalCount}</span> {t('results')}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-slate-600">{t('perPage')}:</label>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                    >
+                      <option value={12}>12</option>
+                      <option value={24}>24</option>
+                      <option value={48}>48</option>
+                      <option value={96}>96</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Pagination buttons */}
+                <div className="flex items-center gap-2">
+                  {/* Previous Button */}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={!hasPrevPage}
+                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {t('previous')}
+                  </button>
+                  
+                  {/* Page numbers */}
+                  <div className="flex items-center gap-1">
+                    {totalPages <= 7 ? (
+                      // Show all pages if 7 or less
+                      Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`min-w-[2.5rem] px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            currentPage === pageNum
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      ))
+                    ) : (
+                      // Show smart pagination for more than 7 pages
+                      <>
+                        {/* First page */}
+                        <button
+                          onClick={() => setCurrentPage(1)}
+                          className={`min-w-[2.5rem] px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            currentPage === 1
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          1
+                        </button>
+                        
+                        {/* Left ellipsis */}
+                        {currentPage > 3 && (
+                          <span className="px-2 text-slate-500">...</span>
+                        )}
+                        
+                        {/* Middle pages */}
+                        {Array.from({ length: 5 }, (_, i) => {
+                          let pageNum;
+                          if (currentPage <= 3) {
+                            pageNum = i + 2;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 5 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          
+                          if (pageNum > 1 && pageNum < totalPages) {
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => setCurrentPage(pageNum)}
+                                className={`min-w-[2.5rem] px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                  currentPage === pageNum
+                                    ? 'bg-primary text-white shadow-sm'
+                                    : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          }
+                          return null;
+                        })}
+                        
+                        {/* Right ellipsis */}
+                        {currentPage < totalPages - 2 && (
+                          <span className="px-2 text-slate-500">...</span>
+                        )}
+                        
+                        {/* Last page */}
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          className={`min-w-[2.5rem] px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            currentPage === totalPages
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={!hasNextPage}
+                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {t('next')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+            </>
+          )}
         </div>
       </div>
 
+      {/* Hidden File Input for Bulk Upload */}
+      <input
+        ref={bulkUploadInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleBulkUpload}
+        className="hidden"
+      />
+
+      {/* Floating Action Bar */}
+      <FloatingActionBar
+        selectedCount={selectedProducts.length}
+        onClearSelection={clearSelection}
+        onSelectAll={toggleSelectAll}
+        isAllSelected={selectedProducts.length === productsList.length}
+        totalCount={productsList.length}
+        actions={[
+          ...(selectedProducts.length === 1 ? [
+            {
+              id: 'upload',
+              label: t('importFile'),
+              icon: <Upload className="w-3.5 h-3.5" />,
+              onClick: () => bulkUploadInputRef.current?.click(),
+              variant: 'secondary' as const,
+            },
+            {
+              id: 'view',
+              label: t('details'),
+              icon: <Package className="w-3.5 h-3.5" />,
+              onClick: () => {
+                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+                if (product) handleOpenModal(product);
+              },
+              variant: 'secondary' as const,
+            },
+            {
+              id: 'toggle-price-change',
+              label: (() => {
+                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+                return product?.IsPriceChangeAllowed ? t('lockPriceChange') : t('allowPriceChange');
+              })(),
+              icon: (() => {
+                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+                return product?.IsPriceChangeAllowed ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />;
+              })(),
+              onClick: handleTogglePriceChangeAllowed,
+              variant: 'secondary' as const,
+            },
+            {
+              id: 'toggle-status',
+              label: (() => {
+                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+                return product?.IsEnabled ? t('disable') : t('enable');
+              })(),
+              icon: (() => {
+                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+                return product?.IsEnabled ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />;
+              })(),
+              onClick: () => {
+                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+                if (product?.IsEnabled) {
+                  handleBulkDisable();
+                } else {
+                  handleBulkEnable();
+                }
+              },
+              variant: 'primary' as const,
+            },
+          ] : []),
+          {
+            id: 'delete',
+            label: t('delete'),
+            icon: <Trash2 className="w-3.5 h-3.5" />,
+            onClick: handleBulkDelete,
+            variant: 'danger' as const,
+          },
+        ]}
+      />
+
       {/* Product Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-[95vw] mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b border-slate-200">
               <button
                 onClick={handleCloseModal}
-                className="absolute top-4 end-4 w-8 h-8 rounded-full bg-white hover:bg-slate-100 flex items-center justify-center shadow-sm transition-all"
+                className="absolute top-4 end-4 w-8 h-8 rounded-full bg-white hover:bg-slate-100 flex items-center justify-center shadow-sm transition-all z-10"
               >
                 <X className="w-4 h-4" />
               </button>
-              <h2 className="text-2xl font-bold text-slate-900">
+              <h2 className="text-2xl font-bold text-slate-900 pr-12">
                 {editingProduct ? t('editProduct') : t('addProduct')}
               </h2>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* Form - Scrollable Body */}
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -499,10 +1440,20 @@ export default function Products() {
                   />
                   <span className="text-sm text-slate-700">{t('isEnabled')}</span>
                 </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.IsPriceChangeAllowed}
+                    onChange={(e) => setFormData({ ...formData, IsPriceChangeAllowed: e.target.checked })}
+                    className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
+                  />
+                  <span className="text-sm text-slate-700">{t('isPriceChangeAllowed')}</span>
+                </label>
+              </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+              {/* Actions - Fixed Footer */}
+              <div className="flex-shrink-0 flex justify-end gap-3 p-6 pt-4 border-t border-slate-200 bg-slate-50">
                 <button
                   type="button"
                   onClick={handleCloseModal}

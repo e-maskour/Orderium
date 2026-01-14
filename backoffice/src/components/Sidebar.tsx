@@ -5,7 +5,10 @@ import {
   Package,
   ShoppingCart,
   Users,
+  UserCircle,
+  Truck,
   CreditCard,
+  FileText,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -31,9 +34,24 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
       label: t('orders'),
     },
     {
+      path: '/invoices',
+      icon: FileText,
+      label: t('invoices'),
+    },
+    {
       path: '/products',
       icon: Package,
       label: t('products'),
+    },
+    {
+      path: '/customers',
+      icon: UserCircle,
+      label: t('customers'),
+    },
+    {
+      path: '/fournisseurs',
+      icon: Truck,
+      label: t('suppliers'),
     },
     {
       path: '/delivery-persons',

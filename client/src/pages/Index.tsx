@@ -10,7 +10,7 @@ import { CartDrawer } from '@/components/CartDrawer';
 import { FloatingCartButton } from '@/components/FloatingCartButton';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Grid3x3, List } from 'lucide-react';
+import { Grid3x3, List, Plus } from 'lucide-react';
 
 const Index = () => {
   const { t, dir } = useLanguage();
@@ -126,47 +126,52 @@ const Index = () => {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col">
-          {/* Sticky Search and Categories */}
-          <div className="sticky top-14 sm:top-16 z-30 bg-white border-b border-gray-200 shadow-sm">
-            <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 space-y-3 sm:space-y-4">
-              {/* Search Bar */}
+        <main className="flex-1 flex flex-col h-full overflow-hidden">
+          {/* Search Bar */}
+          <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
+            <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
               <SearchBar value={filters.search} onChange={handleSearchChange} />
-              
-              {/* Category Chips and View Toggle */}
-              <div className="flex items-center justify-between gap-3">
-                <CategoryChips
-                  activeCategory={filters.category}
-                  onCategoryChange={handleCategoryChange}
-                />
-                
-                {/* View Toggle */}
-                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="h-9 px-2 sm:px-3"
-                  >
-                    <Grid3x3 className="w-4 h-4 sm:me-2" />
-                    <span className="hidden sm:inline text-sm whitespace-nowrap">{t('gridView')}</span>
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="h-9 px-2 sm:px-3"
-                  >
-                    <List className="w-4 h-4 sm:me-2" />
-                    <span className="hidden sm:inline text-sm whitespace-nowrap">{t('listView')}</span>
-                  </Button>
-                </div>
+            </div>
+          </div>
+
+          {/* Header Section */}
+          <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 flex-shrink-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              {/* Category Chips */}
+              <CategoryChips
+                activeCategory={filters.category}
+                onCategoryChange={handleCategoryChange}
+              />
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === 'grid'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Grid3x3 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === 'list'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Product Grid */}
-          <div className="flex-1 container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 lg:pb-8">
+          {/* Product Grid - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
             {loading && (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
@@ -198,6 +203,7 @@ const Index = () => {
                 onViewModeChange={setViewMode}
               />
             )}
+            </div>
           </div>
         </main>
       </div>

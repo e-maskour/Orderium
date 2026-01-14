@@ -240,10 +240,28 @@ export class OrderRepository {
   // Get order with items
   async getOrderWithItems(documentId: number): Promise<OrderWithItems | null> {
     try {
-      const document = await this.getDocumentById(documentId);
-      if (!document) return null;
-      
       const pool = await getPool();
+      
+      // Get document with customer info
+      const documentResult = await pool.request()
+        .input('id', sql.Int, documentId)
+        .query(`
+          SELECT 
+            d.*,
+            c.Name as CustomerName,
+            c.PhoneNumber as CustomerPhone,
+            c.Address as CustomerAddress,
+            od.Status
+          FROM Document d
+          LEFT JOIN Customer c ON d.CustomerId = c.Id
+          LEFT JOIN OrdersDelivery od ON d.Id = od.DocumentId
+          WHERE d.Id = @id
+        `);
+      
+      if (documentResult.recordset.length === 0) return null;
+      
+      const document = documentResult.recordset[0];
+      
       const itemsResult = await pool.request()
         .input('documentId', sql.Int, documentId)
         .query(`
@@ -258,6 +276,10 @@ export class OrderRepository {
       return {
         Document: document,
         Items: itemsResult.recordset,
+        CustomerName: document.CustomerName,
+        CustomerPhone: document.CustomerPhone,
+        CustomerAddress: document.CustomerAddress,
+        Status: document.Status,
       };
     } catch (err) {
       logger.error(err, 'Failed to get order with items');

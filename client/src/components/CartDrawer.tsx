@@ -132,7 +132,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
           </div>
           {itemCount > 0 && (
             <p className="text-sm text-gray-500">
-              {uniqueProductCount} {uniqueProductCount === 1 ? t('product') : t('products')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')}
+              {uniqueProductCount} {uniqueProductCount === 1 ? t('cartProduct') : t('cartProducts')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')}
             </p>
           )}
         </div>
@@ -210,7 +210,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
               {t('yourCart')}
               {itemCount > 0 && (
                 <span className="text-sm font-normal text-gray-500">
-                  ({uniqueProductCount} {uniqueProductCount === 1 ? t('product') : t('products')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')})
+                  ({uniqueProductCount} {uniqueProductCount === 1 ? t('cartProduct') : t('cartProducts')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')})
                 </span>
               )}
             </span>

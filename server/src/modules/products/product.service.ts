@@ -3,7 +3,14 @@ import { Product, CreateProductDTO, UpdateProductDTO } from "./product.model";
 
 interface ProductsResult {
   products: Product[];
-  total: number;
+  pagination: {
+    total: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 export async function getProducts(params: {
@@ -22,7 +29,21 @@ export async function getProducts(params: {
     getTotalProductCount(params.search)
   ]);
 
-  return { products, total };
+  const totalPages = Math.ceil(total / pageSize);
+  const hasNext = page < totalPages;
+  const hasPrev = page > 1;
+
+  return { 
+    products, 
+    pagination: {
+      total,
+      totalPages,
+      currentPage: page,
+      pageSize,
+      hasNext,
+      hasPrev
+    }
+  };
 }
 
 export async function getProduct(id: number): Promise<Product | null> {

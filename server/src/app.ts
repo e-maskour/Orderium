@@ -8,15 +8,16 @@ import { getPool } from "./db/pool";
 import productRoutes from "./modules/products/product.routes";
 import customerRoutes from "./modules/customers/customer.routes";
 import orderRoutes from "./modules/orders/order.routes";
+import invoiceRoutes from "./modules/invoices/invoice.routes";
 import portalRoutes from "./modules/portal/portal.routes";
 import deliveryRoutes from "./modules/delivery/delivery.routes";
 import notificationRoutes from "./modules/notifications/notification.routes";
-import statisticsRoutes from "./modules/statistics/statistics.routes";
 import statisticsRoutes from "./modules/statistics/statistics.routes";
 import { customerService } from "./modules/customers/customer.service";
 import { portalRepository } from "./modules/portal/portal.repo";
 import { deliveryService } from "./modules/delivery/delivery.service";
 import { notificationRepo } from "./modules/notifications/notification.repo";
+import { InvoiceRepository } from "./modules/invoices/invoice.repo";
 import { seedDeliveryPerson } from "./seeders/deliveryPersonSeeder";
 import { seedAdmin } from "./seeders/adminSeeder";
 import { initializeProductTable } from "./modules/products/product.repo";
@@ -68,6 +69,12 @@ export function createApp() {
         console.error("Failed to initialize product table:", err);
     });
 
+    // Initialize invoice tables
+    const invoiceRepo = new InvoiceRepository();
+    invoiceRepo.initialize().catch(err => {
+        console.error("Failed to initialize invoice tables:", err);
+    });
+
     // Health check endpoint
     app.get("/health", async (_req, res, next) => {
         try {
@@ -83,6 +90,7 @@ export function createApp() {
     app.use("/api/products", productRoutes);
     app.use("/api/customers", customerRoutes);
     app.use("/api/orders", orderRoutes);
+    app.use("/api/invoices", invoiceRoutes);
     app.use("/api/portal", portalRoutes);
     app.use("/api/delivery", deliveryRoutes);
     app.use("/api/notifications", notificationRoutes);

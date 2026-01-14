@@ -4,10 +4,12 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { useState, useEffect, useMemo } from 'react';
-import { Phone, MapPin, X, Search, Package } from 'lucide-react';
+import { Phone, MapPin, X, Search, Package, Eye, Download, CheckSquare, Square, UserPlus, Grid3x3, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
 import { DateRangePicker } from '../components/ui/date-range-picker';
+import { OrderDetailsModal } from '../components/OrderDetailsModal';
+import { FloatingActionBar, FloatingAction } from '../components/FloatingActionBar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +26,9 @@ export default function Orders() {
   const { admin } = useAuth();
   const queryClient = useQueryClient();
   const [unassignOrderId, setUnassignOrderId] = useState<number | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'unassigned' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
@@ -114,6 +119,12 @@ export default function Orders() {
     queryFn: deliveryPersonService.getAll,
   });
 
+  const { data: orderDetails, isLoading: orderDetailsLoading } = useQuery({
+    queryKey: ['orderDetails', selectedOrderId],
+    queryFn: () => orderService.getById(selectedOrderId!),
+    enabled: !!selectedOrderId,
+  });
+
   const assignMutation = useMutation({
     mutationFn: ({ orderId, deliveryPersonId }: { orderId: number; deliveryPersonId: number }) =>
       orderService.assignToDelivery(orderId, deliveryPersonId),
@@ -186,33 +197,88 @@ export default function Orders() {
     return order.Status === statusFilter;
   });
 
-  // Count orders by status
+  // Count orders by status - use full orders list, not filtered
   const statusCounts = {
-    all: filteredOrders.length,
-    unassigned: filteredOrders.filter((o: any) => !o.Status).length,
-    to_delivery: filteredOrders.filter((o: any) => o.Status === 'to_delivery').length,
-    in_delivery: filteredOrders.filter((o: any) => o.Status === 'in_delivery').length,
-    delivered: filteredOrders.filter((o: any) => o.Status === 'delivered').length,
-    canceled: filteredOrders.filter((o: any) => o.Status === 'canceled').length,
+    all: orders.length,
+    unassigned: orders.filter((o: any) => !o.Status).length,
+    to_delivery: orders.filter((o: any) => o.Status === 'to_delivery').length,
+    in_delivery: orders.filter((o: any) => o.Status === 'in_delivery').length,
+    delivered: orders.filter((o: any) => o.Status === 'delivered').length,
+    canceled: orders.filter((o: any) => o.Status === 'canceled').length,
   };
+
+  // Selection handlers
+  const toggleSelectOrder = (orderId: number) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrders.length === filteredOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(filteredOrders.map((o: any) => o.OrderId));
+    }
+  };
+
+  const clearSelection = () => setSelectedOrders([]);
 
   return (
     <AdminLayout>
-      {/* Search and Filter */}
-      <div className="bg-white border-b border-slate-200/60 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
-          {/* Search Bar and Date Picker Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+      <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header with Search and Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('orders')}</h1>
+            <p className="text-slate-600">{t('viewAndAssignOrders')}</p>
+          </div>
+
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('card')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  viewMode === 'card'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Grid3x3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative flex-1 sm:flex-none">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input
                 type="text"
                 placeholder={t('searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-10 rtl:pr-10 rtl:pl-4 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-700 placeholder:text-slate-400"
+                className="w-full sm:w-80 ps-10 pe-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
               />
+              {searchInput && (
+                <button
+                  onClick={() => setSearchInput('')}
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {/* Date Range Picker */}
@@ -227,8 +293,10 @@ export default function Orders() {
               placeholder={t('selectDate')}
             />
           </div>
+        </div>
 
-          {/* Status Filter Tabs */}
+        {/* Status Filter Tabs */}
+        <div className="mb-6 flex-shrink-0">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
             {[
               { key: 'all', label: t('all'), color: 'slate' },
@@ -241,49 +309,158 @@ export default function Orders() {
               <button
                 key={filter.key}
                 onClick={() => setStatusFilter(filter.key as any)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                  statusFilter === filter.key
-                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
-                }`}
-              >
-                {filter.label}
-                <span className={`ml-2 rtl:mr-2 rtl:ml-0 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                  statusFilter === filter.key 
-                    ? 'bg-white/20 text-white' 
-                    : 'bg-slate-100 text-slate-600'
-                }`}>
-                  {statusCounts[filter.key as keyof typeof statusCounts]}
-                </span>
-              </button>
-            ))}
+                  className={`px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                    statusFilter === filter.key
+                      ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
+                      : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                  }`}
+                >
+                  {filter.label}
+                  <span className={`ml-2 rtl:mr-2 rtl:ml-0 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                    statusFilter === filter.key 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {statusCounts[filter.key as keyof typeof statusCounts]}
+                  </span>
+                </button>
+              ))}
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {ordersLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm p-16 text-center border border-slate-200/60">
-            <Package className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-800 font-semibold text-lg mb-2">{t('noOrdersFound')}</p>
-            <p className="text-sm text-slate-500">
-              {statusFilter === 'all' 
-                ? t('noOrdersFound')
-                : `${t('noOrdersFound')}`
-              }
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {/* Orders Content - Scrollable */}
+        <div className="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          {ordersLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="flex items-center justify-center flex-1 p-16">
+              <div className="text-center">
+                <Package className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-800 font-semibold text-lg mb-2">{t('noOrdersFound')}</p>
+                <p className="text-sm text-slate-500">
+                  {statusFilter === 'all' 
+                    ? t('noOrdersFound')
+                    : `${t('noOrdersFound')}`
+                  }
+                </p>
+              </div>
+            </div>
+          ) : viewMode === 'list' ? (
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="space-y-3">
+                {filteredOrders.map((order: any) => (
+              <div
+                key={order.OrderId}
+                onClick={() => toggleSelectOrder(order.OrderId)}
+                className={`relative bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${
+                  selectedOrders.includes(order.OrderId)
+                    ? 'border-amber-500 ring-2 ring-amber-500/20'
+                    : 'border-slate-200/60 hover:border-slate-300/60'
+                }`}
+              >
+                <div className="px-5 py-4">
+                  <div className="flex items-center gap-4">
+                    {/* Selection Checkbox */}
+                    <div className="flex-shrink-0">
+                      <div
+                        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                          selectedOrders.includes(order.OrderId)
+                            ? 'bg-amber-500 border-amber-500 text-white'
+                            : 'bg-white border-slate-300'
+                        }`}
+                      >
+                        {selectedOrders.includes(order.OrderId) && (
+                          <CheckSquare className="w-4 h-4" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Order Number & Status */}
+                    <div className="flex-shrink-0 w-32">
+                      <span className="text-sm font-semibold text-slate-500">#{order.OrderNumber}</span>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {new Date(order.CreatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex-shrink-0">
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(order.Status)}`}>
+                        <span className="text-base">{getStatusIcon(order.Status)}</span>
+                        <span>{getStatusLabel(order.Status)}</span>
+                      </span>
+                    </div>
+
+                    {/* Customer Info */}
+                    <div className="w-48 min-w-0 flex items-center gap-3">
+                      <div className="w-9 h-9 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md shadow-amber-500/30">
+                        <Package className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-800 truncate">{order.CustomerName}</p>
+                        <a href={`tel:${order.CustomerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 transition-colors">
+                          <Phone className="w-3 h-3" />
+                          {order.CustomerPhone}
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    {order.CustomerAddress && (
+                      <div className="flex-1 min-w-0 flex items-center gap-2" title={order.CustomerAddress}>
+                        <div className="w-6 h-6 bg-amber-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-3 h-3 text-amber-600" />
+                        </div>
+                        <p className="text-xs text-slate-600 truncate">{order.CustomerAddress}</p>
+                      </div>
+                    )}
+
+                    {/* Total */}
+                    <div className="flex-shrink-0 text-right">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">{t('total')}</span>
+                      <span className="text-base font-bold text-amber-600 block mt-0.5">
+                        {order.TotalAmount?.toFixed(2)} <span className="text-xs">{t('currency')}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredOrders.map((order: any) => (
-              <div key={order.OrderId} className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden hover:shadow-lg hover:border-slate-300/60 transition-all duration-200">
+              <div 
+                key={order.OrderId} 
+                onClick={() => toggleSelectOrder(order.OrderId)}
+                className={`relative bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer ${
+                  selectedOrders.includes(order.OrderId) 
+                    ? 'border-amber-500 ring-2 ring-amber-500/20' 
+                    : 'border-slate-200/60 hover:border-slate-300/60'
+                }`}
+              >
                 {/* Card Header */}
-                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="px-4 py-3 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
+                  {/* Selection Checkbox */}
+                  <div className="absolute top-2 left-2 z-10">
+                    <div
+                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                        selectedOrders.includes(order.OrderId)
+                          ? 'bg-amber-500 border-amber-500 text-white'
+                          : 'bg-white border-slate-300'
+                      }`}
+                    >
+                      {selectedOrders.includes(order.OrderId) && (
+                        <CheckSquare className="w-4 h-4" />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-2 ml-8">
                     <span className="text-xs font-semibold text-slate-500 tracking-wide">#{order.OrderNumber}</span>
                     <span className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(order.Status)}`}>
                       <span className="text-base">{getStatusIcon(order.Status)}</span>
@@ -296,16 +473,16 @@ export default function Orders() {
                 </div>
 
                 {/* Card Body */}
-                <div className="p-5 space-y-4">
+                <div className="p-4 space-y-3">
                   {/* Customer - Most Prominent */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md shadow-amber-500/30">
-                      <Package className="w-5 h-5 text-white" />
+                  <div className="flex items-start gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md shadow-amber-500/30">
+                      <Package className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-base font-bold text-slate-800 leading-snug">{order.CustomerName}</p>
-                      <a href={`tel:${order.CustomerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1.5 mt-1 transition-colors">
-                        <Phone className="w-3.5 h-3.5" />
+                      <p className="text-sm font-bold text-slate-800 leading-tight">{order.CustomerName}</p>
+                      <a href={`tel:${order.CustomerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 mt-0.5 transition-colors">
+                        <Phone className="w-3 h-3" />
                         {order.CustomerPhone}
                       </a>
                     </div>
@@ -313,60 +490,97 @@ export default function Orders() {
 
                   {/* Address */}
                   {order.CustomerAddress && (
-                    <div className="flex items-start gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100">
-                      <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <MapPin className="w-4 h-4 text-amber-600" />
+                    <div className="flex items-start gap-2 bg-slate-50 rounded-lg p-2 border border-slate-100" title={order.CustomerAddress}>
+                      <div className="w-6 h-6 bg-amber-100 rounded-md flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-3 h-3 text-amber-600" />
                       </div>
-                      <p className="text-xs text-slate-600 flex-1 line-clamp-2 leading-relaxed">{order.CustomerAddress}</p>
+                      <p className="text-xs text-slate-600 flex-1 line-clamp-1 leading-relaxed">{order.CustomerAddress}</p>
                     </div>
                   )}
 
                   {/* Total */}
-                  <div className="border-t border-slate-100 pt-3">
+                  <div className="border-t border-slate-100 pt-2">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('total')}</span>
-                      <span className="text-lg font-bold text-amber-600">{order.TotalAmount?.toFixed(2)} <span className="text-sm">{t('currency')}</span></span>
-                    </div>
-                  </div>
-
-                  {/* Assignment - More Prominent */}
-                  <div className="border-t border-slate-100 pt-4">
-                    <label className="text-xs font-bold text-slate-700 mb-2 block uppercase tracking-wide">
-                      {t('assignTo')}
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={order.DeliveryPersonId || ''}
-                        onChange={(e) => handleAssign(order.OrderId, e.target.value)}
-                        className={`flex-1 border-2 rounded-xl px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium ${
-                          order.DeliveryPersonId 
-                            ? 'border-emerald-300 text-emerald-700 bg-emerald-50' 
-                            : 'border-slate-200 text-slate-600 hover:border-amber-400'
-                        }`}
-                        disabled={order.Status === 'delivered'}
-                      >
-                        <option value="">{order.DeliveryPersonId ? t('assigned') : t('selectDeliveryPerson')}</option>
-                        {deliveryPersons.filter((p: any) => p.IsActive).map((person: any) => (
-                          <option key={person.Id} value={person.Id}>{person.Name}</option>
-                        ))}
-                      </select>
-                      {order.DeliveryPersonId && (
-                        <button
-                          onClick={() => setUnassignOrderId(order.OrderId)}
-                          className="bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-xl transition-all shadow-sm hover:shadow-md"
-                          title={t('unassign')}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
+                      <span className="text-base font-bold text-amber-600">{order.TotalAmount?.toFixed(2)} <span className="text-xs">{t('currency')}</span></span>
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Order Details Modal */}
+      {selectedOrderId && orderDetails && (
+        <OrderDetailsModal
+          order={orderDetails}
+          onClose={() => setSelectedOrderId(null)}
+        />
+      )}
+
+      {/* Floating Action Bar */}
+      <FloatingActionBar
+        selectedCount={selectedOrders.length}
+        onClearSelection={clearSelection}
+        onSelectAll={toggleSelectAll}
+        isAllSelected={selectedOrders.length === filteredOrders.length}
+        totalCount={filteredOrders.length}
+        actions={[
+          {
+            id: 'details',
+            label: t('details'),
+            icon: <Eye className="w-3.5 h-3.5" />,
+            onClick: () => setSelectedOrderId(selectedOrders[0]),
+            hidden: selectedOrders.length !== 1,
+          },
+          {
+            id: 'receipt',
+            label: t('receipt'),
+            icon: <Download className="w-3.5 h-3.5" />,
+            onClick: () => {
+              toast.success(`${t('downloading')} ${selectedOrders.length} ${t('receipts')}...`);
+            },
+          },
+          {
+            id: 'invoice',
+            label: t('invoice'),
+            icon: <Download className="w-3.5 h-3.5" />,
+            onClick: () => {
+              toast.success(`${t('downloading')} ${selectedOrders.length} ${t('invoices')}...`);
+            },
+          },
+        ]}
+      >
+        {/* Assign to Delivery - Custom Dropdown */}
+        <div className="relative group">
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                selectedOrders.forEach(orderId => {
+                  const order = filteredOrders.find((o: any) => o.OrderId === orderId);
+                  if (order && order.Status !== 'delivered') {
+                    handleAssign(orderId, e.target.value);
+                  }
+                });
+                clearSelection();
+                e.target.value = '';
+              }
+            }}
+            className="px-3 py-1.5 bg-white text-amber-600 rounded-lg hover:bg-amber-50 transition-all shadow-md font-semibold text-sm cursor-pointer appearance-none pr-8"
+          >
+            <option value="">
+              {t('assignToDelivery')}
+            </option>
+            {deliveryPersons.filter((p: any) => p.IsActive).map((person: any) => (
+              <option key={person.Id} value={person.Id}>{person.Name}</option>
+            ))}
+          </select>
+        </div>
+      </FloatingActionBar>
 
       <AlertDialog open={unassignOrderId !== null} onOpenChange={(open) => !open && setUnassignOrderId(null)}>
         <AlertDialogContent>

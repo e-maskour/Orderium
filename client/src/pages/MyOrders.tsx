@@ -145,7 +145,7 @@ export default function MyOrders() {
           <LanguageProvider>
             <Receipt
               orderNumber={selectedOrderItems.order.Number}
-              customerName={user?.Name || ''}
+              customerName={user?.CustomerName || ''}
               customerPhone={user?.PhoneNumber || ''}
               items={items}
               subtotal={selectedOrderItems.order.Total}
@@ -158,7 +158,7 @@ export default function MyOrders() {
           <LanguageProvider>
             <Invoice
               orderNumber={selectedOrderItems.order.Number}
-              customerName={user?.Name || ''}
+              customerName={user?.CustomerName || ''}
               customerPhone={user?.PhoneNumber || ''}
               customerAddress={''}
               items={items}
@@ -451,7 +451,7 @@ export default function MyOrders() {
                         >
                           <div className="flex-1">
                             <p className="font-medium text-foreground">
-                              {item.ProductName || `${t('product')} ${item.ProductId}`}
+                              {item.ProductName || `${t('cartProduct')} ${item.ProductId}`}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {t('quantity')}: {item.Quantity} × {formatCurrency(item.Price, language)}
