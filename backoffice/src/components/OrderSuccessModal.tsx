@@ -10,9 +10,9 @@ import { useLanguage } from '../context/LanguageContext';
 
 interface CartItem {
   product: {
-    Id: number;
-    Name: string;
-    Price: number;
+    id: number;
+    name: string;
+    price: number;
     Description?: string;
   };
   quantity: number;
@@ -60,17 +60,17 @@ export const OrderSuccessModal = ({
       // Convert items to expected format
       const formattedItems = items.map(item => ({
         product: {
-          Id: item.product.Id,
-          Name: item.product.Name,
-          Price: item.product.Price,
-          Description: item.product.Description || '',
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          description: item.product.description || '',
           CategoryId: 0,
-          ImageUrl: '',
-          Code: '',
-          Stock: 0,
-          Cost: 0,
-          IsService: false,
-          IsEnabled: true,
+          imageUrl: '',
+          code: '',
+          stock: 0,
+          cost: 0,
+          isService: false,
+          isEnabled: true,
           DateCreated: '',
           DateUpdated: '',
         },
@@ -315,17 +315,17 @@ export const OrderSuccessModal = ({
                   customerPhone={customerPhone}
                   items={items.map(item => ({
                     product: {
-                      Id: item.product.Id,
-                      Name: item.product.Name,
-                      Price: item.product.Price,
-                      Description: item.product.Description || '',
+                      id: item.product.id,
+                      name: item.product.name,
+                      price: item.product.price,
+                      description: item.product.description || '',
                       CategoryId: 0,
-                      ImageUrl: '',
-                      Code: '',
-                      Stock: 0,
-                      Cost: 0,
-                      IsService: false,
-                      IsEnabled: true,
+                      imageUrl: '',
+                      code: '',
+                      stock: 0,
+                      cost: 0,
+                      isService: false,
+                      isEnabled: true,
                       DateCreated: '',
                       DateUpdated: '',
                     },
@@ -342,17 +342,17 @@ export const OrderSuccessModal = ({
                   customerAddress={customerAddress || ''}
                   items={items.map(item => ({
                     product: {
-                      Id: item.product.Id,
-                      Name: item.product.Name,
-                      Price: item.product.Price,
-                      Description: item.product.Description || '',
+                      id: item.product.id,
+                      name: item.product.name,
+                      price: item.product.price,
+                      description: item.product.description || '',
                       CategoryId: 0,
-                      ImageUrl: '',
-                      Code: '',
-                      Stock: 0,
-                      Cost: 0,
-                      IsService: false,
-                      IsEnabled: true,
+                      imageUrl: '',
+                      code: '',
+                      stock: 0,
+                      cost: 0,
+                      isService: false,
+                      isEnabled: true,
                       DateCreated: '',
                       DateUpdated: '',
                     },

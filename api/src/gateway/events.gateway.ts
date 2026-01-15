@@ -43,7 +43,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() room: string,
   ) {
-    client.join(room);
+    void client.join(room);
     this.logger.log(`Client ${client.id} joined room: ${room}`);
     return { success: true, room };
   }
@@ -53,15 +53,15 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() room: string,
   ) {
-    client.leave(room);
+    void client.leave(room);
     this.logger.log(`Client ${client.id} left room: ${room}`);
     return { success: true, room };
   }
 
   // Emit order created event
-  emitOrderCreated(order: any) {
+  emitOrderCreated(order: { Order?: { number?: string } }) {
     this.server.emit('order:created', order);
-    this.logger.log(`Order created event emitted: ${order.Document?.number}`);
+    this.logger.log(`Order created event emitted: ${order.Order?.number}`);
   }
 
   // Emit order status updated event
@@ -71,7 +71,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // Emit delivery assigned event
-  emitDeliveryAssigned(delivery: any) {
+  emitDeliveryAssigned(delivery: { deliveryPersonId: number }) {
     this.server
       .to(`delivery-${delivery.deliveryPersonId}`)
       .emit('delivery:assigned', delivery);
@@ -79,7 +79,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // Emit notification
-  emitNotification(userId: number, notification: any) {
+  emitNotification(userId: number, notification: Record<string, unknown>) {
     this.server.to(`user-${userId}`).emit('notification', notification);
     this.logger.log(`Notification sent to user ${userId}`);
   }

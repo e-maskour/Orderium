@@ -193,18 +193,18 @@ export default function Orders() {
   // Filter orders by status (no date filtering on client - done on server)
   const filteredOrders = orders.filter((order: any) => {
     if (statusFilter === 'all') return true;
-    if (statusFilter === 'unassigned') return !order.Status;
-    return order.Status === statusFilter;
+    if (statusFilter === 'unassigned') return !order.status;
+    return order.status === statusFilter;
   });
 
   // Count orders by status - use full orders list, not filtered
   const statusCounts = {
     all: orders.length,
-    unassigned: orders.filter((o: any) => !o.Status).length,
-    to_delivery: orders.filter((o: any) => o.Status === 'to_delivery').length,
-    in_delivery: orders.filter((o: any) => o.Status === 'in_delivery').length,
-    delivered: orders.filter((o: any) => o.Status === 'delivered').length,
-    canceled: orders.filter((o: any) => o.Status === 'canceled').length,
+    unassigned: orders.filter((o: any) => !o.status).length,
+    to_delivery: orders.filter((o: any) => o.status === 'to_delivery').length,
+    in_delivery: orders.filter((o: any) => o.status === 'in_delivery').length,
+    delivered: orders.filter((o: any) => o.status === 'delivered').length,
+    canceled: orders.filter((o: any) => o.status === 'canceled').length,
   };
 
   // Selection handlers
@@ -381,15 +381,15 @@ export default function Orders() {
                     <div className="flex-shrink-0 w-32">
                       <span className="text-sm font-semibold text-slate-500">#{order.OrderNumber}</span>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {new Date(order.CreatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
 
                     {/* Status */}
                     <div className="flex-shrink-0">
-                      <span className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(order.Status)}`}>
-                        <span className="text-base">{getStatusIcon(order.Status)}</span>
-                        <span>{getStatusLabel(order.Status)}</span>
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(order.status)}`}>
+                        <span className="text-base">{getStatusIcon(order.status)}</span>
+                        <span>{getStatusLabel(order.status)}</span>
                       </span>
                     </div>
 
@@ -421,7 +421,7 @@ export default function Orders() {
                     <div className="flex-shrink-0 text-right">
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">{t('total')}</span>
                       <span className="text-base font-bold text-amber-600 block mt-0.5">
-                        {order.TotalAmount?.toFixed(2)} <span className="text-xs">{t('currency')}</span>
+                        {order.totalAmount?.toFixed(2)} <span className="text-xs">{t('currency')}</span>
                       </span>
                     </div>
                   </div>
@@ -462,13 +462,13 @@ export default function Orders() {
 
                   <div className="flex items-center justify-between mb-2 ml-8">
                     <span className="text-xs font-semibold text-slate-500 tracking-wide">#{order.OrderNumber}</span>
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(order.Status)}`}>
-                      <span className="text-base">{getStatusIcon(order.Status)}</span>
-                      <span>{getStatusLabel(order.Status)}</span>
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(order.status)}`}>
+                      <span className="text-base">{getStatusIcon(order.status)}</span>
+                      <span>{getStatusLabel(order.status)}</span>
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">
-                    {new Date(order.CreatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
 
@@ -502,7 +502,7 @@ export default function Orders() {
                   <div className="border-t border-slate-100 pt-2">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('total')}</span>
-                      <span className="text-base font-bold text-amber-600">{order.TotalAmount?.toFixed(2)} <span className="text-xs">{t('currency')}</span></span>
+                      <span className="text-base font-bold text-amber-600">{order.totalAmount?.toFixed(2)} <span className="text-xs">{t('currency')}</span></span>
                     </div>
                   </div>
                 </div>
@@ -562,7 +562,7 @@ export default function Orders() {
               if (e.target.value) {
                 selectedOrders.forEach(orderId => {
                   const order = filteredOrders.find((o: any) => o.OrderId === orderId);
-                  if (order && order.Status !== 'delivered') {
+                  if (order && order.status !== 'delivered') {
                     handleAssign(orderId, e.target.value);
                   }
                 });
@@ -575,8 +575,8 @@ export default function Orders() {
             <option value="">
               {t('assignToDelivery')}
             </option>
-            {deliveryPersons.filter((p: any) => p.IsActive).map((person: any) => (
-              <option key={person.Id} value={person.Id}>{person.Name}</option>
+            {deliveryPersons.filter((p: any) => p.isActive).map((person: any) => (
+              <option key={person.id} value={person.id}>{person.name}</option>
             ))}
           </select>
         </div>

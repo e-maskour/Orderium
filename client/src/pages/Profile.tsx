@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { customerService } from '@/services';
+import { partnerService } from '@/services';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { AddressInput } from '@/components/AddressInput';
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { language, dir, t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -28,37 +28,37 @@ export default function Profile() {
 
   useEffect(() => {
     // Always load customer data on mount
-    if (user?.PhoneNumber) {
+    if (user?.phoneNumber) {
       loadCustomerData();
     }
-  }, [user?.PhoneNumber]);
+  }, [user?.phoneNumber]);
 
   const loadCustomerData = async () => {
-    if (!user?.PhoneNumber) return;
+    if (!user?.phoneNumber) return;
     
     try {
-      const response = await customerService.getByPhone(user.PhoneNumber);
-      if (response.customer) {
+      const response = await partnerService.getByPhone(user.PhoneNumber);
+      if (response.partner) {
         setFormData({
-          name: response.customer.Name || '',
-          address: response.customer.Address || '',
-          latitude: response.customer.Latitude,
-          longitude: response.customer.Longitude,
+          name: response.partner.name || '',
+          address: response.partner.address || '',
+          latitude: response.partner.latitude,
+          longitude: response.partner.longitude,
         });
         
         // Set map links if available
-        if (response.customer.GoogleMapsUrl) setMapsLink(response.customer.GoogleMapsUrl);
-        else if (response.customer.Latitude && response.customer.Longitude) {
-          setMapsLink(`https://www.google.com/maps?q=${response.customer.Latitude},${response.customer.Longitude}`);
+        if (response.partner.googleMapsUrl) setMapsLink(response.partner.googleMapsUrl);
+        else if (response.partner.latitude && response.partner.longitude) {
+          setMapsLink(`https://www.google.com/maps?q=${response.partner.latitude},${response.partner.longitude}`);
         }
         
-        if (response.customer.WazeUrl) setWazeLink(response.customer.WazeUrl);
-        else if (response.customer.Latitude && response.customer.Longitude) {
-          setWazeLink(`https://waze.com/ul?ll=${response.customer.Latitude},${response.customer.Longitude}&navigate=yes`);
+        if (response.partner.wazeUrl) setWazeLink(response.partner.wazeUrl);
+        else if (response.partner.latitude && response.partner.longitude) {
+          setWazeLink(`https://waze.com/ul?ll=${response.partner.latitude},${response.partner.longitude}&navigate=yes`);
         }
       }
     } catch (error) {
-      console.error('Failed to load customer data:', error);
+      console.error('Failed to load partner data:', error);
     }
   };
 
@@ -88,7 +88,7 @@ export default function Profile() {
       return;
     }
 
-    if (!user?.PhoneNumber) return;
+    if (!user?.phoneNumber) return;
 
     setIsLoading(true);
 
@@ -101,15 +101,19 @@ export default function Profile() {
         ? `https://waze.com/ul?ll=${formData.latitude},${formData.longitude}&navigate=yes`
         : undefined;
 
-      await customerService.upsert({
-        PhoneNumber: user.PhoneNumber,
-        Name: formData.name,
-        Address: formData.address,
-        Latitude: formData.latitude || undefined,
-        Longitude: formData.longitude || undefined,
-        GoogleMapsUrl: mapsLinkToSave,
-        WazeUrl: wazeLinkToSave,
+      await partnerService.upsert({
+        phoneNumber: user.phoneNumber,
+        name: formData.name,
+        address: formData.address,
+        latitude: formData.latitude || undefined,
+        longitude: formData.longitude || undefined,
+        googleMapsUrl: mapsLinkToSave,
+        wazeUrl: wazeLinkToSave,
+        portalPhoneNumber: user.phoneNumber, // Link to portal account
       });
+
+      // Refresh user data to get updated customerId
+      await refreshUser();
 
       toast({
         title: t('saved'),
@@ -157,7 +161,7 @@ export default function Profile() {
                 <Input
                   id="phone"
                   type="tel"
-                  value={user?.PhoneNumber || ''}
+                  value={user?.phoneNumber || ''}
                   disabled
                   className="bg-gray-100 h-11 sm:h-10 text-base sm:text-sm"
                 />

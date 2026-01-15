@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface Admin {
-  Id: number;
-  PhoneNumber: string;
+  id: number;
+  phoneNumber: string;
   FullName?: string;
   IsCustomer: boolean;
   IsDelivery: boolean;
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          PhoneNumber: credentials.phoneNumber,
+          phoneNumber: credentials.phoneNumber,
           Password: credentials.password,
         }),
       });

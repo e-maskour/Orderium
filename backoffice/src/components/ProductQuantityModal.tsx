@@ -50,12 +50,12 @@ if (typeof document !== 'undefined') {
 }
 
 interface Product {
-  Id: number;
-  Name: string;
-  Price: number;
-  Stock?: number;
-  Code?: string;
-  ImageUrl?: string;
+  id: number;
+  name: string;
+  price: number;
+  stock?: number;
+  code?: string;
+  imageUrl?: string;
 }
 
 interface ProductQuantityModalProps {
@@ -107,7 +107,7 @@ export const ProductQuantityModal = ({
 
   if (!product || !isOpen) return null;
 
-  const maxQuantity = product.Stock ?? 999;
+  const maxQuantity = product.stock ?? 999;
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
@@ -149,7 +149,7 @@ export const ProductQuantityModal = ({
     onClose();
   };
 
-  const totalPrice = product.Price * (parseInt(quantity) || 0);
+  const totalPrice = product.price * (parseInt(quantity) || 0);
   const hasQuantity = quantity !== '' && parseInt(quantity) > 0;
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0'];
 
@@ -182,19 +182,19 @@ export const ProductQuantityModal = ({
 
           <div className="space-y-1.5 sm:space-y-2 pr-10 sm:pr-12">
             <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
-              {product.Name}
+              {product.name}
             </h2>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-xl font-bold text-primary">
-                {product.Price.toFixed(2)} {t('currency')}
+                {product.price.toFixed(2)} {t('currency')}
               </span>
               <span className="text-xs sm:text-sm text-gray-500">
                 {t('perUnit')}
               </span>
             </div>
-            {product.Code && (
+            {product.code && (
               <p className="text-xs text-gray-500">
-                {t('code')}: {product.Code}
+                {t('code')}: {product.code}
               </p>
             )}
           </div>

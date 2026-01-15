@@ -50,12 +50,12 @@ if (typeof document !== 'undefined') {
 }
 
 interface Product {
-  Id: number;
-  Name: string;
-  Price: number;
-  Cost?: number;
-  ImageUrl?: string;
-  Code?: string;
+  id: number;
+  name: string;
+  price: number;
+  cost?: number;
+  imageUrl?: string;
+  code?: string;
 }
 
 interface PriceConfirmModalProps {
@@ -80,7 +80,7 @@ export const PriceConfirmModal = ({
 
   useEffect(() => {
     if (isOpen && product) {
-      setPrice(product.Price.toFixed(2));
+      setPrice(product.price.toFixed(2));
       setDecimalMode(false);
       setTimeout(() => {
         inputRef.current?.focus();
@@ -183,10 +183,10 @@ export const PriceConfirmModal = ({
             <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
               {t('confirmPrice')}
             </h2>
-            <p className="text-sm text-gray-600">{product.Name}</p>
-            {product.Code && (
+            <p className="text-sm text-gray-600">{product.name}</p>
+            {product.code && (
               <p className="text-xs text-gray-500">
-                {t('code')}: {product.Code}
+                {t('code')}: {product.code}
               </p>
             )}
           </div>
@@ -214,11 +214,11 @@ export const PriceConfirmModal = ({
             />
             <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
               <span>
-                {t('originalPrice')}: {product.Price.toFixed(2)} {t('currency')}
+                {t('originalPrice')}: {product.price.toFixed(2)} {t('currency')}
               </span>
-              {product.Cost != null && (
+              {product.cost != null && (
                 <span className="text-amber-600 font-medium">
-                  {t('cost')}: {product.Cost.toFixed(2)} {t('currency')}
+                  {t('cost')}: {product.cost.toFixed(2)} {t('currency')}
                 </span>
               )}
             </div>

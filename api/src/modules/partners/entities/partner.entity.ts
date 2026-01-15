@@ -7,17 +7,17 @@ import {
   Index,
 } from 'typeorm';
 
-@Entity('customers')
+@Entity('partners')
 @Index(['phoneNumber'])
 @Index(['email'])
-export class Customer {
+export class Partner {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'varchar', length: 50, nullable: true, unique: true })
+  @Column({ type: 'varchar', length: 50, unique: true })
   phoneNumber: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -40,6 +40,12 @@ export class Customer {
 
   @Column({ type: 'boolean', default: true })
   isEnabled: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isCustomer: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isSupplier: boolean;
 
   @CreateDateColumn()
   dateCreated: Date;

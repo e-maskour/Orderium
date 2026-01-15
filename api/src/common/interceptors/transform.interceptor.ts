@@ -16,15 +16,15 @@ export interface ClassType<T> {
 export class TransformInterceptor<T> implements NestInterceptor<Partial<T>, T> {
   constructor(private readonly classType: ClassType<T>) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<T> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      map((data) => {
+      map((data: any) => {
         if (data && typeof data === 'object') {
           return plainToClass(this.classType, data, {
             excludeExtraneousValues: true,
           });
         }
-        return data;
+        return data as T;
       }),
     );
   }

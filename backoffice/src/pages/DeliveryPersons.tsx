@@ -27,16 +27,16 @@ export default function DeliveryPersons() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPersons, setSelectedPersons] = useState<number[]>([]);
   const [editingValues, setEditingValues] = useState<{
-    Name: string;
-    PhoneNumber: string;
-    Email: string;
-  }>({ Name: '', PhoneNumber: '', Email: '' });
+    name: string;
+    phoneNumber: string;
+    email: string;
+  }>({ name: '', phoneNumber: '', email: '' });
   const [formData, setFormData] = useState({
-    Name: '',
-    PhoneNumber: '',
-    Email: '',
-    Password: '',
-    IsActive: true,
+    name: '',
+    phoneNumber: '',
+    email: '',
+    password: '',
+    isActive: true,
   });
 
   const queryClient = useQueryClient();
@@ -84,7 +84,7 @@ export default function DeliveryPersons() {
   });
 
   const resetForm = () => {
-    setFormData({ Name: '', PhoneNumber: '', Email: '', Password: '', IsActive: true });
+    setFormData({ name: '', phoneNumber: '', email: '', password: '', isActive: true });
     setShowForm(false);
     setEditingId(null);
   };
@@ -99,7 +99,7 @@ export default function DeliveryPersons() {
     if (selectedPersons.length === filteredPersons.length) {
       setSelectedPersons([]);
     } else {
-      setSelectedPersons(filteredPersons.map((p: DeliveryPerson) => p.Id));
+      setSelectedPersons(filteredPersons.map((p: DeliveryPerson) => p.id));
     }
   };
 
@@ -118,34 +118,34 @@ export default function DeliveryPersons() {
 
   // Filter delivery persons by search term
   const filteredPersons = deliveryPersons.filter((person: DeliveryPerson) =>
-    person.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    person.PhoneNumber.includes(searchTerm) ||
-    person.Email?.toLowerCase().includes(searchTerm.toLowerCase())
+    person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.phoneNumber.includes(searchTerm) ||
+    person.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const startInlineEdit = (person: DeliveryPerson) => {
-    setEditingId(person.Id);
+    setEditingId(person.id);
     setEditingValues({
-      Name: person.Name,
-      PhoneNumber: person.PhoneNumber,
-      Email: person.Email || '',
+      name: person.name,
+      phoneNumber: person.phoneNumber,
+      email: person.email || '',
     });
   };
 
   const cancelInlineEdit = () => {
     setEditingId(null);
-    setEditingValues({ Name: '', PhoneNumber: '', Email: '' });
+    setEditingValues({ name: '', phoneNumber: '', email: '' });
   };
 
   const saveInlineEdit = (person: DeliveryPerson) => {
     const updatedData = {
-      Name: editingValues.Name,
-      PhoneNumber: editingValues.PhoneNumber,
-      Email: editingValues.Email || undefined,
-      IsActive: person.IsActive,
+      name: editingValues.name,
+      phoneNumber: editingValues.phoneNumber,
+      email: editingValues.email || undefined,
+      isActive: person.isActive,
     };
     
-    updateMutation.mutate({ id: person.Id, data: updatedData });
+    updateMutation.mutate({ id: person.id, data: updatedData });
     setEditingId(null);
   };
 
@@ -157,7 +157,7 @@ export default function DeliveryPersons() {
         id: editingId, 
         data: { 
           ...updateData, 
-          Email: Email || undefined 
+          email: Email || undefined 
         } 
       });
     } else {
@@ -167,20 +167,20 @@ export default function DeliveryPersons() {
       }
       createMutation.mutate({
         ...formData,
-        Email: formData.Email || undefined
+        email: formData.email || undefined
       });
     }
   };
 
   const handleEdit = (person: DeliveryPerson) => {
     setFormData({
-      Name: person.Name,
-      PhoneNumber: person.PhoneNumber,
-      Email: person.Email || '',
-      Password: '',
-      IsActive: person.IsActive,
+      name: person.name,
+      phoneNumber: person.phoneNumber,
+      email: person.email || '',
+      password: '',
+      isActive: person.isActive,
     });
-    setEditingId(person.Id);
+    setEditingId(person.id);
     setShowForm(true);
   };
 
@@ -253,8 +253,8 @@ export default function DeliveryPersons() {
                   <label className="block text-sm font-semibold mb-2 text-slate-700">{t('name')} *</label>
                   <input
                     type="text"
-                    value={formData.Name}
-                    onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-700"
                     required
                   />
@@ -263,8 +263,8 @@ export default function DeliveryPersons() {
                   <label className="block text-sm font-semibold mb-2 text-slate-700">{t('phoneNumber')} *</label>
                   <input
                     type="tel"
-                    value={formData.PhoneNumber}
-                    onChange={(e) => setFormData({ ...formData, PhoneNumber: e.target.value })}
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-700"
                     placeholder="06XXXXXXXX"
                     required
@@ -274,8 +274,8 @@ export default function DeliveryPersons() {
                   <label className="block text-sm font-semibold mb-2 text-slate-700">{t('email')}</label>
                   <input
                     type="email"
-                    value={formData.Email}
-                    onChange={(e) => setFormData({ ...formData, Email: e.target.value })}
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-700"
                   />
                 </div>
@@ -285,7 +285,7 @@ export default function DeliveryPersons() {
                     <input
                       type="password"
                       value={formData.Password}
-                      onChange={(e) => setFormData({ ...formData, Password: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-700"
                       required={!editingId}
                       placeholder={t('minSixCharacters')}
@@ -296,8 +296,8 @@ export default function DeliveryPersons() {
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={formData.IsActive}
-                      onChange={(e) => setFormData({ ...formData, IsActive: e.target.checked })}
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                       className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500 mr-3 rtl:ml-3 rtl:mr-0"
                     />
                     <span className="text-sm font-semibold text-slate-700">{t('active')}</span>
@@ -340,13 +340,13 @@ export default function DeliveryPersons() {
             <div className="flex-1 overflow-y-auto p-3">
               <div className="space-y-2">
                 {filteredPersons.map((person: DeliveryPerson) => {
-                  const isEditing = editingId === person.Id;
+                  const isEditing = editingId === person.id;
                   return (
                     <div
-                      key={person.Id}
-                      onClick={() => !isEditing && toggleSelectPerson(person.Id)}
+                      key={person.id}
+                      onClick={() => !isEditing && toggleSelectPerson(person.id)}
                       className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all ${!isEditing && 'cursor-pointer'} ${
-                        selectedPersons.includes(person.Id)
+                        selectedPersons.includes(person.id)
                           ? 'border-amber-500 ring-2 ring-amber-500/20'
                           : 'border-slate-200/60 hover:border-slate-300/60'
                       }`}
@@ -357,15 +357,15 @@ export default function DeliveryPersons() {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleSelectPerson(person.Id);
+                            toggleSelectPerson(person.id);
                           }}
                           className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
-                            selectedPersons.includes(person.Id)
+                            selectedPersons.includes(person.id)
                               ? 'bg-amber-500 border-amber-500 text-white'
                               : 'bg-white border-slate-300 hover:border-amber-400'
                           }`}
                         >
-                          {selectedPersons.includes(person.Id) && (
+                          {selectedPersons.includes(person.id) && (
                             <CheckSquare className="w-3.5 h-3.5" />
                           )}
                         </div>
@@ -382,14 +382,14 @@ export default function DeliveryPersons() {
                         {isEditing ? (
                           <input
                             type="text"
-                            value={editingValues.Name}
-                            onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                            value={editingValues.name}
+                            onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                             onClick={(e) => e.stopPropagation()}
                             className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                             autoFocus
                           />
                         ) : (
-                          <p className="text-sm font-semibold text-slate-800 truncate">{person.Name}</p>
+                          <p className="text-sm font-semibold text-slate-800 truncate">{person.name}</p>
                         )}
                       </div>
 
@@ -399,15 +399,15 @@ export default function DeliveryPersons() {
                         {isEditing ? (
                           <input
                             type="tel"
-                            value={editingValues.PhoneNumber}
-                            onChange={(e) => setEditingValues({ ...editingValues, PhoneNumber: e.target.value })}
+                            value={editingValues.phoneNumber}
+                            onChange={(e) => setEditingValues({ ...editingValues, phoneNumber: e.target.value })}
                             onClick={(e) => e.stopPropagation()}
                             className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                           />
                         ) : (
                           <p className="text-sm text-slate-700 flex items-center gap-1">
                             <Phone className="w-3 h-3" />
-                            {person.PhoneNumber}
+                            {person.phoneNumber}
                           </p>
                         )}
                       </div>
@@ -418,15 +418,15 @@ export default function DeliveryPersons() {
                         {isEditing ? (
                           <input
                             type="email"
-                            value={editingValues.Email}
-                            onChange={(e) => setEditingValues({ ...editingValues, Email: e.target.value })}
+                            value={editingValues.email}
+                            onChange={(e) => setEditingValues({ ...editingValues, email: e.target.value })}
                             onClick={(e) => e.stopPropagation()}
                             className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                           />
                         ) : (
                           <p className="text-sm text-slate-600 truncate flex items-center gap-1">
                             <Mail className="w-3 h-3" />
-                            {person.Email || '-'}
+                            {person.email || '-'}
                           </p>
                         )}
                       </div>
@@ -435,11 +435,11 @@ export default function DeliveryPersons() {
                       <div className="w-24 flex flex-col items-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          person.IsActive
+                          person.isActive
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {person.IsActive ? t('active') : t('inactive')}
+                          {person.isActive ? t('active') : t('inactive')}
                         </span>
                       </div>
 
@@ -491,12 +491,12 @@ export default function DeliveryPersons() {
             <div className="flex-1 overflow-y-auto p-3">
               <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {filteredPersons.map((person: DeliveryPerson) => {
-                  const isEditing = editingId === person.Id;
-                  const isSelected = selectedPersons.includes(person.Id);
+                  const isEditing = editingId === person.id;
+                  const isSelected = selectedPersons.includes(person.id);
                   return (
                     <div
-                      key={person.Id}
-                      onClick={() => !isEditing && toggleSelectPerson(person.Id)}
+                      key={person.id}
+                      onClick={() => !isEditing && toggleSelectPerson(person.id)}
                       className={`group relative bg-white rounded-lg overflow-hidden transition-all ${
                         isEditing 
                           ? 'ring-2 ring-amber-400 shadow-md cursor-default' 
@@ -521,11 +521,11 @@ export default function DeliveryPersons() {
                       {/* Status Badge */}
                       <div className="absolute top-2 right-2 z-10">
                         <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${
-                          person.IsActive
+                          person.isActive
                             ? 'bg-green-100 text-green-700'
                             : 'bg-slate-100 text-slate-600'
                         }`}>
-                          {person.IsActive ? t('active') : t('inactive')}
+                          {person.isActive ? t('active') : t('inactive')}
                         </span>
                       </div>
 
@@ -541,15 +541,15 @@ export default function DeliveryPersons() {
                               {isEditing ? (
                                 <input
                                   type="text"
-                                  value={editingValues.Name}
-                                  onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                                  value={editingValues.name}
+                                  onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-full px-2 py-1.5 text-sm border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none font-semibold"
                                   autoFocus
                                 />
                               ) : (
-                                <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={person.Name}>
-                                  {person.Name}
+                                <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={person.name}>
+                                  {person.name}
                                 </h3>
                               )}
                             </div>
@@ -564,13 +564,13 @@ export default function DeliveryPersons() {
                             {isEditing ? (
                               <input
                                 type="tel"
-                                value={editingValues.PhoneNumber}
-                                onChange={(e) => setEditingValues({ ...editingValues, PhoneNumber: e.target.value })}
+                                value={editingValues.phoneNumber}
+                                onChange={(e) => setEditingValues({ ...editingValues, phoneNumber: e.target.value })}
                                 onClick={(e) => e.stopPropagation()}
                                 className="flex-1 px-1.5 py-0.5 text-xs border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                               />
                             ) : (
-                              <span className="truncate">{person.PhoneNumber}</span>
+                              <span className="truncate">{person.phoneNumber}</span>
                             )}
                           </div>
 
@@ -580,13 +580,13 @@ export default function DeliveryPersons() {
                             {isEditing ? (
                               <input
                                 type="email"
-                                value={editingValues.Email}
-                                onChange={(e) => setEditingValues({ ...editingValues, Email: e.target.value })}
+                                value={editingValues.email}
+                                onChange={(e) => setEditingValues({ ...editingValues, email: e.target.value })}
                                 onClick={(e) => e.stopPropagation()}
                                 className="flex-1 px-1.5 py-0.5 text-xs border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                               />
                             ) : (
-                              <span className="truncate">{person.Email || '-'}</span>
+                              <span className="truncate">{person.email || '-'}</span>
                             )}
                           </div>
                         </div>

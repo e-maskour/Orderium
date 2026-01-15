@@ -15,12 +15,12 @@ export default function Fournisseurs() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSuppliers, setSelectedSuppliers] = useState<number[]>([]);
   const [editingValues, setEditingValues] = useState<{
-    Name: string;
-    PhoneNumber: string;
-    Email: string;
-    Address: string;
-    City: string;
-  }>({ Name: '', PhoneNumber: '', Email: '', Address: '', City: '' });
+    name: string;
+    phoneNumber: string;
+    email: string;
+    address: string;
+    city: string;
+  }>({ name: '', phoneNumber: '', email: '', address: '', city: '' });
 
   const queryClient = useQueryClient();
 
@@ -31,7 +31,7 @@ export default function Fournisseurs() {
 
   const allCustomers = data?.customers || [];
   // Filter only suppliers (IsSupplier = true)
-  const suppliers = allCustomers.filter((customer: Customer) => customer.IsSupplier);
+  const suppliers = allCustomers.filter((customer: Customer) => customer.isSupplier);
 
   const updateMutation = useMutation({
     mutationFn: ({ phone, data }: { phone: string; data: Partial<Customer> }) =>
@@ -56,7 +56,7 @@ export default function Fournisseurs() {
     if (selectedSuppliers.length === filteredSuppliers.length) {
       setSelectedSuppliers([]);
     } else {
-      setSelectedSuppliers(filteredSuppliers.map((s: Customer) => s.Id));
+      setSelectedSuppliers(filteredSuppliers.map((s: Customer) => s.id));
     }
   };
 
@@ -66,42 +66,42 @@ export default function Fournisseurs() {
 
   // Filter suppliers by search term
   const filteredSuppliers = suppliers.filter((supplier: Customer) =>
-    supplier.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.PhoneNumber?.includes(searchTerm) ||
-    supplier.Email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.City?.toLowerCase().includes(searchTerm.toLowerCase())
+    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.phoneNumber?.includes(searchTerm) ||
+    supplier.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.city?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const startInlineEdit = (supplier: Customer) => {
-    setEditingId(supplier.Id);
+    setEditingId(supplier.id);
     setEditingValues({
-      Name: supplier.Name,
-      PhoneNumber: supplier.PhoneNumber || '',
-      Email: supplier.Email || '',
-      Address: supplier.Address || '',
-      City: supplier.City || '',
+      name: supplier.name,
+      phoneNumber: supplier.phoneNumber || '',
+      email: supplier.email || '',
+      address: supplier.address || '',
+      city: supplier.city || '',
     });
   };
 
   const cancelInlineEdit = () => {
     setEditingId(null);
-    setEditingValues({ Name: '', PhoneNumber: '', Email: '', Address: '', City: '' });
+    setEditingValues({ name: '', phoneNumber: '', email: '', address: '', city: '' });
   };
 
   const saveInlineEdit = (supplier: Customer) => {
-    if (!supplier.PhoneNumber) {
+    if (!supplier.phoneNumber) {
       toast.error(t('phoneNumberRequired'));
       return;
     }
 
     const updatedData = {
-      Name: editingValues.Name,
-      Email: editingValues.Email || undefined,
-      Address: editingValues.Address || undefined,
-      City: editingValues.City || undefined,
+      name: editingValues.name,
+      email: editingValues.email || undefined,
+      address: editingValues.address || undefined,
+      city: editingValues.city || undefined,
     };
     
-    updateMutation.mutate({ phone: supplier.PhoneNumber, data: updatedData });
+    updateMutation.mutate({ phone: supplier.phoneNumber, data: updatedData });
   };
 
   const getFloatingActions = () => {
@@ -111,7 +111,7 @@ export default function Fournisseurs() {
           id: 'details',
           label: t('details'),
           onClick: () => {
-            const supplier = suppliers.find((s: Customer) => s.Id === selectedSuppliers[0]);
+            const supplier = suppliers.find((s: Customer) => s.id === selectedSuppliers[0]);
             if (supplier) {
               startInlineEdit(supplier);
             }
@@ -204,13 +204,13 @@ export default function Fournisseurs() {
                 <div className="flex-1 overflow-y-auto p-3">
                   <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                     {filteredSuppliers.map((supplier: Customer) => {
-                      const isSelected = selectedSuppliers.includes(supplier.Id);
-                      const isEditing = editingId === supplier.Id;
+                      const isSelected = selectedSuppliers.includes(supplier.id);
+                      const isEditing = editingId === supplier.id;
 
                       return (
                         <div
-                          key={supplier.Id}
-                          onClick={() => !isEditing && toggleSelectSupplier(supplier.Id)}
+                          key={supplier.id}
+                          onClick={() => !isEditing && toggleSelectSupplier(supplier.id)}
                           className={`group relative bg-white rounded-lg overflow-hidden transition-all ${
                             isEditing 
                               ? 'ring-2 ring-amber-400 shadow-md cursor-default' 
@@ -235,11 +235,11 @@ export default function Fournisseurs() {
                           {/* Status Badge */}
                           <div className="absolute top-2 right-2 z-10">
                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${
-                              supplier.IsEnabled
+                              supplier.isEnabled
                                 ? 'bg-green-100 text-green-700'
                                 : 'bg-slate-100 text-slate-600'
                             }`}>
-                              {supplier.IsEnabled ? t('active') : t('inactive')}
+                              {supplier.isEnabled ? t('active') : t('inactive')}
                             </span>
                           </div>
 
@@ -255,15 +255,15 @@ export default function Fournisseurs() {
                                   {isEditing ? (
                                     <input
                                       type="text"
-                                      value={editingValues.Name}
-                                      onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                                      value={editingValues.name}
+                                      onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                                       onClick={(e) => e.stopPropagation()}
                                       className="w-full px-2 py-1.5 text-sm border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none font-semibold"
                                       autoFocus
                                     />
                                   ) : (
-                                    <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={supplier.Name}>
-                                      {supplier.Name}
+                                    <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={supplier.name}>
+                                      {supplier.name}
                                     </h3>
                                   )}
                                 </div>
@@ -275,7 +275,7 @@ export default function Fournisseurs() {
                               {/* Phone */}
                               <div className="flex items-center gap-2 text-xs text-slate-600">
                                 <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                <span className="truncate">{supplier.PhoneNumber || '-'}</span>
+                                <span className="truncate">{supplier.phoneNumber || '-'}</span>
                               </div>
 
                               {/* Email */}
@@ -284,13 +284,13 @@ export default function Fournisseurs() {
                                 {isEditing ? (
                                   <input
                                     type="email"
-                                    value={editingValues.Email}
-                                    onChange={(e) => setEditingValues({ ...editingValues, Email: e.target.value })}
+                                    value={editingValues.email}
+                                    onChange={(e) => setEditingValues({ ...editingValues, email: e.target.value })}
                                     onClick={(e) => e.stopPropagation()}
                                     className="flex-1 px-1.5 py-0.5 text-xs border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                                   />
                                 ) : (
-                                  <span className="truncate">{supplier.Email || '-'}</span>
+                                  <span className="truncate">{supplier.email || '-'}</span>
                                 )}
                               </div>
 
@@ -300,13 +300,13 @@ export default function Fournisseurs() {
                                 {isEditing ? (
                                   <input
                                     type="text"
-                                    value={editingValues.City}
-                                    onChange={(e) => setEditingValues({ ...editingValues, City: e.target.value })}
+                                    value={editingValues.city}
+                                    onChange={(e) => setEditingValues({ ...editingValues, city: e.target.value })}
                                     onClick={(e) => e.stopPropagation()}
                                     className="flex-1 px-1.5 py-0.5 text-xs border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                                   />
                                 ) : (
-                                  <span className="truncate">{supplier.City || '-'}</span>
+                                  <span className="truncate">{supplier.city || '-'}</span>
                                 )}
                               </div>
                             </div>
@@ -357,15 +357,15 @@ export default function Fournisseurs() {
               ) : (
                 <div className="flex-1 overflow-y-auto p-3 space-y-2 border border-slate-200/60 rounded-lg bg-white">
                   {filteredSuppliers.map((supplier: Customer) => {
-                    const isSelected = selectedSuppliers.includes(supplier.Id);
-                    const isEditing = editingId === supplier.Id;
+                    const isSelected = selectedSuppliers.includes(supplier.id);
+                    const isEditing = editingId === supplier.id;
 
                     return (
                       <div
-                        key={supplier.Id}
-                        onClick={() => !isEditing && toggleSelectSupplier(supplier.Id)}
+                        key={supplier.id}
+                        onClick={() => !isEditing && toggleSelectSupplier(supplier.id)}
                         className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${
-                          selectedSuppliers.includes(supplier.Id)
+                          selectedSuppliers.includes(supplier.id)
                             ? 'border-amber-500 ring-2 ring-amber-500/20'
                             : 'border-slate-200/60 hover:border-slate-300/60'
                         }`}
@@ -376,15 +376,15 @@ export default function Fournisseurs() {
                             <div
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleSelectSupplier(supplier.Id);
+                                toggleSelectSupplier(supplier.id);
                               }}
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
-                                selectedSuppliers.includes(supplier.Id)
+                                selectedSuppliers.includes(supplier.id)
                                   ? 'bg-amber-500 border-amber-500 text-white'
                                   : 'bg-white border-slate-300 hover:border-amber-400'
                               }`}
                             >
-                              {selectedSuppliers.includes(supplier.Id) && (
+                              {selectedSuppliers.includes(supplier.id) && (
                                 <CheckSquare className="w-3.5 h-3.5" />
                               )}
                             </div>
@@ -402,8 +402,8 @@ export default function Fournisseurs() {
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('name')}</p>
                                 <input
                                   type="text"
-                                  value={editingValues.Name}
-                                  onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                                  value={editingValues.name}
+                                  onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                                   autoFocus
@@ -412,7 +412,7 @@ export default function Fournisseurs() {
                             ) : (
                               <div>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('name')}</p>
-                                <p className="text-sm font-semibold text-slate-800 truncate">{supplier.Name}</p>
+                                <p className="text-sm font-semibold text-slate-800 truncate">{supplier.name}</p>
                               </div>
                             )}
                           </div>
@@ -420,7 +420,7 @@ export default function Fournisseurs() {
                           {/* Phone */}
                           <div className="w-32">
                             <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('phone')}</p>
-                            <p className="text-sm text-slate-600">{supplier.PhoneNumber || '-'}</p>
+                            <p className="text-sm text-slate-600">{supplier.phoneNumber || '-'}</p>
                           </div>
 
                           {/* Email */}
@@ -430,8 +430,8 @@ export default function Fournisseurs() {
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('email')}</p>
                                 <input
                                   type="email"
-                                  value={editingValues.Email}
-                                  onChange={(e) => setEditingValues({ ...editingValues, Email: e.target.value })}
+                                  value={editingValues.email}
+                                  onChange={(e) => setEditingValues({ ...editingValues, email: e.target.value })}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                                 />
@@ -439,7 +439,7 @@ export default function Fournisseurs() {
                             ) : (
                               <div>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('email')}</p>
-                                <p className="text-sm text-slate-600 truncate">{supplier.Email || '-'}</p>
+                                <p className="text-sm text-slate-600 truncate">{supplier.email || '-'}</p>
                               </div>
                             )}
                           </div>
@@ -451,8 +451,8 @@ export default function Fournisseurs() {
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('city')}</p>
                                 <input
                                   type="text"
-                                  value={editingValues.City}
-                                  onChange={(e) => setEditingValues({ ...editingValues, City: e.target.value })}
+                                  value={editingValues.city}
+                                  onChange={(e) => setEditingValues({ ...editingValues, city: e.target.value })}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                                 />
@@ -460,7 +460,7 @@ export default function Fournisseurs() {
                             ) : (
                               <div>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('city')}</p>
-                                <p className="text-sm text-slate-600">{supplier.City || '-'}</p>
+                                <p className="text-sm text-slate-600">{supplier.city || '-'}</p>
                               </div>
                             )}
                           </div>
@@ -469,11 +469,11 @@ export default function Fournisseurs() {
                           <div className="w-24 flex flex-col items-center">
                             <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
                             <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                              supplier.IsEnabled
+                              supplier.isEnabled
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
                             }`}>
-                              {supplier.IsEnabled ? t('active') : t('inactive')}
+                              {supplier.isEnabled ? t('active') : t('inactive')}
                             </span>
                           </div>
 

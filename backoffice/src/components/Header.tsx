@@ -41,7 +41,7 @@ export const Header = () => {
             </div>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-slate-700">
-                {admin?.PhoneNumber || 'Admin'}
+                {admin?.phoneNumber || 'Admin'}
               </p>
               <p className="text-xs text-slate-500">{t('adminBackoffice')}</p>
             </div>

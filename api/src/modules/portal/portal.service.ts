@@ -30,4 +30,21 @@ export class PortalService {
     const user = this.portalRepository.create(data);
     return this.portalRepository.save(user);
   }
+
+  async findByPhoneNumber(phoneNumber: string): Promise<Portal | null> {
+    return this.portalRepository.findOne({ where: { phoneNumber } });
+  }
+
+  async updateCustomerId(
+    phoneNumber: string,
+    customerId: number,
+  ): Promise<Portal | null> {
+    const portal = await this.findByPhoneNumber(phoneNumber);
+    if (portal) {
+      portal.customerId = customerId;
+      portal.isCustomer = true;
+      return this.portalRepository.save(portal);
+    }
+    return null;
+  }
 }

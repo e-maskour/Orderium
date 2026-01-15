@@ -18,23 +18,23 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
   const { addItem, removeItem, getItemQuantity, updateQuantity } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const quantity = getItemQuantity(product.Id);
+  const quantity = getItemQuantity(product.id);
   
-  const displayName = product.Name;
+  const displayName = product.name;
 
   const handleAddToCart = () => {
     addItem(product);
   };
 
   const handleIncrement = () => {
-    updateQuantity(product.Id, quantity + 1);
+    updateQuantity(product.id, quantity + 1);
   };
 
   const handleDecrement = () => {
     if (quantity > 1) {
-      updateQuantity(product.Id, quantity - 1);
+      updateQuantity(product.id, quantity - 1);
     } else {
-      removeItem(product.Id);
+      removeItem(product.id);
     }
   };
 
@@ -68,9 +68,9 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
         >
           {/* Image */}
           <div className="relative w-16 h-16 sm:w-18 sm:h-18 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-            {product.ImageUrl ? (
+            {product.imageUrl ? (
               <img
-                src={product.ImageUrl}
+                src={product.imageUrl}
                 alt={displayName}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
@@ -90,7 +90,7 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
               </h3>
               <div className="flex items-center gap-2">
                 <p className="text-sm sm:text-base font-bold text-primary">
-                  {formatCurrency(product.Price, language)}
+                  {formatCurrency(product.price ?? 0, language)}
                 </p>
                 {quantity > 0 && (
                   <span className="px-2 py-0.5 bg-primary text-white text-xs font-semibold rounded-full">
@@ -127,9 +127,9 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
       >
       {/* Image */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
-        {product.ImageUrl ? (
+        {product.imageUrl ? (
           <img
-            src={product.ImageUrl}
+            src={product.imageUrl}
             alt={displayName}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
@@ -156,7 +156,7 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
 
         <div className="mt-auto">
           <span className="text-[11px] sm:text-xs font-bold text-primary">
-            {formatCurrency(product.Price, language)}
+            {formatCurrency(product.price ?? 0, language)}
           </span>
         </div>
       </div>

@@ -15,7 +15,7 @@ export class Notification {
   id: number;
 
   @Column({ type: 'int', nullable: true })
-  userId: number;
+  userId: number | null;
 
   @Column({ type: 'varchar', length: 50 })
   type: string;
@@ -27,7 +27,7 @@ export class Notification {
   message: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  data: any;
+  data: Record<string, unknown> | null;
 
   @Column({ type: 'boolean', default: false })
   isRead: boolean;

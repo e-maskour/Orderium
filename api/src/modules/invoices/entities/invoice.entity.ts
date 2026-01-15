@@ -9,7 +9,7 @@ import {
   OneToMany,
   Index,
 } from 'typeorm';
-import { Customer } from '../../customers/entities/customer.entity';
+import { Partner } from '../../partners/entities/partner.entity';
 
 @Entity('invoices')
 @Index(['invoiceNumber'])
@@ -67,9 +67,9 @@ export class Invoice {
   @UpdateDateColumn()
   dateUpdated: Date;
 
-  @ManyToOne(() => Customer, { nullable: true })
+  @ManyToOne(() => Partner, { nullable: true })
   @JoinColumn({ name: 'customerId' })
-  customer: Customer;
+  customer: Partner;
 
   @OneToMany(() => InvoiceItem, (item) => item.invoice)
   items: InvoiceItem[];

@@ -109,7 +109,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align={dir === 'rtl' ? 'start' : 'end'}>
               <DropdownMenuLabel>
-                {user?.CustomerName || user?.PhoneNumber}
+                {user?.customerName || user?.phoneNumber}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => window.location.href = '/my-orders'}>

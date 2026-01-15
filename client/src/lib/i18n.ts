@@ -571,8 +571,9 @@ export const translations = {
 
 export type TranslationKey = keyof typeof translations.ar;
 
-export const formatCurrency = (amount: number, lang: Language): string => {
-  const formatted = amount.toLocaleString('fr-MA', {
+export const formatCurrency = (amount: number | undefined | null, lang: Language): string => {
+  const safeAmount = amount ?? 0;
+  const formatted = safeAmount.toLocaleString('fr-MA', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

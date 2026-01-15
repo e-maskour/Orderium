@@ -87,8 +87,8 @@ const Index = () => {
 
   // Filter products by category on client side (since category filtering is simple)
   const filteredProducts = products.filter((product) => {
-    if (filters.category === 'products' && product.IsService) return false;
-    if (filters.category === 'services' && !product.IsService) return false;
+    if (filters.category === 'products' && product.isService) return false;
+    if (filters.category === 'services' && !product.isService) return false;
     return true;
   });
 

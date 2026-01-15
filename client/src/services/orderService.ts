@@ -1,19 +1,19 @@
 import { http } from './httpClient';
 
 export interface CreateOrderItem {
-  ProductId: number;
-  Quantity: number;
-  Price: number;
-  Discount?: number;
-  DiscountType?: number;
+  productId: number;
+  quantity: number;
+  price: number;
+  discount?: number;
+  discountType?: number;
 }
 
 export interface CreateOrderRequest {
-  CustomerId?: number;
-  CustomerPhone?: string;
-  Items: CreateOrderItem[];
-  Note?: string;
-  InternalNote?: string;
+  customerId?: number;
+  customerPhone?: string;
+  items: CreateOrderItem[];
+  note?: string;
+  internalNote?: string;
 }
 
 export interface OrderResponse {

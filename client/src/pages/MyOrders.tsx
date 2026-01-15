@@ -145,8 +145,8 @@ export default function MyOrders() {
           <LanguageProvider>
             <Receipt
               orderNumber={selectedOrderItems.order.Number}
-              customerName={user?.CustomerName || ''}
-              customerPhone={user?.PhoneNumber || ''}
+              customerName={user?.customerName || user?.name || ''}
+              customerPhone={user?.phoneNumber || ''}
               items={items}
               subtotal={selectedOrderItems.order.Total}
               orderDate={new Date(selectedOrderItems.order.DateCreated)}
@@ -158,8 +158,8 @@ export default function MyOrders() {
           <LanguageProvider>
             <Invoice
               orderNumber={selectedOrderItems.order.Number}
-              customerName={user?.CustomerName || ''}
-              customerPhone={user?.PhoneNumber || ''}
+              customerName={user?.customerName || user?.name || ''}
+              customerPhone={user?.phoneNumber || ''}
               customerAddress={''}
               items={items}
               subtotal={selectedOrderItems.order.Total}
@@ -238,7 +238,7 @@ export default function MyOrders() {
     );
   }
 
-  if (!user?.CustomerId) {
+  if (!user?.customerId) {
     return (
       <div className="min-h-screen bg-background py-6 px-4" dir={dir}>
         <div className="max-w-4xl mx-auto">
@@ -378,7 +378,7 @@ export default function MyOrders() {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            {selectedOrder && user?.CustomerId && (
+            {selectedOrder && user?.customerId && (
               <>
                 <div className="bg-secondary/50 rounded-lg p-3 mb-4">
                   <p className="text-xs text-muted-foreground">
@@ -386,7 +386,7 @@ export default function MyOrders() {
                   </p>
                   <p className="font-mono font-bold text-primary">{selectedOrder}</p>
                 </div>
-                <OrderTracking orderNumber={selectedOrder} customerId={user.CustomerId} />
+                <OrderTracking orderNumber={selectedOrder} customerId={user.customerId} />
               </>
             )}
           </div>

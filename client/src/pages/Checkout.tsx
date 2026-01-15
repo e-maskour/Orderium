@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, ArrowRight, Package, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { customerService, orderService } from '@/services';
-import { Customer } from '@/types/customer';
+import { partnerService, orderService } from '@/services';
+import { Partner } from '@/types/partner';
 import { AddressInput } from '@/components/AddressInput';
 
 interface FormData {
@@ -38,17 +38,24 @@ const Checkout = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
-  const [existingCustomer, setExistingCustomer] = useState<Customer | null>(null);
+  const [existingCustomer, setExistingCustomer] = useState<Partner | null>(null);
   const [mapsLink, setMapsLink] = useState<string | null>(null);
   const [wazeLink, setWazeLink] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    phone: user?.PhoneNumber || '',
+    phone: user?.phoneNumber || '',
     address: '',
     latitude: undefined,
     longitude: undefined,
   });
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Check if form is valid
+  const isFormValid = 
+    formData.name.trim().length > 0 && 
+    formData.phone.trim().length > 0 && 
+    validateMoroccanPhone(formData.phone) &&
+    formData.address.trim().length > 0;
 
   const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
@@ -64,24 +71,24 @@ const Checkout = () => {
 
     setIsSearchingCustomer(true);
     try {
-      const result = await customerService.searchByPhone(cleanPhone);
+      const result = await partnerService.searchByPhone(cleanPhone);
       
-      if (result.customers && result.customers.length > 0) {
-        const customer = result.customers[0];
+      if (result.partners && result.partners.length > 0) {
+        const customer = result.partners[0];
         setExistingCustomer(customer);
         
         // Auto-fill form with customer data
         setFormData(prev => ({
           ...prev,
-          name: customer.Name,
-          address: customer.Address || '',
-          latitude: customer.Latitude,
-          longitude: customer.Longitude,
+          name: customer.name,
+          address: customer.address || '',
+          latitude: customer.latitude,
+          longitude: customer.longitude,
         }));
 
         // Set map links if available
-        if (customer.GoogleMapsUrl) setMapsLink(customer.GoogleMapsUrl);
-        if (customer.WazeUrl) setWazeLink(customer.WazeUrl);
+        if (customer.googleMapsUrl) setMapsLink(customer.googleMapsUrl);
+        if (customer.wazeUrl) setWazeLink(customer.wazeUrl);
 
         // Clear errors
         setErrors({});
@@ -108,14 +115,14 @@ const Checkout = () => {
     } finally {
       setIsSearchingCustomer(false);
     }
-  }, [language, toast, t]);
+  }, []);
 
   // Auto-search customer on mount if user phone is available
   useEffect(() => {
-    if (user?.PhoneNumber) {
-      searchCustomerByPhone(user.PhoneNumber);
+    if (user?.phoneNumber) {
+      searchCustomerByPhone(user.phoneNumber);
     }
-  }, [user?.PhoneNumber, searchCustomerByPhone]);
+  }, [user?.phoneNumber, searchCustomerByPhone]);
 
   const handleAddressChange = (address: string, latitude?: number, longitude?: number) => {
     setFormData(prev => ({
@@ -164,36 +171,37 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Save or update customer in database
+      // 1. Save or update partner in database
       let customerId: number | undefined;
       try {
-        const customerResult = await customerService.upsert({
-          PhoneNumber: formData.phone,
-          Name: formData.name,
-          Address: formData.address,
-          Latitude: formData.latitude,
-          Longitude: formData.longitude,
-          GoogleMapsUrl: mapsLink || undefined,
-          WazeUrl: wazeLink || undefined,
+        const partnerResult = await partnerService.upsert({
+          phoneNumber: formData.phone,
+          name: formData.name,
+          address: formData.address,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          googleMapsUrl: mapsLink || undefined,
+          wazeUrl: wazeLink || undefined,
+          portalPhoneNumber: user?.phoneNumber, // Link to portal account
         });
-        customerId = customerResult.customer.Id;
+        customerId = partnerResult.partner.id;
       } catch (error) {
-        console.error('Failed to save customer:', error);
-        // Continue with order even if customer save fails
+        console.error('Failed to save partner:', error);
+        // Continue with order even if partner save fails
       }
 
       // 2. Create order in database
       const orderResult = await orderService.create({
-        CustomerId: customerId,
-        CustomerPhone: formData.phone,
-        Items: items.map(item => ({
-          ProductId: item.product.Id,
-          Quantity: item.quantity,
-          Price: item.product.Price,
-          Discount: 0,
-          DiscountType: 0,
+        customerId: customerId,
+        customerPhone: formData.phone,
+        items: items.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: item.product.price,
+          discount: 0,
+          discountType: 0,
         })),
-        Note: formData.address,
+        note: formData.address,
       });
 
       // 3. Navigate to success with order data (before clearing cart)
@@ -318,6 +326,7 @@ const Checkout = () => {
                         'h-12',
                         errors.name && 'border-destructive focus-visible:ring-destructive'
                       )}
+                      required
                     />
                     {errors.name && (
                       <p className="text-sm text-destructive">{errors.name}</p>
@@ -347,7 +356,7 @@ const Checkout = () => {
                   variant="cart"
                   size="touchLg"
                   className="w-full h-12 sm:h-14 text-sm sm:text-base"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !isFormValid}
                 >
                   {isSubmitting ? (
                     <>
@@ -372,14 +381,14 @@ const Checkout = () => {
               
               <div className="space-y-2 sm:space-y-3 max-h-[250px] sm:max-h-[300px] overflow-y-auto">
                 {items.map((item) => {
-                  const displayName = item.product.Name;
+                  const displayName = item.product.name;
 
                   return (
-                    <div key={item.product.Id} className="flex gap-2 sm:gap-3 py-2">
+                    <div key={item.product.id} className="flex gap-2 sm:gap-3 py-2">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
-                        {item.product.ImageUrl ? (
+                        {item.product.imageUrl ? (
                           <img
-                            src={item.product.ImageUrl}
+                            src={item.product.imageUrl}
                             alt={displayName}
                             className="w-full h-full object-cover"
                           />
@@ -392,11 +401,11 @@ const Checkout = () => {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground line-clamp-1 text-sm sm:text-base">{displayName}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">
-                          {item.quantity} × {formatCurrency(item.product.Price, language)}
+                          {item.quantity} × {formatCurrency(item.product.price, language)}
                         </p>
                       </div>
                       <span className="font-semibold text-foreground text-sm sm:text-base">
-                        {formatCurrency(item.product.Price * item.quantity, language)}
+                        {formatCurrency(item.product.price * item.quantity, language)}
                       </span>
                     </div>
                   );
@@ -419,7 +428,7 @@ const Checkout = () => {
                   variant="cart"
                   size="touchLg"
                   className="w-full"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !isFormValid}
                   onClick={handleSubmit}
                 >
                   {isSubmitting ? (

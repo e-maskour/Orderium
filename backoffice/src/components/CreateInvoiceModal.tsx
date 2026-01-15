@@ -89,14 +89,14 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
     }
 
     const invoiceData: CreateInvoiceDTO = {
-      CustomerId: customerId,
+      customerId: customerId,
       Date: new Date(issueDate),
       DueDate: new Date(dueDate),
       Note: notes || undefined,
       Items: items.filter(item => item.productName && item.quantity > 0).map(item => ({
-        ProductId: item.productId || 0, // Default to 0 if no productId
-        Description: item.description,
-        Quantity: item.quantity,
+        productId: item.productId || 0, // Default to 0 if no productId
+        description: item.description,
+        quantity: item.quantity,
         UnitPrice: item.unitPrice,
         Discount: discount > 0 ? (discount / items.length) : 0, // Distribute discount evenly
         TaxRate: taxRate,
@@ -148,8 +148,8 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                   >
                     <option value="">{t('invoice.selectCustomer')}</option>
                     {customers.map((customer) => (
-                      <option key={customer.Id} value={customer.Id}>
-                        {customer.Name} {customer.Email && `(${customer.Email})`}
+                      <option key={customer.id} value={customer.id}>
+                        {customer.name} {customer.email && `(${customer.email})`}
                       </option>
                     ))}
                   </select>

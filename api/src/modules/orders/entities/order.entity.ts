@@ -9,14 +9,14 @@ import {
   OneToMany,
   Index,
 } from 'typeorm';
-import { Customer } from '../../customers/entities/customer.entity';
+import { Partner } from '../../partners/entities/partner.entity';
 
-@Entity('documents')
+@Entity('orders')
 @Index(['number'])
 @Index(['orderNumber'])
 @Index(['customerId'])
 @Index(['date'])
-export class Document {
+export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -24,16 +24,13 @@ export class Document {
   number: string;
 
   @Column({ type: 'int', nullable: true })
-  adminId: number;
+  adminId: number | null;
 
   @Column({ type: 'int', nullable: true })
-  customerId: number;
-
-  @Column({ type: 'int', nullable: true })
-  cashRegisterId: number;
+  customerId: number | null;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
-  orderNumber: string;
+  orderNumber: string | null;
 
   @Column({ type: 'date' })
   date: Date;
@@ -47,23 +44,23 @@ export class Document {
   @Column({ type: 'boolean', default: false })
   isClockedOut: boolean;
 
-  @Column({ type: 'int' })
-  documentTypeId: number;
+  @Column({ type: 'int', nullable: true })
+  documentTypeId: number | null;
 
-  @Column({ type: 'int' })
-  warehouseId: number;
+  @Column({ type: 'int', nullable: true })
+  warehouseId: number | null;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
-  referenceDocumentNumber: string;
+  referenceDocumentNumber: string | null;
 
   @Column({ type: 'text', nullable: true })
-  internalNote: string;
+  internalNote: string | null;
 
   @Column({ type: 'text', nullable: true })
-  note: string;
+  note: string | null;
 
   @Column({ type: 'date', nullable: true })
-  dueDate: Date;
+  dueDate: Date | null;
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
   discount: number;
@@ -86,23 +83,23 @@ export class Document {
   @UpdateDateColumn()
   dateUpdated: Date;
 
-  @ManyToOne(() => Customer, { nullable: true })
+  @ManyToOne(() => Partner, { nullable: true })
   @JoinColumn({ name: 'customerId' })
-  customer: Customer;
+  customer: Partner;
 
-  @OneToMany(() => DocumentItem, (item) => item.document)
-  items: DocumentItem[];
+  @OneToMany(() => OrderItem, (item) => item.order)
+  items: OrderItem[];
 }
 
-@Entity('document_items')
-@Index(['documentId'])
+@Entity('order_items')
+@Index(['orderId'])
 @Index(['productId'])
-export class DocumentItem {
+export class OrderItem {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'int' })
-  documentId: number;
+  orderId: number;
 
   @Column({ type: 'int' })
   productId: number;
@@ -143,7 +140,7 @@ export class DocumentItem {
   @Column({ type: 'int', default: 0 })
   discountApplyRule: number;
 
-  @ManyToOne(() => Document, (document) => document.items)
-  @JoinColumn({ name: 'documentId' })
-  document: Document;
+  @ManyToOne(() => Order, (order) => order.items)
+  @JoinColumn({ name: 'orderId' })
+  order: Order;
 }

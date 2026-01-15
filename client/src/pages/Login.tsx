@@ -130,8 +130,8 @@ export default function Login() {
       if (phoneExists) {
         // Login existing user
         await login({
-          PhoneNumber: normalizedPhone,
-          Password: formData.password,
+          phoneNumber: normalizedPhone,
+          password: formData.password,
         });
         
         toast({
@@ -141,10 +141,10 @@ export default function Login() {
       } else {
         // Register new user
         await register({
-          PhoneNumber: normalizedPhone,
-          Password: formData.password,
-          CustomerId: customerId,
-          IsCustomer: true,
+          phoneNumber: normalizedPhone,
+          password: formData.password,
+          customerId: customerId,
+          isCustomer: true,
         });
         
         toast({

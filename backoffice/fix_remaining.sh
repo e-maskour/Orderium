@@ -1,0 +1,45 @@
+#!/bin/bash
+
+cd /Users/emaskour/Desktop/projects/Orderium/backoffice/src
+
+# Fix all remaining PascalCase accesses that were missed
+find . -name "*.tsx" -type f -print0 | while IFS= read -r -d '' file; do
+  perl -i -pe 's/\.Id(?=\W)/\.id/g' "$file"
+  perl -i -pe 's/\.Name(?=\W)/\.name/g' "$file"
+  perl -i -pe 's/\.Price(?=\W)/\.price/g' "$file"
+  perl -i -pe 's/\.Cost(?=\W)/\.cost/g' "$file"
+  perl -i -pe 's/\.Stock(?=\W)/\.stock/g' "$file"
+  perl -i -pe 's/\.Description(?=\W)/\.description/g' "$file"
+  perl -i -pe 's/\.ImageUrl(?=\W)/\.imageUrl/g' "$file"
+  perl -i -pe 's/\.IsEnabled(?=\W)/\.isEnabled/g' "$file"
+  perl -i -pe 's/\.IsService(?=\W)/\.isService/g' "$file"
+  perl -i -pe 's/\.Code(?=\W)/\.code/g' "$file"
+  perl -i -pe 's/\.IsPriceChangeAllowed(?=\W)/\.isPriceChangeAllowed/g' "$file"
+  perl -i -pe 's/\.CategoryId(?=\W)/\.categoryId/g' "$file"
+  perl -i -pe 's/\.DateCreated(?=\W)/\.dateCreated/g' "$file"
+  perl -i -pe 's/\.DateUpdated(?=\W)/\.dateUpdated/g' "$file"
+  perl -i -pe 's/\.PhoneNumber(?=\W)/\.phoneNumber/g' "$file"
+  perl -i -pe 's/\.Address(?=\W)/\.address/g' "$file"
+  perl -i -pe 's/\.Email(?=\W)/\.email/g' "$file"
+  perl -i -pe 's/\.TotalAmount(?=\W)/\.totalAmount/g' "$file"
+  perl -i -pe 's/\.Status(?=\W)/\.status/g' "$file"
+  perl -i -pe 's/\.CreatedAt(?=\W)/\.createdAt/g' "$file"
+  perl -i -pe 's/\.UpdatedAt(?=\W)/\.updatedAt/g' "$file"
+  perl -i -pe 's/\.City(?=\W)/\.city/g' "$file"
+  perl -i -pe 's/\.IsSupplier(?=\W)/\.isSupplier/g' "$file"
+  perl -i -pe 's/\.IsCustomer(?=\W)/\.isCustomer/g' "$file"
+  perl -i -pe 's/\.IsActive(?=\W)/\.isActive/g' "$file"
+  perl -i -pe 's/\.InvoiceNumber(?=\W)/\.invoiceNumber/g' "$file"
+  perl -i -pe 's/\.CustomerId(?=\W)/\.customerId/g' "$file"
+  perl -i -pe 's/\.PaymentStatus(?=\W)/\.paymentStatus/g' "$file"
+  perl -i -pe 's/\.Customer(?=\W)/\.customer/g' "$file"
+  perl -i -pe 's/\.Invoice(?=\W)/\.invoice/g' "$file"
+  perl -i -pe 's/\.Phone(?=\W)/\.phone/g' "$file"
+  perl -i -pe 's/\.Items(?=\W)/\.items/g' "$file"
+  perl -i -pe 's/\.Latitude(?=\W)/\.latitude/g' "$file"
+  perl -i -pe 's/\.Longitude(?=\W)/\.longitude/g' "$file"
+  perl -i -pe 's/\.Document(?=\W)/\.document/g' "$file"
+  perl -i -pe 's/\.ServiceType(?=\W)/\.serviceType/g' "$file"
+done
+
+echo "Fixed remaining PascalCase field accesses!"

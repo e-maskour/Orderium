@@ -76,10 +76,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addItem = useCallback((product: Product, quantity = 1) => {
     setItems(prev => {
-      const existing = prev.find(item => item.product.Id === product.Id);
+      const existing = prev.find(item => item.product.id === product.id);
       if (existing) {
         return prev.map(item =>
-          item.product.Id === product.Id
+          item.product.id === product.id
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
@@ -89,7 +89,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const removeItem = useCallback((productId: number) => {
-    setItems(prev => prev.filter(item => item.product.Id !== productId));
+    setItems(prev => prev.filter(item => item.product.id !== productId));
   }, []);
 
   const updateQuantity = useCallback((productId: number, quantity: number) => {
@@ -100,7 +100,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     
     setItems(prev =>
       prev.map(item =>
-        item.product.Id === productId
+        item.product.id === productId
           ? { ...item, quantity }
           : item
       )
@@ -112,12 +112,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const getItemQuantity = useCallback((productId: number): number => {
-    const item = items.find(item => item.product.Id === productId);
+    const item = items.find(item => item.product.id === productId);
     return item?.quantity || 0;
   }, [items]);
 
   const subtotal = items.reduce(
-    (sum, item) => sum + item.product.Price * item.quantity,
+    (sum, item) => sum + (Number(item.product.price) || 0) * item.quantity,
     0
   );
 

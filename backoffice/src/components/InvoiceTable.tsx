@@ -92,21 +92,21 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           </thead>
           <tbody className="divide-y divide-slate-200">
             {invoices.map((invoice) => {
-              const isSelected = selectedInvoices.includes(invoice.Invoice.Id);
+              const isSelected = selectedInvoices.includes(invoice.invoice.id);
               const overdue = isOverdue(invoice);
-              const canRecordPayment = invoice.Invoice.PaymentStatus !== 'paid' && invoice.Invoice.Status !== 'cancelled';
-              const canChangeStatus = invoice.Invoice.Status !== 'cancelled';
+              const canRecordPayment = invoice.invoice.paymentStatus !== 'paid' && invoice.invoice.status !== 'cancelled';
+              const canChangeStatus = invoice.invoice.status !== 'cancelled';
               
               return (
                 <tr 
-                  key={invoice.Invoice.Id}
+                  key={invoice.invoice.id}
                   className={`hover:bg-slate-50 transition-colors ${
                     isSelected ? 'bg-blue-50' : ''
                   } ${overdue ? 'bg-red-50' : ''}`}
                 >
                   <td className="px-4 py-4">
                     <button
-                      onClick={() => onToggleSelect(invoice.Invoice.Id)}
+                      onClick={() => onToggleSelect(invoice.invoice.id)}
                       className="w-6 h-6 rounded-md border-2 border-slate-300 flex items-center justify-center hover:border-blue-500 transition-colors"
                     >
                       {isSelected ? (
@@ -120,20 +120,20 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   <td className="px-4 py-4">
                     <div className="flex items-center">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">#{invoice.Invoice.InvoiceNumber}</p>
-                        <p className="text-xs text-slate-500">{formatDate(invoice.Invoice.CreatedAt)}</p>
+                        <p className="text-sm font-medium text-slate-900">#{invoice.invoice.invoiceNumber}</p>
+                        <p className="text-xs text-slate-500">{formatDate(invoice.invoice.createdAt)}</p>
                       </div>
                     </div>
                   </td>
                   
                   <td className="px-4 py-4">
-                    {invoice.Customer ? (
+                    {invoice.customer ? (
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-slate-400" />
                         <div>
-                          <p className="text-sm font-medium text-slate-900">{invoice.Customer.Name}</p>
-                          {invoice.Customer.Email && (
-                            <p className="text-xs text-slate-500">{invoice.Customer.Email}</p>
+                          <p className="text-sm font-medium text-slate-900">{invoice.customer.name}</p>
+                          {invoice.customer.email && (
+                            <p className="text-xs text-slate-500">{invoice.customer.email}</p>
                           )}
                         </div>
                       </div>
@@ -144,33 +144,33 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   
                   <td className="px-4 py-4">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{formatCurrency(invoice.Invoice.Total)}</p>
-                      {invoice.Invoice.PaidAmount > 0 && (
+                      <p className="text-sm font-medium text-slate-900">{formatCurrency(invoice.invoice.Total)}</p>
+                      {invoice.invoice.PaidAmount > 0 && (
                         <p className="text-xs text-green-600">
-                          {t('invoice.paid')}: {formatCurrency(invoice.Invoice.PaidAmount)}
+                          {t('invoice.paid')}: {formatCurrency(invoice.invoice.PaidAmount)}
                         </p>
                       )}
-                      {invoice.Invoice.Total - invoice.Invoice.PaidAmount > 0 && (
+                      {invoice.invoice.Total - invoice.invoice.PaidAmount > 0 && (
                         <p className={`text-xs ${overdue ? 'text-red-600' : 'text-orange-600'}`}>
-                          {t('invoice.remaining')}: {formatCurrency(invoice.Invoice.Total - invoice.Invoice.PaidAmount)}
+                          {t('invoice.remaining')}: {formatCurrency(invoice.invoice.Total - invoice.invoice.PaidAmount)}
                         </p>
                       )}
                     </div>
                   </td>
                   
                   <td className="px-4 py-4">
-                    {getStatusBadge(invoice.Invoice.Status)}
+                    {getStatusBadge(invoice.invoice.status)}
                   </td>
                   
                   <td className="px-4 py-4">
-                    {getPaymentBadge(invoice.Invoice.PaymentStatus)}
+                    {getPaymentBadge(invoice.invoice.paymentStatus)}
                   </td>
                   
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4 text-slate-400" />
                       <span className={`text-sm ${overdue ? 'text-red-600 font-medium' : 'text-slate-900'}`}>
-                        {formatDate(invoice.Invoice.DueDate)}
+                        {formatDate(invoice.invoice.DueDate)}
                       </span>
                     </div>
                     {overdue && (
@@ -208,9 +208,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                           <div className="py-1">
                             {canChangeStatus && (
                               <>
-                                {invoice.Invoice.Status === 'draft' && (
+                                {invoice.invoice.status === 'draft' && (
                                   <button
-                                    onClick={() => onStatusChange(invoice.Invoice.Id, 'sent')}
+                                    onClick={() => onStatusChange(invoice.invoice.id, 'sent')}
                                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                                   >
                                     <Send className="w-4 h-4" />
@@ -218,9 +218,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                                   </button>
                                 )}
                                 
-                                {invoice.Invoice.Status !== 'paid' && invoice.Invoice.PaymentStatus === 'paid' && (
+                                {invoice.invoice.status !== 'paid' && invoice.invoice.paymentStatus === 'paid' && (
                                   <button
-                                    onClick={() => onStatusChange(invoice.Invoice.Id, 'paid')}
+                                    onClick={() => onStatusChange(invoice.invoice.id, 'paid')}
                                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                                   >
                                     <CheckCircle2 className="w-4 h-4" />
@@ -228,9 +228,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                                   </button>
                                 )}
                                 
-                                {invoice.Invoice.Status !== 'cancelled' && (
+                                {invoice.invoice.status !== 'cancelled' && (
                                   <button
-                                    onClick={() => onStatusChange(invoice.Invoice.Id, 'cancelled')}
+                                    onClick={() => onStatusChange(invoice.invoice.id, 'cancelled')}
                                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                                   >
                                     <Edit className="w-4 h-4" />
@@ -243,7 +243,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                             <hr className="my-1" />
                             
                             <button
-                              onClick={() => onDelete(invoice.Invoice.Id)}
+                              onClick={() => onDelete(invoice.invoice.id)}
                               className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                             >
                               <Trash2 className="w-4 h-4" />

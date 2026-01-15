@@ -23,7 +23,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   formatCurrency,
   t
 }) => {
-  const remainingAmount = invoice.Invoice.Total - invoice.Invoice.PaidAmount;
+  const remainingAmount = invoice.invoice.Total - invoice.invoice.PaidAmount;
   const amountValue = parseFloat(amount) || 0;
   const isValidAmount = amountValue > 0 && amountValue <= remainingAmount;
   
@@ -42,7 +42,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <div>
             <h2 className="text-xl font-semibold text-slate-900">{t('invoice.recordPayment')}</h2>
             <p className="text-sm text-slate-500 mt-1">
-              {t('invoice.number')} #{invoice.Invoice.InvoiceNumber}
+              {t('invoice.number')} #{invoice.invoice.invoiceNumber}
             </p>
           </div>
           <button
@@ -59,13 +59,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="bg-slate-50 p-4 rounded-lg space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">{t('invoice.total')}</span>
-              <span className="font-medium text-slate-900">{formatCurrency(invoice.Invoice.Total)}</span>
+              <span className="font-medium text-slate-900">{formatCurrency(invoice.invoice.Total)}</span>
             </div>
             
-            {invoice.Invoice.PaidAmount > 0 && (
+            {invoice.invoice.PaidAmount > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">{t('invoice.paid')}</span>
-                <span className="font-medium text-green-600">{formatCurrency(invoice.Invoice.PaidAmount)}</span>
+                <span className="font-medium text-green-600">{formatCurrency(invoice.invoice.PaidAmount)}</span>
               </div>
             )}
             

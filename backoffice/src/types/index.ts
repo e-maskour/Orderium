@@ -1,163 +1,163 @@
 export interface DeliveryPerson {
-  Id: number;
-  Name: string;
-  PhoneNumber: string;
-  Email?: string;
-  IsActive: boolean;
-  DateCreated: string;
-  DateUpdated?: string;
+  id: number;
+  name: string;
+  phoneNumber: string;
+  email?: string;
+  isActive: boolean;
+  dateCreated: string;
+  dateUpdated?: string;
 }
 
 export interface Customer {
-  Id: number;
-  Code?: string;
-  Name: string;
-  TaxNumber?: string;
-  Address?: string;
-  PostalCode?: string;
-  City?: string;
-  CountryId?: number;
-  Email?: string;
-  PhoneNumber?: string;
-  IsEnabled: boolean;
-  IsCustomer: boolean;
-  IsSupplier: boolean;
-  DueDatePeriod: number;
-  DateCreated: string;
-  DateUpdated: string;
-  StreetName?: string;
-  AdditionalStreetName?: string;
-  BuildingNumber?: string;
-  PlotIdentification?: string;
-  CitySubdivisionName?: string;
-  CountrySubentity?: string;
-  IsTaxExempt: boolean;
-  PriceListId?: number;
-  Latitude?: number;
-  Longitude?: number;
-  GoogleMapsUrl?: string;
-  WazeUrl?: string;
+  id: number;
+  code?: string;
+  name: string;
+  taxNumber?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  countryId?: number;
+  email?: string;
+  phoneNumber?: string;
+  isEnabled: boolean;
+  isCustomer: boolean;
+  isSupplier: boolean;
+  dueDatePeriod: number;
+  dateCreated: string;
+  dateUpdated: string;
+  streetName?: string;
+  additionalStreetName?: string;
+  buildingNumber?: string;
+  plotIdentification?: string;
+  citySubdivisionName?: string;
+  countrySubentity?: string;
+  isTaxExempt: boolean;
+  priceListId?: number;
+  latitude?: number;
+  longitude?: number;
+  googleMapsUrl?: string;
+  wazeUrl?: string;
   totalOrders?: number;
 }
 
 export interface Order {
-  OrderId: number;
-  OrderNumber: string;
-  CustomerName: string;
-  CustomerPhone: string;
-  CustomerAddress?: string;
-  GoogleMapsUrl?: string;
-  WazeUrl?: string;
-  TotalAmount: number;
-  Status: 'assigned' | 'confirmed' | 'picked_up' | 'in_delivery' | 'delivered';
-  DeliveryPersonId?: number;
-  ConfirmedAt?: string;
-  PickedUpAt?: string;
-  DeliveredAt?: string;
-  CreatedAt: string;
-  AssignedAt?: string;
+  orderId: number;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress?: string;
+  googleMapsUrl?: string;
+  wazeUrl?: string;
+  totalAmount: number;
+  status: 'assigned' | 'confirmed' | 'picked_up' | 'in_delivery' | 'delivered';
+  deliveryPersonId?: number;
+  confirmedAt?: string;
+  pickedUpAt?: string;
+  deliveredAt?: string;
+  createdAt: string;
+  assignedAt?: string;
 }
 
 export interface OrderDelivery {
-  Id: number;
-  DocumentId: number;
-  CustomerId: number;
-  DeliveryId: number;
-  Status: 'assigned' | 'confirmed' | 'picked_up' | 'in_delivery' | 'delivered';
-  DateCreated: string;
+  id: number;
+  documentId: number;
+  customerId: number;
+  deliveryId: number;
+  status: 'assigned' | 'confirmed' | 'picked_up' | 'in_delivery' | 'delivered';
+  dateCreated: string;
 }
 
 // Invoice types
 export interface Invoice {
-  Id: number;
-  InvoiceNumber: string;
-  CustomerId: number;
-  AdminId?: number;
-  Date: string;
-  DueDate: string;
-  Subtotal: number;
-  TaxAmount: number;
-  DiscountAmount: number;
-  Total: number;
-  PaidAmount: number;
-  Status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  PaymentStatus: 'unpaid' | 'partial' | 'paid';
-  Note?: string;
-  Terms?: string;
-  CreatedAt: string;
-  UpdatedAt: string;
+  id: number;
+  invoiceNumber: string;
+  customerId: number;
+  adminId?: number;
+  date: string;
+  dueDate: string;
+  subtotal: number;
+  taxAmount: number;
+  discountAmount: number;
+  total: number;
+  paidAmount: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  paymentStatus: 'unpaid' | 'partial' | 'paid';
+  note?: string;
+  terms?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface InvoiceItem {
-  Id: number;
-  InvoiceId: number;
-  ProductId: number;
-  ProductName?: string;
-  Description?: string;
-  Quantity: number;
-  UnitPrice: number;
-  Discount: number;
-  DiscountType: 0 | 1; // 0 = fixed, 1 = percentage
-  TaxRate: number;
-  Total: number;
+  id: number;
+  invoiceId: number;
+  productId: number;
+  productName?: string;
+  description?: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  discountType: 0 | 1; // 0 = fixed, 1 = percentage
+  taxRate: number;
+  total: number;
 }
 
 export interface InvoiceWithDetails {
-  Invoice: Invoice;
-  Items: InvoiceItem[];
-  Customer: {
-    Id: number;
-    Name: string;
-    Email?: string;
-    Phone?: string;
-    Address?: string;
-    City?: string;
+  invoice: Invoice;
+  items: InvoiceItem[];
+  customer: {
+    id: number;
+    name: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
   };
 }
 
 export interface CreateInvoiceDTO {
-  CustomerId: number;
-  AdminId?: number;
-  Date?: Date;
-  DueDate?: Date;
-  Items: {
-    ProductId: number;
-    Description?: string;
-    Quantity: number;
-    UnitPrice: number;
-    Discount?: number;
-    DiscountType?: 0 | 1;
-    TaxRate?: number;
+  customerId: number;
+  adminId?: number;
+  date?: Date;
+  dueDate?: Date;
+  items: {
+    productId: number;
+    description?: string;
+    quantity: number;
+    unitPrice: number;
+    discount?: number;
+    discountType?: 0 | 1;
+    taxRate?: number;
   }[];
-  Note?: string;
-  Terms?: string;
-  Status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  note?: string;
+  terms?: string;
+  status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 }
 
 export interface UpdateInvoiceDTO {
-  CustomerId?: number;
-  Date?: Date;
-  DueDate?: Date;
-  Items?: {
-    ProductId: number;
-    Description?: string;
-    Quantity: number;
-    UnitPrice: number;
-    Discount?: number;
-    DiscountType?: 0 | 1;
-    TaxRate?: number;
+  customerId?: number;
+  date?: Date;
+  dueDate?: Date;
+  items?: {
+    productId: number;
+    description?: string;
+    quantity: number;
+    unitPrice: number;
+    discount?: number;
+    discountType?: 0 | 1;
+    taxRate?: number;
   }[];
-  Note?: string;
-  Terms?: string;
-  Status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  note?: string;
+  terms?: string;
+  status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 }
 
 export interface RecordPaymentDTO {
-  InvoiceId: number;
-  Amount: number;
-  PaymentMethod?: string;
-  Reference?: string;
-  Note?: string;
+  invoiceId: number;
+  amount: number;
+  paymentMethod?: string;
+  reference?: string;
+  note?: string;
 }
 
 export interface InvoiceFilters {

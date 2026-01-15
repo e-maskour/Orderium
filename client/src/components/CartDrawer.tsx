@@ -21,7 +21,7 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
   const { language, dir, t } = useLanguage();
   const { removeItem } = useCart();
   
-  const displayName = item.product.Name;
+  const displayName = item.product.name;
 
   return (
     <div 
@@ -31,9 +31,9 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
     >
       {/* Image */}
       <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
-        {item.product.ImageUrl ? (
+        {item.product.imageUrl ? (
           <img
-            src={item.product.ImageUrl}
+            src={item.product.imageUrl}
             alt={displayName}
             className="w-full h-full object-cover"
           />
@@ -55,7 +55,7 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
             size="icon"
             onClick={(e) => {
               e.stopPropagation();
-              removeItem(item.product.Id);
+              removeItem(item.product.id);
             }}
             className="h-5 w-5 -mt-0.5 -me-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0"
           >
@@ -65,14 +65,14 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
         
         <div className="flex items-center justify-between">
           <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
-            {formatCurrency(item.product.Price, language)} × 
+            {formatCurrency(item.product.price, language)} × 
             <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-primary text-white rounded-full text-[9px] sm:text-[10px] font-bold">
               {item.quantity}
             </span>
           </p>
           
           <span className="font-bold text-gray-900 text-sm sm:text-base">
-            {formatCurrency(item.product.Price * item.quantity, language)}
+            {formatCurrency(item.product.price * item.quantity, language)}
           </span>
         </div>
       </div>
@@ -154,7 +154,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
           ) : (
             <div className="py-3">
               {items.map((item) => (
-                <CartItemRow key={item.product.Id} item={item} onItemClick={handleItemClick} />
+                <CartItemRow key={item.product.id} item={item} onItemClick={handleItemClick} />
               ))}
             </div>
           )}
@@ -247,7 +247,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
           ) : (
             <div className="py-3">
               {items.map((item) => (
-                <CartItemRow key={item.product.Id} item={item} onItemClick={handleItemClick} />
+                <CartItemRow key={item.product.id} item={item} onItemClick={handleItemClick} />
               ))}
             </div>
           )}

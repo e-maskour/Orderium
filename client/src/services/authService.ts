@@ -1,30 +1,30 @@
 import { http } from './httpClient';
 
 export interface LoginRequest {
-  PhoneNumber: string;
-  Password: string;
+  phoneNumber: string;
+  password: string;
 }
 
 export interface RegisterRequest {
-  PhoneNumber: string;
-  Password: string;
-  FullName?: string;
-  CustomerId?: number;
-  IsCustomer?: boolean;
-  IsDelivery?: boolean;
-  IsAdmin?: boolean;
+  phoneNumber: string;
+  password: string;
+  fullName?: string;
+  customerId?: number;
+  isCustomer?: boolean;
+  isDelivery?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface PortalUser {
-  Id: number;
-  PhoneNumber: string;
-  FullName?: string;
-  CustomerId?: number;
-  CustomerName?: string;
-  IsCustomer: boolean;
-  IsDelivery: boolean;
-  IsAdmin: boolean;
-  DeliveryId?: number;
+  id: number;
+  phoneNumber: string;
+  fullName?: string;
+  customerId?: number;
+  customerName?: string;
+  isCustomer: boolean;
+  isDelivery: boolean;
+  isAdmin: boolean;
+  deliveryId?: number;
 }
 
 export interface AuthResponse {
@@ -44,23 +44,23 @@ export const authService = {
       if (portalResponse.success && portalResponse.user) {
         return {
           exists: true,
-          customerName: portalResponse.user.CustomerName,
-          customerId: portalResponse.user.CustomerId,
+          customerName: portalResponse.user.customerName,
+          customerId: portalResponse.user.customerId,
         };
       }
       
-      // If not in Portal, check Customer table
+      // If not in Portal, check Partner table
       try {
-        const customerResponse = await http<{ customer?: { Id: number; Name: string; PhoneNumber: string } }>(`/api/customers/${phoneNumber}`);
-        if (customerResponse.customer) {
+        const partnerResponse = await http<{ partner?: { id: number; name: string; phoneNumber: string } }>(`/api/partners/${phoneNumber}`);
+        if (partnerResponse.partner) {
           return {
-            exists: false, // Not in Portal, but exists as customer
-            customerName: customerResponse.customer.Name,
-            customerId: customerResponse.customer.Id,
+            exists: false, // Not in Portal, but exists as partner
+            customerName: partnerResponse.partner.name,
+            customerId: partnerResponse.partner.id,
           };
         }
       } catch {
-        // Customer not found either
+        // Partner not found either
       }
       
       return { exists: false };
@@ -89,7 +89,7 @@ export const authService = {
       method: 'POST',
       body: JSON.stringify({
         ...data,
-        IsCustomer: data.IsCustomer ?? true,
+        isCustomer: data.isCustomer ?? true,
       }),
     });
     

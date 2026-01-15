@@ -8,17 +8,16 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateCustomerDto {
-  @ApiProperty({ description: 'Customer name', maxLength: 255 })
+export class CreatePartnerDto {
+  @ApiProperty({ description: 'Partner name', maxLength: 255 })
   @IsString()
   @MaxLength(255)
   name: string;
 
-  @ApiPropertyOptional({ description: 'Phone number', maxLength: 50 })
-  @IsOptional()
+  @ApiProperty({ description: 'Phone number', maxLength: 50 })
   @IsString()
   @MaxLength(50)
-  phoneNumber?: string;
+  phoneNumber: string;
 
   @ApiPropertyOptional({ description: 'Email address' })
   @IsOptional()
@@ -52,8 +51,18 @@ export class CreateCustomerDto {
   @MaxLength(500)
   wazeUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Is customer enabled?', default: true })
+  @ApiPropertyOptional({ description: 'Is partner enabled?', default: true })
   @IsOptional()
   @IsBoolean()
   isEnabled?: boolean;
+
+  @ApiPropertyOptional({ description: 'Is customer?', default: true })
+  @IsOptional()
+  @IsBoolean()
+  isCustomer?: boolean;
+
+  @ApiPropertyOptional({ description: 'Is supplier?', default: false })
+  @IsOptional()
+  @IsBoolean()
+  isSupplier?: boolean;
 }

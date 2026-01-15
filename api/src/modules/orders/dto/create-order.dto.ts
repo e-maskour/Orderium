@@ -57,11 +57,6 @@ export class CreateOrderDto {
   @IsInt()
   adminId?: number;
 
-  @ApiPropertyOptional({ description: 'Cash register ID' })
-  @IsOptional()
-  @IsInt()
-  cashRegisterId?: number;
-
   @ApiPropertyOptional({ description: 'Warehouse ID' })
   @IsOptional()
   @IsInt()

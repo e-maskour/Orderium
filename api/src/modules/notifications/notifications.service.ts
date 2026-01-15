@@ -33,4 +33,10 @@ export class NotificationsService {
       { isRead: true },
     );
   }
+
+  async getUnreadCount(userId: number): Promise<number> {
+    return this.notificationRepository.count({
+      where: { userId, isRead: false },
+    });
+  }
 }

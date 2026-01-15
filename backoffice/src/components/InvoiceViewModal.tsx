@@ -23,13 +23,13 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'items' | 'payments'>('details');
   
-  const subtotal = invoice.Items?.reduce((sum, item) => sum + (item.Quantity * item.UnitPrice), 0) || 0;
-  const taxAmount = invoice.Invoice.TaxAmount || 0;
-  const discount = invoice.Invoice.DiscountAmount || 0;
+  const subtotal = invoice.items?.reduce((sum, item) => sum + (item.Quantity * item.UnitPrice), 0) || 0;
+  const taxAmount = invoice.invoice.TaxAmount || 0;
+  const discount = invoice.invoice.DiscountAmount || 0;
   const total = subtotal + taxAmount - discount;
   
-  const isOverdue = invoice.Invoice.PaymentStatus !== 'paid' && 
-                   new Date(invoice.Invoice.DueDate) < new Date();
+  const isOverdue = invoice.invoice.paymentStatus !== 'paid' && 
+                   new Date(invoice.invoice.DueDate) < new Date();
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -42,10 +42,10 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-slate-900">
-                {t('invoice.number')} #{invoice.Invoice.InvoiceNumber}
+                {t('invoice.number')} #{invoice.invoice.invoiceNumber}
               </h2>
               <p className="text-sm text-slate-500">
-                {t('invoice.createdAt')} {formatDate(invoice.Invoice.CreatedAt)}
+                {t('invoice.createdAt')} {formatDate(invoice.invoice.createdAt)}
               </p>
             </div>
           </div>
@@ -72,8 +72,8 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
         <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {getStatusBadge(invoice.Invoice.Status)}
-              {getPaymentBadge(invoice.Invoice.PaymentStatus)}
+              {getStatusBadge(invoice.invoice.status)}
+              {getPaymentBadge(invoice.invoice.paymentStatus)}
               {isOverdue && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
                   {t('invoice.overdue')}
@@ -83,7 +83,7 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
             
             <div className="text-right">
               <p className="text-sm text-slate-600">{t('invoice.total')}</p>
-              <p className="text-2xl font-bold text-slate-900">{formatCurrency(invoice.Invoice.Total)}</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(invoice.invoice.Total)}</p>
             </div>
           </div>
         </div>
@@ -93,7 +93,7 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
           <div className="flex">
             {([
               { id: 'details', label: t('details') },
-              { id: 'items', label: `${t('items')} (${invoice.Items?.length || 0})` },
+              { id: 'items', label: `${t('items')} (${invoice.items?.length || 0})` },
               { id: 'payments', label: t('invoice.payments') }
             ] as const).map((tab) => (
               <button
@@ -125,25 +125,25 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-slate-600">{t('invoice.number')}</span>
-                    <span className="font-medium">#{invoice.Invoice.InvoiceNumber}</span>
+                    <span className="font-medium">#{invoice.invoice.invoiceNumber}</span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-slate-600">{t('invoice.issueDate')}</span>
-                    <span className="font-medium">{formatDate(invoice.Invoice.Date)}</span>
+                    <span className="font-medium">{formatDate(invoice.invoice.Date)}</span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-slate-600">{t('invoice.dueDate')}</span>
                     <span className={`font-medium ${isOverdue ? 'text-red-600' : ''}`}>
-                      {formatDate(invoice.Invoice.DueDate)}
+                      {formatDate(invoice.invoice.DueDate)}
                     </span>
                   </div>
                   
-                  {invoice.Invoice.Note && (
+                  {invoice.invoice.Note && (
                     <div>
                       <span className="block text-slate-600 mb-1">{t('invoice.notes')}</span>
-                      <p className="text-sm bg-slate-50 p-3 rounded-lg">{invoice.Invoice.Note}</p>
+                      <p className="text-sm bg-slate-50 p-3 rounded-lg">{invoice.invoice.Note}</p>
                     </div>
                   )}
                 </div>
@@ -155,24 +155,24 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
                   {t('customer.information')}
                 </h3>
                 
-                {invoice.Customer ? (
+                {invoice.customer ? (
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <User className="w-5 h-5 text-slate-400 mt-0.5" />
                       <div>
-                        <p className="font-medium text-slate-900">{invoice.Customer.Name}</p>
-                        {invoice.Customer.Email && (
-                          <p className="text-sm text-slate-600">{invoice.Customer.Email}</p>
+                        <p className="font-medium text-slate-900">{invoice.customer.name}</p>
+                        {invoice.customer.email && (
+                          <p className="text-sm text-slate-600">{invoice.customer.email}</p>
                         )}
-                        {invoice.Customer.Phone && (
-                          <p className="text-sm text-slate-600">{invoice.Customer.Phone}</p>
+                        {invoice.customer.phone && (
+                          <p className="text-sm text-slate-600">{invoice.customer.phone}</p>
                         )}
                       </div>
                     </div>
                     
-                    {invoice.Customer.Address && (
+                    {invoice.customer.address && (
                       <div className="bg-slate-50 p-3 rounded-lg">
-                        <p className="text-sm text-slate-700">{invoice.Customer.Address}</p>
+                        <p className="text-sm text-slate-700">{invoice.customer.address}</p>
                       </div>
                     )}
                   </div>
@@ -186,7 +186,7 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
           {/* Items Tab */}
           {activeTab === 'items' && (
             <div className="space-y-4">
-              {invoice.Items && invoice.Items.length > 0 ? (
+              {invoice.items && invoice.items.length > 0 ? (
                 <>
                   <div className="overflow-x-auto">
                     <table className="w-full">
@@ -207,15 +207,15 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">
-                        {invoice.Items.map((item, index) => (
+                        {invoice.items.map((item, index) => (
                           <tr key={index} className="hover:bg-slate-50">
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
                                 <Package className="w-4 h-4 text-slate-400" />
                                 <div>
                                   <p className="font-medium text-slate-900">{item.ProductName}</p>
-                                  {item.Description && (
-                                    <p className="text-sm text-slate-500">{item.Description}</p>
+                                  {item.description && (
+                                    <p className="text-sm text-slate-500">{item.description}</p>
                                   )}
                                 </div>
                               </div>
@@ -279,18 +279,18 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-slate-50 p-4 rounded-lg">
                   <p className="text-sm text-slate-600">{t('invoice.total')}</p>
-                  <p className="text-xl font-bold text-slate-900">{formatCurrency(invoice.Invoice.Total)}</p>
+                  <p className="text-xl font-bold text-slate-900">{formatCurrency(invoice.invoice.Total)}</p>
                 </div>
                 
                 <div className="bg-green-50 p-4 rounded-lg">
                   <p className="text-sm text-green-600">{t('invoice.paid')}</p>
-                  <p className="text-xl font-bold text-green-700">{formatCurrency(invoice.Invoice.PaidAmount)}</p>
+                  <p className="text-xl font-bold text-green-700">{formatCurrency(invoice.invoice.PaidAmount)}</p>
                 </div>
                 
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <p className="text-sm text-orange-600">{t('invoice.remaining')}</p>
                   <p className="text-xl font-bold text-orange-700">
-                    {formatCurrency(invoice.Invoice.Total - invoice.Invoice.PaidAmount)}
+                    {formatCurrency(invoice.invoice.Total - invoice.invoice.PaidAmount)}
                   </p>
                 </div>
               </div>

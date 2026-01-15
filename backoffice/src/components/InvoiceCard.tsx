@@ -36,7 +36,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({
   isOverdue,
   t
 }) => {
-  const customer = invoice.Customer;
+  const customer = invoice.customer;
   
   return (
     <div 
@@ -67,11 +67,11 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-slate-900 text-sm truncate">
-              #{invoice.Invoice.InvoiceNumber}
+              #{invoice.invoice.invoiceNumber}
             </h3>
           </div>
           <div className="ml-2 flex-shrink-0">
-            {getStatusBadge(invoice.Invoice.Status)}
+            {getStatusBadge(invoice.invoice.status)}
           </div>
         </div>
 
@@ -79,29 +79,29 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({
         {customer && (
           <div className="flex items-center gap-1.5 mb-2">
             <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-            <p className="text-xs text-slate-600 truncate font-medium">{customer.Name}</p>
+            <p className="text-xs text-slate-600 truncate font-medium">{customer.name}</p>
           </div>
         )}
 
         {/* Amount & Payment Status */}
         <div className="flex items-center justify-between mb-2">
           <div>
-            <p className="text-lg font-bold text-slate-900">{formatCurrency(invoice.Invoice.Total)}</p>
-            {invoice.Invoice.PaidAmount > 0 && (
+            <p className="text-lg font-bold text-slate-900">{formatCurrency(invoice.invoice.Total)}</p>
+            {invoice.invoice.PaidAmount > 0 && (
               <p className="text-xs text-green-600">
-                {t('invoice.paid')}: {formatCurrency(invoice.Invoice.PaidAmount)}
+                {t('invoice.paid')}: {formatCurrency(invoice.invoice.PaidAmount)}
               </p>
             )}
           </div>
           <div>
-            {getPaymentBadge(invoice.Invoice.PaymentStatus)}
+            {getPaymentBadge(invoice.invoice.paymentStatus)}
           </div>
         </div>
 
         {/* Due Date */}
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
           <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="truncate">{formatDate(invoice.Invoice.DueDate)}</span>
+          <span className="truncate">{formatDate(invoice.invoice.DueDate)}</span>
           {isOverdue && (
             <AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
           )}

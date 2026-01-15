@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -12,7 +12,7 @@ import defaultsConfig from './config/defaults.config';
 
 // Import modules
 import { ProductsModule } from './modules/products/products.module';
-import { CustomersModule } from './modules/customers/customers.module';
+import { PartnersModule } from './modules/partners/partners.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
@@ -32,10 +32,10 @@ import { GatewayModule } from './gateway/gateway.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
-        configService.get('database'),
+        configService.get('database') as TypeOrmModuleOptions,
     }),
     ProductsModule,
-    CustomersModule,
+    PartnersModule,
     OrdersModule,
     InvoicesModule,
     DeliveryModule,

@@ -56,21 +56,20 @@ export class InitialMigration1710000000000 implements MigrationInterface {
       `CREATE INDEX "IDX_customers_email" ON "customers" ("email")`,
     );
 
-    // Create documents table
+    // Create orders table
     await queryRunner.query(`
-            CREATE TABLE "documents" (
+            CREATE TABLE "orders" (
                 "id" SERIAL NOT NULL,
                 "number" character varying(50) NOT NULL,
                 "adminId" integer,
                 "customerId" integer,
-                "cashRegisterId" integer,
                 "orderNumber" character varying(50),
                 "date" date NOT NULL,
                 "stockDate" date NOT NULL,
                 "total" numeric(18,2) NOT NULL DEFAULT 0,
                 "isClockedOut" boolean NOT NULL DEFAULT false,
-                "documentTypeId" integer NOT NULL,
-                "warehouseId" integer NOT NULL,
+                "documentTypeId" integer,
+                "warehouseId" integer,
                 "referenceDocumentNumber" character varying(50),
                 "internalNote" text,
                 "note" text,
@@ -82,28 +81,28 @@ export class InitialMigration1710000000000 implements MigrationInterface {
                 "serviceType" integer NOT NULL DEFAULT 0,
                 "dateCreated" TIMESTAMP NOT NULL DEFAULT now(),
                 "dateUpdated" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "UQ_documents_number" UNIQUE ("number"),
-                CONSTRAINT "PK_documents" PRIMARY KEY ("id")
+                CONSTRAINT "UQ_orders_number" UNIQUE ("number"),
+                CONSTRAINT "PK_orders" PRIMARY KEY ("id")
             )
         `);
     await queryRunner.query(
-      `CREATE INDEX "IDX_documents_number" ON "documents" ("number")`,
+      `CREATE INDEX "IDX_orders_number" ON "orders" ("number")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_documents_orderNumber" ON "documents" ("orderNumber")`,
+      `CREATE INDEX "IDX_orders_orderNumber" ON "orders" ("orderNumber")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_documents_customerId" ON "documents" ("customerId")`,
+      `CREATE INDEX "IDX_orders_customerId" ON "orders" ("customerId")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_documents_date" ON "documents" ("date")`,
+      `CREATE INDEX "IDX_orders_date" ON "orders" ("date")`,
     );
 
-    // Create document_items table
+    // Create order_items table
     await queryRunner.query(`
-            CREATE TABLE "document_items" (
+            CREATE TABLE "order_items" (
                 "id" SERIAL NOT NULL,
-                "documentId" integer NOT NULL,
+                "orderId" integer NOT NULL,
                 "productId" integer NOT NULL,
                 "quantity" numeric(18,3) NOT NULL DEFAULT 0,
                 "expectedQuantity" numeric(18,3) NOT NULL DEFAULT 0,
@@ -117,14 +116,14 @@ export class InitialMigration1710000000000 implements MigrationInterface {
                 "priceBeforeTaxAfterDiscount" numeric(18,2) NOT NULL DEFAULT 0,
                 "totalAfterDocumentDiscount" numeric(18,2) NOT NULL DEFAULT 0,
                 "discountApplyRule" integer NOT NULL DEFAULT 0,
-                CONSTRAINT "PK_document_items" PRIMARY KEY ("id")
+                CONSTRAINT "PK_order_items" PRIMARY KEY ("id")
             )
         `);
     await queryRunner.query(
-      `CREATE INDEX "IDX_document_items_documentId" ON "document_items" ("documentId")`,
+      `CREATE INDEX "IDX_order_items_orderId" ON "order_items" ("orderId")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_document_items_productId" ON "document_items" ("productId")`,
+      `CREATE INDEX "IDX_order_items_productId" ON "order_items" ("productId")`,
     );
 
     // Create invoices table
@@ -259,29 +258,37 @@ export class InitialMigration1710000000000 implements MigrationInterface {
     await queryRunner.query(`
             CREATE TABLE "portal" (
                 "id" SERIAL NOT NULL,
-                "email" character varying(255) NOT NULL,
+                "phoneNumber" character varying(50) NOT NULL,
                 "password" character varying(255) NOT NULL,
                 "name" character varying(255),
-                "role" character varying(50) NOT NULL DEFAULT 'admin',
+                "email" character varying(255),
+                "isAdmin" boolean NOT NULL DEFAULT false,
+                "isCustomer" boolean NOT NULL DEFAULT false,
+                "customerId" integer,
+                "isDelivery" boolean NOT NULL DEFAULT false,
+                "deliveryId" integer,
                 "isActive" boolean NOT NULL DEFAULT true,
                 "dateCreated" TIMESTAMP NOT NULL DEFAULT now(),
                 "dateUpdated" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "UQ_portal_email" UNIQUE ("email"),
+                CONSTRAINT "UQ_portal_phoneNumber" UNIQUE ("phoneNumber"),
                 CONSTRAINT "PK_portal" PRIMARY KEY ("id")
             )
         `);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_portal_phoneNumber" ON "portal" ("phoneNumber")`,
+    );
 
     // Add foreign key constraints
     await queryRunner.query(`
-            ALTER TABLE "documents" 
-            ADD CONSTRAINT "FK_documents_customerId" 
+            ALTER TABLE "orders" 
+            ADD CONSTRAINT "FK_orders_customerId" 
             FOREIGN KEY ("customerId") REFERENCES "customers"("id") ON DELETE SET NULL ON UPDATE NO ACTION
         `);
 
     await queryRunner.query(`
-            ALTER TABLE "document_items" 
-            ADD CONSTRAINT "FK_document_items_documentId" 
-            FOREIGN KEY ("documentId") REFERENCES "documents"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+            ALTER TABLE "order_items" 
+            ADD CONSTRAINT "FK_order_items_orderId" 
+            FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
 
     await queryRunner.query(`
@@ -295,9 +302,27 @@ export class InitialMigration1710000000000 implements MigrationInterface {
             ADD CONSTRAINT "FK_invoice_items_invoiceId" 
             FOREIGN KEY ("invoiceId") REFERENCES "invoices"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
+
+    await queryRunner.query(`
+            ALTER TABLE "portal" 
+            ADD CONSTRAINT "FK_portal_customerId" 
+            FOREIGN KEY ("customerId") REFERENCES "customers"("id") ON DELETE SET NULL ON UPDATE NO ACTION
+        `);
+
+    await queryRunner.query(`
+            ALTER TABLE "portal" 
+            ADD CONSTRAINT "FK_portal_deliveryId" 
+            FOREIGN KEY ("deliveryId") REFERENCES "delivery_persons"("id") ON DELETE SET NULL ON UPDATE NO ACTION
+        `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "portal" DROP CONSTRAINT "FK_portal_deliveryId"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "portal" DROP CONSTRAINT "FK_portal_customerId"`,
+    );
     await queryRunner.query(
       `ALTER TABLE "invoice_items" DROP CONSTRAINT "FK_invoice_items_invoiceId"`,
     );
@@ -305,10 +330,10 @@ export class InitialMigration1710000000000 implements MigrationInterface {
       `ALTER TABLE "invoices" DROP CONSTRAINT "FK_invoices_customerId"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "document_items" DROP CONSTRAINT "FK_document_items_documentId"`,
+      `ALTER TABLE "order_items" DROP CONSTRAINT "FK_order_items_orderId"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "documents" DROP CONSTRAINT "FK_documents_customerId"`,
+      `ALTER TABLE "orders" DROP CONSTRAINT "FK_orders_customerId"`,
     );
     await queryRunner.query(`DROP TABLE "portal"`);
     await queryRunner.query(`DROP TABLE "notifications"`);
@@ -316,8 +341,8 @@ export class InitialMigration1710000000000 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "delivery_persons"`);
     await queryRunner.query(`DROP TABLE "invoice_items"`);
     await queryRunner.query(`DROP TABLE "invoices"`);
-    await queryRunner.query(`DROP TABLE "document_items"`);
-    await queryRunner.query(`DROP TABLE "documents"`);
+    await queryRunner.query(`DROP TABLE "order_items"`);
+    await queryRunner.query(`DROP TABLE "orders"`);
     await queryRunner.query(`DROP TABLE "customers"`);
     await queryRunner.query(`DROP TABLE "products"`);
   }

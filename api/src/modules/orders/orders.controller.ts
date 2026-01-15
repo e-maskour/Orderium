@@ -14,7 +14,7 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @ApiTags('Orders')
-@Controller('api/orders')
+@Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -27,7 +27,7 @@ export class OrdersController {
     return {
       success: true,
       order,
-      documentNumber: order.Document.number,
+      documentNumber: order.Order.number,
     };
   }
 
@@ -67,7 +67,7 @@ export class OrdersController {
     }
 
     // Verify order belongs to customer
-    if (order.Document.customerId !== customerIdNum) {
+    if (order.Order.customerId !== customerIdNum) {
       throw new NotFoundException('Order not found');
     }
 

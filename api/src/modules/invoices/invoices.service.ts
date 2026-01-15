@@ -20,7 +20,7 @@ export class InvoicesService {
     });
   }
 
-  async findOne(id: number): Promise<Invoice> {
+  async findOne(id: number): Promise<Invoice | null> {
     return this.invoiceRepository.findOne({
       where: { id },
       relations: ['customer', 'items'],

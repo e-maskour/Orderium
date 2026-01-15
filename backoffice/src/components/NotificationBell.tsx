@@ -14,7 +14,7 @@ import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 
 interface Notification {
-  Id: number;
+  id: number;
   Title: string;
   Message: string;
   Type: string;
@@ -39,7 +39,7 @@ export function NotificationBell() {
   });
 
   // Fetch notifications
-  const { data: notifications = [] } = useQuery({
+  const { data: notificationsData } = useQuery({
     queryKey: ['notifications', 'admin'],
     queryFn: async () => {
       const response = await fetch('/api/notifications?userType=admin');
@@ -49,6 +49,8 @@ export function NotificationBell() {
     enabled: !!admin,
     refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  const notifications = notificationsData?.notifications || [];
 
   // Fetch unread count
   const { data: unreadData } = useQuery({
@@ -194,7 +196,7 @@ export function NotificationBell() {
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.IsRead) {
-      markAsReadMutation.mutate(notification.Id);
+      markAsReadMutation.mutate(notification.id);
     }
   };
 
@@ -236,7 +238,7 @@ export function NotificationBell() {
                 const { title, message } = translateNotification(notification);
                 return (
                   <div
-                    key={notification.Id}
+                    key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     className={`p-4 hover:bg-muted/50 cursor-pointer transition-all ${
                       !notification.IsRead ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
@@ -258,14 +260,14 @@ export function NotificationBell() {
                         </p>
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-muted-foreground">
-                            {formatDate(notification.DateCreated)}
+                            {formatDate(notification.dateCreated)}
                           </p>
                           {!notification.IsRead && (
                             <button
                               className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                markAsReadMutation.mutate(notification.Id);
+                                markAsReadMutation.mutate(notification.id);
                               }}
                             >
                               <Check className="h-3.5 w-3.5" />

@@ -163,7 +163,7 @@ export default function Invoices() {
   // Get selected invoice details
   const selectedInvoice = useMemo(() => {
     if (!selectedInvoiceId) return null;
-    return invoices.find(inv => inv.Invoice.Id === selectedInvoiceId) || null;
+    return invoices.find(inv => inv.invoice.id === selectedInvoiceId) || null;
   }, [selectedInvoiceId, invoices]);
 
   // Mutations
@@ -223,12 +223,12 @@ export default function Invoices() {
   };
 
   const handleViewInvoice = (invoice: InvoiceWithDetails) => {
-    setSelectedInvoiceId(invoice.Invoice.Id);
+    setSelectedInvoiceId(invoice.invoice.id);
     setIsViewModalOpen(true);
   };
 
   const handleRecordPayment = (invoice: InvoiceWithDetails) => {
-    setSelectedInvoiceId(invoice.Invoice.Id);
+    setSelectedInvoiceId(invoice.invoice.id);
     setPaymentAmount('');
     setIsPaymentModalOpen(true);
   };
@@ -242,13 +242,13 @@ export default function Invoices() {
       return;
     }
     
-    const remainingAmount = selectedInvoice.Invoice.Total - selectedInvoice.Invoice.PaidAmount;
+    const remainingAmount = selectedInvoice.invoice.Total - selectedInvoice.invoice.PaidAmount;
     if (amount > remainingAmount) {
       toast.error(t('invoice.paymentExceedsRemaining'));
       return;
     }
     
-    recordPaymentMutation.mutate({ id: selectedInvoice.Invoice.Id, amount });
+    recordPaymentMutation.mutate({ id: selectedInvoice.invoice.id, amount });
   };
 
   const handleStatusChange = (invoiceId: number, status: string) => {
@@ -271,7 +271,7 @@ export default function Invoices() {
 
   const toggleSelectAll = () => {
     setSelectedInvoices(prev => 
-      prev.length === invoices.length ? [] : invoices.map(inv => inv.Invoice.Id)
+      prev.length === invoices.length ? [] : invoices.map(inv => inv.invoice.id)
     );
   };
 
@@ -305,8 +305,8 @@ export default function Invoices() {
       case 'paymentStatus':
         return `${t('invoice.payment')}: ${t(`invoice.paymentStatus.${value}`)}`;
       case 'customerId':
-        const customer = customers.find(c => c.Id === value);
-        return `${t('customer')}: ${customer?.Name || value}`;
+        const customer = customers.find(c => c.id === value);
+        return `${t('customer')}: ${customer?.name || value}`;
       case 'dateRange':
         const labels: Record<string, string> = {
           today: t('today'),
@@ -375,8 +375,8 @@ export default function Invoices() {
   };
 
   const isOverdue = (invoice: InvoiceWithDetails) => {
-    if (invoice.Invoice.PaymentStatus === 'paid') return false;
-    return new Date(invoice.Invoice.DueDate) < new Date();
+    if (invoice.invoice.paymentStatus === 'paid') return false;
+    return new Date(invoice.invoice.DueDate) < new Date();
   };
 
   // Floating actions
@@ -387,7 +387,7 @@ export default function Invoices() {
       icon: <Eye className="w-4 h-4" />,
       onClick: () => {
         if (selectedInvoices.length === 1) {
-          const invoice = invoices.find(inv => inv.Invoice.Id === selectedInvoices[0]);
+          const invoice = invoices.find(inv => inv.invoice.id === selectedInvoices[0]);
           if (invoice) handleViewInvoice(invoice);
         }
       },
@@ -400,12 +400,12 @@ export default function Invoices() {
       icon: <DollarSign className="w-4 h-4" />,
       onClick: () => {
         if (selectedInvoices.length === 1) {
-          const invoice = invoices.find(inv => inv.Invoice.Id === selectedInvoices[0]);
+          const invoice = invoices.find(inv => inv.invoice.id === selectedInvoices[0]);
           if (invoice) handleRecordPayment(invoice);
         }
       },
       variant: 'success',
-      disabled: selectedInvoices.length !== 1 || (selectedInvoices.length === 1 && invoices.find(inv => inv.Invoice.Id === selectedInvoices[0])?.Invoice.PaymentStatus === 'paid'),
+      disabled: selectedInvoices.length !== 1 || (selectedInvoices.length === 1 && invoices.find(inv => inv.invoice.id === selectedInvoices[0])?.invoice.paymentStatus === 'paid'),
     },
     {
       id: 'mark-sent',
@@ -413,16 +413,16 @@ export default function Invoices() {
       icon: <Send className="w-4 h-4" />,
       onClick: () => {
         selectedInvoices.forEach(id => {
-          const invoice = invoices.find(inv => inv.Invoice.Id === id);
-          if (invoice?.Invoice.Status === 'draft') {
+          const invoice = invoices.find(inv => inv.invoice.id === id);
+          if (invoice?.invoice.status === 'draft') {
             handleStatusChange(id, 'sent');
           }
         });
       },
       variant: 'secondary',
       disabled: selectedInvoices.length === 0 || selectedInvoices.every(id => {
-        const invoice = invoices.find(inv => inv.Invoice.Id === id);
-        return invoice?.Invoice.Status !== 'draft';
+        const invoice = invoices.find(inv => inv.invoice.id === id);
+        return invoice?.invoice.status !== 'draft';
       }),
     },
     {
@@ -431,16 +431,16 @@ export default function Invoices() {
       icon: <CheckCircle2 className="w-4 h-4" />,
       onClick: () => {
         selectedInvoices.forEach(id => {
-          const invoice = invoices.find(inv => inv.Invoice.Id === id);
-          if (invoice?.Invoice.PaymentStatus === 'paid' && invoice?.Invoice.Status !== 'paid') {
+          const invoice = invoices.find(inv => inv.invoice.id === id);
+          if (invoice?.invoice.paymentStatus === 'paid' && invoice?.invoice.status !== 'paid') {
             handleStatusChange(id, 'paid');
           }
         });
       },
       variant: 'success',
       disabled: selectedInvoices.length === 0 || selectedInvoices.every(id => {
-        const invoice = invoices.find(inv => inv.Invoice.Id === id);
-        return invoice?.Invoice.Status === 'paid' || invoice?.Invoice.PaymentStatus !== 'paid';
+        const invoice = invoices.find(inv => inv.invoice.id === id);
+        return invoice?.invoice.status === 'paid' || invoice?.invoice.paymentStatus !== 'paid';
       }),
     },
     {
@@ -665,8 +665,8 @@ export default function Invoices() {
                         >
                           <option value="">{t('all')}</option>
                           {customers.map((customer) => (
-                            <option key={customer.Id} value={customer.Id}>
-                              {customer.Name}
+                            <option key={customer.id} value={customer.id}>
+                              {customer.name}
                             </option>
                           ))}
                         </select>
@@ -774,14 +774,14 @@ export default function Invoices() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {invoices.map((invoice) => (
                   <InvoiceCard
-                    key={invoice.Invoice.Id}
+                    key={invoice.invoice.id}
                     invoice={invoice}
-                    isSelected={selectedInvoices.includes(invoice.Invoice.Id)}
-                    onToggleSelect={() => toggleSelectInvoice(invoice.Invoice.Id)}
+                    isSelected={selectedInvoices.includes(invoice.invoice.id)}
+                    onToggleSelect={() => toggleSelectInvoice(invoice.invoice.id)}
                     onView={() => handleViewInvoice(invoice)}
                     onRecordPayment={() => handleRecordPayment(invoice)}
-                    onDelete={() => setDeleteInvoiceId(invoice.Invoice.Id)}
-                    onStatusChange={(status) => handleStatusChange(invoice.Invoice.Id, status)}
+                    onDelete={() => setDeleteInvoiceId(invoice.invoice.id)}
+                    onStatusChange={(status) => handleStatusChange(invoice.invoice.id, status)}
                     formatCurrency={formatCurrency}
                     formatDate={formatDate}
                     getStatusBadge={getStatusBadge}

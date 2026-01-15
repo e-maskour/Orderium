@@ -2,28 +2,32 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, EntityManager } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Document, DocumentItem } from './entities/document.entity';
+import { Order, OrderItem } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { CustomersService } from '../customers/customers.service';
+import { PartnersService } from '../partners/partners.service';
+
+export interface OrderWithItems {
+  Order: Order;
+  Items: OrderItem[];
+}
 
 @Injectable()
 export class OrdersService {
   constructor(
-    @InjectRepository(Document)
-    private readonly documentRepository: Repository<Document>,
-    @InjectRepository(DocumentItem)
-    private readonly documentItemRepository: Repository<DocumentItem>,
-    private readonly customersService: CustomersService,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private readonly orderItemRepository: Repository<OrderItem>,
+    private readonly partnersService: PartnersService,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
   ) {}
 
-  async createOrder(createOrderDto: CreateOrderDto): Promise<any> {
+  async createOrder(createOrderDto: CreateOrderDto): Promise<OrderWithItems> {
     if (!createOrderDto.items || createOrderDto.items.length === 0) {
       throw new BadRequestException('Order must have at least one item');
     }
@@ -39,17 +43,14 @@ export class OrdersService {
       // Get customer ID
       let customerId = createOrderDto.customerId;
       if (!customerId && createOrderDto.customerPhone) {
-        const customer = await this.customersService.findByPhone(
+        const partner = await this.partnersService.findByPhone(
           createOrderDto.customerPhone,
         );
-        customerId = customer?.id;
+        customerId = partner?.id;
       }
 
       // Get default values from config
       const adminId = createOrderDto.adminId || null;
-      const cashRegisterId =
-        createOrderDto.cashRegisterId ||
-        this.configService.get<number>('defaults.cashRegisterId');
       const warehouseId =
         createOrderDto.warehouseId ||
         this.configService.get<number>('defaults.warehouseId');
@@ -66,31 +67,30 @@ export class OrdersService {
         return sum + (itemTotal - discountAmount);
       }, 0);
 
-      // Create document
-      const document = manager.create(Document, {
-        number: documentNumber,
-        adminId,
-        customerId,
-        cashRegisterId,
-        orderNumber: documentNumber.split('-')[2],
-        date: today,
-        stockDate: today,
-        total,
-        isClockedOut: false,
-        documentTypeId,
-        warehouseId,
-        note: createOrderDto.note,
-        internalNote: createOrderDto.internalNote,
-        discount: 0,
-        discountType: 0,
-        paidStatus: this.configService.get<number>('defaults.paidStatus'),
-        discountApplyRule: 0,
-        serviceType: 0,
-      });
+      // Create order
+      const order = new Order();
+      order.number = documentNumber;
+      order.adminId = adminId;
+      order.customerId = customerId ?? null;
+      order.orderNumber = documentNumber.split('-')[2];
+      order.date = today;
+      order.stockDate = today;
+      order.total = total;
+      order.isClockedOut = false;
+      order.documentTypeId = documentTypeId ?? null;
+      order.warehouseId = warehouseId ?? null;
+      order.note = createOrderDto.note ?? '';
+      order.internalNote = createOrderDto.internalNote ?? '';
+      order.discount = 0;
+      order.discountType = 0;
+      order.paidStatus =
+        this.configService.get<number>('defaults.paidStatus') ?? 2;
+      order.discountApplyRule = 0;
+      order.serviceType = 0;
 
-      const savedDocument = await manager.save(Document, document);
+      const savedOrder = await manager.save(Order, order);
 
-      // Create document items
+      // Create order items
       const items = createOrderDto.items.map((item) => {
         const itemTotal = item.price * item.quantity;
         const discount = item.discount || 0;
@@ -99,8 +99,8 @@ export class OrdersService {
           discountType === 1 ? (itemTotal * discount) / 100 : discount;
         const totalAfterDiscount = itemTotal - discountAmount;
 
-        return manager.create(DocumentItem, {
-          documentId: savedDocument.id,
+        return manager.create(OrderItem, {
+          orderId: savedOrder.id,
           productId: item.productId,
           quantity: item.quantity,
           expectedQuantity: item.quantity,
@@ -121,57 +121,57 @@ export class OrdersService {
         });
       });
 
-      const savedItems = await manager.save(DocumentItem, items);
+      const savedItems = await manager.save(OrderItem, items);
 
       return {
-        Document: savedDocument,
+        Order: savedOrder,
         Items: savedItems,
       };
     });
   }
 
-  async getAllOrders(limit = 100): Promise<Document[]> {
-    return this.documentRepository.find({
+  async getAllOrders(limit = 100): Promise<Order[]> {
+    return this.orderRepository.find({
       take: limit,
       order: { dateCreated: 'DESC' },
       relations: ['customer'],
     });
   }
 
-  async getOrderById(id: number): Promise<any> {
-    const document = await this.documentRepository.findOne({
+  async getOrderById(id: number): Promise<OrderWithItems> {
+    const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer', 'items'],
     });
 
-    if (!document) {
+    if (!order) {
       throw new NotFoundException(`Order with ID ${id} not found`);
     }
 
     return {
-      Document: document,
-      Items: document.items,
+      Order: order,
+      Items: order.items,
     };
   }
 
-  async getOrderByNumber(orderNumber: string): Promise<any> {
-    const document = await this.documentRepository.findOne({
+  async getOrderByNumber(orderNumber: string): Promise<OrderWithItems | null> {
+    const order = await this.orderRepository.findOne({
       where: { number: orderNumber },
       relations: ['customer', 'items'],
     });
 
-    if (!document) {
+    if (!order) {
       return null;
     }
 
     return {
-      Document: document,
-      Items: document.items,
+      Order: order,
+      Items: order.items,
     };
   }
 
-  async getCustomerOrders(customerId: number, limit = 50): Promise<Document[]> {
-    return this.documentRepository.find({
+  async getCustomerOrders(customerId: number, limit = 50): Promise<Order[]> {
+    return this.orderRepository.find({
       where: { customerId },
       take: limit,
       order: { dateCreated: 'DESC' },
@@ -181,15 +181,15 @@ export class OrdersService {
 
   private async getNextDocumentNumber(
     year: number,
-    manager: any,
+    manager: EntityManager,
   ): Promise<string> {
     const prefix = year.toString().slice(-2);
     const pattern = `${prefix}-%`;
 
     const result = await manager
-      .createQueryBuilder(Document, 'document')
-      .where('document.number LIKE :pattern', { pattern })
-      .orderBy('document.number', 'DESC')
+      .createQueryBuilder(Order, 'order')
+      .where('order.number LIKE :pattern', { pattern })
+      .orderBy('order.number', 'DESC')
       .limit(1)
       .getOne();
 
@@ -198,7 +198,7 @@ export class OrdersService {
     }
 
     const parts = result.number.split('-');
-    const sequence = parseInt(parts[2]) + 1;
+    const sequence = parseInt(parts[2], 10) + 1;
 
     return `${prefix}-200-${sequence.toString().padStart(6, '0')}`;
   }

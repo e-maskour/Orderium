@@ -88,7 +88,7 @@ export const ProductGrid = ({
         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
           {products.map((product, index) => (
             <div
-              key={product.Id}
+              key={`${product.id}-${index}`}
               style={{ animationDelay: `${index * 20}ms` }}
               className="animate-fade-in"
             >
@@ -100,7 +100,7 @@ export const ProductGrid = ({
         <div className="space-y-2 sm:space-y-3">
           {products.map((product, index) => (
             <div
-              key={product.Id}
+              key={`${product.id}-${index}`}
               style={{ animationDelay: `${index * 20}ms` }}
               className="animate-fade-in"
             >

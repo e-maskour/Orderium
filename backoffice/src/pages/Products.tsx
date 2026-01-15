@@ -7,19 +7,19 @@ import { AdminLayout } from '../components/AdminLayout';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 
 interface Product {
-  Id: number;
-  Name: string;
-  Code: string | null;
-  Description: string | null;
-  Price: number;
-  Cost: number;
-  Stock?: number;
-  IsService: boolean;
-  IsEnabled: boolean;
-  IsPriceChangeAllowed: boolean;
-  DateCreated: string;
-  DateUpdated: string;
-  ImageUrl?: string;
+  id: number;
+  name: string;
+  code: string | null;
+  description: string | null;
+  price: number;
+  cost: number;
+  stock?: number;
+  isService: boolean;
+  isEnabled: boolean;
+  isPriceChangeAllowed: boolean;
+  dateCreated: string;
+  dateUpdated: string;
+  imageUrl?: string;
 }
 
 export default function Products() {
@@ -35,22 +35,22 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [editingValues, setEditingValues] = useState<{
-    Name: string;
-    Code: string;
-    Price: string;
-    Cost: string;
-  }>({ Name: '', Code: '', Price: '', Cost: '' });
+    name: string;
+    code: string;
+    price: string;
+    cost: string;
+  }>({ name: '', code: '', price: '', cost: '' });
   const [formData, setFormData] = useState({
-    Name: '',
-    Code: '',
-    Description: '',
-    Price: '',
-    Cost: '',
-    Stock: '',
-    IsService: false,
-    IsEnabled: true,
-    IsPriceChangeAllowed: true,
-    ImageUrl: ''
+    name: '',
+    code: '',
+    description: '',
+    price: '',
+    cost: '',
+    stock: '',
+    isService: false,
+    isEnabled: true,
+    isPriceChangeAllowed: true,
+    imageUrl: ''
   });
   const [imagePreview, setImagePreview] = useState<string>('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -106,7 +106,7 @@ export default function Products() {
     if (selectedProducts.length === productsList.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(productsList.map((p: Product) => p.Id));
+      setSelectedProducts(productsList.map((p: Product) => p.id));
     }
   };
 
@@ -126,69 +126,69 @@ export default function Products() {
   const handleBulkEnable = () => {
     if (selectedProducts.length === 0) return;
     
-    const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+    const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
     if (!product) return;
 
     const updatedData = {
-      Name: product.Name,
-      Code: product.Code || null,
-      Description: product.Description,
-      Price: product.Price,
-      Cost: product.Cost,
-      Stock: product.Stock,
-      IsService: product.IsService,
-      IsEnabled: true,
-      IsPriceChangeAllowed: product.IsPriceChangeAllowed,
-      ImageUrl: product.ImageUrl || null
+      name: product.name,
+      code: product.code || null,
+      description: product.description,
+      price: product.price,
+      cost: product.cost,
+      stock: product.stock,
+      isService: product.isService,
+      isEnabled: true,
+      isPriceChangeAllowed: product.isPriceChangeAllowed,
+      imageUrl: product.imageUrl || null
     };
 
-    updateMutation.mutate({ id: product.Id, data: updatedData });
+    updateMutation.mutate({ id: product.id, data: updatedData });
     clearSelection();
   };
 
   const handleBulkDisable = () => {
     if (selectedProducts.length === 0) return;
     
-    const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+    const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
     if (!product) return;
 
     const updatedData = {
-      Name: product.Name,
-      Code: product.Code || null,
-      Description: product.Description,
-      Price: product.Price,
-      Cost: product.Cost,
-      Stock: product.Stock,
-      IsService: product.IsService,
-      IsEnabled: false,
-      IsPriceChangeAllowed: product.IsPriceChangeAllowed,
-      ImageUrl: product.ImageUrl || null
+      name: product.name,
+      code: product.code || null,
+      description: product.description,
+      price: product.price,
+      cost: product.cost,
+      stock: product.stock,
+      isService: product.isService,
+      isEnabled: false,
+      isPriceChangeAllowed: product.isPriceChangeAllowed,
+      imageUrl: product.imageUrl || null
     };
 
-    updateMutation.mutate({ id: product.Id, data: updatedData });
+    updateMutation.mutate({ id: product.id, data: updatedData });
     clearSelection();
   };
 
   const handleTogglePriceChangeAllowed = () => {
     if (selectedProducts.length === 0) return;
     
-    const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+    const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
     if (!product) return;
 
     const updatedData = {
-      Name: product.Name,
-      Code: product.Code || null,
-      Description: product.Description,
-      Price: product.Price,
-      Cost: product.Cost,
-      Stock: product.Stock,
-      IsService: product.IsService,
-      IsEnabled: product.IsEnabled,
-      IsPriceChangeAllowed: !product.IsPriceChangeAllowed,
-      ImageUrl: product.ImageUrl || null
+      name: product.name,
+      code: product.code || null,
+      description: product.description,
+      price: product.price,
+      cost: product.cost,
+      stock: product.stock,
+      isService: product.isService,
+      isEnabled: product.isEnabled,
+      isPriceChangeAllowed: !product.isPriceChangeAllowed,
+      imageUrl: product.imageUrl || null
     };
 
-    updateMutation.mutate({ id: product.Id, data: updatedData });
+    updateMutation.mutate({ id: product.id, data: updatedData });
     clearSelection();
   };
 
@@ -196,30 +196,30 @@ export default function Products() {
     if (product) {
       setEditingProduct(product);
       setFormData({
-        Name: product.Name,
-        Code: product.Code || '',
-        Description: product.Description || '',
-        Price: product.Price.toString(),
-        Cost: product.Cost.toString(),
-        Stock: product.Stock?.toString() || '',
-        IsService: product.IsService,
-        IsEnabled: product.IsEnabled,
-        IsPriceChangeAllowed: product.IsPriceChangeAllowed,
-        ImageUrl: product.ImageUrl || ''
+        name: product.name,
+        code: product.code || '',
+        description: product.description || '',
+        price: product.price.toString(),
+        cost: product.cost.toString(),
+        stock: product.stock?.toString() || '',
+        isService: product.isService,
+        isEnabled: product.isEnabled,
+        isPriceChangeAllowed: product.isPriceChangeAllowed,
+        imageUrl: product.imageUrl || ''
       });
-      setImagePreview(product.ImageUrl || '');
+      setImagePreview(product.imageUrl || '');
     } else {
       setEditingProduct(null);
       setFormData({
-        Name: '',
-        Code: '',
-        Description: '',
-        Price: '',
-        Cost: '',
-        Stock: '',
-        IsService: false,
-        IsEnabled: true,
-        ImageUrl: ''
+        name: '',
+        code: '',
+        description: '',
+        price: '',
+        cost: '',
+        stock: '',
+        isService: false,
+        isEnabled: true,
+        imageUrl: ''
       });
       setImagePreview('');
     }
@@ -231,16 +231,16 @@ export default function Products() {
     setIsModalOpen(false);
     setEditingProduct(null);
     setFormData({
-      Name: '',
-      Code: '',
-      Description: '',
-      Price: '',
-      Cost: '',
-      Stock: '',
-      IsService: false,
-      IsEnabled: true,
-      IsPriceChangeAllowed: true,
-      ImageUrl: ''
+      name: '',
+      code: '',
+      description: '',
+      price: '',
+      cost: '',
+      stock: '',
+      isService: false,
+      isEnabled: true,
+      isPriceChangeAllowed: true,
+      imageUrl: ''
     });
     setImagePreview('');
     setImageFile(null);
@@ -262,20 +262,20 @@ export default function Products() {
     e.preventDefault();
 
     const productData = {
-      Name: formData.Name,
-      Code: formData.Code || null,
-      Description: formData.Description || null,
-      Price: parseFloat(formData.Price),
-      Cost: parseFloat(formData.Cost),
-      Stock: formData.Stock ? parseInt(formData.Stock) : null,
-      IsService: formData.IsService,
-      IsEnabled: formData.IsEnabled,
-      IsPriceChangeAllowed: formData.IsPriceChangeAllowed,
-      ImageUrl: imagePreview || null
+      name: formData.name,
+      code: formData.code || null,
+      description: formData.description || null,
+      price: parseFloat(formData.price),
+      cost: parseFloat(formData.cost),
+      stock: formData.stock ? parseInt(formData.stock) : null,
+      isService: formData.isService,
+      isEnabled: formData.isEnabled,
+      isPriceChangeAllowed: formData.isPriceChangeAllowed,
+      imageUrl: imagePreview || null
     };
 
     if (editingProduct) {
-      updateMutation.mutate({ id: editingProduct.Id, data: productData });
+      updateMutation.mutate({ id: editingProduct.id, data: productData });
     } else {
       createMutation.mutate(productData);
     }
@@ -288,35 +288,35 @@ export default function Products() {
   };
 
   const startInlineEdit = (product: Product) => {
-    setEditingRowId(product.Id);
+    setEditingRowId(product.id);
     setEditingValues({
-      Name: product.Name,
-      Code: product.Code || '',
-      Price: product.Price.toString(),
-      Cost: product.Cost.toString(),
+      name: product.name,
+      code: product.code || '',
+      price: product.price.toString(),
+      cost: product.cost.toString(),
     });
   };
 
   const cancelInlineEdit = () => {
     setEditingRowId(null);
-    setEditingValues({ Name: '', Code: '', Price: '', Cost: '' });
+    setEditingValues({ name: '', code: '', price: '', cost: '' });
   };
 
   const saveInlineEdit = (product: Product) => {
     const updatedData = {
-      Name: editingValues.Name,
-      Code: editingValues.Code || null,
-      Description: product.Description,
-      Price: parseFloat(editingValues.Price),
-      Cost: parseFloat(editingValues.Cost),
-      Stock: product.Stock,
-      IsService: product.IsService,
-      IsEnabled: product.IsEnabled,
-      IsPriceChangeAllowed: product.IsPriceChangeAllowed,
-      ImageUrl: product.ImageUrl || null
+      name: editingValues.name,
+      code: editingValues.code || null,
+      description: product.description,
+      price: parseFloat(editingValues.price),
+      cost: parseFloat(editingValues.cost),
+      stock: product.stock,
+      isService: product.isService,
+      isEnabled: product.isEnabled,
+      isPriceChangeAllowed: product.isPriceChangeAllowed,
+      imageUrl: product.imageUrl || null
     };
     
-    updateMutation.mutate({ id: product.Id, data: updatedData });
+    updateMutation.mutate({ id: product.id, data: updatedData });
     setEditingRowId(null);
   };
 
@@ -339,24 +339,24 @@ export default function Products() {
       const imageUrl = reader.result as string;
       
       // Find the selected product
-      const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+      const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
       if (!product) return;
 
       // Update the product with the new image
       const updatedData = {
-        Name: product.Name,
-        Code: product.Code || null,
-        Description: product.Description,
-        Price: product.Price,
-        Cost: product.Cost,
-        Stock: product.Stock,
-        IsService: product.IsService,
-        IsEnabled: product.IsEnabled,
-        IsPriceChangeAllowed: product.IsPriceChangeAllowed,
-        ImageUrl: imageUrl
+        name: product.name,
+        code: product.code || null,
+        description: product.description,
+        price: product.price,
+        cost: product.cost,
+        stock: product.stock,
+        isService: product.isService,
+        isEnabled: product.isEnabled,
+        isPriceChangeAllowed: product.isPriceChangeAllowed,
+        imageUrl: imageUrl
       };
 
-      updateMutation.mutate({ id: product.Id, data: updatedData });
+      updateMutation.mutate({ id: product.id, data: updatedData });
       clearSelection();
     };
 
@@ -448,13 +448,13 @@ export default function Products() {
               {/* Product Rows */}
               {productsList && productsList.length > 0 ? (
                 productsList.map((product: Product) => {
-                  const isEditing = editingRowId === product.Id;
+                  const isEditing = editingRowId === product.id;
                   return (
                     <div
-                      key={product.Id}
-                      onClick={() => toggleSelectProduct(product.Id)}
+                      key={product.id}
+                      onClick={() => toggleSelectProduct(product.id)}
                       className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${
-                        selectedProducts.includes(product.Id)
+                        selectedProducts.includes(product.id)
                           ? 'border-amber-500 ring-2 ring-amber-500/20'
                           : 'border-slate-200/60 hover:border-slate-300/60'
                       }`}
@@ -465,15 +465,15 @@ export default function Products() {
                           <div
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleSelectProduct(product.Id);
+                              toggleSelectProduct(product.id);
                             }}
                             className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                              selectedProducts.includes(product.Id)
+                              selectedProducts.includes(product.id)
                                 ? 'bg-amber-500 border-amber-500 text-white'
                                 : 'bg-white border-slate-300'
                             }`}
                           >
-                            {selectedProducts.includes(product.Id) && (
+                            {selectedProducts.includes(product.id) && (
                               <CheckSquare className="w-4 h-4" />
                             )}
                           </div>
@@ -481,10 +481,10 @@ export default function Products() {
 
                         {/* Image */}
                         <div className="w-10">
-                          {product.ImageUrl ? (
+                          {product.imageUrl ? (
                             <img
-                              src={product.ImageUrl}
-                              alt={product.Name}
+                              src={product.imageUrl}
+                              alt={product.name}
                               className="w-10 h-10 object-cover rounded-lg shadow-sm"
                             />
                           ) : (
@@ -501,8 +501,8 @@ export default function Products() {
                               <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('name')}</p>
                               <input
                                 type="text"
-                                value={editingValues.Name}
-                                onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                                value={editingValues.name}
+                                onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                                 onClick={(e) => e.stopPropagation()}
                                 className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                                 autoFocus
@@ -511,9 +511,9 @@ export default function Products() {
                           ) : (
                             <div>
                               <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('name')}</p>
-                              <p className="text-sm font-semibold text-slate-800 truncate">{product.Name}</p>
-                              {product.Code && (
-                                <p className="text-xs text-slate-400 mt-0.5">{product.Code}</p>
+                              <p className="text-sm font-semibold text-slate-800 truncate">{product.name}</p>
+                              {product.code && (
+                                <p className="text-xs text-slate-400 mt-0.5">{product.code}</p>
                               )}
                             </div>
                           )}
@@ -527,8 +527,8 @@ export default function Products() {
                               <input
                                 type="number"
                                 step="0.01"
-                                value={editingValues.Price}
-                                onChange={(e) => setEditingValues({ ...editingValues, Price: e.target.value })}
+                                value={editingValues.price}
+                                onChange={(e) => setEditingValues({ ...editingValues, price: e.target.value })}
                                 onClick={(e) => e.stopPropagation()}
                                 className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                               />
@@ -537,7 +537,7 @@ export default function Products() {
                             <div>
                               <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('price')}</p>
                               <span className="text-sm font-semibold text-amber-600">
-                                {product.Price.toFixed(2)} {t('currency')}
+                                {(product.price || 0).toFixed(2)} {t('currency')}
                               </span>
                             </div>
                           )}
@@ -551,8 +551,8 @@ export default function Products() {
                               <input
                                 type="number"
                                 step="0.01"
-                                value={editingValues.Cost}
-                                onChange={(e) => setEditingValues({ ...editingValues, Cost: e.target.value })}
+                                value={editingValues.cost}
+                                onChange={(e) => setEditingValues({ ...editingValues, cost: e.target.value })}
                                 onClick={(e) => e.stopPropagation()}
                                 className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                               />
@@ -561,7 +561,7 @@ export default function Products() {
                             <div>
                               <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('cost')}</p>
                               <span className="text-sm text-slate-600">
-                                {product.Cost.toFixed(2)} {t('currency')}
+                                {(product.cost || 0).toFixed(2)} {t('currency')}
                               </span>
                             </div>
                           )}
@@ -571,7 +571,7 @@ export default function Products() {
                         <div className="w-20 text-center">
                           <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('stock')}</p>
                           <span className="text-sm text-slate-700 font-medium">
-                            {product.Stock !== null && product.Stock !== undefined ? product.Stock : '-'}
+                            {product.stock !== null && product.stock !== undefined ? product.stock : '-'}
                           </span>
                         </div>
 
@@ -579,11 +579,11 @@ export default function Products() {
                         <div className="w-24 flex flex-col items-center">
                           <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
                           <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            product.IsEnabled
+                            product.isEnabled
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {product.IsEnabled ? t('active') : t('inactive')}
+                            {product.isEnabled ? t('active') : t('inactive')}
                           </span>
                         </div>
 
@@ -641,10 +641,10 @@ export default function Products() {
                 {productsList && productsList.length > 0 ? (
                   productsList.map((product: Product) => (
                     <div
-                      key={product.Id}
-                      onClick={() => toggleSelectProduct(product.Id)}
+                      key={product.id}
+                      onClick={() => toggleSelectProduct(product.id)}
                       className={`relative bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${
-                        selectedProducts.includes(product.Id)
+                        selectedProducts.includes(product.id)
                           ? 'border-amber-500 ring-2 ring-amber-500/20'
                           : 'border-slate-200/60 hover:border-slate-300/60'
                       }`}
@@ -653,12 +653,12 @@ export default function Products() {
                       <div className="absolute top-1.5 left-1.5 z-10">
                         <div
                           className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                            selectedProducts.includes(product.Id)
+                            selectedProducts.includes(product.id)
                               ? 'bg-amber-500 border-amber-500 text-white'
                               : 'bg-white border-slate-300'
                           }`}
                         >
-                          {selectedProducts.includes(product.Id) && (
+                          {selectedProducts.includes(product.id) && (
                             <CheckSquare className="w-4 h-4" />
                           )}
                         </div>
@@ -666,10 +666,10 @@ export default function Products() {
 
                       {/* Product Image */}
                       <div className="relative h-32 overflow-hidden rounded-t-xl">
-                        {product.ImageUrl ? (
+                        {product.imageUrl ? (
                           <img
-                            src={product.ImageUrl}
-                            alt={product.Name}
+                            src={product.imageUrl}
+                            alt={product.name}
                             className="w-full h-full object-cover opacity-90 drop-shadow-lg hover:scale-105 hover:opacity-100 transition-all duration-300"
                           />
                         ) : (
@@ -680,11 +680,11 @@ export default function Products() {
                         {/* Status Badge */}
                         <div className="absolute top-1.5 right-1.5">
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold shadow-md ${
-                            product.IsEnabled
+                            product.isEnabled
                               ? 'bg-green-500 text-white'
                               : 'bg-red-500 text-white'
                           }`}>
-                            {product.IsEnabled ? t('active') : t('inactive')}
+                            {product.isEnabled ? t('active') : t('inactive')}
                           </span>
                         </div>
                       </div>
@@ -692,28 +692,28 @@ export default function Products() {
                       {/* Product Info */}
                       <div className="p-2 space-y-1">
                         <div className="pb-1">
-                          {editingRowId === product.Id ? (
+                          {editingRowId === product.id ? (
                             <input
                               type="text"
-                              value={editingValues.Name}
-                              onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                              value={editingValues.name}
+                              onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                               onClick={(e) => e.stopPropagation()}
                               className="w-full px-1.5 py-0.5 text-[10px] border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                               autoFocus
                             />
                           ) : (
-                            <h3 className="text-[10px] font-bold text-slate-800 truncate leading-tight pb-1" title={product.Name}>
-                              {product.Name}
+                            <h3 className="text-[10px] font-bold text-slate-800 truncate leading-tight pb-1" title={product.name}>
+                              {product.name}
                             </h3>
                           )}
-                          {product.Code && (
-                            <p className="text-[9px] text-slate-400 mt-0.5 px-0.5">{t('code')}: {product.Code}</p>
+                          {product.code && (
+                            <p className="text-[9px] text-slate-400 mt-0.5 px-0.5">{t('code')}: {product.code}</p>
                           )}
                         </div>
 
-                        {product.Description && (
-                          <p className="text-[10px] text-slate-500 line-clamp-2 min-h-[2rem]" title={product.Description}>
-                            {product.Description}
+                        {product.description && (
+                          <p className="text-[10px] text-slate-500 line-clamp-2 min-h-[2rem]" title={product.description}>
+                            {product.description}
                           </p>
                         )}
 
@@ -721,53 +721,53 @@ export default function Products() {
                         <div className="flex items-center justify-between pt-1 border-t border-slate-100">
                           <div className="flex-1">
                             <p className="text-[8px] text-slate-500 uppercase tracking-wide">{t('price')}</p>
-                            {editingRowId === product.Id ? (
+                            {editingRowId === product.id ? (
                               <input
                                 type="number"
                                 step="0.01"
-                                value={editingValues.Price}
-                                onChange={(e) => setEditingValues({ ...editingValues, Price: e.target.value })}
+                                value={editingValues.price}
+                                onChange={(e) => setEditingValues({ ...editingValues, price: e.target.value })}
                                 onClick={(e) => e.stopPropagation()}
                                 className="w-full px-1.5 py-0.5 text-xs border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                               />
                             ) : (
                               <p className="text-xs font-bold text-amber-600">
-                                {product.Price.toFixed(2)} <span className="text-[8px]">{t('currency')}</span>
+                                {(product.price || 0).toFixed(2)} <span className="text-[8px]">{t('currency')}</span>
                               </p>
                             )}
                           </div>
                           <div className="text-right flex-1">
                             <p className="text-[8px] text-slate-500 uppercase tracking-wide">{t('cost')}</p>
-                            {editingRowId === product.Id ? (
+                            {editingRowId === product.id ? (
                               <input
                                 type="number"
                                 step="0.01"
-                                value={editingValues.Cost}
-                                onChange={(e) => setEditingValues({ ...editingValues, Cost: e.target.value })}
+                                value={editingValues.cost}
+                                onChange={(e) => setEditingValues({ ...editingValues, cost: e.target.value })}
                                 onClick={(e) => e.stopPropagation()}
                                 className="w-full px-1.5 py-0.5 text-[9px] border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                               />
                             ) : (
                               <p className="text-[9px] text-slate-600">
-                                {product.Cost.toFixed(2)} {t('currency')}
+                                {(product.cost || 0).toFixed(2)} {t('currency')}
                               </p>
                             )}
                           </div>
                         </div>
 
                         {/* Stock */}
-                        {!product.IsService && (
+                        {!product.isService && (
                           <div className="flex items-center justify-between text-[10px]">
                             <span className="text-slate-500">{t('stock')}:</span>
                             <span className="font-semibold text-slate-700">
-                              {product.Stock !== null && product.Stock !== undefined ? product.Stock : '-'}
+                              {product.stock !== null && product.stock !== undefined ? product.stock : '-'}
                             </span>
                           </div>
                         )}
 
                         {/* Actions */}
                         <div className="flex items-center gap-0.5 pt-1 border-t border-slate-100">
-                          {editingRowId === product.Id ? (
+                          {editingRowId === product.id ? (
                             <>
                               <button
                                 onClick={(e) => {
@@ -881,15 +881,15 @@ export default function Products() {
                   </tr>
                 ) : productsList && productsList.length > 0 ? (
                   productsList.map((product: Product) => {
-                    const isEditing = editingRowId === product.Id;
+                    const isEditing = editingRowId === product.id;
                     
                     return (
-                      <tr key={product.Id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {product.ImageUrl ? (
+                          {product.imageUrl ? (
                             <img
-                              src={product.ImageUrl}
-                              alt={product.Name}
+                              src={product.imageUrl}
+                              alt={product.name}
                               className="w-12 h-12 object-cover rounded-lg"
                             />
                           ) : (
@@ -902,16 +902,16 @@ export default function Products() {
                           {isEditing ? (
                             <input
                               type="text"
-                              value={editingValues.Name}
-                              onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                              value={editingValues.name}
+                              onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                               className="w-full px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary/50 outline-none"
                               autoFocus
                             />
                           ) : (
                             <div>
-                              <div className="text-sm font-medium text-slate-900">{product.Name}</div>
-                              {product.Description && (
-                                <div className="text-sm text-slate-500 truncate max-w-xs">{product.Description}</div>
+                              <div className="text-sm font-medium text-slate-900">{product.name}</div>
+                              {product.description && (
+                                <div className="text-sm text-slate-500 truncate max-w-xs">{product.description}</div>
                               )}
                             </div>
                           )}
@@ -920,12 +920,12 @@ export default function Products() {
                           {isEditing ? (
                             <input
                               type="text"
-                              value={editingValues.Code}
-                              onChange={(e) => setEditingValues({ ...editingValues, Code: e.target.value })}
+                              value={editingValues.code}
+                              onChange={(e) => setEditingValues({ ...editingValues, code: e.target.value })}
                               className="w-full px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary/50 outline-none"
                             />
                           ) : (
-                            <span className="text-sm text-slate-500">{product.Code || '-'}</span>
+                            <span className="text-sm text-slate-500">{product.code || '-'}</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -933,13 +933,13 @@ export default function Products() {
                             <input
                               type="number"
                               step="0.01"
-                              value={editingValues.Price}
-                              onChange={(e) => setEditingValues({ ...editingValues, Price: e.target.value })}
+                              value={editingValues.price}
+                              onChange={(e) => setEditingValues({ ...editingValues, price: e.target.value })}
                               className="w-24 px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary/50 outline-none"
                             />
                           ) : (
                             <span className="text-sm font-medium text-slate-900">
-                              {product.Price.toFixed(2)} {t('currency')}
+                              {(product.price || 0).toFixed(2)} {t('currency')}
                             </span>
                           )}
                         </td>
@@ -948,26 +948,26 @@ export default function Products() {
                             <input
                               type="number"
                               step="0.01"
-                              value={editingValues.Cost}
-                              onChange={(e) => setEditingValues({ ...editingValues, Cost: e.target.value })}
+                              value={editingValues.cost}
+                              onChange={(e) => setEditingValues({ ...editingValues, cost: e.target.value })}
                               className="w-24 px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary/50 outline-none"
                             />
                           ) : (
                             <span className="text-sm text-slate-500">
-                              {product.Cost.toFixed(2)} {t('currency')}
+                              {(product.cost || 0).toFixed(2)} {t('currency')}
                             </span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                          {product.Stock !== null && product.Stock !== undefined ? product.Stock : '-'}
+                          {product.stock !== null && product.stock !== undefined ? product.stock : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            product.IsEnabled
+                            product.isEnabled
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {product.IsEnabled ? t('active') : t('inactive')}
+                            {product.isEnabled ? t('active') : t('inactive')}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
@@ -1005,7 +1005,7 @@ export default function Products() {
                                 <Package className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(product.Id)}
+                                onClick={() => handleDelete(product.id)}
                                 className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                                 title={t('delete')}
                               >
@@ -1132,7 +1132,7 @@ export default function Products() {
                             );
                           }
                           return null;
-                        })}
+                        }).filter(Boolean)}
                         
                         {/* Right ellipsis */}
                         {currentPage < totalPages - 2 && (
@@ -1201,7 +1201,7 @@ export default function Products() {
               label: t('details'),
               icon: <Package className="w-3.5 h-3.5" />,
               onClick: () => {
-                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
+                const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
                 if (product) handleOpenModal(product);
               },
               variant: 'secondary' as const,
@@ -1209,12 +1209,12 @@ export default function Products() {
             {
               id: 'toggle-price-change',
               label: (() => {
-                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
-                return product?.IsPriceChangeAllowed ? t('lockPriceChange') : t('allowPriceChange');
+                const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
+                return product?.isPriceChangeAllowed ? t('lockPriceChange') : t('allowPriceChange');
               })(),
               icon: (() => {
-                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
-                return product?.IsPriceChangeAllowed ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />;
+                const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
+                return product?.isPriceChangeAllowed ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />;
               })(),
               onClick: handleTogglePriceChangeAllowed,
               variant: 'secondary' as const,
@@ -1222,16 +1222,16 @@ export default function Products() {
             {
               id: 'toggle-status',
               label: (() => {
-                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
-                return product?.IsEnabled ? t('disable') : t('enable');
+                const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
+                return product?.isEnabled ? t('disable') : t('enable');
               })(),
               icon: (() => {
-                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
-                return product?.IsEnabled ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />;
+                const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
+                return product?.isEnabled ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />;
               })(),
               onClick: () => {
-                const product = productsList.find((p: Product) => p.Id === selectedProducts[0]);
-                if (product?.IsEnabled) {
+                const product = productsList.find((p: Product) => p.id === selectedProducts[0]);
+                if (product?.isEnabled) {
                   handleBulkDisable();
                 } else {
                   handleBulkEnable();
@@ -1288,7 +1288,7 @@ export default function Products() {
                         onClick={() => {
                           setImagePreview('');
                           setImageFile(null);
-                          setFormData({ ...formData, ImageUrl: '' });
+                          setFormData({ ...formData, imageUrl: '' });
                         }}
                         className="absolute -top-2 -end-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
                       >
@@ -1326,9 +1326,9 @@ export default function Products() {
                   </label>
                   <input
                     type="url"
-                    value={formData.ImageUrl}
+                    value={formData.imageUrl}
                     onChange={(e) => {
-                      setFormData({ ...formData, ImageUrl: e.target.value });
+                      setFormData({ ...formData, imageUrl: e.target.value });
                       setImagePreview(e.target.value);
                     }}
                     placeholder="https://example.com/image.jpg"
@@ -1345,8 +1345,8 @@ export default function Products() {
                 <input
                   type="text"
                   required
-                  value={formData.Name}
-                  onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                 />
               </div>
@@ -1358,8 +1358,8 @@ export default function Products() {
                 </label>
                 <input
                   type="text"
-                  value={formData.Code}
-                  onChange={(e) => setFormData({ ...formData, Code: e.target.value })}
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                 />
               </div>
@@ -1370,8 +1370,8 @@ export default function Products() {
                   {t('description')}
                 </label>
                 <textarea
-                  value={formData.Description}
-                  onChange={(e) => setFormData({ ...formData, Description: e.target.value })}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none resize-none"
                 />
@@ -1387,8 +1387,8 @@ export default function Products() {
                     type="number"
                     step="0.01"
                     required
-                    value={formData.Price}
-                    onChange={(e) => setFormData({ ...formData, Price: e.target.value })}
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                   />
                 </div>
@@ -1400,8 +1400,8 @@ export default function Products() {
                     type="number"
                     step="0.01"
                     required
-                    value={formData.Cost}
-                    onChange={(e) => setFormData({ ...formData, Cost: e.target.value })}
+                    value={formData.cost}
+                    onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                   />
                 </div>
@@ -1414,8 +1414,8 @@ export default function Products() {
                 </label>
                 <input
                   type="number"
-                  value={formData.Stock}
-                  onChange={(e) => setFormData({ ...formData, Stock: e.target.value })}
+                  value={formData.stock}
+                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                 />
               </div>
@@ -1425,8 +1425,8 @@ export default function Products() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.IsService}
-                    onChange={(e) => setFormData({ ...formData, IsService: e.target.checked })}
+                    checked={formData.isService}
+                    onChange={(e) => setFormData({ ...formData, isService: e.target.checked })}
                     className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
                   />
                   <span className="text-sm text-slate-700">{t('isService')}</span>
@@ -1434,8 +1434,8 @@ export default function Products() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.IsEnabled}
-                    onChange={(e) => setFormData({ ...formData, IsEnabled: e.target.checked })}
+                    checked={formData.isEnabled}
+                    onChange={(e) => setFormData({ ...formData, isEnabled: e.target.checked })}
                     className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
                   />
                   <span className="text-sm text-slate-700">{t('isEnabled')}</span>
@@ -1443,8 +1443,8 @@ export default function Products() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.IsPriceChangeAllowed}
-                    onChange={(e) => setFormData({ ...formData, IsPriceChangeAllowed: e.target.checked })}
+                    checked={formData.isPriceChangeAllowed}
+                    onChange={(e) => setFormData({ ...formData, isPriceChangeAllowed: e.target.checked })}
                     className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
                   />
                   <span className="text-sm text-slate-700">{t('isPriceChangeAllowed')}</span>

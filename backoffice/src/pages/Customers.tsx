@@ -15,12 +15,12 @@ export default function Customers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
   const [editingValues, setEditingValues] = useState<{
-    Name: string;
-    PhoneNumber: string;
-    Email: string;
-    Address: string;
-    City: string;
-  }>({ Name: '', PhoneNumber: '', Email: '', Address: '', City: '' });
+    name: string;
+    phoneNumber: string;
+    email: string;
+    address: string;
+    city: string;
+  }>({ name: '', phoneNumber: '', email: '', address: '', city: '' });
 
   const queryClient = useQueryClient();
 
@@ -54,7 +54,7 @@ export default function Customers() {
     if (selectedCustomers.length === filteredCustomers.length) {
       setSelectedCustomers([]);
     } else {
-      setSelectedCustomers(filteredCustomers.map((c: Customer) => c.Id));
+      setSelectedCustomers(filteredCustomers.map((c: Customer) => c.id));
     }
   };
 
@@ -64,42 +64,42 @@ export default function Customers() {
 
   // Filter customers by search term
   const filteredCustomers = customers.filter((customer: Customer) =>
-    customer.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.PhoneNumber?.includes(searchTerm) ||
-    customer.Email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.City?.toLowerCase().includes(searchTerm.toLowerCase())
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.phoneNumber?.includes(searchTerm) ||
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.city?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const startInlineEdit = (customer: Customer) => {
-    setEditingId(customer.Id);
+    setEditingId(customer.id);
     setEditingValues({
-      Name: customer.Name,
-      PhoneNumber: customer.PhoneNumber || '',
-      Email: customer.Email || '',
-      Address: customer.Address || '',
-      City: customer.City || '',
+      name: customer.name,
+      phoneNumber: customer.phoneNumber || '',
+      email: customer.email || '',
+      address: customer.address || '',
+      city: customer.city || '',
     });
   };
 
   const cancelInlineEdit = () => {
     setEditingId(null);
-    setEditingValues({ Name: '', PhoneNumber: '', Email: '', Address: '', City: '' });
+    setEditingValues({ name: '', phoneNumber: '', email: '', address: '', city: '' });
   };
 
   const saveInlineEdit = (customer: Customer) => {
-    if (!customer.PhoneNumber) {
+    if (!customer.phoneNumber) {
       toast.error(t('phoneNumberRequired'));
       return;
     }
 
     const updatedData = {
-      Name: editingValues.Name,
-      Email: editingValues.Email || undefined,
-      Address: editingValues.Address || undefined,
-      City: editingValues.City || undefined,
+      name: editingValues.name,
+      email: editingValues.email || undefined,
+      address: editingValues.address || undefined,
+      city: editingValues.city || undefined,
     };
     
-    updateMutation.mutate({ phone: customer.PhoneNumber, data: updatedData });
+    updateMutation.mutate({ phone: customer.phoneNumber, data: updatedData });
   };
 
   const getFloatingActions = () => {
@@ -109,7 +109,7 @@ export default function Customers() {
           id: 'details',
           label: t('details'),
           onClick: () => {
-            const customer = customers.find((c: Customer) => c.Id === selectedCustomers[0]);
+            const customer = customers.find((c: Customer) => c.id === selectedCustomers[0]);
             if (customer) {
               startInlineEdit(customer);
             }
@@ -202,13 +202,13 @@ export default function Customers() {
                 <div className="flex-1 overflow-y-auto p-3">
                   <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                     {filteredCustomers.map((customer: Customer) => {
-                      const isSelected = selectedCustomers.includes(customer.Id);
-                      const isEditing = editingId === customer.Id;
+                      const isSelected = selectedCustomers.includes(customer.id);
+                      const isEditing = editingId === customer.id;
 
                       return (
                         <div
-                          key={customer.Id}
-                          onClick={() => !isEditing && toggleSelectCustomer(customer.Id)}
+                          key={customer.id}
+                          onClick={() => !isEditing && toggleSelectCustomer(customer.id)}
                           className={`group relative bg-white rounded-lg overflow-hidden transition-all ${
                             isEditing 
                               ? 'ring-2 ring-amber-400 shadow-md cursor-default' 
@@ -233,11 +233,11 @@ export default function Customers() {
                           {/* Status Badge */}
                           <div className="absolute top-2 right-2 z-10">
                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${
-                              customer.IsEnabled
+                              customer.isEnabled
                                 ? 'bg-green-100 text-green-700'
                                 : 'bg-slate-100 text-slate-600'
                             }`}>
-                              {customer.IsEnabled ? t('active') : t('inactive')}
+                              {customer.isEnabled ? t('active') : t('inactive')}
                             </span>
                           </div>
 
@@ -253,15 +253,15 @@ export default function Customers() {
                                   {isEditing ? (
                                     <input
                                       type="text"
-                                      value={editingValues.Name}
-                                      onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                                      value={editingValues.name}
+                                      onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                                       onClick={(e) => e.stopPropagation()}
                                       className="w-full px-2 py-1.5 text-sm border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none font-semibold"
                                       autoFocus
                                     />
                                   ) : (
-                                    <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={customer.Name}>
-                                      {customer.Name}
+                                    <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={customer.name}>
+                                      {customer.name}
                                     </h3>
                                   )}
                                 </div>
@@ -273,7 +273,7 @@ export default function Customers() {
                               {/* Phone */}
                               <div className="flex items-center gap-2 text-xs text-slate-600">
                                 <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                <span className="truncate">{customer.PhoneNumber || '-'}</span>
+                                <span className="truncate">{customer.phoneNumber || '-'}</span>
                               </div>
 
                               {/* Email */}
@@ -282,13 +282,13 @@ export default function Customers() {
                                 {isEditing ? (
                                   <input
                                     type="email"
-                                    value={editingValues.Email}
-                                    onChange={(e) => setEditingValues({ ...editingValues, Email: e.target.value })}
+                                    value={editingValues.email}
+                                    onChange={(e) => setEditingValues({ ...editingValues, email: e.target.value })}
                                     onClick={(e) => e.stopPropagation()}
                                     className="flex-1 px-1.5 py-0.5 text-xs border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                                   />
                                 ) : (
-                                  <span className="truncate">{customer.Email || '-'}</span>
+                                  <span className="truncate">{customer.email || '-'}</span>
                                 )}
                               </div>
 
@@ -298,13 +298,13 @@ export default function Customers() {
                                 {isEditing ? (
                                   <input
                                     type="text"
-                                    value={editingValues.City}
-                                    onChange={(e) => setEditingValues({ ...editingValues, City: e.target.value })}
+                                    value={editingValues.city}
+                                    onChange={(e) => setEditingValues({ ...editingValues, city: e.target.value })}
                                     onClick={(e) => e.stopPropagation()}
                                     className="flex-1 px-1.5 py-0.5 text-xs border border-amber-400 rounded focus:ring-1 focus:ring-amber-500/50 outline-none"
                                   />
                                 ) : (
-                                  <span className="truncate">{customer.City || '-'}</span>
+                                  <span className="truncate">{customer.city || '-'}</span>
                                 )}
                               </div>
                             </div>
@@ -355,15 +355,15 @@ export default function Customers() {
               ) : (
                 <div className="flex-1 overflow-y-auto p-3 space-y-2 border border-slate-200/60 rounded-lg bg-white">
                   {filteredCustomers.map((customer: Customer) => {
-                    const isSelected = selectedCustomers.includes(customer.Id);
-                    const isEditing = editingId === customer.Id;
+                    const isSelected = selectedCustomers.includes(customer.id);
+                    const isEditing = editingId === customer.id;
 
                     return (
                       <div
-                        key={customer.Id}
-                        onClick={() => !isEditing && toggleSelectCustomer(customer.Id)}
+                        key={customer.id}
+                        onClick={() => !isEditing && toggleSelectCustomer(customer.id)}
                         className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${
-                          selectedCustomers.includes(customer.Id)
+                          selectedCustomers.includes(customer.id)
                             ? 'border-amber-500 ring-2 ring-amber-500/20'
                             : 'border-slate-200/60 hover:border-slate-300/60'
                         }`}
@@ -374,15 +374,15 @@ export default function Customers() {
                             <div
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleSelectCustomer(customer.Id);
+                                toggleSelectCustomer(customer.id);
                               }}
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
-                                selectedCustomers.includes(customer.Id)
+                                selectedCustomers.includes(customer.id)
                                   ? 'bg-amber-500 border-amber-500 text-white'
                                   : 'bg-white border-slate-300 hover:border-amber-400'
                               }`}
                             >
-                              {selectedCustomers.includes(customer.Id) && (
+                              {selectedCustomers.includes(customer.id) && (
                                 <CheckSquare className="w-3.5 h-3.5" />
                               )}
                             </div>
@@ -400,8 +400,8 @@ export default function Customers() {
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('name')}</p>
                                 <input
                                   type="text"
-                                  value={editingValues.Name}
-                                  onChange={(e) => setEditingValues({ ...editingValues, Name: e.target.value })}
+                                  value={editingValues.name}
+                                  onChange={(e) => setEditingValues({ ...editingValues, name: e.target.value })}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                                   autoFocus
@@ -410,7 +410,7 @@ export default function Customers() {
                             ) : (
                               <div>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('name')}</p>
-                                <p className="text-sm font-semibold text-slate-800 truncate">{customer.Name}</p>
+                                <p className="text-sm font-semibold text-slate-800 truncate">{customer.name}</p>
                               </div>
                             )}
                           </div>
@@ -418,7 +418,7 @@ export default function Customers() {
                           {/* Phone */}
                           <div className="w-32">
                             <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('phone')}</p>
-                            <p className="text-sm text-slate-600">{customer.PhoneNumber || '-'}</p>
+                            <p className="text-sm text-slate-600">{customer.phoneNumber || '-'}</p>
                           </div>
 
                           {/* Email */}
@@ -428,8 +428,8 @@ export default function Customers() {
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('email')}</p>
                                 <input
                                   type="email"
-                                  value={editingValues.Email}
-                                  onChange={(e) => setEditingValues({ ...editingValues, Email: e.target.value })}
+                                  value={editingValues.email}
+                                  onChange={(e) => setEditingValues({ ...editingValues, email: e.target.value })}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                                 />
@@ -437,7 +437,7 @@ export default function Customers() {
                             ) : (
                               <div>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('email')}</p>
-                                <p className="text-sm text-slate-600 truncate">{customer.Email || '-'}</p>
+                                <p className="text-sm text-slate-600 truncate">{customer.email || '-'}</p>
                               </div>
                             )}
                           </div>
@@ -449,8 +449,8 @@ export default function Customers() {
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('city')}</p>
                                 <input
                                   type="text"
-                                  value={editingValues.City}
-                                  onChange={(e) => setEditingValues({ ...editingValues, City: e.target.value })}
+                                  value={editingValues.city}
+                                  onChange={(e) => setEditingValues({ ...editingValues, city: e.target.value })}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-full px-2 py-1 text-sm border border-amber-400 rounded focus:ring-2 focus:ring-amber-500/50 outline-none"
                                 />
@@ -458,7 +458,7 @@ export default function Customers() {
                             ) : (
                               <div>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('city')}</p>
-                                <p className="text-sm text-slate-600">{customer.City || '-'}</p>
+                                <p className="text-sm text-slate-600">{customer.city || '-'}</p>
                               </div>
                             )}
                           </div>
@@ -467,11 +467,11 @@ export default function Customers() {
                           <div className="w-24 flex flex-col items-center">
                             <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
                             <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                              customer.IsEnabled
+                              customer.isEnabled
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
                             }`}>
-                              {customer.IsEnabled ? t('active') : t('inactive')}
+                              {customer.isEnabled ? t('active') : t('inactive')}
                             </span>
                           </div>
 

@@ -9,27 +9,27 @@ import { PriceConfirmModal } from '../components/PriceConfirmModal';
 import { OrderSuccessModal } from '../components/OrderSuccessModal';
 
 interface Product {
-  Id: number;
-  Name: string;
-  Description?: string;
-  Price: number;
-  Cost?: number;
-  CategoryId?: number;
-  ImageUrl?: string;
-  IsEnabled?: boolean;
-  IsService?: boolean;
-  Stock?: number;
-  Code?: string;
-  IsPriceChangeAllowed?: boolean;
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  cost?: number;
+  categoryId?: number;
+  imageUrl?: string;
+  isEnabled?: boolean;
+  isService?: boolean;
+  stock?: number;
+  code?: string;
+  isPriceChangeAllowed?: boolean;
 }
 
 interface Customer {
-  Id: number;
-  Name: string;
-  PhoneNumber: string;
-  Address?: string;
-  Latitude?: number;
-  Longitude?: number;
+  id: number;
+  name: string;
+  phoneNumber: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface CartItem {
@@ -56,9 +56,9 @@ export default function POS() {
   const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
   const [isResizing, setIsResizing] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
-    Name: '',
-    PhoneNumber: '',
-    Address: '',
+    name: '',
+    phoneNumber: '',
+    address: '',
   });
   const [orderSuccessData, setOrderSuccessData] = useState<{
     orderNumber: string;
@@ -82,7 +82,27 @@ export default function POS() {
     queryFn: async () => {
       const response = await fetch('/api/products');
       if (!response.ok) throw new Error('Failed to fetch products');
-      return response.json();
+      const data = await response.json();
+      
+      // Transform products with proper type conversion
+      if (data.products) {
+        data.products = data.products.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          code: p.code,
+          description: p.description,
+          price: parseFloat(p.price) || 0,
+          cost: p.cost != null ? parseFloat(p.cost) : undefined,
+          stock: p.stock != null ? parseInt(p.stock) : undefined,
+          isService: p.isService,
+          isEnabled: p.isEnabled,
+          isPriceChangeAllowed: p.isPriceChangeAllowed,
+          categoryId: p.categoryId,
+          imageUrl: p.imageUrl,
+        }));
+      }
+      
+      return data;
     },
   });
 
@@ -99,19 +119,19 @@ export default function POS() {
 
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/customers/search?phone=${encodeURIComponent(customerSearch)}`);
+        const response = await fetch(`/api/partners/search?phone=${encodeURIComponent(customerSearch)}`);
         if (!response.ok) throw new Error('Failed to search customers');
         const data = await response.json();
         
-        if (data.customers && data.customers.length > 0) {
-          setCustomerSuggestions(data.customers);
+        if (data.partners && data.partners.length > 0) {
+          setCustomerSuggestions(data.partners);
           setShowSuggestions(true);
           setShowCustomerForm(false);
         } else {
           setCustomerSuggestions([]);
           setShowSuggestions(false);
           setShowCustomerForm(true);
-          setNewCustomer({ ...newCustomer, PhoneNumber: customerSearch, Name: '' });
+          setNewCustomer({ ...newCustomer, phoneNumber: customerSearch, name: '' });
         }
       } catch (error) {
         console.error('Failed to search customers:', error);
@@ -124,20 +144,20 @@ export default function POS() {
   // Create customer mutation
   const createCustomerMutation = useMutation({
     mutationFn: async (customerData: typeof newCustomer) => {
-      const response = await fetch('/api/customers', {
+      const response = await fetch('/api/partners', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(customerData),
       });
       if (!response.ok) throw new Error('Failed to create customer');
       const data = await response.json();
-      return data.customer;
+      return data.partner;
     },
     onSuccess: (customer) => {
       setSelectedCustomer(customer);
       setShowCustomerForm(false);
       setShowSuggestions(false);
-      setCustomerSearch(customer.Name);
+      setCustomerSearch(customer.name);
       toast.success(t('customerCreated'));
     },
     onError: () => {
@@ -161,9 +181,9 @@ export default function POS() {
       if (selectedCustomer) {
         setOrderSuccessData({
           orderNumber: data.documentNumber,
-          customerName: selectedCustomer.Name,
-          customerPhone: selectedCustomer.PhoneNumber,
-          customerAddress: selectedCustomer.Address,
+          customerName: selectedCustomer.name,
+          customerPhone: selectedCustomer.phoneNumber,
+          customerAddress: selectedCustomer.address,
           items: cart,
           total: total,
           orderDate: new Date(),
@@ -183,22 +203,22 @@ export default function POS() {
   });
 
   const filteredProducts = products.filter((p: Product) =>
-    p.IsEnabled !== false &&
-    p.IsService !== true &&
+    p.isEnabled !== false &&
+    p.isService !== true &&
     (searchQuery === '' || 
-     p.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     p.Description?.toLowerCase().includes(searchQuery.toLowerCase()))
+     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     p.description?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const openQuantityModal = (product: Product) => {
     setSelectedProduct(product);
     
     // If price change is allowed, show price confirmation modal first
-    if (product.IsPriceChangeAllowed) {
+    if (product.isPriceChangeAllowed) {
       setIsPriceModalOpen(true);
     } else {
       // Otherwise, go directly to quantity modal
-      setConfirmedPrice(product.Price);
+      setConfirmedPrice(product.price);
       setIsModalOpen(true);
     }
   };
@@ -213,13 +233,13 @@ export default function POS() {
     if (!selectedProduct) return;
     
     // Use confirmed price if available, otherwise use product's original price
-    const finalPrice = confirmedPrice !== null ? confirmedPrice : selectedProduct.Price;
-    const productWithPrice = { ...selectedProduct, Price: finalPrice };
+    const finalPrice = confirmedPrice !== null ? confirmedPrice : selectedProduct.price;
+    const productWithPrice = { ...selectedProduct, price: finalPrice };
     
-    const existing = cart.find(item => item.product.Id === selectedProduct.Id);
+    const existing = cart.find(item => item.product.id === selectedProduct.id);
     if (existing) {
       setCart(cart.map(item =>
-        item.product.Id === selectedProduct.Id
+        item.product.id === selectedProduct.id
           ? { ...item, quantity, product: productWithPrice }
           : item
       ));
@@ -232,14 +252,14 @@ export default function POS() {
   };
 
   const removeFromCart = (productId: number) => {
-    setCart(cart.filter(item => item.product.Id !== productId));
+    setCart(cart.filter(item => item.product.id !== productId));
   };
 
   const clearCart = () => {
     setCart([]);
   };
 
-  const total = cart.reduce((sum, item) => sum + (item.product.Price * item.quantity), 0);
+  const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
   const cartTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleCheckout = () => {
@@ -254,11 +274,11 @@ export default function POS() {
     }
 
     const orderData = {
-      CustomerId: selectedCustomer.Id,
+      customerId: selectedCustomer.id,
       Items: cart.map(item => ({
-        ProductId: item.product.Id,
-        Quantity: item.quantity,
-        Price: item.product.Price,
+        productId: item.product.id,
+        quantity: item.quantity,
+        price: item.product.price,
       })),
     };
 
@@ -267,7 +287,7 @@ export default function POS() {
 
   const selectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setCustomerSearch(customer.Name);
+    setCustomerSearch(customer.name);
     setShowSuggestions(false);
     setShowCustomerForm(false);
   };
@@ -351,7 +371,7 @@ export default function POS() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAddToCart={handleAddToCart}
-        initialQuantity={cart.find(item => item.product.Id === selectedProduct?.Id)?.quantity || 0}
+        initialQuantity={cart.find(item => item.product.id === selectedProduct?.id)?.quantity || 0}
         language={language}
         t={(key: string) => t(key as any)}
       />
@@ -403,14 +423,14 @@ export default function POS() {
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-20">
                   {customerSuggestions.map((customer) => (
                     <div
-                      key={customer.Id}
+                      key={customer.id}
                       onClick={() => selectCustomer(customer)}
                       className="p-2.5 hover:bg-primary/10 cursor-pointer border-b border-gray-100 last:border-0 transition-colors"
                     >
-                      <p className="font-semibold text-gray-900 text-sm">{customer.Name}</p>
-                      <p className="text-xs text-gray-600">{customer.PhoneNumber}</p>
-                      {customer.Address && (
-                        <p className="text-xs text-gray-500 line-clamp-1">{customer.Address}</p>
+                      <p className="font-semibold text-gray-900 text-sm">{customer.name}</p>
+                      <p className="text-xs text-gray-600">{customer.phoneNumber}</p>
+                      {customer.address && (
+                        <p className="text-xs text-gray-500 line-clamp-1">{customer.address}</p>
                       )}
                     </div>
                   ))}
@@ -419,12 +439,12 @@ export default function POS() {
 
               {selectedCustomer && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                  <p className="font-semibold text-emerald-900 text-sm">{selectedCustomer.Name}</p>
-                  <p className="text-xs text-emerald-700">{selectedCustomer.PhoneNumber}</p>
-                  {selectedCustomer.Address && (
+                  <p className="font-semibold text-emerald-900 text-sm">{selectedCustomer.name}</p>
+                  <p className="text-xs text-emerald-700">{selectedCustomer.phoneNumber}</p>
+                  {selectedCustomer.address && (
                     <p className="text-xs text-emerald-700 flex items-start gap-1 mt-1">
                       <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                      <span className="line-clamp-2">{selectedCustomer.Address}</span>
+                      <span className="line-clamp-2">{selectedCustomer.address}</span>
                     </p>
                   )}
                   <button
@@ -445,27 +465,27 @@ export default function POS() {
                   <input
                     type="text"
                     placeholder={t('name')}
-                    value={newCustomer.Name}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, Name: e.target.value })}
+                    value={newCustomer.name}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
                     className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <input
                     type="tel"
                     placeholder={t('phoneNumber')}
-                    value={newCustomer.PhoneNumber}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, PhoneNumber: e.target.value })}
+                    value={newCustomer.phoneNumber}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
                     className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <input
                     type="text"
                     placeholder={t('address')}
-                    value={newCustomer.Address}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, Address: e.target.value })}
+                    value={newCustomer.address}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
                     className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <button
                     onClick={() => createCustomerMutation.mutate(newCustomer)}
-                    disabled={!newCustomer.Name || !newCustomer.PhoneNumber || createCustomerMutation.isPending}
+                    disabled={!newCustomer.name || !newCustomer.phoneNumber || createCustomerMutation.isPending}
                     className="w-full bg-blue-600 text-white py-2 text-sm rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
                   >
                     {createCustomerMutation.isPending ? t('loading') : t('create')}
@@ -514,16 +534,16 @@ export default function POS() {
                 <div className="py-2">
                   {cart.map((item) => (
                     <div
-                      key={item.product.Id}
+                      key={item.product.id}
                       onClick={() => openQuantityModal(item.product)}
                       className="flex gap-2 py-1.5 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors rounded-md cursor-pointer"
                     >
                       {/* Image */}
                       <div className="w-10 h-10 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
-                        {item.product.ImageUrl ? (
+                        {item.product.imageUrl ? (
                           <img
-                            src={item.product.ImageUrl}
-                            alt={item.product.Name}
+                            src={item.product.imageUrl}
+                            alt={item.product.name}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -537,12 +557,12 @@ export default function POS() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-0.5">
                           <h4 className="font-medium text-gray-900 line-clamp-1 leading-tight text-xs">
-                            {item.product.Name}
+                            {item.product.name}
                           </h4>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              removeFromCart(item.product.Id);
+                              removeFromCart(item.product.id);
                             }}
                             className="h-5 w-5 -mt-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0 rounded flex items-center justify-center"
                           >
@@ -552,14 +572,14 @@ export default function POS() {
 
                         <div className="flex items-center justify-between">
                           <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                            {formatCurrency(item.product.Price)} ×
+                            {formatCurrency(item.product.price)} ×
                             <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-primary text-white rounded-full text-[8px] font-bold">
                               {item.quantity}
                             </span>
                           </p>
 
                           <span className="font-bold text-gray-900 text-xs">
-                            {formatCurrency(item.product.Price * item.quantity)}
+                            {formatCurrency(item.product.price * item.quantity)}
                           </span>
                         </div>
                       </div>
@@ -652,12 +672,12 @@ export default function POS() {
             ) : (
               <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
                 {filteredProducts.map((product: Product, index: number) => {
-                  const cartItem = cart.find(item => item.product.Id === product.Id);
+                  const cartItem = cart.find(item => item.product.id === product.id);
                   const quantity = cartItem?.quantity || 0;
 
                   return (
                     <div
-                      key={product.Id}
+                      key={product.id}
                       style={{ animationDelay: `${index * 20}ms` }}
                       onClick={() => openQuantityModal(product)}
                       className={`group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer active:scale-[0.98] animate-fade-in ${
@@ -666,10 +686,10 @@ export default function POS() {
                     >
                       {/* Image */}
                       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                        {product.ImageUrl ? (
+                        {product.imageUrl ? (
                           <img
-                            src={product.ImageUrl}
-                            alt={product.Name}
+                            src={product.imageUrl}
+                            alt={product.name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             loading="lazy"
                           />
@@ -690,12 +710,12 @@ export default function POS() {
                       {/* Content */}
                       <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
                         <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
-                          {product.Name}
+                          {product.name}
                         </h3>
 
                         <div className="mt-auto">
                           <span className="text-[11px] sm:text-xs font-bold text-primary">
-                            {formatCurrency(product.Price)}
+                            {formatCurrency(product.price)}
                           </span>
                         </div>
                       </div>

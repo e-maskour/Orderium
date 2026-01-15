@@ -32,16 +32,16 @@ interface InvoiceItem {
 }
 
 interface Product {
-  Id: number;
-  Code: string | null;
-  Name: string;
-  Description?: string;
-  Price: number;
-  Cost: number;
-  IsEnabled: boolean;
-  Stock?: number | null;
-  IsService: boolean;
-  IsPriceChangeAllowed: boolean;
+  id: number;
+  code: string | null;
+  name: string;
+  description?: string;
+  price: number;
+  cost: number;
+  isEnabled: boolean;
+  stock?: number | null;
+  isService: boolean;
+  isPriceChangeAllowed: boolean;
 }
 
 export default function CreateInvoice() {
@@ -91,13 +91,13 @@ export default function CreateInvoice() {
   const customers = Array.isArray(customersData) ? customersData : [];
 
   // Get selected customer
-  const selectedCustomer = customers.find(c => c.Id === customerId);
+  const selectedCustomer = customers.find(c => c.id === customerId);
 
   // Filter customers for autocomplete
   const filteredCustomers = customers.filter(customer => 
-    customer.Name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    (customer.Email && customer.Email.toLowerCase().includes(customerSearch.toLowerCase())) ||
-    (customer.PhoneNumber && customer.PhoneNumber.includes(customerSearch))
+    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    (customer.email && customer.email.toLowerCase().includes(customerSearch.toLowerCase())) ||
+    (customer.phoneNumber && customer.phoneNumber.includes(customerSearch))
   ).slice(0, 10);
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
@@ -115,7 +115,7 @@ export default function CreateInvoice() {
     staleTime: 30000, // Cache for 30 seconds
   });
 
-  const products: Product[] = Array.isArray(productsData) ? productsData.filter(p => p.IsEnabled) : [];
+  const products: Product[] = Array.isArray(productsData) ? productsData.filter(p => p.isEnabled) : [];
   
 
   // Catalog products query - loads all products for catalog modal
@@ -134,7 +134,7 @@ export default function CreateInvoice() {
     enabled: catalogModalOpen, // Only fetch when catalog is open
   });
 
-  const catalogProducts: Product[] = Array.isArray(catalogProductsData) ? catalogProductsData.filter(p => p.IsEnabled) : [];
+  const catalogProducts: Product[] = Array.isArray(catalogProductsData) ? catalogProductsData.filter(p => p.isEnabled) : [];
 
   // Update dropdown position when active index changes
   useEffect(() => {
@@ -200,8 +200,8 @@ export default function CreateInvoice() {
 
   // Handlers
   const handleSelectCustomer = (customer: typeof customers[0]) => {
-    setCustomerId(customer.Id);
-    setCustomerSearch(customer.Name);
+    setCustomerId(customer.id);
+    setCustomerSearch(customer.name);
     setShowCustomerSuggestions(false);
   };
 
@@ -237,7 +237,7 @@ export default function CreateInvoice() {
   };
 
   const handleSelectProduct = (index: number, product: Product) => {
-    const price = product.Price ?? 0;
+    const price = product.price ?? 0;
     
     // Clear active search to prevent debounce trigger
     setActiveSearchIndex(null);
@@ -247,14 +247,14 @@ export default function CreateInvoice() {
     setItems(items.map((item, i) => 
       i === index ? {
         ...item,
-        productId: product.Id,
-        productName: product.Name,
+        productId: product.id,
+        productName: product.name,
         unitPrice: price,
-        description: product.Description || ''
+        description: product.description || ''
       } : item
     ));
     
-    setProductSearch({ ...productSearch, [index]: product.Name });
+    setProductSearch({ ...productSearch, [index]: product.name });
   };
 
   const getFilteredProducts = (index: number): Product[] => {    
@@ -310,18 +310,18 @@ export default function CreateInvoice() {
   };
 
   const handleConfirmCatalogSelection = () => {
-    const selectedProducts = catalogProducts.filter(p => selectedCatalogProducts[p.Id]);
+    const selectedProducts = catalogProducts.filter(p => selectedCatalogProducts[p.id]);
     
     setItems(prev => {
       const updatedItems = [...prev];
       
       selectedProducts.forEach(product => {
-        const catalogQuantity = selectedCatalogProducts[product.Id];
+        const catalogQuantity = selectedCatalogProducts[product.id];
         const quantity = typeof catalogQuantity === 'number' ? catalogQuantity : 1;
-        const price = product.Price ?? 0;
+        const price = product.price ?? 0;
         
         // Check if product already exists in items
-        const existingIndex = updatedItems.findIndex(item => item.productId === product.Id);
+        const existingIndex = updatedItems.findIndex(item => item.productId === product.id);
         
         if (existingIndex !== -1) {
           // Update existing item quantity
@@ -333,10 +333,10 @@ export default function CreateInvoice() {
         } else {
           // Add new item
           updatedItems.push({
-            productId: product.Id,
-            productName: product.Name,
+            productId: product.id,
+            productName: product.name,
             unitPrice: price,
-            description: product.Description || '',
+            description: product.description || '',
             quantity: quantity,
             taxRate: 20
           });
@@ -384,16 +384,16 @@ export default function CreateInvoice() {
     }
 
     const invoiceData: CreateInvoiceDTO = {
-      CustomerId: customerId,
-      AdminId: admin?.Id,
+      customerId: customerId,
+      AdminId: admin?.id,
       Date: new Date(issueDate),
       DueDate: dueDate,
       Note: notes || undefined,
       Status: status,
       Items: items.filter(item => item.productName && item.quantity > 0).map(item => ({
-        ProductId: item.productId || 0,
-        Description: item.description,
-        Quantity: item.quantity,
+        productId: item.productId || 0,
+        description: item.description,
+        quantity: item.quantity,
         UnitPrice: item.unitPrice,
         Discount: discount > 0 ? (discount / items.length) : 0,
         TaxRate: item.taxRate,
@@ -478,15 +478,15 @@ export default function CreateInvoice() {
                     <div className="absolute z-20 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {filteredCustomers.map((customer) => (
                         <button
-                          key={customer.Id}
+                          key={customer.id}
                           type="button"
                           onClick={() => handleSelectCustomer(customer)}
                           className="w-full px-3 py-2 text-left hover:bg-blue-50 transition-colors border-b border-slate-100 last:border-b-0"
                         >
-                          <div className="font-medium text-slate-900 text-sm">{customer.Name}</div>
+                          <div className="font-medium text-slate-900 text-sm">{customer.name}</div>
                           <div className="text-xs text-slate-500">
-                            {customer.Email && `${customer.Email}`}
-                            {customer.PhoneNumber && ` • ${customer.PhoneNumber}`}
+                            {customer.email && `${customer.email}`}
+                            {customer.phoneNumber && ` • ${customer.phoneNumber}`}
                           </div>
                         </button>
                       ))}
@@ -533,14 +533,14 @@ export default function CreateInvoice() {
             </div>
 
             {/* Second Row: Customer Address (Read-only Label) */}
-            {selectedCustomer && selectedCustomer.Address && (
+            {selectedCustomer && selectedCustomer.address && (
               <div className="mt-3 pt-3 border-t border-slate-200">
                 <label className="block text-xs font-medium text-slate-600 mb-1">
                   {t('address')}
                 </label>
                 <p className="text-sm text-slate-700">
-                  {selectedCustomer.Address}
-                  {selectedCustomer.City && `, ${selectedCustomer.City}`}
+                  {selectedCustomer.address}
+                  {selectedCustomer.city && `, ${selectedCustomer.city}`}
                   {selectedCustomer.PostalCode && ` ${selectedCustomer.PostalCode}`}
                 </p>
               </div>
@@ -835,12 +835,12 @@ export default function CreateInvoice() {
               <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {catalogProducts.map((product, index) => {
-                    const isSelected = !!selectedCatalogProducts[product.Id];
-                    const quantity = selectedCatalogProducts[product.Id];
+                    const isSelected = !!selectedCatalogProducts[product.id];
+                    const quantity = selectedCatalogProducts[product.id];
                     
                     return (
                       <div
-                        key={product.Id}
+                        key={product.id}
                         style={{ animationDelay: `${index * 20}ms` }}
                         className={`group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer active:scale-[0.98] ${
                           isSelected ? 'ring-2 ring-blue-600 bg-blue-50' : ''
@@ -848,10 +848,10 @@ export default function CreateInvoice() {
                       >
                         {/* Product Image/Icon */}
                         <div className="relative aspect-[4/3] bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
-                          {product.ImageUrl ? (
+                          {product.imageUrl ? (
                             <img
-                              src={product.ImageUrl}
-                              alt={product.Name}
+                              src={product.imageUrl}
+                              alt={product.name}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               loading="lazy"
                             />
@@ -873,16 +873,16 @@ export default function CreateInvoice() {
                             <input
                               type="checkbox"
                               checked={isSelected}
-                              onChange={() => handleToggleCatalogProduct(product.Id)}
+                              onChange={() => handleToggleCatalogProduct(product.id)}
                               className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
 
                           {/* Stock badge */}
-                          {product.Stock !== undefined && product.Stock !== null && (
+                          {product.stock !== undefined && product.stock !== null && (
                             <div className="absolute bottom-2 left-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-xs font-medium text-slate-700">
-                              Stock: {product.Stock}
+                              stock: {product.stock}
                             </div>
                           )}
                         </div>
@@ -890,20 +890,20 @@ export default function CreateInvoice() {
                         {/* Content */}
                         <div className="flex-1 p-3 flex flex-col">
                           <h3 className="font-semibold text-slate-900 line-clamp-2 leading-tight mb-1 text-sm">
-                            {product.Name}
+                            {product.name}
                           </h3>
                           
-                          {product.Code && (
-                            <p className="text-xs text-slate-500 mb-2">Code: {product.Code}</p>
+                          {product.code && (
+                            <p className="text-xs text-slate-500 mb-2">code: {product.code}</p>
                           )}
 
-                          {product.Description && !isSelected && (
-                            <p className="text-xs text-slate-600 line-clamp-2 mb-2">{product.Description}</p>
+                          {product.description && !isSelected && (
+                            <p className="text-xs text-slate-600 line-clamp-2 mb-2">{product.description}</p>
                           )}
 
                           <div className="mt-auto">
                             <span className="text-sm font-bold text-blue-600">
-                              {(product.Price ?? 0).toFixed(2)} MAD
+                              {(product.price ?? 0).toFixed(2)} MAD
                             </span>
                           </div>
 
@@ -918,7 +918,7 @@ export default function CreateInvoice() {
                                 min="0"
                                 step="1"
                                 value={quantity === '' ? '' : (quantity || '')}
-                                onChange={(e) => handleUpdateCatalogQuantity(product.Id, e.target.value)}
+                                onChange={(e) => handleUpdateCatalogQuantity(product.id, e.target.value)}
                                 placeholder="0"
                                 className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 onClick={(e) => e.stopPropagation()}
@@ -991,7 +991,7 @@ export default function CreateInvoice() {
         >
           {getFilteredProducts(activeSearchIndex).slice(0, 10).map((product) => (
             <button
-              key={product.Id}
+              key={product.id}
               type="button"
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -1001,14 +1001,14 @@ export default function CreateInvoice() {
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="font-medium text-slate-900 text-sm">{product.Name}</div>
+                  <div className="font-medium text-slate-900 text-sm">{product.name}</div>
                   <div className="text-xs text-slate-500">
-                    {product.Code && `Code: ${product.Code}`}
-                    {product.Stock !== undefined && product.Stock !== null && ` • Stock: ${product.Stock}`}
+                    {product.code && `code: ${product.code}`}
+                    {product.stock !== undefined && product.stock !== null && ` • stock: ${product.stock}`}
                   </div>
                 </div>
                 <div className="text-sm font-semibold text-blue-600 ml-2">
-                  {(product.Price ?? 0).toFixed(2)} MAD
+                  {(product.price ?? 0).toFixed(2)} MAD
                 </div>
               </div>
             </button>

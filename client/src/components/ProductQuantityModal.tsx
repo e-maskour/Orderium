@@ -53,7 +53,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
 
   useEffect(() => {
     if (isOpen && product) {
-      const currentQty = initialQuantity || getItemQuantity(product.Id);
+      const currentQty = initialQuantity || getItemQuantity(product.id);
       if (currentQty > 0) {
         setQuantity(currentQty.toString());
       } else {
@@ -68,9 +68,9 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
 
   if (!product || !isOpen) return null;
 
-  const currentCartQuantity = getItemQuantity(product.Id);
+  const currentCartQuantity = getItemQuantity(product.id);
   const maxQuantity = 999;
-  const displayName = product.Name;
+  const displayName = product.name;
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
@@ -101,7 +101,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
     if (!qty || qty <= 0) return;
     
     if (currentCartQuantity > 0) {
-      updateQuantity(product.Id, qty);
+      updateQuantity(product.id, qty);
     } else {
       for (let i = 0; i < qty; i++) {
         addItem(product);
@@ -116,7 +116,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
     onClose();
   };
 
-  const totalPrice = product.Price * (parseInt(quantity) || 0);
+  const totalPrice = product.price * (parseInt(quantity) || 0);
   const hasQuantity = quantity !== '' && parseInt(quantity) > 0;
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0'];
 
@@ -141,10 +141,10 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
           <div className={cn("space-y-1.5 sm:space-y-2", dir === 'rtl' ? 'pl-10 sm:pl-12' : 'pr-10 sm:pr-12')}>
             <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">{displayName}</h2>
             <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(product.Price, language)}</span>
+              <span className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(product.price, language)}</span>
               <span className="text-xs sm:text-sm text-gray-500">{t('perUnit')}</span>
             </div>
-            {product.Code && <p className="text-xs text-gray-500">{t('code')}: {product.Code}</p>}
+            {product.code && <p className="text-xs text-gray-500">{t('code')}: {product.code}</p>}
           </div>
         </div>
         <div className="p-3 sm:p-4 space-y-3 sm:space-y-4" style={{ animation: 'contentStagger 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards' }}>

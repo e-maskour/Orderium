@@ -217,8 +217,8 @@ export const Invoice = ({
           </thead>
           <tbody>
             {items.map((item, index) => {
-              const displayName = item.product.Name;
-              const itemTotal = item.product.Price * item.quantity;
+              const displayName = item.product.name;
+              const itemTotal = item.product.price * item.quantity;
 
               return (
                 <tr key={index}>
@@ -268,7 +268,7 @@ export const Invoice = ({
                     lineHeight: '1.5',
                     height: '36px'
                   }}>
-                    {formatCurrency(item.product.Price, language)}
+                    {formatCurrency(item.product.price, language)}
                   </td>
                   <td style={{ 
                     padding: '8px', 

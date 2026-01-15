@@ -8,6 +8,7 @@ interface AuthContextType {
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +44,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    if (!user?.phoneNumber) return;
+    
+    try {
+      const response = await fetch(`/api/portal/user/${user.phoneNumber}`);
+      const data = await response.json();
+      
+      if (data.success && data.user) {
+        const updatedUser = { ...user, ...data.user };
+        setUser(updatedUser);
+        localStorage.setItem('orderium_user', JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -52,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        refreshUser,
       }}
     >
       {children}
