@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Product } from "@/types/database";
-import { productService } from "@/services";
+import { productsService, Product } from "@/modules/products";
 
 interface UseProductsParams {
   page?: number;
@@ -26,20 +25,15 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
   useEffect(() => {
     setLoading(true);
     
-    productService.getAll({
+    productsService.getAll({
       page,
       pageSize,
       ...(search && { search }),
     })
       .then(data => {
-        // Assuming API returns { products: Product[], total: number } or just Product[]
-        if (Array.isArray(data)) {
-          setProducts(data);
-          setTotalCount(data.length);
-        } else {
-          setProducts(data.products || []);
-          setTotalCount(data.total || data.products?.length || 0);
-        }
+        // productsService.getAll returns Product[]
+        setProducts(data);
+        setTotalCount(data.length);
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));

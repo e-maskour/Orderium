@@ -3,7 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { AdminLayout } from '../components/AdminLayout';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { useQuery } from '@tanstack/react-query';
-import { statisticsService } from '../services/api';
+import { statisticsService } from '../modules/statistics';
 import { Package, Truck, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

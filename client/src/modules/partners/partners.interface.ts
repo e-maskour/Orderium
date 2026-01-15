@@ -42,3 +42,11 @@ export interface PartnerFormData {
   googleMapsUrl?: string;
   wazeUrl?: string;
 }
+
+export interface PartnerSearchResponse {
+  partners: Partner[];
+}
+
+export interface PartnerResponse {
+  partner: Partner;
+}

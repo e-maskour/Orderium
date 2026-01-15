@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
-import { orderService } from '@/services/orderService';
+import { ordersService } from '@/modules/orders';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { OrderTracking } from '@/components/OrderTracking';
 import { Receipt } from '@/components/Receipt';
@@ -16,20 +16,20 @@ import html2canvas from 'html2canvas';
 import { LanguageProvider } from '@/context/LanguageContext';
 
 interface Order {
-  Id: number;
-  Number: string;
-  DateCreated: string;
-  Total: number;
-  DeliveryStatus?: string;
+  id: number;
+  number: string;
+  dateCreated: string;
+  total: number;
+  status?: string;
 }
 
 interface OrderItem {
-  Id: number;
-  ProductId: number;
-  ProductName?: string;
-  Quantity: number;
-  Price: number;
-  Total: number;
+  id: number;
+  productId: number;
+  productName?: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
 }
 
 export default function MyOrders() {
@@ -45,13 +45,13 @@ export default function MyOrders() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user?.CustomerId) {
+      if (!user?.customerId) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const response = await orderService.getCustomerOrders(user.CustomerId);
+        const response = await ordersService.getCustomerOrders(user.customerId);
         if (response.success) {
           setOrders(response.orders);
         }
@@ -96,13 +96,11 @@ export default function MyOrders() {
 
   const handleViewItems = async (order: Order) => {
     try {
-      const response = await orderService.getById(order.Id);
-      if (response.success && response.order) {
-        setSelectedOrderItems({
-          order,
-          items: response.order.Items || []
-        });
-      }
+      const orderDetails = await ordersService.getById(order.id);
+      setSelectedOrderItems({
+        order,
+        items: orderDetails.items || []
+      });
     } catch (error) {
       console.error('Failed to fetch order items:', error);
     }
@@ -123,18 +121,18 @@ export default function MyOrders() {
       // Map items to CartItem format
       const items = selectedOrderItems.items.map(item => ({
         product: {
-          Id: item.ProductId,
-          Name: item.ProductName || `Product ${item.ProductId}`,
-          Price: item.Price,
-          Code: null,
-          Description: null,
-          Cost: 0,
-          IsService: false,
-          IsEnabled: true,
-          DateCreated: '',
-          DateUpdated: '',
+          id: item.productId,
+          name: item.productName || `Product ${item.productId}`,
+          price: item.unitPrice,
+          code: null,
+          description: null,
+          cost: 0,
+          isService: false,
+          isEnabled: true,
+          dateCreated: '',
+          dateUpdated: '',
         },
-        quantity: item.Quantity
+        quantity: item.quantity
       }));
 
       // Render component
@@ -144,12 +142,12 @@ export default function MyOrders() {
         root.render(
           <LanguageProvider>
             <Receipt
-              orderNumber={selectedOrderItems.order.Number}
-              customerName={user?.customerName || user?.name || ''}
+              orderNumber={selectedOrderItems.order.number}
+              customerName={user?.customerName || ''}
               customerPhone={user?.phoneNumber || ''}
               items={items}
-              subtotal={selectedOrderItems.order.Total}
-              orderDate={new Date(selectedOrderItems.order.DateCreated)}
+              subtotal={selectedOrderItems.order.total}
+              orderDate={new Date(selectedOrderItems.order.dateCreated)}
             />
           </LanguageProvider>
         );
@@ -157,13 +155,13 @@ export default function MyOrders() {
         root.render(
           <LanguageProvider>
             <Invoice
-              orderNumber={selectedOrderItems.order.Number}
-              customerName={user?.customerName || user?.name || ''}
+              orderNumber={selectedOrderItems.order.number}
+              customerName={user?.customerName || ''}
               customerPhone={user?.phoneNumber || ''}
               customerAddress={''}
               items={items}
-              subtotal={selectedOrderItems.order.Total}
-              orderDate={new Date(selectedOrderItems.order.DateCreated)}
+              subtotal={selectedOrderItems.order.total}
+              orderDate={new Date(selectedOrderItems.order.dateCreated)}
             />
           </LanguageProvider>
         );
@@ -200,7 +198,7 @@ export default function MyOrders() {
 
         const imgData = canvas.toDataURL('image/png', 1.0);
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`${t('receipt')}_${selectedOrderItems.order.Number}.pdf`);
+        pdf.save(`${t('receipt')}_${selectedOrderItems.order.number}.pdf`);
       } else {
         // Invoice: A5 size (148mm x 210mm)
         const a5Width = 148;
@@ -216,7 +214,7 @@ export default function MyOrders() {
 
         const imgData = canvas.toDataURL('image/png', 1.0);
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`${t('deliveryNote')}_${selectedOrderItems.order.Number}.pdf`);
+        pdf.save(`${t('deliveryNote')}_${selectedOrderItems.order.number}.pdf`);
       }
 
       // Cleanup
@@ -294,10 +292,10 @@ export default function MyOrders() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {orders.map((order) => {
-              const status = getStatusLabel(order.DeliveryStatus);
+              const status = getStatusLabel(order.status);
               return (
                 <div
-                  key={order.Id}
+                  key={order.id}
                   className="bg-card rounded-2xl shadow-card border border-border overflow-hidden hover:shadow-lg transition-all group"
                 >
                   {/* Order Header */}
@@ -314,7 +312,7 @@ export default function MyOrders() {
                       </span>
                     </div>
                     <p className="font-mono font-bold text-lg text-foreground">
-                      {order.Number}
+                      {order.number}
                     </p>
                   </div>
 
@@ -322,7 +320,7 @@ export default function MyOrders() {
                   <div className="p-4 space-y-3">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="w-4 h-4" />
-                      <span>{formatDate(order.DateCreated)}</span>
+                      <span>{formatDate(order.dateCreated)}</span>
                     </div>
 
                     <div className="flex items-center justify-between pt-3 border-t border-border">
@@ -330,16 +328,16 @@ export default function MyOrders() {
                         {t('totalAmount')}
                       </span>
                       <span className="text-xl font-bold text-primary">
-                        {formatCurrency(order.Total || 0, language)}
+                        {formatCurrency(order.total || 0, language)}
                       </span>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-2 pt-3">
+                    <div className="flex gap-2 pt-3">
                       {/* View Items Button */}
                       <Button
                         onClick={() => handleViewItems(order)}
-                        className="w-full"
+                        className="flex-1"
                         variant="outline"
                       >
                         <Eye className="w-4 h-4 mr-2" />
@@ -347,10 +345,10 @@ export default function MyOrders() {
                       </Button>
 
                       {/* Track Button */}
-                      {order.DeliveryStatus !== 'delivered' && order.DeliveryStatus !== 'canceled' && (
+                      {(order.status !== 'delivered' && order.status !== 'canceled') && (
                         <Button
-                          onClick={() => setSelectedOrder(order.Number)}
-                          className="w-full"
+                          onClick={() => setSelectedOrder(order.number)}
+                          className="flex-1"
                         >
                           <MapPin className="w-4 h-4 mr-2" />
                           {t('track')}
@@ -415,13 +413,13 @@ export default function MyOrders() {
                       <p className="text-xs text-muted-foreground mb-1">
                         {t('orderNumber')}
                       </p>
-                      <p className="font-mono font-bold text-primary">{selectedOrderItems.order.Number}</p>
+                      <p className="font-mono font-bold text-primary">{selectedOrderItems.order.number}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">
                         {t('date')}
                       </p>
-                      <p className="font-medium">{formatDate(selectedOrderItems.order.DateCreated)}</p>
+                      <p className="font-medium">{formatDate(selectedOrderItems.order.dateCreated)}</p>
                     </div>
                   </div>
                 </div>
@@ -446,20 +444,20 @@ export default function MyOrders() {
                     <div className="space-y-2">
                       {selectedOrderItems.items.map((item, index) => (
                         <div
-                          key={item.Id}
+                          key={item.id}
                           className="flex items-center justify-between p-3 bg-card border border-border rounded-lg hover:shadow-sm transition-shadow"
                         >
                           <div className="flex-1">
                             <p className="font-medium text-foreground">
-                              {item.ProductName || `${t('cartProduct')} ${item.ProductId}`}
+                              {item.productName || `${t('cartProduct')} ${item.productId}`}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {t('quantity')}: {item.Quantity} × {formatCurrency(item.Price, language)}
+                              {t('quantity')}: {item.quantity} × {formatCurrency(item.unitPrice, language)}
                             </p>
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-primary">
-                              {formatCurrency(item.Total, language)}
+                              {formatCurrency(item.total, language)}
                             </p>
                           </div>
                         </div>
@@ -476,7 +474,7 @@ export default function MyOrders() {
                     {t('total')}
                   </span>
                   <span className="text-2xl font-bold text-primary">
-                    {formatCurrency(selectedOrderItems.order.Total || 0, language)}
+                    {formatCurrency(selectedOrderItems.order.total || 0, language)}
                   </span>
                 </div>
 

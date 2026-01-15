@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { invoiceService, customerService, productsService } from '../services/api';
+import { invoicesService, customersService, productsService } from '../modules';
 import { CreateInvoiceDTO } from '../types';
 import { 
   X, 
@@ -79,7 +79,7 @@ export default function CreateInvoice() {
     queryKey: ['customers'],
     queryFn: async () => {
       try {
-        const result = await customerService.getAll();
+        const result = await customersService.getAll();
         return result.customers || [];
       } catch (error) {
         console.error('Failed to fetch customers:', error);
@@ -186,7 +186,7 @@ export default function CreateInvoice() {
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: (data: CreateInvoiceDTO) => invoiceService.create(data),
+    mutationFn: (data: CreateInvoiceDTO) => invoicesService.create(data),
     onSuccess: () => {
       toast.success(t('invoice.createSuccess'));
       navigate('/invoices');

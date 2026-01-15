@@ -11,8 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, ArrowRight, Package, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { partnerService, orderService } from '@/services';
-import { Partner } from '@/types/partner';
+import { partnersService, ordersService, Partner } from '@/modules';
 import { AddressInput } from '@/components/AddressInput';
 
 interface FormData {
@@ -71,10 +70,10 @@ const Checkout = () => {
 
     setIsSearchingCustomer(true);
     try {
-      const result = await partnerService.searchByPhone(cleanPhone);
+      const result = await partnersService.searchByPhone(cleanPhone);
       
-      if (result.partners && result.partners.length > 0) {
-        const customer = result.partners[0];
+      if (result && result.length > 0) {
+        const customer = result[0];
         setExistingCustomer(customer);
         
         // Auto-fill form with customer data
@@ -174,7 +173,7 @@ const Checkout = () => {
       // 1. Save or update partner in database
       let customerId: number | undefined;
       try {
-        const partnerResult = await partnerService.upsert({
+        const partnerResult = await partnersService.upsert({
           phoneNumber: formData.phone,
           name: formData.name,
           address: formData.address,
@@ -184,14 +183,14 @@ const Checkout = () => {
           wazeUrl: wazeLink || undefined,
           portalPhoneNumber: user?.phoneNumber, // Link to portal account
         });
-        customerId = partnerResult.partner.id;
+        customerId = partnerResult.id;
       } catch (error) {
         console.error('Failed to save partner:', error);
         // Continue with order even if partner save fails
       }
 
       // 2. Create order in database
-      const orderResult = await orderService.create({
+      const orderResult = await ordersService.create({
         customerId: customerId,
         customerPhone: formData.phone,
         items: items.map(item => ({

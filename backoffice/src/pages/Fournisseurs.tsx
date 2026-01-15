@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { customerService } from '../services/api';
+import { customersService } from '../modules/customers';
 import { Customer } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { Users, Edit2, Search, X, Grid3x3, List, Phone, Mail, MapPin, CheckSquare } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function Fournisseurs() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers'],
-    queryFn: customerService.getAll,
+    queryFn: customersService.getAll,
   });
 
   const allCustomers = data?.customers || [];
@@ -35,7 +35,7 @@ export default function Fournisseurs() {
 
   const updateMutation = useMutation({
     mutationFn: ({ phone, data }: { phone: string; data: Partial<Customer> }) =>
-      customerService.update(phone, data),
+      customersService.update(phone, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast.success(t('supplierUpdated'));

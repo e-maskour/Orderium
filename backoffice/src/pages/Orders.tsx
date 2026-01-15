@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { orderService, deliveryPersonService } from '../services/api';
+import { ordersService, deliveryPersonService } from '../modules';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
@@ -111,7 +111,7 @@ export default function Orders() {
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders', searchQuery, dateFilterType, dateRange],
-    queryFn: () => orderService.getAll(searchQuery, getDateRange.start, getDateRange.end),
+    queryFn: () => ordersService.getAll(searchQuery, getDateRange.start, getDateRange.end),
   });
 
   const { data: deliveryPersons = [] } = useQuery({
@@ -121,13 +121,13 @@ export default function Orders() {
 
   const { data: orderDetails, isLoading: orderDetailsLoading } = useQuery({
     queryKey: ['orderDetails', selectedOrderId],
-    queryFn: () => orderService.getById(selectedOrderId!),
+    queryFn: () => ordersService.getById(selectedOrderId!),
     enabled: !!selectedOrderId,
   });
 
   const assignMutation = useMutation({
     mutationFn: ({ orderId, deliveryPersonId }: { orderId: number; deliveryPersonId: number }) =>
-      orderService.assignToDelivery(orderId, deliveryPersonId),
+      ordersService.assignToDelivery(orderId, deliveryPersonId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success(t('orderAssigned'));
@@ -138,7 +138,7 @@ export default function Orders() {
   });
 
   const unassignMutation = useMutation({
-    mutationFn: (orderId: number) => orderService.unassignOrder(orderId),
+    mutationFn: (orderId: number) => ordersService.unassignOrder(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success(t('orderUnassigned'));

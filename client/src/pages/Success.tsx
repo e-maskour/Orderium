@@ -299,7 +299,7 @@ const Success = () => {
                 <p className="font-mono font-bold text-primary">{state.orderNumber}</p>
               </div>
               {user?.CustomerId && (
-                <OrderTracking orderNumber={state.orderNumber} customerId={user.CustomerId} />
+                <OrderTracking orderNumber={state.orderNumber} customerId={user.customerId} />
               )}
             </div>
           </DialogContent>

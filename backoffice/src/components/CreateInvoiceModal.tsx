@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { invoiceService } from '../services/api';
+import { invoicesService } from '../modules/invoices';
 import { Customer, CreateInvoiceDTO } from '../types';
 import { X, Plus, Trash2, User, Calendar, DollarSign, Percent, FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -48,7 +48,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: (data: CreateInvoiceDTO) => invoiceService.create(data),
+    mutationFn: (data: CreateInvoiceDTO) => invoicesService.create(data),
     onSuccess: () => {
       toast.success(t('invoice.createSuccess'));
       onSuccess();

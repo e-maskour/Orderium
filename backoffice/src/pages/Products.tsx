@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productsService } from '../services/api';
+import { productsService } from '../modules/products';
 import { Plus, Edit, Trash2, Search, Package, Image as ImageIcon, X, Check, Grid3x3, List, CheckSquare, Square, Download, FileText, Upload } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { FloatingActionBar } from '../components/FloatingActionBar';

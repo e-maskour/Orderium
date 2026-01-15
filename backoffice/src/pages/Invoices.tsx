@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invoiceService, customerService } from '../services/api';
+import { invoicesService, customersService } from '../modules';
 import { useLanguage } from '../context/LanguageContext';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -135,13 +135,13 @@ export default function Invoices() {
   // Queries
   const { data: invoices = [], isLoading, error } = useQuery({
     queryKey: ['invoices', filters],
-    queryFn: () => invoiceService.getAll(filters),
+    queryFn: () => invoicesService.getAll(filters),
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: stats } = useQuery({
     queryKey: ['invoice-stats', filters],
-    queryFn: () => invoiceService.getStatistics(filters),
+    queryFn: () => invoicesService.getStatistics(filters),
     refetchInterval: 30000,
   });
 
@@ -149,7 +149,7 @@ export default function Invoices() {
     queryKey: ['customers'],
     queryFn: async () => {
       try {
-        const result = await customerService.getAll();
+        const result = await customersService.getAll();
         return result.customers || [];
       } catch (error) {
         console.error('Failed to fetch customers:', error);
@@ -168,7 +168,7 @@ export default function Invoices() {
 
   // Mutations
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => invoiceService.delete(id),
+    mutationFn: (id: number) => invoicesService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoice-stats'] });
@@ -184,7 +184,7 @@ export default function Invoices() {
 
   const recordPaymentMutation = useMutation({
     mutationFn: ({ id, amount }: { id: number; amount: number }) =>
-      invoiceService.recordPayment(id, { Amount: amount }),
+      invoicesService.recordPayment(id, { Amount: amount }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoice-stats'] });
@@ -200,7 +200,7 @@ export default function Invoices() {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
-      invoiceService.updateStatus(id, status),
+      invoicesService.updateStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoice-stats'] });

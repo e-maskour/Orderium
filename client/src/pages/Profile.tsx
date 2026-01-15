@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { partnerService } from '@/services';
+import { partnersService } from '@/modules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,28 +37,31 @@ export default function Profile() {
     if (!user?.phoneNumber) return;
     
     try {
-      const response = await partnerService.getByPhone(user.PhoneNumber);
-      if (response.partner) {
+      const partner = await partnersService.getByPhone(user.phoneNumber);
+      if (partner) {
         setFormData({
-          name: response.partner.name || '',
-          address: response.partner.address || '',
-          latitude: response.partner.latitude,
-          longitude: response.partner.longitude,
+          name: partner.name || '',
+          address: partner.address || '',
+          latitude: partner.latitude,
+          longitude: partner.longitude,
         });
         
         // Set map links if available
-        if (response.partner.googleMapsUrl) setMapsLink(response.partner.googleMapsUrl);
-        else if (response.partner.latitude && response.partner.longitude) {
-          setMapsLink(`https://www.google.com/maps?q=${response.partner.latitude},${response.partner.longitude}`);
+        if (partner.googleMapsUrl) setMapsLink(partner.googleMapsUrl);
+        else if (partner.latitude && partner.longitude) {
+          setMapsLink(`https://www.google.com/maps?q=${partner.latitude},${partner.longitude}`);
         }
         
-        if (response.partner.wazeUrl) setWazeLink(response.partner.wazeUrl);
-        else if (response.partner.latitude && response.partner.longitude) {
-          setWazeLink(`https://waze.com/ul?ll=${response.partner.latitude},${response.partner.longitude}&navigate=yes`);
+        if (partner.wazeUrl) setWazeLink(partner.wazeUrl);
+        else if (partner.latitude && partner.longitude) {
+          setWazeLink(`https://waze.com/ul?ll=${partner.latitude},${partner.longitude}&navigate=yes`);
         }
       }
-    } catch (error) {
-      console.error('Failed to load partner data:', error);
+    } catch (error: any) {
+      // 404 is expected for new users who haven't filled their profile yet
+      if (!error.message?.includes('404')) {
+        console.error('Failed to load partner data:', error);
+      }
     }
   };
 
@@ -101,7 +104,7 @@ export default function Profile() {
         ? `https://waze.com/ul?ll=${formData.latitude},${formData.longitude}&navigate=yes`
         : undefined;
 
-      await partnerService.upsert({
+      await partnersService.upsert({
         phoneNumber: user.phoneNumber,
         name: formData.name,
         address: formData.address,

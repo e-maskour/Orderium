@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { deliveryPersonService } from '../services/api';
+import { deliveryPersonService } from '../modules/delivery';
 import { DeliveryPerson } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { UserPlus, Edit2, Trash2, Truck, Search, X, Grid3x3, List, CheckSquare, Phone, Mail, Plus } from 'lucide-react';

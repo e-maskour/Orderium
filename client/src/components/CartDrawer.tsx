@@ -2,7 +2,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useCart, CartItem } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { QuantityStepper } from './QuantityStepper';
 import { ShoppingBag, Trash2, ArrowRight, ArrowLeft, Package, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -225,6 +225,9 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
               </Button>
             )}
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            {t('cartProducts')}
+          </SheetDescription>
         </SheetHeader>
 
         {/* Cart items */}

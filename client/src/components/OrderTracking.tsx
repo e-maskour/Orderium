@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { orderService } from '@/services/orderService';
+import { ordersService } from '@/modules/orders';
 import { Package, Truck, CheckCircle, Clock, MapPin, Loader2 } from 'lucide-react';
 
 interface OrderTrackingProps {
@@ -35,28 +35,29 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
       setError(null);
 
       try {
-        const response = await orderService.getByOrderNumber(orderNumber, customerId);
-        if (response.success && response.order) {
-          const order = response.order.Document;
-          
-          // Map order delivery status to tracking status
-          let status: 'pending' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled' = 'pending';
-          
-          if (order.DeliveryStatus) {
-            status = order.DeliveryStatus;
-          }
-
-          setOrderStatus({
-            status,
-            createdAt: new Date(order.DateCreated),
-            confirmedAt: order.ConfirmedAt ? new Date(order.ConfirmedAt) : undefined,
-            pickedUpAt: order.PickedUpAt ? new Date(order.PickedUpAt) : undefined,
-            deliveredAt: order.DeliveredAt ? new Date(order.DeliveredAt) : undefined,
-            canceledAt: order.CanceledAt ? new Date(order.CanceledAt) : undefined,
-          });
-        } else {
-          setError(t('orderNotFound'));
+        const order = await ordersService.getByOrderNumber(orderNumber, customerId);
+        
+        // Map order status to tracking status
+        // Since delivery tracking isn't fully implemented yet, we'll use simple status
+        let status: 'pending' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled' = 'pending';
+        
+        if (order.status) {
+          // Map the status from the order
+          if (order.status === 'delivered') status = 'delivered';
+          else if (order.status === 'canceled') status = 'canceled';
+          else if (order.status === 'in_transit' || order.status === 'in_delivery') status = 'in_delivery';
+          else if (order.status === 'to_delivery') status = 'to_delivery';
         }
+
+        setOrderStatus({
+          status,
+          createdAt: new Date(order.dateCreated),
+          // Delivery tracking timestamps are not yet implemented
+          confirmedAt: undefined,
+          pickedUpAt: undefined,
+          deliveredAt: undefined,
+          canceledAt: undefined,
+        });
       } catch (err: any) {
         console.error('Failed to fetch order:', err);
         // Check if it's a 404 error (order not found)

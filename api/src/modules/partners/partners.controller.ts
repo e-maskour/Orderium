@@ -80,6 +80,30 @@ export class PartnersController {
     };
   }
 
+  @Get('search')
+  @ApiOperation({ summary: 'Search partners by phone' })
+  @ApiQuery({ name: 'phone', required: true, type: String })
+  @ApiResponse({ status: 200, description: 'Partners found' })
+  async search(@Query('phone') phone: string) {
+    const partners = await this.partnersService.searchByPhone(phone);
+    return {
+      success: true,
+      partners,
+    };
+  }
+
+  @Get('phone/:phoneNumber')
+  @ApiOperation({ summary: 'Get partner by phone number' })
+  @ApiResponse({ status: 200, description: 'Partner retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Partner not found' })
+  async findByPhone(@Param('phoneNumber') phoneNumber: string) {
+    const partner = await this.partnersService.findByPhone(phoneNumber);
+    return {
+      success: true,
+      partner,
+    };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get partner by ID' })
   @ApiResponse({ status: 200, description: 'Partner retrieved successfully' })

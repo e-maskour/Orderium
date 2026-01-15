@@ -141,7 +141,7 @@ export class OrdersService {
   async getOrderById(id: number): Promise<OrderWithItems> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['customer', 'items'],
+      relations: ['customer', 'items', 'items.product'],
     });
 
     if (!order) {
@@ -150,14 +150,17 @@ export class OrdersService {
 
     return {
       Order: order,
-      Items: order.items,
+      Items: order.items.map(item => ({
+        ...item,
+        productName: item.product?.name || null,
+      })),
     };
   }
 
   async getOrderByNumber(orderNumber: string): Promise<OrderWithItems | null> {
     const order = await this.orderRepository.findOne({
       where: { number: orderNumber },
-      relations: ['customer', 'items'],
+      relations: ['customer', 'items', 'items.product'],
     });
 
     if (!order) {
@@ -166,7 +169,10 @@ export class OrdersService {
 
     return {
       Order: order,
-      Items: order.items,
+      Items: order.items.map(item => ({
+        ...item,
+        productName: item.product?.name || null,
+      })),
     };
   }
 

@@ -36,7 +36,7 @@ export class PartnersService {
         
         // Update portal if phoneNumber is provided
         if (portalPhoneNumber) {
-          await this.updatePortalPartnerId(portalPhoneNumber, updated.id);
+          await this.updatePortalPartner(portalPhoneNumber, updated.id, updated.name);
         }
         
         return updated;
@@ -51,17 +51,18 @@ export class PartnersService {
     });
     const savedPartner = await this.partnerRepository.save(partner);
     
-    // Update portal with the new partnerId
+    // Update portal with the new partnerId and name
     if (portalPhoneNumber) {
-      await this.updatePortalPartnerId(portalPhoneNumber, savedPartner.id);
+      await this.updatePortalPartner(portalPhoneNumber, savedPartner.id, savedPartner.name);
     }
     
     return savedPartner;
   }
 
-  private async updatePortalPartnerId(
+  private async updatePortalPartner(
     phoneNumber: string,
     partnerId: number,
+    partnerName: string,
   ): Promise<void> {
     const portal = await this.portalRepository.findOne({
       where: { phoneNumber },
@@ -70,6 +71,7 @@ export class PartnersService {
     if (portal) {
       portal.customerId = partnerId;
       portal.isCustomer = true;
+      portal.name = partnerName;
       await this.portalRepository.save(portal);
     }
   }
@@ -120,10 +122,20 @@ export class PartnersService {
     return partner;
   }
 
-  async findByPhone(phoneNumber: string): Promise<Partner | null> {
-    return this.partnerRepository.findOne({
+  async searchByPhone(phone: string): Promise<Partner[]> {
+    return this.partnerRepository.find({
+      where: { phoneNumber: phone },
+    });
+  }
+
+  async findByPhone(phoneNumber: string): Promise<Partner> {
+    const partner = await this.partnerRepository.findOne({
       where: { phoneNumber },
     });
+    if (!partner) {
+      throw new NotFoundException(`Partner with phone ${phoneNumber} not found`);
+    }
+    return partner;
   }
 
   async update(

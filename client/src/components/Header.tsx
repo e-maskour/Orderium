@@ -9,7 +9,7 @@ import { OrderTracking } from './OrderTracking';
 import { ShoppingBag, LogOut, User, Package, MapPin, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { orderService } from '@/services/orderService';
+import { ordersService } from '@/modules/orders';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,13 +40,13 @@ export const Header = ({ onCartClick }: HeaderProps) => {
       }
 
       try {
-        const response = await orderService.getCustomerOrders(user.CustomerId, 10);
+        const response = await ordersService.getCustomerOrders(user.customerId, 10);
         if (response.success && response.orders) {
           // Check if there are any orders with active status
-          // Orders without DeliveryStatus or with pending/to_delivery/in_delivery are considered active
+          // Orders without status or with pending/to_delivery/in_delivery are considered active
           const activeStatuses = ['pending', 'to_delivery', 'in_delivery'];
           const hasActive = response.orders.some(order => 
-            !order.DeliveryStatus || activeStatuses.includes(order.DeliveryStatus)
+            !order.status || activeStatuses.includes(order.status)
           );
           setHasActiveOrders(hasActive);
         }
@@ -77,7 +77,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {user?.CustomerId && <NotificationBell customerId={user.CustomerId} />}
+          {user?.customerId && <NotificationBell customerId={user.customerId} />}
           <LanguageToggle />
           
           {/* Track Order Button - Animated - Only show if there are active orders */}
@@ -178,7 +178,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
                   </p>
                   <p className="font-mono font-bold text-primary">{trackingOrderNumber}</p>
                 </div>
-                <OrderTracking orderNumber={trackingOrderNumber} customerId={user.CustomerId} />
+                <OrderTracking orderNumber={trackingOrderNumber} customerId={user.customerId} />
               </>
             )}
           </div>

@@ -81,15 +81,15 @@ export const Receipt = ({
       {/* Items */}
       <div className="mb-2">
         {items.map((item, index) => {
-          const displayName = item.product.Name;
-          const itemTotal = item.product.Price * item.quantity;
+          const displayName = item.product.name;
+          const itemTotal = item.product.price * item.quantity;
 
           return (
             <div key={index} className="mb-2">
               <div className="mb-0" style={{ textAlign: dir === 'rtl' ? 'right' : 'left' }}>{displayName}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', direction: dir }}>
                 <span>
-                  {item.quantity}x {formatCurrency(item.product.Price, language)}
+                  {item.quantity}x {formatCurrency(item.product.price, language)}
                 </span>
                 <span>{formatCurrency(itemTotal, language)}</span>
               </div>

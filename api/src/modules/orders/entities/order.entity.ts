@@ -10,6 +10,7 @@ import {
   Index,
 } from 'typeorm';
 import { Partner } from '../../partners/entities/partner.entity';
+import { Product } from '../../products/entities/product.entity';
 
 @Entity('orders')
 @Index(['number'])
@@ -143,4 +144,8 @@ export class OrderItem {
   @ManyToOne(() => Order, (order) => order.items)
   @JoinColumn({ name: 'orderId' })
   order: Order;
+
+  @ManyToOne(() => Product, { nullable: true })
+  @JoinColumn({ name: 'productId' })
+  product: Product;
 }

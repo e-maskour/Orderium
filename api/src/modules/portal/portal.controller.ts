@@ -24,10 +24,14 @@ export class PortalController {
         phoneNumber: user.phoneNumber,
         email: user.email,
         name: user.name,
+        customerId: user.customerId,
+        customerName: user.name,
         isAdmin: user.isAdmin,
         isCustomer: user.isCustomer,
         isDelivery: user.isDelivery,
+        deliveryId: user.deliveryId,
       },
+      token: 'mock-token',
     };
   }
 

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, PortalUser, LoginRequest, RegisterRequest } from '@/services/authService';
+import { authService, PortalUser, LoginRequest, RegisterRequest } from '@/modules/auth';
 
 interface AuthContextType {
   user: PortalUser | null;
@@ -31,12 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (data: LoginRequest) => {
     const response = await authService.login(data);
-    setUser(response.user);
+    setUser(response.user as PortalUser);
   };
 
   const register = async (data: RegisterRequest) => {
     const response = await authService.register(data);
-    setUser(response.user);
+    setUser(response.user as PortalUser);
   };
 
   const logout = () => {
