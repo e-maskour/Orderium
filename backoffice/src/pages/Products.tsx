@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
 import { Plus, Edit, Trash2, Search, Package, Image as ImageIcon, X, Check, Grid3x3, List, CheckSquare, Square, Download, FileText, Upload } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 
 interface Product {
@@ -370,39 +371,43 @@ export default function Products() {
 
   return (
     <AdminLayout>
-      <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header with Search and Add Button */}
-        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('products')}</h1>
-            <p className="text-slate-600">{t('manageProducts')}</p>
+      <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="flex-shrink-0">
+          <PageHeader
+            icon={Package}
+            title={t('products')}
+            subtitle={t('manageProducts')}
+          />
+        </div>
+
+        {/* Toolbar: Search, View Toggle, Add Button */}
+        <div className="mb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 flex-shrink-0">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('card')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'card'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Grid3x3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'list'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <List className="w-4 h-4" />
+            </button>
           </div>
 
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('card')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  viewMode === 'card'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-
+          <div className="flex items-center gap-3 flex-1 sm:flex-none w-full sm:w-auto">
             {/* Search */}
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -414,7 +419,7 @@ export default function Products() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full sm:w-80 ps-10 pe-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                className="w-full sm:w-96 ps-10 pe-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
               />
               {searchTerm && (
                 <button
@@ -429,7 +434,7 @@ export default function Products() {
             {/* Add Product Button */}
             <button
               onClick={() => handleOpenModal()}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap"
             >
               <Plus className="w-5 h-5" />
               {t('addProduct')}

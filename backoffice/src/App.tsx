@@ -8,12 +8,22 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DeliveryPersons from './pages/DeliveryPersons';
 import Orders from './pages/Orders';
-import Invoices from './pages/Invoices';
-import CreateInvoice from './pages/CreateInvoice';
 import POS from './pages/POS';
 import Products from './pages/Products';
 import Customers from './pages/Customers';
 import Fournisseurs from './pages/Fournisseurs';
+import Devis from './pages/Devis';
+import BonLivraison from './pages/BonLivraison';
+import DemandePrix from './pages/DemandePrix';
+import BonAchat from './pages/BonAchat';
+import FactureAchat from './pages/FactureAchat';
+import FactureAchatCreate from './pages/FactureAchatCreate';
+import FactureAchatEdit from './pages/FactureAchatEdit';
+import FactureVente from './pages/FactureVente';
+import FactureVenteCreate from './pages/FactureVenteCreate';
+import FactureVenteEdit from './pages/FactureVenteEdit';
+import PaiementsVente from './pages/PaiementsVente';
+import PaiementsAchat from './pages/PaiementsAchat';
 
 const queryClient = new QueryClient();
 
@@ -55,30 +65,6 @@ function App() {
                 }
               />
               <Route
-                path="/invoices"
-                element={
-                  <ProtectedRoute>
-                    <Invoices />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/invoices/create"
-                element={
-                  <ProtectedRoute>
-                    <CreateInvoice />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/invoices/edit/:id"
-                element={
-                  <ProtectedRoute>
-                    <CreateInvoice />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/pos"
                 element={
                   <ProtectedRoute>
@@ -107,6 +93,102 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Fournisseurs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/devis"
+                element={
+                  <ProtectedRoute>
+                    <Devis />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bon-livraison"
+                element={
+                  <ProtectedRoute>
+                    <BonLivraison />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/facture-vente"
+                element={
+                  <ProtectedRoute>
+                    <FactureVente />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/facture-vente/create"
+                element={
+                  <ProtectedRoute>
+                    <FactureVenteCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/facture-vente/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <FactureVenteEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/paiements-vente"
+                element={
+                  <ProtectedRoute>
+                    <PaiementsVente />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/demande-prix"
+                element={
+                  <ProtectedRoute>
+                    <DemandePrix />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bon-achat"
+                element={
+                  <ProtectedRoute>
+                    <BonAchat />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/facture-achat"
+                element={
+                  <ProtectedRoute>
+                    <FactureAchat />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/facture-achat/create"
+                element={
+                  <ProtectedRoute>
+                    <FactureAchatCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/facture-achat/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <FactureAchatEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/paiements-achat"
+                element={
+                  <ProtectedRoute>
+                    <PaiementsAchat />
                   </ProtectedRoute>
                 }
               />

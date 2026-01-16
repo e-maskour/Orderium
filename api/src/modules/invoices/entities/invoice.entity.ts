@@ -11,9 +11,17 @@ import {
 } from 'typeorm';
 import { Partner } from '../../partners/entities/partner.entity';
 
+export enum InvoiceStatus {
+  DRAFT = 'draft',
+  UNPAID = 'unpaid',
+  PARTIAL = 'partial',
+  PAID = 'paid',
+}
+
 @Entity('invoices')
 @Index(['invoiceNumber'])
 @Index(['customerId'])
+@Index(['supplierId'])
 @Index(['date'])
 export class Invoice {
   @PrimaryGeneratedColumn()
@@ -34,11 +42,23 @@ export class Invoice {
   @Column({ type: 'text', nullable: true })
   customerAddress: string;
 
+  @Column({ type: 'int', nullable: true })
+  supplierId: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  supplierName: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  supplierPhone: string;
+
+  @Column({ type: 'text', nullable: true })
+  supplierAddress: string;
+
   @Column({ type: 'date' })
   date: Date;
 
   @Column({ type: 'date', nullable: true })
-  dueDate: Date;
+  dueDate: Date | null;
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
   subtotal: number;
@@ -55,8 +75,12 @@ export class Invoice {
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
   total: number;
 
-  @Column({ type: 'int', default: 0 })
-  paidStatus: number;
+  @Column({
+    type: 'enum',
+    enum: InvoiceStatus,
+    default: InvoiceStatus.DRAFT,
+  })
+  status: InvoiceStatus;
 
   @Column({ type: 'text', nullable: true })
   notes: string;
@@ -70,6 +94,10 @@ export class Invoice {
   @ManyToOne(() => Partner, { nullable: true })
   @JoinColumn({ name: 'customerId' })
   customer: Partner;
+
+  @ManyToOne(() => Partner, { nullable: true })
+  @JoinColumn({ name: 'supplierId' })
+  supplier: Partner;
 
   @OneToMany(() => InvoiceItem, (item) => item.invoice)
   items: InvoiceItem[];
@@ -102,6 +130,9 @@ export class InvoiceItem {
 
   @Column({ type: 'int', default: 0 })
   discountType: number;
+
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
+  tax: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
   total: number;

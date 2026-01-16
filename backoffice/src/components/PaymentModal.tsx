@@ -1,176 +1,278 @@
-import React from 'react';
-import { InvoiceWithDetails } from '../types';
-import { X, DollarSign, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Calendar, CreditCard, FileText, Hash } from 'lucide-react';
+import { Payment, CreatePaymentDTO, UpdatePaymentDTO, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 
 interface PaymentModalProps {
-  invoice: InvoiceWithDetails;
-  amount: string;
-  onAmountChange: (amount: string) => void;
-  onSubmit: () => void;
+  isOpen: boolean;
   onClose: () => void;
-  isSubmitting: boolean;
-  formatCurrency: (amount: number) => string;
-  t: (key: string) => string;
+  onSuccess: () => void;
+  invoiceId: number;
+  invoiceTotal: number;
+  customerId?: number;
+  supplierId?: number;
+  payment?: Payment | null;
 }
 
-export const PaymentModal: React.FC<PaymentModalProps> = ({
-  invoice,
-  amount,
-  onAmountChange,
-  onSubmit,
+const PaymentModal: React.FC<PaymentModalProps> = ({
+  isOpen,
   onClose,
-  isSubmitting,
-  formatCurrency,
-  t
+  onSuccess,
+  invoiceId,
+  invoiceTotal,
+  customerId,
+  supplierId,
+  payment,
 }) => {
-  const remainingAmount = invoice.invoice.Total - invoice.invoice.PaidAmount;
-  const amountValue = parseFloat(amount) || 0;
-  const isValidAmount = amountValue > 0 && amountValue <= remainingAmount;
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isValidAmount) {
-      onSubmit();
+  const [formData, setFormData] = useState({
+    amount: '',
+    paymentDate: new Date().toISOString().split('T')[0],
+    paymentType: 'cash' as const,
+    notes: '',
+    referenceNumber: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [totalPaid, setTotalPaid] = useState(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (payment) {
+        setFormData({
+          amount: payment.amount.toString(),
+          paymentDate: payment.paymentDate,
+          paymentType: payment.paymentType,
+          notes: payment.notes || '',
+          referenceNumber: payment.referenceNumber || '',
+        });
+      } else {
+        setFormData({
+          amount: '',
+          paymentDate: new Date().toISOString().split('T')[0],
+          paymentType: 'cash',
+          notes: '',
+          referenceNumber: '',
+        });
+      }
+      fetchTotalPaid();
+    }
+  }, [isOpen, payment]);
+
+  const fetchTotalPaid = async () => {
+    try {
+      const total = await paymentsService.getTotalPaid(invoiceId);
+      setTotalPaid(total);
+    } catch (err) {
+      console.error('Error fetching total paid:', err);
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const amount = parseFloat(formData.amount);
+      
+      // Validate amount
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Le montant doit être supérieur à 0');
+      }
+
+      // Check if total would exceed invoice total (only for new payments)
+      if (!payment) {
+        const newTotal = totalPaid + amount;
+        if (newTotal > invoiceTotal) {
+          throw new Error(`Le montant total des paiements (${newTotal.toFixed(2)} MAD) ne peut pas dépasser le total de la facture (${invoiceTotal.toFixed(2)} MAD)`);
+        }
+      }
+
+      const paymentData = {
+        amount,
+        paymentDate: formData.paymentDate,
+        paymentType: formData.paymentType,
+        notes: formData.notes || undefined,
+        referenceNumber: formData.referenceNumber || undefined,
+      };
+
+      if (payment) {
+        await paymentsService.update(payment.id, paymentData as UpdatePaymentDTO);
+      } else {
+        await paymentsService.create({
+          ...paymentData,
+          invoiceId,
+          customerId,
+          supplierId,
+        } as CreatePaymentDTO);
+      }
+
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const remainingAmount = invoiceTotal - totalPaid;
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">{t('invoice.recordPayment')}</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              {t('invoice.number')} #{invoice.invoice.invoiceNumber}
-            </p>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold text-slate-800">
+            {payment ? 'Modifier le paiement' : 'Ajouter un paiement'}
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            className="text-slate-400 hover:text-slate-600 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
           {/* Payment Summary */}
           <div className="bg-slate-50 p-4 rounded-lg space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-600">{t('invoice.total')}</span>
-              <span className="font-medium text-slate-900">{formatCurrency(invoice.invoice.Total)}</span>
+              <span className="text-slate-600">Total facture:</span>
+              <span className="font-semibold text-slate-900">{invoiceTotal.toFixed(2)} MAD</span>
             </div>
-            
-            {invoice.invoice.PaidAmount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">{t('invoice.paid')}</span>
-                <span className="font-medium text-green-600">{formatCurrency(invoice.invoice.PaidAmount)}</span>
-              </div>
-            )}
-            
-            <hr className="border-slate-200" />
-            
-            <div className="flex justify-between">
-              <span className="text-slate-600">{t('invoice.remaining')}</span>
-              <span className="font-semibold text-orange-600">{formatCurrency(remainingAmount)}</span>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600">Total payé:</span>
+              <span className="font-semibold text-emerald-600">{totalPaid.toFixed(2)} MAD</span>
+            </div>
+            <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
+              <span className="text-slate-600">Reste à payer:</span>
+              <span className="font-semibold text-amber-600">{remainingAmount.toFixed(2)} MAD</span>
             </div>
           </div>
 
-          {/* Payment Amount Input */}
+          {/* Amount */}
           <div>
-            <label htmlFor="payment-amount" className="block text-sm font-medium text-slate-700 mb-2">
-              {t('invoice.paymentAmount')}
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Montant *
             </label>
             <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                <DollarSign className="w-4 h-4 text-slate-400" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <CreditCard className="h-5 w-5 text-slate-400" />
               </div>
               <input
-                id="payment-amount"
                 type="number"
                 step="0.01"
-                min="0"
-                max={remainingAmount}
-                value={amount}
-                onChange={(e) => onAmountChange(e.target.value)}
-                className={`w-full pl-9 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  amount && !isValidAmount
-                    ? 'border-red-300 focus:ring-red-500'
-                    : 'border-slate-300 focus:ring-blue-500'
-                }`}
-                placeholder="0.00"
                 required
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                className="block w-full pl-10 pr-12 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="0.00"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span className="text-slate-500 text-sm">MAD</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Date */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Date de paiement *
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Calendar className="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                type="date"
+                required
+                value={formData.paymentDate}
+                onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
+                className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            
-            {amount && !isValidAmount && (
-              <div className="mt-2 flex items-center gap-2 text-red-600 text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span>
-                  {amountValue <= 0 
-                    ? t('invoice.amountMustBePositive')
-                    : t('invoice.amountExceedsRemaining')
-                  }
-                </span>
-              </div>
-            )}
           </div>
 
-          {/* Quick Amount Buttons */}
+          {/* Payment Type */}
           <div>
-            <p className="text-sm font-medium text-slate-700 mb-3">{t('invoice.quickAmounts')}</p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => onAmountChange((remainingAmount * 0.25).toFixed(2))}
-                className="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                25%
-              </button>
-              <button
-                type="button"
-                onClick={() => onAmountChange((remainingAmount * 0.5).toFixed(2))}
-                className="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                50%
-              </button>
-              <button
-                type="button"
-                onClick={() => onAmountChange(remainingAmount.toFixed(2))}
-                className="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-              >
-                {t('invoice.payInFull')}
-              </button>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Mode de paiement *
+            </label>
+            <select
+              required
+              value={formData.paymentType}
+              onChange={(e) => setFormData({ ...formData, paymentType: e.target.value as any })}
+              className="block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {Object.entries(PAYMENT_TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Reference Number */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Numéro de référence
+              <span className="text-slate-500 text-xs ml-1">(N° chèque, transaction, etc.)</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Hash className="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                value={formData.referenceNumber}
+                onChange={(e) => setFormData({ ...formData, referenceNumber: e.target.value })}
+                className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ex: CHK-12345"
+              />
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Notes
+            </label>
+            <div className="relative">
+              <div className="absolute top-3 left-3 pointer-events-none">
+                <FileText className="h-5 w-5 text-slate-400" />
+              </div>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={3}
+                className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Notes supplémentaires..."
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-              disabled={isSubmitting}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              {t('cancel')}
+              Annuler
             </button>
             <button
               type="submit"
-              disabled={!isValidAmount || isSubmitting}
-              className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  {t('invoice.recording')}
-                </>
-              ) : (
-                <>
-                  <DollarSign className="w-4 h-4" />
-                  {t('invoice.recordPayment')}
-                </>
-              )}
+              {loading ? 'Enregistrement...' : payment ? 'Modifier' : 'Ajouter'}
             </button>
           </div>
         </form>
@@ -178,3 +280,5 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     </div>
   );
 };
+
+export default PaymentModal;

@@ -1,56 +1,49 @@
 export interface Invoice {
   id: number;
   invoiceNumber: string;
-  customerId: number;
-  adminId?: number | null;
+  customerId?: number | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerAddress?: string | null;
+  supplierId?: number | null;
+  supplierName?: string | null;
+  supplierPhone?: string | null;
+  supplierAddress?: string | null;
   date: string;
   dueDate?: string | null;
   subtotal: number;
-  taxAmount: number;
-  discountAmount: number;
+  tax: number;
+  discount: number;
+  discountType: number;
   total: number;
-  paidAmount: number;
-  status: string;
-  paymentStatus: string;
-  note?: string | null;
-  terms?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  status: 'draft' | 'unpaid' | 'partial' | 'paid';
+  notes?: string | null;
+  dateCreated: string;
+  dateUpdated: string;
 }
 
 export interface InvoiceItem {
   id: number;
   invoiceId: number;
   productId?: number | null;
-  productName: string;
-  description?: string | null;
+  description: string;
   quantity: number;
   unitPrice: number;
   discount: number;
-  discountType: string;
-  taxRate: number;
+  discountType: number;
+  tax: number;
   total: number;
-}
-
-export interface InvoiceCustomer {
-  id: number;
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  city?: string | null;
 }
 
 export interface InvoiceWithDetails {
   invoice: Invoice;
   items: InvoiceItem[];
-  customer?: InvoiceCustomer;
 }
 
 export interface InvoiceFilters {
-  status?: string;
-  paymentStatus?: string;
+  status?: 'draft' | 'unpaid' | 'partial' | 'paid';
   customerId?: number;
+  supplierId?: number;
   dateFrom?: string;
   dateTo?: string;
   search?: string;
@@ -64,40 +57,55 @@ export interface InvoiceStatistics {
 }
 
 export interface CreateInvoiceDTO {
-  customerId: number;
+  customerId?: number;
+  customerName?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  supplierId?: number;
+  supplierName?: string;
+  supplierPhone?: string;
+  supplierAddress?: string;
   date: string;
   dueDate?: string;
   items: Array<{
     productId?: number;
-    productName: string;
-    description?: string;
+    description: string;
     quantity: number;
     unitPrice: number;
     discount?: number;
-    discountType?: string;
-    taxRate?: number;
+    discountType?: number;
+    tax?: number;
   }>;
-  note?: string;
-  terms?: string;
+  tax?: number;
+  discount?: number;
+  discountType?: number;
+  notes?: string;
 }
 
 export interface UpdateInvoiceDTO {
+  customerId?: number;
+  customerName?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  supplierId?: number;
+  supplierName?: string;
+  supplierPhone?: string;
+  supplierAddress?: string;
   date?: string;
   dueDate?: string;
   items?: Array<{
     productId?: number;
-    productName: string;
-    description?: string;
+    description: string;
     quantity: number;
     unitPrice: number;
     discount?: number;
-    discountType?: string;
-    taxRate?: number;
+    discountType?: number;
+    tax?: number;
   }>;
-  note?: string;
-  terms?: string;
-  status?: string;
-  paymentStatus?: string;
+  tax?: number;
+  discount?: number;
+  discountType?: number;
+  notes?: string;
 }
 
 export interface RecordPaymentDTO {

@@ -10,7 +10,7 @@ export class OrdersService {
     if (endDate) params.append('endDate', endDate.toISOString());
     
     const queryString = params.toString();
-    const response = await fetch(`${API_URL}/delivery/orders${queryString ? `?${queryString}` : ''}`);
+    const response = await fetch(`${API_URL}/orders${queryString ? `?${queryString}` : ''}`);
     if (!response.ok) throw new Error('Failed to fetch orders');
     const data = await response.json();
     const orders = data.orders || data;

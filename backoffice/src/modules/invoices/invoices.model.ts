@@ -1,71 +1,31 @@
 import {
   Invoice as IInvoice,
   InvoiceItem as IInvoiceItem,
-  InvoiceCustomer as IInvoiceCustomer,
-  InvoiceWithDetails as IInvoiceWithDetails,
-  CreateInvoiceDTO,
-  UpdateInvoiceDTO,
-  RecordPaymentDTO
+  InvoiceWithDetails as IInvoiceWithDetails
 } from './invoices.interface';
-
-export class InvoiceCustomer implements IInvoiceCustomer {
-  id: number;
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  city?: string | null;
-
-  constructor(data: IInvoiceCustomer) {
-    this.id = data.id;
-    this.name = data.name;
-    this.email = data.email;
-    this.phone = data.phone;
-    this.address = data.address;
-    this.city = data.city;
-  }
-
-  get displayName(): string {
-    return this.name;
-  }
-
-  static fromApiResponse(data: any): InvoiceCustomer | undefined {
-    if (!data) return undefined;
-    return new InvoiceCustomer({
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      address: data.address,
-      city: data.city,
-    });
-  }
-}
 
 export class InvoiceItem implements IInvoiceItem {
   id: number;
   invoiceId: number;
   productId?: number | null;
-  productName: string;
-  description?: string | null;
+  description: string;
   quantity: number;
   unitPrice: number;
   discount: number;
-  discountType: string;
-  taxRate: number;
+  discountType: number;
+  tax: number;
   total: number;
 
   constructor(data: IInvoiceItem) {
     this.id = data.id;
     this.invoiceId = data.invoiceId;
     this.productId = data.productId;
-    this.productName = data.productName;
     this.description = data.description;
     this.quantity = data.quantity;
     this.unitPrice = data.unitPrice;
     this.discount = data.discount;
     this.discountType = data.discountType;
-    this.taxRate = data.taxRate;
+    this.tax = data.tax;
     this.total = data.total;
   }
 
@@ -75,7 +35,7 @@ export class InvoiceItem implements IInvoiceItem {
   }
 
   get discountAmount(): number {
-    if (this.discountType === 'percentage') {
+    if (this.discountType === 1) {
       return this.subtotal * (this.discount / 100);
     }
     return this.discount;
@@ -83,10 +43,6 @@ export class InvoiceItem implements IInvoiceItem {
 
   get subtotalAfterDiscount(): number {
     return this.subtotal - this.discountAmount;
-  }
-
-  get taxAmount(): number {
-    return this.subtotalAfterDiscount * (this.taxRate / 100);
   }
 
   get displayUnitPrice(): string {
@@ -103,13 +59,12 @@ export class InvoiceItem implements IInvoiceItem {
       id: data.id,
       invoiceId: data.invoiceId,
       productId: data.productId,
-      productName: data.productName,
       description: data.description,
       quantity: parseFloat(data.quantity) || 0,
       unitPrice: parseFloat(data.unitPrice) || 0,
       discount: parseFloat(data.discount) || 0,
-      discountType: data.discountType,
-      taxRate: parseFloat(data.taxRate) || 0,
+      discountType: data.discountType || 0,
+      tax: parseFloat(data.tax) || 0,
       total: parseFloat(data.total) || 0,
     });
   }
@@ -118,57 +73,85 @@ export class InvoiceItem implements IInvoiceItem {
 export class Invoice implements IInvoice {
   id: number;
   invoiceNumber: string;
-  customerId: number;
-  adminId?: number | null;
+  customerId?: number | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerAddress?: string | null;
+  supplierId?: number | null;
+  supplierName?: string | null;
+  supplierPhone?: string | null;
+  supplierAddress?: string | null;
   date: string;
   dueDate?: string | null;
   subtotal: number;
-  taxAmount: number;
-  discountAmount: number;
+  tax: number;
+  discount: number;
+  discountType: number;
   total: number;
-  paidAmount: number;
-  status: string;
-  paymentStatus: string;
-  note?: string | null;
-  terms?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  status: 'draft' | 'unpaid' | 'partial' | 'paid';
+  notes?: string | null;
+  dateCreated: string;
+  dateUpdated: string;
 
   constructor(data: IInvoice) {
     this.id = data.id;
     this.invoiceNumber = data.invoiceNumber;
     this.customerId = data.customerId;
-    this.adminId = data.adminId;
+    this.customerName = data.customerName;
+    this.customerPhone = data.customerPhone;
+    this.customerAddress = data.customerAddress;
+    this.supplierId = data.supplierId;
+    this.supplierName = data.supplierName;
+    this.supplierPhone = data.supplierPhone;
+    this.supplierAddress = data.supplierAddress;
     this.date = data.date;
     this.dueDate = data.dueDate;
     this.subtotal = data.subtotal;
-    this.taxAmount = data.taxAmount;
-    this.discountAmount = data.discountAmount;
+    this.tax = data.tax;
+    this.discount = data.discount;
+    this.discountType = data.discountType;
     this.total = data.total;
-    this.paidAmount = data.paidAmount;
     this.status = data.status;
-    this.paymentStatus = data.paymentStatus;
-    this.note = data.note;
-    this.terms = data.terms;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
+    this.notes = data.notes;
+    this.dateCreated = data.dateCreated;
+    this.dateUpdated = data.dateUpdated;
   }
 
   // Getters
-  get remainingAmount(): number {
-    return this.total - this.paidAmount;
+  get isVente(): boolean {
+    return !!this.customerId;
+  }
+
+  get isAchat(): boolean {
+    return !!this.supplierId;
+  }
+
+  get partnerName(): string {
+    return this.customerName || this.supplierName || 'N/A';
+  }
+
+  get partnerPhone(): string {
+    return this.customerPhone || this.supplierPhone || 'N/A';
+  }
+
+  get partnerAddress(): string {
+    return this.customerAddress || this.supplierAddress || 'N/A';
   }
 
   get isPaid(): boolean {
-    return this.paidAmount >= this.total;
+    return this.status === 'paid';
   }
 
-  get isPartiallyPaid(): boolean {
-    return this.paidAmount > 0 && this.paidAmount < this.total;
+  get isPending(): boolean {
+    return this.status === 'partial';
   }
 
   get isUnpaid(): boolean {
-    return this.paidAmount === 0;
+    return this.status === 'unpaid';
+  }
+
+  get isDraft(): boolean {
+    return this.status === 'draft';
   }
 
   get isOverdue(): boolean {
@@ -180,33 +163,43 @@ export class Invoice implements IInvoice {
     return this.subtotal.toFixed(2);
   }
 
-  get displayTaxAmount(): string {
-    return this.taxAmount.toFixed(2);
+  get displayTax(): string {
+    return this.tax.toFixed(2);
   }
 
-  get displayDiscountAmount(): string {
-    return this.discountAmount.toFixed(2);
+  get displayDiscount(): string {
+    return this.discount.toFixed(2);
   }
 
   get displayTotal(): string {
     return this.total.toFixed(2);
   }
 
-  get displayPaidAmount(): string {
-    return this.paidAmount.toFixed(2);
+  get discountAmount(): number {
+    if (this.discountType === 1) {
+      return this.subtotal * (this.discount / 100);
+    }
+    return this.discount;
   }
 
-  get displayRemainingAmount(): string {
-    return this.remainingAmount.toFixed(2);
+  get taxAmount(): number {
+    const subtotalAfterDiscount = this.subtotal - this.discountAmount;
+    return subtotalAfterDiscount * (this.tax / 100);
   }
 
   get statusBadgeColor(): string {
-    switch (this.paymentStatus.toLowerCase()) {
-      case 'paid': return 'green';
-      case 'partial': return 'yellow';
-      case 'overdue': return 'red';
-      default: return 'gray';
-    }
+    if (this.isPaid) return 'green';
+    if (this.isOverdue) return 'red';
+    if (this.isPending) return 'amber';
+    return 'gray';
+  }
+
+  get statusLabel(): string {
+    if (this.isDraft) return 'Brouillon';
+    if (this.isPaid) return 'Payée';
+    if (this.isOverdue) return 'En retard';
+    if (this.isPending) return 'Partielle';
+    return 'Impayée';
   }
 
   // Static factory method
@@ -215,20 +208,24 @@ export class Invoice implements IInvoice {
       id: data.id,
       invoiceNumber: data.invoiceNumber,
       customerId: data.customerId,
-      adminId: data.adminId,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      customerAddress: data.customerAddress,
+      supplierId: data.supplierId,
+      supplierName: data.supplierName,
+      supplierPhone: data.supplierPhone,
+      supplierAddress: data.supplierAddress,
       date: data.date,
       dueDate: data.dueDate,
       subtotal: parseFloat(data.subtotal) || 0,
-      taxAmount: parseFloat(data.taxAmount) || 0,
-      discountAmount: parseFloat(data.discountAmount) || 0,
+      tax: parseFloat(data.tax) || 0,
+      discount: parseFloat(data.discount) || 0,
+      discountType: data.discountType || 0,
       total: parseFloat(data.total) || 0,
-      paidAmount: parseFloat(data.paidAmount) || 0,
-      status: data.status,
-      paymentStatus: data.paymentStatus,
-      note: data.note,
-      terms: data.terms,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
+      status: data.status || 'draft',
+      notes: data.notes,
+      dateCreated: data.dateCreated,
+      dateUpdated: data.dateUpdated,
     });
   }
 }
@@ -236,12 +233,10 @@ export class Invoice implements IInvoice {
 export class InvoiceWithDetails implements IInvoiceWithDetails {
   invoice: Invoice;
   items: InvoiceItem[];
-  customer?: InvoiceCustomer;
 
   constructor(data: IInvoiceWithDetails) {
     this.invoice = data.invoice instanceof Invoice ? data.invoice : new Invoice(data.invoice);
     this.items = data.items.map(item => item instanceof InvoiceItem ? item : new InvoiceItem(item));
-    this.customer = data.customer instanceof InvoiceCustomer ? data.customer : (data.customer ? new InvoiceCustomer(data.customer) : undefined);
   }
 
   // Getters
@@ -253,17 +248,17 @@ export class InvoiceWithDetails implements IInvoiceWithDetails {
     return this.items.reduce((sum, item) => sum + item.quantity, 0);
   }
 
-  get hasCustomer(): boolean {
-    return !!this.customer;
+  get isVente(): boolean {
+    return this.invoice.isVente;
+  }
+
+  get isAchat(): boolean {
+    return this.invoice.isAchat;
   }
 
   // Methods
-  canBePaid(): boolean {
-    return !this.invoice.isPaid;
-  }
-
   canBeEdited(): boolean {
-    return this.invoice.status !== 'cancelled' && this.invoice.status !== 'void';
+    return !this.invoice.isPaid;
   }
 
   // Static factory method
@@ -272,7 +267,6 @@ export class InvoiceWithDetails implements IInvoiceWithDetails {
     return new InvoiceWithDetails({
       invoice: Invoice.fromApiResponse(invoiceData),
       items: (data.items || []).map(InvoiceItem.fromApiResponse),
-      customer: InvoiceCustomer.fromApiResponse(data.customer),
     });
   }
 }

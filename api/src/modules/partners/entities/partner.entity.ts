@@ -26,6 +26,30 @@ export class Partner {
   @Column({ type: 'text', nullable: true })
   address: string;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  ice: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  if: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  cnss: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  rc: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  patente: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  tvaNumber: string;
+
+  @Column({ type: 'text', nullable: true })
+  deliveryAddress: string;
+
+  @Column({ type: 'boolean', default: false })
+  isCompany: boolean;
+
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   latitude: number;
 

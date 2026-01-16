@@ -47,7 +47,7 @@ export class ProductsService {
 
   async updateProduct(id: number, data: UpdateProductDTO): Promise<{ product: Product }> {
     const response = await fetch(`${API_URL}/products/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });

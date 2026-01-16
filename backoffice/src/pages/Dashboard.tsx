@@ -1,10 +1,11 @@
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '../modules/statistics';
-import { Package, Truck, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, TrendingUp, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
@@ -34,7 +35,11 @@ export default function Dashboard() {
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold text-slate-800 mb-6">{t('dashboard')}</h2>
+        <PageHeader
+          icon={LayoutDashboard}
+          title={t('dashboard')}
+          subtitle="Vue d'ensemble de votre activité"
+        />
           
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">

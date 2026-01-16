@@ -2,8 +2,7 @@ import {
   InvoiceFilters,
   InvoiceStatistics,
   CreateInvoiceDTO,
-  UpdateInvoiceDTO,
-  RecordPaymentDTO
+  UpdateInvoiceDTO
 } from './invoices.interface';
 import { InvoiceWithDetails } from './invoices.model';
 
@@ -13,8 +12,8 @@ export class InvoicesService {
   async getAll(filters?: InvoiceFilters): Promise<InvoiceWithDetails[]> {
     const params = new URLSearchParams();
     if (filters?.status) params.append('status', filters.status);
-    if (filters?.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
     if (filters?.customerId) params.append('customerId', filters.customerId.toString());
+    if (filters?.supplierId) params.append('supplierId', filters.supplierId.toString());
     if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
     if (filters?.dateTo) params.append('dateTo', filters.dateTo);
     if (filters?.search) params.append('search', filters.search);
@@ -62,34 +61,6 @@ export class InvoicesService {
     return InvoiceWithDetails.fromApiResponse(result.invoice);
   }
 
-  async updateStatus(id: number, status: string): Promise<InvoiceWithDetails> {
-    const response = await fetch(`${API_URL}/invoices/${id}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update invoice status');
-    }
-    const result = await response.json();
-    return InvoiceWithDetails.fromApiResponse(result.invoice);
-  }
-
-  async recordPayment(id: number, data: Omit<RecordPaymentDTO, 'InvoiceId'>): Promise<InvoiceWithDetails> {
-    const response = await fetch(`${API_URL}/invoices/${id}/payment`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to record payment');
-    }
-    const result = await response.json();
-    return InvoiceWithDetails.fromApiResponse(result.invoice);
-  }
-
   async delete(id: number): Promise<void> {
     const response = await fetch(`${API_URL}/invoices/${id}`, {
       method: 'DELETE',
@@ -103,8 +74,8 @@ export class InvoicesService {
   async getStatistics(filters?: InvoiceFilters): Promise<InvoiceStatistics> {
     const params = new URLSearchParams();
     if (filters?.status) params.append('status', filters.status);
-    if (filters?.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
     if (filters?.customerId) params.append('customerId', filters.customerId.toString());
+    if (filters?.supplierId) params.append('supplierId', filters.supplierId.toString());
     if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
     if (filters?.dateTo) params.append('dateTo', filters.dateTo);
     

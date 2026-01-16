@@ -4,9 +4,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { useState, useEffect, useMemo } from 'react';
-import { Phone, MapPin, X, Search, Package, Eye, Download, CheckSquare, Square, UserPlus, Grid3x3, List } from 'lucide-react';
+import { Phone, MapPin, X, Search, Package, Eye, Download, CheckSquare, Square, UserPlus, Grid3x3, List, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { DateRangePicker } from '../components/ui/date-range-picker';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { FloatingActionBar, FloatingAction } from '../components/FloatingActionBar';
@@ -220,7 +221,7 @@ export default function Orders() {
     if (selectedOrders.length === filteredOrders.length) {
       setSelectedOrders([]);
     } else {
-      setSelectedOrders(filteredOrders.map((o: any) => o.OrderId));
+      setSelectedOrders(filteredOrders.map((o: any) => o.id));
     }
   };
 
@@ -228,40 +229,40 @@ export default function Orders() {
 
   return (
     <AdminLayout>
-      <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col max-w-7xl mx-auto">
         {/* Header with Search and Filters */}
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('orders')}</h1>
-            <p className="text-slate-600">{t('viewAndAssignOrders')}</p>
-          </div>
+          <PageHeader
+            icon={ShoppingCart}
+            title={t('orders')}
+            subtitle={t('viewAndAssignOrders')}
+            actions={
+              <>
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('card')}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      viewMode === 'card'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Grid3x3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      viewMode === 'list'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
 
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('card')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  viewMode === 'card'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Search */}
+                {/* Search */}
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input
@@ -292,7 +293,9 @@ export default function Orders() {
               }}
               placeholder={t('selectDate')}
             />
-          </div>
+              </>
+            }
+          />
         </div>
 
         {/* Status Filter Tabs */}
@@ -352,10 +355,10 @@ export default function Orders() {
               <div className="space-y-3">
                 {filteredOrders.map((order: any) => (
               <div
-                key={order.OrderId}
-                onClick={() => toggleSelectOrder(order.OrderId)}
+                key={order.id}
+                onClick={() => toggleSelectOrder(order.id)}
                 className={`relative bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${
-                  selectedOrders.includes(order.OrderId)
+                  selectedOrders.includes(order.id)
                     ? 'border-amber-500 ring-2 ring-amber-500/20'
                     : 'border-slate-200/60 hover:border-slate-300/60'
                 }`}
@@ -366,12 +369,12 @@ export default function Orders() {
                     <div className="flex-shrink-0">
                       <div
                         className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                          selectedOrders.includes(order.OrderId)
+                          selectedOrders.includes(order.id)
                             ? 'bg-amber-500 border-amber-500 text-white'
                             : 'bg-white border-slate-300'
                         }`}
                       >
-                        {selectedOrders.includes(order.OrderId) && (
+                        {selectedOrders.includes(order.id) && (
                           <CheckSquare className="w-4 h-4" />
                         )}
                       </div>
@@ -379,7 +382,7 @@ export default function Orders() {
 
                     {/* Order Number & Status */}
                     <div className="flex-shrink-0 w-32">
-                      <span className="text-sm font-semibold text-slate-500">#{order.OrderNumber}</span>
+                      <span className="text-sm font-semibold text-slate-500">#{order.orderNumber}</span>
                       <p className="text-xs text-slate-400 mt-0.5">
                         {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </p>
@@ -399,21 +402,21 @@ export default function Orders() {
                         <Package className="w-4 h-4 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-800 truncate">{order.CustomerName}</p>
-                        <a href={`tel:${order.CustomerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 transition-colors">
+                        <p className="text-sm font-bold text-slate-800 truncate">{order.customerName}</p>
+                        <a href={`tel:${order.customerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 transition-colors">
                           <Phone className="w-3 h-3" />
-                          {order.CustomerPhone}
+                          {order.customerPhone}
                         </a>
                       </div>
                     </div>
 
                     {/* Address */}
-                    {order.CustomerAddress && (
-                      <div className="flex-1 min-w-0 flex items-center gap-2" title={order.CustomerAddress}>
+                    {order.customerAddress && (
+                      <div className="flex-1 min-w-0 flex items-center gap-2" title={order.customerAddress}>
                         <div className="w-6 h-6 bg-amber-100 rounded-md flex items-center justify-center flex-shrink-0">
                           <MapPin className="w-3 h-3 text-amber-600" />
                         </div>
-                        <p className="text-xs text-slate-600 truncate">{order.CustomerAddress}</p>
+                        <p className="text-xs text-slate-600 truncate">{order.customerAddress}</p>
                       </div>
                     )}
 
@@ -435,10 +438,10 @@ export default function Orders() {
               <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredOrders.map((order: any) => (
               <div 
-                key={order.OrderId} 
-                onClick={() => toggleSelectOrder(order.OrderId)}
+                key={order.id} 
+                onClick={() => toggleSelectOrder(order.id)}
                 className={`relative bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer ${
-                  selectedOrders.includes(order.OrderId) 
+                  selectedOrders.includes(order.id) 
                     ? 'border-amber-500 ring-2 ring-amber-500/20' 
                     : 'border-slate-200/60 hover:border-slate-300/60'
                 }`}
@@ -449,19 +452,19 @@ export default function Orders() {
                   <div className="absolute top-2 left-2 z-10">
                     <div
                       className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                        selectedOrders.includes(order.OrderId)
+                        selectedOrders.includes(order.id)
                           ? 'bg-amber-500 border-amber-500 text-white'
                           : 'bg-white border-slate-300'
                       }`}
                     >
-                      {selectedOrders.includes(order.OrderId) && (
+                      {selectedOrders.includes(order.id) && (
                         <CheckSquare className="w-4 h-4" />
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between mb-2 ml-8">
-                    <span className="text-xs font-semibold text-slate-500 tracking-wide">#{order.OrderNumber}</span>
+                    <span className="text-xs font-semibold text-slate-500 tracking-wide">#{order.orderNumber}</span>
                     <span className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getStatusColor(order.status)}`}>
                       <span className="text-base">{getStatusIcon(order.status)}</span>
                       <span>{getStatusLabel(order.status)}</span>
@@ -480,21 +483,21 @@ export default function Orders() {
                       <Package className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-800 leading-tight">{order.CustomerName}</p>
-                      <a href={`tel:${order.CustomerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 mt-0.5 transition-colors">
+                      <p className="text-sm font-bold text-slate-800 leading-tight">{order.customerName}</p>
+                      <a href={`tel:${order.customerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 mt-0.5 transition-colors">
                         <Phone className="w-3 h-3" />
-                        {order.CustomerPhone}
+                        {order.customerPhone}
                       </a>
                     </div>
                   </div>
 
                   {/* Address */}
-                  {order.CustomerAddress && (
-                    <div className="flex items-start gap-2 bg-slate-50 rounded-lg p-2 border border-slate-100" title={order.CustomerAddress}>
+                  {order.customerAddress && (
+                    <div className="flex items-start gap-2 bg-slate-50 rounded-lg p-2 border border-slate-100" title={order.customerAddress}>
                       <div className="w-6 h-6 bg-amber-100 rounded-md flex items-center justify-center flex-shrink-0">
                         <MapPin className="w-3 h-3 text-amber-600" />
                       </div>
-                      <p className="text-xs text-slate-600 flex-1 line-clamp-1 leading-relaxed">{order.CustomerAddress}</p>
+                      <p className="text-xs text-slate-600 flex-1 line-clamp-1 leading-relaxed">{order.customerAddress}</p>
                     </div>
                   )}
 

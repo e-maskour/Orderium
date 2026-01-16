@@ -47,7 +47,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-slate-800">{t('orderDetails')}</h2>
-              <p className="text-sm text-slate-500 mt-1">#{order.document.Number}</p>
+              <p className="text-sm text-slate-500 mt-1">#{order.orderNumber}</p>
             </div>
             <button
               onClick={onClose}
@@ -71,19 +71,19 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
               <div className="space-y-4">
                 <div>
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{t('orderNumber')}</p>
-                  <p className="text-base font-bold text-slate-800">#{order.document.Number}</p>
+                  <p className="text-base font-bold text-slate-800">#{order.orderNumber}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
-                  <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 ${getStatusColor(order.document.serviceType === 2 ? 'to_delivery' : order.status || 'unassigned')}`}>
-                    <span className="text-base">{getStatusIcon(order.document.serviceType === 2 ? 'to_delivery' : order.status || 'unassigned')}</span>
-                    <span>{getStatusLabel(order.document.serviceType === 2 ? 'to_delivery' : order.status || 'unassigned')}</span>
+                  <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 ${getStatusColor(order.serviceType === 2 ? 'to_delivery' : order.status || 'unassigned')}`}>
+                    <span className="text-base">{getStatusIcon(order.serviceType === 2 ? 'to_delivery' : order.status || 'unassigned')}</span>
+                    <span>{getStatusLabel(order.serviceType === 2 ? 'to_delivery' : order.status || 'unassigned')}</span>
                   </span>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{t('date')}</p>
                   <p className="text-sm text-slate-700">
-                    {new Date(order.document.Date).toLocaleDateString('en-US', { 
+                    {new Date(order.date || order.createdAt).toLocaleDateString('en-US', { 
                       year: 'numeric',
                       month: 'long', 
                       day: 'numeric', 
@@ -92,10 +92,10 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                     })}
                   </p>
                 </div>
-                {order.document.Note && (
+                {order.note && (
                   <div>
                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{t('note')}</p>
-                    <p className="text-sm text-slate-700 bg-amber-50 border border-amber-200 rounded-lg p-3">{order.document.Note}</p>
+                    <p className="text-sm text-slate-700 bg-amber-50 border border-amber-200 rounded-lg p-3">{order.note}</p>
                   </div>
                 )}
               </div>
@@ -108,38 +108,38 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                 {t('customerInformation')}
               </h3>
               <div className="space-y-3">
-                {order.CustomerName && (
+                {order.customerName && (
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md shadow-amber-500/30">
                       <Package className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('customer')}</p>
-                      <p className="text-base font-bold text-slate-800">{order.CustomerName}</p>
+                      <p className="text-base font-bold text-slate-800">{order.customerName}</p>
                     </div>
                   </div>
                 )}
-                {order.CustomerPhone && (
+                {order.customerPhone && (
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
                       <Phone className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('phone')}</p>
-                      <a href={`tel:${order.CustomerPhone}`} className="text-base font-bold text-emerald-600 hover:text-emerald-700">
-                        {order.CustomerPhone}
+                      <a href={`tel:${order.customerPhone}`} className="text-base font-bold text-emerald-600 hover:text-emerald-700">
+                        {order.customerPhone}
                       </a>
                     </div>
                   </div>
                 )}
-                {order.CustomerAddress && (
+                {order.customerAddress && (
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                       <MapPin className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('address')}</p>
-                      <p className="text-sm text-slate-700">{order.CustomerAddress}</p>
+                      <p className="text-sm text-slate-700">{order.customerAddress}</p>
                     </div>
                   </div>
                 )}
@@ -169,27 +169,27 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                   {order.items.map((item: any, index: number) => (
                     <tr key={item.id} className={index !== order.items.length - 1 ? 'border-b border-slate-100' : ''}>
                       <td className="py-3 px-5">
-                        <p className="font-semibold text-slate-800">{item.ProductName || `Product #${item.ProductId}`}</p>
+                        <p className="font-semibold text-slate-800">{item.productName || `Product #${item.productId}`}</p>
                       </td>
                       <td className="py-3 px-2 text-center">
                         <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 font-bold px-3 py-1 rounded-lg text-sm">
-                          {item.Quantity}
+                          {item.quantity}
                         </span>
                       </td>
                       <td className="py-3 px-2 text-right font-semibold text-slate-700">
                         {item.price.toFixed(2)} {t('currency')}
                       </td>
                       <td className="py-3 px-2 text-right">
-                        {item.Discount > 0 ? (
+                        {item.discount > 0 ? (
                           <span className="text-red-600 font-semibold">
-                            -{item.Discount.toFixed(2)} {t('currency')}
+                            -{item.discount.toFixed(2)} {t('currency')}
                           </span>
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}
                       </td>
                       <td className="py-3 px-5 text-right font-bold text-slate-800">
-                        {item.Total.toFixed(2)} {t('currency')}
+                        {item.total.toFixed(2)} {t('currency')}
                       </td>
                     </tr>
                   ))}
@@ -202,21 +202,21 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
               <div className="flex justify-between items-center">
                 <span className="text-sm font-semibold text-slate-600">{t('subtotal')}</span>
                 <span className="text-base font-bold text-slate-800">
-                  {order.items.reduce((sum: number, item: any) => sum + item.Total, 0).toFixed(2)} {t('currency')}
+                  {order.items.reduce((sum: number, item: any) => sum + item.total, 0).toFixed(2)} {t('currency')}
                 </span>
               </div>
-              {order.document.Discount > 0 && (
+              {order.discount > 0 && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold text-slate-600">{t('discount')}</span>
                   <span className="text-base font-bold text-red-600">
-                    -{order.document.Discount.toFixed(2)} {t('currency')}
+                    -{order.discount.toFixed(2)} {t('currency')}
                   </span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-3 border-t border-slate-200">
                 <span className="text-lg font-bold text-slate-800">{t('grandTotal')}</span>
                 <span className="text-2xl font-bold text-amber-600">
-                  {order.document.Total.toFixed(2)} <span className="text-lg">{t('currency')}</span>
+                  {order.totalAmount?.toFixed(2) || '0.00'} <span className="text-lg">{t('currency')}</span>
                 </span>
               </div>
             </div>

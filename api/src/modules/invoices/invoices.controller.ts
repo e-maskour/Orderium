@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { InvoicesService } from './invoices.service';
 
@@ -20,5 +20,26 @@ export class InvoicesController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.findOne(id);
     return { success: true, invoice };
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new invoice' })
+  async create(@Body() createInvoiceDto: any) {
+    const invoice = await this.invoicesService.create(createInvoiceDto);
+    return { success: true, invoice };
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update an invoice' })
+  async update(@Param('id', ParseIntPipe) id: number, @Body() updateInvoiceDto: any) {
+    const invoice = await this.invoicesService.update(id, updateInvoiceDto);
+    return { success: true, invoice };
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete an invoice' })
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.invoicesService.remove(id);
+    return { success: true, message: 'Invoice deleted successfully' };
   }
 }

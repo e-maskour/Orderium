@@ -8,36 +8,29 @@ export interface DeliveryPerson {
   dateUpdated?: string;
 }
 
-export interface Customer {
+export interface Partner {
   id: number;
-  code?: string;
   name: string;
-  taxNumber?: string;
-  address?: string;
-  postalCode?: string;
-  city?: string;
-  countryId?: number;
-  email?: string;
-  phoneNumber?: string;
+  phoneNumber: string;
+  email?: string | null;
+  address?: string | null;
+  ice?: string | null;
+  if?: string | null;
+  cnss?: string | null;
+  rc?: string | null;
+  patente?: string | null;
+  tvaNumber?: string | null;
+  deliveryAddress?: string | null;
+  isCompany: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
+  googleMapsUrl?: string | null;
+  wazeUrl?: string | null;
   isEnabled: boolean;
   isCustomer: boolean;
   isSupplier: boolean;
-  dueDatePeriod: number;
   dateCreated: string;
   dateUpdated: string;
-  streetName?: string;
-  additionalStreetName?: string;
-  buildingNumber?: string;
-  plotIdentification?: string;
-  citySubdivisionName?: string;
-  countrySubentity?: string;
-  isTaxExempt: boolean;
-  priceListId?: number;
-  latitude?: number;
-  longitude?: number;
-  googleMapsUrl?: string;
-  wazeUrl?: string;
-  totalOrders?: number;
 }
 
 export interface Order {
@@ -68,6 +61,13 @@ export interface OrderDelivery {
 }
 
 // Invoice types
+export enum InvoiceStatus {
+  DRAFT = 'draft',
+  UNPAID = 'unpaid',
+  PARTIAL = 'partial',
+  PAID = 'paid'
+}
+
 export interface Invoice {
   id: number;
   invoiceNumber: string;
@@ -80,7 +80,7 @@ export interface Invoice {
   discountAmount: number;
   total: number;
   paidAmount: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  status: InvoiceStatus;
   paymentStatus: 'unpaid' | 'partial' | 'paid';
   note?: string;
   terms?: string;

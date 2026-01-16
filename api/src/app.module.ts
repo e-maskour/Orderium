@@ -19,6 +19,7 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
@@ -42,6 +43,7 @@ import { GatewayModule } from './gateway/gateway.module';
     PortalModule,
     NotificationsModule,
     StatisticsModule,
+    PaymentsModule,
     GatewayModule,
   ],
   controllers: [AppController],
