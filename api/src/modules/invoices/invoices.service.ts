@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Invoice, InvoiceItem, InvoiceStatus } from './entities/invoice.entity';
 import { Product } from '../products/entities/product.entity';
+import { ConfigurationsService } from '../configurations/configurations.service';
 
 interface CreateInvoiceItemDTO {
   productId?: number;
@@ -41,6 +42,7 @@ export class InvoicesService {
     private readonly invoiceItemRepository: Repository<InvoiceItem>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly configurationsService: ConfigurationsService,
   ) {}
 
   private async calculateInvoiceStatus(
@@ -82,6 +84,150 @@ export class InvoicesService {
     return parseFloat(result[0]?.total || '0');
   }
 
+  private async getOrCreateSequence(entityType: string): Promise<any> {
+    console.log(`Getting or creating sequence for entityType: ${entityType}`);
+    
+    try {
+      console.log('Calling configurationsService.findByEntity(sequences)...');
+      const config = await this.configurationsService.findByEntity('sequences');
+      console.log('Configuration found:', JSON.stringify(config, null, 2));
+      
+      const sequences = config?.values?.sequences || [];
+      console.log('Sequences array:', JSON.stringify(sequences, null, 2));
+      
+      let sequence = sequences.find(seq => seq.entityType === entityType && seq.isActive);
+      console.log('Found matching sequence:', JSON.stringify(sequence, null, 2));
+      
+      if (!sequence) {
+        // Create default sequence for invoice_sale
+        const now = new Date();
+        const defaultSequence = {
+          id: this.generateSequenceId(),
+          name: `Sequence ${entityType}`,
+          entityType,
+          prefix: 'FA',
+          suffix: '',
+          nextNumber: 1,
+          numberLength: 4,
+          isActive: true,
+          yearInPrefix: true,
+          monthInPrefix: false,
+          dayInPrefix: false,
+          trimesterInPrefix: false,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+        };
+        
+        sequences.push(defaultSequence);
+        await this.configurationsService.update(config.id, {
+          values: { sequences }
+        });
+        
+        sequence = defaultSequence;
+      }
+      
+      return sequence;
+    } catch (error) {
+      // Fallback to default if configurations service fails
+      const now = new Date();
+      return {
+        id: 'fallback',
+        name: 'Default Sequence',
+        entityType,
+        prefix: 'FA',
+        suffix: '',
+        nextNumber: 1,
+        numberLength: 4,
+        isActive: true,
+        yearInPrefix: true,
+        monthInPrefix: false,
+        dayInPrefix: false,
+        trimesterInPrefix: false,
+      };
+    }
+  }
+
+  private generateSequenceId(): string {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  }
+
+  private generateSequenceNumber(sequence: any): string {
+    console.log('Generating sequence number for:', JSON.stringify(sequence, null, 2));
+    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    
+    // Calculate trimester (Q1=01, Q2=04, Q3=07, Q4=10)
+    const currentMonth = now.getMonth() + 1;
+    const trimester = currentMonth <= 3 ? '01' : 
+                     currentMonth <= 6 ? '04' : 
+                     currentMonth <= 9 ? '07' : '10';
+    
+    let result = sequence.prefix || '';
+    let dateComponents: string[] = [];
+    
+    console.log('Date components calculation:');
+    console.log('- year:', year, 'yearInPrefix:', sequence.yearInPrefix);
+    console.log('- month:', month, 'monthInPrefix:', sequence.monthInPrefix);
+    console.log('- trimester:', trimester, 'trimesterInPrefix:', sequence.trimesterInPrefix);
+    console.log('- day:', day, 'dayInPrefix:', sequence.dayInPrefix);
+    
+    if (sequence.yearInPrefix) {
+      dateComponents.push(year.toString());
+    }
+    
+    if (sequence.trimesterInPrefix && sequence.monthInPrefix) {
+      dateComponents.push(trimester);
+    } else if (sequence.trimesterInPrefix) {
+      dateComponents.push(trimester);
+    } else if (sequence.monthInPrefix) {
+      dateComponents.push(month);
+    }
+    
+    if (sequence.dayInPrefix) {
+      dateComponents.push(day);
+    }
+    
+    console.log('Final dateComponents:', dateComponents);
+    
+    if (result && dateComponents.length > 0) {
+      result += ' ';
+    }
+    
+    if (dateComponents.length > 0) {
+      result += dateComponents.join('-') + '-';
+    }
+    
+    const numberPart = sequence.nextNumber.toString().padStart(sequence.numberLength || 4, '0');
+    result += numberPart;
+    result += sequence.suffix || '';
+    
+    console.log('Final generated number:', result);
+    return result;
+  }
+
+  private async updateSequenceNextNumber(entityType: string, sequence: any): Promise<void> {
+    try {
+      const config = await this.configurationsService.findByEntity('sequences');
+      const sequences = config?.values?.sequences || [];
+      const sequenceIndex = sequences.findIndex(seq => seq.id === sequence.id);
+      
+      if (sequenceIndex !== -1) {
+        sequences[sequenceIndex].nextNumber = sequence.nextNumber + 1;
+        sequences[sequenceIndex].updatedAt = new Date().toISOString();
+        
+        await this.configurationsService.update(config.id, {
+          values: { sequences }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update sequence next number:', error);
+      // Continue execution even if sequence update fails
+    }
+  }
+
   async findAll(limit = 100): Promise<Invoice[]> {
     return this.invoiceRepository.find({
       take: limit,
@@ -98,22 +244,38 @@ export class InvoicesService {
   }
 
   async create(createInvoiceDto: CreateInvoiceDTO): Promise<Invoice> {
-    // Generate provisional invoice number for draft
-    const lastProvisional = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .where('invoice.invoiceNumber LIKE :pattern', { pattern: 'PROV%' })
-      .orderBy('invoice.id', 'DESC')
-      .limit(1)
-      .getOne();
-    
-    let nextProvisionalNumber = 1;
-    if (lastProvisional) {
-      const match = lastProvisional.invoiceNumber.match(/PROV(\d+)/);
-      if (match) {
-        nextProvisionalNumber = parseInt(match[1]) + 1;
+    // Generate provisional invoice number with sequence pattern preview
+    try {
+      const sequence = await this.getOrCreateSequence('invoice_sale');
+      const provisionalNumber = `PROV-${this.generateSequenceNumber(sequence)}`;
+      
+      // Continue with existing creation logic using the provisional number
+      const invoice = await this.createInvoiceWithNumber(createInvoiceDto, provisionalNumber);
+      return invoice;
+    } catch (error) {
+      // Fallback to old provisional numbering if sequence fails
+      const lastProvisional = await this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .where('invoice.invoiceNumber LIKE :pattern', { pattern: 'PROV%' })
+        .orderBy('invoice.id', 'DESC')
+        .limit(1)
+        .getOne();
+      
+      let nextProvisionalNumber = 1;
+      if (lastProvisional) {
+        const match = lastProvisional.invoiceNumber.match(/PROV(\\d+)/);
+        if (match) {
+          nextProvisionalNumber = parseInt(match[1]) + 1;
+        }
       }
+      const provisionalNumber = `PROV${nextProvisionalNumber}`;
+      
+      const invoice = await this.createInvoiceWithNumber(createInvoiceDto, provisionalNumber);
+      return invoice;
     }
-    const provisionalNumber = `PROV${nextProvisionalNumber}`;
+  }
+
+  private async createInvoiceWithNumber(createInvoiceDto: CreateInvoiceDTO, invoiceNumber: string): Promise<Invoice> {
 
     // Calculate totals
     let subtotal = 0;
@@ -144,7 +306,7 @@ export class InvoicesService {
 
     // Create invoice with provisional number and draft status
     const invoice = this.invoiceRepository.create({
-      invoiceNumber: provisionalNumber,
+      invoiceNumber,
       customerId: createInvoiceDto.customerId,
       customerName: createInvoiceDto.customerName,
       customerPhone: createInvoiceDto.customerPhone,
@@ -350,44 +512,77 @@ export class InvoicesService {
   }
 
   async validate(id: number): Promise<Invoice> {
+    console.log(`=== VALIDATE INVOICE ${id} STARTED ===`);
+    
     const invoice = await this.findOne(id);
     if (!invoice) {
+      console.log('Invoice not found');
       throw new Error('Invoice not found');
     }
+    console.log('Invoice found:', invoice.invoiceNumber);
 
     if (invoice.isValidated) {
+      console.log('Invoice already validated');
       throw new Error('Invoice is already validated');
     }
 
-    // Generate final invoice number
-    const lastInvoice = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .where('invoice.invoiceNumber LIKE :pattern', { pattern: 'INV-%' })
-      .orderBy('invoice.id', 'DESC')
-      .limit(1)
-      .getOne();
-    
-    let nextNumber = 1;
-    if (lastInvoice) {
-      const match = lastInvoice.invoiceNumber.match(/INV-(\d+)/);
-      if (match) {
-        nextNumber = parseInt(match[1]) + 1;
+    try {
+      console.log('Attempting to get sequence for invoice_sale...');
+      // Get or create sequence for invoice_sale
+      const sequence = await this.getOrCreateSequence('invoice_sale');
+      console.log('Found sequence for validation:', JSON.stringify(sequence, null, 2));
+      
+      // Generate final invoice number using sequence
+      const finalInvoiceNumber = this.generateSequenceNumber(sequence);
+      console.log('Generated invoice number:', finalInvoiceNumber);
+
+      // Update invoice with final number and validated status
+      await this.invoiceRepository.update(id, {
+        invoiceNumber: finalInvoiceNumber,
+        isValidated: true,
+        status: InvoiceStatus.UNPAID,
+      });
+
+      // Update sequence next number
+      await this.updateSequenceNextNumber('invoice_sale', sequence);
+
+      const result = await this.findOne(id);
+      if (!result) {
+        throw new Error('Invoice not found after validation');
       }
-    }
-    const finalInvoiceNumber = `INV-${String(nextNumber).padStart(5, '0')}`;
+      return result;
+    } catch (error) {
+      console.error('Error in sequence-based validation, falling back to old system:', error);
+      
+      // Fallback to old system if sequence fails
+      const lastInvoice = await this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .where('invoice.invoiceNumber LIKE :pattern', { pattern: 'INV-%' })
+        .orderBy('invoice.id', 'DESC')
+        .limit(1)
+        .getOne();
+      
+      let nextNumber = 1;
+      if (lastInvoice) {
+        const match = lastInvoice.invoiceNumber.match(/INV-(\\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+      const finalInvoiceNumber = `INV-${String(nextNumber).padStart(5, '0')}`;
 
-    // Update invoice with final number and validated status
-    await this.invoiceRepository.update(id, {
-      invoiceNumber: finalInvoiceNumber,
-      isValidated: true,
-      status: InvoiceStatus.UNPAID,
-    });
+      await this.invoiceRepository.update(id, {
+        invoiceNumber: finalInvoiceNumber,
+        isValidated: true,
+        status: InvoiceStatus.UNPAID,
+      });
 
-    const result = await this.findOne(id);
-    if (!result) {
-      throw new Error('Invoice not found after validation');
+      const result = await this.findOne(id);
+      if (!result) {
+        throw new Error('Invoice not found after validation');
+      }
+      return result;
     }
-    return result;
   }
 
   async devalidate(id: number): Promise<Invoice> {

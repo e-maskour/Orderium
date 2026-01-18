@@ -1,0 +1,48 @@
+export interface Sequence {
+  id: string;
+  name: string;
+  entityType: SequenceEntityType;
+  prefix: string;
+  suffix: string;
+  nextNumber: number;
+  numberLength: number;
+  isActive: boolean;
+  yearInPrefix: boolean;
+  monthInPrefix: boolean;
+  dayInPrefix: boolean;
+  trimesterInPrefix: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  realTimeNextNumber?: number; // Enhanced field from database calculation
+}
+
+export type SequenceEntityType = 
+  | 'invoice_sale'      // Facture de vente
+  | 'invoice_purchase'  // Facture d'achat
+  | 'quote'            // Devis
+  | 'delivery_note'    // Bon de livraison
+  | 'price_request'    // Demande de prix
+  | 'purchase_order'   // Bon d'achat
+  | 'payment'          // Paiement
+  | 'credit_note'      // Avoir
+  | 'receipt';         // Reçu
+
+export interface CreateSequenceDTO {
+  name: string;
+  entityType: SequenceEntityType;
+  prefix: string;
+  suffix: string;
+  numberLength: number;
+  isActive: boolean;
+  yearInPrefix: boolean;
+  monthInPrefix: boolean;
+  dayInPrefix: boolean;
+  trimesterInPrefix: boolean;
+}
+
+export interface UpdateSequenceDTO extends Partial<CreateSequenceDTO> {}
+
+export interface SequencePreview {
+  example: string;
+  nextSequence: string;
+}

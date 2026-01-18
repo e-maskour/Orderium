@@ -34,6 +34,7 @@ import Configurations from './pages/Configurations';
 import Taxes from './pages/configurations/Taxes';
 import Currencies from './pages/configurations/Currencies';
 import PaymentTerms from './pages/configurations/PaymentTerms';
+import Sequences from './pages/configurations/Sequences';
 
 const queryClient = new QueryClient();
 
@@ -279,6 +280,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <PaymentTerms />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations/sequences"
+                element={
+                  <ProtectedRoute>
+                    <Sequences />
                   </ProtectedRoute>
                 }
               />

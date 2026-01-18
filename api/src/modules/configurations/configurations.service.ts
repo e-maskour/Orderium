@@ -31,7 +31,16 @@ export class ConfigurationsService {
   }
 
   async findByEntity(entity: string): Promise<Configuration> {
-    const config = await this.configRepository.findOne({ where: { entity } });
+    let config = await this.configRepository.findOne({ where: { entity } });
+    
+    // Create sequences entity if it doesn't exist
+    if (!config && entity === 'sequences') {
+      config = await this.create({
+        entity: 'sequences',
+        values: { sequences: [] }
+      });
+    }
+    
     if (!config) {
       throw new NotFoundException(`Configuration "${entity}" not found`);
     }
