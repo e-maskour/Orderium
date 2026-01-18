@@ -6,6 +6,8 @@ import { Plus, Edit, Trash2, Search, Package, Image as ImageIcon, X, Check, Grid
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
+import ConfirmDialog from '../components/ConfirmDialog';
+import AlertDialog from '../components/AlertDialog';
 
 interface Product {
   id: number;
@@ -18,6 +20,8 @@ interface Product {
   isService: boolean;
   isEnabled: boolean;
   isPriceChangeAllowed: boolean;
+  defaultTax: number;
+  minPrice: number;
   dateCreated: string;
   dateUpdated: string;
   imageUrl?: string;
@@ -51,11 +55,22 @@ export default function Products() {
     isService: false,
     isEnabled: true,
     isPriceChangeAllowed: true,
+    defaultTax: '0',
+    minPrice: '0',
     imageUrl: ''
   });
   const [imagePreview, setImagePreview] = useState<string>('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const bulkUploadInputRef = useRef<HTMLInputElement>(null);
+  
+  // Confirmation dialog
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteAction, setDeleteAction] = useState<'single' | 'bulk'>('single');
+  const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
+  
+  // Alert dialog
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState({ title: '', message: '' });
 
   // Fetch products
   const { data: products, isLoading } = useQuery({
@@ -95,6 +110,13 @@ export default function Products() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
+    onError: (error: Error) => {
+      setAlertMessage({
+        title: 'Erreur de suppression',
+        message: error.message
+      });
+      setShowAlert(true);
+    },
   });
 
   const toggleSelectProduct = (id: number) => {
@@ -115,13 +137,44 @@ export default function Products() {
     setSelectedProducts([]);
   };
 
+  const handleDelete = (id: number) => {
+    setDeleteProductId(id);
+    setDeleteAction('single');
+    setShowDeleteConfirm(true);
+  };
+
   const handleBulkDelete = () => {
-    if (window.confirm(t('confirmDelete'))) {
-      selectedProducts.forEach(id => {
-        deleteMutation.mutate(id);
-      });
-      clearSelection();
+    setDeleteAction('bulk');
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteAction === 'bulk') {
+      // Delete selected products one by one
+      let hasErrors = false;
+      for (const id of selectedProducts) {
+        try {
+          await productsService.deleteProduct(id);
+        } catch (error: any) {
+          hasErrors = true;
+          setAlertMessage({
+            title: 'Erreur de suppression',
+            message: error.message
+          });
+          setShowAlert(true);
+          break; // Stop on first error
+        }
+      }
+      
+      if (!hasErrors) {
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+        clearSelection();
+      }
+    } else if (deleteProductId !== null) {
+      deleteMutation.mutate(deleteProductId);
     }
+    setShowDeleteConfirm(false);
+    setDeleteProductId(null);
   };
 
   const handleBulkEnable = () => {
@@ -206,6 +259,8 @@ export default function Products() {
         isService: product.isService,
         isEnabled: product.isEnabled,
         isPriceChangeAllowed: product.isPriceChangeAllowed,
+        defaultTax: product.defaultTax?.toString() || '0',
+        minPrice: product.minPrice?.toString() || '0',
         imageUrl: product.imageUrl || ''
       });
       setImagePreview(product.imageUrl || '');
@@ -220,6 +275,9 @@ export default function Products() {
         stock: '',
         isService: false,
         isEnabled: true,
+        isPriceChangeAllowed: true,
+        defaultTax: '0',
+        minPrice: '0',
         imageUrl: ''
       });
       setImagePreview('');
@@ -241,6 +299,8 @@ export default function Products() {
       isService: false,
       isEnabled: true,
       isPriceChangeAllowed: true,
+      defaultTax: '0',
+      minPrice: '0',
       imageUrl: ''
     });
     setImagePreview('');
@@ -272,6 +332,8 @@ export default function Products() {
       isService: formData.isService,
       isEnabled: formData.isEnabled,
       isPriceChangeAllowed: formData.isPriceChangeAllowed,
+      defaultTax: parseFloat(formData.defaultTax || '0'),
+      minPrice: parseFloat(formData.minPrice || '0'),
       imageUrl: imagePreview || null
     };
 
@@ -279,12 +341,6 @@ export default function Products() {
       updateMutation.mutate({ id: editingProduct.id, data: productData });
     } else {
       createMutation.mutate(productData);
-    }
-  };
-
-  const handleDelete = (id: number) => {
-    if (window.confirm(t('confirmDelete'))) {
-      deleteMutation.mutate(id);
     }
   };
 
@@ -327,7 +383,11 @@ export default function Products() {
 
     // Check if exactly one product is selected
     if (selectedProducts.length !== 1) {
-      alert(t('selectOneProductForImageUpload'));
+      setAlertMessage({
+        title: 'Sélection requise',
+        message: t('selectOneProductForImageUpload')
+      });
+      setShowAlert(true);
       if (bulkUploadInputRef.current) {
         bulkUploadInputRef.current.value = '';
       }
@@ -1425,6 +1485,37 @@ export default function Products() {
                 />
               </div>
 
+              {/* Default Tax */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  TVA par défaut (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={formData.defaultTax}
+                  onChange={(e) => setFormData({ ...formData, defaultTax: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                />
+              </div>
+
+              {/* Min Price */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Prix minimum (DH)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.minPrice}
+                  onChange={(e) => setFormData({ ...formData, minPrice: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                />
+              </div>
+
               {/* Checkboxes */}
               <div className="space-y-3">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1482,6 +1573,30 @@ export default function Products() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeleteProductId(null);
+        }}
+        onConfirm={confirmDelete}
+        title={deleteAction === 'bulk' ? 'Supprimer les produits' : 'Supprimer le produit'}
+        message={deleteAction === 'bulk' 
+          ? `Êtes-vous sûr de vouloir supprimer ${selectedProducts.length} produit(s) sélectionné(s) ? Cette action est irréversible.`
+          : 'Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.'}
+        type="danger"
+        confirmText="Supprimer"
+        cancelText="Annuler"
+      />
+
+      <AlertDialog
+        isOpen={showAlert}
+        onClose={() => setShowAlert(false)}
+        title={alertMessage.title}
+        message={alertMessage.message}
+        type="warning"
+      />
     </AdminLayout>
   );
 }

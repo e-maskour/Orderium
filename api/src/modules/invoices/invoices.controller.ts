@@ -42,4 +42,18 @@ export class InvoicesController {
     await this.invoicesService.remove(id);
     return { success: true, message: 'Invoice deleted successfully' };
   }
+
+  @Put(':id/validate')
+  @ApiOperation({ summary: 'Validate an invoice (change from draft to unpaid)' })
+  async validate(@Param('id', ParseIntPipe) id: number) {
+    const invoice = await this.invoicesService.validate(id);
+    return { success: true, invoice };
+  }
+
+  @Put(':id/devalidate')
+  @ApiOperation({ summary: 'Devalidate an invoice (change back to draft)' })
+  async devalidate(@Param('id', ParseIntPipe) id: number) {
+    const invoice = await this.invoicesService.devalidate(id);
+    return { success: true, invoice };
+  }
 }

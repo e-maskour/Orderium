@@ -5,7 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Order } from '../../orders/entities/order.entity';
 
 @Entity('delivery_persons')
 @Index(['email'])
@@ -37,18 +40,18 @@ export class DeliveryPerson {
 }
 
 @Entity('orders_delivery')
-@Index(['orderId'])
-@Index(['deliveryPersonId'])
 @Index(['status'])
 export class OrderDelivery {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int' })
-  orderId: number;
+  @ManyToOne(() => Order, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'orderId' })
+  order: Order;
 
-  @Column({ type: 'int', nullable: true })
-  deliveryPersonId: number;
+  @ManyToOne(() => DeliveryPerson, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'deliveryPersonId' })
+  deliveryPerson: DeliveryPerson;
 
   @Column({ type: 'varchar', length: 50, default: 'pending' })
   status: string;

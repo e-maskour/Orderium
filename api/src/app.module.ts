@@ -20,6 +20,7 @@ import { PortalModule } from './modules/portal/portal.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ConfigurationsModule } from './modules/configurations/configurations.module';
 import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
@@ -44,6 +45,7 @@ import { GatewayModule } from './gateway/gateway.module';
     NotificationsModule,
     StatisticsModule,
     PaymentsModule,
+    ConfigurationsModule,
     GatewayModule,
   ],
   controllers: [AppController],

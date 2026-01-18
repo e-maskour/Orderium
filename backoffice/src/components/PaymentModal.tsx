@@ -159,9 +159,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Montant *
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Montant *
+              </label>
+              {remainingAmount > 0 && !payment && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, amount: remainingAmount.toFixed(2) })}
+                  className="text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-1 rounded-md transition-colors"
+                >
+                  Payer le reste ({remainingAmount.toFixed(2)} MAD)
+                </button>
+              )}
+            </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <CreditCard className="h-5 w-5 text-slate-400" />

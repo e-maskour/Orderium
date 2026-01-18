@@ -82,6 +82,9 @@ export class Invoice {
   })
   status: InvoiceStatus;
 
+  @Column({ type: 'boolean', default: false })
+  isValidated: boolean;
+
   @Column({ type: 'text', nullable: true })
   notes: string;
 

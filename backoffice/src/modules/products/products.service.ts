@@ -25,6 +25,15 @@ export class ProductsService {
     return data;
   }
 
+  async getProduct(id: number): Promise<Product> {
+    const response = await fetch(`${API_URL}/products/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch product');
+    const data = await response.json();
+    
+    // Transform product using model
+    return Product.fromApiResponse(data.product || data);
+  }
+
   async createProduct(data: CreateProductDTO): Promise<{ product: Product }> {
     const response = await fetch(`${API_URL}/products`, {
       method: 'POST',
@@ -63,6 +72,16 @@ export class ProductsService {
     }
     
     return result;
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete product');
+    }
   }
 }
 

@@ -93,6 +93,31 @@ export class InvoicesService {
     const invoices = data.invoices || [];
     return invoices.map((inv: any) => InvoiceWithDetails.fromApiResponse(inv));
   }
+
+  async validate(id: number): Promise<InvoiceWithDetails> {
+    const response = await fetch(`${API_URL}/invoices/${id}/validate`, {
+      method: 'PUT',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to validate invoice');
+    }
+    const result = await response.json();
+    return InvoiceWithDetails.fromApiResponse(result.invoice);
+  }
+
+  async devalidate(id: number): Promise<InvoiceWithDetails> {
+    const response = await fetch(`${API_URL}/invoices/${id}/devalidate`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to devalidate invoice');
+    }
+    const result = await response.json();
+    return InvoiceWithDetails.fromApiResponse(result.invoice);
+  }
 }
 
 export const invoicesService = new InvoicesService();

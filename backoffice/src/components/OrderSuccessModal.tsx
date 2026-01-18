@@ -7,6 +7,7 @@ import { Receipt } from '../../../client/src/components/Receipt';
 import { Invoice } from '../../../client/src/components/Invoice';
 import { LanguageProvider } from '../context/LanguageContext';
 import { useLanguage } from '../context/LanguageContext';
+import AlertDialog from './AlertDialog';
 
 interface CartItem {
   product: {
@@ -44,6 +45,8 @@ export const OrderSuccessModal = ({
   const { t } = useLanguage();
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewType, setPreviewType] = useState<'receipt' | 'invoice' | null>(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState({ title: '', message: '' });
 
   if (!isOpen) return null;
 
@@ -162,7 +165,11 @@ export const OrderSuccessModal = ({
       document.body.removeChild(container);
     } catch (error) {
       console.error('Failed to generate PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      setAlertMessage({
+        title: 'Erreur PDF',
+        message: 'Échec de la génération du PDF. Veuillez réessayer.'
+      });
+      setShowAlert(true);
     } finally {
       setIsGenerating(false);
     }
@@ -366,6 +373,14 @@ export const OrderSuccessModal = ({
           </div>
         </div>
       )}
+
+      <AlertDialog
+        isOpen={showAlert}
+        onClose={() => setShowAlert(false)}
+        title={alertMessage.title}
+        message={alertMessage.message}
+        type="error"
+      />
     </>
   );
 };

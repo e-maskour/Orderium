@@ -5,6 +5,8 @@ import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard, FileText, Plus } f
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import { invoicesService } from '../modules/invoices';
 import PaymentModal from '../components/PaymentModal';
+import ConfirmDialog from '../components/ConfirmDialog';
+import AlertDialog from '../components/AlertDialog';
 
 export default function PaiementsAchat() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -13,6 +15,14 @@ export default function PaiementsAchat() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
+  
+  // Confirmation dialogs
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePaymentId, setDeletePaymentId] = useState<number | null>(null);
+  
+  // Alert dialog
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState({ title: '', message: '', type: 'error' as const });
 
   useEffect(() => {
     loadPayments();
@@ -23,9 +33,7 @@ export default function PaiementsAchat() {
     try {
       setLoading(true);
       const data = await paymentsService.getAll();
-      // Filter for purchase payments (those with supplierId or purchase invoices)
-      const purchasePayments = data.filter(p => p.supplierId);
-      setPayments(purchasePayments);
+      setPayments(data);
     } catch (error) {
       console.error('Error loading payments:', error);
     } finally {
@@ -43,14 +51,27 @@ export default function PaiementsAchat() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) return;
+    setDeletePaymentId(id);
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDelete = async () => {
+    if (deletePaymentId === null) return;
+    
     try {
-      await paymentsService.delete(id);
+      await paymentsService.delete(deletePaymentId);
       await loadPayments();
+      setShowDeleteConfirm(false);
+      setDeletePaymentId(null);
     } catch (error) {
       console.error('Error deleting payment:', error);
-      alert('Erreur lors de la suppression du paiement');
+      setShowDeleteConfirm(false);
+      setAlertMessage({
+        title: 'Erreur',
+        message: 'Erreur lors de la suppression du paiement',
+        type: 'error'
+      });
+      setShowAlert(true);
     }
   };
 
@@ -75,6 +96,10 @@ export default function PaiementsAchat() {
   };
 
   const filteredPayments = payments.filter(payment => {
+    // Only show purchase payments (invoices with supplierId)
+    const invoice = invoices.find(inv => inv.invoice.id === payment.invoiceId);
+    if (!invoice || !invoice.invoice.supplierId) return false;
+    
     const invoiceNumber = getInvoiceNumber(payment.invoiceId);
     const supplierName = getSupplierName(payment.invoiceId);
     const search = searchTerm.toLowerCase();
@@ -266,6 +291,28 @@ export default function PaiementsAchat() {
           payment={selectedPayment}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeletePaymentId(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Supprimer le paiement"
+        message="Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible."
+        type="danger"
+        confirmText="Supprimer"
+        cancelText="Annuler"
+      />
+
+      <AlertDialog
+        isOpen={showAlert}
+        onClose={() => setShowAlert(false)}
+        title={alertMessage.title}
+        message={alertMessage.message}
+        type={alertMessage.type}
+      />
     </AdminLayout>
   );
 }

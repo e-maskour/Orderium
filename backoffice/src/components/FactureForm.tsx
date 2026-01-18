@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Search, Wallet } from 'lucide-react';
+import { Plus, Trash2, BookOpen } from 'lucide-react';
 import { CreateInvoiceDTO } from '../modules/invoices/invoices.interface';
 import { Partner } from '../modules/partners/partners.interface';
 import { Product } from '../modules/products/products.interface';
 import { partnersService } from '../modules/partners/partners.service';
 import { productsService } from '../modules/products/products.service';
 import { useLanguage } from '../context/LanguageContext';
+import { ProductCatalogueModal } from './ProductCatalogueModal';
 
 interface InvoiceItemRow {
   id: string;
@@ -23,11 +24,12 @@ interface FactureFormProps {
   type: 'vente' | 'achat';
   onSubmit: (data: CreateInvoiceDTO) => void;
   onCancel: () => void;
-  onPaymentClick?: () => void;
   initialData?: any;
+  loading?: boolean;
+  readOnly?: boolean;
 }
 
-export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentClick }: FactureFormProps) {
+export function FactureForm({ type, onSubmit, onCancel, initialData, readOnly }: FactureFormProps) {
   const { t } = useLanguage();
   const isVente = type === 'vente';
   const partnerLabel = isVente ? t('invoice.customer') : t('invoice.supplier');
@@ -38,7 +40,6 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
   const [partnerPhone, setPartnerPhone] = useState(initialData?.partnerPhone || '');
   const [partnerAddress, setPartnerAddress] = useState(initialData?.partnerAddress || '');
   const [partnerIce, setPartnerIce] = useState(initialData?.partnerIce || '');
-  const [partnerIsCompany, setPartnerIsCompany] = useState(initialData?.partnerIsCompany || false);
   const [deliveryAddress, setDeliveryAddress] = useState(initialData?.deliveryAddress || '');
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(initialData?.dueDate || '');
@@ -49,7 +50,60 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
     { id: '1', productId: undefined, description: '', quantity: 1, unitPrice: 0, discount: 0, discountType: 0, tax: 0, total: 0 }
   ]);
 
-  // Load initial items from initialData
+  // Catalogue modal state
+  const [showCatalogueModal, setShowCatalogueModal] = useState(false);
+  
+  // MinPrice validation state
+  const [minPriceValidation, setMinPriceValidation] = useState<{ show: boolean; message: string; itemId: string }>({ 
+    show: false, 
+    message: '', 
+    itemId: '' 
+  });
+  
+  // Debounce validation
+  const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [pendingValidation, setPendingValidation] = useState<{ itemId: string; productId: number; value: number } | null>(null);
+
+  // Handle catalogue modal opening
+  const handleOpenCatalogue = () => {
+    setShowCatalogueModal(true);
+  };
+
+  // Handle items change from catalogue
+  const handleCatalogueItemsChange = (newItems: InvoiceItemRow[]) => {
+    setItems(newItems);
+  };
+
+  // Debounced minPrice validation
+  useEffect(() => {
+    if (pendingValidation) {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+      
+      validationTimeoutRef.current = setTimeout(async () => {
+        try {
+          const product = await productsService.getProduct(pendingValidation.productId);
+          if (product && product.minPrice && pendingValidation.value < product.minPrice) {
+            setMinPriceValidation({
+              show: true,
+              message: `Le prix minimum pour ce produit est de ${product.minPrice.toFixed(2)} DH`,
+              itemId: pendingValidation.itemId
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching product for minPrice validation:', error);
+        }
+        setPendingValidation(null);
+      }, 800); // 800ms delay
+    }
+    
+    return () => {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    };
+  }, [pendingValidation]);
   useEffect(() => {
     if (initialData?.items && initialData.items.length > 0) {
       const loadedItems = initialData.items.map((item: any, index: number) => ({
@@ -78,7 +132,7 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
   const [loadingProducts, setLoadingProducts] = useState<Record<string, boolean>>({});
   const productSearchRef = useRef<HTMLInputElement>(null);
   const productDropdownRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const searchTimeoutRef = useRef<Record<string, number>>({});
 
   // Load partners
   useEffect(() => {
@@ -211,6 +265,17 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
   };
 
   const handleItemChange = (id: string, field: keyof InvoiceItemRow, value: any) => {
+    // If changing unitPrice, setup debounced validation
+    if (field === 'unitPrice' && typeof value === 'number') {
+      const item = items.find(i => i.id === id);
+      if (item && item.productId) {
+        // Clear any existing validation popup
+        setMinPriceValidation({ show: false, message: '', itemId: '' });
+        // Setup debounced validation
+        setPendingValidation({ itemId: id, productId: item.productId, value });
+      }
+    }
+
     setItems(items.map(item => {
       if (item.id === id) {
         const updated = { ...item, [field]: value };
@@ -233,42 +298,48 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
     setPartnerPhone(partner.phoneNumber);
     setPartnerAddress(partner.address || '');
     setPartnerIce(partner.ice || '');
-    setPartnerIsCompany(partner.isCompany || false);
     setDeliveryAddress(partner.deliveryAddress || '');
     setShowPartnerSearch(false);
   };
 
   const handleSelectProduct = (itemId: string, product: Product) => {
-    const updatedItems = items.map(item => {
-      if (item.id === itemId) {
-        const updated = { 
-          ...item, 
-          productId: product.id,
-          description: product.name,
-          unitPrice: isVente ? product.price : product.cost
-        };
-        updated.total = calculateItemTotal(updated);
-        return updated;
-      }
-      return item;
-    });
+    // Check if product already exists in the items list
+    const existingItemIndex = items.findIndex(item => item.productId === product.id);
     
-    setItems(updatedItems);
+    if (existingItemIndex !== -1) {
+      // Product already exists, increase quantity by 1
+      const updatedItems = items.map((item, index) => {
+        if (index === existingItemIndex) {
+          const updated = { 
+            ...item, 
+            quantity: item.quantity + 1
+          };
+          updated.total = calculateItemTotal(updated);
+          return updated;
+        }
+        return item;
+      });
+      setItems(updatedItems);
+    } else {
+      // Product doesn't exist, update the current row
+      const updatedItems = items.map(item => {
+        if (item.id === itemId) {
+          const updated = { 
+            ...item, 
+            productId: product.id,
+            description: product.name,
+            unitPrice: isVente ? product.price : product.cost,
+            tax: product.defaultTax || 0
+          };
+          updated.total = calculateItemTotal(updated);
+          return updated;
+        }
+        return item;
+      });
+      setItems(updatedItems);
+    }
+    
     setShowProductSearch(null);
-    
-    // Automatically add a new empty line
-    const newId = (Math.max(...updatedItems.map(i => parseInt(i.id)), 0) + 1).toString();
-    setItems([...updatedItems, {
-      id: newId,
-      productId: undefined,
-      description: '',
-      quantity: 1,
-      unitPrice: 0,
-      discount: 0,
-      discountType: 0,
-      tax: 0,
-      total: 0
-    }]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -313,7 +384,8 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" style={{overflow: 'visible'}}>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6" style={{overflow: 'visible'}}>
       {/* Partner Information & Invoice Information Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Partner Information */}
@@ -335,8 +407,9 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
                   }}
                   onFocus={() => setShowPartnerSearch(true)}
                   placeholder={t('invoice.partnerNamePlaceholder').replace('{partner}', partnerLabel.toLowerCase())}
-                  className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
                   required
+                  disabled={readOnly}
                 />
                 {(partnerPhone || partnerAddress) && (
                   <div className="mt-1.5 space-y-0.5">
@@ -488,14 +561,17 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
                         value={item.description}
                         onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
                         onFocus={() => {
-                          setShowProductSearch(item.id);
-                          // Load products if not already loaded for this item
-                          if (!products[item.id]) {
-                            searchProducts(item.id, item.description);
+                          if (!readOnly) {
+                            setShowProductSearch(item.id);
+                            // Load products if not already loaded for this item
+                            if (!products[item.id]) {
+                              searchProducts(item.id, item.description);
+                            }
                           }
                         }}
                         placeholder={t('invoice.itemDescriptionPlaceholder')}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
+                        disabled={readOnly}
                       />
                       {showProductSearch === item.id && productSearchRef.current && (
                         <div 
@@ -547,7 +623,8 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
                       step="0.1"
                       value={item.quantity}
                       onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                      className="w-20 px-2 py-2 border border-slate-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-20 px-2 py-2 border border-slate-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                      disabled={readOnly}
                     />
                   </td>
                   <td className="py-2 px-2">
@@ -557,7 +634,8 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
                       step="0.1"
                       value={item.unitPrice}
                       onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                      className="w-20 px-2 py-2 border border-slate-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-20 px-2 py-2 border border-slate-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                      disabled={readOnly}
                     />
                   </td>
                   <td className="py-2 px-2">
@@ -568,12 +646,14 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
                         step="0.1"
                         value={item.discount}
                         onChange={(e) => handleItemChange(item.id, 'discount', parseFloat(e.target.value) || 0)}
-                        className="w-20 flex-1 px-2 py-2 text-sm text-right focus:outline-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-20 flex-1 px-2 py-2 text-sm text-right focus:outline-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                        disabled={readOnly}
                       />
                       <button
                         type="button"
-                        onClick={() => handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
-                        className="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium min-w-[40px] transition-colors"
+                        onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
+                        className="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium min-w-[40px] transition-colors disabled:bg-slate-200 disabled:text-slate-400"
+                        disabled={readOnly}
                       >
                         {item.discountType === 0 ? 'DH' : '%'}
                       </button>
@@ -583,7 +663,8 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
                     <select
                       value={item.tax}
                       onChange={(e) => handleItemChange(item.id, 'tax', parseFloat(e.target.value))}
-                      className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
+                      disabled={readOnly}
                     >
                       <option value={0}>0%</option>
                       <option value={10}>10%</option>
@@ -596,7 +677,7 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
                     </div>
                   </td>
                   <td className="py-2 px-2">
-                    {item.productId && (
+                    {item.productId && !readOnly && (
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(item.id)}
@@ -610,6 +691,28 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
               ))}
             </tbody>
           </table>
+          
+          {/* Action Buttons - Only show when not readOnly */}
+          {!readOnly && (
+            <div className="mt-4 flex justify-start gap-2">
+              <button
+                type="button"
+                onClick={handleAddItem}
+                className="flex items-center justify-center w-8 h-8 bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-colors"
+                title="Ajouter une ligne"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenCatalogue}
+                className="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+                title="Catalogue produits"
+              >
+                <BookOpen className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -660,35 +763,64 @@ export function FactureForm({ type, onSubmit, onCancel, initialData, onPaymentCl
       </div>
 
       {/* Actions */}
-      <div className="flex justify-between gap-3">
-        <div>
-          {initialData && onPaymentClick && (
-            <button
-              type="button"
-              onClick={onPaymentClick}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-            >
-              <Wallet className="w-4 h-4" />
-              Saisir règlement
-            </button>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-          >
-            {t('cancel')}
-          </button>
+      <div className="flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-6 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+        >
+          {readOnly ? 'Fermer' : t('cancel')}
+        </button>
+        {!readOnly && (
           <button
             type="submit"
             className="px-6 py-2.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium"
           >
             {initialData ? t('edit') : t('create')} {type === 'vente' ? t('invoice.title').toLowerCase().slice(0, -1) : 'bon d\'achat'}
           </button>
-        </div>
+        )}
       </div>
     </form>
+
+    {/* Product Catalogue Modal */}
+    {/* MinPrice Validation Popup */}
+    {minPriceValidation.show && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+          <div className="flex items-center mb-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-gray-900">Prix en dessous du minimum</h3>
+            </div>
+          </div>
+          <div className="mb-6">
+            <p className="text-sm text-gray-600">{minPriceValidation.message}</p>
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setMinPriceValidation({ show: false, message: '', itemId: '' })}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Compris
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    <ProductCatalogueModal
+      isOpen={showCatalogueModal}
+      onClose={() => setShowCatalogueModal(false)}
+      onItemsChange={handleCatalogueItemsChange}
+      currentItems={items}
+      type={type}
+    />
+    </>
   );
 }

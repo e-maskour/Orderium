@@ -11,7 +11,13 @@ import Orders from './pages/Orders';
 import POS from './pages/POS';
 import Products from './pages/Products';
 import Customers from './pages/Customers';
+import CustomerCreate from './pages/CustomerCreate';
+import CustomerEdit from './pages/CustomerEdit';
+import CustomerDetail from './pages/CustomerDetail';
 import Fournisseurs from './pages/Fournisseurs';
+import FournisseurCreate from './pages/FournisseurCreate';
+import FournisseurEdit from './pages/FournisseurEdit';
+import FournisseurDetail from './pages/FournisseurDetail';
 import Devis from './pages/Devis';
 import BonLivraison from './pages/BonLivraison';
 import DemandePrix from './pages/DemandePrix';
@@ -24,6 +30,10 @@ import FactureVenteCreate from './pages/FactureVenteCreate';
 import FactureVenteEdit from './pages/FactureVenteEdit';
 import PaiementsVente from './pages/PaiementsVente';
 import PaiementsAchat from './pages/PaiementsAchat';
+import Configurations from './pages/Configurations';
+import Taxes from './pages/configurations/Taxes';
+import Currencies from './pages/configurations/Currencies';
+import PaymentTerms from './pages/configurations/PaymentTerms';
 
 const queryClient = new QueryClient();
 
@@ -89,10 +99,58 @@ function App() {
                 }
               />
               <Route
+                path="/customers/create"
+                element={
+                  <ProtectedRoute>
+                    <CustomerCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/customers/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <CustomerEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/customers/:id"
+                element={
+                  <ProtectedRoute>
+                    <CustomerDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/fournisseurs"
                 element={
                   <ProtectedRoute>
                     <Fournisseurs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/fournisseurs/create"
+                element={
+                  <ProtectedRoute>
+                    <FournisseurCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/fournisseurs/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <FournisseurEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/fournisseurs/:id"
+                element={
+                  <ProtectedRoute>
+                    <FournisseurDetail />
                   </ProtectedRoute>
                 }
               />
@@ -189,6 +247,38 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <PaiementsAchat />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations"
+                element={
+                  <ProtectedRoute>
+                    <Configurations />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations/taxes"
+                element={
+                  <ProtectedRoute>
+                    <Taxes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations/currencies"
+                element={
+                  <ProtectedRoute>
+                    <Currencies />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations/payment-terms"
+                element={
+                  <ProtectedRoute>
+                    <PaymentTerms />
                   </ProtectedRoute>
                 }
               />

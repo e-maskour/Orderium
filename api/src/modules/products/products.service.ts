@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -58,11 +58,62 @@ export class ProductsService {
 
   async remove(id: number): Promise<void> {
     const product = await this.findOne(id);
+    
+    // Check if product is used in invoice items
+    const invoiceItemCount = await this.productRepository.manager.query(
+      `SELECT COUNT(*) as count FROM invoice_items WHERE "productId" = $1`,
+      [id]
+    );
+    
+    if (parseInt(invoiceItemCount[0]?.count || '0') > 0) {
+      throw new ConflictException('Cannot delete product that is used in invoices. Please remove from all invoices first.');
+    }
+    
+    // Check if product is used in orders (if order_items table exists)
+    try {
+      const orderItemCount = await this.productRepository.manager.query(
+        `SELECT COUNT(*) as count FROM order_items WHERE "productId" = $1`,
+        [id]
+      );
+      
+      if (parseInt(orderItemCount[0]?.count || '0') > 0) {
+        throw new ConflictException('Cannot delete product that is used in orders. Please remove from all orders first.');
+      }
+    } catch (error) {
+      // Order items table might not exist, ignore this check
+    }
+    
     product.isEnabled = false;
     await this.productRepository.save(product);
   }
 
   async hardDelete(id: number): Promise<void> {
+    const product = await this.findOne(id);
+    
+    // Check if product is used in invoice items
+    const invoiceItemCount = await this.productRepository.manager.query(
+      `SELECT COUNT(*) as count FROM invoice_items WHERE "productId" = $1`,
+      [id]
+    );
+    
+    if (parseInt(invoiceItemCount[0]?.count || '0') > 0) {
+      throw new ConflictException('Cannot delete product that is used in invoices. Please remove from all invoices first.');
+    }
+    
+    // Check if product is used in orders (if order_items table exists)
+    try {
+      const orderItemCount = await this.productRepository.manager.query(
+        `SELECT COUNT(*) as count FROM order_items WHERE "productId" = $1`,
+        [id]
+      );
+      
+      if (parseInt(orderItemCount[0]?.count || '0') > 0) {
+        throw new ConflictException('Cannot delete product that is used in orders. Please remove from all orders first.');
+      }
+    } catch (error) {
+      // Order items table might not exist, ignore this check
+    }
+    
     const result = await this.productRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Product with ID ${id} not found`);

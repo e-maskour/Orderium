@@ -88,6 +88,19 @@ CREATE DATABASE orderium_db;
 npm run migration:run
 ```
 
+### 5. Seed Database (Optional)
+
+Populate the database with initial configurations:
+
+```bash
+npm run seed
+```
+
+This will create default configurations for:
+- **Taxes**: Standard (20%), Reduced (10%), Zero (0%)
+- **Currencies**: MAD, EUR, USD
+- **Payment Terms**: Immediate, Net 15, Net 30, Net 60
+
 ## 🏃 Running the Application
 
 ### Development Mode
@@ -191,6 +204,14 @@ api/
 - `GET /api/statistics/orders` - Get order statistics
 - `GET /api/statistics/daily` - Get daily statistics
 
+### Configurations
+- `GET /api/configurations` - List all configurations
+- `GET /api/configurations/:id` - Get configuration by ID
+- `GET /api/configurations/entity/:entity` - Get by entity name
+- `POST /api/configurations` - Create configuration
+- `PUT /api/configurations/:id` - Update configuration
+- `DELETE /api/configurations/:id` - Delete configuration
+
 ### Portal
 - `POST /api/portal/login` - Admin login
 
@@ -225,7 +246,34 @@ npm run migration:generate -- src/database/migrations/MigrationName
 
 ```bash
 npm run migration:run
+```🌱 Database Seeders
+
+### Run All Seeders
+
+```bash
+npm run seed
 ```
+
+Seeders will:
+- Check for existing data to prevent duplicates
+- Create initial configurations (taxes, currencies, payment terms)
+- Log each operation with status
+
+### Creating New Seeders
+
+1. Create a new seeder file in `src/database/seeders/`
+2. Export an async function that accepts `DataSource`
+3. Add the seeder to `src/database/seeders/index.ts`
+
+Example:
+```typescript
+export async function seedYourData(dataSource: DataSource) {
+  const repository = dataSource.getRepository(YourEntity);
+  // Seed logic here
+}
+```
+
+## 
 
 ### Revert Last Migration
 

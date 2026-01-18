@@ -89,6 +89,7 @@ export class Invoice implements IInvoice {
   discountType: number;
   total: number;
   status: 'draft' | 'unpaid' | 'partial' | 'paid';
+  isValidated: boolean;
   notes?: string | null;
   dateCreated: string;
   dateUpdated: string;
@@ -112,6 +113,7 @@ export class Invoice implements IInvoice {
     this.discountType = data.discountType;
     this.total = data.total;
     this.status = data.status;
+    this.isValidated = data.isValidated;
     this.notes = data.notes;
     this.dateCreated = data.dateCreated;
     this.dateUpdated = data.dateUpdated;
@@ -223,6 +225,7 @@ export class Invoice implements IInvoice {
       discountType: data.discountType || 0,
       total: parseFloat(data.total) || 0,
       status: data.status || 'draft',
+      isValidated: data.isValidated || false,
       notes: data.notes,
       dateCreated: data.dateCreated,
       dateUpdated: data.dateUpdated,
@@ -266,7 +269,7 @@ export class InvoiceWithDetails implements IInvoiceWithDetails {
     const invoiceData = data.invoice || data;
     return new InvoiceWithDetails({
       invoice: Invoice.fromApiResponse(invoiceData),
-      items: (data.items || []).map(InvoiceItem.fromApiResponse),
+      items: (invoiceData.items || []).map(InvoiceItem.fromApiResponse),
     });
   }
 }

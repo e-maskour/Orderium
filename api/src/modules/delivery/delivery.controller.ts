@@ -1,6 +1,20 @@
-import { Controller, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  ParseIntPipe,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { DeliveryService } from './delivery.service';
+import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
+import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
 
 @ApiTags('Delivery')
 @Controller('delivery')
@@ -10,8 +24,44 @@ export class DeliveryController {
   @Get('persons')
   @ApiOperation({ summary: 'Get all delivery persons' })
   async getAllDeliveryPersons() {
-    const persons = await this.deliveryService.getAllDeliveryPersons();
-    return { success: true, persons };
+    const deliveryPersons =
+      await this.deliveryService.getAllDeliveryPersons();
+    return { success: true, deliveryPersons };
+  }
+
+  @Get('persons/:id')
+  @ApiOperation({ summary: 'Get a delivery person by ID' })
+  async getDeliveryPersonById(@Param('id', ParseIntPipe) id: number) {
+    const deliveryPerson = await this.deliveryService.getDeliveryPersonById(id);
+    return { success: true, deliveryPerson };
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new delivery person' })
+  async createDeliveryPerson(@Body() createDto: CreateDeliveryPersonDto) {
+    const deliveryPerson =
+      await this.deliveryService.createDeliveryPerson(createDto);
+    return { success: true, deliveryPerson };
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a delivery person' })
+  async updateDeliveryPerson(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDto: UpdateDeliveryPersonDto,
+  ) {
+    const deliveryPerson = await this.deliveryService.updateDeliveryPerson(
+      id,
+      updateDto,
+    );
+    return { success: true, deliveryPerson };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a delivery person' })
+  async deleteDeliveryPerson(@Param('id', ParseIntPipe) id: number) {
+    await this.deliveryService.deleteDeliveryPerson(id);
   }
 
   @Get('orders')

@@ -61,4 +61,16 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   stock?: number;
+
+  @ApiPropertyOptional({ description: 'Default tax percentage', minimum: 0, maximum: 100, default: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  defaultTax?: number;
+
+  @ApiPropertyOptional({ description: 'Minimum price', minimum: 0, default: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minPrice?: number;
 }

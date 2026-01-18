@@ -17,6 +17,7 @@ export interface Invoice {
   discountType: number;
   total: number;
   status: 'draft' | 'unpaid' | 'partial' | 'paid';
+  isValidated: boolean;
   notes?: string | null;
   dateCreated: string;
   dateUpdated: string;

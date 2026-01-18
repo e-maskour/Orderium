@@ -44,6 +44,12 @@ export class Product {
   @Column({ type: 'int', nullable: true })
   stock: number;
 
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
+  defaultTax: number;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  minPrice: number;
+
   @CreateDateColumn()
   dateCreated: Date;
 

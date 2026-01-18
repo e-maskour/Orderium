@@ -11,6 +11,8 @@ export class Product implements IProduct {
   isService: boolean;
   isEnabled: boolean;
   isPriceChangeAllowed: boolean;
+  defaultTax: number;
+  minPrice: number;
   dateCreated: string;
   dateUpdated: string;
   imageUrl?: string | null;
@@ -26,6 +28,8 @@ export class Product implements IProduct {
     this.isService = data.isService;
     this.isEnabled = data.isEnabled;
     this.isPriceChangeAllowed = data.isPriceChangeAllowed;
+    this.defaultTax = data.defaultTax;
+    this.minPrice = data.minPrice;
     this.dateCreated = data.dateCreated;
     this.dateUpdated = data.dateUpdated;
     this.imageUrl = data.imageUrl;
@@ -121,6 +125,8 @@ export class Product implements IProduct {
       isService: data.isService,
       isEnabled: data.isEnabled,
       isPriceChangeAllowed: data.isPriceChangeAllowed,
+      defaultTax: parseFloat(data.defaultTax) || 0,
+      minPrice: parseFloat(data.minPrice) || 0,
       dateCreated: data.dateCreated,
       dateUpdated: data.dateUpdated,
       imageUrl: data.imageUrl,
@@ -139,6 +145,8 @@ export class Product implements IProduct {
       isService: this.isService,
       isEnabled: this.isEnabled,
       isPriceChangeAllowed: this.isPriceChangeAllowed,
+      defaultTax: this.defaultTax,
+      minPrice: this.minPrice,
       imageUrl: this.imageUrl,
     };
   }
@@ -156,6 +164,8 @@ export class Product implements IProduct {
       isService: this.isService,
       isEnabled: this.isEnabled,
       isPriceChangeAllowed: this.isPriceChangeAllowed,
+      defaultTax: this.defaultTax,
+      minPrice: this.minPrice,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
       imageUrl: this.imageUrl,

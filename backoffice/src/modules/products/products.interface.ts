@@ -9,6 +9,8 @@ export interface Product {
   isService: boolean;
   isEnabled: boolean;
   isPriceChangeAllowed: boolean;
+  defaultTax: number;
+  minPrice: number;
   dateCreated: string;
   dateUpdated: string;
   imageUrl?: string | null;
@@ -42,6 +44,8 @@ export interface CreateProductDTO {
   isService: boolean;
   isEnabled: boolean;
   isPriceChangeAllowed: boolean;
+  defaultTax?: number;
+  minPrice?: number;
   imageUrl?: string | null;
 }
 
@@ -55,5 +59,7 @@ export interface UpdateProductDTO {
   isService?: boolean;
   isEnabled?: boolean;
   isPriceChangeAllowed?: boolean;
+  defaultTax?: number;
+  minPrice?: number;
   imageUrl?: string | null;
 }

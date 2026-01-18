@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Trash2, Edit2, Calendar, CreditCard, FileText, Hash, Plus, AlertCircle } from 'lucide-react';
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import PaymentModal from './PaymentModal';
+import ConfirmDialog from './ConfirmDialog';
+import AlertDialog from './AlertDialog';
 
 interface PaymentHistoryModalProps {
   isOpen: boolean;
@@ -29,6 +31,12 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [totalPaid, setTotalPaid] = useState(0);
+  
+  // Confirmation and alert dialogs
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePaymentId, setDeletePaymentId] = useState<number | null>(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState({ title: '', message: '', type: 'error' as const });
 
   useEffect(() => {
     if (isOpen) {
@@ -52,15 +60,28 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) return;
+    setDeletePaymentId(id);
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDelete = async () => {
+    if (deletePaymentId === null) return;
+    
     try {
-      await paymentsService.delete(id);
+      await paymentsService.delete(deletePaymentId);
       await fetchPayments();
       onPaymentUpdate();
+      setShowDeleteConfirm(false);
+      setDeletePaymentId(null);
     } catch (error) {
       console.error('Error deleting payment:', error);
-      alert('Erreur lors de la suppression du paiement');
+      setShowDeleteConfirm(false);
+      setAlertMessage({
+        title: 'Erreur',
+        message: 'Erreur lors de la suppression du paiement',
+        type: 'error'
+      });
+      setShowAlert(true);
     }
   };
 
@@ -254,6 +275,28 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
           payment={selectedPayment}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeletePaymentId(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Supprimer le paiement"
+        message="Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible."
+        type="danger"
+        confirmText="Supprimer"
+        cancelText="Annuler"
+      />
+
+      <AlertDialog
+        isOpen={showAlert}
+        onClose={() => setShowAlert(false)}
+        title={alertMessage.title}
+        message={alertMessage.message}
+        type={alertMessage.type}
+      />
     </>
   );
 };

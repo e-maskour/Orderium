@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Invoice, InvoiceItem, InvoiceStatus } from './entities/invoice.entity';
+import { Product } from '../products/entities/product.entity';
 
 interface CreateInvoiceItemDTO {
   productId?: number;
@@ -38,9 +39,13 @@ export class InvoicesService {
     private readonly invoiceRepository: Repository<Invoice>,
     @InjectRepository(InvoiceItem)
     private readonly invoiceItemRepository: Repository<InvoiceItem>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
   ) {}
 
-  private async calculateInvoiceStatus(invoiceId: number): Promise<InvoiceStatus> {
+  private async calculateInvoiceStatus(
+    invoiceId: number,
+  ): Promise<InvoiceStatus> {
     const invoice = await this.invoiceRepository.findOne({
       where: { id: invoiceId },
       relations: ['items'],
@@ -50,8 +55,8 @@ export class InvoicesService {
       return InvoiceStatus.DRAFT;
     }
 
-    // Check if invoice has items
-    if (!invoice.items || invoice.items.length === 0) {
+    // If not validated, always DRAFT
+    if (!invoice.isValidated) {
       return InvoiceStatus.DRAFT;
     }
 
@@ -72,7 +77,7 @@ export class InvoicesService {
     // This will need to be injected from payments service or calculated via raw query
     const result = await this.invoiceRepository.manager.query(
       `SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE "invoiceId" = $1`,
-      [invoiceId]
+      [invoiceId],
     );
     return parseFloat(result[0]?.total || '0');
   }
@@ -93,24 +98,34 @@ export class InvoicesService {
   }
 
   async create(createInvoiceDto: CreateInvoiceDTO): Promise<Invoice> {
-    // Generate invoice number
-    const lastInvoice = await this.invoiceRepository.find({
-      order: { id: 'DESC' },
-      take: 1,
-    });
-    const nextNumber = lastInvoice.length > 0 ? parseInt(lastInvoice[0].invoiceNumber.split('-')[1]) + 1 : 1;
-    const invoiceNumber = `INV-${String(nextNumber).padStart(6, '0')}`;
+    // Generate provisional invoice number for draft
+    const lastProvisional = await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .where('invoice.invoiceNumber LIKE :pattern', { pattern: 'PROV%' })
+      .orderBy('invoice.id', 'DESC')
+      .limit(1)
+      .getOne();
+    
+    let nextProvisionalNumber = 1;
+    if (lastProvisional) {
+      const match = lastProvisional.invoiceNumber.match(/PROV(\d+)/);
+      if (match) {
+        nextProvisionalNumber = parseInt(match[1]) + 1;
+      }
+    }
+    const provisionalNumber = `PROV${nextProvisionalNumber}`;
 
     // Calculate totals
     let subtotal = 0;
-    const items = createInvoiceDto.items.map(item => {
+    const items = createInvoiceDto.items.map((item) => {
       const itemSubtotal = item.quantity * item.unitPrice;
-      const discountAmount = item.discountType === 1 
-        ? itemSubtotal * (item.discount / 100) 
-        : item.discount;
+      const discountAmount =
+        item.discountType === 1
+          ? itemSubtotal * (item.discount / 100)
+          : item.discount;
       const itemTotal = itemSubtotal - discountAmount;
       subtotal += itemTotal;
-      
+
       return {
         ...item,
         total: itemTotal,
@@ -119,16 +134,17 @@ export class InvoicesService {
     });
 
     // Calculate global discount and tax
-    const globalDiscountAmount = createInvoiceDto.discountType === 1
-      ? subtotal * (createInvoiceDto.discount / 100)
-      : createInvoiceDto.discount;
+    const globalDiscountAmount =
+      createInvoiceDto.discountType === 1
+        ? subtotal * (createInvoiceDto.discount / 100)
+        : createInvoiceDto.discount;
     const subtotalAfterDiscount = subtotal - globalDiscountAmount;
     const taxAmount = subtotalAfterDiscount * (createInvoiceDto.tax / 100);
     const total = subtotalAfterDiscount + taxAmount;
 
-    // Create invoice
+    // Create invoice with provisional number and draft status
     const invoice = this.invoiceRepository.create({
-      invoiceNumber,
+      invoiceNumber: provisionalNumber,
       customerId: createInvoiceDto.customerId,
       customerName: createInvoiceDto.customerName,
       customerPhone: createInvoiceDto.customerPhone,
@@ -138,19 +154,37 @@ export class InvoicesService {
       supplierPhone: createInvoiceDto.supplierPhone,
       supplierAddress: createInvoiceDto.supplierAddress,
       date: new Date(createInvoiceDto.date),
-      dueDate: createInvoiceDto.dueDate ? new Date(createInvoiceDto.dueDate) : undefined,
+      dueDate: createInvoiceDto.dueDate
+        ? new Date(createInvoiceDto.dueDate)
+        : undefined,
       subtotal,
       tax: createInvoiceDto.tax,
       discount: createInvoiceDto.discount,
       discountType: createInvoiceDto.discountType,
       total,
       notes: createInvoiceDto.notes,
+      status: InvoiceStatus.DRAFT,
+      isValidated: false,
     });
 
     const savedInvoice = await this.invoiceRepository.save(invoice);
 
+    // Validate minimum prices for items with productId
+    for (const item of createInvoiceDto.items) {
+      if (item.productId) {
+        const product = await this.productRepository.findOne({ 
+          where: { id: item.productId } 
+        });
+        if (product && product.minPrice > 0 && item.unitPrice < product.minPrice) {
+          throw new BadRequestException(
+            `Unit price ${item.unitPrice} is below minimum price ${product.minPrice} for product "${product.name}"`
+          );
+        }
+      }
+    }
+
     // Create invoice items
-    const invoiceItems = items.map(item =>
+    const invoiceItems = items.map((item) =>
       this.invoiceItemRepository.create({
         invoiceId: savedInvoice.id,
         productId: item.productId,
@@ -166,10 +200,7 @@ export class InvoicesService {
 
     await this.invoiceItemRepository.save(invoiceItems);
 
-    // Update invoice status based on items
-    const status = await this.calculateInvoiceStatus(savedInvoice.id);
-    await this.invoiceRepository.update(savedInvoice.id, { status });
-
+    // Return the created invoice with items
     const result = await this.findOne(savedInvoice.id);
     if (!result) {
       throw new Error('Failed to create invoice');
@@ -177,87 +208,232 @@ export class InvoicesService {
     return result;
   }
 
-  async update(id: number, updateInvoiceDto: Partial<CreateInvoiceDTO>): Promise<Invoice> {
+  async update(
+    id: number,
+    updateInvoiceDto: Partial<CreateInvoiceDTO>,
+  ): Promise<Invoice> {
+    const invoice = await this.findOne(id);
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+
+    // Prevent updates to validated invoices
+    if (invoice.isValidated) {
+      throw new BadRequestException('Cannot update a validated invoice. Please devalidate it first.');
+    }
+
+    try {
+      // If items are being updated, handle item replacement
+      if (updateInvoiceDto.items && Array.isArray(updateInvoiceDto.items)) {
+        console.log(`Updating invoice ${id} with ${updateInvoiceDto.items.length} items`);
+        
+        // Validate that we have items
+        if (updateInvoiceDto.items.length === 0) {
+          throw new BadRequestException('Cannot update invoice with empty items array');
+        }
+
+        // Calculate totals
+        let subtotal = 0;
+        const items = updateInvoiceDto.items.map((item) => {
+          const itemSubtotal = item.quantity * item.unitPrice;
+          const discountAmount =
+            item.discountType === 1
+              ? itemSubtotal * (item.discount / 100)
+              : item.discount;
+          const itemTotal = itemSubtotal - discountAmount;
+          subtotal += itemTotal;
+
+          return {
+            ...item,
+            total: itemTotal,
+            tax: item.tax || 0,
+          };
+        });
+
+        const globalDiscountAmount =
+          (updateInvoiceDto.discountType ?? invoice.discountType ?? 0) === 1
+            ? subtotal * ((updateInvoiceDto.discount ?? invoice.discount ?? 0) / 100)
+            : (updateInvoiceDto.discount ?? invoice.discount ?? 0);
+        const subtotalAfterDiscount = subtotal - globalDiscountAmount;
+        const taxAmount =
+          subtotalAfterDiscount * ((updateInvoiceDto.tax ?? invoice.tax ?? 0) / 100);
+        const total = subtotalAfterDiscount + taxAmount;
+
+        // Delete old items
+        await this.invoiceItemRepository.delete({ invoiceId: id });
+        console.log(`Deleted old items for invoice ${id}`);
+
+        // Create new items
+        // Validate minimum prices for items with productId
+        for (const item of items) {
+          if (item.productId) {
+            const product = await this.productRepository.findOne({ 
+              where: { id: item.productId } 
+            });
+            if (product && product.minPrice > 0 && item.unitPrice < product.minPrice) {
+              throw new BadRequestException(
+                `Unit price ${item.unitPrice} is below minimum price ${product.minPrice} for product "${product.name}"`
+              );
+            }
+          }
+        }
+
+        const invoiceItems = items.map((item) =>
+          this.invoiceItemRepository.create({
+            invoiceId: id,
+            productId: item.productId,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discount: item.discount,
+            discountType: item.discountType,
+            tax: item.tax,
+            total: item.total,
+          }),
+        );
+
+        const savedItems = await this.invoiceItemRepository.save(invoiceItems);
+        console.log(`Saved ${savedItems.length} new items for invoice ${id}`);
+
+        // Prepare invoice update data (exclude items)
+        const { items: _, ...invoiceUpdateData } = updateInvoiceDto;
+        
+        // Update invoice with new totals
+        await this.invoiceRepository.update(id, {
+          ...invoiceUpdateData,
+          date: updateInvoiceDto.date
+            ? new Date(updateInvoiceDto.date)
+            : invoice.date,
+          dueDate: updateInvoiceDto.dueDate
+            ? new Date(updateInvoiceDto.dueDate)
+            : invoice.dueDate,
+          subtotal,
+          total,
+        });
+
+        console.log(`Updated invoice ${id} with new totals`);
+      } else {
+        // Update invoice without items
+        await this.invoiceRepository.update(id, {
+          ...updateInvoiceDto,
+          date: updateInvoiceDto.date
+            ? new Date(updateInvoiceDto.date)
+            : undefined,
+          dueDate: updateInvoiceDto.dueDate
+            ? new Date(updateInvoiceDto.dueDate)
+            : undefined,
+        });
+      }
+
+      // Return the updated invoice
+      const result = await this.findOne(id);
+      if (!result) {
+        throw new NotFoundException('Invoice not found after update');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error(`Error updating invoice ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async remove(id: number): Promise<void> {
+    // Check if invoice has payments
+    const totalPaid = await this.getTotalPaid(id);
+    if (totalPaid > 0) {
+      throw new Error('Cannot delete invoice that has payments.');
+    }
+
+    await this.invoiceItemRepository.delete({ invoiceId: id });
+    await this.invoiceRepository.delete(id);
+  }
+
+  async validate(id: number): Promise<Invoice> {
     const invoice = await this.findOne(id);
     if (!invoice) {
       throw new Error('Invoice not found');
     }
 
-    // If items are being updated, delete old items and create new ones
-    if (updateInvoiceDto.items) {
-      await this.invoiceItemRepository.delete({ invoiceId: id });
-
-      // Calculate totals
-      let subtotal = 0;
-      const items = updateInvoiceDto.items.map(item => {
-        const itemSubtotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1 
-          ? itemSubtotal * (item.discount / 100) 
-          : item.discount;
-        const itemTotal = itemSubtotal - discountAmount;
-        subtotal += itemTotal;
-        
-        return {
-          ...item,
-          total: itemTotal,
-          tax: item.tax || 0,
-        };
-      });
-
-      const globalDiscountAmount = (updateInvoiceDto.discountType ?? invoice.discountType) === 1
-        ? subtotal * ((updateInvoiceDto.discount ?? invoice.discount) / 100)
-        : (updateInvoiceDto.discount ?? invoice.discount);
-      const subtotalAfterDiscount = subtotal - globalDiscountAmount;
-      const taxAmount = subtotalAfterDiscount * ((updateInvoiceDto.tax ?? invoice.tax) / 100);
-      const total = subtotalAfterDiscount + taxAmount;
-
-      // Update invoice
-      await this.invoiceRepository.update(id, {
-        ...updateInvoiceDto,
-        date: updateInvoiceDto.date ? new Date(updateInvoiceDto.date) : invoice.date,
-        dueDate: updateInvoiceDto.dueDate ? new Date(updateInvoiceDto.dueDate) : invoice.dueDate,
-        subtotal,
-        total,
-      });
-
-      // Create new items
-      const invoiceItems = items.map(item =>
-        this.invoiceItemRepository.create({
-          invoiceId: id,
-          productId: item.productId,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          discount: item.discount,
-          discountType: item.discountType,
-          tax: item.tax,
-          total: item.total,
-        }),
-      );
-
-      await this.invoiceItemRepository.save(invoiceItems);
-
-      // Update invoice status based on items
-      const status = await this.calculateInvoiceStatus(id);
-      await this.invoiceRepository.update(id, { status });
-    } else {
-      // Update invoice without items
-      await this.invoiceRepository.update(id, {
-        ...updateInvoiceDto,
-        date: updateInvoiceDto.date ? new Date(updateInvoiceDto.date) : undefined,
-        dueDate: updateInvoiceDto.dueDate ? new Date(updateInvoiceDto.dueDate) : undefined,
-      });
+    if (invoice.isValidated) {
+      throw new Error('Invoice is already validated');
     }
+
+    // Generate final invoice number
+    const lastInvoice = await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .where('invoice.invoiceNumber LIKE :pattern', { pattern: 'INV-%' })
+      .orderBy('invoice.id', 'DESC')
+      .limit(1)
+      .getOne();
+    
+    let nextNumber = 1;
+    if (lastInvoice) {
+      const match = lastInvoice.invoiceNumber.match(/INV-(\d+)/);
+      if (match) {
+        nextNumber = parseInt(match[1]) + 1;
+      }
+    }
+    const finalInvoiceNumber = `INV-${String(nextNumber).padStart(5, '0')}`;
+
+    // Update invoice with final number and validated status
+    await this.invoiceRepository.update(id, {
+      invoiceNumber: finalInvoiceNumber,
+      isValidated: true,
+      status: InvoiceStatus.UNPAID,
+    });
 
     const result = await this.findOne(id);
     if (!result) {
-      throw new Error('Invoice not found after update');
+      throw new Error('Invoice not found after validation');
     }
     return result;
   }
 
-  async remove(id: number): Promise<void> {
-    await this.invoiceItemRepository.delete({ invoiceId: id });
-    await this.invoiceRepository.delete(id);
+  async devalidate(id: number): Promise<Invoice> {
+    // Find the invoice
+    const invoice = await this.findOne(id);
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+
+    // Check if the invoice is validated
+    if (!invoice.isValidated) {
+      throw new BadRequestException('Invoice is not validated');
+    }
+
+    // Generate new provisional number (PROV format)
+    const lastProvNumber = await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .where('invoice.invoiceNumber LIKE :pattern', { pattern: 'PROV%' })
+      .orderBy('invoice.id', 'DESC')
+      .limit(1)
+      .getOne();
+
+    let nextProvNumber: string;
+    if (lastProvNumber) {
+      const match = lastProvNumber.invoiceNumber.match(/PROV(\d+)/);
+      if (match) {
+        const lastNumber = parseInt(match[1]);
+        nextProvNumber = `PROV${lastNumber + 1}`;
+      } else {
+        nextProvNumber = 'PROV1';
+      }
+    } else {
+      nextProvNumber = 'PROV1';
+    }
+
+    // Update invoice back to draft status with new provisional number
+    await this.invoiceRepository.update(id, {
+      invoiceNumber: nextProvNumber,
+      isValidated: false,
+      status: InvoiceStatus.DRAFT,
+    });
+
+    const result = await this.findOne(id);
+    if (!result) {
+      throw new Error('Invoice not found after devalidation');
+    }
+    return result;
   }
 }

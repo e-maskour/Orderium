@@ -22,6 +22,13 @@ export class PartnersService {
     return Partner.fromApiResponse(data.partner);
   }
 
+  async getById(id: number): Promise<Partner> {
+    const response = await fetch(`${API_URL}/partners/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch partner');
+    const data = await response.json();
+    return Partner.fromApiResponse(data.partner);
+  }
+
   async create(data: CreatePartnerDTO): Promise<Partner> {
     const response = await fetch(`${API_URL}/partners`, {
       method: 'POST',
@@ -54,7 +61,10 @@ export class PartnersService {
     const response = await fetch(`${API_URL}/partners/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to delete partner');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete partner');
+    }
   }
 }
 

@@ -21,6 +21,7 @@ import {
   ShoppingBag,
   DollarSign,
   Wallet,
+  Settings,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -155,6 +156,11 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
       path: '/pos',
       icon: CreditCard,
       label: t('pointOfSale'),
+    },
+    {
+      path: '/configurations',
+      icon: Settings,
+      label: 'Configurations',
     },
   ];
 

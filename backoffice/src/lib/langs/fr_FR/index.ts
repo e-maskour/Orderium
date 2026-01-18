@@ -7,6 +7,7 @@ import invoices from './invoices';
 import delivery from './delivery';
 import notifications from './notifications';
 import pos from './pos';
+import configurations from './configurations';
 
 export default {
   ...common,
@@ -18,4 +19,5 @@ export default {
   ...delivery,
   ...notifications,
   ...pos,
+  ...configurations,
 };

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Edit, Trash2, Download, Filter, ChevronDown, MoreVertical, CreditCard } from 'lucide-react';
+import { Search, Edit, Trash2, Download, Filter, ChevronDown, CreditCard, CheckCircle, Eye } from 'lucide-react';
+import { FloatingActionBar } from './FloatingActionBar';
 
 interface Facture {
   id: number;
@@ -7,7 +8,8 @@ interface Facture {
   date: string;
   partnerName: string;
   amount: number;
-  status: 'paid' | 'pending' | 'overdue';
+  status: 'paid' | 'pending' | 'overdue' | 'draft' | 'partial' | 'unpaid';
+  isValidated?: boolean;
   dueDate?: string;
   itemsCount?: number;
 }
@@ -19,26 +21,56 @@ interface FactureTableProps {
   onDelete?: (id: number) => void;
   onDownload?: (id: number) => void;
   onViewPayments?: (id: number) => void;
+  onValidate?: (id: number) => void;
+  onDevalidate?: (id: number) => void;
+  loading?: boolean;
 }
 
-export function FactureTable({ type, factures, onEdit, onDelete, onDownload, onViewPayments }: FactureTableProps) {
+export function FactureTable({ type, factures, onEdit, onDelete, onDownload, onViewPayments, onValidate, onDevalidate, loading }: FactureTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'number'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedFactures, setSelectedFactures] = useState<number[]>([]);
   const itemsPerPage = 10;
 
   const partnerLabel = type === 'vente' ? 'Client' : 'Fournisseur';
+
+  // Selection functions
+  const handleSelectAll = () => {
+    if (selectedFactures.length === paginatedFactures.length) {
+      setSelectedFactures([]);
+    } else {
+      setSelectedFactures(paginatedFactures.map(f => f.id));
+    }
+  };
+
+  const handleSelectFacture = (id: number) => {
+    setSelectedFactures(prev => 
+      prev.includes(id) 
+        ? prev.filter(fId => fId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const clearSelection = () => {
+    setSelectedFactures([]);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'partial':
       case 'pending':
         return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'overdue':
         return 'bg-red-50 text-red-700 border-red-200';
+      case 'unpaid':
+        return 'bg-orange-50 text-orange-700 border-orange-200';
+      case 'draft':
+        return 'bg-slate-50 text-slate-700 border-slate-200';
       default:
         return 'bg-slate-50 text-slate-700 border-slate-200';
     }
@@ -48,10 +80,16 @@ export function FactureTable({ type, factures, onEdit, onDelete, onDownload, onV
     switch (status) {
       case 'paid':
         return 'Payée';
+      case 'partial':
+        return 'Partielle';
       case 'pending':
         return 'En attente';
       case 'overdue':
         return 'En retard';
+      case 'unpaid':
+        return 'Impayée';
+      case 'draft':
+        return 'Brouillon';
       default:
         return status;
     }
@@ -92,52 +130,118 @@ export function FactureTable({ type, factures, onEdit, onDelete, onDownload, onV
 
   return (
     <div className="space-y-4">
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
+      {/* Search */}
+      <div className="flex justify-end mb-4">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Rechercher par numéro ou nom..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+            className="w-96 pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
           />
         </div>
-
-        {/* Filters */}
-        <div className="flex items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all bg-white"
-          >
-            <option value="all">Tous les statuts</option>
-            <option value="paid">Payées</option>
-            <option value="pending">En attente</option>
-            <option value="overdue">En retard</option>
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all bg-white"
-          >
-            <option value="date">Trier par date</option>
-            <option value="amount">Trier par montant</option>
-            <option value="number">Trier par numéro</option>
-          </select>
-
-          <button
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="p-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-            title={sortOrder === 'asc' ? 'Croissant' : 'Décroissant'}
-          >
-            <ChevronDown className={`w-4 h-4 text-slate-600 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
       </div>
+
+      {/* Separator Line */}
+      <div className="border-t border-slate-200"></div>
+
+      {/* Floating Action Bar */}
+      <FloatingActionBar
+        selectedCount={selectedFactures.length}
+        onClearSelection={clearSelection}
+        onSelectAll={handleSelectAll}
+        isAllSelected={selectedFactures.length === paginatedFactures.length && paginatedFactures.length > 0}
+        totalCount={paginatedFactures.length}
+        itemLabel="facture"
+        actions={(() => {
+          // Check if selected factures have mixed validation states
+          const selectedFacturesData = selectedFactures.map(id => factures.find(f => f.id === id)).filter((f): f is Facture => f !== undefined);
+          const hasValidated = selectedFacturesData.some(f => f.isValidated);
+          const hasUnvalidated = selectedFacturesData.some(f => !f.isValidated);
+          const hasMixedValidation = hasValidated && hasUnvalidated;
+          
+          return [
+            {
+              id: 'view',
+              label: 'Voir',
+              icon: <Eye className="w-4 h-4" />,
+              onClick: () => {
+                if (selectedFactures.length === 1) {
+                  onEdit?.(selectedFactures[0]);
+                  clearSelection();
+                }
+              },
+              hidden: selectedFactures.length !== 1
+            },
+            {
+              id: 'validate',
+              label: 'Valider',
+              icon: <CheckCircle className="w-4 h-4" />,
+              onClick: () => {
+                selectedFactures.forEach(id => {
+                  const facture = factures.find(f => f.id === id);
+                  if (facture && !facture.isValidated) {
+                    onValidate?.(id);
+                  }
+                });
+                clearSelection();
+              },
+              variant: 'primary' as const,
+              hidden: hasMixedValidation || (selectedFactures.length === 1 && hasValidated)
+            },
+            {
+              id: 'devalidate',
+              label: 'Dévalider', 
+              icon: <Edit className="w-4 h-4" />,
+              onClick: () => {
+                selectedFactures.forEach(id => {
+                  const facture = factures.find(f => f.id === id);
+                  if (facture && facture.isValidated) {
+                    onDevalidate?.(id);
+                  }
+                });
+                clearSelection();
+              },
+              hidden: hasMixedValidation || (selectedFactures.length === 1 && hasUnvalidated)
+            },
+            {
+              id: 'payments',
+              label: 'Paiements',
+              icon: <CreditCard className="w-4 h-4" />,
+              onClick: () => {
+                if (selectedFactures.length === 1) {
+                  onViewPayments?.(selectedFactures[0]);
+                  clearSelection();
+                }
+              },
+              hidden: selectedFactures.length !== 1 || selectedFacturesData.every(facture => 
+                !facture?.isValidated || facture?.status === 'draft'
+              )
+            },
+            {
+              id: 'download',
+              label: 'Télécharger',
+              icon: <Download className="w-4 h-4" />,
+              onClick: () => {
+                selectedFactures.forEach(id => onDownload?.(id));
+                clearSelection();
+              }
+            },
+            {
+              id: 'delete',
+              label: 'Supprimer',
+              icon: <Trash2 className="w-4 h-4" />,
+              onClick: () => {
+                selectedFactures.forEach(id => onDelete?.(id));
+                clearSelection();
+              },
+              variant: 'danger' as const
+            }
+          ];
+        })()}
+      />
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
@@ -145,6 +249,20 @@ export function FactureTable({ type, factures, onEdit, onDelete, onDownload, onV
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
+                <th className="py-4 px-6">
+                  <div
+                    onClick={handleSelectAll}
+                    className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
+                      selectedFactures.length === paginatedFactures.length && paginatedFactures.length > 0
+                        ? 'bg-amber-500 border-amber-500 text-white'
+                        : 'bg-white border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    {selectedFactures.length === paginatedFactures.length && paginatedFactures.length > 0 && (
+                      <CheckCircle className="w-4 h-4" />
+                    )}
+                  </div>
+                </th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Numéro
                 </th>
@@ -163,17 +281,54 @@ export function FactureTable({ type, factures, onEdit, onDelete, onDownload, onV
                 <th className="text-center py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Statut
                 </th>
-                <th className="text-center py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
-              {paginatedFactures.length > 0 ? (
+            <tbody className="">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+                      <p className="text-slate-500">Chargement des factures...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedFactures.length > 0 ? (
                 paginatedFactures.map((facture) => (
-                  <tr key={facture.id} className="hover:bg-slate-50 transition-colors">
+                  <tr 
+                    key={facture.id} 
+                    className={`transition-all duration-200 cursor-pointer border-l-4 border-b border-slate-200 ${
+                      selectedFactures.includes(facture.id) 
+                        ? 'bg-amber-50 border-l-amber-500 shadow-md !bg-amber-50' 
+                        : 'hover:bg-slate-50 border-l-transparent'
+                    }`}
+                    style={selectedFactures.includes(facture.id) ? { backgroundColor: 'rgb(255 251 235)' } : {}}
+                    onClick={() => handleSelectFacture(facture.id)}
+                  >
                     <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800">{facture.number}</span>
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectFacture(facture.id);
+                        }}
+                        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
+                          selectedFactures.includes(facture.id)
+                            ? 'bg-amber-500 border-amber-500 text-white'
+                            : 'bg-white border-slate-300 hover:border-slate-400'
+                        }`}
+                      >
+                        {selectedFactures.includes(facture.id) && (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <button
+                        onClick={() => onEdit?.(facture.id)}
+                        className="font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                      >
+                        {facture.number}
+                      </button>
                     </td>
                     <td className="py-4 px-6">
                       <span className="text-sm text-slate-600">
@@ -204,38 +359,6 @@ export function FactureTable({ type, factures, onEdit, onDelete, onDownload, onV
                         <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(facture.status)}`}>
                           {getStatusLabel(facture.status)}
                         </span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => onViewPayments?.(facture.id)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Paiements"
-                        >
-                          <CreditCard className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onEdit?.(facture.id)}
-                          className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                          title="Modifier"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDownload?.(facture.id)}
-                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Télécharger"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDelete?.(facture.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
                     </td>
                   </tr>
