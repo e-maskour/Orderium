@@ -564,7 +564,7 @@ export default function Orders() {
             onChange={(e) => {
               if (e.target.value) {
                 selectedOrders.forEach(orderId => {
-                  const order = filteredOrders.find((o: any) => o.OrderId === orderId);
+                  const order = filteredOrders.find((o: any) => o.id === orderId);
                   if (order && order.status !== 'delivered') {
                     handleAssign(orderId, e.target.value);
                   }

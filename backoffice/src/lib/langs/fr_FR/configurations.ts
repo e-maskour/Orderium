@@ -111,7 +111,6 @@ export default {
   saving: 'Enregistrement...',
   
   // Status Labels
-  default: 'Par défaut',
   daysLabel: 'jours',
   
   // Confirmation Messages

@@ -102,4 +102,44 @@ export class DeliveryService {
       order: { dateCreated: 'DESC' },
     });
   }
+
+  async assignOrderToDelivery(
+    orderId: number,
+    deliveryPersonId: number,
+  ): Promise<OrderDelivery> {
+    // Check if delivery already exists for this order
+    let orderDelivery = await this.orderDeliveryRepository.findOne({
+      where: { orderId },
+    });
+
+    if (orderDelivery) {
+      // Update existing delivery
+      orderDelivery.deliveryPersonId = deliveryPersonId;
+      orderDelivery.assignedAt = new Date();
+      orderDelivery.status = 'assigned';
+    } else {
+      // Create new delivery
+      orderDelivery = this.orderDeliveryRepository.create({
+        orderId,
+        deliveryPersonId,
+        assignedAt: new Date(),
+        status: 'assigned',
+      });
+    }
+
+    return this.orderDeliveryRepository.save(orderDelivery);
+  }
+
+  async unassignOrder(orderId: number): Promise<void> {
+    const orderDelivery = await this.orderDeliveryRepository.findOne({
+      where: { orderId },
+    });
+
+    if (orderDelivery) {
+      orderDelivery.deliveryPersonId = null;
+      orderDelivery.assignedAt = null;
+      orderDelivery.status = 'pending';
+      await this.orderDeliveryRepository.save(orderDelivery);
+    }
+  }
 }

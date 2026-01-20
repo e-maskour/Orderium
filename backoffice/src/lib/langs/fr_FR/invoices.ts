@@ -153,7 +153,6 @@ export default {
   'invoice.itemDescriptionPlaceholder': 'Description de l\'article',
   'invoice.productSearchPlaceholder': 'Rechercher un produit...',
   'invoice.noProductsFound': 'Aucun produit trouvé',
-  'invoice.amount': 'Montant',
   'invoice.percentage': 'Pourcentage',
   'invoice.discountTypeAmount': 'Montant',
   'invoice.discountTypePercentage': '%',

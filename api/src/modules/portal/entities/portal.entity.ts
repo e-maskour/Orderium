@@ -35,14 +35,8 @@ export class Portal {
   @Column({ type: 'boolean', default: false })
   isCustomer: boolean;
 
-  @Column({ type: 'int', nullable: true })
-  customerId: number | null;
-
   @Column({ type: 'boolean', default: false })
   isDelivery: boolean;
-
-  @Column({ type: 'int', nullable: true })
-  deliveryId: number | null;
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
@@ -53,11 +47,17 @@ export class Portal {
   @UpdateDateColumn()
   dateUpdated: Date;
 
-  @ManyToOne(() => Partner, { nullable: true })
+  @ManyToOne(() => Partner, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'customerId' })
   customer: Partner;
 
-  @ManyToOne(() => DeliveryPerson, { nullable: true })
+  @Column({ type: 'int', nullable: true })
+  customerId: number | null;
+
+  @ManyToOne(() => DeliveryPerson, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'deliveryId' })
   deliveryPerson: DeliveryPerson;
+
+  @Column({ type: 'int', nullable: true })
+  deliveryId: number | null;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   Controller,
   Get,
@@ -77,5 +78,24 @@ export class DeliveryController {
   async getDeliveryPersonOrders(@Param('id', ParseIntPipe) id: number) {
     const orders = await this.deliveryService.getDeliveryPersonOrders(id);
     return { success: true, orders };
+  }
+
+  @Post('assign')
+  @ApiOperation({ summary: 'Assign order to delivery person' })
+  async assignToDelivery(
+    @Body() body: { OrderId: number; DeliveryPersonId: number },
+  ) {
+    const orderDelivery = await this.deliveryService.assignOrderToDelivery(
+      body.OrderId,
+      body.DeliveryPersonId,
+    );
+    return { success: true, orderDelivery };
+  }
+
+  @Post('unassign/:orderId')
+  @ApiOperation({ summary: 'Unassign order from delivery person' })
+  async unassignOrder(@Param('orderId', ParseIntPipe) orderId: number) {
+    await this.deliveryService.unassignOrder(orderId);
+    return { success: true };
   }
 }

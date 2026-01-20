@@ -11,6 +11,8 @@ import {
 } from 'typeorm';
 import { Partner } from '../../partners/entities/partner.entity';
 import { Product } from '../../products/entities/product.entity';
+import { Warehouse } from '../../inventory/entities/warehouse.entity';
+import { Portal } from '../../portal/entities/portal.entity';
 
 @Entity('orders')
 @Index(['number'])
@@ -24,8 +26,16 @@ export class Order {
   @Column({ type: 'varchar', length: 50, unique: true })
   number: string;
 
+  @ManyToOne(() => Portal, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'adminId' })
+  admin: Portal;
+
   @Column({ type: 'int', nullable: true })
   adminId: number | null;
+
+  @ManyToOne(() => Partner, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'customerId' })
+  customer: Partner;
 
   @Column({ type: 'int', nullable: true })
   customerId: number | null;
@@ -47,6 +57,10 @@ export class Order {
 
   @Column({ type: 'int', nullable: true })
   documentTypeId: number | null;
+
+  @ManyToOne(() => Warehouse, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'warehouseId' })
+  warehouse: Warehouse;
 
   @Column({ type: 'int', nullable: true })
   warehouseId: number | null;
@@ -84,10 +98,6 @@ export class Order {
   @UpdateDateColumn()
   dateUpdated: Date;
 
-  @ManyToOne(() => Partner, { nullable: true })
-  @JoinColumn({ name: 'customerId' })
-  customer: Partner;
-
   @OneToMany(() => OrderItem, (item) => item.order)
   items: OrderItem[];
 }
@@ -98,12 +108,6 @@ export class Order {
 export class OrderItem {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column({ type: 'int' })
-  orderId: number;
-
-  @Column({ type: 'int' })
-  productId: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
   quantity: number;
@@ -145,7 +149,13 @@ export class OrderItem {
   @JoinColumn({ name: 'orderId' })
   order: Order;
 
-  @ManyToOne(() => Product, { nullable: true })
+  @Column({ type: 'int' })
+  orderId: number;
+
+  @ManyToOne(() => Product, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'productId' })
   product: Product;
+
+  @Column({ type: 'int', nullable: true })
+  productId: number | null;
 }

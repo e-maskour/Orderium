@@ -10,6 +10,7 @@ import {
   Index,
 } from 'typeorm';
 import { Partner } from '../../partners/entities/partner.entity';
+import { Product } from '../../products/entities/product.entity';
 
 export enum InvoiceStatus {
   DRAFT = 'draft',
@@ -113,8 +114,16 @@ export class InvoiceItem {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @ManyToOne(() => Invoice, (invoice) => invoice.items, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'invoiceId' })
+  invoice: Invoice;
+
   @Column({ type: 'int' })
   invoiceId: number;
+
+  @ManyToOne(() => Product, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'productId' })
+  product: Product;
 
   @Column({ type: 'int', nullable: true })
   productId: number;
@@ -139,8 +148,4 @@ export class InvoiceItem {
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
   total: number;
-
-  @ManyToOne(() => Invoice, (invoice) => invoice.items)
-  @JoinColumn({ name: 'invoiceId' })
-  invoice: Invoice;
 }

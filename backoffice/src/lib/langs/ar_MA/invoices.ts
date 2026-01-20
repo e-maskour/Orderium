@@ -153,7 +153,6 @@ export default {
   'invoice.itemDescriptionPlaceholder': 'وصف العنصر',
   'invoice.productSearchPlaceholder': 'ابحث عن منتج...',
   'invoice.noProductsFound': 'لا توجد منتجات',
-  'invoice.amount': 'المبلغ',
   'invoice.percentage': 'النسبة',
   'invoice.discountTypeAmount': 'المبلغ',
   'invoice.discountTypePercentage': '%',

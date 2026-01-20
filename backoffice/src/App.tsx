@@ -10,6 +10,8 @@ import DeliveryPersons from './pages/DeliveryPersons';
 import Orders from './pages/Orders';
 import POS from './pages/POS';
 import Products from './pages/Products';
+import ProductCreate from './pages/ProductCreate';
+import ProductDetail from './pages/ProductDetail';
 import Customers from './pages/Customers';
 import CustomerCreate from './pages/CustomerCreate';
 import CustomerEdit from './pages/CustomerEdit';
@@ -35,6 +37,9 @@ import Taxes from './pages/configurations/Taxes';
 import Currencies from './pages/configurations/Currencies';
 import PaymentTerms from './pages/configurations/PaymentTerms';
 import Sequences from './pages/configurations/Sequences';
+import Warehouses from './pages/Warehouses';
+import StockMovements from './pages/StockMovements';
+import InventoryAdjustments from './pages/InventoryAdjustments';
 
 const queryClient = new QueryClient();
 
@@ -88,6 +93,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Products />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/products/create"
+                element={
+                  <ProtectedRoute>
+                    <ProductCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/products/:id"
+                element={
+                  <ProtectedRoute>
+                    <ProductDetail />
                   </ProtectedRoute>
                 }
               />
@@ -288,6 +309,30 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Sequences />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/warehouses"
+                element={
+                  <ProtectedRoute>
+                    <Warehouses />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/stock-movements"
+                element={
+                  <ProtectedRoute>
+                    <StockMovements />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/inventory-adjustments"
+                element={
+                  <ProtectedRoute>
+                    <InventoryAdjustments />
                   </ProtectedRoute>
                 }
               />

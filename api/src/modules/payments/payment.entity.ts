@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Invoice } from '../invoices/entities/invoice.entity';
+import { Partner } from '../partners/entities/partner.entity';
 
 export enum PaymentType {
   CASH = 'cash',
@@ -15,18 +16,26 @@ export class Payment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  invoiceId: number;
-
   @ManyToOne(() => Invoice)
   @JoinColumn({ name: 'invoiceId' })
   invoice: Invoice;
 
-  @Column({ nullable: true })
-  customerId: number;
+  @Column({ type: 'int', nullable: true })
+  invoiceId: number | null;
 
-  @Column({ nullable: true })
-  supplierId: number;
+  @ManyToOne(() => Partner, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'customerId' })
+  customer: Partner;
+
+  @Column({ type: 'int', nullable: true })
+  customerId: number | null;
+
+  @ManyToOne(() => Partner, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'supplierId' })
+  supplier: Partner;
+
+  @Column({ type: 'int', nullable: true })
+  supplierId: number | null;
 
   @Column('decimal', { precision: 10, scale: 2 })
   amount: number;

@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   Index,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Portal } from '../../portal/entities/portal.entity';
 
 @Entity('notifications')
 @Index(['userId'])
@@ -13,6 +16,10 @@ import {
 export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @ManyToOne(() => Portal, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: Portal;
 
   @Column({ type: 'int', nullable: true })
   userId: number | null;

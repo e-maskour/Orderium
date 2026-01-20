@@ -22,6 +22,7 @@ import {
   DollarSign,
   Wallet,
   Settings,
+  Building2,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -44,6 +45,10 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
       {
         key: 'achats',
         submenu: ['/demande-prix', '/bon-achat', '/facture-achat', '/paiements-achat', '/fournisseurs'],
+      },
+      {
+        key: 'products',
+        submenu: ['/products', '/warehouses', '/stock-movements', '/inventory-adjustments'],
       },
     ];
 
@@ -143,9 +148,31 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
       label: t('orders'),
     },
     {
-      path: '/products',
+      key: 'products',
       icon: Package,
       label: t('products'),
+      submenu: [
+        {
+          path: '/products',
+          icon: Package,
+          label: 'Products',
+        },
+        {
+          path: '/warehouses',
+          icon: Building2,
+          label: 'Warehouses',
+        },
+        {
+          path: '/stock-movements',
+          icon: TrendingUp,
+          label: 'Stock Movements',
+        },
+        {
+          path: '/inventory-adjustments',
+          icon: FileCheck,
+          label: 'Inventory Adjustments',
+        },
+      ],
     },
     {
       path: '/delivery-persons',

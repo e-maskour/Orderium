@@ -43,7 +43,7 @@ export default function Configurations() {
         icon={Settings}
         title={t('configurations')}
         subtitle={t('manageSystemConfigurations')}
-        action={
+        actions={
           <Link
             to="/dashboard"
             className="inline-flex items-center gap-2 text-slate-600 hover:text-amber-500"

@@ -67,7 +67,9 @@ export class PaymentsService {
     const updatedPayment = await this.paymentsRepository.save(payment);
 
     // Update invoice paid status
-    await this.updateInvoicePaidStatus(payment.invoiceId);
+    if (payment.invoiceId) {
+      await this.updateInvoicePaidStatus(payment.invoiceId);
+    }
 
     return updatedPayment;
   }
@@ -79,7 +81,9 @@ export class PaymentsService {
     await this.paymentsRepository.remove(payment);
 
     // Update invoice paid status after deletion
-    await this.updateInvoicePaidStatus(invoiceId);
+    if (invoiceId) {
+      await this.updateInvoicePaidStatus(invoiceId);
+    }
   }
 
   async getTotalPaid(invoiceId: number): Promise<number> {

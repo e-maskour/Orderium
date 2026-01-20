@@ -49,21 +49,27 @@ export class OrderDelivery {
   @JoinColumn({ name: 'orderId' })
   order: Order;
 
+  @Column({ type: 'int' })
+  orderId: number;
+
   @ManyToOne(() => DeliveryPerson, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'deliveryPersonId' })
   deliveryPerson: DeliveryPerson;
+
+  @Column({ type: 'int', nullable: true })
+  deliveryPersonId: number | null;
 
   @Column({ type: 'varchar', length: 50, default: 'pending' })
   status: string;
 
   @Column({ type: 'timestamp', nullable: true })
-  assignedAt: Date;
+  assignedAt: Date | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  pickedUpAt: Date;
+  pickedUpAt: Date | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  deliveredAt: Date;
+  deliveredAt: Date | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string;

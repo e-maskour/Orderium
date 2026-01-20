@@ -108,9 +108,8 @@ export default {
   saving: 'جارٍ الحفظ...',
   
   // Status Labels
-  default: 'افتراضي',
   daysLabel: 'أيام',
-    // Confirmation Messages
+  // Confirmation Messages
   confirmDeleteTaxRate: 'هل أنت متأكد من حذف معدل الضريبة هذا؟',
   confirmDeleteCurrency: 'هل أنت متأكد من حذف هذه العملة؟',
   confirmDeletePaymentTerm: 'هل أنت متأكد من حذف شرط الدفع هذا؟',

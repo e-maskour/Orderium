@@ -21,6 +21,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ConfigurationsModule } from './modules/configurations/configurations.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
@@ -46,6 +47,7 @@ import { GatewayModule } from './gateway/gateway.module';
     StatisticsModule,
     PaymentsModule,
     ConfigurationsModule,
+    InventoryModule,
     GatewayModule,
   ],
   controllers: [AppController],
