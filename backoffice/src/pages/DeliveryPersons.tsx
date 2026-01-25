@@ -509,12 +509,16 @@ export default function DeliveryPersons() {
                           <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
                               <th className="py-3 px-4 text-left">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedPersons.length === filteredPersons.length && filteredPersons.length > 0}
-                                  onChange={toggleSelectAll}
-                                  className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-                                />
+                                <div
+                                  onClick={toggleSelectAll}
+                                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
+                                    selectedPersons.length === filteredPersons.length && filteredPersons.length > 0
+                                      ? 'bg-amber-500 border-amber-500 text-white'
+                                      : 'bg-white border-slate-300'
+                                  }`}
+                                >
+                                  {selectedPersons.length === filteredPersons.length && filteredPersons.length > 0 && <CheckSquare className="w-4 h-4" />}
+                                </div>
                               </th>
                               <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase">Nom</th>
                               <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase">Téléphone</th>
@@ -533,12 +537,7 @@ export default function DeliveryPersons() {
                                 onClick={() => toggleSelectPerson(person.id)}
                               >
                                 <td className="py-3 px-4">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedPersons.includes(person.id)}
-                                    onChange={() => {}}
-                                    className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-                                  />
+                                  {/* Checkbox is now handled above */}
                                 </td>
                                 <td className="py-3 px-4">
                                   <div className="flex items-center gap-2">
@@ -687,13 +686,17 @@ export default function DeliveryPersons() {
               />
             </div>
             <div className="flex items-center pt-6">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500 mr-3"
-                />
+              <label className="flex items-center cursor-pointer gap-3">
+                <div
+                  onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
+                    formData.isActive
+                      ? 'bg-amber-500 border-amber-500 text-white'
+                      : 'bg-white border-slate-300'
+                  }`}
+                >
+                  {formData.isActive && <CheckSquare className="w-4 h-4" />}
+                </div>
                 <span className="text-sm font-semibold text-slate-700">{t('active')}</span>
               </label>
             </div>

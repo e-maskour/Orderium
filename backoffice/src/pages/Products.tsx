@@ -276,10 +276,12 @@ export default function Products() {
                       </div>
 
                       {/* Stock */}
-                      <div className="w-20 text-center">
+                      <div className="w-24 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('stock')}</p>
                         <span className="text-sm text-slate-700 font-medium">
-                          {product.stock !== null && product.stock !== undefined ? product.stock : '-'}
+                          {product.stock !== null && product.stock !== undefined 
+                            ? `${product.stock} per ${(product as any).saleUnitOfMeasure?.code || 'Unité(s)'}`
+                            : '-'}
                         </span>
                       </div>
 
@@ -416,7 +418,9 @@ export default function Products() {
                           <div className="flex items-center justify-between text-[10px]">
                             <span className="text-slate-500">{t('stock')}:</span>
                             <span className="font-semibold text-slate-700">
-                              {product.stock !== null && product.stock !== undefined ? product.stock : '-'}
+                              {product.stock !== null && product.stock !== undefined 
+                                ? `${product.stock} per ${(product as any).saleUnitOfMeasure?.code || 'Unité(s)'}`
+                                : '-'}
                             </span>
                           </div>
                         )}

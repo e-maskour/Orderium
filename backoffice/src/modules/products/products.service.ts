@@ -83,6 +83,18 @@ export class ProductsService {
       throw new Error(error.message || 'Failed to delete product');
     }
   }
+
+  async checkCodeExists(code: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_URL}/products?search=${encodeURIComponent(code)}&limit=1`);
+      if (!response.ok) return false;
+      const data = await response.json();
+      // Check if any product has exactly this code
+      return data.products?.some((p: any) => p.code === code) || false;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export const productsService = new ProductsService();

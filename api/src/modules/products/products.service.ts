@@ -1,19 +1,30 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    const product = this.productRepository.create(createProductDto);
+    const { categoryIds, ...productData } = createProductDto;
+    const product = this.productRepository.create(productData);
+    
+    if (categoryIds && categoryIds.length > 0) {
+      product.categories = await this.categoryRepository.find({
+        where: { id: In(categoryIds) },
+      });
+    }
+    
     return this.productRepository.save(product);
   }
 
@@ -24,6 +35,9 @@ export class ProductsService {
   ): Promise<{ products: Product[]; total: number }> {
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
+      .leftJoinAndSelect('product.categories', 'categories')
+      .leftJoinAndSelect('product.saleUnitOfMeasure', 'saleUnitOfMeasure')
+      .leftJoinAndSelect('product.purchaseUnitOfMeasure', 'purchaseUnitOfMeasure')
       .where('product.isEnabled = :isEnabled', { isEnabled: true });
 
     if (search) {
@@ -40,7 +54,10 @@ export class ProductsService {
   }
 
   async findOne(id: number): Promise<Product> {
-    const product = await this.productRepository.findOne({ where: { id } });
+    const product = await this.productRepository.findOne({ 
+      where: { id },
+      relations: ['categories', 'saleUnitOfMeasure', 'purchaseUnitOfMeasure']
+    });
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
@@ -51,9 +68,24 @@ export class ProductsService {
     id: number,
     updateProductDto: UpdateProductDto,
   ): Promise<Product> {
+    const { categoryIds, ...productData } = updateProductDto;
     const product = await this.findOne(id);
-    Object.assign(product, updateProductDto);
-    return this.productRepository.save(product);
+    Object.assign(product, productData);
+    
+    if (categoryIds !== undefined) {
+      if (categoryIds.length > 0) {
+        product.categories = await this.categoryRepository.find({
+          where: { id: In(categoryIds) },
+        });
+      } else {
+        product.categories = [];
+      }
+    }
+    
+    await this.productRepository.save(product);
+    
+    // Reload product with categories to return fresh data
+    return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {

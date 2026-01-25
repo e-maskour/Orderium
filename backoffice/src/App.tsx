@@ -12,6 +12,7 @@ import POS from './pages/POS';
 import Products from './pages/Products';
 import ProductCreate from './pages/ProductCreate';
 import ProductDetail from './pages/ProductDetail';
+import Categories from './pages/Categories';
 import Customers from './pages/Customers';
 import CustomerCreate from './pages/CustomerCreate';
 import CustomerEdit from './pages/CustomerEdit';
@@ -37,6 +38,7 @@ import Taxes from './pages/configurations/Taxes';
 import Currencies from './pages/configurations/Currencies';
 import PaymentTerms from './pages/configurations/PaymentTerms';
 import Sequences from './pages/configurations/Sequences';
+import UnitsOfMeasure from './pages/configurations/UnitsOfMeasure';
 import Warehouses from './pages/Warehouses';
 import StockMovements from './pages/StockMovements';
 import InventoryAdjustments from './pages/InventoryAdjustments';
@@ -109,6 +111,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ProductDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/categories"
+                element={
+                  <ProtectedRoute>
+                    <Categories />
                   </ProtectedRoute>
                 }
               />
@@ -309,6 +319,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Sequences />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations/uom"
+                element={
+                  <ProtectedRoute>
+                    <UnitsOfMeasure />
                   </ProtectedRoute>
                 }
               />

@@ -30,4 +30,5 @@ export default {
   thermalReceipt80mm: 'إيصال حراري 80 مم',
   deliveryNoteA5: 'سند تسليم A5',
   preview: 'معاينة',
+  print: 'طباعة',
 };

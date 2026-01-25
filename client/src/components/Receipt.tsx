@@ -25,7 +25,7 @@ export const Receipt = ({
   const isArabic = language === 'ar';
 
   // Calculate items count
-  const itemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const itemsCount = items.reduce((sum, item) => sum + Number(item.quantity), 0);
 
   return (
     <div

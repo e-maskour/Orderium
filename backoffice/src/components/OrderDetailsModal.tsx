@@ -155,46 +155,53 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
             
             {/* Scrollable Items Table */}
             <div className="max-h-64 overflow-y-auto">
-              <table className="w-full">
-                <thead className="sticky top-0 bg-slate-100 z-10">
-                  <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-5 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('product')}</th>
-                    <th className="text-center py-3 px-2 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('quantity')}</th>
-                    <th className="text-right py-3 px-2 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('unitPrice')}</th>
-                    <th className="text-right py-3 px-2 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('discount')}</th>
-                    <th className="text-right py-3 px-5 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('total')}</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {order.items.map((item: any, index: number) => (
-                    <tr key={item.id} className={index !== order.items.length - 1 ? 'border-b border-slate-100' : ''}>
-                      <td className="py-3 px-5">
-                        <p className="font-semibold text-slate-800">{item.productName || `Product #${item.productId}`}</p>
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 font-bold px-3 py-1 rounded-lg text-sm">
-                          {item.quantity}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2 text-right font-semibold text-slate-700">
-                        {item.price.toFixed(2)} {t('currency')}
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        {item.discount > 0 ? (
-                          <span className="text-red-600 font-semibold">
-                            -{item.discount.toFixed(2)} {t('currency')}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-5 text-right font-bold text-slate-800">
-                        {item.total.toFixed(2)} {t('currency')}
-                      </td>
+              {(!order.items || order.items.length === 0) ? (
+                <div className="text-center py-8 text-slate-500">
+                  <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p>{t('noItems') || 'No items found'}</p>
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead className="sticky top-0 bg-slate-100 z-10">
+                    <tr className="border-b border-slate-200">
+                      <th className="text-left py-3 px-5 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('product')}</th>
+                      <th className="text-center py-3 px-2 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('quantity')}</th>
+                      <th className="text-right py-3 px-2 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('unitPrice')}</th>
+                      <th className="text-right py-3 px-2 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('discount')}</th>
+                      <th className="text-right py-3 px-5 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('total')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white">
+                    {(order.items || []).map((item: any, index: number) => (
+                      <tr key={item.id || index} className={index !== (order.items || []).length - 1 ? 'border-b border-slate-100' : ''}>
+                        <td className="py-3 px-5">
+                          <p className="font-semibold text-slate-800">{item.productName || item.product?.name || `Product #${item.productId}`}</p>
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 font-bold px-3 py-1 rounded-lg text-sm">
+                            {item.quantity || 0}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-right font-semibold text-slate-700">
+                          {(item.price || 0).toFixed(2)} {t('currency')}
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          {(item.discount || 0) > 0 ? (
+                            <span className="text-red-600 font-semibold">
+                              -{(item.discount || 0).toFixed(2)} {t('currency')}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-5 text-right font-bold text-slate-800">
+                          {(item.total || 0).toFixed(2)} {t('currency')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             {/* Fixed Order Totals */}
@@ -202,7 +209,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
               <div className="flex justify-between items-center">
                 <span className="text-sm font-semibold text-slate-600">{t('subtotal')}</span>
                 <span className="text-base font-bold text-slate-800">
-                  {order.items.reduce((sum: number, item: any) => sum + item.total, 0).toFixed(2)} {t('currency')}
+                  {(order.items || []).reduce((sum: number, item: any) => sum + (item.total || 0), 0).toFixed(2)} {t('currency')}
                 </span>
               </div>
               {order.discount > 0 && (

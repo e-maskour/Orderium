@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { X, Download, Eye, FileText, Receipt as ReceiptIcon, CheckCircle } from 'lucide-react';
+import { X, Download, Eye, FileText, Receipt as ReceiptIcon, CheckCircle, Printer } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Receipt } from '../../../client/src/components/Receipt';
@@ -183,6 +183,155 @@ export const OrderSuccessModal = ({
     setPreviewType(null);
   };
 
+  const handlePrint = async (documentType: 'receipt' | 'invoice') => {
+    setIsGenerating(true);
+    try {
+      // Create off-screen container for printing
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-99999px';
+      container.style.top = '0';
+      document.body.appendChild(container);
+
+      // Convert items to expected format
+      const formattedItems = items.map(item => ({
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          description: item.product.description || '',
+          CategoryId: 0,
+          imageUrl: '',
+          code: '',
+          stock: 0,
+          cost: 0,
+          isService: false,
+          isEnabled: true,
+          DateCreated: '',
+          DateUpdated: '',
+        },
+        quantity: item.quantity
+      }));
+
+      // Render component
+      const root = createRoot(container);
+      
+      if (documentType === 'receipt') {
+        root.render(
+          <LanguageProvider>
+            <Receipt
+              orderNumber={orderNumber}
+              customerName={customerName}
+              customerPhone={customerPhone}
+              items={formattedItems}
+              subtotal={total}
+              orderDate={orderDate}
+            />
+          </LanguageProvider>
+        );
+      } else {
+        root.render(
+          <LanguageProvider>
+            <Invoice
+              orderNumber={orderNumber}
+              customerName={customerName}
+              customerPhone={customerPhone}
+              customerAddress={customerAddress || ''}
+              items={formattedItems}
+              subtotal={total}
+              orderDate={orderDate}
+            />
+          </LanguageProvider>
+        );
+      }
+
+      // Wait for render
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Get the rendered element
+      const element = container.querySelector(documentType === 'receipt' ? '#receipt-content' : '#invoice-content') as HTMLElement;
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      // Create a new window for printing
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      if (!printWindow) {
+        throw new Error('Failed to open print window');
+      }
+
+      // Get all styles from the main document
+      const styles = Array.from(document.styleSheets)
+        .map(styleSheet => {
+          try {
+            return Array.from(styleSheet.cssRules)
+              .map(rule => rule.cssText)
+              .join('\n');
+          } catch (e) {
+            return '';
+          }
+        })
+        .join('\n');
+
+      // Write content to print window
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${documentType === 'receipt' ? 'Receipt' : 'Invoice'} - ${orderNumber}</title>
+            <style>
+              ${styles}
+              @page {
+                size: ${documentType === 'receipt' ? '80mm auto' : 'A5'};
+                margin: 0;
+              }
+              body {
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              @media print {
+                body {
+                  width: ${documentType === 'receipt' ? '80mm' : '148mm'};
+                }
+              }
+            </style>
+          </head>
+          <body>
+            ${element.outerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+
+      // Wait for content to load
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Trigger print
+      printWindow.focus();
+      printWindow.print();
+
+      // Close print window after printing (with delay to ensure print dialog shows)
+      setTimeout(() => {
+        printWindow.close();
+      }, 100);
+
+      // Cleanup
+      root.unmount();
+      document.body.removeChild(container);
+    } catch (error) {
+      console.error('Failed to print:', error);
+      setAlertMessage({
+        title: 'Erreur d\'impression',
+        message: 'Échec de l\'impression. Veuillez réessayer.'
+      });
+      setShowAlert(true);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <>
       {/* Main Success Modal */}
@@ -223,18 +372,26 @@ export const OrderSuccessModal = ({
                   <p className="text-xs text-gray-600">{t('thermalReceipt80mm')}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => handlePreview('receipt')}
-                  className="flex-1 bg-white hover:bg-gray-50 text-blue-700 font-medium py-2 px-4 rounded-lg border border-blue-300 transition-colors flex items-center justify-center gap-2"
+                  className="bg-white hover:bg-gray-50 text-blue-700 font-medium py-2 px-3 rounded-lg border border-blue-300 transition-colors flex items-center justify-center gap-1.5 text-sm"
                 >
                   <Eye className="w-4 h-4" />
                   {t('preview')}
                 </button>
                 <button
+                  onClick={() => handlePrint('receipt')}
+                  disabled={isGenerating}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 text-sm"
+                >
+                  <Printer className="w-4 h-4" />
+                  {t('print')}
+                </button>
+                <button
                   onClick={() => handleDownload('receipt')}
                   disabled={isGenerating}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 text-sm"
                 >
                   <Download className="w-4 h-4" />
                   {isGenerating ? t('generating') : t('download')}
@@ -253,18 +410,26 @@ export const OrderSuccessModal = ({
                   <p className="text-xs text-gray-600">{t('deliveryNoteA5')}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => handlePreview('invoice')}
-                  className="flex-1 bg-white hover:bg-gray-50 text-amber-700 font-medium py-2 px-4 rounded-lg border border-amber-300 transition-colors flex items-center justify-center gap-2"
+                  className="bg-white hover:bg-gray-50 text-amber-700 font-medium py-2 px-3 rounded-lg border border-amber-300 transition-colors flex items-center justify-center gap-1.5 text-sm"
                 >
                   <Eye className="w-4 h-4" />
                   {t('preview')}
                 </button>
                 <button
+                  onClick={() => handlePrint('invoice')}
+                  disabled={isGenerating}
+                  className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 text-sm"
+                >
+                  <Printer className="w-4 h-4" />
+                  {t('print')}
+                </button>
+                <button
                   onClick={() => handleDownload('invoice')}
                   disabled={isGenerating}
-                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 text-sm"
                 >
                   <Download className="w-4 h-4" />
                   {isGenerating ? t('generating') : t('download')}

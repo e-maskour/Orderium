@@ -1,10 +1,15 @@
+/* eslint-disable prettier/prettier */
 import { DataSource } from 'typeorm';
 import { seedConfigurations } from './configurations.seeder';
+import { seedWarehouses } from './warehouse.seeder';
+import { seedUnitOfMeasures } from './uom.seeder';
 
 export async function runSeeders(dataSource: DataSource) {
   console.log('🌱 Running database seeders...\n');
 
   try {
+    await seedWarehouses(dataSource);
+    await seedUnitOfMeasures(dataSource);
     await seedConfigurations(dataSource);
     
     console.log('\n✅ All seeders completed successfully');

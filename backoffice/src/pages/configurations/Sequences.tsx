@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Hash, Eye, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Hash, Eye, RotateCcw, CheckSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
   sequencesService, 
@@ -421,72 +421,92 @@ export default function Sequences() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="yearInPrefix"
-                checked={formData.yearInPrefix}
-                onChange={(e) => setFormData({ ...formData, yearInPrefix: e.target.checked })}
-                className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-                disabled={editingSequence && editingSequence.nextNumber > 1}
-              />
-              <label htmlFor="yearInPrefix" className="ml-2 text-sm text-slate-700">
+            <div className="flex items-center gap-2">
+              <div
+                onClick={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, yearInPrefix: !formData.yearInPrefix })}
+                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                  editingSequence && editingSequence.nextNumber > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                } ${
+                  formData.yearInPrefix
+                    ? 'bg-amber-500 border-amber-500 text-white'
+                    : 'bg-white border-slate-300'
+                }`}
+              >
+                {formData.yearInPrefix && <CheckSquare className="w-4 h-4" />}
+              </div>
+              <label htmlFor="yearInPrefix" className="text-sm text-slate-700">
                 {t('includeYearInPrefix')} (2025)
               </label>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="trimesterInPrefix"
-                checked={formData.trimesterInPrefix}
-                onChange={(e) => setFormData({ ...formData, trimesterInPrefix: e.target.checked })}
-                className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-                disabled={editingSequence && editingSequence.nextNumber > 1}
-              />
-              <label htmlFor="trimesterInPrefix" className="ml-2 text-sm text-slate-700">
+            <div className="flex items-center gap-2">
+              <div
+                onClick={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, trimesterInPrefix: !formData.trimesterInPrefix })}
+                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                  editingSequence && editingSequence.nextNumber > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                } ${
+                  formData.trimesterInPrefix
+                    ? 'bg-amber-500 border-amber-500 text-white'
+                    : 'bg-white border-slate-300'
+                }`}
+              >
+                {formData.trimesterInPrefix && <CheckSquare className="w-4 h-4" />}
+              </div>
+              <label htmlFor="trimesterInPrefix" className="text-sm text-slate-700">
                 {t('includeTrimesterInPrefix')} (01, 04, 07, 10)
               </label>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="monthInPrefix"
-                checked={formData.monthInPrefix}
-                onChange={(e) => setFormData({ ...formData, monthInPrefix: e.target.checked })}
-                className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-                disabled={formData.trimesterInPrefix || (editingSequence && editingSequence.nextNumber > 1)}
-              />
-              <label htmlFor="monthInPrefix" className={`ml-2 text-sm ${formData.trimesterInPrefix ? 'text-slate-400' : 'text-slate-700'}`}>
+            <div className="flex items-center gap-2">
+              <div
+                onClick={() => !formData.trimesterInPrefix && !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, monthInPrefix: !formData.monthInPrefix })}
+                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                  formData.trimesterInPrefix || (editingSequence && editingSequence.nextNumber > 1) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                } ${
+                  formData.monthInPrefix
+                    ? 'bg-amber-500 border-amber-500 text-white'
+                    : 'bg-white border-slate-300'
+                }`}
+              >
+                {formData.monthInPrefix && <CheckSquare className="w-4 h-4" />}
+              </div>
+              <label htmlFor="monthInPrefix" className={`text-sm ${formData.trimesterInPrefix ? 'text-slate-400' : 'text-slate-700'}`}>
                 {t('includeMonthInPrefix')} (12) {formData.trimesterInPrefix && '(désactivé par trimestre)'}
               </label>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="dayInPrefix"
-                checked={formData.dayInPrefix}
-                onChange={(e) => setFormData({ ...formData, dayInPrefix: e.target.checked })}
-                className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-                disabled={editingSequence && editingSequence.nextNumber > 1}
-              />
-              <label htmlFor="dayInPrefix" className="ml-2 text-sm text-slate-700">
+            <div className="flex items-center gap-2">
+              <div
+                onClick={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, dayInPrefix: !formData.dayInPrefix })}
+                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                  editingSequence && editingSequence.nextNumber > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                } ${
+                  formData.dayInPrefix
+                    ? 'bg-amber-500 border-amber-500 text-white'
+                    : 'bg-white border-slate-300'
+                }`}
+              >
+                {formData.dayInPrefix && <CheckSquare className="w-4 h-4" />}
+              </div>
+              <label htmlFor="dayInPrefix" className="text-sm text-slate-700">
                 {t('includeDayInPrefix')} (01)
               </label>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-                disabled={editingSequence && editingSequence.nextNumber > 1}
-              />
-              <label htmlFor="isActive" className="ml-2 text-sm text-slate-700">
+            <div className="flex items-center gap-2">
+              <div
+                onClick={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, isActive: !formData.isActive })}
+                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                  editingSequence && editingSequence.nextNumber > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                } ${
+                  formData.isActive
+                    ? 'bg-amber-500 border-amber-500 text-white'
+                    : 'bg-white border-slate-300'
+                }`}
+              >
+                {formData.isActive && <CheckSquare className="w-4 h-4" />}
+              </div>
+              <label htmlFor="isActive" className="text-sm text-slate-700">
                 {t('isActive')}
               </label>
             </div>

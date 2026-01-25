@@ -21,7 +21,12 @@ export async function seedConfigurations(dataSource: DataSource) {
       values: {
         default: 'MAD',
         currencies: [
-          { code: 'MAD', name: 'Moroccan Dirham', symbol: 'DH', isDefault: true },
+          {
+            code: 'MAD',
+            name: 'Moroccan Dirham',
+            symbol: 'DH',
+            isDefault: true,
+          },
           { code: 'EUR', name: 'Euro', symbol: '€', isDefault: false },
           { code: 'USD', name: 'US Dollar', symbol: '$', isDefault: false },
         ],
@@ -61,7 +66,7 @@ export async function seedConfigurations(dataSource: DataSource) {
           },
           {
             id: 'seq_invoice_purchase_001',
-            name: 'Factures d\\\'achat',
+            name: "Factures d\\'achat",
             entityType: 'invoice_purchase',
             prefix: 'PINV-',
             suffix: '',
@@ -109,7 +114,7 @@ export async function seedConfigurations(dataSource: DataSource) {
           },
           {
             id: 'seq_purchase_order_001',
-            name: 'Bons d\\\'achat',
+            name: "Bons d\\'achat",
             entityType: 'purchase_order',
             prefix: 'BA-',
             suffix: '',

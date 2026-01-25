@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { useState, useEffect, useMemo } from 'react';
+import { createRoot } from 'react-dom/client';
 import { Phone, MapPin, X, Search, Package, Eye, Download, CheckSquare, Square, UserPlus, Grid3x3, List, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
@@ -11,6 +12,205 @@ import { PageHeader } from '../components/PageHeader';
 import { DateRangePicker } from '../components/ui/date-range-picker';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { FloatingActionBar, FloatingAction } from '../components/FloatingActionBar';
+import html2pdf from 'html2pdf.js';
+import { Receipt } from '../../../client/src/components/Receipt';
+import { Invoice } from '../../../client/src/components/Invoice';
+
+// Helper functions for generating HTML content
+const generateInvoiceHTML = (props: any) => {
+  const totalTVA = props.subtotal * 0.2;
+  const totalTTC = props.subtotal * 1.2;
+  
+  // Calculate pagination
+  const itemsPerPage = 12;
+  const totalPages = Math.max(1, Math.ceil(props.items.length / itemsPerPage));
+  
+  const pages = [];
+  for (let i = 0; i < totalPages; i++) {
+    const startIndex = i * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, props.items.length);
+    pages.push({
+      pageNumber: i + 1,
+      items: props.items.slice(startIndex, endIndex),
+      isLast: i === totalPages - 1
+    });
+  }
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Invoice ${props.orderNumber}</title>
+        <style>
+          @page {
+            size: A5;
+            margin: 0;
+          }
+          
+          @media print {
+            .page-break {
+              page-break-before: always;
+            }
+            .no-break {
+              page-break-inside: avoid;
+            }
+          }
+          
+          body {
+            font-family: "DejaVu Sans", "Helvetica", "Arial", sans-serif;
+            background-color: #ffffff;
+            width: 148mm;
+            margin: 0;
+            padding: 0;
+            font-size: 9pt;
+            color: #000000;
+            line-height: 1.3;
+            box-sizing: border-box;
+          }
+          
+          .invoice-page {
+            min-height: 210mm;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+          }
+          
+          .header {
+            padding: 5mm 6mm 3mm 6mm;
+            background-color: #ffffff;
+          }
+          
+          .company-info {
+            width: 70mm;
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 1mm;
+            color: #000000;
+            letter-spacing: 0.3pt;
+          }
+          
+          .footer {
+            border-top: 0.5pt solid #DDDDDD;
+            padding: 2.5mm 8mm 5mm 8mm;
+            font-size: 6.5pt;
+            color: #777777;
+            line-height: 1.3;
+            background-color: #ffffff;
+            margin-top: auto;
+          }
+          
+          /* More styles... */
+        </style>
+      </head>
+      <body>
+        ${pages.map((page, pageIndex) => `
+          <div class="invoice-page ${pageIndex > 0 ? 'page-break' : ''}">
+            <div class="header">
+              <div style="display: flex; justify-content: space-between;">
+                <div class="company-info">ORDERIUM</div>
+                <div>
+                  <div style="font-size: 15pt; font-weight: bold;">FACTURE</div>
+                  <div style="font-size: 8pt; color: #666;">N° ${props.orderNumber}</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Content goes here -->
+            
+            <div class="footer">
+              <div style="display: flex; justify-content: space-between;">
+                <div>ORDERIUM - Système de gestion des commandes</div>
+                <div>Page ${page.pageNumber}/${totalPages}</div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </body>
+    </html>
+  `;
+};
+
+const generateReceiptHTML = (props: any) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Receipt ${props.orderNumber}</title>
+        <style>
+          @page {
+            size: 80mm 297mm;
+            margin: 0;
+          }
+          
+          body {
+            font-family: "Courier New", monospace;
+            background-color: #ffffff;
+            width: 80mm;
+            margin: 0;
+            padding: 3mm;
+            font-size: 8pt;
+            color: #000000;
+            line-height: 1.2;
+          }
+          
+          .receipt-header {
+            text-align: center;
+            margin-bottom: 3mm;
+            font-weight: bold;
+          }
+          
+          .divider {
+            border-top: 1px dashed #000;
+            margin: 2mm 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-header">
+          <div style="font-size: 12pt;">ORDERIUM</div>
+          <div>Reçu N° ${props.orderNumber}</div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div>
+          Date: ${props.orderDate.toLocaleDateString('fr-FR')}<br/>
+          Client: ${props.customerName}<br/>
+          Tel: ${props.customerPhone}
+        </div>
+        
+        <div class="divider"></div>
+        
+        ${props.items.map((item: any) => {
+          const itemTotal = item.product.price * item.quantity;
+          return `
+            <div style="margin-bottom: 2mm;">
+              <div style="font-weight: bold;">${item.product.name}</div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>${item.quantity} x ${item.product.price.toFixed(2)}</span>
+                <span>${itemTotal.toFixed(2)} MAD</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+        
+        <div class="divider"></div>
+        
+        <div style="display: flex; justify-content: space-between; font-weight: bold;">
+          <span>Total TTC:</span>
+          <span>${(props.subtotal * 1.2).toFixed(2)} MAD</span>
+        </div>
+        
+        <div style="text-align: center; margin-top: 5mm; font-size: 6pt;">
+          Merci pour votre commande!
+        </div>
+      </body>
+    </html>
+  `;
+};
+import { LanguageProvider } from '../context/LanguageContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +222,92 @@ import {
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 
+// Preview Content Component
+function PreviewContent({ orderId, type, filteredOrders }: { orderId: number; type: 'receipt' | 'invoice'; filteredOrders: any[] }) {
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        const orderData = filteredOrders.find((o: any) => o.id === orderId);
+        if (!orderData) return;
+
+        const orderDetails = await ordersService.getById(orderId);
+        
+        const formattedItems = (orderDetails.items || []).map((item: any) => ({
+          product: {
+            id: item.productId || 0,
+            name: item.product?.name || item.productName || 'Product',
+            price: item.price || 0,
+            description: item.product?.description || '',
+            CategoryId: 0,
+            imageUrl: '',
+            code: item.product?.code || '',
+            stock: 0,
+            cost: 0,
+            isService: false,
+            isEnabled: true,
+            DateCreated: '',
+            DateUpdated: '',
+          },
+          quantity: item.quantity
+        }));
+
+        setOrder({
+          ...orderData,
+          items: formattedItems
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch order:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId, filteredOrders]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return <div className="text-center py-12 text-gray-500">Order not found</div>;
+  }
+
+  return (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <LanguageProvider>
+        {type === 'receipt' ? (
+          <Receipt
+            orderNumber={order.orderNumber}
+            customerName={order.customerName}
+            customerPhone={order.customerPhone}
+            items={order.items}
+            subtotal={order.totalAmount}
+            orderDate={new Date(order.createdAt)}
+          />
+        ) : (
+          <Invoice
+            orderNumber={order.orderNumber}
+            customerName={order.customerName}
+            customerPhone={order.customerPhone}
+            customerAddress={order.customerAddress || ''}
+            items={order.items}
+            subtotal={order.totalAmount}
+            orderDate={new Date(order.createdAt)}
+          />
+        )}
+      </LanguageProvider>
+    </div>
+  );
+}
+
 export default function Orders() {
   const { t } = useLanguage();
   const { admin } = useAuth();
@@ -29,6 +315,7 @@ export default function Orders() {
   const [unassignOrderId, setUnassignOrderId] = useState<number | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
+  const [previewModal, setPreviewModal] = useState<{ isOpen: boolean; type: 'receipt' | 'invoice' | null; orderId: number | null }>({ isOpen: false, type: null, orderId: null });
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -158,6 +445,131 @@ export default function Orders() {
   const handleUnassign = () => {
     if (unassignOrderId) {
       unassignMutation.mutate(unassignOrderId);
+    }
+  };
+
+  const handlePreview = (documentType: 'receipt' | 'invoice') => {
+    if (selectedOrders.length !== 1) {
+      toast.error(t('selectOneOrder') || 'Please select only one order to preview');
+      return;
+    }
+    setPreviewModal({ isOpen: true, type: documentType, orderId: selectedOrders[0] });
+  };
+
+  const handleDownloadDocuments = async (documentType: 'receipt' | 'invoice') => {
+    if (selectedOrders.length === 0) return;
+
+    const toastId = toast.loading(`${t('generating')} ${selectedOrders.length} ${documentType === 'receipt' ? t('receipts') : t('invoices')}...`);
+
+    try {
+      for (const orderId of selectedOrders) {
+        const order = filteredOrders.find((o: any) => o.id === orderId);
+        if (!order) continue;
+
+        // Try server-side PDF generation first
+        try {
+          const response = await fetch(`/api/pdf/${documentType}/${orderId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            }
+          });
+
+          if (response.ok) {
+            // Server-side generation successful
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `${documentType === 'receipt' ? 'Receipt' : 'Invoice'}_${order.orderNumber}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            continue; // Move to next order
+          }
+        } catch (serverError) {
+          console.warn('Server-side PDF generation failed, falling back to client-side:', serverError);
+        }
+
+        // Fallback to client-side browser print
+        const orderDetails = await ordersService.getById(orderId);
+        
+        // Format items for components
+        const formattedItems = (orderDetails.items || []).map((item: any) => ({
+          product: {
+            id: item.productId || 0,
+            name: item.product?.name || item.productName || 'Product',
+            price: item.price || 0,
+            description: item.product?.description || '',
+            CategoryId: 0,
+            imageUrl: '',
+            code: item.product?.code || '',
+            stock: 0,
+            cost: 0,
+            isService: false,
+            isEnabled: true,
+            DateCreated: '',
+            DateUpdated: '',
+          },
+          quantity: item.quantity
+        }));
+
+        // Create print window
+        const printWindow = window.open('', '_blank', 
+          documentType === 'receipt' 
+            ? 'width=320,height=800,scrollbars=no'
+            : 'width=595,height=842,scrollbars=no'
+        );
+        
+        if (!printWindow) {
+          throw new Error('Popup blocked - please allow popups for this site');
+        }
+
+        // Generate HTML content
+        const htmlContent = documentType === 'receipt' 
+          ? generateReceiptHTML({
+              orderNumber: order.orderNumber || '',
+              customerName: order.customerName || '',
+              customerPhone: order.customerPhone || '',
+              items: formattedItems,
+              subtotal: order.totalAmount || 0,
+              orderDate: new Date(order.createdAt)
+            })
+          : generateInvoiceHTML({
+              orderNumber: order.orderNumber || '',
+              customerName: order.customerName || '',
+              customerPhone: order.customerPhone || '',
+              customerAddress: order.customerAddress || '',
+              items: formattedItems,
+              subtotal: order.totalAmount || 0,
+              orderDate: new Date(order.createdAt)
+            });
+
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+
+        // Auto-print and close
+        printWindow.onload = () => {
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.onafterprint = () => printWindow.close();
+          }, 1000);
+        };
+
+        // Small delay between orders
+        if (selectedOrders.indexOf(orderId) < selectedOrders.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+      }
+
+      toast.success(`${selectedOrders.length} ${documentType === 'receipt' ? t('receipts') : t('invoices')} ready for download`, { id: toastId });
+      clearSelection();
+    } catch (error) {
+      console.error('Failed to generate documents:', error);
+      toast.error(t('failedToGenerate'), { id: toastId });
     }
   };
 
@@ -541,20 +953,18 @@ export default function Orders() {
             hidden: selectedOrders.length !== 1,
           },
           {
-            id: 'receipt',
-            label: t('receipt'),
-            icon: <Download className="w-3.5 h-3.5" />,
-            onClick: () => {
-              toast.success(`${t('downloading')} ${selectedOrders.length} ${t('receipts')}...`);
-            },
+            id: 'preview-receipt',
+            label: t('previewReceipt') || 'Aperçu Reçu',
+            icon: <Eye className="w-3.5 h-3.5" />,
+            onClick: () => handlePreview('receipt'),
+            hidden: selectedOrders.length !== 1,
           },
           {
-            id: 'invoice',
-            label: t('invoice'),
-            icon: <Download className="w-3.5 h-3.5" />,
-            onClick: () => {
-              toast.success(`${t('downloading')} ${selectedOrders.length} ${t('invoices')}...`);
-            },
+            id: 'preview-invoice',
+            label: t('previewInvoice') || 'Aperçu Facture',
+            icon: <Eye className="w-3.5 h-3.5" />,
+            onClick: () => handlePreview('invoice'),
+            hidden: selectedOrders.length !== 1,
           },
         ]}
       >
@@ -584,6 +994,103 @@ export default function Orders() {
           </select>
         </div>
       </FloatingActionBar>
+
+      {/* Preview Modal */}
+      {previewModal.isOpen && previewModal.orderId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-[900px] w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {previewModal.type === 'receipt' ? t('receipt') : t('invoice')} - {t('preview')}
+              </h3>
+              <div className="flex items-center gap-3">
+                {/* Print Button */}
+                <button
+                  onClick={async () => {
+                    if (!previewModal.orderId) return;
+                    
+                    try {
+                      const element = document.getElementById(previewModal.type === 'receipt' ? 'receipt-content' : 'invoice-content');
+                      if (!element) {
+                        toast.error('Preview content not found');
+                        return;
+                      }
+
+                      // Configure html2pdf options for printing
+                      const options = {
+                        margin: 0,
+                        image: { type: 'jpeg' as const, quality: 0.98 },
+                        html2canvas: { 
+                          scale: 2,
+                          useCORS: true,
+                          allowTaint: true,
+                          backgroundColor: '#ffffff',
+                          logging: false
+                        },
+                        jsPDF: { 
+                          unit: 'mm', 
+                          format: previewModal.type === 'receipt' ? [80, 200] : 'a5', 
+                          orientation: 'portrait' 
+                        }
+                      };
+
+                      // Generate PDF blob and open for printing
+                      const pdfBlob = await html2pdf().set(options).from(element).outputPdf('blob');
+                      const url = URL.createObjectURL(pdfBlob);
+                      const printWindow = window.open(url, '_blank');
+                      if (printWindow) {
+                        printWindow.onload = () => {
+                          printWindow.print();
+                        };
+                      }
+                    } catch (error) {
+                      console.error('Failed to generate PDF for printing:', error);
+                      toast.error('Failed to generate PDF for printing');
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  <span className="text-sm font-semibold">{t('print') || 'Imprimer'}</span>
+                </button>
+                
+                {/* Download Button */}
+                <button
+                  onClick={() => {
+                    if (previewModal.orderId) {
+                      handleDownloadDocuments(previewModal.type!);
+                      setPreviewModal({ isOpen: false, type: null, orderId: null });
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="text-sm font-semibold">{t('download') || 'Télécharger'}</span>
+                </button>
+                
+                {/* Close Button */}
+                <button
+                  onClick={() => setPreviewModal({ isOpen: false, type: null, orderId: null })}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 flex justify-center">
+              <PreviewContent
+                orderId={previewModal.orderId}
+                type={previewModal.type!}
+                filteredOrders={filteredOrders}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={unassignOrderId !== null} onOpenChange={(open) => !open && setUnassignOrderId(null)}>
         <AlertDialogContent>

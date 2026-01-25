@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Settings, Percent, DollarSign, Calendar, Hash, ArrowLeft } from 'lucide-react';
+import { Settings, Percent, DollarSign, Calendar, Hash, Ruler, ArrowLeft } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
@@ -34,6 +34,13 @@ export default function Configurations() {
       icon: Hash,
       path: '/configurations/sequences',
       color: 'bg-orange-500',
+    },
+    {
+      name: t('unitsOfMeasure') || 'Units of Measure',
+      description: t('manageUomDescription') || 'Manage units of measure for inventory',
+      icon: Ruler,
+      path: '/configurations/uom',
+      color: 'bg-teal-500',
     },
   ];
 

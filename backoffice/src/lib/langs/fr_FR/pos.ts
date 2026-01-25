@@ -30,4 +30,5 @@ export default {
   thermalReceipt80mm: 'Reçu thermique 80mm',
   deliveryNoteA5: 'Bon de livraison A5',
   preview: 'Aperçu',
+  print: 'Imprimer',
 };

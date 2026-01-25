@@ -64,6 +64,8 @@ export default {
   creating: 'Création',
   generating: 'Génération...',
   downloading: 'Téléchargement',
+  downloaded: 'Téléchargé',
+  failedToGenerate: 'Échec de génération',
   'common.loading': 'Chargement...',
   'common.saving': 'Enregistrement...',
   'common.close': 'Fermer',

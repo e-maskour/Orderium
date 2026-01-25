@@ -20,7 +20,7 @@ export default function Orders() {
   // Enable real-time notifications
   useOrderNotifications({
     token: localStorage.getItem('authToken') || '',
-    deliveryPersonId: deliveryPerson?.Id,
+    deliveryPersonId: deliveryPerson?.id,
     enabled: !!deliveryPerson,
   });
 
@@ -34,21 +34,21 @@ export default function Orders() {
   }, [searchInput]);
 
   const { data: orders, isLoading, error } = useQuery({
-    queryKey: ['orders', deliveryPerson?.Id, searchQuery],
-    queryFn: () => deliveryPerson ? deliveryService.getMyOrders(deliveryPerson.Id, searchQuery) : Promise.resolve([]),
+    queryKey: ['orders', deliveryPerson?.id, searchQuery],
+    queryFn: () => deliveryPerson ? deliveryService.getMyOrders(deliveryPerson.id, searchQuery) : Promise.resolve([]),
     enabled: !!deliveryPerson,
   });
 
   const filteredOrders = orders?.filter((order: Order) => 
-    statusFilter === 'all' || order.Status === statusFilter
+    statusFilter === 'all' || order.status === statusFilter
   ) || [];
 
   const statusCounts = {
     all: orders?.length || 0,
-    to_delivery: orders?.filter((o: Order) => o.Status === 'to_delivery').length || 0,
-    in_delivery: orders?.filter((o: Order) => o.Status === 'in_delivery').length || 0,
-    delivered: orders?.filter((o: Order) => o.Status === 'delivered').length || 0,
-    canceled: orders?.filter((o: Order) => o.Status === 'canceled').length || 0,
+    to_delivery: orders?.filter((o: Order) => o.status === 'to_delivery').length || 0,
+    in_delivery: orders?.filter((o: Order) => o.status === 'in_delivery').length || 0,
+    delivered: orders?.filter((o: Order) => o.status === 'delivered').length || 0,
+    canceled: orders?.filter((o: Order) => o.status === 'canceled').length || 0,
   };
 
   const getStatusLabel = (status: string) => {
@@ -74,7 +74,7 @@ export default function Orders() {
               <div>
                 <h1 className="text-2xl font-bold text-foreground">{t('myDeliveries')}</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {t('welcomeBack')}, {deliveryPerson?.Name}
+                  {t('welcomeBack')}, {deliveryPerson?.name}
                 </p>
               </div>
             </div>
@@ -162,7 +162,7 @@ export default function Orders() {
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredOrders.map((order: Order) => (
-              <OrderCard key={order.OrderId} order={order} />
+              <OrderCard key={order.orderId} order={order} />
             ))}
           </div>
         )}

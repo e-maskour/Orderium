@@ -9,13 +9,15 @@ export interface Product {
   isService: boolean;
   isEnabled: boolean;
   isPriceChangeAllowed: boolean;
-  saleTax: number;
-  purchaseTax: number;
+  saleTax?: number;
+  purchaseTax?: number;
   minPrice: number;
   warehouseId?: number | null;
   dateCreated: string;
   dateUpdated: string;
   imageUrl?: string | null;
+  saleUnit?: string;
+  purchaseUnit?: string;
 }
 
 export interface ProductsResponse {
@@ -51,6 +53,8 @@ export interface CreateProductDTO {
   minPrice?: number;
   warehouseId?: number | null;
   imageUrl?: string | null;
+  saleUnit?: string;
+  purchaseUnit?: string;
 }
 
 export interface UpdateProductDTO {
@@ -68,4 +72,6 @@ export interface UpdateProductDTO {
   minPrice?: number;
   warehouseId?: number | null;
   imageUrl?: string | null;
+  saleUnit?: string;
+  purchaseUnit?: string;
 }

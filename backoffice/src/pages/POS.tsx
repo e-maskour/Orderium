@@ -21,6 +21,12 @@ interface Product {
   stock?: number;
   code?: string;
   isPriceChangeAllowed?: boolean;
+  saleUnitOfMeasure?: {
+    id: number;
+    name: string;
+    code: string;
+    category: string;
+  };
 }
 
 interface Customer {
@@ -99,6 +105,7 @@ export default function POS() {
           isPriceChangeAllowed: p.isPriceChangeAllowed,
           categoryId: p.categoryId,
           imageUrl: p.imageUrl,
+          saleUnitOfMeasure: p.saleUnitOfMeasure,
         }));
       }
       
@@ -119,7 +126,8 @@ export default function POS() {
 
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/partners/search?phone=${encodeURIComponent(customerSearch)}`);
+        // Search by name, phone, or email using the general search endpoint
+        const response = await fetch(`/api/partners?search=${encodeURIComponent(customerSearch)}&type=customer&limit=10`);
         if (!response.ok) throw new Error('Failed to search customers');
         const data = await response.json();
         
@@ -275,7 +283,7 @@ export default function POS() {
 
     const orderData = {
       customerId: selectedCustomer.id,
-      Items: cart.map(item => ({
+      items: cart.map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
         price: item.product.price,

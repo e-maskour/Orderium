@@ -64,6 +64,8 @@ export default {
   creating: 'جاري الإنشاء',
   generating: 'جاري التوليد...',
   downloading: 'جاري التحميل',
+  downloaded: 'تم التحميل',
+  failedToGenerate: 'فشل في التوليد',
   'common.loading': 'جاري التحميل...',
   'common.saving': 'جاري الحفظ...',
   'common.close': 'إغلاق',

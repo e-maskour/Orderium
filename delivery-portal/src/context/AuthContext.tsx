@@ -2,10 +2,10 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { deliveryService } from '../services/api';
 
 interface DeliveryPerson {
-  Id: number;
-  Name: string;
-  PhoneNumber: string;
-  Email?: string;
+  id: number;
+  name: string;
+  phoneNumber: string;
+  email?: string;
 }
 
 interface AuthContextType {
@@ -58,9 +58,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const data = await response.json();
-      setDeliveryPerson(data.deliveryPerson);
+      
+      // Transform PascalCase to camelCase
+      const deliveryPersonData = {
+        id: data.deliveryPerson.Id,
+        name: data.deliveryPerson.Name,
+        phoneNumber: data.deliveryPerson.PhoneNumber,
+        email: data.deliveryPerson.Email,
+      };
+      
+      setDeliveryPerson(deliveryPersonData);
       setIsAuthenticated(true);
-      localStorage.setItem('deliveryPerson', JSON.stringify(data.deliveryPerson));
+      localStorage.setItem('deliveryPerson', JSON.stringify(deliveryPersonData));
       localStorage.setItem('authToken', data.token);
     } catch (error) {
       throw error;

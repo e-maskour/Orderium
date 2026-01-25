@@ -23,6 +23,7 @@ import {
   Wallet,
   Settings,
   Building2,
+  FolderTree,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -48,7 +49,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
       },
       {
         key: 'products',
-        submenu: ['/products', '/warehouses', '/stock-movements', '/inventory-adjustments'],
+        submenu: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'],
       },
     ];
 
@@ -156,6 +157,11 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
           path: '/products',
           icon: Package,
           label: 'Products',
+        },
+        {
+          path: '/categories',
+          icon: FolderTree,
+          label: 'Categories',
         },
         {
           path: '/warehouses',

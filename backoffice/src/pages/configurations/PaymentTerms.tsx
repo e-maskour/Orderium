@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Trash2, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Calendar, CheckSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { paymentTermsService, PaymentTerm, CreatePaymentTermDTO, UpdatePaymentTermDTO } from '../../modules/payment-terms';
 import { Modal } from '../../components/Modal';
@@ -249,15 +249,18 @@ export default function PaymentTerms() {
             <p className="mt-1 text-xs text-slate-500">{t('numberOfDaysUntilDue')}</p>
           </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="isDefault"
-              checked={formData.isDefault}
-              onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-              className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-            />
-            <label htmlFor="isDefault" className="ml-2 text-sm text-slate-700">
+          <div className="flex items-center gap-2">
+            <div
+              onClick={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
+              className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
+                formData.isDefault
+                  ? 'bg-amber-500 border-amber-500 text-white'
+                  : 'bg-white border-slate-300'
+              }`}
+            >
+              {formData.isDefault && <CheckSquare className="w-4 h-4" />}
+            </div>
+            <label htmlFor="isDefault" className="text-sm text-slate-700">
               {t('setAsDefaultPaymentTerm')}
             </label>
           </div>

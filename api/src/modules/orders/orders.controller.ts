@@ -27,7 +27,7 @@ export class OrdersController {
     return {
       success: true,
       order,
-      documentNumber: order.Order.number,
+      documentNumber: order.number,
     };
   }
 
@@ -67,7 +67,7 @@ export class OrdersController {
     }
 
     // Verify order belongs to customer
-    if (order.Order.customerId !== customerIdNum) {
+    if (order.customerId !== customerIdNum) {
       throw new NotFoundException('Order not found');
     }
 

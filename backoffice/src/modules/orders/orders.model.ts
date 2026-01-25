@@ -100,39 +100,7 @@ export class Order implements IOrder {
 
   // Static factory method
   static fromApiResponse(data: any): Order {
-    // Handle nested structure { Order: {...}, Items: [...] }
-    if (data.Order && data.Items) {
-      const orderData = data.Order;
-      return new Order({
-        id: orderData.id,
-        orderNumber: orderData.number || orderData.orderNumber,
-        customerId: orderData.customerId,
-        customerName: orderData.customer?.name || orderData.customerName,
-        customerPhone: orderData.customer?.phoneNumber || orderData.customerPhone,
-        customerAddress: orderData.customer?.address || orderData.customerAddress,
-        status: data.status,
-        totalAmount: orderData.total ? parseFloat(orderData.total) : undefined,
-        deliveryPersonId: data.deliveryPersonId,
-        deliveryPersonName: data.deliveryPersonName,
-        createdAt: orderData.dateCreated,
-        updatedAt: orderData.dateUpdated,
-        date: orderData.date || orderData.dateCreated,
-        note: orderData.note || orderData.internalNote,
-        discount: orderData.discount ? parseFloat(orderData.discount) : 0,
-        serviceType: orderData.serviceType,
-        items: data.Items.map((item: any) => ({
-          id: item.id,
-          productId: item.productId,
-          productName: item.productName || item.product?.name,
-          quantity: item.quantity,
-          price: parseFloat(item.price || 0),
-          discount: parseFloat(item.discount || 0),
-          total: parseFloat(item.total || 0),
-        })),
-      });
-    }
-    
-    // Handle flat structure (for list view)
+    // Handle flat structure (unified API response)
     return new Order({
       id: data.id,
       orderNumber: data.number || data.orderNumber,
@@ -146,10 +114,19 @@ export class Order implements IOrder {
       deliveryPersonName: data.deliveryPersonName,
       createdAt: data.dateCreated,
       updatedAt: data.dateUpdated,
-      date: data.date,
-      note: data.note,
+      date: data.date || data.dateCreated,
+      note: data.note || data.internalNote,
       discount: data.discount ? parseFloat(data.discount) : 0,
       serviceType: data.serviceType,
+      items: data.items?.map((item: any) => ({
+        id: item.id,
+        productId: item.productId,
+        productName: item.product?.name,
+        quantity: item.quantity,
+        price: parseFloat(item.price || 0),
+        discount: parseFloat(item.discount || 0),
+        total: parseFloat(item.total || 0),
+      })) || [],
     });
   }
 

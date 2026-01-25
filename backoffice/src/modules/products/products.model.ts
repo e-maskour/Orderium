@@ -11,13 +11,23 @@ export class Product implements IProduct {
   isService: boolean;
   isEnabled: boolean;
   isPriceChangeAllowed: boolean;
-  defaultTax: number;
   minPrice: number;
   dateCreated: string;
   dateUpdated: string;
   imageUrl?: string | null;
+  categories?: any[];
+  saleUnit?: string;
+  purchaseUnit?: string;
+  saleUnitId?: number | null;
+  purchaseUnitId?: number | null;
+  saleUnitOfMeasure?: any;
+  purchaseUnitOfMeasure?: any;
+  saleTax?: number;
+  purchaseTax?: number;
+  warehouseId?: number | null;
+  warehouse?: any;
 
-  constructor(data: IProduct) {
+  constructor(data: IProduct & { categories?: any[], saleUnit?: string, purchaseUnit?: string, saleUnitId?: number | null, purchaseUnitId?: number | null, saleUnitOfMeasure?: any, purchaseUnitOfMeasure?: any, saleTax?: number, purchaseTax?: number, warehouseId?: number | null, warehouse?: any }) {
     this.id = data.id;
     this.name = data.name;
     this.code = data.code;
@@ -28,11 +38,21 @@ export class Product implements IProduct {
     this.isService = data.isService;
     this.isEnabled = data.isEnabled;
     this.isPriceChangeAllowed = data.isPriceChangeAllowed;
-    this.defaultTax = data.defaultTax;
     this.minPrice = data.minPrice;
     this.dateCreated = data.dateCreated;
     this.dateUpdated = data.dateUpdated;
     this.imageUrl = data.imageUrl;
+    this.categories = data.categories;
+    this.saleUnit = data.saleUnit;
+    this.purchaseUnit = data.purchaseUnit;
+    this.saleUnitId = data.saleUnitId;
+    this.purchaseUnitId = data.purchaseUnitId;
+    this.saleUnitOfMeasure = data.saleUnitOfMeasure;
+    this.purchaseUnitOfMeasure = data.purchaseUnitOfMeasure;
+    this.saleTax = data.saleTax;
+    this.purchaseTax = data.purchaseTax;
+    this.warehouseId = data.warehouseId;
+    this.warehouse = data.warehouse;
   }
 
   // Getters
@@ -125,11 +145,21 @@ export class Product implements IProduct {
       isService: data.isService,
       isEnabled: data.isEnabled,
       isPriceChangeAllowed: data.isPriceChangeAllowed,
-      defaultTax: parseFloat(data.defaultTax) || 0,
       minPrice: parseFloat(data.minPrice) || 0,
       dateCreated: data.dateCreated,
       dateUpdated: data.dateUpdated,
       imageUrl: data.imageUrl,
+      categories: data.categories || [],
+      saleUnit: data.saleUnit,
+      purchaseUnit: data.purchaseUnit,
+      saleUnitId: data.saleUnitId,
+      purchaseUnitId: data.purchaseUnitId,
+      saleUnitOfMeasure: data.saleUnitOfMeasure,
+      purchaseUnitOfMeasure: data.purchaseUnitOfMeasure,
+      saleTax: data.saleTax ? parseFloat(data.saleTax) : undefined,
+      purchaseTax: data.purchaseTax ? parseFloat(data.purchaseTax) : undefined,
+      warehouseId: data.warehouseId,
+      warehouse: data.warehouse,
     });
   }
 
@@ -145,7 +175,6 @@ export class Product implements IProduct {
       isService: this.isService,
       isEnabled: this.isEnabled,
       isPriceChangeAllowed: this.isPriceChangeAllowed,
-      defaultTax: this.defaultTax,
       minPrice: this.minPrice,
       imageUrl: this.imageUrl,
     };
@@ -164,7 +193,6 @@ export class Product implements IProduct {
       isService: this.isService,
       isEnabled: this.isEnabled,
       isPriceChangeAllowed: this.isPriceChangeAllowed,
-      defaultTax: this.defaultTax,
       minPrice: this.minPrice,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,

@@ -20,7 +20,7 @@ export default function OrderCard({ order }: OrderCardProps) {
 
   const updateStatusMutation = useMutation({
     mutationFn: (status: 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled') => 
-      deliveryPerson ? deliveryService.updateOrderStatus(order.OrderId, status, deliveryPerson.Id) : Promise.reject('Not authenticated'),
+      deliveryPerson ? deliveryService.updateOrderStatus(order.orderId, status, deliveryPerson.id) : Promise.reject('Not authenticated'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       setIsUpdating(false);
@@ -37,7 +37,7 @@ export default function OrderCard({ order }: OrderCardProps) {
   };
 
   const getStatusColor = () => {
-    switch (order.Status) {
+    switch (order.status) {
       case 'to_delivery': return 'bg-blue-100 text-blue-700 border border-blue-200';
       case 'in_delivery': return 'bg-yellow-100 text-yellow-700 border border-yellow-200';
       case 'delivered': return 'bg-green-100 text-green-700 border border-green-200';
@@ -47,12 +47,12 @@ export default function OrderCard({ order }: OrderCardProps) {
   };
 
   const getStatusLabel = () => {
-    switch (order.Status) {
+    switch (order.status) {
       case 'to_delivery': return t('toDeliveryStatus');
       case 'in_delivery': return t('inDeliveryStatus');
       case 'delivered': return t('deliveredStatus');
       case 'canceled': return t('canceledStatus');
-      default: return order.Status;
+      default: return order.status;
     }
   };
 
@@ -72,12 +72,12 @@ export default function OrderCard({ order }: OrderCardProps) {
       {/* Header */}
       <div className="p-2.5 border-b border-border bg-muted/50">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium text-muted-foreground">#{order.OrderNumber}</span>
+          <span className="text-xs font-medium text-muted-foreground">#{order.orderNumber}</span>
           <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor()}`}>
             {getStatusLabel()}
           </span>
         </div>
-        <p className="text-xs text-muted-foreground">{formatDate(order.CreatedAt)}</p>
+        <p className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
       </div>
 
       {/* Customer Info */}
@@ -87,13 +87,13 @@ export default function OrderCard({ order }: OrderCardProps) {
             <Package className="w-3 h-3 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">{order.CustomerName}</p>
+            <p className="text-sm font-medium text-foreground">{order.customerName}</p>
             <a 
-              href={`tel:${order.CustomerPhone}`}
+              href={`tel:${order.customerPhone}`}
               className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
             >
               <Phone className="w-3 h-3" />
-              {order.CustomerPhone}
+              {order.customerPhone}
             </a>
           </div>
         </div>
@@ -103,13 +103,13 @@ export default function OrderCard({ order }: OrderCardProps) {
           <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
             <MapPin className="w-3 h-3 text-primary" />
           </div>
-          <p className="text-xs text-muted-foreground flex-1">{order.CustomerAddress}</p>
+          <p className="text-xs text-muted-foreground flex-1">{order.customerAddress}</p>
         </div>
 
         {/* Navigation Buttons */}
         <div className="flex gap-1.5">
           <a
-            href={order.GoogleMapsUrl}
+            href={order.googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
@@ -118,7 +118,7 @@ export default function OrderCard({ order }: OrderCardProps) {
             {t('googleMaps')}
           </a>
           <a
-            href={order.WazeUrl}
+            href={order.wazeUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-cyan-500 text-white rounded-lg text-xs font-medium hover:bg-cyan-600 transition-colors"
@@ -134,25 +134,25 @@ export default function OrderCard({ order }: OrderCardProps) {
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t('uniqueProducts')}</span>
-              <span className="text-foreground font-medium">{order.Items.length}</span>
+              <span className="text-foreground font-medium">{order.items?.length || 0}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t('totalItems')}</span>
               <span className="text-foreground font-medium">
-                {order.Items.reduce((sum, item) => sum + item.Quantity, 0)}
+                {order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}
               </span>
             </div>
             <div className="flex justify-between text-xs font-bold pt-1.5 border-t border-border">
               <span>{t('totalAmount')}</span>
-              <span className="text-primary">{formatCurrency(order.TotalAmount, language)}</span>
+              <span className="text-primary">{formatCurrency(order.totalAmount || 0, language)}</span>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        {order.Status !== 'delivered' && order.Status !== 'canceled' && (
+        {order.status !== 'delivered' && order.status !== 'canceled' && (
           <div className="border-t border-border pt-2 mt-2 space-y-1.5">
-            {order.Status === 'to_delivery' && (
+            {order.status === 'to_delivery' && (
               <button
                 onClick={() => handleStatusUpdate('in_delivery')}
                 disabled={isUpdating}
@@ -171,7 +171,7 @@ export default function OrderCard({ order }: OrderCardProps) {
                 )}
               </button>
             )}
-            {order.Status === 'in_delivery' && (
+            {order.status === 'in_delivery' && (
               <button
                 onClick={() => handleStatusUpdate('delivered')}
                 disabled={isUpdating}

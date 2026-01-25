@@ -142,6 +142,9 @@ export class StockService {
       unitOfMeasureId?: number;
     } = {},
   ): Promise<StockQuant> {
+    // Ensure quantityChange is a number
+    const numericChange = parseFloat(quantityChange.toString());
+    
     let stockQuant = await this.stockQuantRepository.findOne({
       where: { productId, warehouseId },
     });
@@ -151,7 +154,7 @@ export class StockService {
       stockQuant = this.stockQuantRepository.create({
         productId,
         warehouseId,
-        quantity: quantityChange,
+        quantity: numericChange,
         reservedQuantity: 0,
         incomingQuantity: 0,
         outgoingQuantity: 0,
@@ -160,16 +163,19 @@ export class StockService {
         unitOfMeasureId: options.unitOfMeasureId,
       });
     } else {
-      stockQuant.quantity += quantityChange;
+      // Ensure numeric addition by converting to numbers
+      const currentQty = parseFloat(stockQuant.quantity.toString() || '0');
+      stockQuant.quantity = currentQty + numericChange;
       if (options.lotNumber) stockQuant.lotNumber = options.lotNumber;
       if (options.serialNumber) stockQuant.serialNumber = options.serialNumber;
       if (options.unitOfMeasureId)
         stockQuant.unitOfMeasureId = options.unitOfMeasureId;
     }
 
-    // Calculate available quantity
-    stockQuant.availableQuantity =
-      stockQuant.quantity - stockQuant.reservedQuantity;
+    // Calculate available quantity (ensure numeric operation)
+    const qty = parseFloat(stockQuant.quantity.toString() || '0');
+    const reserved = parseFloat(stockQuant.reservedQuantity.toString() || '0');
+    stockQuant.availableQuantity = qty - reserved;
 
     return this.stockQuantRepository.save(stockQuant);
   }
@@ -268,9 +274,11 @@ export class StockService {
     }
 
     // Check stock availability for outgoing movements
+    // Skip validation for RECEIPT and ADJUSTMENT movements
     if (
       movement.sourceWarehouseId &&
-      movement.movementType !== MovementType.RECEIPT
+      movement.movementType !== MovementType.RECEIPT &&
+      movement.movementType !== MovementType.ADJUSTMENT
     ) {
       const stockQuant = await this.getStockAtWarehouse(
         movement.productId,

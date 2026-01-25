@@ -21,6 +21,27 @@ export class DeliveryService {
     });
   }
 
+  async login(phoneNumber: string, password: string): Promise<DeliveryPerson> {
+    const person = await this.deliveryPersonRepository.findOne({
+      where: { phoneNumber },
+    });
+
+    if (!person) {
+      throw new NotFoundException('Invalid phone number or password');
+    }
+
+    if (!person.isActive) {
+      throw new NotFoundException('Account is inactive');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, person.password);
+    if (!isPasswordValid) {
+      throw new NotFoundException('Invalid phone number or password');
+    }
+
+    return person;
+  }
+
   async getDeliveryPersonById(id: number): Promise<DeliveryPerson> {
     const person = await this.deliveryPersonRepository.findOne({
       where: { id },
@@ -89,6 +110,7 @@ export class DeliveryService {
 
   async getOrderDeliveries(limit = 100): Promise<OrderDelivery[]> {
     return this.orderDeliveryRepository.find({
+      relations: ['order', 'order.items', 'order.customer', 'deliveryPerson'],
       take: limit,
       order: { dateCreated: 'DESC' },
     });
@@ -99,6 +121,7 @@ export class DeliveryService {
   ): Promise<OrderDelivery[]> {
     return this.orderDeliveryRepository.find({
       where: { deliveryPerson: { id: deliveryPersonId } },
+      relations: ['order', 'order.items', 'order.items.product', 'order.customer'],
       order: { dateCreated: 'DESC' },
     });
   }

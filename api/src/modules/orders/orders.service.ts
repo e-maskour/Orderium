@@ -10,10 +10,7 @@ import { Order, OrderItem } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
 
-export interface OrderWithItems {
-  Order: Order;
-  Items: OrderItem[];
-}
+// Removed composite response interface; service now returns `Order` directly.
 
 @Injectable()
 export class OrdersService {
@@ -27,7 +24,7 @@ export class OrdersService {
     private readonly configService: ConfigService,
   ) {}
 
-  async createOrder(createOrderDto: CreateOrderDto): Promise<OrderWithItems> {
+  async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
     if (!createOrderDto.items || createOrderDto.items.length === 0) {
       throw new BadRequestException('Order must have at least one item');
     }
@@ -121,12 +118,16 @@ export class OrdersService {
         });
       });
 
-      const savedItems = await manager.save(OrderItem, items);
+      await manager.save(OrderItem, items);
 
-      return {
-        Order: savedOrder,
-        Items: savedItems,
-      };
+      // Return the full order with relations and items included
+      const fullOrder = await manager.findOne(Order, {
+        where: { id: savedOrder.id },
+        relations: ['customer', 'items', 'items.product'],
+      });
+
+      // fullOrder should exist since we just created it
+      return fullOrder as Order;
     });
   }
 
@@ -138,7 +139,7 @@ export class OrdersService {
     });
   }
 
-  async getOrderById(id: number): Promise<OrderWithItems> {
+  async getOrderById(id: number): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer', 'items', 'items.product'],
@@ -148,16 +149,10 @@ export class OrdersService {
       throw new NotFoundException(`Order with ID ${id} not found`);
     }
 
-    return {
-      Order: order,
-      Items: order.items.map(item => ({
-        ...item,
-        productName: item.product?.name || null,
-      })),
-    };
+    return order;
   }
 
-  async getOrderByNumber(orderNumber: string): Promise<OrderWithItems | null> {
+  async getOrderByNumber(orderNumber: string): Promise<Order | null> {
     const order = await this.orderRepository.findOne({
       where: { number: orderNumber },
       relations: ['customer', 'items', 'items.product'],
@@ -167,13 +162,7 @@ export class OrdersService {
       return null;
     }
 
-    return {
-      Order: order,
-      Items: order.items.map(item => ({
-        ...item,
-        productName: item.product?.name || null,
-      })),
-    };
+    return order;
   }
 
   async getCustomerOrders(customerId: number, limit = 50): Promise<Order[]> {

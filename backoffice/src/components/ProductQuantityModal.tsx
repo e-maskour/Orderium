@@ -56,6 +56,12 @@ interface Product {
   stock?: number;
   code?: string;
   imageUrl?: string;
+  saleUnitOfMeasure?: {
+    id: number;
+    name: string;
+    code: string;
+    category: string;
+  };
 }
 
 interface ProductQuantityModalProps {
@@ -114,10 +120,8 @@ export const ProductQuantityModal = ({
       setQuantity('');
     } else {
       const newValue = quantity === '' ? num : quantity + num;
-      const numValue = parseInt(newValue);
-      if (numValue <= maxQuantity && numValue > 0) {
-        setQuantity(newValue);
-      }
+      // Allow clicking any number, validation happens on submit
+      setQuantity(newValue);
     }
     // Restore focus after button click
     setTimeout(() => inputRef.current?.focus(), 0);
@@ -128,10 +132,8 @@ export const ProductQuantityModal = ({
     if (value === '' || value === '0') {
       setQuantity('');
     } else {
-      const numValue = parseInt(value);
-      if (numValue <= maxQuantity) {
-        setQuantity(value);
-      }
+      // Allow typing any number, validation happens on submit
+      setQuantity(value);
     }
   };
 
@@ -152,6 +154,9 @@ export const ProductQuantityModal = ({
   const totalPrice = product.price * (parseInt(quantity) || 0);
   const hasQuantity = quantity !== '' && parseInt(quantity) > 0;
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0'];
+  
+  // Get the unit code from product's saleUnitOfMeasure, default to 'UNIT'
+  const unitCode = product.saleUnitOfMeasure?.code || 'UNIT';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -189,7 +194,7 @@ export const ProductQuantityModal = ({
                 {product.price.toFixed(2)} {t('currency')}
               </span>
               <span className="text-xs sm:text-sm text-gray-500">
-                {t('perUnit')}
+                / {unitCode}
               </span>
             </div>
             {product.code && (
@@ -210,7 +215,7 @@ export const ProductQuantityModal = ({
           {/* Quantity Input */}
           <div className="space-y-2">
             <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
-              {t('quantity')}
+              {t('quantity')} {product.stock && `(${t('available')}: ${maxQuantity})`}
             </label>
             <input
               ref={inputRef}
@@ -220,7 +225,6 @@ export const ProductQuantityModal = ({
               onChange={handleInputChange}
               className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               min="0"
-              max={maxQuantity}
             />
           </div>
 

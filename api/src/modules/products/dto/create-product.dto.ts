@@ -73,4 +73,35 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   minPrice?: number;
+
+  @ApiPropertyOptional({ description: 'Sale tax percentage', minimum: 0, maximum: 100, default: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  saleTax?: number;
+
+  @ApiPropertyOptional({ description: 'Purchase tax percentage', minimum: 0, maximum: 100, default: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  purchaseTax?: number;
+
+  @ApiPropertyOptional({ description: 'Warehouse ID' })
+  @IsOptional()
+  @IsNumber()
+  warehouseId?: number;
+
+  @ApiPropertyOptional({ description: 'Category IDs', type: [Number] })
+  @IsOptional()
+  categoryIds?: number[];
+
+  @ApiPropertyOptional({ description: 'Sale unit of measure ID' })
+  @IsOptional()
+  @IsNumber()
+  saleUnitId?: number;
+
+  @ApiPropertyOptional({ description: 'Purchase unit of measure ID' })
+  @IsOptional()
+  @IsNumber()
+  purchaseUnitId?: number;
 }

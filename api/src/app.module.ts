@@ -22,6 +22,8 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ConfigurationsModule } from './modules/configurations/configurations.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { PDFModule } from './modules/pdf/pdf.module';
 import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
@@ -48,6 +50,8 @@ import { GatewayModule } from './gateway/gateway.module';
     PaymentsModule,
     ConfigurationsModule,
     InventoryModule,
+    CategoriesModule,
+    PDFModule,
     GatewayModule,
   ],
   controllers: [AppController],

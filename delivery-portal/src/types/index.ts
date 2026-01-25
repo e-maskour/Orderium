@@ -1,25 +1,25 @@
 export interface Order {
-  OrderId: number;
-  OrderNumber: string;
-  CustomerName: string;
-  CustomerPhone: string;
-  CustomerAddress?: string;
-  Latitude?: number;
-  Longitude?: number;
-  GoogleMapsUrl?: string;
-  WazeUrl?: string;
-  TotalAmount: number;
-  Status: 'assigned' | 'confirmed' | 'picked_up' | 'in_delivery' | 'delivered';
-  ConfirmedAt?: string;
-  PickedUpAt?: string;
-  DeliveredAt?: string;
-  CreatedAt: string;
-  AssignedAt?: string;
-  Items?: OrderItem[];
+  orderId: number;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress?: string;
+  latitude?: number;
+  longitude?: number;
+  googleMapsUrl?: string;
+  wazeUrl?: string;
+  totalAmount: number;
+  status: 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
+  confirmedAt?: string;
+  pickedUpAt?: string;
+  deliveredAt?: string;
+  createdAt: string;
+  assignedAt?: string;
+  items?: OrderItem[];
 }
 
 export interface OrderItem {
-  ProductName: string;
-  Quantity: number;
-  Price: number;
+  productName: string;
+  quantity: number;
+  price: number;
 }
