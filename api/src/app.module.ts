@@ -15,6 +15,7 @@ import { ProductsModule } from './modules/products/products.module';
 import { PartnersModule } from './modules/partners/partners.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
+import { QuotesModule } from './modules/quotes/quotes.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -43,6 +44,7 @@ import { GatewayModule } from './gateway/gateway.module';
     PartnersModule,
     OrdersModule,
     InvoicesModule,
+    QuotesModule,
     DeliveryModule,
     PortalModule,
     NotificationsModule,

@@ -1,149 +1,86 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
   OneToMany,
   Index,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
-import { Partner } from '../../partners/entities/partner.entity';
 import { Product } from '../../products/entities/product.entity';
-import { Warehouse } from '../../inventory/entities/warehouse.entity';
-import { Portal } from '../../portal/entities/portal.entity';
+import { BaseDocument, BaseStandardItem } from '../../../common/entities/base-document.entity';
+
+export enum OrderStatus {
+  DRAFT = 'draft',           // Brouillon
+  VALIDATED = 'validated',   // Validée
+  IN_PROGRESS = 'in_progress', // En cours
+  DELIVERED = 'delivered',   // Livrée
+  INVOICED = 'invoiced',     // Facturée
+  CANCELLED = 'cancelled',   // Annulée
+}
 
 @Entity('orders')
-@Index(['number'])
-@Index(['orderNumber'])
+@Index(['documentNumber'])
 @Index(['customerId'])
 @Index(['date'])
-export class Order {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class Order extends BaseDocument {
+  // Override documentNumber to use orderNumber for backwards compatibility
+  get orderNumber(): string {
+    return this.documentNumber;
+  }
 
-  @Column({ type: 'varchar', length: 50, unique: true })
-  number: string;
-
-  @ManyToOne(() => Portal, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'adminId' })
-  admin: Portal;
-
-  @Column({ type: 'int', nullable: true })
-  adminId: number | null;
-
-  @ManyToOne(() => Partner, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'customerId' })
-  customer: Partner;
-
-  @Column({ type: 'int', nullable: true })
-  customerId: number | null;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  orderNumber: string | null;
-
-  @Column({ type: 'date' })
-  date: Date;
-
-  @Column({ type: 'date' })
-  stockDate: Date;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  total: number;
-
-  @Column({ type: 'boolean', default: false })
-  isClockedOut: boolean;
-
-  @Column({ type: 'int', nullable: true })
-  documentTypeId: number | null;
-
-  @ManyToOne(() => Warehouse, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'warehouseId' })
-  warehouse: Warehouse;
-
-  @Column({ type: 'int', nullable: true })
-  warehouseId: number | null;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  referenceDocumentNumber: string | null;
-
-  @Column({ type: 'text', nullable: true })
-  internalNote: string | null;
-
-  @Column({ type: 'text', nullable: true })
-  note: string | null;
+  set orderNumber(value: string) {
+    this.documentNumber = value;
+  }
 
   @Column({ type: 'date', nullable: true })
   dueDate: Date | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  discount: number;
+  @Column({ type: 'int', nullable: true })
+  convertedToInvoiceId: number | null; // Reference to invoice if converted
 
-  @Column({ type: 'int', default: 0 })
-  discountType: number;
+  @Column({ type: 'boolean', default: false })
+  fromPortal: boolean; // Indicates if order was created from delivery portal
 
-  @Column({ type: 'int', default: 0 })
-  paidStatus: number;
+  // isValidated inherited from BaseDocument
 
-  @Column({ type: 'int', default: 0 })
-  discountApplyRule: number;
+  @Column({
+    type: 'enum',
+    enum: OrderStatus,
+    default: OrderStatus.DRAFT,
+  })
+  status: OrderStatus;
 
-  @Column({ type: 'int', default: 0 })
-  serviceType: number;
-
-  @CreateDateColumn()
-  dateCreated: Date;
-
-  @UpdateDateColumn()
-  dateUpdated: Date;
+  // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
 
   @OneToMany(() => OrderItem, (item) => item.order)
   items: OrderItem[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateStatus() {
+    // Ensure status is consistent with isValidated field
+    // Only enforce rules for non-terminal statuses
+    if (!this.isValidated) {
+      // If not validated, status must be DRAFT (unless it's a terminal status)
+      if (this.status !== OrderStatus.INVOICED && 
+          this.status !== OrderStatus.CANCELLED && 
+          this.status !== OrderStatus.DELIVERED) {
+        this.status = OrderStatus.DRAFT;
+      }
+    } else if (this.isValidated && this.status === OrderStatus.DRAFT) {
+      // If validated but status is still DRAFT, change to IN_PROGRESS
+      this.status = OrderStatus.IN_PROGRESS;
+    }
+  }
 }
 
 @Entity('order_items')
 @Index(['orderId'])
 @Index(['productId'])
-export class OrderItem {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
-  quantity: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
-  expectedQuantity: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  priceBeforeTax: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  discount: number;
-
-  @Column({ type: 'int', default: 0 })
-  discountType: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  price: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  productCost: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  priceAfterDiscount: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  total: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  priceBeforeTaxAfterDiscount: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  totalAfterDocumentDiscount: number;
-
-  @Column({ type: 'int', default: 0 })
-  discountApplyRule: number;
+export class OrderItem extends BaseStandardItem {
+  // Standard fields (description, unitPrice, tax, quantity, discount, discountType, total, product) inherited from BaseStandardItem
 
   @ManyToOne(() => Order, (order) => order.items)
   @JoinColumn({ name: 'orderId' })
@@ -151,11 +88,4 @@ export class OrderItem {
 
   @Column({ type: 'int' })
   orderId: number;
-
-  @ManyToOne(() => Product, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'productId' })
-  product: Product;
-
-  @Column({ type: 'int', nullable: true })
-  productId: number | null;
 }

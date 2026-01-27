@@ -37,7 +37,7 @@ export class PDFController {
       // Set response headers
       res.set({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Invoice_${orderData.orderNumber || orderData.number}.pdf"`,
+        'Content-Disposition': `attachment; filename="Invoice_${orderData.orderNumber}.pdf"`,
         'Content-Length': pdfBuffer.length.toString(),
       });
 

@@ -1,16 +1,16 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
   OneToMany,
   Index,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Partner } from '../../partners/entities/partner.entity';
 import { Product } from '../../products/entities/product.entity';
+import { BaseDocument, BaseStandardItem } from '../../../common/entities/base-document.entity';
 
 export enum InvoiceStatus {
   DRAFT = 'draft',
@@ -20,28 +20,21 @@ export enum InvoiceStatus {
 }
 
 @Entity('invoices')
-@Index(['invoiceNumber'])
+@Index(['documentNumber'])
 @Index(['customerId'])
 @Index(['supplierId'])
 @Index(['date'])
-export class Invoice {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class Invoice extends BaseDocument {
+  // Override documentNumber to use invoiceNumber for backwards compatibility
+  get invoiceNumber(): string {
+    return this.documentNumber;
+  }
 
-  @Column({ type: 'varchar', length: 50, unique: true })
-  invoiceNumber: string;
+  set invoiceNumber(value: string) {
+    this.documentNumber = value;
+  }
 
-  @Column({ type: 'int', nullable: true })
-  customerId: number;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  customerName: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  customerPhone: string;
-
-  @Column({ type: 'text', nullable: true })
-  customerAddress: string;
+  // Customer fields inherited from BaseDocument
 
   @Column({ type: 'int', nullable: true })
   supplierId: number;
@@ -55,26 +48,12 @@ export class Invoice {
   @Column({ type: 'text', nullable: true })
   supplierAddress: string;
 
-  @Column({ type: 'date' })
-  date: Date;
+  // date inherited from BaseDocument
 
   @Column({ type: 'date', nullable: true })
   dueDate: Date | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  subtotal: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  tax: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  discount: number;
-
-  @Column({ type: 'int', default: 0 })
-  discountType: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  total: number;
+  // subtotal, tax, discount, discountType, total inherited from BaseDocument
 
   @Column({
     type: 'enum',
@@ -83,21 +62,18 @@ export class Invoice {
   })
   status: InvoiceStatus;
 
-  @Column({ type: 'boolean', default: false })
-  isValidated: boolean;
+  // isValidated inherited from BaseDocument
 
-  @Column({ type: 'text', nullable: true })
-  notes: string;
+  @Column({ type: 'date', nullable: true })
+  validationDate: Date | null;
 
-  @CreateDateColumn()
-  dateCreated: Date;
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  paidAmount: number;
 
-  @UpdateDateColumn()
-  dateUpdated: Date;
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  remainingAmount: number;
 
-  @ManyToOne(() => Partner, { nullable: true })
-  @JoinColumn({ name: 'customerId' })
-  customer: Partner;
+  // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
 
   @ManyToOne(() => Partner, { nullable: true })
   @JoinColumn({ name: 'supplierId' })
@@ -105,14 +81,25 @@ export class Invoice {
 
   @OneToMany(() => InvoiceItem, (item) => item.invoice)
   items: InvoiceItem[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateStatus() {
+    // Ensure status is consistent with isValidated field
+    if (!this.isValidated) {
+      // If not validated, status must be DRAFT
+      this.status = InvoiceStatus.DRAFT;
+    } else if (this.isValidated && this.status === InvoiceStatus.DRAFT) {
+      // If validated but status is still DRAFT, change to UNPAID
+      this.status = InvoiceStatus.UNPAID;
+    }
+  }
 }
 
 @Entity('invoice_items')
 @Index(['invoiceId'])
 @Index(['productId'])
-export class InvoiceItem {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class InvoiceItem extends BaseStandardItem {
 
   @ManyToOne(() => Invoice, (invoice) => invoice.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'invoiceId' })
@@ -121,31 +108,5 @@ export class InvoiceItem {
   @Column({ type: 'int' })
   invoiceId: number;
 
-  @ManyToOne(() => Product, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'productId' })
-  product: Product;
-
-  @Column({ type: 'int', nullable: true })
-  productId: number;
-
-  @Column({ type: 'varchar', length: 255 })
-  description: string;
-
-  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
-  quantity: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  unitPrice: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  discount: number;
-
-  @Column({ type: 'int', default: 0 })
-  discountType: number;
-
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
-  tax: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  total: number;
+  // product relationship and productId inherited from BaseStandardItem
 }

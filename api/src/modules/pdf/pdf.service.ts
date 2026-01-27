@@ -10,8 +10,7 @@ interface PageData {
 
 interface OrderData {
   id: number;
-  number: string;
-  orderNumber?: string | null;
+  orderNumber: string;
   total: number;
   dateCreated: Date;
   customer?: {
@@ -236,7 +235,7 @@ export class PDFService {
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>Invoice ${orderData.orderNumber || orderData.number}</title>
+          <title>Invoice ${orderData.orderNumber}</title>
           <style>
             @page {
               size: A5;
@@ -441,7 +440,7 @@ export class PDFService {
                     <div class="document-title">
                       <div class="invoice-title">FACTURE</div>
                       <div class="invoice-meta">
-                        <div style="margin-bottom: 1mm;">N° ${orderData.orderNumber || orderData.number}</div>
+                        <div style="margin-bottom: 1mm;">N° ${orderData.orderNumber}</div>
                         <div>Date: ${new Date(orderData.dateCreated).toLocaleDateString('fr-FR')}</div>
                       </div>
                     </div>
@@ -473,7 +472,7 @@ export class PDFService {
                           </div>
                           <div style="display: flex; justify-content: space-between;">
                             <span style="color: #666666;">Commande N°:</span>
-                            <span style="font-weight: 600;">${orderData.orderNumber || orderData.number}</span>
+                            <span style="font-weight: 600;">${orderData.orderNumber}</span>
                           </div>
                           <div style="display: flex; justify-content: space-between;">
                             <span style="color: #666666;">Statut:</span>
@@ -601,7 +600,7 @@ export class PDFService {
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>Receipt ${orderData.orderNumber || orderData.number}</title>
+          <title>Receipt ${orderData.orderNumber}</title>
           <style>
             @page {
               size: 80mm auto;
@@ -662,7 +661,7 @@ export class PDFService {
             <div class="divider"></div>
             
             <div style="text-align: center; font-weight: bold; margin: 2mm 0;">
-              REÇU N° ${orderData.orderNumber || orderData.number}
+              REÇU N° ${orderData.orderNumber}
             </div>
             
             <div style="font-size: 7pt; margin-bottom: 3mm;">

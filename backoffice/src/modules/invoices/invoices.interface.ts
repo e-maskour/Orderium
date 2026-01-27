@@ -18,6 +18,9 @@ export interface Invoice {
   total: number;
   status: 'draft' | 'unpaid' | 'partial' | 'paid';
   isValidated: boolean;
+  validationDate?: string | null;
+  paidAmount: number;
+  remainingAmount: number;
   notes?: string | null;
   dateCreated: string;
   dateUpdated: string;

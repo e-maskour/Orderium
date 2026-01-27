@@ -1,23 +1,98 @@
-import { Order as IOrder } from './orders.interface';
+import {
+  Order as IOrder,
+  OrderItem as IOrderItem,
+  OrderStatus,
+  OrderWithDetails as IOrderWithDetails
+} from './orders.interface';
+
+export class OrderItem implements IOrderItem {
+  id: number;
+  orderId: number;
+  productId?: number | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  discountType: number;
+  tax: number;
+  total: number;
+
+  constructor(data: IOrderItem) {
+    this.id = data.id;
+    this.orderId = data.orderId;
+    this.productId = data.productId;
+    this.description = data.description;
+    this.quantity = data.quantity;
+    this.unitPrice = data.unitPrice;
+    this.discount = data.discount;
+    this.discountType = data.discountType;
+    this.tax = data.tax;
+    this.total = data.total;
+  }
+
+  get subtotal(): number {
+    return this.quantity * this.unitPrice;
+  }
+
+  get discountAmount(): number {
+    if (this.discountType === 1) {
+      return this.subtotal * (this.discount / 100);
+    }
+    return this.discount;
+  }
+
+  get subtotalAfterDiscount(): number {
+    return this.subtotal - this.discountAmount;
+  }
+
+  get displayUnitPrice(): string {
+    return this.unitPrice.toFixed(2);
+  }
+
+  get displayTotal(): string {
+    return this.total.toFixed(2);
+  }
+
+  static fromApiResponse(data: any): OrderItem {
+    return new OrderItem({
+      id: data.id,
+      orderId: data.orderId,
+      productId: data.productId,
+      description: data.description,
+      quantity: parseFloat(data.quantity) || 0,
+      unitPrice: parseFloat(data.unitPrice) || 0,
+      discount: parseFloat(data.discount) || 0,
+      discountType: data.discountType || 0,
+      tax: parseFloat(data.tax) || 0,
+      total: parseFloat(data.total) || 0,
+    });
+  }
+}
 
 export class Order implements IOrder {
   id: number;
-  orderNumber?: string;
-  customerId?: number;
-  customerName?: string;
-  customerPhone?: string;
-  customerAddress?: string;
-  status?: string;
-  totalAmount?: number;
+  orderNumber: string;
+  customerId?: number | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerAddress?: string | null;
+  date: string;
+  dueDate?: string | null;
+  subtotal: number;
+  tax: number;
+  discount: number;
+  discountType: number;
+  total: number;
+  status: OrderStatus;
+  isValidated: boolean;
+  notes?: string | null;
+  convertedToInvoiceId?: number | null;
+  fromPortal?: boolean;
   deliveryPersonId?: number | null;
   deliveryPersonName?: string | null;
-  createdAt: string;
-  updatedAt?: string;
-  date?: string;
-  note?: string;
-  discount?: number;
-  serviceType?: number;
-  items?: any[];
+  dateCreated: string;
+  dateUpdated: string;
+  items?: OrderItem[];
 
   constructor(data: IOrder) {
     this.id = data.id;
@@ -26,20 +101,38 @@ export class Order implements IOrder {
     this.customerName = data.customerName;
     this.customerPhone = data.customerPhone;
     this.customerAddress = data.customerAddress;
+    this.date = data.date;
+    this.dueDate = data.dueDate;
+    this.subtotal = data.subtotal;
+    this.tax = data.tax;
+    this.discount = data.discount;
+    this.discountType = data.discountType;
+    this.total = data.total;
     this.status = data.status;
-    this.totalAmount = data.totalAmount;
+    this.isValidated = data.isValidated;
+    this.notes = data.notes;
+    this.convertedToInvoiceId = data.convertedToInvoiceId;
+    this.fromPortal = data.fromPortal;
     this.deliveryPersonId = data.deliveryPersonId;
     this.deliveryPersonName = data.deliveryPersonName;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
-    this.date = data.date;
-    this.note = data.note;
-    this.discount = data.discount;
-    this.serviceType = data.serviceType;
-    this.items = data.items;
+    this.dateCreated = data.dateCreated;
+    this.dateUpdated = data.dateUpdated;
+    this.items = data.items ? (data.items.map(item => item instanceof OrderItem ? item : new OrderItem(item))) : undefined;
   }
 
   // Getters
+  get partnerName(): string {
+    return this.customerName || 'N/A';
+  }
+
+  get partnerPhone(): string {
+    return this.customerPhone || 'N/A';
+  }
+
+  get partnerAddress(): string {
+    return this.customerAddress || 'N/A';
+  }
+
   get hasDeliveryPerson(): boolean {
     return this.deliveryPersonId !== null && this.deliveryPersonId !== undefined;
   }
@@ -49,11 +142,23 @@ export class Order implements IOrder {
   }
 
   get displayTotal(): string {
-    return this.totalAmount ? this.totalAmount.toFixed(2) : '0.00';
+    return this.total.toFixed(2);
+  }
+
+  get displaySubtotal(): string {
+    return this.subtotal.toFixed(2);
+  }
+
+  get displayTax(): string {
+    return this.tax.toFixed(2);
+  }
+
+  get displayDiscount(): string {
+    return this.discount.toFixed(2);
   }
 
   get statusText(): string {
-    return this.status || 'Unknown';
+    return this.status;
   }
 
   get displayOrderNumber(): string {
@@ -64,17 +169,40 @@ export class Order implements IOrder {
     return this.deliveryPersonName || 'Unassigned';
   }
 
+  get discountAmount(): number {
+    if (this.discountType === 1) {
+      return this.subtotal * (this.discount / 100);
+    }
+    return this.discount;
+  }
+
+  get taxAmount(): number {
+    const subtotalAfterDiscount = this.subtotal - this.discountAmount;
+    return subtotalAfterDiscount * (this.tax / 100);
+  }
+
+  get statusLabel(): string {
+    switch (this.status) {
+      case 'draft': return 'Brouillon';
+      case 'validated': return 'Validée';
+      case 'in_progress': return 'En cours';
+      case 'delivered': return 'Livrée';
+      case 'cancelled': return 'Annulée';
+      default: return 'Inconnu';
+    }
+  }
+
   // Status checks
-  isPending(): boolean {
-    return this.status === 'pending';
+  isDraft(): boolean {
+    return this.status === 'draft';
   }
 
-  isProcessing(): boolean {
-    return this.status === 'processing';
+  isValidatedStatus(): boolean {
+    return this.status === 'validated';
   }
 
-  isDelivering(): boolean {
-    return this.status === 'delivering';
+  isInProgress(): boolean {
+    return this.status === 'in_progress';
   }
 
   isDelivered(): boolean {
@@ -100,56 +228,60 @@ export class Order implements IOrder {
 
   // Static factory method
   static fromApiResponse(data: any): Order {
-    // Handle flat structure (unified API response)
     return new Order({
       id: data.id,
-      orderNumber: data.number || data.orderNumber,
+      orderNumber: data.orderNumber || data.documentNumber,
       customerId: data.customerId,
-      customerName: data.customer?.name || data.customerName,
-      customerPhone: data.customer?.phoneNumber || data.customerPhone,
-      customerAddress: data.customer?.address || data.customerAddress,
-      status: data.status,
-      totalAmount: data.total ? parseFloat(data.total) : undefined,
-      deliveryPersonId: data.deliveryPersonId,
-      deliveryPersonName: data.deliveryPersonName,
-      createdAt: data.dateCreated,
-      updatedAt: data.dateUpdated,
-      date: data.date || data.dateCreated,
-      note: data.note || data.internalNote,
-      discount: data.discount ? parseFloat(data.discount) : 0,
-      serviceType: data.serviceType,
-      items: data.items?.map((item: any) => ({
-        id: item.id,
-        productId: item.productId,
-        productName: item.product?.name,
-        quantity: item.quantity,
-        price: parseFloat(item.price || 0),
-        discount: parseFloat(item.discount || 0),
-        total: parseFloat(item.total || 0),
-      })) || [],
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      customerAddress: data.customerAddress,
+      date: data.date,
+      dueDate: data.dueDate,
+      subtotal: parseFloat(data.subtotal) || 0,
+      tax: parseFloat(data.tax) || 0,
+      discount: parseFloat(data.discount) || 0,
+      discountType: data.discountType || 0,
+      total: parseFloat(data.total) || 0,
+      status: data.status || 'draft',
+      isValidated: data.isValidated || false,
+      notes: data.notes,
+      convertedToInvoiceId: data.convertedToInvoiceId,
+      fromPortal: data.fromPortal || false,
+      deliveryPersonId: data.deliveryPersonId, // Business logic field
+      deliveryPersonName: data.deliveryPersonName, // Business logic field
+      dateCreated: data.dateCreated,
+      dateUpdated: data.dateUpdated,
+      items: (data.items || []).map(OrderItem.fromApiResponse),
     });
   }
+}
 
-  // Convert to plain object
-  toJSON(): IOrder {
-    return {
-      id: this.id,
-      orderNumber: this.orderNumber,
-      customerId: this.customerId,
-      customerName: this.customerName,
-      customerPhone: this.customerPhone,
-      customerAddress: this.customerAddress,
-      status: this.status,
-      totalAmount: this.totalAmount,
-      deliveryPersonId: this.deliveryPersonId,
-      deliveryPersonName: this.deliveryPersonName,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      date: this.date,
-      note: this.note,
-      discount: this.discount,
-      serviceType: this.serviceType,
-      items: this.items,
-    };
+export class OrderWithDetails implements IOrderWithDetails {
+  order: Order;
+  items: OrderItem[];
+
+  constructor(data: IOrderWithDetails) {
+    this.order = data.order instanceof Order ? data.order : new Order(data.order);
+    this.items = data.items.map(item => item instanceof OrderItem ? item : new OrderItem(item));
+  }
+
+  get totalItems(): number {
+    return this.items.length;
+  }
+
+  get totalQuantity(): number {
+    return this.items.reduce((sum, item) => sum + item.quantity, 0);
+  }
+
+  canBeEdited(): boolean {
+    return this.order.isDraft();
+  }
+
+  static fromApiResponse(data: any): OrderWithDetails {
+    const orderData = data.order || data;
+    return new OrderWithDetails({
+      order: Order.fromApiResponse(orderData),
+      items: (orderData.items || []).map(OrderItem.fromApiResponse),
+    });
   }
 }

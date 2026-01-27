@@ -41,11 +41,11 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
     const menuItems = [
       {
         key: 'ventes',
-        submenu: ['/devis', '/bon-livraison', '/facture-vente', '/paiements-vente', '/customers'],
+        submenu: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'],
       },
       {
         key: 'achats',
-        submenu: ['/demande-prix', '/bon-achat', '/facture-achat', '/paiements-achat', '/fournisseurs'],
+        submenu: ['/demande-prix', '/bon-achat', '/factures/achat', '/paiements-achat', '/fournisseurs'],
       },
       {
         key: 'products',
@@ -54,7 +54,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
     ];
 
     menuItems.forEach(menu => {
-      if (menu.submenu.some(path => location.pathname === path)) {
+      if (menu.submenu.some(path => location.pathname.startsWith(path))) {
         if (!expandedMenus.includes(menu.key)) {
           setExpandedMenus(prev => [...prev, menu.key]);
         }
@@ -90,12 +90,12 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
           label: 'Devis',
         },
         {
-          path: '/bon-livraison',
+          path: '/bons-livraison',
           icon: PackageCheck,
           label: 'Bon de Livraison',
         },
         {
-          path: '/facture-vente',
+          path: '/factures/vente',
           icon: FileText,
           label: 'Facture de Vente',
         },
@@ -127,7 +127,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
           label: "Bon d'Achat",
         },
         {
-          path: '/facture-achat',
+          path: '/factures/achat',
           icon: Receipt,
           label: "Facture d'Achat",
         },
@@ -245,7 +245,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
             // Handle menu items with submenu
             if ('submenu' in item && item.submenu) {
               const isExpanded = expandedMenus.includes(item.key);
-              const hasActiveChild = item.submenu.some(sub => location.pathname === sub.path);
+              const hasActiveChild = item.submenu.some(sub => location.pathname.startsWith(sub.path));
 
               return (
                 <li key={item.key}>
@@ -280,7 +280,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                     <ul className="mt-1 ml-4 space-y-1 border-l-2 border-slate-200 pl-4">
                       {item.submenu.map((subItem) => {
                         const SubIcon = subItem.icon;
-                        const isActive = location.pathname === subItem.path;
+                        const isActive = location.pathname.startsWith(subItem.path);
                         
                         return (
                           <li key={subItem.path}>

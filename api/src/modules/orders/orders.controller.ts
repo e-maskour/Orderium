@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Param,
   Query,
@@ -27,17 +28,22 @@ export class OrdersController {
     return {
       success: true,
       order,
-      documentNumber: order.number,
+      documentNumber: order.orderNumber,
     };
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all orders' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'fromPortal', required: false, type: Boolean, description: 'Filter by fromPortal field' })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
-  async findAll(@Query('limit') limit?: string) {
+  async findAll(
+    @Query('limit') limit?: string,
+    @Query('fromPortal') fromPortal?: string
+  ) {
     const limitNum = limit ? parseInt(limit, 10) : 100;
-    const orders = await this.ordersService.getAllOrders(limitNum);
+    const fromPortalBool = fromPortal !== undefined ? fromPortal === 'true' : undefined;
+    const orders = await this.ordersService.getAllOrders(limitNum, fromPortalBool);
     return {
       success: true,
       orders,
@@ -106,6 +112,69 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.getOrderById(id);
+    return {
+      success: true,
+      order,
+    };
+  }
+
+  @Put(':id/validate')
+  @ApiOperation({ summary: 'Validate an order (change from draft to validated)' })
+  @ApiResponse({ status: 200, description: 'Order validated successfully' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async validate(@Param('id', ParseIntPipe) id: number) {
+    const order = await this.ordersService.validate(id);
+    return {
+      success: true,
+      order,
+    };
+  }
+
+  @Put(':id/devalidate')
+  @ApiOperation({ summary: 'Devalidate an order (change back to draft)' })
+  @ApiResponse({ status: 200, description: 'Order devalidated successfully' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async devalidate(@Param('id', ParseIntPipe) id: number) {
+    const order = await this.ordersService.devalidate(id);
+    return {
+      success: true,
+      order,
+    };
+  }
+
+  @Put(':id/deliver')
+  @ApiOperation({ summary: 'Mark an order as delivered' })
+  @ApiResponse({ status: 200, description: 'Order marked as delivered successfully' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async deliver(@Param('id', ParseIntPipe) id: number) {
+    const order = await this.ordersService.deliver(id);
+    return {
+      success: true,
+      order,
+    };
+  }
+
+  @Put(':id/cancel')
+  @ApiOperation({ summary: 'Cancel an order' })
+  @ApiResponse({ status: 200, description: 'Order cancelled successfully' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async cancel(@Param('id', ParseIntPipe) id: number) {
+    const order = await this.ordersService.cancel(id);
+    return {
+      success: true,
+      order,
+    };
+  }
+
+  @Put(':id/mark-invoiced')
+  @ApiOperation({ summary: 'Mark an order as invoiced after conversion' })
+  @ApiResponse({ status: 200, description: 'Order marked as invoiced successfully' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async markAsInvoiced(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { invoiceId: number }
+  ) {
+    const order = await this.ordersService.markAsInvoiced(id, body.invoiceId);
     return {
       success: true,
       order,

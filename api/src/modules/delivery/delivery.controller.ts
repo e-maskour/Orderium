@@ -104,7 +104,7 @@ export class DeliveryController {
     // Transform OrderDelivery to match frontend Order interface
     const orders = orderDeliveries.map(od => ({
       orderId: od.order.id,
-      orderNumber: od.order.orderNumber || od.order.number,
+      orderNumber: od.order.orderNumber,
       customerName: od.order.customer?.name || 'N/A',
       customerPhone: od.order.customer?.phoneNumber || 'N/A',
       customerAddress: od.order.customer?.deliveryAddress || od.order.customer?.address,
@@ -126,7 +126,7 @@ export class DeliveryController {
       items: od.order.items?.map(item => ({
         productName: item.product?.name || 'Unknown Product',
         quantity: Number(item.quantity),
-        price: Number(item.price),
+        price: Number(item.unitPrice),
       })),
     }));
     

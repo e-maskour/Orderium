@@ -83,11 +83,14 @@ export class Invoice implements IInvoice {
   supplierAddress?: string | null;
   date: string;
   dueDate?: string | null;
+  validationDate?: string | null;
   subtotal: number;
   tax: number;
   discount: number;
   discountType: number;
   total: number;
+  paidAmount: number;
+  remainingAmount: number;
   status: 'draft' | 'unpaid' | 'partial' | 'paid';
   isValidated: boolean;
   notes?: string | null;
@@ -107,11 +110,14 @@ export class Invoice implements IInvoice {
     this.supplierAddress = data.supplierAddress;
     this.date = data.date;
     this.dueDate = data.dueDate;
+    this.validationDate = data.validationDate;
     this.subtotal = data.subtotal;
     this.tax = data.tax;
     this.discount = data.discount;
     this.discountType = data.discountType;
     this.total = data.total;
+    this.paidAmount = data.paidAmount;
+    this.remainingAmount = data.remainingAmount;
     this.status = data.status;
     this.isValidated = data.isValidated;
     this.notes = data.notes;
@@ -208,7 +214,7 @@ export class Invoice implements IInvoice {
   static fromApiResponse(data: any): Invoice {
     return new Invoice({
       id: data.id,
-      invoiceNumber: data.invoiceNumber,
+      invoiceNumber: data.invoiceNumber || data.documentNumber,
       customerId: data.customerId,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
@@ -219,11 +225,14 @@ export class Invoice implements IInvoice {
       supplierAddress: data.supplierAddress,
       date: data.date,
       dueDate: data.dueDate,
+      validationDate: data.validationDate,
       subtotal: parseFloat(data.subtotal) || 0,
       tax: parseFloat(data.tax) || 0,
       discount: parseFloat(data.discount) || 0,
       discountType: data.discountType || 0,
       total: parseFloat(data.total) || 0,
+      paidAmount: parseFloat(data.paidAmount) || 0,
+      remainingAmount: parseFloat(data.remainingAmount) || 0,
       status: data.status || 'draft',
       isValidated: data.isValidated || false,
       notes: data.notes,

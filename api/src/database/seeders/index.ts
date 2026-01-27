@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { seedConfigurations } from './configurations.seeder';
 import { seedWarehouses } from './warehouse.seeder';
 import { seedUnitOfMeasures } from './uom.seeder';
+import { seedPartners } from './partners.seeder';
 
 export async function runSeeders(dataSource: DataSource) {
   console.log('🌱 Running database seeders...\n');
@@ -10,6 +11,7 @@ export async function runSeeders(dataSource: DataSource) {
   try {
     await seedWarehouses(dataSource);
     await seedUnitOfMeasures(dataSource);
+    await seedPartners(dataSource);
     await seedConfigurations(dataSource);
     
     console.log('\n✅ All seeders completed successfully');

@@ -7,6 +7,7 @@ import {
   IsArray,
   ArrayMinSize,
   IsString,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -15,6 +16,10 @@ export class CreateOrderItemDto {
   @ApiProperty({ description: 'Product ID' })
   @IsInt()
   productId: number;
+
+  @ApiProperty({ description: 'Product description' })
+  @IsString()
+  description: string;
 
   @ApiProperty({ description: 'Quantity', minimum: 0 })
   @IsNumber()
@@ -39,6 +44,12 @@ export class CreateOrderItemDto {
   @IsOptional()
   @IsInt()
   discountType?: number;
+
+  @ApiPropertyOptional({ description: 'Tax percentage', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  tax?: number;
 }
 
 export class CreateOrderDto {
@@ -52,21 +63,6 @@ export class CreateOrderDto {
   @IsString()
   customerPhone?: string;
 
-  @ApiPropertyOptional({ description: 'Admin ID' })
-  @IsOptional()
-  @IsInt()
-  adminId?: number;
-
-  @ApiPropertyOptional({ description: 'Warehouse ID' })
-  @IsOptional()
-  @IsInt()
-  warehouseId?: number;
-
-  @ApiPropertyOptional({ description: 'Document type ID' })
-  @IsOptional()
-  @IsInt()
-  documentTypeId?: number;
-
   @ApiProperty({ description: 'Order items', type: [CreateOrderItemDto] })
   @IsArray()
   @ArrayMinSize(1)
@@ -79,8 +75,8 @@ export class CreateOrderDto {
   @IsString()
   note?: string;
 
-  @ApiPropertyOptional({ description: 'Internal note' })
+  @ApiPropertyOptional({ description: 'Indicates if order was created from delivery portal', default: false })
   @IsOptional()
-  @IsString()
-  internalNote?: string;
+  @IsBoolean()
+  fromPortal?: boolean;
 }

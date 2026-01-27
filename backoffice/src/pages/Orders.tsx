@@ -289,8 +289,8 @@ function PreviewContent({ orderId, type, filteredOrders }: { orderId: number; ty
             customerName={order.customerName}
             customerPhone={order.customerPhone}
             items={order.items}
-            subtotal={order.totalAmount}
-            orderDate={new Date(order.createdAt)}
+            subtotal={order.total}
+            orderDate={new Date(order.dateCreated)}
           />
         ) : (
           <Invoice
@@ -299,8 +299,8 @@ function PreviewContent({ orderId, type, filteredOrders }: { orderId: number; ty
             customerPhone={order.customerPhone}
             customerAddress={order.customerAddress || ''}
             items={order.items}
-            subtotal={order.totalAmount}
-            orderDate={new Date(order.createdAt)}
+            subtotal={order.total}
+            orderDate={new Date(order.dateCreated)}
           />
         )}
       </LanguageProvider>
@@ -384,7 +384,7 @@ export default function Orders() {
 
   // Enable real-time notifications
   useOrderNotifications({
-    token: admin?.Token || localStorage.getItem('adminToken'),
+    token: localStorage.getItem('adminToken'),
     enabled: !!admin,
   });
 
@@ -399,7 +399,7 @@ export default function Orders() {
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders', searchQuery, dateFilterType, dateRange],
-    queryFn: () => ordersService.getAll(searchQuery, getDateRange.start, getDateRange.end),
+    queryFn: () => ordersService.getAll(searchQuery, getDateRange.start, getDateRange.end, true),
   });
 
   const { data: deliveryPersons = [] } = useQuery({
@@ -535,8 +535,8 @@ export default function Orders() {
               customerName: order.customerName || '',
               customerPhone: order.customerPhone || '',
               items: formattedItems,
-              subtotal: order.totalAmount || 0,
-              orderDate: new Date(order.createdAt)
+              subtotal: order.total || 0,
+              orderDate: new Date(order.dateCreated)
             })
           : generateInvoiceHTML({
               orderNumber: order.orderNumber || '',
@@ -544,8 +544,8 @@ export default function Orders() {
               customerPhone: order.customerPhone || '',
               customerAddress: order.customerAddress || '',
               items: formattedItems,
-              subtotal: order.totalAmount || 0,
-              orderDate: new Date(order.createdAt)
+              subtotal: order.total || 0,
+              orderDate: new Date(order.dateCreated)
             });
 
         printWindow.document.write(htmlContent);
@@ -796,7 +796,7 @@ export default function Orders() {
                     <div className="flex-shrink-0 w-32">
                       <span className="text-sm font-semibold text-slate-500">#{order.orderNumber}</span>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {new Date(order.dateCreated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
 
@@ -836,7 +836,7 @@ export default function Orders() {
                     <div className="flex-shrink-0 text-right">
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">{t('total')}</span>
                       <span className="text-base font-bold text-amber-600 block mt-0.5">
-                        {order.totalAmount?.toFixed(2)} <span className="text-xs">{t('currency')}</span>
+                        {order.total?.toFixed(2)} <span className="text-xs">{t('currency')}</span>
                       </span>
                     </div>
                   </div>
@@ -883,7 +883,7 @@ export default function Orders() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">
-                    {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(order.dateCreated).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
 
@@ -917,7 +917,7 @@ export default function Orders() {
                   <div className="border-t border-slate-100 pt-2">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('total')}</span>
-                      <span className="text-base font-bold text-amber-600">{order.totalAmount?.toFixed(2)} <span className="text-xs">{t('currency')}</span></span>
+                      <span className="text-base font-bold text-amber-600">{order.total?.toFixed(2)} <span className="text-xs">{t('currency')}</span></span>
                     </div>
                   </div>
                 </div>
@@ -932,7 +932,7 @@ export default function Orders() {
       {/* Order Details Modal */}
       {selectedOrderId && orderDetails && (
         <OrderDetailsModal
-          order={orderDetails}
+          order={orderDetails.order || orderDetails}
           onClose={() => setSelectedOrderId(null)}
         />
       )}

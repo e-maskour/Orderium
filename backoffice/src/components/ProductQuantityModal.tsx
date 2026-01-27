@@ -118,9 +118,21 @@ export const ProductQuantityModal = ({
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
       setQuantity('');
+    } else if (num === '.') {
+      // Only add decimal point if there isn't one already
+      if (!quantity.includes('.')) {
+        const newValue = quantity === '' ? '0.' : quantity + '.';
+        setQuantity(newValue);
+      }
     } else {
       const newValue = quantity === '' ? num : quantity + num;
-      // Allow clicking any number, validation happens on submit
+      // Check if adding this number would exceed 2 decimal places
+      if (newValue.includes('.')) {
+        const [, decimal] = newValue.split('.');
+        if (decimal && decimal.length > 2) {
+          return; // Don't add if it would exceed 2 decimal places
+        }
+      }
       setQuantity(newValue);
     }
     // Restore focus after button click
@@ -128,17 +140,28 @@ export const ProductQuantityModal = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    if (value === '' || value === '0') {
+    const value = e.target.value.replace(/[^0-9.]/g, '');
+    // Only allow one decimal point
+    const parts = value.split('.');
+    let sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : value;
+    
+    // Limit decimal places to 2
+    if (sanitizedValue.includes('.')) {
+      const [integer, decimal] = sanitizedValue.split('.');
+      if (decimal && decimal.length > 2) {
+        sanitizedValue = integer + '.' + decimal.substring(0, 2);
+      }
+    }
+    
+    if (sanitizedValue === '' || sanitizedValue === '0') {
       setQuantity('');
     } else {
-      // Allow typing any number, validation happens on submit
-      setQuantity(value);
+      setQuantity(sanitizedValue);
     }
   };
 
   const handleAddToCart = () => {
-    const qty = parseInt(quantity);
+    const qty = parseFloat(quantity);
     if (qty > 0) {
       onAddToCart(qty);
       setQuantity('');
@@ -151,9 +174,9 @@ export const ProductQuantityModal = ({
     onClose();
   };
 
-  const totalPrice = product.price * (parseInt(quantity) || 0);
-  const hasQuantity = quantity !== '' && parseInt(quantity) > 0;
-  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0'];
+  const totalPrice = product.price * (parseFloat(quantity) || 0);
+  const hasQuantity = quantity !== '' && parseFloat(quantity) > 0;
+  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
   
   // Get the unit code from product's saleUnitOfMeasure, default to 'UNIT'
   const unitCode = product.saleUnitOfMeasure?.code || 'UNIT';
@@ -219,12 +242,11 @@ export const ProductQuantityModal = ({
             </label>
             <input
               ref={inputRef}
-              type="number"
-              inputMode="numeric"
+              type="text"
+              inputMode="decimal"
               value={quantity}
               onChange={handleInputChange}
-              className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              min="0"
+              className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
           </div>
 
@@ -237,6 +259,8 @@ export const ProductQuantityModal = ({
                 className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${
                   num === 'C'
                     ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
+                    : num === '.'
+                    ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
                 }`}
               >

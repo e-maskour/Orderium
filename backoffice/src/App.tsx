@@ -21,16 +21,23 @@ import Fournisseurs from './pages/Fournisseurs';
 import FournisseurCreate from './pages/FournisseurCreate';
 import FournisseurEdit from './pages/FournisseurEdit';
 import FournisseurDetail from './pages/FournisseurDetail';
-import Devis from './pages/Devis';
-import BonLivraison from './pages/BonLivraison';
+import {
+  FactureVenteList,
+  FactureVenteCreate,
+  FactureVenteEdit,
+  FactureAchatList,
+  FactureAchatCreate,
+  FactureAchatEdit,
+  DevisVenteList,
+  DevisVenteCreate,
+  DevisVenteEdit,
+  BonLivraisonList,
+  BonLivraisonCreate,
+  BonLivraisonEdit,
+} from './pages/documents';
+import QuotePreviewPage from './pages/QuotePreviewPage';
 import DemandePrix from './pages/DemandePrix';
 import BonAchat from './pages/BonAchat';
-import FactureAchat from './pages/FactureAchat';
-import FactureAchatCreate from './pages/FactureAchatCreate';
-import FactureAchatEdit from './pages/FactureAchatEdit';
-import FactureVente from './pages/FactureVente';
-import FactureVenteCreate from './pages/FactureVenteCreate';
-import FactureVenteEdit from './pages/FactureVenteEdit';
 import PaiementsVente from './pages/PaiementsVente';
 import PaiementsAchat from './pages/PaiementsAchat';
 import Configurations from './pages/Configurations';
@@ -57,7 +64,9 @@ function App() {
             }}
           >
             <Routes>
+              {/* Public Routes - No Authentication Required */}
               <Route path="/login" element={<Login />} />
+              <Route path="/preview/quote/:token" element={<QuotePreviewPage />} />
               <Route
                 path="/dashboard"
                 element={
@@ -186,32 +195,70 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Devis - New Unified System */}
               <Route
                 path="/devis"
                 element={
                   <ProtectedRoute>
-                    <Devis />
+                    <DevisVenteList />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="/bon-livraison"
+                path="/devis/create"
                 element={
                   <ProtectedRoute>
-                    <BonLivraison />
+                    <DevisVenteCreate />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="/facture-vente"
+                path="/devis/:id"
                 element={
                   <ProtectedRoute>
-                    <FactureVente />
+                    <DevisVenteEdit />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Bons de Livraison - New Unified System */}
+              <Route
+                path="/bons-livraison"
+                element={
+                  <ProtectedRoute>
+                    <BonLivraisonList />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="/facture-vente/create"
+                path="/bons-livraison/create"
+                element={
+                  <ProtectedRoute>
+                    <BonLivraisonCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bons-livraison/:id"
+                element={
+                  <ProtectedRoute>
+                    <BonLivraisonEdit />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Legacy route redirect */}
+              <Route path="/bon-livraison" element={<Navigate to="/bons-livraison" replace />} />
+              
+              {/* Factures de Vente - New Unified System */}
+              <Route
+                path="/factures/vente"
+                element={
+                  <ProtectedRoute>
+                    <FactureVenteList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/factures/vente/create"
                 element={
                   <ProtectedRoute>
                     <FactureVenteCreate />
@@ -219,18 +266,53 @@ function App() {
                 }
               />
               <Route
-                path="/facture-vente/edit/:id"
+                path="/factures/vente/:id"
                 element={
                   <ProtectedRoute>
                     <FactureVenteEdit />
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/paiements-vente"
                 element={
                   <ProtectedRoute>
                     <PaiementsVente />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Factures d'Achat - New Unified System */}
+              <Route
+                path="/factures/achat"
+                element={
+                  <ProtectedRoute>
+                    <FactureAchatList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/factures/achat/create"
+                element={
+                  <ProtectedRoute>
+                    <FactureAchatCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/factures/achat/:id"
+                element={
+                  <ProtectedRoute>
+                    <FactureAchatEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/paiements-achat"
+                element={
+                  <ProtectedRoute>
+                    <PaiementsAchat />
                   </ProtectedRoute>
                 }
               />
@@ -250,38 +332,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/facture-achat"
-                element={
-                  <ProtectedRoute>
-                    <FactureAchat />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/facture-achat/create"
-                element={
-                  <ProtectedRoute>
-                    <FactureAchatCreate />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/facture-achat/edit/:id"
-                element={
-                  <ProtectedRoute>
-                    <FactureAchatEdit />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/paiements-achat"
-                element={
-                  <ProtectedRoute>
-                    <PaiementsAchat />
-                  </ProtectedRoute>
-                }
-              />
+              
               <Route
                 path="/configurations"
                 element={

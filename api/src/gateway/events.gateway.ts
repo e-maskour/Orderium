@@ -59,9 +59,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // Emit order created event
-  emitOrderCreated(order: { Order?: { number?: string } }) {
+  emitOrderCreated(order: { Order?: { orderNumber?: string } }) {
     this.server.emit('order:created', order);
-    this.logger.log(`Order created event emitted: ${order.Order?.number}`);
+    this.logger.log(`Order created event emitted: ${order.Order?.orderNumber}`);
   }
 
   // Emit order status updated event

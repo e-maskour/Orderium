@@ -34,21 +34,28 @@ export interface Partner {
 }
 
 export interface Order {
-  orderId: number;
+  id: number;
   orderNumber: string;
-  customerName: string;
-  customerPhone: string;
-  customerAddress?: string;
-  googleMapsUrl?: string;
-  wazeUrl?: string;
-  totalAmount: number;
-  status: 'assigned' | 'confirmed' | 'picked_up' | 'in_delivery' | 'delivered';
-  deliveryPersonId?: number;
-  confirmedAt?: string;
-  pickedUpAt?: string;
-  deliveredAt?: string;
-  createdAt: string;
-  assignedAt?: string;
+  date: Date;
+  total: number;
+  status: string;
+  note?: string;
+  createdAt?: string;
+  customer: {
+    id: number;
+    name: string;
+    phone?: string;
+    address?: string;
+  };
+  items: Array<{
+    id: number;
+    productId: number;
+    description: string;
+    quantity: number;
+    price: number;
+    totalPrice: number;
+    totalPriceWithoutTax: number;
+  }>;
 }
 
 export interface OrderDelivery {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ProductQuantityModal } from '../components/ProductQuantityModal';
 import { PriceConfirmModal } from '../components/PriceConfirmModal';
 import { OrderSuccessModal } from '../components/OrderSuccessModal';
+import { CustomerSelectionModal } from '../components/CustomerSelectionModal';
 
 interface Product {
   id: number;
@@ -49,23 +50,17 @@ export default function POS() {
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [customerSearch, setCustomerSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const hasSetDefaultCustomer = useRef(false);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [showCustomerForm, setShowCustomerForm] = useState(false);
-  const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
   const [confirmedPrice, setConfirmedPrice] = useState<number | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
   const [isResizing, setIsResizing] = useState(false);
-  const [newCustomer, setNewCustomer] = useState({
-    name: '',
-    phoneNumber: '',
-    address: '',
-  });
+
   const [orderSuccessData, setOrderSuccessData] = useState<{
     orderNumber: string;
     customerName: string;
@@ -115,63 +110,27 @@ export default function POS() {
 
   const products: Product[] = productsData?.products || [];
 
-  // Search customers with debounce
-  useEffect(() => {
-    if (customerSearch.length < 2) {
-      setCustomerSuggestions([]);
-      setShowSuggestions(false);
-      setShowCustomerForm(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        // Search by name, phone, or email using the general search endpoint
-        const response = await fetch(`/api/partners?search=${encodeURIComponent(customerSearch)}&type=customer&limit=10`);
-        if (!response.ok) throw new Error('Failed to search customers');
-        const data = await response.json();
-        
-        if (data.partners && data.partners.length > 0) {
-          setCustomerSuggestions(data.partners);
-          setShowSuggestions(true);
-          setShowCustomerForm(false);
-        } else {
-          setCustomerSuggestions([]);
-          setShowSuggestions(false);
-          setShowCustomerForm(true);
-          setNewCustomer({ ...newCustomer, phoneNumber: customerSearch, name: '' });
-        }
-      } catch (error) {
-        console.error('Failed to search customers:', error);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [customerSearch]);
-
-  // Create customer mutation
-  const createCustomerMutation = useMutation({
-    mutationFn: async (customerData: typeof newCustomer) => {
-      const response = await fetch('/api/partners', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(customerData),
-      });
-      if (!response.ok) throw new Error('Failed to create customer');
+  // Fetch all partners to find "Client Comptoir"
+  const { data: partnersData } = useQuery({
+    queryKey: ['partners-all'],
+    queryFn: async () => {
+      const response = await fetch('/api/partners?type=customer');
+      if (!response.ok) throw new Error('Failed to fetch partners');
       const data = await response.json();
-      return data.partner;
-    },
-    onSuccess: (customer) => {
-      setSelectedCustomer(customer);
-      setShowCustomerForm(false);
-      setShowSuggestions(false);
-      setCustomerSearch(customer.name);
-      toast.success(t('customerCreated'));
-    },
-    onError: () => {
-      toast.error(t('failedToCreate'));
+      return data.partners || [];
     },
   });
+
+  // Set "Client Comptoir" as default customer on initial load
+  useEffect(() => {
+    if (!hasSetDefaultCustomer.current && partnersData && partnersData.length > 0) {
+      const comptoirClient = partnersData.find((p: Customer) => p.name === 'Client Comptoir');
+      if (comptoirClient) {
+        setSelectedCustomer(comptoirClient);
+        hasSetDefaultCustomer.current = true;
+      }
+    }
+  }, [partnersData]);
 
   // Create order mutation
   const createOrderMutation = useMutation({
@@ -201,7 +160,6 @@ export default function POS() {
       toast.success(`${t('orderCreated')}: ${data.documentNumber}`);
       setCart([]);
       setSelectedCustomer(null);
-      setCustomerSearch('');
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['statistics'] });
     },
@@ -283,21 +241,20 @@ export default function POS() {
 
     const orderData = {
       customerId: selectedCustomer.id,
+      fromPortal: true,
       items: cart.map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
         price: item.product.price,
+        description: item.product.name || '',
       })),
     };
 
     createOrderMutation.mutate(orderData);
   };
 
-  const selectCustomer = (customer: Customer) => {
+  const handleSelectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setCustomerSearch(customer.name);
-    setShowSuggestions(false);
-    setShowCustomerForm(false);
   };
 
   const startResizing = (e: React.MouseEvent) => {
@@ -359,9 +316,44 @@ export default function POS() {
                 {t('pointOfSale')}
               </h1>
             </div>
+
+            {/* Customer Selection in Header */}
+            <button
+              onClick={() => setShowCustomerModal(true)}
+              className="flex items-center gap-2 hover:bg-slate-50 rounded-lg px-3 py-2 transition-colors"
+            >
+              {selectedCustomer ? (
+                <div className="flex items-center gap-2">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-emerald-600" />
+                      <div>
+                        <p className="font-semibold text-emerald-900 text-sm">{selectedCustomer.name}</p>
+                        <p className="text-xs text-emerald-700">{selectedCustomer.phoneNumber}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm text-slate-600">{t('selectCustomer')}</span>
+                </div>
+              )}
+            </button>
           </div>
         </div>
       </header>
+
+      {/* Customer Selection Modal */}
+      <CustomerSelectionModal
+        isOpen={showCustomerModal}
+        onClose={() => setShowCustomerModal(false)}
+        onSelectCustomer={handleSelectCustomer}
+        selectedCustomer={selectedCustomer}
+        t={(key: string) => t(key as any)}
+        dir={dir}
+      />
 
       {/* Price Confirmation Modal */}
       <PriceConfirmModal
@@ -406,103 +398,6 @@ export default function POS() {
           className={`hidden lg:flex lg:flex-col bg-white ${dir === 'rtl' ? 'border-s' : 'border-e'} border-gray-200 h-full overflow-hidden relative`}
           style={{ width: `${sidebarWidth}px` }}
         >
-          {/* Customer Selection */}
-          <div className="border-b border-gray-200 p-3 sm:p-4">
-            <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <User className="w-4 h-4" />
-              {t('customer')}
-            </h2>
-
-            <div className="space-y-3 relative">
-              <div className="relative">
-                <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400`} />
-                <input
-                  type="text"
-                  placeholder={t('searchByNameOrPhone')}
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                  onFocus={() => customerSuggestions.length > 0 && setShowSuggestions(true)}
-                  className={`w-full ${dir === 'rtl' ? 'pr-10 pl-3' : 'pl-10 pr-3'} py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent`}
-                />
-              </div>
-
-              {/* Customer Suggestions Dropdown */}
-              {showSuggestions && customerSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-20">
-                  {customerSuggestions.map((customer) => (
-                    <div
-                      key={customer.id}
-                      onClick={() => selectCustomer(customer)}
-                      className="p-2.5 hover:bg-primary/10 cursor-pointer border-b border-gray-100 last:border-0 transition-colors"
-                    >
-                      <p className="font-semibold text-gray-900 text-sm">{customer.name}</p>
-                      <p className="text-xs text-gray-600">{customer.phoneNumber}</p>
-                      {customer.address && (
-                        <p className="text-xs text-gray-500 line-clamp-1">{customer.address}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {selectedCustomer && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                  <p className="font-semibold text-emerald-900 text-sm">{selectedCustomer.name}</p>
-                  <p className="text-xs text-emerald-700">{selectedCustomer.phoneNumber}</p>
-                  {selectedCustomer.address && (
-                    <p className="text-xs text-emerald-700 flex items-start gap-1 mt-1">
-                      <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                      <span className="line-clamp-2">{selectedCustomer.address}</span>
-                    </p>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSelectedCustomer(null);
-                      setCustomerSearch('');
-                    }}
-                    className="mt-2 text-xs text-emerald-700 hover:text-emerald-900 font-medium"
-                  >
-                    {t('change')}
-                  </button>
-                </div>
-              )}
-
-              {showCustomerForm && !selectedCustomer && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-                  <p className="text-xs text-blue-700 font-medium">{t('newCustomer')}</p>
-                  <input
-                    type="text"
-                    placeholder={t('name')}
-                    value={newCustomer.name}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="tel"
-                    placeholder={t('phoneNumber')}
-                    value={newCustomer.phoneNumber}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="text"
-                    placeholder={t('address')}
-                    value={newCustomer.address}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <button
-                    onClick={() => createCustomerMutation.mutate(newCustomer)}
-                    disabled={!newCustomer.name || !newCustomer.phoneNumber || createCustomerMutation.isPending}
-                    className="w-full bg-blue-600 text-white py-2 text-sm rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
-                  >
-                    {createCustomerMutation.isPending ? t('loading') : t('create')}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          
           {/* Cart */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Cart Header */}
@@ -619,17 +514,19 @@ export default function POS() {
           </div>
 
           {/* Resize Handle */}
-          <div
-            onMouseDown={startResizing}
-            className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-0 bottom-0 w-2 hover:w-3 cursor-col-resize transition-all z-50 group`}
-            style={{ 
-              background: isResizing ? 'rgba(37, 99, 235, 0.2)' : 'transparent',
-            }}
-          >
-            <div 
-              className={`absolute inset-y-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-px bg-gray-300 group-hover:bg-primary group-hover:w-0.5 transition-all`}
-            />
-          </div>
+          {!showCustomerModal && !isPriceModalOpen && !isModalOpen && !orderSuccessData && (
+            <div
+              onMouseDown={startResizing}
+              className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-0 bottom-0 w-2 hover:w-3 cursor-col-resize transition-all z-50 group`}
+              style={{ 
+                background: isResizing ? 'rgba(37, 99, 235, 0.2)' : 'transparent',
+              }}
+            >
+              <div 
+                className={`absolute inset-y-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-px bg-gray-300 group-hover:bg-primary group-hover:w-0.5 transition-all`}
+              />
+            </div>
+          )}
         </aside>
 
         {/* Main Content Area */}
