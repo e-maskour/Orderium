@@ -46,6 +46,7 @@ import Currencies from './pages/configurations/Currencies';
 import PaymentTerms from './pages/configurations/PaymentTerms';
 import Sequences from './pages/configurations/Sequences';
 import UnitsOfMeasure from './pages/configurations/UnitsOfMeasure';
+import CompanySettings from './pages/configurations/CompanySettings';
 import Warehouses from './pages/Warehouses';
 import StockMovements from './pages/StockMovements';
 import InventoryAdjustments from './pages/InventoryAdjustments';
@@ -378,6 +379,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <UnitsOfMeasure />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations/company"
+                element={
+                  <ProtectedRoute>
+                    <CompanySettings />
                   </ProtectedRoute>
                 }
               />

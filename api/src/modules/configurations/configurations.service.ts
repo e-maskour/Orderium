@@ -41,6 +41,34 @@ export class ConfigurationsService {
       });
     }
     
+    // Create my_company entity with defaults if it doesn't exist
+    if (!config && entity === 'my_company') {
+      config = await this.create({
+        entity: 'my_company',
+        values: {
+          companyName: '',
+          address: '',
+          zipCode: '',
+          city: '',
+          country: 'Maroc',
+          state: '',
+          phone: '',
+          fax: '',
+          email: '',
+          website: '',
+          logo: '',
+          professions: '',
+          vatNumber: '',
+          ice: '',
+          taxId: '',
+          registrationNumber: '',
+          legalStructure: '',
+          capital: 0,
+          fiscalYearStartMonth: 1,
+        }
+      });
+    }
+    
     if (!config) {
       throw new NotFoundException(`Configuration "${entity}" not found`);
     }

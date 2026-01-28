@@ -11,7 +11,10 @@ export class OrderItem implements IOrderItem {
     public discount: number,
     public discountType: number,
     public taxAmount: number,
-    public total: number
+    public total: number,
+    public description?: string,
+    public price?: number,
+    public tax?: number
   ) {}
 
   get displayPrice(): string {
@@ -36,13 +39,16 @@ export class OrderItem implements IOrderItem {
       data.id,
       data.orderId,
       data.productId,
-      data.productName || `Product ${data.productId}`, // productName not in API entity
+      data.productName || data.description || `Product ${data.productId}`,
       parseFloat(data.quantity) || 0,
-      parseFloat(data.unitPrice || data.price) || 0, // API uses 'price', client uses 'unitPrice'
+      parseFloat(data.unitPrice || data.price) || 0,
       parseFloat(data.discount) || 0,
       data.discountType || 0,
-      parseFloat(data.taxAmount) || 0, // May not exist in API
-      parseFloat(data.total) || 0
+      parseFloat(data.taxAmount || data.tax) || 0,
+      parseFloat(data.total) || 0,
+      data.description,
+      parseFloat(data.price) || undefined,
+      parseFloat(data.tax) || undefined
     );
   }
 }
@@ -50,7 +56,7 @@ export class OrderItem implements IOrderItem {
 export class Order implements IOrder {
   constructor(
     public id: number,
-    public number: string,
+    public orderNumber: string,  // Changed from 'number' to 'orderNumber'
     public customerId: number,
     public items: OrderItem[],
     public subtotal: number,
@@ -62,8 +68,11 @@ export class Order implements IOrder {
     public dateUpdated: string,
     public customerName?: string,
     public customerPhone?: string,
+    public customerAddress?: string,
     public note?: string,
-    public internalNote?: string
+    public internalNote?: string,
+    public date?: string,
+    public isValidated?: boolean
   ) {}
 
   get displayTotal(): string {
@@ -132,7 +141,7 @@ export class Order implements IOrder {
 
     return new Order(
       data.id,
-      data.number,
+      data.orderNumber,  // API returns 'orderNumber'
       data.customerId,
       items,
       parseFloat(data.subtotal) || 0,
@@ -144,18 +153,22 @@ export class Order implements IOrder {
       data.dateUpdated,
       data.customerName,
       data.customerPhone,
+      data.customerAddress,
       data.note,
-      data.internalNote
+      data.internalNote,
+      data.date,
+      data.isValidated
     );
   }
 
   toJSON(): IOrder {
     return {
       id: this.id,
-      number: this.number,
+      orderNumber: this.orderNumber,
       customerId: this.customerId,
       customerName: this.customerName,
       customerPhone: this.customerPhone,
+      customerAddress: this.customerAddress,
       items: this.items.map(item => ({
         id: item.id,
         orderId: item.orderId,
@@ -175,8 +188,10 @@ export class Order implements IOrder {
       status: this.status,
       note: this.note,
       internalNote: this.internalNote,
+      date: this.date,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
+      isValidated: this.isValidated,
     };
   }
 }

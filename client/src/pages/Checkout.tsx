@@ -195,6 +195,7 @@ const Checkout = () => {
         customerPhone: formData.phone,
         items: items.map(item => ({
           productId: item.product.id,
+          description: item.product.name || '',
           quantity: item.quantity,
           price: item.product.price,
           discount: 0,

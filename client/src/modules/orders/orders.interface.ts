@@ -1,5 +1,6 @@
 export interface CreateOrderItem {
   productId: number;
+  description?: string;  // Added to match API requirement
   quantity: number;
   price: number;
   discount?: number;
@@ -16,32 +17,38 @@ export interface CreateOrderRequest {
 
 export interface Order {
   id: number;
-  number: string;
+  orderNumber: string;  // API returns 'orderNumber' not 'number'
   customerId: number;
   customerName?: string;
   customerPhone?: string;
+  customerAddress?: string;
   items: OrderItem[];
-  subtotal: number;
-  taxAmount: number;
-  discountAmount: number;
+  subtotal?: number;
+  taxAmount?: number;
+  discountAmount?: number;
   total: number;
   status: string;
   note?: string;
   internalNote?: string;
+  date?: string;  // API returns 'date' field
   dateCreated: string;
   dateUpdated: string;
+  isValidated?: boolean;
 }
 
 export interface OrderItem {
   id: number;
   orderId: number;
   productId: number;
-  productName: string;
+  productName?: string;
+  description?: string;  // Added to match API
   quantity: number;
   unitPrice: number;
+  price?: number;  // API may return 'price' field
   discount: number;
   discountType: number;
-  taxAmount: number;
+  taxAmount?: number;
+  tax?: number;  // API may return 'tax' field
   total: number;
 }
 

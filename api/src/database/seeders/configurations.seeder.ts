@@ -147,6 +147,30 @@ export async function seedConfigurations(dataSource: DataSource) {
         ],
       },
     },
+    {
+      entity: 'my_company',
+      values: {
+        companyName: '',
+        address: '',
+        zipCode: '',
+        city: '',
+        country: 'Maroc',
+        state: '',
+        phone: '',
+        fax: '',
+        email: '',
+        website: '',
+        logo: '',
+        professions: '',
+        vatNumber: '',
+        ice: '',
+        taxId: '',
+        registrationNumber: '',
+        legalStructure: '',
+        capital: 0,
+        fiscalYearStartMonth: 1,
+      },
+    },
   ];
 
   for (const config of configurations) {

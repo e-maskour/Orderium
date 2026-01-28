@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Edit, Trash2, Download, Filter, ChevronDown, CreditCard, CheckCircle, Eye, Columns } from 'lucide-react';
+import { Search, Edit, Trash2, Download, Filter, ChevronDown, CreditCard, CheckCircle, Eye, Columns, FileText } from 'lucide-react';
 import { FloatingActionBar } from '../FloatingActionBar';
 import { DocumentType } from '../../modules/documents/types';
+import { pdfService } from '../../services/pdf.service';
+import { PDFPreviewModal } from '../PDFPreviewModal';
 
 interface Document {
   id: number;
@@ -66,6 +68,9 @@ export function DocumentTable({
     remainingAmount: false
   });
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfTitle, setPdfTitle] = useState('');
   const columnsMenuRef = useRef<HTMLDivElement>(null);
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 10;
@@ -89,6 +94,20 @@ export function DocumentTable({
 
   const clearSelection = () => {
     setSelectedDocuments([]);
+  };
+
+  // Map document type to PDF service type
+  const getPDFDocumentType = (docType: DocumentType): 'invoice' | 'quote' | 'delivery-note' => {
+    switch (docType) {
+      case 'facture':
+        return 'invoice';
+      case 'devis':
+        return 'quote';
+      case 'bon_livraison':
+        return 'delivery-note';
+      default:
+        return 'invoice';
+    }
   };
 
   // Close columns menu on outside click
@@ -391,6 +410,47 @@ export function DocumentTable({
               )
             },
             {
+              id: 'pdf-preview',
+              label: 'Aperçu PDF',
+              icon: <Eye className="w-4 h-4" />,
+              onClick: () => {
+                if (selectedDocuments.length === 1) {
+                  const doc = selectedDocumentsData[0];
+                  if (doc && doc.isValidated && doc.status !== 'draft') {
+                    const url = pdfService.getPDFUrl(getPDFDocumentType(documentType), selectedDocuments[0], 'preview');
+                    const label = pdfService.getDocumentLabel(getPDFDocumentType(documentType));
+                    setPdfUrl(url);
+                    setPdfTitle(`${label} ${doc.number}`);
+                    setShowPDFPreview(true);
+                  }
+                  clearSelection();
+                }
+              },
+              hidden: selectedDocuments.length !== 1 || selectedDocumentsData.every(doc => 
+                !doc?.isValidated || doc?.status === 'draft'
+              )
+            },
+            {
+              id: 'pdf-download',
+              label: 'Télécharger PDF',
+              icon: <FileText className="w-4 h-4" />,
+              onClick: () => {
+                selectedDocuments.forEach(id => {
+                  const doc = documents.find(d => d.id === id);
+                  if (doc && doc.isValidated && doc.status !== 'draft') {
+                    pdfService.download({
+                      documentType: getPDFDocumentType(documentType),
+                      documentId: id
+                    });
+                  }
+                });
+                clearSelection();
+              },
+              hidden: selectedDocumentsData.every(doc => 
+                !doc?.isValidated || doc?.status === 'draft'
+              )
+            },
+            {
               id: 'download',
               label: 'Télécharger',
               icon: <Download className="w-4 h-4" />,
@@ -669,6 +729,14 @@ export function DocumentTable({
           </div>
         )}
       </div>
+
+      {/* PDF Preview Modal */}
+      <PDFPreviewModal
+        isOpen={showPDFPreview}
+        onClose={() => setShowPDFPreview(false)}
+        pdfUrl={pdfUrl}
+        title={pdfTitle}
+      />
     </div>
   );
 }

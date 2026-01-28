@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Settings, Percent, DollarSign, Calendar, Hash, Ruler, ArrowLeft } from 'lucide-react';
+import { Settings, Percent, DollarSign, Calendar, Hash, Ruler, ArrowLeft, Building2 } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
@@ -7,6 +7,13 @@ import { useLanguage } from '../context/LanguageContext';
 export default function Configurations() {
   const { t } = useLanguage();
   const configModules = [
+    {
+      name: 'Informations Entreprise',
+      description: 'Gérer les informations de votre entreprise',
+      icon: Building2,
+      path: '/configurations/company',
+      color: 'bg-indigo-500',
+    },
     {
       name: t('taxes'),
       description: t('manageTaxRatesDescription'),

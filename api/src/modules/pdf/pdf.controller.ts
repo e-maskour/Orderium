@@ -1,80 +1,146 @@
 import {
   Controller,
-  Post,
+  Get,
   Param,
+  Query,
   Res,
   NotFoundException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { PDFService } from './pdf.service';
-import { OrdersService } from '../orders/orders.service';
 
 @Controller('pdf')
 export class PDFController {
   constructor(
     private readonly pdfService: PDFService,
-    private readonly ordersService: OrdersService,
   ) {}
 
-  @Post('invoice/:orderId')
-  async generateInvoice(
-    @Param('orderId') orderId: string,
+  /**
+   * Generate PDF for invoice
+   * @param invoiceId - Invoice ID
+   * @param mode - 'preview' (inline) or 'download' (attachment)
+   */
+  @Get('invoice/:invoiceId')
+  async generateInvoicePDF(
+    @Param('invoiceId') invoiceId: string,
+    @Query('mode') mode: 'preview' | 'download' = 'download',
     @Res() res: Response,
   ) {
     try {
-      // Fetch order data with items
-      const orderData = await this.ordersService.getOrderById(
-        parseInt(orderId),
+      const { pdfBuffer, fileName } = await this.pdfService.generateDocumentPDF(
+        'invoice',
+        parseInt(invoiceId),
       );
 
-      if (!orderData) {
-        throw new NotFoundException(`Order with ID ${orderId} not found`);
-      }
+      const disposition = mode === 'preview' ? 'inline' : 'attachment';
 
-      // Generate PDF
-      const pdfBuffer = await this.pdfService.generateInvoicePDF(orderData);
-
-      // Set response headers
       res.set({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Invoice_${orderData.orderNumber}.pdf"`,
+        'Content-Disposition': `${disposition}; filename="${fileName}"`,
         'Content-Length': pdfBuffer.length.toString(),
       });
 
       res.send(pdfBuffer);
     } catch (error) {
-      res.status(500).json({
+      res.status(error.status || 500).json({
         error: 'PDF generation failed',
         message: error.message,
       });
     }
   }
 
-  @Post('receipt/:orderId')
-  async generateReceipt(
-    @Param('orderId') orderId: string,
+  /**
+   * Generate PDF for quote
+   * @param quoteId - Quote ID
+   * @param mode - 'preview' (inline) or 'download' (attachment)
+   */
+  @Get('quote/:quoteId')
+  async generateQuotePDF(
+    @Param('quoteId') quoteId: string,
+    @Query('mode') mode: 'preview' | 'download' = 'download',
     @Res() res: Response,
   ) {
     try {
-      const orderData = await this.ordersService.getOrderById(
-        parseInt(orderId),
+      const { pdfBuffer, fileName } = await this.pdfService.generateDocumentPDF(
+        'quote',
+        parseInt(quoteId),
       );
 
-      if (!orderData) {
-        throw new NotFoundException(`Order with ID ${orderId} not found`);
-      }
-
-      const pdfBuffer = await this.pdfService.generateReceiptPDF(orderData);
+      const disposition = mode === 'preview' ? 'inline' : 'attachment';
 
       res.set({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Receipt_${orderData.orderNumber}.pdf"`,
+        'Content-Disposition': `${disposition}; filename="${fileName}"`,
         'Content-Length': pdfBuffer.length.toString(),
       });
 
       res.send(pdfBuffer);
     } catch (error) {
-      res.status(500).json({
+      res.status(error.status || 500).json({
+        error: 'PDF generation failed',
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Generate PDF for delivery note (bon de livraison)
+   * @param orderId - Order ID
+   * @param mode - 'preview' (inline) or 'download' (attachment)
+   */
+  @Get('delivery-note/:orderId')
+  async generateDeliveryNotePDF(
+    @Param('orderId') orderId: string,
+    @Query('mode') mode: 'preview' | 'download' = 'download',
+    @Res() res: Response,
+  ) {
+    try {
+      const { pdfBuffer, fileName } = await this.pdfService.generateDocumentPDF(
+        'delivery-note',
+        parseInt(orderId),
+      );
+
+      const disposition = mode === 'preview' ? 'inline' : 'attachment';
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `${disposition}; filename="${fileName}"`,
+        'Content-Length': pdfBuffer.length.toString(),
+      });
+
+      res.send(pdfBuffer);
+    } catch (error) {
+      res.status(error.status || 500).json({
+        error: 'PDF generation failed',
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Generate receipt (80mm thermal) for order
+   * @param orderId - Order ID
+   */
+  @Get('receipt/:orderId')
+  async generateReceipt(
+    @Param('orderId') orderId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const { pdfBuffer, fileName } = await this.pdfService.generateDocumentPDF(
+        'receipt',
+        parseInt(orderId),
+      );
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Length': pdfBuffer.length.toString(),
+      });
+
+      res.send(pdfBuffer);
+    } catch (error) {
+      res.status(error.status || 500).json({
         error: 'PDF generation failed',
         message: error.message,
       });

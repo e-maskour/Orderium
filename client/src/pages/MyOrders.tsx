@@ -4,6 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
 import { ordersService } from '@/modules/orders';
+import { Order, OrderItem } from '@/modules/orders/orders.interface';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { OrderTracking } from '@/components/OrderTracking';
 import { Receipt } from '@/components/Receipt';
@@ -15,23 +16,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { LanguageProvider } from '@/context/LanguageContext';
 
-interface Order {
-  id: number;
-  number: string;
-  dateCreated: string;
-  total: number;
-  status?: string;
-}
-
-interface OrderItem {
-  id: number;
-  productId: number;
-  productName?: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
 export default function MyOrders() {
   const { t, language, dir } = useLanguage();
   const { user } = useAuth();
@@ -41,7 +25,6 @@ export default function MyOrders() {
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [selectedOrderItems, setSelectedOrderItems] = useState<{ order: Order; items: OrderItem[] } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const documentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -142,7 +125,7 @@ export default function MyOrders() {
         root.render(
           <LanguageProvider>
             <Receipt
-              orderNumber={selectedOrderItems.order.number}
+              orderNumber={selectedOrderItems.order.orderNumber}
               customerName={user?.customerName || ''}
               customerPhone={user?.phoneNumber || ''}
               items={items}
@@ -155,7 +138,7 @@ export default function MyOrders() {
         root.render(
           <LanguageProvider>
             <Invoice
-              orderNumber={selectedOrderItems.order.number}
+              orderNumber={selectedOrderItems.order.orderNumber}
               customerName={user?.customerName || ''}
               customerPhone={user?.phoneNumber || ''}
               customerAddress={''}
@@ -198,7 +181,7 @@ export default function MyOrders() {
 
         const imgData = canvas.toDataURL('image/png', 1.0);
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`${t('receipt')}_${selectedOrderItems.order.number}.pdf`);
+        pdf.save(`${t('receipt')}_${selectedOrderItems.order.orderNumber}.pdf`);
       } else {
         // Invoice: A5 size (148mm x 210mm)
         const a5Width = 148;
@@ -214,7 +197,7 @@ export default function MyOrders() {
 
         const imgData = canvas.toDataURL('image/png', 1.0);
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`${t('deliveryNote')}_${selectedOrderItems.order.number}.pdf`);
+        pdf.save(`${t('deliveryNote')}_${selectedOrderItems.order.orderNumber}.pdf`);
       }
 
       // Cleanup
@@ -312,7 +295,7 @@ export default function MyOrders() {
                       </span>
                     </div>
                     <p className="font-mono font-bold text-lg text-foreground">
-                      {order.number}
+                      {order.orderNumber}
                     </p>
                   </div>
 
@@ -347,7 +330,7 @@ export default function MyOrders() {
                       {/* Track Button */}
                       {(order.status !== 'delivered' && order.status !== 'canceled') && (
                         <Button
-                          onClick={() => setSelectedOrder(order.number)}
+                          onClick={() => setSelectedOrder(order.orderNumber)}
                           className="flex-1"
                         >
                           <MapPin className="w-4 h-4 mr-2" />
@@ -413,7 +396,7 @@ export default function MyOrders() {
                       <p className="text-xs text-muted-foreground mb-1">
                         {t('orderNumber')}
                       </p>
-                      <p className="font-mono font-bold text-primary">{selectedOrderItems.order.number}</p>
+                      <p className="font-mono font-bold text-primary">{selectedOrderItems.order.orderNumber}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">

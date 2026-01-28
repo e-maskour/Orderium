@@ -9,6 +9,8 @@ import { ShareQuoteDialog } from '../../components/documents/ShareQuoteDialog';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { ordersService } from '../../modules/orders/orders.service';
+import PDFActionButtons from '../../components/PDFActionButtons';
+import { pdfService } from '../../services/pdf.service';
 import AlertDialog from '../../components/AlertDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
@@ -228,6 +230,20 @@ export default function DocumentEditPage({
           iconBg: 'bg-slate-500',
           textColor: 'text-slate-700'
         };
+    }
+  };
+
+  // Map document type to PDF service type
+  const getPDFDocumentType = (docType: DocumentType): 'invoice' | 'quote' | 'delivery-note' => {
+    switch (docType) {
+      case 'facture':
+        return 'invoice';
+      case 'devis':
+        return 'quote';
+      case 'bon_livraison':
+        return 'delivery-note';
+      default:
+        return 'invoice';
     }
   };
 
@@ -1330,6 +1346,14 @@ export default function DocumentEditPage({
                     </div>
                   )}
                 </div>
+              )}
+              
+              {/* PDF Action Buttons - Show when validated and not draft */}
+              {isValidated && status !== 'draft' && id && (
+                <PDFActionButtons
+                  documentType={getPDFDocumentType(documentType)}
+                  documentId={Number(id)}
+                />
               )}
               
               {/* Save button */}
