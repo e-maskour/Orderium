@@ -30,19 +30,17 @@ export function getDocumentStyles(): string {
       }
 
       section.customer-section {
-        padding: 2mm 0;
+        padding: 2mm 0 0 0;
         page-break-after: avoid;
       }
 
       .customer-grid {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 4mm;
+        display: block;
+        margin-bottom: 3mm;
       }
 
-      .bill-to,
-      .invoice-details {
-        width: 45%;
+      .bill-to {
+        width: 100%;
       }
 
       .section-title {

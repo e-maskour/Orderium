@@ -8,6 +8,7 @@ import { categoriesService } from '../modules/categories';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
+import { ImageUpload } from '../components/ImageUpload';
 import { Package, Save, ArrowLeft, CheckSquare, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
@@ -103,8 +104,10 @@ export default function ProductCreate() {
     isPriceChangeAllowed: true,
   });
 
+  const [imageData, setImageData] = useState<{ url: string; publicId: string } | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Generate unique code on mount
   useEffect(() => {
@@ -166,8 +169,23 @@ export default function ProductCreate() {
 
   const createMutation = useMutation({
     mutationFn: (data: any) => productsService.createProduct(data),
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      
+      // If image was uploaded, associate it with the product
+      if (imageData && result.product?.id) {
+        try {
+          // The image is already linked via the upload, but we can verify
+          await fetch(`/api/products/${result.product.id}/image`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: imageData.url, imagePublicId: imageData.publicId }),
+          });
+        } catch (error) {
+          console.warn('Could not verify image association:', error);
+        }
+      }
+      
       toast.success('Product created successfully');
       // The result is { product: Product }
       navigate(`/products/${result.product.id}`);

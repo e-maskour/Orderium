@@ -44,6 +44,10 @@ export class ProductResponseDto {
 
   @ApiPropertyOptional()
   @Expose()
+  imagePublicId?: string;
+
+  @ApiPropertyOptional()
+  @Expose()
   stock?: number;
 
   @ApiProperty()

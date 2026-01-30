@@ -26,10 +26,16 @@ export class CreateOrderItemDto {
   @Min(0)
   quantity: number;
 
-  @ApiProperty({ description: 'Price', minimum: 0 })
+  @ApiProperty({ description: 'Unit price', minimum: 0 })
   @IsNumber()
   @Min(0)
-  price: number;
+  unitPrice: number;
+
+  @ApiPropertyOptional({ description: 'Price (alias for unitPrice)', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
 
   @ApiPropertyOptional({ description: 'Discount amount', minimum: 0 })
   @IsOptional()
@@ -50,6 +56,12 @@ export class CreateOrderItemDto {
   @IsNumber()
   @Min(0)
   tax?: number;
+
+  @ApiPropertyOptional({ description: 'Item total after discount', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  total?: number;
 }
 
 export class CreateOrderDto {
@@ -57,6 +69,11 @@ export class CreateOrderDto {
   @IsOptional()
   @IsInt()
   customerId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer name' })
+  @IsOptional()
+  @IsString()
+  customerName?: string;
 
   @ApiPropertyOptional({ description: 'Customer phone number (for lookup)' })
   @IsOptional()
@@ -75,7 +92,59 @@ export class CreateOrderDto {
   @IsString()
   note?: string;
 
-  @ApiPropertyOptional({ description: 'Indicates if order was created from delivery portal', default: false })
+  @ApiPropertyOptional({
+    description: 'Customer-facing notes (alias for note)',
+  })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @ApiPropertyOptional({ description: 'Order date' })
+  @IsOptional()
+  @IsString()
+  date?: string;
+
+  @ApiPropertyOptional({ description: 'Due date' })
+  @IsOptional()
+  @IsString()
+  dueDate?: string;
+
+  @ApiPropertyOptional({ description: 'Order total', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  total?: number;
+
+  @ApiPropertyOptional({ description: 'Order subtotal', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  subtotal?: number;
+
+  @ApiPropertyOptional({ description: 'Tax amount', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  tax?: number;
+
+  @ApiPropertyOptional({ description: 'Discount amount', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Discount type (0=amount, 1=percentage)',
+    default: 0,
+  })
+  @IsOptional()
+  @IsInt()
+  discountType?: number;
+
+  @ApiPropertyOptional({
+    description: 'Indicates if order was created from delivery portal',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   fromPortal?: boolean;

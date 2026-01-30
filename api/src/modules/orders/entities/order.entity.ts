@@ -43,6 +43,9 @@ export class Order extends BaseDocument {
   @Column({ type: 'boolean', default: false })
   fromPortal: boolean; // Indicates if order was created from delivery portal
 
+  @Column({ type: 'varchar', nullable: true })
+  receiptNumber: string | null;
+
   // isValidated inherited from BaseDocument
 
   @Column({

@@ -9,7 +9,8 @@ import { taxesService } from '../modules/taxes';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { Package, ArrowLeft, Save, Plus, ArrowRightLeft, Edit2, CheckSquare, RefreshCw } from 'lucide-react';
+import { ImageUpload } from '../components/ImageUpload';
+import { Package, ArrowLeft, Save, Plus, ArrowRightLeft, Edit2, CheckSquare, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 
@@ -45,6 +46,12 @@ export default function ProductDetail() {
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
+
+  const handleImageModeChange = (mode: 'file' | 'url') => {
+    setShowUrlInput(mode === 'url');
+  };
 
   // Clear validation error for a specific field
   const clearFieldError = (fieldName: string) => {
@@ -70,6 +77,24 @@ export default function ProductDetail() {
       toast.error('Failed to generate unique code. Please try again.');
     } finally {
       setIsGeneratingCode(false);
+    }
+  };
+
+  // Function to save image URL
+  const handleSaveImageUrl = async () => {
+    if (!imageUrlInput.trim() || !id) return;
+
+    try {
+      await updateMutation.mutateAsync({
+        imageUrl: imageUrlInput.trim(),
+      });
+      
+      setImageUrlInput('');
+      setShowUrlInput(false);
+      toast.success('Image URL saved successfully');
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
+    } catch (error) {
+      toast.error('Failed to save image URL');
     }
   };
 
@@ -423,58 +448,124 @@ export default function ProductDetail() {
               {/* Basic Info Section */}
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Basic Information</h3>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Product Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                      placeholder="Enter product name"
-                    />
+                
+                {/* Image + Name/Code Layout */}
+                <div className="grid grid-cols-3 gap-6 mb-6">
+                  {/* Product Image - Left Side (Interactive Upload Card) */}
+                  <div className="col-span-1">
+                    {id && (
+                      <ImageUpload
+                        productId={Number(id)}
+                        currentImage={(product as any)?.imageUrl}
+                        onImageUpload={(url, publicId) => {
+                          queryClient.invalidateQueries({ queryKey: ['product', id] });
+                          toast.success('Image updated successfully');
+                        }}
+                        onImageRemove={() => {
+                          queryClient.invalidateQueries({ queryKey: ['product', id] });
+                          toast.success('Image removed successfully');
+                        }}
+                        folder="products"
+                        maxSizeMB={5}
+                        onModeChange={handleImageModeChange}
+                      />
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Product Code (EAN-13)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={formData.code}
-                        onChange={(e) => {
-                          setFormData({ ...formData, code: e.target.value });
-                          clearFieldError('code');
-                        }}
-                        className={`w-full px-3 py-2 rounded-lg border ${
-                          validationErrors.code ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
-                        } focus:ring-2`}
-                        placeholder="EAN-13 barcode"
-                        maxLength={13}
-                      />
-                      {validationErrors.code && (
-                        <p className="mt-1 text-sm text-red-600">{validationErrors.code}</p>
-                      )}
-                      {!validationErrors.code && formData.code && (
-                        <p className="mt-1 text-xs text-slate-500">13-digit EAN-13 barcode for Morocco (611)</p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={handleRegenerateCode}
-                        disabled={isGeneratingCode}
-                        className="mt-1 inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Generate new unique EAN-13 code"
-                      >
-                        <RefreshCw className={`w-3 h-3 ${isGeneratingCode ? 'animate-spin' : ''}`} />
-                        {isGeneratingCode ? 'Generating...' : 'Generate new code'}
-                      </button>
+                  {/* Name and Code - Right Side */}
+                  <div className="col-span-2">
+                    <div className="space-y-4">
+                      {/* Product Name */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Product Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                          placeholder="Enter product name"
+                        />
+                      </div>
+
+                      {/* Product Code */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Product Code (EAN-13)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={formData.code}
+                            onChange={(e) => {
+                              setFormData({ ...formData, code: e.target.value });
+                              clearFieldError('code');
+                            }}
+                            className={`w-full px-3 py-2 rounded-lg border ${
+                              validationErrors.code ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
+                            } focus:ring-2`}
+                            placeholder="EAN-13 barcode"
+                            maxLength={13}
+                          />
+                          {validationErrors.code && (
+                            <p className="mt-1 text-sm text-red-600">{validationErrors.code}</p>
+                          )}
+                          {!validationErrors.code && formData.code && (
+                            <p className="mt-1 text-xs text-slate-500">13-digit EAN-13 barcode for Morocco (611)</p>
+                          )}
+                          <button
+                            type="button"
+                            onClick={handleRegenerateCode}
+                            disabled={isGeneratingCode}
+                            className="mt-1 inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Generate new unique EAN-13 code"
+                          >
+                            <RefreshCw className={`w-3 h-3 ${isGeneratingCode ? 'animate-spin' : ''}`} />
+                            {isGeneratingCode ? 'Generating...' : 'Generate new code'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Image URL Input - Full width below upload card and product fields */}
+                {showUrlInput && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Image URL
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={imageUrlInput}
+                        onChange={(e) => setImageUrlInput(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        className="flex-1 px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSaveImageUrl();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveImageUrl}
+                        disabled={!imageUrlInput.trim() || updateMutation.isPending}
+                        className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Save URL
+                      </button>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Enter a web image URL or relative CDN path
+                    </p>
+                  </div>
+                )}
+
+                {/* Warehouse and Categories */}
                 <div className="grid grid-cols-2 gap-6 mt-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">

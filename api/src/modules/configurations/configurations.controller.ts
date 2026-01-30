@@ -45,7 +45,7 @@ export class ConfigurationsController {
   @ApiOperation({ summary: 'Get configuration by entity name' })
   async findByEntity(@Param('entity') entity: string) {
     const configuration = await this.configurationsService.findByEntity(entity);
-    // If it's sequences, enhance with real-time next numbers
+    // If it's sequences, enhance with real-time next numbers and format info
     if (entity === 'sequences' && configuration?.values?.sequences) {
       const enhancedSequences = await Promise.all(
         configuration.values.sequences.map(async (sequence) => {
@@ -54,8 +54,14 @@ export class ConfigurationsController {
               sequence.entityType,
               sequence,
             );
+            const nextDocumentNumber = this.generateSequenceWithNumber(
+              sequence,
+              nextNumber,
+            );
             return {
               ...sequence,
+              format: this.buildFormatPattern(sequence),
+              nextDocumentNumber: nextDocumentNumber,
               realTimeNextNumber: nextNumber,
             };
           } catch (error) {
@@ -65,6 +71,11 @@ export class ConfigurationsController {
             );
             return {
               ...sequence,
+              format: this.buildFormatPattern(sequence),
+              nextDocumentNumber: this.generateSequenceWithNumber(
+                sequence,
+                sequence.nextNumber,
+              ),
               realTimeNextNumber: sequence.nextNumber, // Fallback
             };
           }
@@ -117,36 +128,42 @@ export class ConfigurationsController {
         entity: 'sequences',
         values: { sequences: [] },
       });
-      const sequences = [
-        ...newConfig.values.sequences,
-        {
-          id: this.generateId(),
-          ...sequenceData,
-          nextNumber: 1, // Auto-set initial nextNumber
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-      const updated = await this.configurationsService.update(newConfig.id, {
-        values: { sequences },
-      });
-      return { success: true, sequence: sequences[sequences.length - 1] };
-    }
-
-    const sequences = [
-      ...(config.values.sequences || []),
-      {
+      const newSequence = {
         id: this.generateId(),
         ...sequenceData,
         nextNumber: 1, // Auto-set initial nextNumber
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      },
-    ];
+      };
+      const sequences = [...newConfig.values.sequences, newSequence];
+      const updated = await this.configurationsService.update(newConfig.id, {
+        values: { sequences },
+      });
+      const enrichedSequence = {
+        ...newSequence,
+        format: this.buildFormatPattern(newSequence),
+        nextDocumentNumber: this.generateSequenceWithNumber(newSequence, 1),
+      };
+      return { success: true, sequence: enrichedSequence };
+    }
+
+    const newSequence = {
+      id: this.generateId(),
+      ...sequenceData,
+      nextNumber: 1, // Auto-set initial nextNumber
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const sequences = [...(config.values.sequences || []), newSequence];
     const updated = await this.configurationsService.update(config.id, {
       values: { sequences },
     });
-    return { success: true, sequence: sequences[sequences.length - 1] };
+    const enrichedSequence = {
+      ...newSequence,
+      format: this.buildFormatPattern(newSequence),
+      nextDocumentNumber: this.generateSequenceWithNumber(newSequence, 1),
+    };
+    return { success: true, sequence: enrichedSequence };
   }
 
   @Put('entity/sequences/:id')
@@ -173,15 +190,24 @@ export class ConfigurationsController {
       );
     }
 
-    sequences[index] = {
+    const updatedSequence = {
       ...sequences[index],
       ...sequenceData,
       updatedAt: new Date().toISOString(),
     };
+    sequences[index] = updatedSequence;
     const updated = await this.configurationsService.update(config.id, {
       values: { sequences },
     });
-    return { success: true, sequence: sequences[index] };
+    const enrichedSequence = {
+      ...updatedSequence,
+      format: this.buildFormatPattern(updatedSequence),
+      nextDocumentNumber: this.generateSequenceWithNumber(
+        updatedSequence,
+        updatedSequence.nextNumber,
+      ),
+    };
+    return { success: true, sequence: enrichedSequence };
   }
 
   @Delete('entity/sequences/:id')
@@ -206,7 +232,8 @@ export class ConfigurationsController {
   async generateSequencePreview(@Body() sequenceData: any) {
     const example = this.generateSequenceExample(sequenceData);
     const nextSequence = this.generateNextSequence(sequenceData);
-    return { success: true, preview: { example, nextSequence } };
+    const format = this.buildFormatPattern(sequenceData);
+    return { success: true, preview: { example, nextSequence, format } };
   }
 
   @Get('entity/sequences/next/:entityType')
@@ -230,8 +257,14 @@ export class ConfigurationsController {
       sequence,
     );
     const nextSequence = this.generateSequenceWithNumber(sequence, nextNumber);
+    const format = this.buildFormatPattern(sequence);
 
-    return { success: true, nextSequence, nextNumber };
+    return {
+      success: true,
+      nextSequence,
+      nextNumber,
+      format,
+    };
   }
 
   private async calculateNextSequenceNumber(
@@ -308,30 +341,50 @@ export class ConfigurationsController {
 
   private generateSequencePattern(sequence: any): string {
     const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+
+    // Calculate trimester (Q1=01, Q2=04, Q3=07, Q4=10)
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const trimester =
+      currentMonth <= 3
+        ? '01'
+        : currentMonth <= 6
+          ? '04'
+          : currentMonth <= 9
+            ? '07'
+            : '10';
+
     let pattern = sequence.prefix || '';
+    let dateComponents: string[] = [];
 
+    // Build date components in order: year-trimester/month-day
     if (sequence.yearInPrefix) {
-      pattern += now.getFullYear().toString();
+      dateComponents.push(year.toString());
     }
 
-    if (sequence.monthInPrefix) {
-      pattern += (now.getMonth() + 1).toString().padStart(2, '0');
+    if (sequence.trimesterInPrefix && sequence.monthInPrefix) {
+      // If both trimester and month are selected, trimester takes precedence
+      dateComponents.push(trimester);
+    } else if (sequence.trimesterInPrefix) {
+      dateComponents.push(trimester);
+    } else if (sequence.monthInPrefix) {
+      dateComponents.push(month);
     }
 
-    if (sequence.dateFormat && sequence.dateFormat !== 'none') {
-      switch (sequence.dateFormat) {
-        case 'YYYY':
-          pattern += now.getFullYear().toString();
-          break;
-        case 'YYYYMM':
-          pattern +=
-            now.getFullYear().toString() +
-            (now.getMonth() + 1).toString().padStart(2, '0');
-          break;
-        case 'YYYYMMDD':
-          pattern += now.toISOString().slice(0, 10).replace(/-/g, '');
-          break;
-      }
+    if (sequence.dayInPrefix) {
+      dateComponents.push(day);
+    }
+
+    // Add space before date components if prefix exists
+    if (pattern && dateComponents.length > 0) {
+      pattern += ' ';
+    }
+
+    // Join date components with hyphens
+    if (dateComponents.length > 0) {
+      pattern += dateComponents.join('-') + '-';
     }
 
     return pattern;
@@ -360,11 +413,63 @@ export class ConfigurationsController {
   }
 
   private generateSequenceWithNumber(sequence: any, number: number): string {
-    const pattern = this.generateSequencePattern(sequence);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+
+    // Calculate trimester (Q1=01, Q2=04, Q3=07, Q4=10)
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const trimester =
+      currentMonth <= 3
+        ? '01'
+        : currentMonth <= 6
+          ? '04'
+          : currentMonth <= 9
+            ? '07'
+            : '10';
+
+    let result = sequence.prefix || '';
+    let dateComponents: string[] = [];
+
+    // Build date components in order: year-trimester/month-day
+    if (sequence.yearInPrefix) {
+      dateComponents.push(year.toString());
+    }
+
+    if (sequence.trimesterInPrefix && sequence.monthInPrefix) {
+      // If both trimester and month are selected, trimester takes precedence
+      dateComponents.push(trimester);
+    } else if (sequence.trimesterInPrefix) {
+      dateComponents.push(trimester);
+    } else if (sequence.monthInPrefix) {
+      dateComponents.push(month);
+    }
+
+    if (sequence.dayInPrefix) {
+      dateComponents.push(day);
+    }
+
+    // Add space before date components if prefix exists
+    if (result && dateComponents.length > 0) {
+      result += ' ';
+    }
+
+    // Join date components with hyphens
+    if (dateComponents.length > 0) {
+      result += dateComponents.join('-') + '-';
+    }
+
+    // Add the number part
     const numberPart = number
       .toString()
       .padStart(sequence.numberLength || 4, '0');
-    return pattern + numberPart + (sequence.suffix || '');
+    result += numberPart;
+
+    // Add suffix
+    result += sequence.suffix || '';
+
+    return result;
   }
 
   @Post('entity/sequences/:id/reset')
@@ -378,19 +483,52 @@ export class ConfigurationsController {
       throw new BadRequestException(`Sequence with ID ${sequenceId} not found`);
     }
 
-    sequences[index] = {
+    const resetSequence = {
       ...sequences[index],
       nextNumber: 1,
       updatedAt: new Date().toISOString(),
     };
+    sequences[index] = resetSequence;
     await this.configurationsService.update(config.id, {
       values: { sequences },
     });
-    return { success: true };
+    const enrichedSequence = {
+      ...resetSequence,
+      format: this.buildFormatPattern(resetSequence),
+      nextDocumentNumber: this.generateSequenceWithNumber(resetSequence, 1),
+    };
+    return { success: true, sequence: enrichedSequence };
   }
 
   private generateId(): string {
     return Math.random().toString(36).substr(2, 9);
+  }
+
+  private buildFormatPattern(sequence: any): string {
+    let result = sequence.prefix || '';
+    let dateComponents: string[] = [];
+
+    if (sequence.yearInPrefix) dateComponents.push('YYYY');
+    if (sequence.trimesterInPrefix) dateComponents.push('TRIM');
+    if (sequence.monthInPrefix) dateComponents.push('MM');
+    if (sequence.dayInPrefix) dateComponents.push('DD');
+
+    let numberPart = 'X'.repeat(sequence.numberLength || 4);
+
+    // Build the pattern string
+    if (result && dateComponents.length > 0) {
+      result += ' ' + dateComponents.join('-') + '-' + numberPart;
+    } else if (dateComponents.length > 0) {
+      result = dateComponents.join('-') + '-' + numberPart;
+    } else {
+      result = result + (result ? '-' : '') + numberPart;
+    }
+
+    if (sequence.suffix) {
+      result += sequence.suffix;
+    }
+
+    return result;
   }
 
   private generateSequenceExample(sequenceData: any): string {
@@ -469,8 +607,7 @@ export class ConfigurationsController {
   @Put('entity/my_company')
   @ApiOperation({ summary: 'Update company information' })
   async updateCompanyInfo(@Body() companyDto: CompanyDto) {
-    const config =
-      await this.configurationsService.findByEntity('my_company');
+    const config = await this.configurationsService.findByEntity('my_company');
     const updated = await this.configurationsService.update(config.id, {
       values: companyDto,
     });

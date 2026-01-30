@@ -128,15 +128,25 @@ export default function DocumentCreatePage({
         discountType: 0,
         total,
         notes: notes || undefined,
-        items: items.map(item => ({
-          productId: item.productId,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          discount: item.discount || 0,
-          discountType: item.discountType || 0,
-          tax: item.tax || 0,
-        }))
+        items: items.map(item => {
+          // Calculate item total (HT: before tax)
+          const itemSubtotal = item.quantity * item.unitPrice;
+          const discountAmount = item.discountType === 1 
+            ? itemSubtotal * (item.discount / 100) 
+            : item.discount;
+          const itemTotal = itemSubtotal - discountAmount;
+          
+          return {
+            productId: item.productId,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discount: item.discount || 0,
+            discountType: item.discountType || 0,
+            tax: item.tax || 0,
+            total: itemTotal
+          };
+        })
       };
 
       // Call appropriate service based on document type

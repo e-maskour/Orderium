@@ -18,6 +18,7 @@ interface CreateQuoteItemDTO {
   discount: number;
   discountType: number;
   tax?: number;
+  total?: number;
 }
 
 interface CreateQuoteDTO {
@@ -105,6 +106,95 @@ export class QuotesService {
 
   private generateSequenceId(): string {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  }
+
+  private buildSequencePattern(sequence: any): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+
+    const currentMonth = now.getMonth() + 1;
+    const trimester =
+      currentMonth <= 3
+        ? '01'
+        : currentMonth <= 6
+          ? '04'
+          : currentMonth <= 9
+            ? '07'
+            : '10';
+
+    let pattern = sequence.prefix || '';
+    let dateComponents: string[] = [];
+
+    if (sequence.yearInPrefix) {
+      dateComponents.push(year.toString());
+    }
+
+    if (sequence.trimesterInPrefix && sequence.monthInPrefix) {
+      dateComponents.push(trimester);
+    } else if (sequence.trimesterInPrefix) {
+      dateComponents.push(trimester);
+    } else if (sequence.monthInPrefix) {
+      dateComponents.push(month);
+    }
+
+    if (sequence.dayInPrefix) {
+      dateComponents.push(day);
+    }
+
+    if (pattern && dateComponents.length > 0) {
+      pattern += ' ';
+    }
+
+    if (dateComponents.length > 0) {
+      pattern += dateComponents.join('-') + '-';
+    }
+
+    return pattern;
+  }
+
+  private buildFormatPattern(sequence: any): string {
+    let result = sequence.prefix || '';
+    let dateComponents: string[] = [];
+
+    if (sequence.yearInPrefix) {
+      dateComponents.push('YYYY');
+    }
+
+    if (sequence.trimesterInPrefix && sequence.monthInPrefix) {
+      dateComponents.push('QQ');
+    } else if (sequence.trimesterInPrefix) {
+      dateComponents.push('QQ');
+    } else if (sequence.monthInPrefix) {
+      dateComponents.push('MM');
+    }
+
+    if (sequence.dayInPrefix) {
+      dateComponents.push('DD');
+    }
+
+    if (result && dateComponents.length > 0) {
+      result += ' ';
+    }
+
+    if (dateComponents.length > 0) {
+      result += dateComponents.join('-') + '-';
+    }
+
+    const numberPart = 'X'.repeat(sequence.numberLength || 4);
+    result += numberPart;
+    result += sequence.suffix || '';
+
+    return result;
+  }
+
+  private enrichSequenceForResponse(sequence: any): any {
+    return {
+      ...sequence,
+      format: this.buildFormatPattern(sequence),
+      nextDocumentNumber: this.generateSequenceNumber(sequence),
+    };
   }
 
   private generateSequenceNumber(sequence: any): string {
@@ -227,34 +317,17 @@ export class QuotesService {
     createQuoteDto: CreateQuoteDTO,
     quoteNumber: string,
   ): Promise<Quote> {
-    // Calculate totals
-    let subtotal = 0;
+    // Use values from frontend directly (no recalculation)
     const items = createQuoteDto.items.map((item) => {
-      const itemSubtotal = item.quantity * item.unitPrice;
-      const discountAmount =
-        item.discountType === 1
-          ? itemSubtotal * (item.discount / 100)
-          : item.discount;
-      const itemTotal = itemSubtotal - discountAmount;
-      subtotal += itemTotal;
-
       return {
         ...item,
-        total: itemTotal,
+        total: item.total || 0,
         tax: item.tax || 0,
       };
     });
 
-    // Calculate global discount and tax
-    const globalDiscountAmount =
-      createQuoteDto.discountType === 1
-        ? subtotal * (createQuoteDto.discount / 100)
-        : createQuoteDto.discount;
-    const subtotalAfterDiscount = subtotal - globalDiscountAmount;
-    const taxAmount = subtotalAfterDiscount * (createQuoteDto.tax / 100);
-    const total = subtotalAfterDiscount + taxAmount;
-
     // Create quote with provisional number and draft status
+    // Values (subtotal, tax, total, discount) come directly from frontend
     const quote = this.quoteRepository.create({
       documentNumber: quoteNumber,
       customerId: createQuoteDto.customerId,
@@ -265,11 +338,11 @@ export class QuotesService {
       expirationDate: createQuoteDto.expirationDate
         ? new Date(createQuoteDto.expirationDate)
         : undefined,
-      subtotal,
+      subtotal: 0,
       tax: createQuoteDto.tax,
       discount: createQuoteDto.discount,
       discountType: createQuoteDto.discountType,
-      total,
+      total: 0,
       notes: createQuoteDto.notes,
       status: QuoteStatus.DRAFT,
       isValidated: false,
@@ -351,34 +424,14 @@ export class QuotesService {
           );
         }
 
-        // Calculate totals
-        let subtotal = 0;
+        // Use values from frontend directly (no recalculation)
         const items = updateQuoteDto.items.map((item) => {
-          const itemSubtotal = item.quantity * item.unitPrice;
-          const discountAmount =
-            item.discountType === 1
-              ? itemSubtotal * (item.discount / 100)
-              : item.discount;
-          const itemTotal = itemSubtotal - discountAmount;
-          subtotal += itemTotal;
-
           return {
             ...item,
-            total: itemTotal,
+            total: item.total || 0,
             tax: item.tax || 0,
           };
         });
-
-        const globalDiscountAmount =
-          (updateQuoteDto.discountType ?? quote.discountType ?? 0) === 1
-            ? subtotal *
-              ((updateQuoteDto.discount ?? quote.discount ?? 0) / 100)
-            : (updateQuoteDto.discount ?? quote.discount ?? 0);
-        const subtotalAfterDiscount = subtotal - globalDiscountAmount;
-        const taxAmount =
-          subtotalAfterDiscount *
-          ((updateQuoteDto.tax ?? quote.tax ?? 0) / 100);
-        const total = subtotalAfterDiscount + taxAmount;
 
         // Delete old items
         await this.quoteItemRepository.delete({ quoteId: id });
@@ -420,7 +473,7 @@ export class QuotesService {
         // Prepare quote update data (exclude items)
         const { items: _, ...quoteUpdateData } = updateQuoteDto;
 
-        // Update quote with new totals
+        // Update quote with values from frontend
         await this.quoteRepository.update(id, {
           ...quoteUpdateData,
           date: updateQuoteDto.date
@@ -429,8 +482,6 @@ export class QuotesService {
           expirationDate: updateQuoteDto.expirationDate
             ? new Date(updateQuoteDto.expirationDate)
             : quote.expirationDate,
-          subtotal,
-          total,
         });
       } else {
         // Update quote without items
@@ -482,63 +533,32 @@ export class QuotesService {
       throw new BadRequestException('Quote is already validated');
     }
 
-    try {
-      // Get or create sequence for quotes
+    let finalQuoteNumber = quote.documentNumber;
+
+    // Only generate a new number if this is the first validation (provisional number)
+    if (quote.documentNumber.startsWith('PROV')) {
+      // Get sequence for quotes
       const sequence = await this.getOrCreateSequence('quote');
 
-      // Generate final quote number using sequence
-      const finalQuoteNumber = this.generateSequenceNumber(sequence);
+      // Use the sequence's next document number directly
+      finalQuoteNumber = this.generateSequenceNumber(sequence);
 
-      // Update quote with final number and validated status
-      await this.quoteRepository.update(id, {
-        documentNumber: finalQuoteNumber,
-        isValidated: true,
-        status: QuoteStatus.OPEN,
-      });
-
-      // Update sequence next number
+      // Increment sequence next number
       await this.updateSequenceNextNumber('quote', sequence);
-
-      const result = await this.findOne(id);
-      if (!result) {
-        throw new Error('Quote not found after validation');
-      }
-      return result;
-    } catch (error) {
-      console.error(
-        'Error in sequence-based validation, falling back to old system:',
-        error,
-      );
-
-      // Fallback to old system if sequence fails
-      const lastQuote = await this.quoteRepository
-        .createQueryBuilder('quote')
-        .where('quote.documentNumber LIKE :pattern', { pattern: 'DV-%' })
-        .orderBy('quote.id', 'DESC')
-        .limit(1)
-        .getOne();
-
-      let nextNumber = 1;
-      if (lastQuote) {
-        const match = lastQuote.quoteNumber.match(/DV-(\d+)/);
-        if (match) {
-          nextNumber = parseInt(match[1]) + 1;
-        }
-      }
-      const finalQuoteNumber = `DV-${String(nextNumber).padStart(5, '0')}`;
-
-      await this.quoteRepository.update(id, {
-        documentNumber: finalQuoteNumber,
-        isValidated: true,
-        status: QuoteStatus.OPEN,
-      });
-
-      const result = await this.findOne(id);
-      if (!result) {
-        throw new Error('Quote not found after validation');
-      }
-      return result;
     }
+
+    // Update quote with final number (or keep existing) and validated status
+    await this.quoteRepository.update(id, {
+      documentNumber: finalQuoteNumber,
+      isValidated: true,
+      status: QuoteStatus.OPEN,
+    });
+
+    const result = await this.findOne(id);
+    if (!result) {
+      throw new Error('Quote not found after validation');
+    }
+    return result;
   }
 
   async devalidate(id: number): Promise<Quote> {
@@ -557,25 +577,77 @@ export class QuotesService {
       );
     }
 
-    // Generate new provisional number (PROV format)
-    const lastProvNumber = await this.quoteRepository
-      .createQueryBuilder('quote')
-      .where('quote.documentNumber LIKE :pattern', { pattern: 'PROV%' })
-      .orderBy('quote.id', 'DESC')
-      .limit(1)
-      .getOne();
+    // Update sequence nextNumber to match the last document in database
+    try {
+      const sequence = await this.getOrCreateSequence('quote');
+      const config = await this.configurationsService.findByEntity('sequences');
+      const sequences = config?.values?.sequences || [];
+      const sequenceIndex = sequences.findIndex(
+        (seq) => seq.id === sequence.id,
+      );
 
-    let nextProvNumber: string;
-    if (lastProvNumber) {
-      const match = lastProvNumber.quoteNumber.match(/PROV(\d+)/);
-      if (match) {
-        const lastNumber = parseInt(match[1]);
-        nextProvNumber = `PROV${lastNumber + 1}`;
-      } else {
-        nextProvNumber = 'PROV1';
+      if (sequenceIndex !== -1) {
+        // Find the highest document number in database with this sequence pattern
+        const pattern = this.buildSequencePattern(sequence);
+        const lastQuote = await this.quoteRepository
+          .createQueryBuilder('quote')
+          .where('quote.documentNumber LIKE :pattern', {
+            pattern: pattern + '%',
+          })
+          .andWhere('quote.isValidated = :validated', { validated: true })
+          .orderBy(
+            "CAST(SUBSTRING(quote.documentNumber FROM '[0-9]+$') AS INTEGER)",
+            'DESC',
+          )
+          .limit(1)
+          .getOne();
+
+        let nextNumber = 1;
+        if (lastQuote) {
+          const match = lastQuote.documentNumber.match(/(\d+)$/);
+          if (match) {
+            nextNumber = parseInt(match[1]);
+          }
+        }
+
+        sequences[sequenceIndex].nextNumber = nextNumber;
+        sequences[sequenceIndex].updatedAt = new Date().toISOString();
+
+        await this.configurationsService.update(config.id, {
+          values: { sequences },
+        });
       }
+    } catch (error) {
+      console.error('Error updating sequence during devalidation:', error);
+      // Continue with devalidation even if sequence update fails
+    }
+
+    // Generate new provisional number (PROV format)
+    // If already has a PROV number, keep it to avoid duplicates
+    let nextProvNumber: string;
+    if (quote.documentNumber.startsWith('PROV')) {
+      nextProvNumber = quote.documentNumber;
     } else {
-      nextProvNumber = 'PROV1';
+      // Find all PROV numbers to get the maximum
+      const allProvQuotes = await this.quoteRepository
+        .createQueryBuilder('quote')
+        .select('quote.documentNumber')
+        .where('quote.documentNumber LIKE :pattern', { pattern: 'PROV%' })
+        .andWhere('quote.id != :currentId', { currentId: id })
+        .getMany();
+
+      let maxProvNumber = 0;
+      for (const provQuote of allProvQuotes) {
+        const match = provQuote.documentNumber.match(/PROV(\d+)/);
+        if (match) {
+          const num = parseInt(match[1]);
+          if (num > maxProvNumber) {
+            maxProvNumber = num;
+          }
+        }
+      }
+
+      nextProvNumber = `PROV${maxProvNumber + 1}`;
     }
 
     // Update quote back to draft status with new provisional number
@@ -634,7 +706,9 @@ export class QuotesService {
     return result;
   }
 
-  async generateShareLink(id: number): Promise<{ shareToken: string; expiresAt: Date }> {
+  async generateShareLink(
+    id: number,
+  ): Promise<{ shareToken: string; expiresAt: Date }> {
     const quote = await this.findOne(id);
     if (!quote) {
       throw new NotFoundException('Quote not found');
@@ -645,10 +719,11 @@ export class QuotesService {
     }
 
     // Generate random token
-    const shareToken = Math.random().toString(36).substring(2, 15) + 
-                       Math.random().toString(36).substring(2, 15) + 
-                       Date.now().toString(36);
-    
+    const shareToken =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15) +
+      Date.now().toString(36);
+
     // Set expiry to 30 days from now
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
@@ -674,14 +749,21 @@ export class QuotesService {
     }
 
     // Check if token has expired
-    if (quote.shareTokenExpiry && new Date() > new Date(quote.shareTokenExpiry)) {
+    if (
+      quote.shareTokenExpiry &&
+      new Date() > new Date(quote.shareTokenExpiry)
+    ) {
       throw new BadRequestException('This quote link has expired');
     }
 
     return quote;
   }
 
-  async signQuote(token: string, signedBy: string, clientNotes?: string): Promise<Quote> {
+  async signQuote(
+    token: string,
+    signedBy: string,
+    clientNotes?: string,
+  ): Promise<Quote> {
     const quote = await this.getByShareToken(token);
 
     if (quote.status !== QuoteStatus.OPEN) {

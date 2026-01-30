@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, ShoppingBag, Trash2, User, MapPin, Package, ArrowLeft } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Search, ShoppingBag, Trash2, User, MapPin, Package, ArrowLeft, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProductQuantityModal } from '../components/ProductQuantityModal';
 import { PriceConfirmModal } from '../components/PriceConfirmModal';
-import { OrderSuccessModal } from '../components/OrderSuccessModal';
 import { CustomerSelectionModal } from '../components/CustomerSelectionModal';
+import { DiscountModal } from '../components/DiscountModal';
 
 interface Product {
   id: number;
@@ -42,12 +42,28 @@ interface Customer {
 interface CartItem {
   product: Product;
   quantity: number;
+  discount: number;
+  discountType: number; // 0 = fixed amount, 1 = percentage
 }
 
 export default function POS() {
   const { t, language, dir } = useLanguage();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  // Get API base URL from environment or use window origin
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+
+  // Helper to convert relative image paths to full URLs
+  const getImageUrl = (imageUrl?: string): string | undefined => {
+    if (!imageUrl) return undefined;
+    if (imageUrl.startsWith('http')) return imageUrl; // Already full URL
+    if (imageUrl.startsWith('orderium/')) {
+      // Cloudinary
+      return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
+    }
+    // Relative path - add API base URL
+    return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -58,18 +74,10 @@ export default function POS() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
   const [confirmedPrice, setConfirmedPrice] = useState<number | null>(null);
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
   const [isResizing, setIsResizing] = useState(false);
-
-  const [orderSuccessData, setOrderSuccessData] = useState<{
-    orderNumber: string;
-    customerName: string;
-    customerPhone: string;
-    customerAddress?: string;
-    items: CartItem[];
-    total: number;
-    orderDate: Date;
-  } | null>(null);
 
   const formatCurrency = (price: number) => {
     return language === 'ar' 
@@ -132,42 +140,6 @@ export default function POS() {
     }
   }, [partnersData]);
 
-  // Create order mutation
-  const createOrderMutation = useMutation({
-    mutationFn: async (orderData: any) => {
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-      if (!response.ok) throw new Error('Failed to create order');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      // Show success modal with order details
-      if (selectedCustomer) {
-        setOrderSuccessData({
-          orderNumber: data.documentNumber,
-          customerName: selectedCustomer.name,
-          customerPhone: selectedCustomer.phoneNumber,
-          customerAddress: selectedCustomer.address,
-          items: cart,
-          total: total,
-          orderDate: new Date(),
-        });
-      }
-      
-      toast.success(`${t('orderCreated')}: ${data.documentNumber}`);
-      setCart([]);
-      setSelectedCustomer(null);
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['statistics'] });
-    },
-    onError: () => {
-      toast.error(t('failedToCreate'));
-    },
-  });
-
   const filteredProducts = products.filter((p: Product) =>
     p.isEnabled !== false &&
     p.isService !== true &&
@@ -210,7 +182,7 @@ export default function POS() {
           : item
       ));
     } else {
-      setCart([...cart, { product: productWithPrice, quantity }]);
+      setCart([...cart, { product: productWithPrice, quantity, discount: 0, discountType: 0 }]);
     }
     
     // Reset confirmed price
@@ -225,8 +197,68 @@ export default function POS() {
     setCart([]);
   };
 
-  const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const openDiscountModal = (item: CartItem) => {
+    setSelectedCartItem(item);
+    setIsDiscountModalOpen(true);
+  };
+
+  const handleApplyDiscount = (discount: number, discountType: number) => {
+    if (!selectedCartItem) return;
+    
+    setCart(cart.map(item =>
+      item.product.id === selectedCartItem.product.id
+        ? { ...item, discount, discountType }
+        : item
+    ));
+    
+    setSelectedCartItem(null);
+    setIsDiscountModalOpen(false);
+  };
+
+  const total = cart.reduce((sum, item) => {
+    const itemSubtotal = item.product.price * item.quantity;
+    const itemDiscount = item.discountType === 1 
+      ? (itemSubtotal * item.discount) / 100 
+      : item.discount;
+    return sum + (itemSubtotal - itemDiscount);
+  }, 0);
   const cartTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const createOrderMutation = useMutation({
+    mutationFn: async (orderData: any) => {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
+      });
+      if (!response.ok) throw new Error('Failed to create order');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
+      const orderId = data?.order?.id || data?.id;
+      navigate('/checkout/success', {
+        state: {
+          orderNumber: orderNumber,
+          orderId: orderId,
+          customer: {
+            id: selectedCustomer?.id || 0,
+            name: selectedCustomer?.name || '',
+            phone: selectedCustomer?.phoneNumber || '',
+            address: selectedCustomer?.address,
+          },
+          items: cart,
+          total: total,
+          paidAmount: total,
+          change: 0,
+          orderDate: new Date(),
+        }
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || t('error'));
+    },
+  });
 
   const handleCheckout = () => {
     if (!selectedCustomer) {
@@ -239,15 +271,68 @@ export default function POS() {
       return;
     }
 
+    // Navigate to checkout page with cart and customer data
+    navigate('/checkout', {
+      state: {
+        cart: cart,
+        customer: {
+          id: selectedCustomer.id,
+          name: selectedCustomer.name,
+          phone: selectedCustomer.phoneNumber,
+          address: selectedCustomer.address
+        }
+      }
+    });
+  };
+
+  const handleConfirmCash = () => {
+    if (!selectedCustomer) {
+      toast.error(t('selectCustomer'));
+      return;
+    }
+    
+    if (cart.length === 0) {
+      toast.error(t('cartEmpty'));
+      return;
+    }
+
+    const items = cart.map(item => {
+      const quantity = item.quantity;
+      const unitPrice = item.product.price;
+      const itemSubtotal = quantity * unitPrice;
+      const itemDiscountAmount = item.discountType === 1 
+        ? (itemSubtotal * item.discount) / 100 
+        : item.discount;
+      const tax = 0;
+      const itemTotal = itemSubtotal - itemDiscountAmount;
+      
+      return {
+        productId: item.product.id,
+        description: item.product.name || '',
+        quantity: quantity,
+        unitPrice: unitPrice,
+        discount: itemDiscountAmount,
+        discountType: item.discountType,
+        tax: tax,
+        total: itemTotal
+      };
+    });
+
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const totalTax = 0;
+    const totalAmount = subtotal;
+
     const orderData = {
       customerId: selectedCustomer.id,
       fromPortal: true,
-      items: cart.map(item => ({
-        productId: item.product.id,
-        quantity: item.quantity,
-        price: item.product.price,
-        description: item.product.name || '',
-      })),
+      date: new Date().toISOString(),
+      subtotal: subtotal,
+      tax: totalTax,
+      discount: 0,
+      discountType: 0,
+      total: totalAmount,
+      notes: '',
+      items: items
     };
 
     createOrderMutation.mutate(orderData);
@@ -376,20 +461,21 @@ export default function POS() {
         t={(key: string) => t(key as any)}
       />
 
-      {/* Order Success Modal */}
-      {orderSuccessData && (
-        <OrderSuccessModal
-          isOpen={!!orderSuccessData}
-          onClose={() => setOrderSuccessData(null)}
-          orderNumber={orderSuccessData.orderNumber}
-          customerName={orderSuccessData.customerName}
-          customerPhone={orderSuccessData.customerPhone}
-          customerAddress={orderSuccessData.customerAddress}
-          items={orderSuccessData.items}
-          total={orderSuccessData.total}
-          orderDate={orderSuccessData.orderDate}
-        />
-      )}
+      {/* Discount Modal */}
+      <DiscountModal
+        productName={selectedCartItem?.product.name || ''}
+        quantity={selectedCartItem?.quantity || 0}
+        unitPrice={selectedCartItem?.product.price || 0}
+        currentDiscount={selectedCartItem?.discount || 0}
+        currentDiscountType={selectedCartItem?.discountType || 0}
+        isOpen={isDiscountModalOpen}
+        onClose={() => {
+          setIsDiscountModalOpen(false);
+          setSelectedCartItem(null);
+        }}
+        onApply={handleApplyDiscount}
+        t={(key: string) => t(key as any)}
+      />
 
       {/* Main Layout - matching client 2-column layout */}
       <div className="flex h-[calc(100vh-64px)] overflow-hidden">
@@ -445,9 +531,9 @@ export default function POS() {
                       <div className="w-10 h-10 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
                         {item.product.imageUrl ? (
                           <img
-                            src={item.product.imageUrl}
+                            src={getImageUrl(item.product.imageUrl)}
                             alt={item.product.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -482,8 +568,42 @@ export default function POS() {
                           </p>
 
                           <span className="font-bold text-gray-900 text-xs">
-                            {formatCurrency(item.product.price * item.quantity)}
+                            {(() => {
+                              const itemSubtotal = item.product.price * item.quantity;
+                              const itemDiscountAmount = item.discountType === 1 
+                                ? (itemSubtotal * item.discount) / 100 
+                                : item.discount;
+                              const itemTotal = itemSubtotal - itemDiscountAmount;
+                              return formatCurrency(itemTotal);
+                            })()}
                           </span>
+                        </div>
+
+                        {/* Discount info and button */}
+                        <div className="flex items-center justify-between mt-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDiscountModal(item);
+                            }}
+                            className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors ${
+                              item.discount > 0
+                                ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            }`}
+                          >
+                            <Tag className="h-2.5 w-2.5" />
+                            {item.discount > 0 
+                              ? `${item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount)}`
+                              : t('discount')
+                            }
+                          </button>
+                          
+                          {item.discount > 0 && (
+                            <span className="text-[9px] text-gray-400 line-through">
+                              {formatCurrency(item.product.price * item.quantity)}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -503,18 +623,25 @@ export default function POS() {
                 </div>
 
                 <button
-                  onClick={handleCheckout}
+                  onClick={handleConfirmCash}
                   disabled={!selectedCustomer || cart.length === 0 || createOrderMutation.isPending}
+                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {createOrderMutation.isPending ? t('loading') : 'Confirm / Cash'}
+                </button>
+                <button
+                  onClick={handleCheckout}
+                  disabled={!selectedCustomer || cart.length === 0}
                   className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {createOrderMutation.isPending ? t('loading') : t('createOrder')}
+                  {'Payment'}
                 </button>
               </div>
             )}
           </div>
 
           {/* Resize Handle */}
-          {!showCustomerModal && !isPriceModalOpen && !isModalOpen && !orderSuccessData && (
+          {!showCustomerModal && !isPriceModalOpen && !isModalOpen && !isDiscountModalOpen && (
             <div
               onMouseDown={startResizing}
               className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-0 bottom-0 w-2 hover:w-3 cursor-col-resize transition-all z-50 group`}
@@ -593,9 +720,9 @@ export default function POS() {
                       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                         {product.imageUrl ? (
                           <img
-                            src={product.imageUrl}
+                            src={getImageUrl(product.imageUrl)}
                             alt={product.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                             loading="lazy"
                           />
                         ) : (

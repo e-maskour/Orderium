@@ -32,15 +32,15 @@ export class ConfigurationsService {
 
   async findByEntity(entity: string): Promise<Configuration> {
     let config = await this.configRepository.findOne({ where: { entity } });
-    
+
     // Create sequences entity if it doesn't exist
     if (!config && entity === 'sequences') {
       config = await this.create({
         entity: 'sequences',
-        values: { sequences: [] }
+        values: { sequences: [] },
       });
     }
-    
+
     // Create my_company entity with defaults if it doesn't exist
     if (!config && entity === 'my_company') {
       config = await this.create({
@@ -65,10 +65,10 @@ export class ConfigurationsService {
           legalStructure: '',
           capital: 0,
           fiscalYearStartMonth: 1,
-        }
+        },
       });
     }
-    
+
     if (!config) {
       throw new NotFoundException(`Configuration "${entity}" not found`);
     }

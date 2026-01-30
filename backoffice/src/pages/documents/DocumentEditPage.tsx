@@ -501,16 +501,26 @@ export default function DocumentEditPage({
         discountType: 0,
         total,
         notes: notes || undefined,
-        items: items.map(item => ({
-          id: Number(item.id),
-          productId: item.productId,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          discount: item.discount || 0,
-          discountType: item.discountType || 0,
-          tax: item.tax || 0,
-        }))
+        items: items.map(item => {
+          // Calculate item total (HT: before tax)
+          const itemSubtotal = item.quantity * item.unitPrice;
+          const discountAmount = item.discountType === 1 
+            ? itemSubtotal * (item.discount / 100) 
+            : item.discount;
+          const itemTotal = itemSubtotal - discountAmount;
+          
+          return {
+            id: Number(item.id),
+            productId: item.productId,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discount: item.discount || 0,
+            discountType: item.discountType || 0,
+            tax: item.tax || 0,
+            total: itemTotal
+          };
+        })
       };
 
       // Call appropriate service based on document type
@@ -518,8 +528,8 @@ export default function DocumentEditPage({
         await invoicesService.update(Number(id), documentData);
       } else if (documentType === 'devis') {
         await quotesService.update(Number(id), documentData);
-      } else {
-        throw new Error('Les bons de livraison ne peuvent pas être modifiés depuis le back-office');
+      } else if (documentType === 'bon_livraison') {
+        await ordersService.update(Number(id), documentData);
       }
       
       setAlertMessage({

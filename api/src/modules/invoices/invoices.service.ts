@@ -17,6 +17,7 @@ interface CreateInvoiceItemDTO {
   discount: number;
   discountType: number;
   tax?: number;
+  total?: number;
 }
 
 interface CreateInvoiceDTO {
@@ -150,6 +151,52 @@ export class InvoicesService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
+  private buildSequencePattern(sequence: any): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+
+    const currentMonth = now.getMonth() + 1;
+    const trimester =
+      currentMonth <= 3
+        ? '01'
+        : currentMonth <= 6
+          ? '04'
+          : currentMonth <= 9
+            ? '07'
+            : '10';
+
+    let pattern = sequence.prefix || '';
+    let dateComponents: string[] = [];
+
+    if (sequence.yearInPrefix) {
+      dateComponents.push(year.toString());
+    }
+
+    if (sequence.trimesterInPrefix && sequence.monthInPrefix) {
+      dateComponents.push(trimester);
+    } else if (sequence.trimesterInPrefix) {
+      dateComponents.push(trimester);
+    } else if (sequence.monthInPrefix) {
+      dateComponents.push(month);
+    }
+
+    if (sequence.dayInPrefix) {
+      dateComponents.push(day);
+    }
+
+    if (pattern && dateComponents.length > 0) {
+      pattern += ' ';
+    }
+
+    if (dateComponents.length > 0) {
+      pattern += dateComponents.join('-') + '-';
+    }
+
+    return pattern;
+  }
+
   private generateSequenceNumber(sequence: any): string {
     const now = new Date();
     const year = now.getFullYear();
@@ -272,34 +319,17 @@ export class InvoicesService {
     createInvoiceDto: CreateInvoiceDTO,
     invoiceNumber: string,
   ): Promise<Invoice> {
-    // Calculate totals
-    let subtotal = 0;
+    // Use values from frontend directly (no recalculation)
     const items = createInvoiceDto.items.map((item) => {
-      const itemSubtotal = item.quantity * item.unitPrice;
-      const discountAmount =
-        item.discountType === 1
-          ? itemSubtotal * (item.discount / 100)
-          : item.discount;
-      const itemTotal = itemSubtotal - discountAmount;
-      subtotal += itemTotal;
-
       return {
         ...item,
-        total: itemTotal,
+        total: item.total || 0,
         tax: item.tax || 0,
       };
     });
 
-    // Calculate global discount and tax
-    const globalDiscountAmount =
-      createInvoiceDto.discountType === 1
-        ? subtotal * (createInvoiceDto.discount / 100)
-        : createInvoiceDto.discount;
-    const subtotalAfterDiscount = subtotal - globalDiscountAmount;
-    const taxAmount = subtotalAfterDiscount * (createInvoiceDto.tax / 100);
-    const total = subtotalAfterDiscount + taxAmount;
-
     // Create invoice with provisional number and draft status
+    // Values (subtotal, tax, total, discount) come directly from frontend
     const invoice = this.invoiceRepository.create({
       documentNumber: invoiceNumber,
       customerId: createInvoiceDto.customerId,
@@ -314,11 +344,11 @@ export class InvoicesService {
       dueDate: createInvoiceDto.dueDate
         ? new Date(createInvoiceDto.dueDate)
         : undefined,
-      subtotal,
+      subtotal: 0,
       tax: createInvoiceDto.tax,
       discount: createInvoiceDto.discount,
       discountType: createInvoiceDto.discountType,
-      total,
+      total: 0,
       notes: createInvoiceDto.notes,
       status: InvoiceStatus.DRAFT,
       isValidated: false,
@@ -395,34 +425,14 @@ export class InvoicesService {
           );
         }
 
-        // Calculate totals
-        let subtotal = 0;
+        // Use values from frontend directly (no recalculation)
         const items = updateInvoiceDto.items.map((item) => {
-          const itemSubtotal = item.quantity * item.unitPrice;
-          const discountAmount =
-            item.discountType === 1
-              ? itemSubtotal * (item.discount / 100)
-              : item.discount;
-          const itemTotal = itemSubtotal - discountAmount;
-          subtotal += itemTotal;
-
           return {
             ...item,
-            total: itemTotal,
+            total: item.total || 0,
             tax: item.tax || 0,
           };
         });
-
-        const globalDiscountAmount =
-          (updateInvoiceDto.discountType ?? invoice.discountType ?? 0) === 1
-            ? subtotal *
-              ((updateInvoiceDto.discount ?? invoice.discount ?? 0) / 100)
-            : (updateInvoiceDto.discount ?? invoice.discount ?? 0);
-        const subtotalAfterDiscount = subtotal - globalDiscountAmount;
-        const taxAmount =
-          subtotalAfterDiscount *
-          ((updateInvoiceDto.tax ?? invoice.tax ?? 0) / 100);
-        const total = subtotalAfterDiscount + taxAmount;
 
         // Delete old items
         await this.invoiceItemRepository.delete({ invoiceId: id });
@@ -464,7 +474,7 @@ export class InvoicesService {
         // Prepare invoice update data (exclude items)
         const { items: _, ...invoiceUpdateData } = updateInvoiceDto;
 
-        // Update invoice with new totals
+        // Update invoice with values from frontend
         await this.invoiceRepository.update(id, {
           ...invoiceUpdateData,
           date: updateInvoiceDto.date
@@ -473,8 +483,6 @@ export class InvoicesService {
           dueDate: updateInvoiceDto.dueDate
             ? new Date(updateInvoiceDto.dueDate)
             : invoice.dueDate,
-          subtotal,
-          total,
         });
       } else {
         // Update invoice without items
@@ -523,60 +531,33 @@ export class InvoicesService {
       throw new BadRequestException('Invoice is already validated');
     }
 
-    try {
-      // Get or create sequence for invoice_sale
+    let finalInvoiceNumber = invoice.documentNumber;
+
+    // Only generate a new number if this is the first validation (provisional number)
+    if (invoice.documentNumber.startsWith('PROV')) {
+      // Get sequence for invoice_sale
       const sequence = await this.getOrCreateSequence('invoice_sale');
 
-      // Generate final invoice number using sequence
-      const finalInvoiceNumber = this.generateSequenceNumber(sequence);
+      // Use the sequence's next document number directly
+      finalInvoiceNumber = this.generateSequenceNumber(sequence);
 
-      // Update invoice with final number and validated status
-      await this.invoiceRepository.update(id, {
-        documentNumber: finalInvoiceNumber,
-        isValidated: true,
-        validationDate: new Date(),
-        status: InvoiceStatus.UNPAID,
-      });
-
-      // Update sequence next number
+      // Increment sequence next number
       await this.updateSequenceNextNumber('invoice_sale', sequence);
-
-      const result = await this.findOne(id);
-      if (!result) {
-        throw new NotFoundException('Invoice not found after validation');
-      }
-      return result;
-    } catch (error) {
-      // Fallback to old system if sequence fails
-      const lastInvoice = await this.invoiceRepository
-        .createQueryBuilder('invoice')
-        .where('invoice.documentNumber LIKE :pattern', { pattern: 'INV-%' })
-        .orderBy('invoice.id', 'DESC')
-        .limit(1)
-        .getOne();
-
-      let nextNumber = 1;
-      if (lastInvoice) {
-        const match = lastInvoice.invoiceNumber.match(/INV-(\\d+)/);
-        if (match) {
-          nextNumber = parseInt(match[1]) + 1;
-        }
-      }
-      const finalInvoiceNumber = `INV-${String(nextNumber).padStart(5, '0')}`;
-
-      await this.invoiceRepository.update(id, {
-        documentNumber: finalInvoiceNumber,
-        isValidated: true,
-        validationDate: new Date(),
-        status: InvoiceStatus.UNPAID,
-      });
-
-      const result = await this.findOne(id);
-      if (!result) {
-        throw new NotFoundException('Invoice not found after validation');
-      }
-      return result;
     }
+
+    // Update invoice with final number (or keep existing) and validated status
+    await this.invoiceRepository.update(id, {
+      documentNumber: finalInvoiceNumber,
+      isValidated: true,
+      validationDate: new Date(),
+      status: InvoiceStatus.UNPAID,
+    });
+
+    const result = await this.findOne(id);
+    if (!result) {
+      throw new NotFoundException('Invoice not found after validation');
+    }
+    return result;
   }
 
   async devalidate(id: number): Promise<Invoice> {
@@ -591,25 +572,70 @@ export class InvoicesService {
       throw new BadRequestException('Invoice is not validated');
     }
 
-    // Generate new provisional number (PROV format)
-    const lastProvNumber = await this.invoiceRepository
-      .createQueryBuilder('invoice')
-      .where('invoice.documentNumber LIKE :pattern', { pattern: 'PROV%' })
-      .orderBy('invoice.id', 'DESC')
-      .limit(1)
-      .getOne();
+    // Update sequence nextNumber to match the last document in database
+    try {
+      const sequence = await this.getOrCreateSequence('invoice_sale');
+      const config = await this.configurationsService.findByEntity('sequences');
+      const sequences = config?.values?.sequences || [];
+      const sequenceIndex = sequences.findIndex((seq) => seq.id === sequence.id);
+      
+      if (sequenceIndex !== -1) {
+        // Find the highest document number in database with this sequence pattern
+        const pattern = this.buildSequencePattern(sequence);
+        const lastInvoice = await this.invoiceRepository
+          .createQueryBuilder('invoice')
+          .where('invoice.documentNumber LIKE :pattern', { pattern: pattern + '%' })
+          .andWhere('invoice.isValidated = :validated', { validated: true })
+          .orderBy('CAST(SUBSTRING(invoice.documentNumber FROM \'[0-9]+$\') AS INTEGER)', 'DESC')
+          .limit(1)
+          .getOne();
 
-    let nextProvNumber: string;
-    if (lastProvNumber) {
-      const match = lastProvNumber.invoiceNumber.match(/PROV(\d+)/);
-      if (match) {
-        const lastNumber = parseInt(match[1]);
-        nextProvNumber = `PROV${lastNumber + 1}`;
-      } else {
-        nextProvNumber = 'PROV1';
+        let nextNumber = 1;
+        if (lastInvoice) {
+          const match = lastInvoice.documentNumber.match(/(\d+)$/);
+          if (match) {
+            nextNumber = parseInt(match[1]);
+          }
+        }
+
+        sequences[sequenceIndex].nextNumber = nextNumber;
+        sequences[sequenceIndex].updatedAt = new Date().toISOString();
+        
+        await this.configurationsService.update(config.id, {
+          values: { sequences },
+        });
       }
+    } catch (error) {
+      console.error('Error updating sequence during devalidation:', error);
+      // Continue with devalidation even if sequence update fails
+    }
+
+    // Generate new provisional number (PROV format)
+    // If already has a PROV number, keep it to avoid duplicates
+    let nextProvNumber: string;
+    if (invoice.documentNumber.startsWith('PROV')) {
+      nextProvNumber = invoice.documentNumber;
     } else {
-      nextProvNumber = 'PROV1';
+      // Find all PROV numbers to get the maximum
+      const allProvInvoices = await this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .select('invoice.documentNumber')
+        .where('invoice.documentNumber LIKE :pattern', { pattern: 'PROV%' })
+        .andWhere('invoice.id != :currentId', { currentId: id })
+        .getMany();
+
+      let maxProvNumber = 0;
+      for (const provInvoice of allProvInvoices) {
+        const match = provInvoice.documentNumber.match(/PROV(\d+)/);
+        if (match) {
+          const num = parseInt(match[1]);
+          if (num > maxProvNumber) {
+            maxProvNumber = num;
+          }
+        }
+      }
+
+      nextProvNumber = `PROV${maxProvNumber + 1}`;
     }
 
     // Update invoice back to draft status with new provisional number

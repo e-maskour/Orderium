@@ -54,7 +54,12 @@ export class CreateProductDto {
   @ApiPropertyOptional({ description: 'Product image URL' })
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrl?: string | null;
+
+  @ApiPropertyOptional({ description: 'Product image public ID from CDN provider' })
+  @IsOptional()
+  @IsString()
+  imagePublicId?: string | null;
 
   @ApiPropertyOptional({ description: 'Stock quantity', minimum: 0 })
   @IsOptional()

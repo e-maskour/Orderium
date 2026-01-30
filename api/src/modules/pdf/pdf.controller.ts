@@ -124,6 +124,7 @@ export class PDFController {
   @Get('receipt/:orderId')
   async generateReceipt(
     @Param('orderId') orderId: string,
+    @Query('mode') mode: 'preview' | 'download' = 'download',
     @Res() res: Response,
   ) {
     try {
@@ -132,9 +133,11 @@ export class PDFController {
         parseInt(orderId),
       );
 
+      const disposition = mode === 'preview' ? 'inline' : 'attachment';
+
       res.set({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Disposition': `${disposition}; filename="${fileName}"`,
         'Content-Length': pdfBuffer.length.toString(),
       });
 

@@ -7,11 +7,24 @@ interface ReceiptTemplateData {
   customerPhone?: string;
   itemsHtml: string;
   subtotal: string;
+  discount?: string;
+  discountType?: number;
   tax: string;
   total: string;
+  hideVAT?: boolean;
+  companyName: string;
+  companyLines: string[];
 }
 
 export function renderReceiptTemplate(data: ReceiptTemplateData): string {
+  // Build discount row if it exists
+  const discountRowHtml = data.discount && data.discount !== '0.00'
+    ? `<div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
+         <span>Remise${data.discountType === 1 ? ' (%)' : ''}:</span>
+         <span>-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</span>
+       </div>`
+    : '';
+
   return `
 <!DOCTYPE html>
 <html>
@@ -63,16 +76,14 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   <div class="receipt-content">
     <!-- Header -->
     <div class="header">
-      <div style="font-size: 12pt;">ORDERIUM</div>
-      <div style="font-size: 7pt;">123 Avenue Mohammed V</div>
-      <div style="font-size: 7pt;">Casablanca 20000, Maroc</div>
-      <div style="font-size: 7pt;">Tel: +212 5XX-XXXXXX</div>
+      <div style="font-size: 12pt;">${data.companyName}</div>
+      ${data.companyLines.map(line => `<div style="font-size: 7pt;">${line}</div>`).join('')}
     </div>
     
     <div class="divider"></div>
     
     <!-- Receipt Info -->
-    <div style="text-align: center; font-weight: bold; margin: 2mm 0;">
+    <div style="font-weight: bold; margin: 2mm 0;">
       REÇU N° ${data.documentNumber}
     </div>
     <div style="font-size: 7pt; margin-bottom: 3mm;">
@@ -90,15 +101,20 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     
     <!-- Totals -->
     <div class="totals">
+      ${!data.hideVAT ? `
       <div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
         <span>Sous-total:</span>
         <span>${data.subtotal} DH</span>
       </div>
+      ${discountRowHtml}
       <div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
         <span>TVA (20%):</span>
         <span>${data.tax} DH</span>
       </div>
-      <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #000; padding-top: 1mm; margin-top: 1mm;">
+      ` : `
+      ${discountRowHtml}
+      `}
+      <div style="display: flex; justify-content: space-between; font-weight: bold; ${!data.hideVAT ? 'border-top: 1px solid #000; padding-top: 1mm; margin-top: 1mm;' : ''}">
         <span>Total:</span>
         <span>${data.total} DH</span>
       </div>
@@ -108,8 +124,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     
     <!-- Footer -->
     <div style="text-align: center; font-size: 6pt; margin-top: 3mm;">
-      Merci pour votre commande!<br />
-      Système ORDERIUM
+      Merci pour votre commande!
     </div>
   </div>
 </body>

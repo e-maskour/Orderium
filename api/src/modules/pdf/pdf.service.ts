@@ -5,10 +5,11 @@ import { Repository } from 'typeorm';
 import { chromium } from 'playwright';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { Quote } from '../quotes/entities/quote.entity';
-import { OrdersService } from '../orders/orders.service';
 import { renderDocumentTemplate, renderHeaderTemplate, renderFooterTemplate } from './templates/document.template';
 import { renderReceiptTemplate } from './templates/receipt.template';
 import { getDocumentStyles } from './templates/document.styles';
+import { ConfigurationsService } from '../configurations/configurations.service';
+import { Order } from '../orders/entities/order.entity';
 
 type DocumentType = 'invoice' | 'quote' | 'delivery-note' | 'receipt';
 
@@ -25,6 +26,8 @@ interface DocumentData {
   customerPhone?: string;
   customerAddress?: string;
   subtotal: number;
+  discount?: number;
+  discountType?: number;
   tax: number;
   total: number;
   notes?: string;
@@ -37,6 +40,7 @@ interface DocumentData {
   signedBy?: string;
   signedDate?: Date;
   orderNumber?: string;
+  fromPortal?: boolean;
 }
 
 interface DocumentItemData {
@@ -48,6 +52,20 @@ interface DocumentItemData {
   total: number;
 }
 
+interface CompanyConfigData {
+  companyName?: string;
+  address?: string;
+  zipCode?: string;
+  city?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  ice?: string;
+  registrationNumber?: string;
+  taxId?: string;
+  vatNumber?: string;
+}
+
 @Injectable()
 export class PDFService {
   constructor(
@@ -55,7 +73,9 @@ export class PDFService {
     private readonly invoiceRepository: Repository<Invoice>,
     @InjectRepository(Quote)
     private readonly quoteRepository: Repository<Quote>,
-    private readonly ordersService: OrdersService,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+    private readonly configurationsService: ConfigurationsService,
   ) {}
 
   async generateDocumentPDF(
@@ -88,8 +108,9 @@ export class PDFService {
       case 'quote':
         return this.fetchQuoteData(documentId);
       case 'delivery-note':
+        return this.fetchOrderData(documentId, documentType);
       case 'receipt':
-        return this.fetchOrderData(documentId);
+        return this.fetchOrderData(documentId, documentType);
       default:
         throw new Error(`Unsupported document type: ${documentType}`);
     }
@@ -115,6 +136,8 @@ export class PDFService {
       customerPhone: invoice.customerPhone || invoice.customer?.phoneNumber,
       customerAddress: invoice.customerAddress || invoice.customer?.address,
       subtotal: Number(invoice.subtotal) || 0,
+      discount: Number(invoice.discount) || 0,
+      discountType: Number(invoice.discountType) || 0,
       tax: Number(invoice.tax) || 0,
       total: Number(invoice.total) || 0,
       notes: invoice.notes || undefined,
@@ -150,6 +173,8 @@ export class PDFService {
       customerPhone: quote.customerPhone || quote.customer?.phoneNumber,
       customerAddress: quote.customerAddress || quote.customer?.address,
       subtotal: Number(quote.subtotal) || 0,
+      discount: Number(quote.discount) || 0,
+      discountType: Number(quote.discountType) || 0,
       tax: Number(quote.tax) || 0,
       total: Number(quote.total) || 0,
       notes: quote.notes || undefined,
@@ -166,28 +191,42 @@ export class PDFService {
     };
   }
 
-  private async fetchOrderData(orderId: number): Promise<DocumentData> {
-    const order = await this.ordersService.getOrderById(orderId);
+  private async fetchOrderData(
+    orderId: number,
+    documentType: 'delivery-note' | 'receipt',
+  ): Promise<DocumentData> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ['items', 'items.product', 'customer'],
+    });
 
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
 
+    const documentNumber =
+      documentType === 'receipt' && order.receiptNumber
+        ? order.receiptNumber
+        : order.orderNumber;
+
     return {
       id: order.id,
-      documentNumber: order.orderNumber,
+      documentNumber,
       orderNumber: order.orderNumber,
       date: order.dateCreated,
-      customerName: order.customer?.name || 'Client',
-      customerPhone: order.customer?.phone,
+      customerName: order.customerName || order.customer?.name || 'Client',
+      customerPhone: order.customerPhone || order.customer?.phoneNumber,
       customerAddress: order.customerAddress || order.customer?.address,
       subtotal: Number(order.subtotal) || 0,
+      discount: Number(order.discount) || 0,
+      discountType: Number(order.discountType) || 0,
       tax: Number(order.tax) || 0,
       total: Number(order.total) || 0,
+      fromPortal: order.fromPortal || false,
       items: order.items.map((item) => ({
         description: item.description || item.product?.name || 'Article',
         quantity: Number(item.quantity) || 0,
-        unitPrice: Number(item.price) || 0,
+        unitPrice: Number(item.unitPrice) || 0,
         discount: Number(item.discount) || 0,
         tax: Number(item.tax) || 0,
         total: Number(item.total) || 0,
@@ -219,10 +258,11 @@ export class PDFService {
     });
 
     try {
+      // A5 dimensions: 148x210 mm (420x595 pixels at 72 DPI)
       const page = await browser.newPage({
         viewport: {
-          width: 595,
-          height: 842,
+          width: 420,
+          height: 595,
         },
         deviceScaleFactor: 2,
       });
@@ -233,8 +273,14 @@ export class PDFService {
         timeout: 30000,
       });
 
+      const companyConfig = await this.getCompanyConfig();
+      const companyLines = this.buildCompanyLines(companyConfig);
+      const footerLines = this.buildCompanyFooterLines(companyConfig);
+
       // Generate header and footer templates
       const headerTemplate = renderHeaderTemplate({
+        companyName: companyConfig.companyName || '',
+        companyLines,
         documentLabel: this.getDocumentLabel(documentType),
         documentNumber: data.documentNumber,
         date: new Date(data.date).toLocaleDateString('fr-FR'),
@@ -242,7 +288,10 @@ export class PDFService {
         expirationDate: data.expirationDate ? new Date(data.expirationDate).toLocaleDateString('fr-FR') : undefined,
       });
 
-      const footerTemplate = renderFooterTemplate();
+      const footerTemplate = renderFooterTemplate({ 
+        footerLines,
+        hideVAT: data.fromPortal || false,
+      });
 
       const pdfBuffer = await page.pdf({
         format: 'A5',
@@ -283,7 +332,8 @@ export class PDFService {
         deviceScaleFactor: 2,
       });
 
-      const htmlContent = this.renderReceiptHTML(data);
+      const companyConfig = await this.getCompanyConfig();
+      const htmlContent = this.renderReceiptHTML(data, companyConfig);
       await page.setContent(htmlContent, {
         waitUntil: 'networkidle',
         timeout: 30000,
@@ -311,6 +361,7 @@ export class PDFService {
   private renderDocumentHTML(documentType: DocumentType, data: DocumentData): string {
     const documentTitle = this.getDocumentTitle(documentType);
     const documentLabel = this.getDocumentLabel(documentType);
+    const hideVAT = data.fromPortal || false;
 
     // Generate items HTML
     const itemsHtml = data.items
@@ -321,7 +372,7 @@ export class PDFService {
               <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
               <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.unitPrice)}</td>
               <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.discount)}</td>
-              <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${item.tax}%</td>
+              ${!hideVAT ? `<td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${item.tax}%</td>` : ''}
               <td style="text-align: right; font-weight: bold; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.total)}</td>
             </tr>
           `,
@@ -346,10 +397,14 @@ export class PDFService {
       total: this.formatCurrency(data.total),
       notes: data.notes,
       styles: this.getDocumentStyles(),
+      hideVAT,
     });
   }
 
-  private renderReceiptHTML(data: DocumentData): string {
+  private renderReceiptHTML(data: DocumentData, company: CompanyConfigData): string {
+    const hideVAT = data.fromPortal || false;
+    const companyLines = this.buildCompanyLines(company);
+    
     // Generate items HTML
     const itemsHtml = data.items
       .map(
@@ -361,7 +416,7 @@ export class PDFService {
               <span>${this.formatCurrency(item.total)} DH</span>
             </div>
             ${item.discount > 0 ? `<div style="font-size: 6pt; color: #666;">Remise: ${this.formatCurrency(item.discount)} DH</div>` : ''}
-            ${item.tax > 0 ? `<div style="font-size: 6pt; color: #666;">TVA: ${this.formatCurrency(item.tax)}%</div>` : ''}
+            ${!hideVAT && item.tax > 0 ? `<div style="font-size: 6pt; color: #666;">TVA: ${this.formatCurrency(item.tax)}%</div>` : ''}
           </div>
         `,
       )
@@ -374,8 +429,13 @@ export class PDFService {
       customerPhone: data.customerPhone,
       itemsHtml,
       subtotal: this.formatCurrency(data.subtotal),
+      discount: data.discount && data.discount > 0 ? this.formatCurrency(data.discount) : undefined,
+      discountType: data.discountType,
       tax: this.formatCurrency(data.tax),
       total: this.formatCurrency(data.total),
+      hideVAT,
+      companyName: company.companyName || 'ORDERIUM',
+      companyLines,
     });
   }
 
@@ -410,5 +470,70 @@ export class PDFService {
     } catch (error) {
       return '0.00';
     }
+  }
+
+  private async getCompanyConfig(): Promise<CompanyConfigData> {
+    try {
+      const config = await this.configurationsService.findByEntity('my_company');
+      return (config?.values || {}) as CompanyConfigData;
+    } catch (error) {
+      return {};
+    }
+  }
+
+  private buildCompanyLines(company: CompanyConfigData): string[] {
+    const lines: string[] = [];
+
+    const addressParts: string[] = [];
+    if (company.address?.trim()) {
+      addressParts.push(company.address.trim());
+    }
+
+    const cityZip = [company.city?.trim(), company.zipCode?.trim()]
+      .filter(Boolean)
+      .join(' ');
+    if (cityZip) {
+      addressParts.push(cityZip);
+    }
+
+    if (company.country?.trim()) {
+      addressParts.push(company.country.trim());
+    }
+
+    if (addressParts.length) {
+      lines.push(addressParts.join(', '));
+    }
+
+    if (company.phone?.trim()) {
+      lines.push(`Tél: ${company.phone.trim()}`);
+    }
+
+    if (company.email?.trim()) {
+      lines.push(`Email: ${company.email.trim()}`);
+    }
+
+    return lines;
+  }
+
+  private buildCompanyFooterLines(company: CompanyConfigData): string[] {
+    const parts: string[] = [];
+
+    if (company.ice?.trim()) {
+      parts.push(`ICE: ${company.ice.trim()}`);
+    }
+
+    if (company.registrationNumber?.trim()) {
+      parts.push(`RC: ${company.registrationNumber.trim()}`);
+    }
+
+    if (company.taxId?.trim()) {
+      parts.push(`IF: ${company.taxId.trim()}`);
+    }
+
+    if (company.vatNumber?.trim()) {
+      parts.push(`TVA: ${company.vatNumber.trim()}`);
+    }
+
+    return parts.length ? [parts.join(' | ')] : [];
   }
 }

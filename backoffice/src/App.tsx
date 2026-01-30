@@ -9,6 +9,8 @@ import Dashboard from './pages/Dashboard';
 import DeliveryPersons from './pages/DeliveryPersons';
 import Orders from './pages/Orders';
 import POS from './pages/POS';
+import CheckoutPage from './pages/CheckoutPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
 import Products from './pages/Products';
 import ProductCreate from './pages/ProductCreate';
 import ProductDetail from './pages/ProductDetail';
@@ -97,6 +99,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <POS />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <CheckoutPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/checkout/success"
+                element={
+                  <ProtectedRoute>
+                    <OrderSuccessPage />
                   </ProtectedRoute>
                 }
               />

@@ -39,6 +39,19 @@ export class OrdersService {
     return data;
   }
 
+  async update(orderId: number, orderData: any): Promise<any> {
+    const response = await fetch(`${API_URL}/orders/${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update order');
+    }
+    return await response.json();
+  }
+
   async assignToDelivery(orderId: number, deliveryPersonId: number): Promise<void> {
     const response = await fetch(`${API_URL}/delivery/assign`, {
       method: 'POST',
@@ -117,6 +130,23 @@ export class OrdersService {
       throw new Error(error.message || 'Failed to mark order as invoiced');
     }
     return await response.json();
+  }
+
+  async delete(orderId: number): Promise<void> {
+    const response = await fetch(`${API_URL}/orders/${orderId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      let errorMessage = 'Failed to delete order';
+      try {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } catch (e) {
+        // If response is not JSON, use status text
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
+    }
   }
 }
 

@@ -15,6 +15,21 @@ export default function Products() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
+  // Get API base URL from environment or use window origin
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+  
+  // Helper to convert relative image paths to full URLs
+  const getImageUrl = (imageUrl?: string): string | undefined => {
+    if (!imageUrl) return undefined;
+    if (imageUrl.startsWith('http')) return imageUrl; // Already full URL
+    if (imageUrl.startsWith('orderium/')) {
+      // Cloudinary
+      return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
+    }
+    // Relative path - add API base URL
+    return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -241,9 +256,9 @@ export default function Products() {
                       <div className="w-10">
                         {product.imageUrl ? (
                           <img
-                            src={product.imageUrl}
+                            src={getImageUrl(product.imageUrl)}
                             alt={product.name}
-                            className="w-10 h-10 object-cover rounded-lg shadow-sm"
+                            className="w-10 h-10 object-contain rounded-lg shadow-sm"
                           />
                         ) : (
                           <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">
@@ -356,9 +371,9 @@ export default function Products() {
                       <div className="relative h-32 overflow-hidden rounded-t-xl">
                         {product.imageUrl ? (
                           <img
-                            src={product.imageUrl}
+                            src={getImageUrl(product.imageUrl)}
                             alt={product.name}
-                            className="w-full h-full object-cover opacity-90 drop-shadow-lg hover:scale-105 hover:opacity-100 transition-all duration-300"
+                            className="w-full h-full object-contain opacity-90 drop-shadow-lg hover:scale-105 hover:opacity-100 transition-all duration-300"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">

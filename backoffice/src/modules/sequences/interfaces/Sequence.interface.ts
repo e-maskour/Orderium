@@ -14,6 +14,8 @@ export interface Sequence {
   createdAt?: string;
   updatedAt?: string;
   realTimeNextNumber?: number; // Enhanced field from database calculation
+  format?: string; // Format pattern (e.g., "DV YYYY-MM-000X")
+  nextDocumentNumber?: string; // Next actual document number (e.g., "DV 2026-01-0011")
 }
 
 export type SequenceEntityType = 
@@ -45,4 +47,5 @@ export interface UpdateSequenceDTO extends Partial<CreateSequenceDTO> {}
 export interface SequencePreview {
   example: string;
   nextSequence: string;
+  format?: string;
 }

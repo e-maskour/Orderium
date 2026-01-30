@@ -14,18 +14,28 @@ interface DocumentTemplateData {
   signedBy?: string;
   itemsHtml: string;
   subtotal: string;
+  discount?: string;
+  discountType?: number;
   tax: string;
   total: string;
   notes?: string;
   styles: string;
+  hideVAT?: boolean;
 }
 
 interface HeaderTemplateData {
+  companyName: string;
+  companyLines: string[];
   documentLabel: string;
   documentNumber: string;
   date: string;
   dueDate?: string;
   expirationDate?: string;
+}
+
+interface FooterTemplateData {
+  footerLines: string[];
+  hideVAT?: boolean;
 }
 
 export function renderHeaderTemplate(data: HeaderTemplateData): string {
@@ -44,7 +54,7 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
       }
       .header-wrapper {
         width: 100%;
-        padding: 0 5mm;
+        padding: 5mm;
         font-family: "DejaVu Sans", "Helvetica", "Arial", sans-serif;
         font-size: 9pt;
       }
@@ -84,12 +94,9 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
     <div class="header-wrapper">
       <header class="header-content">
         <div class="company-info">
-          ORDERIUM
+          ${data.companyName}
           <div class="company-details">
-            <div>123 Avenue Mohammed V</div>
-            <div>Casablanca 20000, Maroc</div>
-            <div style="margin-top: 1.5mm;">Tél: +212 5XX-XXXXXX</div>
-            <div>Email: contact@orderium.ma</div>
+            ${data.companyLines.map((line) => `<div>${line}</div>`).join('')}
           </div>
         </div>
         <div class="document-title">
@@ -106,7 +113,7 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
   `;
 }
 
-export function renderFooterTemplate(): string {
+export function renderFooterTemplate(data: FooterTemplateData): string {
   return `
     <style>
       * {
@@ -135,18 +142,43 @@ export function renderFooterTemplate(): string {
         font-weight: 600;
         color: #555555;
       }
+      .footer-legal {
+        font-weight: 700;
+        color: #333333;
+      }
+      .footer-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1mm;
+      }
+      .footer-page-number {
+        text-align: right;
+        font-weight: 600;
+        color: #555555;
+      }
     </style>
     <div class="footer-wrapper">
       <footer class="footer-content">
-        <div>RC: XXXXXXX | IF: XXXXXXXX | ICE: XXXXXXXXXXXXXXX</div>
-        <div>RIB: XXXXXXXXXXXXXXXXXXXXXXXX</div>
-        <div class="footer-text" style="margin-top: 1mm;">Merci pour votre confiance !</div>
+        ${!data.hideVAT ? data.footerLines.map((line) => `<div class="footer-legal">${line}</div>`).join('') : ''}
+        <div class="footer-bottom">
+          <div class="footer-text">Merci pour votre confiance !</div>
+          <div class="footer-page-number">Page <span class="pageNumber"></span>/<span class="totalPages"></span></div>
+        </div>
       </footer>
     </div>
   `;
 }
 
 export function renderDocumentTemplate(data: DocumentTemplateData): string {
+    // Build discount row if it exists
+    const discountRowHtml = data.discount && data.discount !== '0.00' 
+      ? `<div class="totals-row">
+           <span class="totals-label">Remise${data.discountType === 1 ? ' (%)' : ''}</span>
+           <span class="totals-value">-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</span>
+         </div>`
+      : '';
+
     return `
         <!DOCTYPE html>
         <html>
@@ -162,60 +194,43 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                 <!-- Customer Section -->
                 <section class="customer-section">
                     <div class="customer-grid">
-                    <div class="bill-to">
-                        <div class="section-title">Client</div>
-                        <div class="info-box">
-                        <div style="font-weight: bold; margin-bottom: 1mm;">${data.customerName}</div>
-                        ${data.customerPhone ? `<div style="font-size: 8pt; color: #666666;">Tél: ${data.customerPhone}</div>` : ''}
-                        ${data.customerAddress ? `<div style="font-size: 8pt; color: #666666; margin-top: 1mm;">${data.customerAddress}</div>` : ''}
+                        <div class="bill-to">
+                            <div class="section-title">Client</div>
+                            <div class="info-box">
+                            <div style="font-weight: bold; margin-bottom: 1mm;">${data.customerName}</div>
+                            ${data.customerPhone ? `<div style="font-size: 8pt; color: #666666;">Tél: ${data.customerPhone}</div>` : ''}
+                            ${data.customerAddress ? `<div style="font-size: 8pt; color: #666666; margin-top: 1mm;">${data.customerAddress}</div>` : ''}
+                            </div>
                         </div>
-                    </div>
-                    <div class="invoice-details">
-                        <div class="section-title">Détails</div>
-                        <div class="info-box" style="font-size: 9pt; line-height: 1.6;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #666666;">Date:</span>
-                            <span style="font-weight: 600;">${data.date}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #666666;">Document N°:</span>
-                            <span style="font-weight: 600;">${data.documentNumber}</span>
-                        </div>
-                        ${data.documentType === 'quote' && data.signedBy ? `
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #666666;">Signé par:</span>
-                            <span style="font-weight: 600;">${data.signedBy}</span>
-                        </div>
-                        ` : ''}
-                        </div>
-                    </div>
                     </div>
                 </section>
 
                 <!-- Items Table -->
                 <section class="table-section">
                     <table class="invoice-table">
-                    <thead class="table-header">
-                        <tr>
-                        <th style="text-align: left; width: 39%;">Description</th>
-                        <th style="text-align: center; width: 10%;">Qté</th>
-                        <th style="text-align: right; width: 13%;">P.U. HT</th>
-                        <th style="text-align: right; width: 10%;">Remise</th>
-                        <th style="text-align: right; width: 10%;">TVA</th>
-                        <th style="text-align: right; width: 18%;">Total HT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.itemsHtml}
-                    </tbody>
+                        <thead class="table-header">
+                            <tr>
+                                <th style="text-align: left; width: ${data.hideVAT ? '48%' : '40%'};">Description</th>
+                                <th style="text-align: center; width: ${data.hideVAT ? '13%' : '10%'};">Qté</th>
+                                <th style="text-align: center; width: ${data.hideVAT ? '13%' : '12%'};">P.U.</th>
+                                <th style="text-align: center; width: ${data.hideVAT ? '13%' : '12%'};">Remise</th>
+                                ${!data.hideVAT ? '<th style="text-align: center; width: 12%;">TVA</th>' : ''}
+                                <th style="text-align: center; width: ${data.hideVAT ? '13%' : '14%'};">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.itemsHtml}
+                        </tbody>
                     </table>
 
                     <!-- Totals -->
                     <div class="totals-section">
+                      ${!data.hideVAT ? `
                       <div class="totals-row">
                         <span class="totals-label">Sous-total HT</span>
                         <span class="totals-value">${data.subtotal} DH</span>
                       </div>
+                      ${discountRowHtml}
                       <div class="totals-row">
                         <span class="totals-label">TVA (20%)</span>
                         <span class="totals-value">${data.tax} DH</span>
@@ -224,6 +239,13 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                         <span class="totals-label">Total TTC</span>
                         <span class="totals-value">${data.total} DH</span>
                       </div>
+                      ` : `
+                      ${discountRowHtml}
+                      <div class="totals-row totals-grand">
+                        <span class="totals-label">Total</span>
+                        <span class="totals-value">${data.total} DH</span>
+                      </div>
+                      `}
                     </div>
 
                     <!-- Notes -->

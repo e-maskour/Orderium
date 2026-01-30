@@ -31,7 +31,7 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-7xl mx-4 h-[95vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 rounded-t-xl">
-          <h2 className="text-lg font-bold text-slate-800">{title}</h2>
+          <h2 className="text-lg font-bold text-slate-800">Aperçu {title}</h2>
           <button
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"

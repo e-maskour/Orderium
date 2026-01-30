@@ -46,7 +46,10 @@ export class Product {
   isPriceChangeAllowed: boolean;
 
   @Column({ type: 'text', nullable: true })
-  imageUrl: string;
+  imageUrl: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  imagePublicId: string | null;
 
   @Column({ type: 'int', nullable: true })
   stock: number;

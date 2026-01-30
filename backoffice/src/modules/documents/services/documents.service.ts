@@ -54,8 +54,7 @@ export class DocumentsService {
     } else if (type === 'devis') {
       await quotesService.validate(id);
     } else if (type === 'bon_livraison') {
-      // Orders don't have a validate endpoint yet
-      // TODO: Implement if needed
+      await ordersService.validate(id);
     }
   }
 
@@ -65,8 +64,7 @@ export class DocumentsService {
     } else if (type === 'devis') {
       await quotesService.devalidate(id);
     } else if (type === 'bon_livraison') {
-      // Orders don't have a devalidate endpoint yet
-      // TODO: Implement if needed
+      await ordersService.devalidate(id);
     }
   }
 
@@ -76,8 +74,7 @@ export class DocumentsService {
     } else if (type === 'devis') {
       await quotesService.delete(id);
     } else if (type === 'bon_livraison') {
-      // Orders don't have a delete endpoint yet
-      // TODO: Implement if needed
+      await ordersService.delete(id);
     }
   }
 
@@ -136,7 +133,7 @@ export class DocumentsService {
       paidAmount: 0,
       remainingAmount: order.total || 0,
       status: order.status || 'draft',
-      isValidated: true, // Orders are always considered validated for now
+      isValidated: order.isValidated || false,
       itemsCount: order.items?.length || 0
     }));
   }

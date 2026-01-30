@@ -14,21 +14,6 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 
-// Component to show real-time next number from enhanced sequence data
-function RealTimeNextNumber({ sequence }: { sequence: Sequence }) {
-  const nextNumber = sequence.realTimeNextNumber ?? sequence.nextNumber;
-  const isRealTime = sequence.realTimeNextNumber !== undefined;
-
-  return (
-    <span 
-      className={`font-medium ${isRealTime ? 'text-green-600' : 'text-orange-600'}`}
-      title={isRealTime ? 'Real-time from database' : 'Using stored value (database unavailable)'}
-    >
-      {nextNumber}
-    </span>
-  );
-}
-
 export default function Sequences() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
@@ -221,7 +206,7 @@ export default function Sequences() {
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('name')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('entityType')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('format')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('nextNumber')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('nextDocumentNumber')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
             </tr>
@@ -241,42 +226,10 @@ export default function Sequences() {
                     {entityTypeOptions.find(opt => opt.value === sequence.entityType)?.label || sequence.entityType}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 font-mono">
-                    {(() => {
-                      const now = new Date();
-                      const year = now.getFullYear();
-                      const month = (now.getMonth() + 1).toString().padStart(2, '0');
-                      const day = now.getDate().toString().padStart(2, '0');
-                      const currentMonth = now.getMonth() + 1;
-                      const trimester = currentMonth <= 3 ? '01' : 
-                                       currentMonth <= 6 ? '04' : 
-                                       currentMonth <= 9 ? '07' : '10';
-                      
-                      let format = sequence.prefix;
-                      let dateComponents = [];
-                      
-                      if (sequence.yearInPrefix) dateComponents.push(year.toString());
-                      
-                      if (sequence.trimesterInPrefix && sequence.monthInPrefix) {
-                        dateComponents.push(trimester);
-                      } else if (sequence.trimesterInPrefix) {
-                        dateComponents.push(trimester);
-                      } else if (sequence.monthInPrefix) {
-                        dateComponents.push(month);
-                      }
-                      
-                      if (sequence.dayInPrefix) dateComponents.push(day);
-                      
-                      if (format && dateComponents.length > 0) format += ' ';
-                      if (dateComponents.length > 0) format += dateComponents.join('-') + '-';
-                      
-                      format += (sequence.realTimeNextNumber || sequence.nextNumber).toString().padStart(sequence.numberLength, '0');
-                      format += sequence.suffix;
-                      
-                      return format;
-                    })()}
+                    {sequence.format || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    <RealTimeNextNumber sequence={sequence} />
+                  <td className="px-6 py-4 text-sm font-medium text-green-600 font-mono">
+                    {sequence.nextDocumentNumber || 'N/A'}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 text-xs font-medium rounded ${sequence.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
