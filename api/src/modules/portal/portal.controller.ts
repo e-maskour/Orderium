@@ -9,9 +9,13 @@ export class PortalController {
 
   @Post('login')
   @ApiOperation({ summary: 'Portal login' })
-  async login(@Body() body: { email: string; password: string }) {
+  async login(@Body() body: { email?: string; phoneNumber?: string; password: string }) {
+    const emailOrPhone = body.email || body.phoneNumber;
+    if (!emailOrPhone) {
+      return { success: false, message: 'Email or phone number required' };
+    }
     const user = await this.portalService.validateUser(
-      body.email,
+      emailOrPhone,
       body.password,
     );
     if (!user) {

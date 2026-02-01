@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber: credentials.phoneNumber,
-          Password: credentials.password,
+          password: credentials.password,
         }),
       });
 
@@ -53,8 +53,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await response.json();
       
+      // Check if login was successful
+      if (!data.success) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
       // Verify it's an admin account
-      if (!data.user.IsAdmin) {
+      if (!data.user.isAdmin) {
         throw new Error('Access denied: Admin credentials required');
       }
       

@@ -3,12 +3,12 @@ import { Partner } from '../../modules/partners/entities/partner.entity';
 
 export async function seedPartners(dataSource: DataSource) {
   console.log('🔄 Seeding partners...');
-  
+
   const partnerRepository = dataSource.getRepository(Partner);
 
   // Check if "Client Comptoir" already exists
   const existingComptoir = await partnerRepository.findOne({
-    where: { name: 'Client Comptoir' }
+    where: { name: 'Client Comptoir' },
   });
 
   if (existingComptoir) {

@@ -7,12 +7,42 @@ import { formatCurrency, validateMoroccanPhone } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, ArrowRight, Package, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { partnersService, ordersService, Partner } from '@/modules';
 import { AddressInput } from '@/components/AddressInput';
+
+// Get API base URL from environment or use window origin
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
+const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
+
+// Helper to convert relative image paths to full URLs - supports multiple CDN providers
+const getImageUrl = (imageUrl?: string): string | undefined => {
+  if (!imageUrl) return undefined;
+  
+  // Already a full URL
+  if (imageUrl.startsWith('http')) return imageUrl;
+  
+  // Cloudinary (orderium/)
+  if (imageUrl.startsWith('orderium/')) {
+    return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
+  }
+  
+  // S3 URL
+  if (imageUrl.startsWith('s3://')) {
+    return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
+  }
+  
+  // Cloudflare (cf://)
+  if (imageUrl.startsWith('cf://')) {
+    return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
+  }
+  
+  // Relative path (LOCAL provider) - construct with API base URL
+  return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+};
 
 interface FormData {
   name: string;
@@ -189,25 +219,47 @@ const Checkout = () => {
         // Continue with order even if partner save fails
       }
 
-      // 2. Create order in database
-      const orderResult = await ordersService.create({
-        customerId: customerId,
-        customerPhone: formData.phone,
-        items: items.map(item => ({
+      // 2. Create order in database with calculated totals
+      const orderItems = items.map(item => {
+        const itemSubtotal = item.quantity * item.product.price;
+        const itemDiscount = 0; // No item-level discount in current implementation
+        const itemTotal = itemSubtotal - itemDiscount;
+        
+        return {
           productId: item.product.id,
           description: item.product.name || '',
           quantity: item.quantity,
-          price: item.product.price,
-          discount: 0,
+          unitPrice: item.product.price,
+          discount: itemDiscount,
           discountType: 0,
-        })),
+          tax: 0, // No tax in current implementation
+          total: itemTotal,
+        };
+      });
+
+      const orderSubtotal = subtotal; // Already calculated by cart context
+      const orderTax = 0; // No tax in current implementation
+      const orderDiscount = 0; // No order-level discount in current implementation
+      const orderTotal = orderSubtotal + orderTax - orderDiscount;
+
+      const orderResult = await ordersService.create({
+        customerId: customerId,
+        customerPhone: formData.phone,
+        items: orderItems,
         note: formData.address,
+        subtotal: orderSubtotal,
+        tax: orderTax,
+        discount: orderDiscount,
+        discountType: 0,
+        total: orderTotal,
+        fromPortal: true,
       });
 
       // 3. Navigate to success with order data (before clearing cart)
       navigate('/success', { 
         state: { 
           orderNumber: orderResult.documentNumber,
+          orderId: orderResult.order.id,
           total: subtotal,
           customerName: formData.name,
           customerPhone: formData.phone,
@@ -388,9 +440,9 @@ const Checkout = () => {
                       <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
                         {item.product.imageUrl ? (
                           <img
-                            src={item.product.imageUrl}
+                            src={getImageUrl(item.product.imageUrl)}
                             alt={displayName}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">

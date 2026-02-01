@@ -1,0 +1,48 @@
+export default {
+  // Orders Management
+  myOrders: 'طلباتي',
+  trackOrder: 'تتبع الطلب',
+  orderDetails: 'تفاصيل الطلب',
+  viewDetails: 'التفاصيل',
+  track: 'تتبع',
+  follow: 'تتبع',
+  trackYourOrder: 'تتبع طلبك',
+  placedOn: 'تاريخ الطلب',
+  previousOrders: 'طلبية سابقة',
+  
+  // Order Status
+  statusPending: 'قيد الانتظار',
+  statusToDelivery: 'للتوصيل',
+  statusInDelivery: 'قيد التوصيل',
+  statusDelivered: 'تم التسليم',
+  statusCanceled: 'ملغي',
+  statusAssigned: 'تم التعيين',
+  statustodelivery: 'للتوصيل',
+  statusindelivery: 'قيد التوصيل',
+  statusdelivered: 'تم التسليم',
+  statuscanceled: 'ملغي',
+  
+  // Status Descriptions
+  currentStatus: 'الحالة الحالية',
+  orderReceived: 'تم استلام طلبك',
+  readyToDeliver: 'جاهز للتوصيل',
+  deliveryAssigned: 'تم تعيين مندوب التوصيل',
+  onTheWay: 'في الطريق إليك',
+  deliveredSuccessfully: 'تم تسليم الطلب بنجاح',
+  orderCanceled: 'تم إلغاء الطلب',
+  orderWasCanceled: 'تم إلغاء هذا الطلب',
+  
+  // Order Errors & Messages
+  cannotLoadOrders: 'لا يمكن تحميل الطلبات',
+  noCustomerId: 'لا يوجد معرف عميل مرتبط بحسابك',
+  noOrders: 'لا توجد طلبات',
+  noOrdersYet: 'لم تقم بأي طلب بعد',
+  trackAndManage: 'تتبع وإدارة جميع طلباتك',
+  orderNotFound: 'الطلب غير موجود',
+  checkNumberAndRetry: 'تحقق من رقم الطلب وحاول مرة أخرى',
+  noData: 'لا توجد بيانات',
+  failedToLoad: 'فشل تحميل بيانات الطلب',
+  enterOrderNumber: 'أدخل رقم الطلب',
+  searchPlaceholder: 'البحث برقم الطلب أو العميل أو الهاتف...',
+  noResultsMessage: 'لا توجد طلبات تطابق بحثك',
+};

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSocket } from './useSocket';
 import { useToast } from './use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface UseOrderNotificationsOptions {
   token?: string;
@@ -10,9 +11,9 @@ interface UseOrderNotificationsOptions {
 }
 
 // Request notification permission
-const requestNotificationPermission = async () => {
+const requestNotificationPermission = async (t: (key: string) => string) => {
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
+    console.log(t('browserNotSupported'));
     return 'denied';
   }
 
@@ -52,6 +53,7 @@ export const useOrderNotifications = (options: UseOrderNotificationsOptions) => 
   const { token, customerId, enabled = true } = options;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
   const { isConnected, error, onOrderCreated, onOrderAssigned, onOrderStatusChanged, onOrderCancelled } = useSocket({
@@ -63,17 +65,17 @@ export const useOrderNotifications = (options: UseOrderNotificationsOptions) => 
 
   // Request notification permission on mount
   useEffect(() => {
-    if (enabled) {
-      requestNotificationPermission().then(setNotificationPermission);
+    if (enabled) {t).then(setNotificationPermission);
     }
+  }, [enabled, t
   }, [enabled]);
 
   useEffect(() => {
     if (!enabled || !isConnected) return;
 
     // Handle order created
-    const unsubscribeCreated = onOrderCreated((data) => {
-      const title = 'Order Created';
+    const unsubscribt('orderCreatedTitle');
+      const body = t('orderCreatedMessage').replace('{orderNumber}', data.orderNumber)
       const body = `Your order ${data.orderNumber} has been created successfully.`;
       
       toast({
@@ -91,8 +93,8 @@ export const useOrderNotifications = (options: UseOrderNotificationsOptions) => 
     });
 
     // Handle order assigned to delivery person
-    const unsubscribeAssigned = onOrderAssigned((data) => {
-      const title = 'Delivery Assigned';
+    const unsubscribt('deliveryAssignedTitle');
+      const body = t('deliveryAssignedMessage').replace('{orderNumber}', data.orderNumber)
       const body = `Your order ${data.orderNumber} has been assigned to a delivery person.`;
       
       toast({
@@ -112,13 +114,13 @@ export const useOrderNotifications = (options: UseOrderNotificationsOptions) => 
 
     // Handle order status change
     const unsubscribeStatusChanged = onOrderStatusChanged((data) => {
-      const statusMessages: Record<string, string> = {
-        to_delivery: 'Your order is confirmed and will be picked up soon.',
-        in_delivery: 'Your order is on the way!',
-        delivered: 'Your order has been delivered. Enjoy!',
+      const statusMest('orderStatusToDeliveryMessage'),
+        in_delivery: t('orderStatusInDeliveryMessage'),
+        delivered: t('orderStatusDeliveredMessage'),
       };
 
-      const title = 'Order Status Updated';
+      const title = t('orderStatusUpdatedTitle');
+      const body = statusMessages[data.status || ''] || t('orderStatusChangedMessage').replace('{orderNumber}', data.orderNumber)
       const body = statusMessages[data.status || ''] || `Order ${data.orderNumber} status changed.`;
 
       toast({
@@ -138,8 +140,8 @@ export const useOrderNotifications = (options: UseOrderNotificationsOptions) => 
 
     // Handle order cancelled
     const unsubscribeCancelled = onOrderCancelled((data) => {
-      const title = 'Order Cancelled';
-      const body = `Order ${data.orderNumber} has been cancelled.`;
+      const title = t('orderCancelledTitle');
+      const body = t('orderCancelledMessage').replace('{orderNumber}', data.orderNumber);
       
       toast({
         title,
@@ -163,7 +165,7 @@ export const useOrderNotifications = (options: UseOrderNotificationsOptions) => 
       unsubscribeStatusChanged();
       unsubscribeCancelled();
     };
-  }, [enabled, isConnected, onOrderCreated, onOrderAssigned, onOrderStatusChanged, onOrderCancelled, toast, queryClient]);
+  }, [enabled, isConnected, onOrderCreated, onOrderAssigned, onOrderStatusChanged, onOrderCancelled, toast, queryClient, t]);
 
   return {
     isConnected,

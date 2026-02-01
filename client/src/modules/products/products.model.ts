@@ -13,7 +13,14 @@ export class Product implements IProduct {
     public code: string | null = null,
     public description: string | null = null,
     public stock?: number | null,
-    public isPriceChangeAllowed?: boolean
+    public isPriceChangeAllowed?: boolean,
+    public imageUrl?: string,
+    public saleUnitOfMeasure?: {
+      id: number;
+      name: string;
+      code: string;
+      category: string;
+    }
   ) {}
 
   get displayPrice(): string {
@@ -96,7 +103,14 @@ export class Product implements IProduct {
       data.code || null,
       data.description || null,
       data.stock !== undefined ? (data.stock !== null ? parseInt(data.stock) : null) : undefined,
-      data.isPriceChangeAllowed
+      data.isPriceChangeAllowed,
+      data.imageUrl,
+      data.saleUnitOfMeasure ? {
+        id: data.saleUnitOfMeasure.id,
+        name: data.saleUnitOfMeasure.name,
+        code: data.saleUnitOfMeasure.code,
+        category: data.saleUnitOfMeasure.category
+      } : undefined
     );
   }
 
@@ -114,6 +128,8 @@ export class Product implements IProduct {
       dateUpdated: this.dateUpdated,
       stock: this.stock,
       isPriceChangeAllowed: this.isPriceChangeAllowed,
+      imageUrl: this.imageUrl,
+      saleUnitOfMeasure: this.saleUnitOfMeasure,
     };
   }
 }

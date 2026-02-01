@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
-import { createRoot } from 'react-dom/client';
+import { useEffect, useState, useMemo } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
@@ -7,14 +6,12 @@ import { ordersService } from '@/modules/orders';
 import { Order, OrderItem } from '@/modules/orders/orders.interface';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { OrderTracking } from '@/components/OrderTracking';
-import { Receipt } from '@/components/Receipt';
-import { Invoice } from '@/components/Invoice';
-import { Package, Loader2, MapPin, Calendar, ArrowLeft, ShoppingBag, Eye, Download, FileText } from 'lucide-react';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { Package, Loader2, MapPin, Calendar, ArrowLeft, ShoppingBag, Eye, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import { LanguageProvider } from '@/context/LanguageContext';
+import { toast } from 'sonner';
 
 export default function MyOrders() {
   const { t, language, dir } = useLanguage();
@@ -24,7 +21,30 @@ export default function MyOrders() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [selectedOrderItems, setSelectedOrderItems] = useState<{ order: Order; items: OrderItem[] } | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfTitle, setPdfTitle] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
+  
+  // Date filter states
+  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>(() => {
+    // Initialize with today's date
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    return { start: startOfDay, end: endOfDay };
+  });
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -47,6 +67,60 @@ export default function MyOrders() {
 
     fetchOrders();
   }, [user]);
+
+  // Filter orders by search, date, and status
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      // Date filter
+      if (dateRange.start && dateRange.end) {
+        const orderDate = new Date(order.dateCreated);
+        if (orderDate < dateRange.start || orderDate > dateRange.end) {
+          return false;
+        }
+      }
+
+      // Search filter
+      if (searchQuery) {
+        const matchesOrderNumber = order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCustomer = order.customerName?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesPhone = order.customerPhone?.toLowerCase().includes(searchQuery.toLowerCase());
+        if (!matchesOrderNumber && !matchesCustomer && !matchesPhone) {
+          return false;
+        }
+      }
+
+      // Status filter
+      if (statusFilter !== 'all') {
+        const normalizedStatus = order.status || 'pending';
+        if (normalizedStatus !== statusFilter) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [orders, searchQuery, dateRange, statusFilter]);
+
+  // Count orders by status
+  const statusCounts = useMemo(() => {
+    const counts = {
+      all: orders.length,
+      pending: 0,
+      to_delivery: 0,
+      in_delivery: 0,
+      delivered: 0,
+      canceled: 0,
+    };
+
+    orders.forEach(order => {
+      const status = order.status || 'pending';
+      if (status in counts) {
+        counts[status as keyof typeof counts]++;
+      }
+    });
+
+    return counts;
+  }, [orders]);
 
   const getStatusLabel = (status?: string) => {
     const statusMap: Record<string, { label: string; color: string }> = {
@@ -89,126 +163,29 @@ export default function MyOrders() {
     }
   };
 
-  const handleDownload = async (documentType: 'receipt' | 'invoice') => {
+  const handlePreview = (documentType: 'receipt' | 'invoice') => {
     if (!selectedOrderItems) return;
 
-    setIsGenerating(true);
-    try {
-      // Create off-screen container
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-99999px';
-      container.style.top = '0';
-      document.body.appendChild(container);
-
-      // Map items to CartItem format
-      const items = selectedOrderItems.items.map(item => ({
-        product: {
-          id: item.productId,
-          name: item.productName || `Product ${item.productId}`,
-          price: item.unitPrice,
-          code: null,
-          description: null,
-          cost: 0,
-          isService: false,
-          isEnabled: true,
-          dateCreated: '',
-          dateUpdated: '',
-        },
-        quantity: item.quantity
-      }));
-
-      // Render component
-      const root = createRoot(container);
-      
-      if (documentType === 'receipt') {
-        root.render(
-          <LanguageProvider>
-            <Receipt
-              orderNumber={selectedOrderItems.order.orderNumber}
-              customerName={user?.customerName || ''}
-              customerPhone={user?.phoneNumber || ''}
-              items={items}
-              subtotal={selectedOrderItems.order.total}
-              orderDate={new Date(selectedOrderItems.order.dateCreated)}
-            />
-          </LanguageProvider>
-        );
-      } else {
-        root.render(
-          <LanguageProvider>
-            <Invoice
-              orderNumber={selectedOrderItems.order.orderNumber}
-              customerName={user?.customerName || ''}
-              customerPhone={user?.phoneNumber || ''}
-              customerAddress={''}
-              items={items}
-              subtotal={selectedOrderItems.order.total}
-              orderDate={new Date(selectedOrderItems.order.dateCreated)}
-            />
-          </LanguageProvider>
-        );
-      }
-
-      // Wait for render
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Get element
-      const element = container.querySelector(documentType === 'receipt' ? '#receipt-content' : '#invoice-content') as HTMLElement;
-      if (!element) {
-        throw new Error('Element not found');
-      }
-
-      // Capture as canvas
-      const canvas = await html2canvas(element, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      // Create PDF with proper dimensions
-      if (documentType === 'receipt') {
-        const imgWidth = 80; // 80mm receipt width
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: [imgWidth, imgHeight],
-        });
-
-        const imgData = canvas.toDataURL('image/png', 1.0);
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`${t('receipt')}_${selectedOrderItems.order.orderNumber}.pdf`);
-      } else {
-        // Invoice: A5 size (148mm x 210mm)
-        const a5Width = 148;
-        const a5Height = 210;
-        const imgWidth = a5Width;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a5',
-        });
-
-        const imgData = canvas.toDataURL('image/png', 1.0);
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`${t('deliveryNote')}_${selectedOrderItems.order.orderNumber}.pdf`);
-      }
-
-      // Cleanup
-      root.unmount();
-      document.body.removeChild(container);
-    } catch (error) {
-      console.error('Failed to generate PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
-    } finally {
-      setIsGenerating(false);
+    const orderId = selectedOrderItems.order.id;
+    if (!orderId) {
+      toast.error(t('orderIdMissing'));
+      return;
     }
+
+    const endpoint = documentType === 'receipt' 
+      ? `/api/pdf/receipt/${orderId}?mode=preview`
+      : `/api/pdf/delivery-note/${orderId}?mode=preview`;
+    
+    const title = documentType === 'receipt'
+      ? t('receipt')
+      : t('deliveryNote');
+    
+    setPdfUrl(endpoint);
+    setPdfTitle(`${title} ${selectedOrderItems.order.orderNumber}`);
+    
+    // Close order details modal before opening preview
+    setSelectedOrderItems(null);
+    setShowPDFPreview(true);
   };
 
   if (isLoading) {
@@ -242,44 +219,117 @@ export default function MyOrders() {
 
   return (
     <div className="min-h-screen bg-background py-4 sm:py-6 px-3 sm:px-4" dir={dir}>
-      <div className="max-w-5xl mx-auto">
-        {/* Header with Back Button */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="mb-4 -ml-2"
-          >
-            <ArrowLeft className={`h-4 w-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-            <span className="ml-2">{t('backToHome')}</span>
-          </Button>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground flex items-center gap-2 sm:gap-3">
-            <ShoppingBag className="w-8 h-8 text-primary" />
-            {t('myOrders')}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {t('trackAndManage')}
-          </p>
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/')}
+                className="h-10 w-10 p-0"
+              >
+                <ArrowLeft className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+              </Button>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+                  <ShoppingBag className="w-7 h-7 text-primary" />
+                  {t('myOrders')}
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t('trackAndManage')}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Date Filter */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search Bar */}
+            <div className="relative flex-1">
+              <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5`} />
+              <input
+                type="text"
+                placeholder={t('searchPlaceholder')}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className={`w-full ${dir === 'rtl' ? 'pr-10 pl-10' : 'pl-10 pr-10'} py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all bg-background`}
+              />
+              {searchInput && (
+                <button
+                  onClick={() => setSearchInput('')}
+                  className={`absolute ${dir === 'rtl' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Date Range Picker */}
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              placeholder={t('filterByDate')}
+            />
+          </div>
         </div>
 
-        {orders.length === 0 ? (
-          <div className="bg-card rounded-xl shadow-card p-12 text-center">
+        {/* Status Filter Tabs */}
+        <div className="mb-6">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+            {[
+              { key: 'all', label: t('all') },
+              { key: 'pending', label: t('statusPending') },
+              { key: 'to_delivery', label: t('statusToDelivery') },
+              { key: 'in_delivery', label: t('statusInDelivery') },
+              { key: 'delivered', label: t('statusDelivered') },
+              { key: 'canceled', label: t('statusCanceled') }
+            ].map((filter) => (
+              <button
+                key={filter.key}
+                onClick={() => setStatusFilter(filter.key as any)}
+                className={`px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                  statusFilter === filter.key
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-card text-foreground hover:bg-muted border border-border'
+                }`}
+              >
+                {filter.label}
+                <span className={`ml-2 rtl:mr-2 rtl:ml-0 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                  statusFilter === filter.key 
+                    ? 'bg-primary-foreground/20 text-primary-foreground' 
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {statusCounts[filter.key as keyof typeof statusCounts]}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Orders List */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="bg-card rounded-xl shadow-sm border border-border p-12 text-center">
             <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {t('noOrders')}
+              {t('noOrdersFound')}
             </h3>
             <p className="text-muted-foreground">
-              {t('noOrdersYet')}
+              {searchQuery ? t('noResultsMessage') : t('noOrdersYet')}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            {orders.map((order) => {
+            {filteredOrders.map((order) => {
               const status = getStatusLabel(order.status);
               return (
                 <div
                   key={order.id}
-                  className="bg-card rounded-2xl shadow-card border border-border overflow-hidden hover:shadow-lg transition-all group"
+                  className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-all group"
                 >
                   {/* Order Header */}
                   <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-4 border-b border-border">
@@ -461,25 +511,23 @@ export default function MyOrders() {
                   </span>
                 </div>
 
-                {/* Download Buttons */}
+                {/* Preview Buttons */}
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    onClick={() => handleDownload('receipt')}
-                    disabled={isGenerating}
+                    onClick={() => handlePreview('receipt')}
                     variant="outline"
                     className="w-full"
                   >
-                    {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-                    {t('downloadReceipt')}
+                    <Eye className="w-4 h-4 mr-2" />
+                    {t('receipt')}
                   </Button>
                   <Button
-                    onClick={() => handleDownload('invoice')}
-                    disabled={isGenerating}
+                    onClick={() => handlePreview('invoice')}
                     variant="outline"
                     className="w-full"
                   >
-                    {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-                    {t('downloadDeliveryNote')}
+                    <Eye className="w-4 h-4 mr-2" />
+                    {t('deliveryNote')}
                   </Button>
                 </div>
               </div>
@@ -487,6 +535,14 @@ export default function MyOrders() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* PDF Preview Modal */}
+      <PDFPreviewModal
+        isOpen={showPDFPreview}
+        onClose={() => setShowPDFPreview(false)}
+        pdfUrl={pdfUrl}
+        title={pdfTitle}
+      />
     </div>
   );
 }

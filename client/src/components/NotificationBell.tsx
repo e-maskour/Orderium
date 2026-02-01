@@ -24,7 +24,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, dir } = useLanguage();
   const token = localStorage.getItem('authToken');
 
   // Socket connection
@@ -215,7 +215,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
   if (!customerId) return null;
 
   return (
-    <div className="relative">
+    <div className="relative" dir={dir}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -234,7 +234,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute end-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg z-50 border">
+          <div className="absolute end-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg z-50 border" dir={dir}>
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="font-semibold">{t('notifications')}</h3>
               {unreadCount > 0 && (

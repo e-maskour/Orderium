@@ -1,0 +1,48 @@
+export default {
+  // Orders Management
+  myOrders: 'Mes commandes',
+  trackOrder: 'Suivre commande',
+  orderDetails: 'Détails de commande',
+  viewDetails: 'Détails',
+  track: 'Suivre',
+  follow: 'Suivre',
+  trackYourOrder: 'Suivre votre commande',
+  placedOn: 'Date de commande',
+  previousOrders: 'commande(s) précédente(s)',
+  
+  // Order Status
+  statusPending: 'En attente',
+  statusToDelivery: 'À livrer',
+  statusInDelivery: 'En livraison',
+  statusDelivered: 'Livré',
+  statusCanceled: 'Annulé',
+  statusAssigned: 'Assigné',
+  statustodelivery: 'À livrer',
+  statusindelivery: 'En livraison',
+  statusdelivered: 'Livré',
+  statuscanceled: 'Annulé',
+  
+  // Status Descriptions
+  currentStatus: 'État actuel',
+  orderReceived: 'Commande reçue',
+  readyToDeliver: 'Prêt à livrer',
+  deliveryAssigned: 'Livreur assigné',
+  onTheWay: 'En route vers vous',
+  deliveredSuccessfully: 'Commande livrée avec succès',
+  orderCanceled: 'Commande annulée',
+  orderWasCanceled: 'Cette commande a été annulée',
+  
+  // Order Errors & Messages
+  cannotLoadOrders: 'Impossible de charger',
+  noCustomerId: 'Aucun ID client associé à votre compte',
+  noOrders: 'Aucune commande',
+  noOrdersYet: "Vous n'avez pas encore passé de commande",
+  trackAndManage: 'Suivez et gérez toutes vos commandes',
+  orderNotFound: 'Commande introuvable',
+  checkNumberAndRetry: 'Vérifiez le numéro et réessayez',
+  noData: 'Aucune donnée',
+  failedToLoad: 'Échec du chargement',
+  enterOrderNumber: 'Entrez le numéro',
+  searchPlaceholder: 'Rechercher par numéro, client ou téléphone...',
+  noResultsMessage: 'Aucune commande ne correspond à votre recherche',
+};

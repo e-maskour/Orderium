@@ -2,9 +2,11 @@ export interface CreateOrderItem {
   productId: number;
   description?: string;  // Added to match API requirement
   quantity: number;
-  price: number;
+  unitPrice: number;
   discount?: number;
   discountType?: number;
+  tax?: number;  // Tax percentage or amount for this item
+  total?: number;  // Calculated total for this item (unitPrice * quantity - discount)
 }
 
 export interface CreateOrderRequest {
@@ -13,6 +15,12 @@ export interface CreateOrderRequest {
   items: CreateOrderItem[];
   note?: string;
   internalNote?: string;
+  subtotal?: number;  // Sum of all item totals before tax
+  tax?: number;  // Total tax amount
+  total?: number;  // Final total (subtotal + tax - discount)
+  discount?: number;  // Order-level discount
+  discountType?: number;  // 0=amount, 1=percentage
+  fromPortal?: boolean;  // Indicates if order is from portal
 }
 
 export interface Order {
@@ -34,6 +42,7 @@ export interface Order {
   dateCreated: string;
   dateUpdated: string;
   isValidated?: boolean;
+  fromPortal?: boolean;  // Default to true
 }
 
 export interface OrderItem {
@@ -44,7 +53,6 @@ export interface OrderItem {
   description?: string;  // Added to match API
   quantity: number;
   unitPrice: number;
-  price?: number;  // API may return 'price' field
   discount: number;
   discountType: number;
   taxAmount?: number;

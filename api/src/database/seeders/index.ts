@@ -4,6 +4,7 @@ import { seedConfigurations } from './configurations.seeder';
 import { seedWarehouses } from './warehouse.seeder';
 import { seedUnitOfMeasures } from './uom.seeder';
 import { seedPartners } from './partners.seeder';
+import { seedPortal } from './portal.seeder';
 
 export async function runSeeders(dataSource: DataSource) {
   console.log('🌱 Running database seeders...\n');
@@ -12,6 +13,7 @@ export async function runSeeders(dataSource: DataSource) {
     await seedWarehouses(dataSource);
     await seedUnitOfMeasures(dataSource);
     await seedPartners(dataSource);
+    await seedPortal(dataSource);
     await seedConfigurations(dataSource);
     
     console.log('\n✅ All seeders completed successfully');

@@ -59,12 +59,16 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
       } else {
         setQuantity('');
       }
-    }
-    
-    if (isOpen && inputRef.current) {
+      
+      // Focus input after setting quantity
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [isOpen, initialQuantity, product, getItemQuantity]);
+    
+    // Reset quantity when modal closes
+    if (!isOpen) {
+      setQuantity('');
+    }
+  }, [isOpen, product?.id, initialQuantity]); // Removed getItemQuantity and only depend on product.id
 
   if (!product || !isOpen) return null;
 
@@ -75,36 +79,63 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
       setQuantity('');
-    } else {
-      const newValue = quantity === '' ? num : quantity + num;
-      const numValue = parseInt(newValue);
-      if (numValue <= maxQuantity && numValue > 0) {
+    } else if (num === '.') {
+      // Only add decimal point if there isn't one already
+      if (!quantity.includes('.')) {
+        const newValue = quantity === '' ? '0.' : quantity + '.';
         setQuantity(newValue);
       }
+    } else {
+      const newValue = quantity === '' ? num : quantity + num;
+      // Check if adding this number would exceed 2 decimal places
+      if (newValue.includes('.')) {
+        const [, decimal] = newValue.split('.');
+        if (decimal && decimal.length > 2) {
+          return; // Don't add if it would exceed 2 decimal places
+        }
+      }
+      setQuantity(newValue);
     }
+    // Restore focus after button click
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    if (value === '' || value === '0') {
+    const value = e.target.value.replace(/[^0-9.]/g, '');
+    // Only allow one decimal point
+    const parts = value.split('.');
+    let sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : value;
+    
+    // Limit decimal places to 2
+    if (sanitizedValue.includes('.')) {
+      const [integer, decimal] = sanitizedValue.split('.');
+      if (decimal && decimal.length > 2) {
+        sanitizedValue = integer + '.' + decimal.substring(0, 2);
+      }
+    }
+    
+    if (sanitizedValue === '' || sanitizedValue === '0') {
       setQuantity('');
     } else {
-      const numValue = parseInt(value);
-      if (numValue <= maxQuantity) {
-        setQuantity(value);
-      }
+      setQuantity(sanitizedValue);
     }
   };
 
   const handleAddToCart = () => {
-    const qty = parseInt(quantity);
+    const qty = parseFloat(quantity);
     if (!qty || qty <= 0) return;
     
     if (currentCartQuantity > 0) {
       updateQuantity(product.id, qty);
     } else {
-      for (let i = 0; i < qty; i++) {
-        addItem(product);
+      // For decimal quantities, add as single item with quantity
+      if (qty % 1 !== 0) {
+        addItem(product, qty);
+      } else {
+        // For whole numbers, keep existing behavior
+        for (let i = 0; i < qty; i++) {
+          addItem(product);
+        }
       }
     }
     setQuantity('');
@@ -116,25 +147,33 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
     onClose();
   };
 
-  const totalPrice = product.price * (parseInt(quantity) || 0);
-  const hasQuantity = quantity !== '' && parseInt(quantity) > 0;
-  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0'];
+  const totalPrice = product.price * (parseFloat(quantity) || 0);
+  const hasQuantity = quantity !== '' && parseFloat(quantity) > 0;
+  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
+  
+  // Get the unit code from product's saleUnitOfMeasure, default to 'UNIT'
+  const unitCode = product.saleUnitOfMeasure?.code || 'UNIT';
 
   const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" dir={dir}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" dir={dir}>
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm z-0 pointer-events-auto"
         onClick={handleClose}
         style={{ animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards' }}
       />
       <div 
-        className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden"
+        className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden z-10 pointer-events-auto touch-auto"
         style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
       >
         <div className="relative bg-gradient-to-br from-primary/10 to-primary/5 p-3 sm:p-4 border-b border-gray-200">
           <button
+            type="button"
             onClick={handleClose}
-            className={cn("absolute top-3 sm:top-4 w-8 h-8 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center shadow-sm transition-all hover:scale-110", dir === 'rtl' ? 'left-3 sm:left-4' : 'right-3 sm:right-4')}
+            className={cn(
+              "absolute top-3 sm:top-4 w-8 h-8 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center shadow-sm transition-all hover:scale-110 touch-manipulation cursor-pointer select-none", 
+              dir === 'rtl' ? 'left-3 sm:left-4' : 'right-3 sm:right-4'
+            )}
+            aria-label="Close"
           >
             <X className="w-4 h-4 text-gray-700" />
           </button>
@@ -142,7 +181,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
             <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">{displayName}</h2>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(product.price, language)}</span>
-              <span className="text-xs sm:text-sm text-gray-500">{t('perUnit')}</span>
+              <span className="text-xs sm:text-sm text-gray-500">/ {unitCode}</span>
             </div>
             {product.code && <p className="text-xs text-gray-500">{t('code')}: {product.code}</p>}
           </div>
@@ -150,11 +189,23 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
         <div className="p-3 sm:p-4 space-y-3 sm:space-y-4" style={{ animation: 'contentStagger 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards' }}>
           <div className="space-y-2">
             <label className="text-xs sm:text-sm font-semibold text-gray-700 block">{t('quantity')}</label>
-            <input ref={inputRef} type="number" inputMode="numeric" value={quantity} onChange={handleInputChange} className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="0" max={maxQuantity} />
+            <input ref={inputRef} type="text" inputMode="decimal" value={quantity} onChange={handleInputChange} className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
           </div>
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {numbers.map((num) => (
-              <button key={num} onClick={() => handleNumberClick(num)} className={cn("h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95", num === 'C' ? "bg-red-500 hover:bg-red-600 text-white shadow-sm" : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300")}>
+              <button 
+                key={num} 
+                type="button"
+                onClick={() => handleNumberClick(num)} 
+                className={cn(
+                  "h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 touch-manipulation select-none cursor-pointer", 
+                  num === 'C' 
+                    ? "bg-red-500 hover:bg-red-600 text-white shadow-sm" 
+                    : num === '.'
+                    ? "bg-blue-500 hover:bg-blue-600 text-white shadow-sm"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
+                )}
+              >
                 {num === 'C' ? <span className="text-xs sm:text-sm">{t('clear')}</span> : num}
               </button>
             ))}
@@ -166,7 +217,12 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
             </div>
           )}
           {hasQuantity && (
-            <Button onClick={handleAddToCart} className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 text-white hover:scale-[1.02]" style={{ animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}>
+            <Button 
+              type="button"
+              onClick={handleAddToCart} 
+              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 text-white hover:scale-[1.02] touch-manipulation cursor-pointer" 
+              style={{ animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}
+            >
               <ShoppingCart className={cn("w-4 h-4 sm:w-5 sm:h-5", dir === 'rtl' ? 'ms-2' : 'me-2')} />
               {currentCartQuantity > 0 ? t('updateQty') : t('addToCart')}
             </Button>

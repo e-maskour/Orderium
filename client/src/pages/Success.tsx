@@ -4,17 +4,15 @@ import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CheckCircle2, Home, Download, Eye, FileText, Receipt as ReceiptIcon, X, Share2, MapPin, Package } from 'lucide-react';
-import { Receipt } from '@/components/Receipt';
-import { Invoice } from '@/components/Invoice';
+import { CheckCircle2, Home, FileText, Receipt as ReceiptIcon, MapPin, Package, Sparkles, User, Phone } from 'lucide-react';
 import { OrderTracking } from '@/components/OrderTracking';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { CartItem } from '@/context/CartContext';
-import { useState, useRef } from 'react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { useState } from 'react';
 
 interface SuccessState {
   orderNumber: string;
+  orderId: number;
   total: number;
   customerName: string;
   customerPhone?: string;
@@ -27,308 +25,192 @@ const Success = () => {
   const { language, t, dir } = useLanguage();
   const { user } = useAuth();
   const state = location.state as SuccessState | null;
-  const receiptRef = useRef<HTMLDivElement>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showTracking, setShowTracking] = useState(false);
   const [documentType, setDocumentType] = useState<'receipt' | 'invoice'>('receipt');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfTitle, setPdfTitle] = useState('');
 
   // Redirect if accessed directly without order data
-  if (!state?.orderNumber || !state?.items) {
+  if (!state?.orderNumber || !state?.items || !state?.orderId) {
     return <Navigate to="/" replace />;
   }
 
-  const handlePreview = () => {
-    setShowPreview(!showPreview);
-  };
+  // Get orderId from state
+  const orderId = state.orderId;
 
-  const handleShareWhatsApp = () => {
-    const message = language === 'ar'
-      ? `تم تأكيد طلبك بنجاح!\n\nرقم الطلب: ${state.orderNumber}\nالعميل: ${state.customerName}\nالمبلغ الإجمالي: ${formatCurrency(state.total, language)}\n\nشكراً لتعاملك معنا!`
-      : `Votre commande a été confirmée avec succès!\n\nNuméro de commande: ${state.orderNumber}\nClient: ${state.customerName}\nMontant total: ${formatCurrency(state.total, language)}\n\nMerci pour votre confiance!`;
+  const handlePreview = async (type: 'receipt' | 'invoice') => {
+    const endpoint = type === 'receipt' 
+      ? `/api/pdf/receipt/${orderId}?mode=preview`
+      : `/api/pdf/delivery-note/${orderId}?mode=preview`;
     
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const handleDownload = async () => {
-    if (!receiptRef.current) return;
-
-    setIsGenerating(true);
-    try {
-      // Temporarily show the receipt for rendering
-      const wasHidden = !showPreview;
-      if (wasHidden) setShowPreview(true);
-
-      // Wait for next tick to ensure DOM is updated
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(
-        `${documentType === 'invoice' ? t('deliveryNote') : t('receipt')}_${state.orderNumber}.pdf`
-      );
-
-      // Hide preview again if it was hidden
-      if (wasHidden) setShowPreview(false);
-    } catch (error) {
-      console.error('Failed to generate PDF:', error);
-      alert(t('documentGenerationFailed'));
-    } finally {
-      setIsGenerating(false);
-    }
+    const title = type === 'receipt'
+      ? t('receipt')
+      : t('deliveryNote');
+    
+    setDocumentType(type);
+    setPdfUrl(endpoint);
+    setPdfTitle(`${title} ${state.orderNumber}`);
+    setShowPreview(true);
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-3 sm:p-4" dir={dir}>
-      <div className="max-w-4xl w-full text-center">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-3" dir={dir}>
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-300/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+
+      <div className="max-w-4xl w-full relative z-10">
         {/* Success animation */}
-        <div className="relative mb-6 sm:mb-8">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mx-auto shadow-lg animate-scale-in">
-            <CheckCircle2 className="w-12 h-12 sm:w-14 sm:h-14 text-white" />
+        <div className="relative mb-4">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 flex items-center justify-center mx-auto shadow-2xl animate-scale-in">
+            <CheckCircle2 className="w-10 h-10 text-white drop-shadow-lg" />
           </div>
-          <div className="absolute inset-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-green-400/30 mx-auto animate-ping" />
+          <div className="absolute inset-0 w-16 h-16 rounded-full bg-emerald-400/30 mx-auto animate-ping" />
+          <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-yellow-400 animate-pulse" />
         </div>
 
-        {/* Content */}
-        <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-medium animate-slide-up" style={{ animationDelay: '200ms' }}>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2">
-            {t('orderSuccess')}
-          </h1>
-          
-          <p className="text-muted-foreground mb-6">
-            {t('thankYou')}, {state.customerName}!
-          </p>
-
-          {/* Order details */}
-          <div className="bg-secondary rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-muted-foreground">{t('orderNumber')}</span>
-              <span className="font-mono font-bold text-primary">{state.orderNumber}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">{t('total')}</span>
-              <span className="text-xl font-bold text-foreground">
-                {formatCurrency(state.total, language)}
-              </span>
-            </div>
+        {/* Main Content Card */}
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden animate-slide-up" style={{ animationDelay: '200ms' }}>
+          {/* Header Section */}
+          <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 p-3 text-center">
+            <h1 className="text-xl font-bold text-white mb-1 drop-shadow-lg">
+              {t('orderSuccess')}
+            </h1>
+            <p className="text-emerald-50 text-sm font-medium">
+              {t('thankYou')}, {state.customerName}! 🎉
+            </p>
           </div>
 
-          {/* Order Tracking Button - Animated */}
-          <div className="mb-6">
+          {/* Order Details Section */}
+          <div className="p-4 space-y-3">
+            {/* Order Summary Card */}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-3 border-2 border-emerald-200 dark:border-emerald-700 shadow-lg">
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-300 dark:border-gray-600">
+                <div className="flex items-center gap-2">
+                  <ReceiptIcon className="w-4 h-4 text-emerald-600" />
+                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">{t('orderNumber')}</span>
+                </div>
+                <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
+                  {state.orderNumber}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-lg">
+                  <User className="w-4 h-4 text-teal-600" />
+                  <div>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">{t('customer')}</p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{state.customerName}</p>
+                  </div>
+                </div>
+                
+                {state.customerPhone && (
+                  <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-lg">
+                    <Phone className="w-4 h-4 text-cyan-600" />
+                    <div>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{t('phone') || 'Phone'}</p>
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{state.customerPhone}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 border-t border-gray-300 dark:border-gray-600 flex items-center justify-between">
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{t('total')}</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                  {formatCurrency(state.total, language)}
+                </span>
+              </div>
+            </div>
+
+            {/* Order Tracking - Premium Design */}
             <Button
               onClick={() => setShowTracking(true)}
-              size="lg"
-              className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all relative overflow-hidden group"
+              size="sm"
+              className="w-full h-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold shadow-lg hover:shadow-xl transition-all group"
             >
-              {/* Animated background pulse */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
-              
-              {/* Icon with animation */}
-              <Package className="w-5 h-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
-              
-              {/* Text */}
-              <span className="relative z-10">
-                {t('trackYourOrder')}
-              </span>
-              
-              {/* Moving dot indicator */}
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1">
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-              </div>
+              <Package className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+              <span className="text-sm">{t('trackYourOrder')}</span>
             </Button>
-          </div>
 
-          {/* Document Type Selection */}
-          <div className="mb-6 sm:mb-8">
-            <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 sm:mb-4">
-              {t('chooseDocumentType')}
-            </p>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <Button
-                variant={documentType === 'receipt' ? 'default' : 'outline'}
-                onClick={() => setDocumentType('receipt')}
-                size="lg"
-                className={`h-20 flex flex-col gap-2 transition-all ${
-                  documentType === 'receipt'
-                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg scale-105 text-white'
-                    : 'hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600'
-                }`}
-              >
-                <ReceiptIcon className="w-6 h-6" />
-                <span className="text-sm font-semibold">
-                  {t('receipt')}
-                </span>
-              </Button>
-              <Button
-                variant={documentType === 'invoice' ? 'default' : 'outline'}
-                onClick={() => setDocumentType('invoice')}
-                size="lg"
-                className={`h-20 flex flex-col gap-2 transition-all ${
-                  documentType === 'invoice'
-                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg scale-105 text-white'
-                    : 'hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600'
-                }`}
-              >
-                <FileText className="w-6 h-6" />
-                <span className="text-sm font-semibold">
-                  {t('deliveryNote')}
-                </span>
-              </Button>
+            {/* Document Preview Buttons */}
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handlePreview('receipt')}
+                  className="relative p-3 rounded-xl border-2 transition-all duration-300 bg-gradient-to-br from-emerald-500 to-teal-500 border-emerald-400 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                >
+                  <ReceiptIcon className="w-6 h-6 mx-auto mb-1 text-white" />
+                  <span className="block text-xs font-bold text-white">
+                    {t('receipt')}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => handlePreview('invoice')}
+                  className="relative p-3 rounded-xl border-2 transition-all duration-300 bg-gradient-to-br from-teal-500 to-cyan-500 border-teal-400 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                >
+                  <FileText className="w-6 h-6 mx-auto mb-1 text-white" />
+                  <span className="block text-xs font-bold text-white">
+                    {t('deliveryNote')}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="mt-2">
+              <Link to="/" className="block">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-10 border-2 border-gray-300 dark:border-gray-600 hover:shadow-xl font-semibold transition-all"
+                >
+                  <Home className="w-3.5 h-3.5 mr-1" />
+                  <span className="text-xs">{t('backToHome')}</span>
+                </Button>
+              </Link>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-            <Button
-              onClick={handlePreview}
-              size="lg"
-              className="w-full h-12 sm:h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
-            >
-              <Eye className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              {t('preview')} {documentType === 'invoice' ? t('deliveryNote') : t('receipt')}
-            </Button>
-
-            <Button
-              onClick={handleDownload}
-              disabled={isGenerating}
-              size="lg"
-              className="w-full h-12 sm:h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 text-sm sm:text-base"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  {t('generating')}
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  {t('download')} PDF
-                </>
-              )}
-            </Button>
-
-            <Button
-              onClick={handleShareWhatsApp}
-              size="lg"
-              className="w-full h-12 sm:h-14 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
-            >
-              <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              {t('shareWhatsApp')}
-            </Button>
-          </div>
-
-          <Link to="/" className="block">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full h-11 sm:h-12 border-2 hover:bg-gray-100 hover:text-gray-900 font-semibold transition-all text-sm sm:text-base"
-            >
-              <Home className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              {t('backToHome')}
-            </Button>
-          </Link>
         </div>
 
         {/* Document Preview Modal */}
-        <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
-            <DialogHeader>
-              <DialogTitle className="text-base sm:text-lg md:text-xl font-bold">
-                {`${t('previewDocument')} ${documentType === 'invoice' ? t('deliveryNote') : t('receipt')}`}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="mt-3 sm:mt-4 overflow-x-auto">
-              <div className="min-w-[300px] scale-90 sm:scale-95 md:scale-100 origin-top">
-              {documentType === 'receipt' ? (
-                <Receipt
-                  orderNumber={state.orderNumber}
-                  customerName={state.customerName}
-                  customerPhone={state.customerPhone || ''}
-                  customerAddress={state.customerAddress}
-                  items={state.items}
-                  subtotal={state.total}
-                  orderDate={new Date()}
-                />
-              ) : (
-                <Invoice
-                  orderNumber={state.orderNumber}
-                  customerName={state.customerName}
-                  customerPhone={state.customerPhone || ''}
-                  customerAddress={state.customerAddress}
-                  items={state.items}
-                  subtotal={state.total}
-                  orderDate={new Date()}
-                />
-              )}
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <PDFPreviewModal
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+          pdfUrl={pdfUrl}
+          title={pdfTitle}
+        />
 
         {/* Order Tracking Modal */}
         <Dialog open={showTracking} onOpenChange={setShowTracking}>
-          <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-white dark:bg-gray-800">
             <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl font-bold flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" />
+              <DialogTitle className="text-lg sm:text-xl font-bold flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-white" />
+                </div>
                 {t('trackOrder')}
               </DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
-              <div className="bg-secondary/50 rounded-lg p-3 mb-4">
-                <p className="text-xs text-muted-foreground">{t('orderNumber')}</p>
-                <p className="font-mono font-bold text-primary">{state.orderNumber}</p>
+            <div className="mt-4 sm:mt-6">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-4 mb-6 border-2 border-blue-200 dark:border-blue-700">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{t('orderNumber')}</p>
+                  <p className="font-mono font-bold text-lg text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-lg shadow-sm">
+                    {state.orderNumber}
+                  </p>
+                </div>
               </div>
-              {user?.CustomerId && (
+              {user?.customerId && (
                 <OrderTracking orderNumber={state.orderNumber} customerId={user.customerId} />
               )}
             </div>
           </DialogContent>
         </Dialog>
-
-        {/* Hidden Document for PDF Generation */}
-        <div ref={receiptRef} className="hidden">
-          {documentType === 'receipt' ? (
-            <Receipt
-              orderNumber={state.orderNumber}
-              customerName={state.customerName}
-              customerPhone={state.customerPhone || ''}
-              customerAddress={state.customerAddress}
-              items={state.items}
-              subtotal={state.total}
-              orderDate={new Date()}
-            />
-          ) : (
-            <Invoice
-              orderNumber={state.orderNumber}
-              customerName={state.customerName}
-              customerPhone={state.customerPhone || ''}
-              customerAddress={state.customerAddress}
-              items={state.items}
-              subtotal={state.total}
-              orderDate={new Date()}
-            />
-          )}
-        </div>
       </div>
     </div>
   );

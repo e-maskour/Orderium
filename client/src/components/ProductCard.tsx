@@ -18,6 +18,36 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
   const { addItem, removeItem, getItemQuantity, updateQuantity } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  // Get API base URL from environment or use window origin
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+  const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
+  const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
+
+  // Helper to convert relative image paths to full URLs - supports multiple CDN providers
+  const getImageUrl = (imageUrl?: string): string | undefined => {
+    if (!imageUrl) return undefined;
+    
+    // Already a full URL
+    if (imageUrl.startsWith('http')) return imageUrl;
+    
+    // Cloudinary (orderium/)
+    if (imageUrl.startsWith('orderium/')) {
+      return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
+    }
+    
+    // S3 URL
+    if (imageUrl.startsWith('s3://')) {
+      return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
+    }
+    
+    // Cloudflare (cf://)
+    if (imageUrl.startsWith('cf://')) {
+      return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
+    }
+    // Relative path (LOCAL provider) - construct with API base URL
+    return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+  };
+  
   const quantity = getItemQuantity(product.id);
   
   const displayName = product.name;
@@ -70,14 +100,14 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
           <div className="relative w-16 h-16 sm:w-18 sm:h-18 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
             {product.imageUrl ? (
               <img
-                src={product.imageUrl}
+                src={getImageUrl(product.imageUrl)}
                 alt={displayName}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                <Package className="w-8 h-8 text-gray-300" />
+                <Package className="w-4 h-4 text-gray-300" />
               </div>
             )}
           </div>
@@ -126,23 +156,23 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
         dir={dir}
       >
       {/* Image */}
-      <div className="relative aspect-square bg-gray-100 overflow-hidden">
+      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
         {product.imageUrl ? (
           <img
-            src={product.imageUrl}
+            src={getImageUrl(product.imageUrl)}
             alt={displayName}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-            <Package className="w-6 h-6 text-gray-300" />
+            <Package className="w-8 h-8 text-gray-300" />
           </div>
         )}
 
         {/* Quantity badge when in cart */}
         {quantity > 0 && (
-          <div className="absolute top-1 end-1 min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md">
+          <div className={`absolute top-1 ${dir === 'rtl' ? 'left-1' : 'right-1'} min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md`}>
             {quantity}
           </div>
         )}
@@ -150,7 +180,7 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
 
       {/* Content */}
       <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
-        <h3 className="font-medium text-gray-900 line-clamp-2 leading-tight mb-1 text-[11px] sm:text-xs">
+        <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
           {displayName}
         </h3>
 

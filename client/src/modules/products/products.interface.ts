@@ -11,6 +11,13 @@ export interface Product {
   dateUpdated: string;
   stock?: number | null;
   isPriceChangeAllowed?: boolean;
+  imageUrl?: string;
+  saleUnitOfMeasure?: {
+    id: number;
+    name: string;
+    code: string;
+    category: string;
+  };
 }
 
 export interface GetProductsParams {

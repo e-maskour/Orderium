@@ -18,7 +18,7 @@ interface OrderStatus {
 }
 
 export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) => {
-  const { t, language } = useLanguage();
+  const { t, language, dir } = useLanguage();
   const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +170,7 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full" dir={dir}>
       {/* Timeline */}
       <div className="relative">
         {statuses.map((status, index) => {
