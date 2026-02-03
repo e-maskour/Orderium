@@ -20,4 +20,25 @@ export default {
   // Validation
   passwordRequired: 'كلمة المرور مطلوبة للمندوبين الجدد',
   minSixCharacters: 'على الأقل 6 أحرف',
+  
+  // Button States
+  updating: 'جاري التحديث...',
+  creatingDeliveryPerson: 'جاري الإنشاء...',
+  
+  // Tabs
+  dashboard: 'لوحة القيادة',
+  deliveryPersonList: 'قائمة عمال التوصيل',
+  
+  // Placeholders & Labels
+  searchDeliveryPersons: 'البحث عن عمال التوصيل...',
+  seeDetails: 'عرض',
+  edit: 'تعديل',
+  delete: 'حذف',
+  confirmDelete: 'حذف عامل التوصيل',
+  addDeliveryPersonTitle: 'إضافة عامل توصيل',
+  editDeliveryPersonTitle: 'تعديل عامل التوصيل',
+  
+  // Error Messages
+  error: 'خطأ',
+  passwordRequiredError: 'كلمة المرور مطلوبة',
 };

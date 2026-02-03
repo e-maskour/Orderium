@@ -20,6 +20,19 @@ async function bootstrap() {
   const uploadsDir = path.join(process.cwd(), 'uploads');
   app.use('/uploads', express.static(uploadsDir));
 
+  // Root path handler - redirect to API documentation or health check
+  app.use('/', (req, res, next) => {
+    if (req.path === '/') {
+      return res.json({
+        message: 'Orderium API',
+        version: '1.0.0',
+        docs: '/api/docs',
+        health: '/api/health',
+      });
+    }
+    next();
+  });
+
   // Global prefix
   app.setGlobalPrefix('api');
 

@@ -9,7 +9,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { toast } from 'sonner';
 
 export default function Warehouses() {
-  const { dir } = useLanguage();
+  const { dir, t } = useLanguage();
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,7 +44,7 @@ export default function Warehouses() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouses'] });
       handleCloseModal();
-      toast.success('Warehouse created successfully');
+      toast.success(t('warehouseCreated'));
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to create warehouse');
@@ -58,7 +58,7 @@ export default function Warehouses() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouses'] });
       handleCloseModal();
-      toast.success('Warehouse updated successfully');
+      toast.success(t('warehouseUpdated'));
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to update warehouse');
@@ -70,7 +70,7 @@ export default function Warehouses() {
     mutationFn: (id: number) => warehousesService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouses'] });
-      toast.success('Warehouse deleted successfully');
+      toast.success(t('warehouseDeleted'));
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to delete warehouse');
@@ -135,15 +135,15 @@ export default function Warehouses() {
     <AdminLayout>
       <PageHeader
         icon={Building2}
-        title="Warehouses"
-        subtitle="Manage your warehouses and storage facilities"
+        title={t('warehouses')}
+        subtitle={t('manageWarehousesSubtitle')}
         actions={
           <button
             onClick={() => handleOpenModal()}
             className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Warehouse
+            {t('addWarehouse')}
           </button>
         }
       />
@@ -154,7 +154,7 @@ export default function Warehouses() {
           <Search className={`absolute top-3 ${dir === 'rtl' ? 'right-3' : 'left-3'} w-5 h-5 text-slate-400`} />
           <input
             type="text"
-            placeholder="Search warehouses..."
+            placeholder={t('searchWarehouses')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full ${dir === 'rtl' ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2.5 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all`}
@@ -240,7 +240,7 @@ export default function Warehouses() {
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-slate-200">
               <h2 className="text-xl font-semibold text-slate-900">
-                {editingWarehouse ? 'Edit Warehouse' : 'Add Warehouse'}
+                {editingWarehouse ? t('editWarehouse') : t('addWarehouse')}
               </h2>
             </div>
 
@@ -256,7 +256,7 @@ export default function Warehouses() {
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                    placeholder="WH-001"
+                    placeholder={t('warehouseCode')}
                   />
                 </div>
 
@@ -270,7 +270,7 @@ export default function Warehouses() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                    placeholder="Main Warehouse"
+                    placeholder={t('warehouseNamePlaceholder')}
                   />
                 </div>
               </div>
@@ -282,7 +282,7 @@ export default function Warehouses() {
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                  placeholder="123 Main St"
+                  placeholder={t('locationPlaceholder')}
                 />
               </div>
 
@@ -293,7 +293,7 @@ export default function Warehouses() {
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                  placeholder="Casablanca"
+                  placeholder={t('cityName')}
                 />
               </div>
 

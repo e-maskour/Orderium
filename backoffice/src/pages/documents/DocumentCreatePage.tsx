@@ -9,6 +9,7 @@ import { invoicesService } from '../../modules/invoices/invoices.service';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { ordersService } from '../../modules/orders/orders.service';
 import AlertDialog from '../../components/AlertDialog';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface DocumentCreatePageProps {
   documentType: DocumentType;
@@ -25,6 +26,7 @@ export default function DocumentCreatePage({
 }: DocumentCreatePageProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState<{ title: string; message: string; type: 'success' | 'error' | 'warning' | 'info' }>({
@@ -60,8 +62,8 @@ export default function DocumentCreatePage({
     // Validation
     if (!partner) {
       setAlertMessage({
-        title: 'Erreur',
-        message: `Veuillez sélectionner un ${config.partnerLabel.toLowerCase()}`,
+        title: t('error'),
+        message: `${t('pleaseSelect')} ${config.partnerLabel.toLowerCase()}`,
         type: 'error'
       });
       setShowAlert(true);
@@ -70,8 +72,8 @@ export default function DocumentCreatePage({
 
     if (items.length === 0) {
       setAlertMessage({
-        title: 'Erreur',
-        message: 'Veuillez ajouter au moins un article',
+        title: t('error'),
+        message: t('pleaseAddAtLeastOneItem'),
         type: 'error'
       });
       setShowAlert(true);
@@ -80,8 +82,8 @@ export default function DocumentCreatePage({
 
     if (!date) {
       setAlertMessage({
-        title: 'Erreur',
-        message: 'Veuillez sélectionner une date',
+        title: t('error'),
+        message: t('pleaseSelectDate'),
         type: 'error'
       });
       setShowAlert(true);
@@ -170,12 +172,12 @@ export default function DocumentCreatePage({
           note: documentData.notes || '',
         });
       } else {
-        throw new Error('Type de document non supporté');
+        throw new Error(t('unsupportedDocumentType'));
       }
       
       setAlertMessage({
-        title: 'Succès',
-        message: `${config.titleShort} créée avec succès`,
+        title: t('success'),
+        message: `${config.titleShort} ${t('createdSuccessfully')}`,
         type: 'success'
       });
       setShowAlert(true);
@@ -201,8 +203,8 @@ export default function DocumentCreatePage({
     } catch (error: any) {
       console.error('Error creating document:', error);
       setAlertMessage({
-        title: 'Erreur',
-        message: error.message || `Erreur lors de la création de la ${config.titleShort.toLowerCase()}`,
+        title: t('error'),
+        message: error.message || `${t('error')} lors de la création de la ${config.titleShort.toLowerCase()}`,
         type: 'error'
       });
       setShowAlert(true);
@@ -213,28 +215,28 @@ export default function DocumentCreatePage({
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto pb-24">
+      <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
         {/* Simplified Header with Back Button */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-start sm:items-center gap-2 sm:gap-3">
             <button
               onClick={() => navigate(listRoute)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0"
             >
-              <ArrowLeft className="w-5 h-5 text-slate-600" />
+              <ArrowLeft className="w-4 sm:w-5 h-4 sm:h-5 text-slate-600" />
             </button>
-            <div>
-              <h1 className="text-xl font-semibold text-slate-900">
-                Nouvelle {config.titleShort}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">
+                {t('new')} {config.titleShort}
               </h1>
-              <p className="text-sm text-slate-500">Créer une nouvelle {config.titleShort.toLowerCase()}</p>
+              <p className="text-xs sm:text-sm text-slate-500">{t('createNew')} {config.titleShort.toLowerCase()}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-lg sm:rounded-lg shadow-sm border border-slate-200 p-3 sm:p-6">
           {/* Two column layout: Partner on left, Document info on right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
             {/* Partner section - Left */}
             <div>
               <DocumentPartnerBox
@@ -258,43 +260,43 @@ export default function DocumentCreatePage({
             </div>
 
             {/* Document information - Right */}
-            <div className="bg-white rounded-lg border border-slate-200 p-4">
-              <h3 className="text-base font-bold text-slate-800 mb-3">
-                Informations du document
+            <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 sm:mb-3">
+                {t('documentInformation')}
               </h3>
               
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                    Date <span className="text-red-500">*</span>
+                  <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
+                    {t('date')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                     required
                   />
                 </div>
 
                 {config.features.expirationDate && (
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                      Date d'expiration
+                    <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
+                      {t('expirationDate')}
                     </label>
                     <input
                       type="date"
                       value={expirationDate}
                       onChange={(e) => setExpirationDate(e.target.value)}
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 )}
 
                 {documentType === 'facture' && (
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                      Date d'échéance
+                    <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
+                      {t('dueDate')}
                     </label>
                     <input
                       type="date"
@@ -322,14 +324,14 @@ export default function DocumentCreatePage({
           {/* Notes */}
           <div className="mt-2">
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Notes
+              {t('notes')}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              placeholder="Notes additionnelles..."
+              placeholder={t('additionalNotes')}
             />
           </div>
 
@@ -349,7 +351,7 @@ export default function DocumentCreatePage({
                 disabled={saving}
               >
                 <X className="w-4 h-4" />
-                Annuler
+                {t('cancel')}
               </button>
               <button
                 onClick={() => handleSave(true)}
@@ -357,7 +359,7 @@ export default function DocumentCreatePage({
                 disabled={saving}
               >
                 <Save className="w-4 h-4" />
-                {saving ? 'Enregistrement...' : 'Brouillon'}
+                {saving ? t('saving') : t('draft')}
               </button>
             </div>
           </div>

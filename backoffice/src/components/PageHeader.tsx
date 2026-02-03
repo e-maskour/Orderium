@@ -10,17 +10,17 @@ interface PageHeaderProps {
 
 export function PageHeader({ icon: Icon, title, subtitle, actions }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
-          <Icon className="w-6 h-6 text-white" />
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
+      <div className="flex items-start sm:items-center gap-2 sm:gap-4 flex-1">
+        <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+          <Icon className="w-4 sm:w-5 md:w-6 h-4 sm:h-5 md:h-6 text-white" />
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">{title}</h1>
-          {subtitle && <p className="text-slate-600 mt-1">{subtitle}</p>}
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 truncate">{title}</h1>
+          {subtitle && <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1 line-clamp-2">{subtitle}</p>}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-3">{actions}</div>}
+      {actions && <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-shrink-0">{actions}</div>}
     </div>
   );
 }

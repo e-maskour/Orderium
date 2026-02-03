@@ -42,6 +42,7 @@ export default {
   
   // Common Validation
   required: 'Requis',
+  nameRequired: 'Le nom est requis',
   
   // Search & Filter
   search: 'Rechercher',
@@ -120,9 +121,117 @@ export default {
   
   // Error Messages
   error: 'Une erreur est survenue',
+  errorPrefix: 'Erreur',
   failedToCreate: 'Échec de création',
   failedToUpdate: 'Échec de mise à jour',
   failedToDelete: 'Échec de suppression',
   useAuthError: 'useAuth doit être utilisé dans un AuthProvider',
   useLanguageError: 'useLanguage doit être utilisé dans un LanguageProvider',
+  
+  // Menu Items
+  sales: 'Ventes',
+  purchases: 'Achats',
+  quote: 'Devis',
+  deliveryNote: 'Bon de Livraison',
+  salesInvoice: 'Facture de Vente',
+  payments: 'Paiements',
+  clients: 'Clients',
+  priceRequest: 'Demande de prix',
+  purchaseOrder: "Bon d'Achat",
+  purchaseInvoice: "Facture d'Achat",
+  suppliers: 'Fournisseurs',
+  stockMovements: 'Mouvements de stock',
+  inventoryAdjustments: 'Ajustements d\'inventaire',
+  warehouses: 'Entrepôts',
+  
+  // Document Statuses
+  paid: 'Payée',
+  partial: 'Partielle',
+  pending: 'En attente',
+  overdue: 'En retard',
+  unpaid: 'Impayée',
+  open: 'Ouvert',
+  signed: 'Signée (à facturer)',
+  closed: 'Non signée (fermée)',
+  invoiced: 'Facturée',
+  validated: 'Validée',
+  inProgress: 'En cours',
+  delivered: 'Livrée',
+  cancelled: 'Annulée',
+  draft: 'Brouillon',
+  confirmed: 'Confirmé',
+  assigned: 'Assigné',
+  done: 'Effectué',
+  allTypes: 'Tous les types',
+  allStatuses: 'Tous les statuts',
+  
+  // Image Upload
+  invalidFileType: 'Type de fichier invalide. Autorisés: JPEG, PNG, WebP',
+  fileSizeExceeds: 'La taille du fichier dépasse la limite de',
+  uploadFailed: 'Échec du téléchargement',
+  pleaseTryAgain: 'Veuillez réessayer',
+  imageUploadedSuccessfully: 'Image téléchargée avec succès',
+  failedToConstructImageUrl: 'Impossible de construire l\'URL de l\'image',
+  failedToRemoveImage: 'Impossible de supprimer l\'image',
+  productPreview: 'Aperçu du produit',
+  removeImage: 'Supprimer l\'image',
+  
+  // Dashboard
+  dashboardOverview: 'Vue d\'ensemble de votre activité',
+  
+  // Common Actions
+  validate: 'Valider',
+  devalidate: 'Dévalider',
+  view: 'Voir',
+  deleteTitle: 'Supprimer',
+  validating: 'En cours...',
+  modify: 'Modifier',
+  remove: 'Supprimer',
+  validateDocument: 'Valider le document',
+  devalidateDocument: 'Dévalider le document',
+  
+  // Months (short)
+  monthJan: 'Jan',
+  monthFeb: 'Fév',
+  monthMar: 'Mar',
+  monthApr: 'Avr',
+  monthMay: 'Mai',
+  monthJun: 'Jun',
+  monthJul: 'Jul',
+  monthAug: 'Aoû',
+  monthSep: 'Sep',
+  monthOct: 'Oct',
+  monthNov: 'Nov',
+  monthDec: 'Déc',
+  monthJanuary: 'Janvier',
+  monthFebruary: 'Février',
+  monthMarch: 'Mars',
+  monthApril: 'Avril',
+  monthMayFull: 'Mai',
+  monthJune: 'Juin',
+  monthJuly: 'Juillet',
+  monthAugust: 'Août',
+  monthSeptember: 'Septembre',
+  monthOctober: 'Octobre',
+  monthNovember: 'Novembre',
+  monthDecember: 'Décembre',
+  
+  // Preview/Download
+  previewPDF: 'Aperçu PDF',
+  downloadPDF: 'Télécharger PDF',
+  download: 'Télécharger',
+  generateLink: 'Générer le lien',
+  
+  // Confirmations
+  confirmCancelMovement: 'Êtes-vous sûr de vouloir annuler ce mouvement ?',
+  confirmRejectQuote: 'Voulez-vous vraiment refuser ce devis ? Il sera marqué comme fermé.',
+  searchByNumberOrName: 'Rechercher par numéro ou nom...',
+  manageCompanyInformation: 'Gérer les informations de votre entreprise',
+  newPasswordOptional: 'Nouveau mot de passe (optionnel)',
+  minCharacters: 'Min 6 caractères',
+  informationSavedSuccess: 'Informations enregistrées avec succès',
+  errorGeneratingPDF: 'Erreur lors de la génération du PDF',
+  confirmDeletePayment: 'Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible.',
+  previewReceipt: 'Aperçu Reçu',
+  previewDeliveryNote: 'Aperçu Bon',
 };

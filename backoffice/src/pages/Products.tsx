@@ -294,14 +294,14 @@ export default function Products() {
                       <div className="w-24 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('stock')}</p>
                         <span className="text-sm text-slate-700 font-medium">
-                          {product.stock !== null && product.stock !== undefined 
-                            ? `${product.stock} per ${(product as any).saleUnitOfMeasure?.code || 'Unité(s)'}`
+                          {product.stock !== null && product.stock !== undefined
+                            ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
                             : '-'}
                         </span>
                       </div>
 
                       {/* Status */}
-                      <div className="w-24 flex flex-col items-center">
+                      {/* <div className="w-24 flex flex-col items-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
                         <span
                           className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -312,10 +312,10 @@ export default function Products() {
                         >
                           {product.isEnabled ? t('active') : t('inactive')}
                         </span>
-                      </div>
+                      </div> */}
 
                       {/* Actions */}
-                      <div className="w-16 flex justify-center">
+                      {/* <div className="w-16 flex justify-center">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -326,7 +326,7 @@ export default function Products() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 ))
@@ -381,7 +381,7 @@ export default function Products() {
                           </div>
                         )}
                         {/* Status Badge */}
-                        <div className="absolute top-1.5 right-1.5">
+                        {/* <div className="absolute top-1.5 right-1.5">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[9px] font-semibold shadow-md ${
                               product.isEnabled ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
@@ -389,7 +389,7 @@ export default function Products() {
                           >
                             {product.isEnabled ? t('active') : t('inactive')}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
 
                       {/* Product Info */}
@@ -405,11 +405,11 @@ export default function Products() {
                           )}
                         </div>
 
-                        {product.description && (
+                        {/* {product.description && (
                           <p className="text-[10px] text-slate-500 line-clamp-2 min-h-[2rem]" title={product.description}>
                             {product.description}
                           </p>
-                        )}
+                        )} */}
 
                         {/* Price & Cost */}
                         <div className="flex items-center justify-between pt-1 border-t border-slate-100">
@@ -434,14 +434,14 @@ export default function Products() {
                             <span className="text-slate-500">{t('stock')}:</span>
                             <span className="font-semibold text-slate-700">
                               {product.stock !== null && product.stock !== undefined 
-                                ? `${product.stock} per ${(product as any).saleUnitOfMeasure?.code || 'Unité(s)'}`
+                                ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
                                 : '-'}
                             </span>
                           </div>
                         )}
 
                         {/* Actions */}
-                        <div className="flex items-center gap-0.5 pt-1 border-t border-slate-100">
+                        {/* <div className="flex items-center gap-0.5 pt-1 border-t border-slate-100">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -452,7 +452,7 @@ export default function Products() {
                             <Eye className="w-2.5 h-2.5" />
                             {t('view')}
                           </button>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   ))
@@ -619,8 +619,8 @@ export default function Products() {
             : 'Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.'
         }
         type="danger"
-        confirmText="Supprimer"
-        cancelText="Annuler"
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
       />
 
       <AlertDialog

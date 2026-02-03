@@ -16,19 +16,35 @@ export class OrdersService {
     return await response.json();
   }
 
-  async getAll(search?: string, startDate?: Date, endDate?: Date, fromPortal?: boolean): Promise<Order[]> {
+  async getAll(search?: string, startDate?: Date, endDate?: Date, fromPortal?: boolean, deliveryStatus?: string, fromClient?: boolean): Promise<any> {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (startDate) params.append('startDate', startDate.toISOString());
     if (endDate) params.append('endDate', endDate.toISOString());
     if (fromPortal !== undefined) params.append('fromPortal', fromPortal.toString());
+    if (deliveryStatus) params.append('deliveryStatus', deliveryStatus);
+    if (fromClient !== undefined) params.append('fromClient', fromClient.toString());
     
     const queryString = params.toString();
     const response = await fetch(`${API_URL}/orders${queryString ? `?${queryString}` : ''}`);
     if (!response.ok) throw new Error('Failed to fetch orders');
     const data = await response.json();
-    const orders = data.orders || data;
-    return Array.isArray(orders) ? orders.map((o: any) => Order.fromApiResponse(o)) : [];
+    
+    // API now returns { orders, count, statusCounts }
+    if (data.orders && Array.isArray(data.orders)) {
+      return {
+        ...data,
+        orders: data.orders.map((o: any) => Order.fromApiResponse(o))
+      };
+    }
+    
+    // Fallback for old API response format
+    const orders = Array.isArray(data) ? data : [];
+    return {
+      orders: orders.map((o: any) => Order.fromApiResponse(o)),
+      count: orders.length,
+      statusCounts: {}
+    };
   }
 
   async getById(orderId: number): Promise<any> {

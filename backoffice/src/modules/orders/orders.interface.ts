@@ -1,4 +1,5 @@
 export type OrderStatus = 'draft' | 'validated' | 'in_progress' | 'delivered' | 'cancelled';
+export type DeliveryStatus = 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
 
 export interface Order {
   id: number;
@@ -19,6 +20,8 @@ export interface Order {
   notes?: string | null;
   convertedToInvoiceId?: number | null;
   fromPortal?: boolean; // Indicates if order was created from delivery portal
+  fromClient?: boolean; // Indicates if order was created from client app
+  deliveryStatus?: DeliveryStatus | null; // Delivery lifecycle status
   deliveryPersonId?: number | null; // Business logic field, not in entity
   deliveryPersonName?: string | null; // Business logic field, not in entity
   dateCreated: string;

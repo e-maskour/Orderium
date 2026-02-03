@@ -66,7 +66,7 @@ export function ShareQuoteDialog({
               <Share2 className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Partager le devis</h3>
+              <h3 className="font-semibold text-slate-900">{t('shareQuote')}</h3>
               <p className="text-xs text-slate-500">{quoteNumber}</p>
             </div>
           </div>
@@ -84,14 +84,14 @@ export function ShareQuoteDialog({
             <div className="text-center py-4">
               <Share2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-sm text-slate-600 mb-4">
-                Générez un lien de partage sécurisé pour permettre à votre client de consulter et signer ce devis.
+                {t('generateSecureLink')}
               </p>
               <button
                 onClick={handleGenerateLink}
                 disabled={generating}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
               >
-                {generating ? 'Génération...' : 'Générer le lien'}
+                {generating ? t('generating') : t('generateLink')}
               </button>
             </div>
           ) : (

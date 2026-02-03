@@ -5,12 +5,17 @@ export default {
   manageCustomers: 'Gérer les clients',
   searchCustomers: 'Rechercher des clients...',
   noCustomersFound: 'Aucun client trouvé',
+  customerName: 'Nom du client',
   customerUpdated: 'Client mis à jour avec succès',
   customerCreated: 'Client créé avec succès',
   customerDeleted: 'Client supprimé avec succès',
   addCustomer: 'Ajouter un client',
+  editCustomer: 'Modifier Client',
+  newCustomer: 'Nouveau Client',
+  customerNotFound: 'Client non trouvé',
   phoneNumberRequired: 'Numéro de téléphone requis',
   city: 'Ville',
+  typeCustomerName: 'Tapez le nom du client',
   
   // Suppliers
   suppliers: 'Fournisseurs',
@@ -22,6 +27,9 @@ export default {
   supplierCreated: 'Fournisseur créé avec succès',
   supplierDeleted: 'Fournisseur supprimé avec succès',
   addSupplier: 'Ajouter un fournisseur',
+  editSupplier: 'Modifier Fournisseur',
+  newSupplier: 'Nouveau Fournisseur',
+  supplierNotFound: 'Fournisseur non trouvé',
   
   // Partner Form
   partnerType: 'Type de partenaire',
@@ -51,4 +59,20 @@ export default {
   updatePartner: 'Mettre à jour le partenaire',
   createPartner: 'Créer un partenaire',
   deletePartnerConfirmation: 'Êtes-vous sûr de vouloir supprimer ce partenaire ? Cette action ne peut pas être annulée.',
+  
+  // Tabs
+  dashboard: 'Tableau de bord',
+  customerList: 'Liste des clients',
+  supplierList: 'Liste des fournisseurs',
+  
+  // Placeholders
+  searchCustomersPlaceholder: 'Rechercher clients...',
+  searchSuppliersPlaceholder: 'Rechercher fournisseurs...',
+  
+  // Common Labels
+  seeDetails: 'Voir',
+  
+  // Supplier Detail
+  supplierDetails: 'Détails du fournisseur',
+  customerDetails: 'Détails du client',
 };

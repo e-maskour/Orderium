@@ -5,8 +5,10 @@ import { PageHeader } from '../components/PageHeader';
 import { ArrowLeftRight, Search, Plus, Eye, CheckCircle2, XCircle, Package, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { stockMovementService, StockMovement } from '../modules/inventory/stock-movements.service';
 import { toast } from 'sonner';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function StockMovements() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -26,7 +28,7 @@ export default function StockMovements() {
     mutationFn: (movementId: number) => stockMovementService.validate({ movementId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
-      toast.success('Mouvement validé avec succès');
+      toast.success(t('movementValidated'));
     },
     onError: (error: Error) => {
       toast.error(`Erreur: ${error.message}`);
@@ -37,7 +39,7 @@ export default function StockMovements() {
     mutationFn: (id: number) => stockMovementService.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
-      toast.success('Mouvement annulé');
+      toast.success(t('movementCancelled'));
     },
     onError: (error: Error) => {
       toast.error(`Erreur: ${error.message}`);
@@ -51,12 +53,12 @@ export default function StockMovements() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { label: 'Brouillon', color: 'bg-slate-100 text-slate-700' },
-      waiting: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700' },
-      confirmed: { label: 'Confirmé', color: 'bg-blue-100 text-blue-700' },
-      assigned: { label: 'Assigné', color: 'bg-indigo-100 text-indigo-700' },
-      done: { label: 'Effectué', color: 'bg-emerald-100 text-emerald-700' },
-      cancelled: { label: 'Annulé', color: 'bg-red-100 text-red-700' },
+      draft: { label: t('draft'), color: 'bg-slate-100 text-slate-700' },
+      waiting: { label: t('pending'), color: 'bg-yellow-100 text-yellow-700' },
+      confirmed: { label: t('confirmed'), color: 'bg-blue-100 text-blue-700' },
+      assigned: { label: t('assigned'), color: 'bg-indigo-100 text-indigo-700' },
+      done: { label: t('done'), color: 'bg-emerald-100 text-emerald-700' },
+      cancelled: { label: t('cancelled'), color: 'bg-red-100 text-red-700' },
     };
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     return (
@@ -78,15 +80,15 @@ export default function StockMovements() {
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      receipt: 'Réception',
-      delivery: 'Livraison',
-      internal: 'Transfert',
-      adjustment: 'Ajustement',
-      production_in: 'Production (entrée)',
-      production_out: 'Production (sortie)',
-      return_in: 'Retour client',
-      return_out: 'Retour fournisseur',
-      scrap: 'Mise au rebut',
+      receipt: t('movementTypes.receipt'),
+      delivery: t('movementTypes.delivery'),
+      internal: t('movementTypes.internal'),
+      adjustment: t('movementTypes.adjustment'),
+      production_in: t('movementTypes.productionIn'),
+      production_out: t('movementTypes.productionOut'),
+      return_in: t('movementTypes.receipt'),
+      return_out: t('movementTypes.delivery'),
+      scrap: t('movementTypes.scrap'),
     };
     return labels[type] || type;
   };
@@ -95,8 +97,8 @@ export default function StockMovements() {
     <AdminLayout>
       <PageHeader
         icon={ArrowLeftRight}
-        title="Mouvements de Stock"
-        subtitle="Suivre et gérer tous les mouvements de stock"
+        title={t('stockMovements')}
+        subtitle={t('stockMovementsSubtitle')}
       />
 
       {/* Filters and Actions Bar */}
@@ -108,7 +110,7 @@ export default function StockMovements() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Rechercher par référence ou produit..."
+                placeholder={t('searchByReferenceOrProduct')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
@@ -122,13 +124,13 @@ export default function StockMovements() {
             onChange={(e) => setTypeFilter(e.target.value)}
             className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           >
-            <option value="all">Tous les types</option>
-            <option value="receipt">Réception</option>
-            <option value="delivery">Livraison</option>
-            <option value="internal">Transfert</option>
-            <option value="adjustment">Ajustement</option>
-            <option value="production_in">Production (entrée)</option>
-            <option value="production_out">Production (sortie)</option>
+            <option value="all">{t('allTypes')}</option>
+            <option value="receipt">{t('movementTypes.receipt')}</option>
+            <option value="delivery">{t('movementTypes.delivery')}</option>
+            <option value="internal">{t('movementTypes.internal')}</option>
+            <option value="adjustment">{t('movementTypes.adjustment')}</option>
+            <option value="production_in">{t('movementTypes.productionIn')}</option>
+            <option value="production_out">{t('movementTypes.productionOut')}</option>
             <option value="return_in">Retour client</option>
             <option value="return_out">Retour fournisseur</option>
             <option value="scrap">Mise au rebut</option>
@@ -140,13 +142,13 @@ export default function StockMovements() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           >
-            <option value="all">Tous les statuts</option>
-            <option value="draft">Brouillon</option>
-            <option value="waiting">En attente</option>
-            <option value="confirmed">Confirmé</option>
-            <option value="assigned">Assigné</option>
-            <option value="done">Effectué</option>
-            <option value="cancelled">Annulé</option>
+            <option value="all">{t('allStatuses')}</option>
+            <option value="draft">{t('draft')}</option>
+            <option value="waiting">{t('pending')}</option>
+            <option value="confirmed">{t('confirmed')}</option>
+            <option value="assigned">{t('assigned')}</option>
+            <option value="done">{t('done')}</option>
+            <option value="cancelled">{t('cancelled')}</option>
           </select>
         </div>
       </div>
@@ -249,7 +251,7 @@ export default function StockMovements() {
                           <button
                             onClick={() => validateMutation.mutate(movement.id)}
                             className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title="Valider"
+                            title={t('validate')}
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </button>
@@ -257,19 +259,19 @@ export default function StockMovements() {
                         <button
                           onClick={() => setSelectedMovement(movement)}
                           className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="Détails"
+                          title={t('details')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         {movement.status !== 'done' && movement.status !== 'cancelled' && (
                           <button
                             onClick={() => {
-                              if (confirm('Êtes-vous sûr de vouloir annuler ce mouvement ?')) {
+                              if (confirm(t('confirmCancelMovement'))) {
                                 cancelMutation.mutate(movement.id);
                               }
                             }}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Annuler"
+                            title={t('cancel')}
                           >
                             <XCircle className="w-4 h-4" />
                           </button>

@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, EntityManager } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Order, OrderItem, OrderStatus } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -96,6 +96,40 @@ export class OrdersService {
       order.discount = createOrderDto.discount || 0;
       order.discountType = createOrderDto.discountType || 0;
       order.fromPortal = createOrderDto.fromPortal ?? false;
+      order.fromClient = createOrderDto.fromClient ?? false;
+      order.deliveryStatus = (createOrderDto.deliveryStatus as any) ?? null;
+
+      if (order.deliveryStatus) {
+        const now = new Date();
+        switch (order.deliveryStatus) {
+          case 'pending':
+            order.pendingAt = now;
+            break;
+          case 'assigned':
+            order.assignedAt = now;
+            break;
+          case 'confirmed':
+            order.confirmedAt = now;
+            break;
+          case 'picked_up':
+            order.pickedUpAt = now;
+            break;
+          case 'to_delivery':
+            order.toDeliveryAt = now;
+            break;
+          case 'in_delivery':
+            order.inDeliveryAt = now;
+            break;
+          case 'delivered':
+            order.deliveredAt = now;
+            break;
+          case 'canceled':
+            order.canceledAt = now;
+            break;
+          default:
+            break;
+        }
+      }
       
       // Orders from POS/Portal are automatically validated and in progress
       if (createOrderDto.fromPortal) {
@@ -153,6 +187,16 @@ export class OrdersService {
           'order.status',
           'order.notes',
           'order.fromPortal',
+          'order.fromClient',
+          'order.deliveryStatus',
+          'order.pendingAt',
+          'order.assignedAt',
+          'order.confirmedAt',
+          'order.pickedUpAt',
+          'order.toDeliveryAt',
+          'order.inDeliveryAt',
+          'order.deliveredAt',
+          'order.canceledAt',
           'order.dateCreated',
           'order.dateUpdated',
           'customer.id',
@@ -193,6 +237,16 @@ export class OrdersService {
         status: createdOrder.status || 'draft',
         note: createdOrder.notes,
         fromPortal: createdOrder.fromPortal || false,
+        fromClient: createdOrder.fromClient || false,
+        deliveryStatus: createdOrder.deliveryStatus || null,
+        pendingAt: createdOrder.pendingAt,
+        assignedAt: createdOrder.assignedAt,
+        confirmedAt: createdOrder.confirmedAt,
+        pickedUpAt: createdOrder.pickedUpAt,
+        toDeliveryAt: createdOrder.toDeliveryAt,
+        inDeliveryAt: createdOrder.inDeliveryAt,
+        deliveredAt: createdOrder.deliveredAt,
+        canceledAt: createdOrder.canceledAt,
         dateCreated: createdOrder.dateCreated,
         dateUpdated: createdOrder.dateUpdated,
         customerId: createdOrder.customer?.id,
@@ -215,7 +269,15 @@ export class OrdersService {
     });
   }
 
-  async getAllOrders(limit = 100, fromPortal?: boolean): Promise<any[]> {
+  async getAllOrders(
+    limit = 100,
+    fromPortal?: boolean,
+    deliveryStatus?: string,
+    fromClient?: boolean,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<{ orders: any[]; count: number; statusCounts: any }> {
+    // Build main query with filters
     const queryBuilder = this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
@@ -233,6 +295,16 @@ export class OrdersService {
         'order.isValidated',
         'order.notes',
         'order.fromPortal',
+        'order.fromClient',
+        'order.deliveryStatus',
+        'order.pendingAt',
+        'order.assignedAt',
+        'order.confirmedAt',
+        'order.pickedUpAt',
+        'order.toDeliveryAt',
+        'order.inDeliveryAt',
+        'order.deliveredAt',
+        'order.canceledAt',
         'order.dateCreated',
         'order.dateUpdated',
         'customer.id',
@@ -243,35 +315,128 @@ export class OrdersService {
       .take(limit)
       .orderBy('order.dateCreated', 'DESC');
 
-    // Apply fromPortal filter if specified
+    // Apply filters
     if (fromPortal !== undefined) {
       queryBuilder.where('order.fromPortal = :fromPortal', { fromPortal });
     }
 
+    if (deliveryStatus) {
+      if (queryBuilder.getParameters().length > 0) {
+        queryBuilder.andWhere('order.deliveryStatus = :deliveryStatus', {
+          deliveryStatus,
+        });
+      } else {
+        queryBuilder.where('order.deliveryStatus = :deliveryStatus', {
+          deliveryStatus,
+        });
+      }
+    }
+
+    if (fromClient !== undefined) {
+      if (queryBuilder.getParameters().length > 0) {
+        queryBuilder.andWhere('order.fromClient = :fromClient', {
+          fromClient,
+        });
+      } else {
+        queryBuilder.where('order.fromClient = :fromClient', {
+          fromClient,
+        });
+      }
+    }
+
+    // Apply date range filter
+    if (startDate && endDate) {
+      queryBuilder.andWhere('order.dateCreated >= :startDate', { startDate });
+      queryBuilder.andWhere('order.dateCreated <= :endDate', { endDate });
+    }
+
     const orders = await queryBuilder.getMany();
 
-    return orders.map((order) => ({
-      id: order.id,
-      orderNumber: order.documentNumber,
-      receiptNumber: order.receiptNumber,
-      date: order.date,
-      subtotal: order.subtotal,
-      tax: order.tax,
-      discount: order.discount,
-      discountType: order.discountType,
-      total: order.total,
-      status: order.status || 'draft',
-      isValidated: order.isValidated || false,
-      note: order.notes,
-      fromPortal: order.fromPortal || false,
-      dateCreated: order.dateCreated,
-      dateUpdated: order.dateUpdated,
-      customerId: order.customer?.id,
-      customerName: order.customer?.name,
-      customerPhone: order.customer?.phoneNumber,
-      customerAddress: order.customer?.address,
-      items: [], // Items not needed for list view
-    }));
+    // Get count of each delivery status (for all orders, not just filtered)
+    const countQueryBuilder = this.dataSource
+      .createQueryBuilder(Order, 'order');
+
+    // Apply same filters for counting
+    if (fromPortal !== undefined) {
+      countQueryBuilder.where('order.fromPortal = :fromPortal', { fromPortal });
+    }
+    if (startDate && endDate) {
+      countQueryBuilder.andWhere('order.dateCreated >= :startDate', {
+        startDate,
+      });
+      countQueryBuilder.andWhere('order.dateCreated <= :endDate', {
+        endDate,
+      });
+    }
+
+    const allOrdersForCounts = await countQueryBuilder.getMany();
+
+    const statusCounts = {
+      all: allOrdersForCounts.length,
+      pending: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === 'pending',
+      ).length,
+      assigned: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === 'assigned',
+      ).length,
+      confirmed: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === 'confirmed',
+      ).length,
+      picked_up: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === 'picked_up',
+      ).length,
+      to_delivery: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === 'to_delivery',
+      ).length,
+      in_delivery: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === 'in_delivery',
+      ).length,
+      delivered: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === 'delivered',
+      ).length,
+      canceled: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === 'canceled',
+      ).length,
+      locale: allOrdersForCounts.filter((o) => !o.fromClient).length,
+      client: allOrdersForCounts.filter((o) => o.fromClient).length,
+    };
+
+    return {
+      orders: orders.map((order) => ({
+        id: order.id,
+        orderNumber: order.documentNumber,
+        receiptNumber: order.receiptNumber,
+        date: order.date,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        discount: order.discount,
+        discountType: order.discountType,
+        total: order.total,
+        status: order.status || 'draft',
+        isValidated: order.isValidated || false,
+        note: order.notes,
+        fromPortal: order.fromPortal || false,
+        fromClient: order.fromClient || false,
+        deliveryStatus: order.deliveryStatus || null,
+        pendingAt: order.pendingAt,
+        assignedAt: order.assignedAt,
+        confirmedAt: order.confirmedAt,
+        pickedUpAt: order.pickedUpAt,
+        toDeliveryAt: order.toDeliveryAt,
+        inDeliveryAt: order.inDeliveryAt,
+        deliveredAt: order.deliveredAt,
+        canceledAt: order.canceledAt,
+        dateCreated: order.dateCreated,
+        dateUpdated: order.dateUpdated,
+        customerId: order.customer?.id,
+        customerName: order.customer?.name,
+        customerPhone: order.customer?.phoneNumber,
+        customerAddress: order.customer?.address,
+        items: [], // Items not needed for list view
+      })),
+      count: orders.length,
+      statusCounts,
+    };
   }
 
   async getOrderById(id: number): Promise<any> {
@@ -294,6 +459,16 @@ export class OrdersService {
         'order.isValidated',
         'order.notes',
         'order.fromPortal',
+        'order.fromClient',
+        'order.deliveryStatus',
+        'order.pendingAt',
+        'order.assignedAt',
+        'order.confirmedAt',
+        'order.pickedUpAt',
+        'order.toDeliveryAt',
+        'order.inDeliveryAt',
+        'order.deliveredAt',
+        'order.canceledAt',
         'order.dateCreated',
         'order.dateUpdated',
         'customer.id',
@@ -334,6 +509,16 @@ export class OrdersService {
       isValidated: order.isValidated || false,
       note: order.notes,
       fromPortal: order.fromPortal || false,
+      fromClient: order.fromClient || false,
+      deliveryStatus: order.deliveryStatus || null,
+      pendingAt: order.pendingAt,
+      assignedAt: order.assignedAt,
+      confirmedAt: order.confirmedAt,
+      pickedUpAt: order.pickedUpAt,
+      toDeliveryAt: order.toDeliveryAt,
+      inDeliveryAt: order.inDeliveryAt,
+      deliveredAt: order.deliveredAt,
+      canceledAt: order.canceledAt,
       dateCreated: order.dateCreated,
       dateUpdated: order.dateUpdated,
       customerId: order.customer?.id,
@@ -375,6 +560,16 @@ export class OrdersService {
         'order.isValidated',
         'order.notes',
         'order.fromPortal',
+        'order.fromClient',
+        'order.deliveryStatus',
+        'order.pendingAt',
+        'order.assignedAt',
+        'order.confirmedAt',
+        'order.pickedUpAt',
+        'order.toDeliveryAt',
+        'order.inDeliveryAt',
+        'order.deliveredAt',
+        'order.canceledAt',
         'order.dateCreated',
         'order.dateUpdated',
         'customer.id',
@@ -415,6 +610,17 @@ export class OrdersService {
       status: order.status || 'draft',
       isValidated: order.isValidated || false,
       note: order.notes,
+      fromPortal: order.fromPortal || false,
+      fromClient: order.fromClient || false,
+      deliveryStatus: order.deliveryStatus || null,
+      pendingAt: order.pendingAt,
+      assignedAt: order.assignedAt,
+      confirmedAt: order.confirmedAt,
+      pickedUpAt: order.pickedUpAt,
+      toDeliveryAt: order.toDeliveryAt,
+      inDeliveryAt: order.inDeliveryAt,
+      deliveredAt: order.deliveredAt,
+      canceledAt: order.canceledAt,
       dateCreated: order.dateCreated,
       dateUpdated: order.dateUpdated,
       customerId: order.customer?.id,
@@ -453,6 +659,17 @@ export class OrdersService {
         'order.status',
         'order.isValidated',
         'order.notes',
+        'order.fromPortal',
+        'order.fromClient',
+        'order.deliveryStatus',
+        'order.pendingAt',
+        'order.assignedAt',
+        'order.confirmedAt',
+        'order.pickedUpAt',
+        'order.toDeliveryAt',
+        'order.inDeliveryAt',
+        'order.deliveredAt',
+        'order.canceledAt',
         'order.dateCreated',
         'order.dateUpdated',
         'customer.id',
@@ -478,6 +695,17 @@ export class OrdersService {
       status: order.status || 'draft',
       isValidated: order.isValidated || false,
       note: order.notes,
+      fromPortal: order.fromPortal || false,
+      fromClient: order.fromClient || false,
+      deliveryStatus: order.deliveryStatus || null,
+      pendingAt: order.pendingAt,
+      assignedAt: order.assignedAt,
+      confirmedAt: order.confirmedAt,
+      pickedUpAt: order.pickedUpAt,
+      toDeliveryAt: order.toDeliveryAt,
+      inDeliveryAt: order.inDeliveryAt,
+      deliveredAt: order.deliveredAt,
+      canceledAt: order.canceledAt,
       dateCreated: order.dateCreated,
       dateUpdated: order.dateUpdated,
       customerId: order.customer?.id,

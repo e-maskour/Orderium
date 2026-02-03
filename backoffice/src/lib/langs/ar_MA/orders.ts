@@ -15,6 +15,9 @@ export default {
   delivered: 'تم التسليم',
   canceled: 'ملغي',
   pending: 'قيد الانتظار',
+  assigned: 'معين',
+  confirmed: 'مؤكد',
+  pickedUp: 'تم الاستلام',
   
   // Order Details
   orderDetails: 'تفاصيل الطلب',
@@ -37,7 +40,6 @@ export default {
   unassign: 'إلغاء التعيين',
   assignTo: 'تعيين إلى',
   selectDeliveryPerson: 'اختر مندوب التوصيل',
-  assigned: '✓ تم التعيين',
   unassignOrder: 'إلغاء تعيين الطلب',
   unassignOrderConfirm: 'هل أنت متأكد من إلغاء تعيين هذا الطلب؟',
   
@@ -49,14 +51,33 @@ export default {
   orderCreatedSuccessfully: 'تم إنشاء الطلب بنجاح',
   failedToAssign: 'فشل تعيين الطلب',
   failedToUnassign: 'فشل إلغاء تعيين الطلب',
+  failedToDelete: 'فشل الحذف',
   
   // Search & Filter
   searchPlaceholder: 'ابحث برقم الطلب، اسم العميل، الهاتف، أو مندوب التوصيل...',
   filterByStatus: 'تصفية حسب الحالة',
+  filters: 'الفلاتر',
+  dateRange: 'نطاق التاريخ',
+  deliveryStatus: 'حالة التسليم',
+  orderSource: 'مصدر الطلب',
+  local: 'محلي',
+  client: 'العميل',
+  reset: 'إعادة تعيين',
+  apply: 'تطبيق',
   
   // KPIs
   totalOrders: 'إجمالي الطلبات',
   ordersToday: 'طلبات اليوم',
   totalRevenue: 'إجمالي الإيرادات',
   revenueToday: 'الإيرادات اليوم',
+  
+  // Order Actions - Bulk
+  deleteOrders: 'حذف الطلبات',
+  ordersDeleted: 'تم حذف الطلبات بنجاح',
+  confirmDeleteOrders: 'هل أنت متأكد من رغبتك في حذف الطلب(ات)؟ لا يمكن التراجع عن هذا الإجراء.',
+  selectOneOrder: 'يرجى تحديد طلب واحد فقط للمعاينة',
+  
+  // Additional
+  previewReceipt: 'معاينة الإيصال',
+  previewDeliveryNote: 'معاينة وصل التسليم',
 };

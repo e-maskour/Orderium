@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -7,6 +8,7 @@ import { inventoryAdjustmentService, InventoryAdjustment } from '../modules/inve
 import { toast } from 'sonner';
 
 export default function InventoryAdjustments() {
+  const { dir, t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
@@ -27,10 +29,10 @@ export default function InventoryAdjustments() {
     mutationFn: (id: number) => inventoryAdjustmentService.startCounting(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-adjustments'] });
-      toast.success('Comptage démarré avec succès');
+      toast.success(t('countingStartedSuccess'));
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
+      toast.error(`${t('errorPrefix')}: ${error.message}`);
     },
   });
 
@@ -39,10 +41,10 @@ export default function InventoryAdjustments() {
       inventoryAdjustmentService.validate(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-adjustments'] });
-      toast.success('Ajustement validé avec succès');
+      toast.success(t('adjustmentValidatedSuccess'));
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
+      toast.error(`${t('errorPrefix')}: ${error.message}`);
     },
   });
 
@@ -50,10 +52,10 @@ export default function InventoryAdjustments() {
     mutationFn: (id: number) => inventoryAdjustmentService.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-adjustments'] });
-      toast.success('Ajustement annulé');
+      toast.success(t('adjustmentCancelled'));
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
+      toast.error(`${t('errorPrefix')}: ${error.message}`);
     },
   });
 
@@ -61,10 +63,10 @@ export default function InventoryAdjustments() {
     mutationFn: (id: number) => inventoryAdjustmentService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-adjustments'] });
-      toast.success('Ajustement supprimé');
+      toast.success(t('adjustmentDeleted'));
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
+      toast.error(`${t('errorPrefix')}: ${error.message}`);
     },
   });
 
@@ -75,10 +77,10 @@ export default function InventoryAdjustments() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { label: 'Brouillon', color: 'bg-slate-100 text-slate-700' },
-      in_progress: { label: 'En cours', color: 'bg-blue-100 text-blue-700' },
-      done: { label: 'Validé', color: 'bg-emerald-100 text-emerald-700' },
-      cancelled: { label: 'Annulé', color: 'bg-red-100 text-red-700' },
+      draft: { label: t('draft'), color: 'bg-slate-100 text-slate-700' },
+      in_progress: { label: t('inProgress'), color: 'bg-blue-100 text-blue-700' },
+      done: { label: t('validated'), color: 'bg-emerald-100 text-emerald-700' },
+      cancelled: { label: t('cancelled'), color: 'bg-red-100 text-red-700' },
     };
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     return (
@@ -92,8 +94,8 @@ export default function InventoryAdjustments() {
     <AdminLayout>
       <PageHeader
         icon={ClipboardCheck}
-        title="Ajustements d'Inventaire"
-        subtitle="Gérer les comptages et ajustements de stock"
+        title={t('inventoryAdjustments')}
+        subtitle={t('manageInventoryAdjustments')}
       />
 
       {/* Filters and Actions Bar */}
@@ -105,7 +107,7 @@ export default function InventoryAdjustments() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Rechercher par référence ou nom..."
+                placeholder={t('searchByReference')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
@@ -132,7 +134,7 @@ export default function InventoryAdjustments() {
             className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold flex items-center gap-2 transition-colors"
           >
             <Plus className="w-5 h-5" />
-            Nouvel Ajustement
+            {t('newAdjustment')}
           </button>
         </div>
       </div>
@@ -147,8 +149,8 @@ export default function InventoryAdjustments() {
         ) : filteredAdjustments.length === 0 ? (
           <div className="p-12 text-center">
             <ClipboardCheck className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-600 mb-2">Aucun ajustement trouvé</p>
-            <p className="text-sm text-slate-500">Créez votre premier ajustement d'inventaire</p>
+            <p className="text-slate-600 mb-2">{t('noAdjustmentsFound')}</p>
+            <p className="text-sm text-slate-500">{t('createFirstAdjustment')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -213,7 +215,7 @@ export default function InventoryAdjustments() {
                           <button
                             onClick={() => startCountingMutation.mutate(adjustment.id)}
                             className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Démarrer"
+                            title={t('start')}
                           >
                             <Play className="w-4 h-4" />
                           </button>
@@ -222,7 +224,7 @@ export default function InventoryAdjustments() {
                           <button
                             onClick={() => setSelectedAdjustment(adjustment)}
                             className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title="Valider"
+                            title={t('validate')}
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </button>
@@ -230,7 +232,7 @@ export default function InventoryAdjustments() {
                         <button
                           onClick={() => setSelectedAdjustment(adjustment)}
                           className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="Détails"
+                          title={t('details')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -239,18 +241,18 @@ export default function InventoryAdjustments() {
                             <button
                               onClick={() => cancelMutation.mutate(adjustment.id)}
                               className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                              title="Annuler"
+                              title={t('cancel')}
                             >
                               <XCircle className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => {
-                                if (confirm('Êtes-vous sûr de vouloir supprimer cet ajustement ?')) {
+                                if (confirm(t('confirmDeleteAdjustment'))) {
                                   deleteMutation.mutate(adjustment.id);
                                 }
                               }}
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Supprimer"
+                              title={t('delete')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

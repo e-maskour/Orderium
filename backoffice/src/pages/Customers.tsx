@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function Customers() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
@@ -103,7 +103,7 @@ export default function Customers() {
       return [
         {
           id: 'view',
-          label: 'Voir',
+          label: t('view'),
           icon: <Eye className="w-4 h-4" />,
           onClick: () => {
             if (customer) {
@@ -138,8 +138,8 @@ export default function Customers() {
   };
 
   const tabs = [
-    { key: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-    { key: 'list', label: 'Liste des clients', icon: List },
+    { key: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
+    { key: 'list', label: t('customerList'), icon: List },
   ];
 
   // Calculate statistics
@@ -323,7 +323,7 @@ export default function Customers() {
                       </div>
                       <span className="text-xs font-semibold text-purple-600 bg-purple-200 px-2 py-1 rounded-full">Revenu</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-purple-900 mb-1">{totalRevenue.toFixed(2)} DH</h3>
+                    <h3 className="text-2xl font-bold text-purple-900 mb-1">{totalRevenue.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</h3>
                     <p className="text-sm text-purple-700">Revenu total</p>
                   </div>
                 </div>
@@ -391,7 +391,7 @@ export default function Customers() {
                               <p className="text-xs font-semibold text-slate-900 truncate">{customer.name}</p>
                               <p className="text-xs text-slate-600">{percentage}%</p>
                             </div>
-                            <p className="text-xs font-bold text-slate-900">{customer.total.toFixed(2)} DH</p>
+                            <p className="text-xs font-bold text-slate-900">{customer.total.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
                           </div>
                         );
                       })}
@@ -439,49 +439,49 @@ export default function Customers() {
             )}
 
             {activeTab === 'list' && (
-              <div className="space-y-1">
+              <div className="space-y-3 sm:space-y-1">
                 {/* Toolbar */}
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 mb-3">
                   {/* View Mode Toggle */}
-                  <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+                  <div className="flex items-center gap-1 sm:gap-2 bg-slate-100 rounded-lg p-1 flex-shrink-0">
                     <button
                       onClick={() => setViewMode('card')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                         viewMode === 'card'
                           ? 'bg-white text-slate-900 shadow-sm'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      <Grid3x3 className="w-4 h-4" />
+                      <Grid3x3 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                         viewMode === 'list'
                           ? 'bg-white text-slate-900 shadow-sm'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      <ListIcon className="w-4 h-4" />
+                      <ListIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                     </button>
                   </div>
 
                   {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <div className="relative flex-1 sm:flex-none">
+                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 sm:w-5 h-4 sm:h-5" />
                     <input
                       type="text"
                       placeholder={t('searchCustomers')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-96 ps-10 pe-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
+                      className="w-full sm:w-96 ps-9 sm:ps-10 pe-9 sm:pe-10 py-2 sm:py-2.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
                     />
                     {searchTerm && (
                       <button
                         onClick={() => setSearchTerm('')}
-                        className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                       </button>
                     )}
                   </div>
@@ -669,7 +669,7 @@ export default function Customers() {
                                     navigate(`/customers/${customer.id}`);
                                   }}
                                   className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                                  title="Voir"
+                                  title={t('seeDetails')}
                                 >
                                   <Eye className="w-4 h-4" />
                                 </button>

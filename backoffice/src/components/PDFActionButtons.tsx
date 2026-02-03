@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { pdfService, DocumentType, PDFMode } from '../services/pdf.service';
 import { toast } from 'sonner';
 import { PDFPreviewModal } from './PDFPreviewModal';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PDFActionButtonsProps {
   documentType: DocumentType;
@@ -23,6 +24,7 @@ export default function PDFActionButtons({
   className = '',
   size = 'md',
 }: PDFActionButtonsProps) {
+  const { t } = useLanguage();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
 
@@ -97,7 +99,7 @@ export default function PDFActionButtons({
             title={`Télécharger ${pdfService.getDocumentLabel(documentType)}`}
           >
             <FileDown size={iconSize} />
-            <span>Télécharger</span>
+            <span>{t('download')}</span>
           </button>
         )}
       </div>

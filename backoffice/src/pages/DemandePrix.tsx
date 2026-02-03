@@ -11,8 +11,8 @@ export default function DemandePrix() {
       <div className="max-w-7xl mx-auto">
         <PageHeader
           icon={FileQuestion}
-          title="Demande de prix"
-          subtitle="Gérez vos demandes de prix"
+          title={t('priceRequest')}
+          subtitle={t('managePriceRequests')}
         />
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-slate-600">Page en construction...</p>

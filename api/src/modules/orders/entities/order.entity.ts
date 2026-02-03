@@ -8,16 +8,29 @@ import {
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
-import { Product } from '../../products/entities/product.entity';
-import { BaseDocument, BaseStandardItem } from '../../../common/entities/base-document.entity';
+import {
+  BaseDocument,
+  BaseStandardItem,
+} from '../../../common/entities/base-document.entity';
 
 export enum OrderStatus {
-  DRAFT = 'draft',           // Brouillon
-  VALIDATED = 'validated',   // Validée
+  DRAFT = 'draft', // Brouillon
+  VALIDATED = 'validated', // Validée
   IN_PROGRESS = 'in_progress', // En cours
-  DELIVERED = 'delivered',   // Livrée
-  INVOICED = 'invoiced',     // Facturée
-  CANCELLED = 'cancelled',   // Annulée
+  DELIVERED = 'delivered', // Livrée
+  INVOICED = 'invoiced', // Facturée
+  CANCELLED = 'cancelled', // Annulée
+}
+
+export enum DeliveryStatus {
+  PENDING = 'pending',
+  ASSIGNED = 'assigned',
+  CONFIRMED = 'confirmed',
+  PICKED_UP = 'picked_up',
+  TO_DELIVERY = 'to_delivery',
+  IN_DELIVERY = 'in_delivery',
+  DELIVERED = 'delivered',
+  CANCELED = 'canceled',
 }
 
 @Entity('orders')
@@ -43,6 +56,9 @@ export class Order extends BaseDocument {
   @Column({ type: 'boolean', default: false })
   fromPortal: boolean; // Indicates if order was created from delivery portal
 
+  @Column({ type: 'boolean', default: false })
+  fromClient: boolean; // Indicates if order was created from client app
+
   @Column({ type: 'varchar', nullable: true })
   receiptNumber: string | null;
 
@@ -54,6 +70,37 @@ export class Order extends BaseDocument {
     default: OrderStatus.DRAFT,
   })
   status: OrderStatus;
+
+  @Column({
+    type: 'enum',
+    enum: DeliveryStatus,
+    nullable: true,
+  })
+  deliveryStatus: DeliveryStatus | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  pendingAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  assignedAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  confirmedAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  pickedUpAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  toDeliveryAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  inDeliveryAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  deliveredAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  canceledAt: Date | null;
 
   // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
 
@@ -67,9 +114,11 @@ export class Order extends BaseDocument {
     // Only enforce rules for non-terminal statuses
     if (!this.isValidated) {
       // If not validated, status must be DRAFT (unless it's a terminal status)
-      if (this.status !== OrderStatus.INVOICED && 
-          this.status !== OrderStatus.CANCELLED && 
-          this.status !== OrderStatus.DELIVERED) {
+      if (
+        this.status !== OrderStatus.INVOICED &&
+        this.status !== OrderStatus.CANCELLED &&
+        this.status !== OrderStatus.DELIVERED
+      ) {
         this.status = OrderStatus.DRAFT;
       }
     } else if (this.isValidated && this.status === OrderStatus.DRAFT) {

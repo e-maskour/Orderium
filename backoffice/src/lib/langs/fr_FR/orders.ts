@@ -15,6 +15,9 @@ export default {
   delivered: 'Livré',
   canceled: 'Annulé',
   pending: 'En attente',
+  assigned: 'Assigné',
+  confirmed: 'Confirmé',
+  pickedUp: 'Récupéré',
   
   // Order Details
   orderDetails: 'Détails de la commande',
@@ -37,7 +40,6 @@ export default {
   unassign: 'Désassigner',
   assignTo: 'Assigner à',
   selectDeliveryPerson: 'Sélectionner un livreur',
-  assigned: '✓ Assigné',
   unassignOrder: 'Désassigner la commande',
   unassignOrderConfirm: 'Êtes-vous sûr de vouloir désassigner cette commande ?',
   
@@ -49,14 +51,33 @@ export default {
   orderCreatedSuccessfully: 'Commande créée avec succès',
   failedToAssign: 'Échec d\'assignation',
   failedToUnassign: 'Échec de désassignation',
+  failedToDelete: 'Échec de la suppression',
   
   // Search & Filter
   searchPlaceholder: 'Rechercher par n° commande, client, téléphone ou livreur...',
   filterByStatus: 'Filtrer par statut',
+  filters: 'Filtres',
+  dateRange: 'Plage de dates',
+  deliveryStatus: 'Statut de livraison',
+  orderSource: 'Source de la commande',
+  local: 'Local',
+  client: 'Client',
+  reset: 'Réinitialiser',
+  apply: 'Appliquer',
   
   // KPIs
   totalOrders: 'Total des commandes',
   ordersToday: 'Commandes aujourd\'hui',
   totalRevenue: 'Revenu total',
   revenueToday: 'Revenu aujourd\'hui',
+  
+  // Order Actions - Bulk
+  deleteOrders: 'Supprimer les commandes',
+  ordersDeleted: 'Commandes supprimées avec succès',
+  confirmDeleteOrders: 'Êtes-vous sûr de vouloir supprimer les commandes ? Cette action ne peut pas être annulée.',
+  selectOneOrder: 'Veuillez sélectionner une seule commande pour l\'aperçu',
+  
+  // Additional
+  previewReceipt: 'Aperçu du reçu',
+  previewDeliveryNote: 'Aperçu du bon de livraison',
 };

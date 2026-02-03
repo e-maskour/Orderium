@@ -4,6 +4,7 @@ import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/paymen
 import PaymentModal from './PaymentModal';
 import ConfirmDialog from './ConfirmDialog';
 import AlertDialog from './AlertDialog';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface PaymentHistoryModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   supplierId,
   onPaymentUpdate,
 }) => {
+  const { t, language } = useLanguage();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -112,9 +114,9 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
           <div className="flex items-center justify-between p-6 border-b">
             <div>
               <h2 className="text-xl font-semibold text-slate-800">
-                Historique des paiements
+                {t('invoice.paymentHistory')}
               </h2>
-              <p className="text-sm text-slate-600 mt-1">Facture {invoiceNumber}</p>
+              <p className="text-sm text-slate-600 mt-1">{t('invoice')} {invoiceNumber}</p>
             </div>
             <button
               onClick={onClose}
@@ -129,17 +131,17 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-lg mb-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-slate-600 mb-1">Total facture</p>
-                  <p className="text-2xl font-bold text-slate-900">{invoiceTotal.toFixed(2)} MAD</p>
+                  <p className="text-sm text-slate-600 mb-1">{t('totalInvoice')}</p>
+                  <p className="text-2xl font-bold text-slate-900">{invoiceTotal.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600 mb-1">Total payé</p>
-                  <p className="text-2xl font-bold text-emerald-600">{totalPaid.toFixed(2)} MAD</p>
+                  <p className="text-sm text-slate-600 mb-1">{t('totalPaid')}</p>
+                  <p className="text-2xl font-bold text-emerald-600">{totalPaid.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600 mb-1">Reste à payer</p>
+                  <p className="text-sm text-slate-600 mb-1">{t('remainingToPay')}</p>
                   <p className={`text-2xl font-bold ${isFullyPaid ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {remainingAmount.toFixed(2)} MAD
+                    {remainingAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
                   </p>
                 </div>
               </div>
@@ -147,7 +149,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
               {isFullyPaid && (
                 <div className="mt-4 flex items-center gap-2 text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg">
                   <AlertCircle className="w-5 h-5" />
-                  <span className="text-sm font-medium">Facture entièrement payée</span>
+                  <span className="text-sm font-medium">{t('invoiceFullyPaid')}</span>
                 </div>
               )}
             </div>
@@ -160,7 +162,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  Ajouter un paiement
+                  {t('addPayment')}
                 </button>
               </div>
             )}
@@ -173,7 +175,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
             ) : payments.length === 0 ? (
               <div className="text-center py-12">
                 <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500">Aucun paiement enregistré</p>
+                <p className="text-slate-500">{t('noPaymentsRecorded')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -185,13 +187,13 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                     <div className="flex items-start justify-between">
                       <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Montant</p>
+                          <p className="text-xs text-slate-500 mb-1">{t('amount')}</p>
                           <p className="text-lg font-semibold text-slate-900">
-                            {parseFloat(payment.amount.toString()).toFixed(2)} MAD
+                            {parseFloat(payment.amount.toString()).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Date</p>
+                          <p className="text-xs text-slate-500 mb-1">{t('invoice.date')}</p>
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-slate-400" />
                             <p className="text-sm text-slate-700">
@@ -200,7 +202,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                           </div>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Mode de paiement</p>
+                          <p className="text-xs text-slate-500 mb-1">{t('paymentMethod')}</p>
                           <div className="flex items-center gap-2">
                             <CreditCard className="w-4 h-4 text-slate-400" />
                             <p className="text-sm text-slate-700">
@@ -210,7 +212,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                         </div>
                         {payment.referenceNumber && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Référence</p>
+                            <p className="text-xs text-slate-500 mb-1">{t('reference')}</p>
                             <div className="flex items-center gap-2">
                               <Hash className="w-4 h-4 text-slate-400" />
                               <p className="text-sm text-slate-700">{payment.referenceNumber}</p>
@@ -222,14 +224,14 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                         <button
                           onClick={() => handleEdit(payment)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Modifier"
+                          title={t('edit')}
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(payment.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Supprimer"
+                          title={t('delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -254,7 +256,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              Fermer
+              {t('close')}
             </button>
           </div>
         </div>
@@ -283,11 +285,11 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
           setDeletePaymentId(null);
         }}
         onConfirm={confirmDelete}
-        title="Supprimer le paiement"
-        message="Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible."
+        title={t('deleteTitle')}
+        message={t('confirmDeletePayment')}
         type="danger"
-        confirmText="Supprimer"
-        cancelText="Annuler"
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
       />
 
       <AlertDialog

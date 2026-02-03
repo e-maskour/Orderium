@@ -136,10 +136,10 @@ export default function QuotePreviewPage() {
                   : 'text-blue-700'
               }`}>
                 {q.status === 'signed'
-                  ? '✓ Signé'
+                  ? t('signedStatus')
                   : q.status === 'closed'
-                  ? '✕ Fermé'
-                  : 'En attente de signature'}
+                  ? t('closedStatus')
+                  : t('awaitingSignature')}
               </span>
             </div>
           </div>
@@ -228,11 +228,11 @@ export default function QuotePreviewPage() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-green-800">
-                        <span className="font-medium">Signé par:</span> {q.signedBy}
+                        <span className="font-medium">{t('signedByLabel')}</span> {q.signedBy}
                       </p>
                       {q.signedDate && (
                         <p className="text-sm text-green-700">
-                          <span className="font-medium">Date:</span>{' '}
+                          <span className="font-medium">{t('dateLabel')}</span>{' '}
                           {new Date(q.signedDate).toLocaleDateString('fr-FR', {
                             day: 'numeric',
                             month: 'long',
@@ -279,14 +279,14 @@ export default function QuotePreviewPage() {
                       </p>
                       <div>
                         <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                          Signé par:
+                          {t('signedByLabel')}
                         </label>
                         <input
                           type="text"
                           value={signedBy}
                           onChange={(e) => setSignedBy(e.target.value)}
                           className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Votre nom complet"
+                          placeholder={t('signedByPlaceholder')}
                         />
                       </div>
                       <div>

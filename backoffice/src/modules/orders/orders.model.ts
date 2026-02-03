@@ -88,6 +88,8 @@ export class Order implements IOrder {
   notes?: string | null;
   convertedToInvoiceId?: number | null;
   fromPortal?: boolean;
+  fromClient?: boolean;
+  deliveryStatus?: string | null;
   deliveryPersonId?: number | null;
   deliveryPersonName?: string | null;
   dateCreated: string;
@@ -113,6 +115,8 @@ export class Order implements IOrder {
     this.notes = data.notes;
     this.convertedToInvoiceId = data.convertedToInvoiceId;
     this.fromPortal = data.fromPortal;
+    this.fromClient = data.fromClient;
+    this.deliveryStatus = data.deliveryStatus;
     this.deliveryPersonId = data.deliveryPersonId;
     this.deliveryPersonName = data.deliveryPersonName;
     this.dateCreated = data.dateCreated;
@@ -247,6 +251,8 @@ export class Order implements IOrder {
       notes: data.notes,
       convertedToInvoiceId: data.convertedToInvoiceId,
       fromPortal: data.fromPortal || false,
+      fromClient: data.fromClient || false,
+      deliveryStatus: data.deliveryStatus || null,
       deliveryPersonId: data.deliveryPersonId, // Business logic field
       deliveryPersonName: data.deliveryPersonName, // Business logic field
       dateCreated: data.dateCreated,

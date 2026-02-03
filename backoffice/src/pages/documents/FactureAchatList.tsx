@@ -1,8 +1,10 @@
 import DocumentListPage from './DocumentListPage';
 import { getDocumentConfig } from '../../modules/documents/types/document-config';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function FactureAchatList() {
-  const config = getDocumentConfig('facture', 'achat');
+  const { t } = useLanguage();
+  const config = getDocumentConfig('facture', 'achat', t);
   
   return (
     <DocumentListPage

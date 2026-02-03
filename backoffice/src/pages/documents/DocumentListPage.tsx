@@ -9,6 +9,7 @@ import PaymentHistoryModal from '../../components/PaymentHistoryModal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import AlertDialog from '../../components/AlertDialog';
 import { DocumentType, DocumentDirection, DocumentConfig } from '../../modules/documents/types';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface DocumentListPageProps {
   documentType: DocumentType;
@@ -25,6 +26,7 @@ export default function DocumentListPage({
   createRoute,
   editRoute
 }: DocumentListPageProps) {
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -106,8 +108,8 @@ export default function DocumentListPage({
       console.error('Error validating document:', error);
       setShowValidateConfirm(false);
       setAlertMessage({
-        title: 'Erreur',
-        message: 'Erreur lors de la validation du document',
+        title: t('error'),
+        message: t('errorValidatingDocument'),
         type: 'error'
       });
       setShowAlert(true);
@@ -126,8 +128,8 @@ export default function DocumentListPage({
       console.error('Error devalidating document:', error);
       setShowDevalidateConfirm(false);
       setAlertMessage({
-        title: 'Erreur',
-        message: 'Erreur lors de la dévalidation du document',
+        title: t('error'),
+        message: t('errorDevalidatingDocument'),
         type: 'error'
       });
       setShowAlert(true);
@@ -151,8 +153,8 @@ export default function DocumentListPage({
       console.error('Error deleting document:', error);
       setShowDeleteConfirm(false);
       setAlertMessage({
-        title: 'Suppression impossible',
-        message: error.message || 'Erreur lors de la suppression du document',
+        title: t('deletionImpossible'),
+        message: error.message || t('errorDeletingDocument'),
         type: 'error'
       });
       setShowAlert(true);
@@ -179,8 +181,8 @@ export default function DocumentListPage({
   };
 
   const tabs = [
-    { key: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-    { key: 'list', label: `Liste des ${config.title.toLowerCase()}`, icon: List },
+    { key: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
+    { key: 'list', label: `${t('listOf')} ${config.title.toLowerCase()}`, icon: List },
   ];
 
   // Calculate statistics
@@ -196,101 +198,103 @@ export default function DocumentListPage({
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto w-full">
         <PageHeader
           icon={Icon}
           title={config.title}
-          subtitle={`Gérez vos ${config.title.toLowerCase()}`}
+          subtitle={`${t('manageYour')} ${config.title.toLowerCase()}`}
           actions={
             <button
               onClick={() => navigate(createRoute)}
-              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2"
+              className="px-2 sm:px-4 py-1.5 sm:py-2 bg-amber-500 text-white rounded-lg sm:rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium"
             >
-              <Plus className="w-4 h-4" />
-              Nouveau
+              <Plus className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              <span className="hidden sm:inline">{t('nouveau')}</span>
+              <span className="sm:hidden">+</span>
             </button>
           }
         />
 
         {/* Tabs Navigation */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-6">
-          <div className="flex items-center gap-2 p-2 border-b border-slate-200">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 mb-4 sm:mb-6">
+          <div className="flex items-center gap-1 sm:gap-2 p-2 border-b border-slate-200 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.key
                       ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <TabIcon className="w-4 h-4" />
-                  {tab.label}
+                  <TabIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden text-xs">{tab.label.split(' ')[0]}</span>
                 </button>
               );
             })}
           </div>
 
           {/* Tab Content */}
-          <div className="p-3 pt-2">
+          <div className="p-2 sm:p-3 pt-2">
             {activeTab === 'dashboard' && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                   {/* Stats Cards */}
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-white" />
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl p-3 sm:p-5 border border-blue-200">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                       </div>
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-200 px-2 py-1 rounded-full">Total</span>
+                      <span className="text-xs font-semibold text-blue-600 bg-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{t('total')}</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-blue-900 mb-1">{totalInvoices}</h3>
-                    <p className="text-sm text-blue-700">Total</p>
+                    <h3 className="text-lg sm:text-2xl font-bold text-blue-900 mb-0.5 sm:mb-1">{totalInvoices}</h3>
+                    <p className="text-xs sm:text-sm text-blue-700">{t('total')}</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 border border-amber-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-white" />
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg sm:rounded-xl p-3 sm:p-5 border border-amber-200">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                       </div>
-                      <span className="text-xs font-semibold text-amber-600 bg-amber-200 px-2 py-1 rounded-full">Partielles</span>
+                      <span className="text-xs font-semibold text-amber-600 bg-amber-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{t('partial')}</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-amber-900 mb-1">{partialInvoices}</h3>
-                    <p className="text-sm text-amber-700">Partiellement payées</p>
+                    <h3 className="text-lg sm:text-2xl font-bold text-amber-900 mb-0.5 sm:mb-1">{partialInvoices}</h3>
+                    <p className="text-xs sm:text-sm text-amber-700">{t('partiallyPaid')}</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-5 border border-emerald-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
-                        <CheckCircle className="w-5 h-5 text-white" />
+                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg sm:rounded-xl p-3 sm:p-5 border border-emerald-200">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                       </div>
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-200 px-2 py-1 rounded-full">Payées</span>
+                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{t('paid')}</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-emerald-900 mb-1">{paidInvoices}</h3>
-                    <p className="text-sm text-emerald-700">Payées</p>
+                    <h3 className="text-lg sm:text-2xl font-bold text-emerald-900 mb-0.5 sm:mb-1">{paidInvoices}</h3>
+                    <p className="text-xs sm:text-sm text-emerald-700">{t('paid')}</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                        <TrendIcon className="w-5 h-5 text-white" />
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl p-3 sm:p-5 border border-purple-200">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <TrendIcon className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                       </div>
-                      <span className="text-xs font-semibold text-purple-600 bg-purple-200 px-2 py-1 rounded-full">Montant</span>
+                      <span className="text-xs font-semibold text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{t('amount')}</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-purple-900 mb-1">{totalAmount.toFixed(2)} DH</h3>
-                    <p className="text-sm text-purple-700">{isVente ? 'Revenu' : 'Dépenses'} total</p>
+                    <h3 className="text-lg sm:text-2xl font-bold text-purple-900 mb-0.5 sm:mb-1">{totalAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</h3>
+                    <p className="text-xs sm:text-sm text-purple-700">{isVente ? t('totalRevenue') : t('totalExpenses')} {t('total').toLowerCase()}</p>
                   </div>
                 </div>
 
                 {/* Dashboard Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
                   {/* Recent Documents */}
-                  <div className="bg-white rounded-xl p-6 border border-slate-200">
-                    <h3 className="text-base font-bold text-slate-800 mb-4">
-                      Les 3 dernières {config.titleShort.toLowerCase()}s
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 border border-slate-200">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-3 sm:mb-4">
+                      {t('lastThree')} {config.titleShort.toLowerCase()}
                     </h3>
                     <div className="space-y-2">
                       {transformedFactures.slice(0, 3).map((facture) => (
@@ -312,7 +316,7 @@ export default function DocumentListPage({
                         </div>
                       ))}
                       {transformedFactures.length === 0 && (
-                        <p className="text-sm text-slate-400 text-center py-4">Aucune {config.titleShort.toLowerCase()} récente</p>
+                        <p className="text-sm text-slate-400 text-center py-4">{t('noRecentDocument')} {config.titleShort.toLowerCase()} {t('recentSuffix')}</p>
                       )}
                     </div>
                   </div>
@@ -321,13 +325,13 @@ export default function DocumentListPage({
                   <div className="bg-white rounded-xl p-6 border border-slate-200">
                     <div className="mb-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-base font-bold text-slate-800">Brouillons</h3>
+                        <h3 className="text-base font-bold text-slate-800">{t('drafts')}</h3>
                         <span className="bg-slate-200 text-slate-700 text-xs font-semibold px-2 py-0.5 rounded-full">{draftInvoices}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
                       {draftInvoices === 0 ? (
-                        <p className="text-sm text-slate-400 text-center py-8">Aucun brouillon</p>
+                        <p className="text-sm text-slate-400 text-center py-8">{t('noDrafts')}</p>
                       ) : (
                         transformedFactures.filter(f => f.status === 'draft').slice(0, 3).map((facture) => (
                           <div key={facture.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
@@ -397,11 +401,11 @@ export default function DocumentListPage({
               setConfirmInvoiceId(null);
             }}
             onConfirm={confirmValidate}
-            title="Valider"
-            message="Êtes-vous sûr de vouloir valider ce document ?"
+            title={t('validateDocument')}
+            message={t('confirmValidate')}
             type="warning"
-            confirmText="Valider"
-            cancelText="Annuler"
+            confirmText={t('validate')}
+            cancelText={t('cancel')}
           />
 
           <ConfirmDialog
@@ -411,11 +415,11 @@ export default function DocumentListPage({
               setConfirmInvoiceId(null);
             }}
             onConfirm={confirmDevalidate}
-            title="Dévalider"
-            message="Êtes-vous sûr de vouloir dévalider ce document ?"
+            title={t('devalidateDocument')}
+            message={t('confirmDevalidate')}
             type="warning"
-            confirmText="Dévalider"
-            cancelText="Annuler"
+            confirmText={t('devalidate')}
+            cancelText={t('cancel')}
           />
         </>
       )}
@@ -427,11 +431,11 @@ export default function DocumentListPage({
           setConfirmInvoiceId(null);
         }}
         onConfirm={confirmDelete}
-        title="Supprimer"
-        message="Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible."
+        title={t('deleteTitle')}
+        message={t('confirmDeleteDocument')}
         type="danger"
-        confirmText="Supprimer"
-        cancelText="Annuler"
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
       />
 
       <AlertDialog

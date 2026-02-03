@@ -42,11 +42,11 @@ export default function DeliveryPersons() {
     mutationFn: deliveryPersonService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveryPersons'] });
-      toast.success('Livreur créé avec succès');
+      toast.success(t('deliveryPersonCreated'));
       closeModal();
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
+      toast.error(`${t('error')}: ${error.message}`);
     },
   });
 
@@ -54,11 +54,11 @@ export default function DeliveryPersons() {
     mutationFn: ({ id, data }: { id: number; data: any }) => deliveryPersonService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveryPersons'] });
-      toast.success('Livreur modifié avec succès');
+      toast.success(t('deliveryPersonUpdated'));
       closeModal();
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
+      toast.error(`${t('error')}: ${error.message}`);
     },
   });
 
@@ -66,7 +66,7 @@ export default function DeliveryPersons() {
     mutationFn: (id: number) => deliveryPersonService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveryPersons'] });
-      toast.success('Livreur supprimé');
+      toast.success(t('deliveryPersonDeleted'));
       setShowDeleteConfirm(false);
       setDeletingPersonId(null);
       setSelectedPersons([]);
@@ -119,7 +119,7 @@ export default function DeliveryPersons() {
     } else {
       // Create new person
       if (!formData.password) {
-        toast.error('Le mot de passe est requis');
+        toast.error(t('passwordRequiredError'));
         return;
       }
       createMutation.mutate({
@@ -180,7 +180,7 @@ export default function DeliveryPersons() {
       return [
         {
           id: 'view',
-          label: 'Voir',
+          label: t('view'),
           icon: <Eye className="w-4 h-4" />,
           onClick: () => {
             if (person) {
@@ -215,8 +215,8 @@ export default function DeliveryPersons() {
   };
 
   const tabs = [
-    { key: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-    { key: 'list', label: 'Liste des livreurs', icon: List },
+    { key: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
+    { key: 'list', label: t('deliveryPersonList'), icon: List },
   ];
 
   // Calculate statistics
@@ -381,7 +381,7 @@ export default function DeliveryPersons() {
                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
                       type="text"
-                      placeholder="Rechercher livreurs..."
+                      placeholder={t('searchDeliveryPersons')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-96 ps-10 pe-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
@@ -566,7 +566,7 @@ export default function DeliveryPersons() {
                                         handleViewPerson(person);
                                       }}
                                       className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                      title="Voir"
+                                      title={t('seeDetails')}
                                     >
                                       <Eye className="w-4 h-4" />
                                     </button>
@@ -576,7 +576,7 @@ export default function DeliveryPersons() {
                                         handleEditPerson(person);
                                       }}
                                       className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                                      title="Modifier"
+                                      title={t('edit')}
                                     >
                                       <Edit2 className="w-4 h-4" />
                                     </button>
@@ -586,7 +586,7 @@ export default function DeliveryPersons() {
                                         handleDeletePerson(person);
                                       }}
                                       className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                      title="Supprimer"
+                                      title={t('delete')}
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </button>
@@ -625,18 +625,18 @@ export default function DeliveryPersons() {
           setDeletingPersonId(null);
         }}
         onConfirm={confirmDelete}
-        title="Supprimer le livreur"
-        message="Êtes-vous sûr de vouloir supprimer ce livreur ? Cette action est irréversible."
+        title={t('confirmDelete')}
+        message={t('deleteDeliveryPersonConfirm')}
         type="danger"
-        confirmText="Supprimer"
-        cancelText="Annuler"
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
       />
 
       {/* Create/Edit Modal */}
       <Modal
         isOpen={showFormModal}
         onClose={closeModal}
-        title={editingPerson ? 'Modifier le livreur' : 'Ajouter un livreur'}
+        title={editingPerson ? t('editDeliveryPersonTitle') : t('addDeliveryPersonTitle')}
         size="md"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -682,7 +682,7 @@ export default function DeliveryPersons() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
                 required={!editingPerson}
-                placeholder={editingPerson ? 'Nouveau mot de passe (optionnel)' : 'Min 6 caractères'}
+                placeholder={editingPerson ? t('newPasswordOptional') : t('minCharacters')}
               />
             </div>
             <div className="flex items-center pt-6">
@@ -708,8 +708,8 @@ export default function DeliveryPersons() {
               className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-lg font-medium shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createMutation.isPending || updateMutation.isPending 
-                ? (editingPerson ? 'Modification...' : 'Création...') 
-                : (editingPerson ? 'Modifier' : 'Créer')}
+                ? (editingPerson ? t('updating') : t('creatingDeliveryPerson')) 
+                : (editingPerson ? t('update') : t('create'))}
             </button>
             <button
               type="button"

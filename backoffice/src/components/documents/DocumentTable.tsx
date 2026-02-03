@@ -4,6 +4,7 @@ import { FloatingActionBar } from '../FloatingActionBar';
 import { DocumentType } from '../../modules/documents/types';
 import { pdfService } from '../../services/pdf.service';
 import { PDFPreviewModal } from '../PDFPreviewModal';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface Document {
   id: number;
@@ -55,6 +56,7 @@ export function DocumentTable({
   showPaymentColumns = false,
   showValidationColumn = false
 }: DocumentTableProps) {
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'number'>('date');
@@ -187,39 +189,39 @@ export function DocumentTable({
     switch (status) {
       // Invoice statuses
       case 'paid':
-        return 'Payée';
+        return t('paid');
       case 'partial':
-        return 'Partielle';
+        return t('partial');
       case 'pending':
-        return 'En attente';
+        return t('pending');
       case 'overdue':
-        return 'En retard';
+        return t('overdue');
       case 'unpaid':
-        return 'Impayée';
+        return t('unpaid');
       
       // Quote statuses
       case 'open':
-        return 'Ouvert';
+        return t('open');
       case 'signed':
-        return 'Signée (à facturer)';
+        return t('signed');
       case 'closed':
-        return 'Non signée (fermée)';
+        return t('closed');
       case 'invoiced':
-        return 'Facturée';
+        return t('invoiced');
       
       // Bon de livraison statuses
       case 'validated':
-        return 'Validée';
+        return t('validated');
       case 'in_progress':
-        return 'En cours';
+        return t('inProgress');
       case 'delivered':
-        return 'Livrée';
+        return t('delivered');
       case 'cancelled':
-        return 'Annulée';
+        return t('cancelled');
       
       // Common
       case 'draft':
-        return 'Brouillon';
+        return t('draft');
       default:
         return status;
     }
@@ -276,14 +278,14 @@ export function DocumentTable({
             className="flex items-center justify-center gap-2 px-3 py-2 text-xs border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors font-medium text-slate-700 w-full sm:w-auto"
           >
             <Columns className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Colonnes</span>
-            <span className="sm:hidden">Afficher colonnes</span>
+            <span className="hidden sm:inline">{t('columns')}</span>
+            <span className="sm:hidden">{t('showColumns')}</span>
             <ChevronDown className="w-3 h-3" />
           </button>
           {showColumnsMenu && (
             <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50 py-2">
               <div className="px-3 py-2 border-b border-slate-100">
-                <p className="text-xs font-semibold text-slate-700">Afficher/Masquer colonnes</p>
+                <p className="text-xs font-semibold text-slate-700">{t('showHideColumns')}</p>
               </div>
               <div className="py-1">
                 <label className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -293,7 +295,7 @@ export function DocumentTable({
                     onChange={(e) => setVisibleColumns(prev => ({ ...prev, tax: e.target.checked }))}
                     className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
                   />
-                  <span className="text-xs text-slate-700">Montant TVA</span>
+                  <span className="text-xs text-slate-700">{t('taxAmount')}</span>
                 </label>
                 {showPaymentColumns && (
                   <>
@@ -304,7 +306,7 @@ export function DocumentTable({
                         onChange={(e) => setVisibleColumns(prev => ({ ...prev, paidAmount: e.target.checked }))}
                         className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
                       />
-                      <span className="text-xs text-slate-700">Déjà réglé</span>
+                      <span className="text-xs text-slate-700">{t('alreadyPaid')}</span>
                     </label>
                     <label className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer">
                       <input
@@ -313,7 +315,7 @@ export function DocumentTable({
                         onChange={(e) => setVisibleColumns(prev => ({ ...prev, remainingAmount: e.target.checked }))}
                         className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
                       />
-                      <span className="text-xs text-slate-700">Reste à payer</span>
+                      <span className="text-xs text-slate-700">{t('remainingToPay')}</span>
                     </label>
                   </>
                 )}
@@ -325,7 +327,7 @@ export function DocumentTable({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Rechercher par numéro ou nom..."
+            placeholder={t('searchByNumberOrName')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
@@ -354,7 +356,7 @@ export function DocumentTable({
           return [
             {
               id: 'view',
-              label: 'Voir',
+              label: t('view'),
               icon: <Eye className="w-4 h-4" />,
               onClick: () => {
                 if (selectedDocuments.length === 1) {
@@ -366,7 +368,7 @@ export function DocumentTable({
             },
             {
               id: 'validate',
-              label: 'Valider',
+              label: t('validate'),
               icon: <CheckCircle className="w-4 h-4" />,
               onClick: () => {
                 selectedDocuments.forEach(id => {
@@ -382,7 +384,7 @@ export function DocumentTable({
             },
             {
               id: 'devalidate',
-              label: 'Dévalider', 
+              label: t('devalidate'), 
               icon: <Edit className="w-4 h-4" />,
               onClick: () => {
                 selectedDocuments.forEach(id => {
@@ -397,7 +399,7 @@ export function DocumentTable({
             },
             {
               id: 'payments',
-              label: 'Paiements',
+              label: t('payments'),
               icon: <CreditCard className="w-4 h-4" />,
               onClick: () => {
                 if (selectedDocuments.length === 1) {
@@ -411,7 +413,7 @@ export function DocumentTable({
             },
             {
               id: 'pdf-preview',
-              label: 'Aperçu PDF',
+              label: t('pdfPreview'),
               icon: <Eye className="w-4 h-4" />,
               onClick: () => {
                 if (selectedDocuments.length === 1) {
@@ -432,7 +434,7 @@ export function DocumentTable({
             },
             {
               id: 'pdf-download',
-              label: 'Télécharger PDF',
+              label: t('downloadPDF'),
               icon: <FileText className="w-4 h-4" />,
               onClick: () => {
                 selectedDocuments.forEach(id => {
@@ -452,7 +454,7 @@ export function DocumentTable({
             },
             {
               id: 'download',
-              label: 'Télécharger',
+              label: t('download'),
               icon: <Download className="w-4 h-4" />,
               onClick: () => {
                 selectedDocuments.forEach(id => onDownload?.(id));
@@ -461,7 +463,7 @@ export function DocumentTable({
             },
             {
               id: 'delete',
-              label: 'Supprimer',
+              label: t('delete'),
               icon: <Trash2 className="w-4 h-4" />,
               onClick: () => {
                 selectedDocuments.forEach(id => onDelete?.(id));
@@ -504,48 +506,48 @@ export function DocumentTable({
                     )}
                   </div>
                 </th>
-                <th className="text-left py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider sticky left-10 z-20 bg-slate-50 shadow-[2px_0_4px_rgba(0,0,0,0.05)] whitespace-nowrap">
-                  Numéro
+                <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider sticky left-10 z-20 bg-slate-50 shadow-[2px_0_4px_rgba(0,0,0,0.05)] whitespace-nowrap`}>
+                  {t('number')}
                 </th>
-                <th className="text-left py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
                   {partnerLabel}
                 </th>
-                <th className="text-left py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                  Date {documentType === 'facture' ? 'facturation' : documentType === 'devis' ? 'devis' : 'livraison'}
+                <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                  {documentType === 'facture' ? t('invoiceDate') : documentType === 'devis' ? t('quoteDate') : t('deliveryDate')}
                 </th>
                 {documentType === 'facture' && (
-                  <th className="text-left py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                    Date échéance
+                  <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                    {t('dueDate')}
                   </th>
                 )}
                 {showValidationColumn && (
-                  <th className="text-left py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                    Date validation
+                  <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                    {t('validationDate')}
                   </th>
                 )}
-                <th className="text-right py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                  Montant HT
+                <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                  {t('amountHT')}
                 </th>
                 {visibleColumns.tax && (
-                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                    Montant TVA
+                  <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                    {t('taxAmount')}
                   </th>
                 )}
-                <th className="text-right py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                  Montant TTC
+                <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                  {t('amountTTC')}
                 </th>
                 {showPaymentColumns && visibleColumns.paidAmount && (
-                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                    Déjà réglé
+                  <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                    {t('alreadyPaid')}
                   </th>
                 )}
                 {showPaymentColumns && visibleColumns.remainingAmount && (
-                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                    Reste à payer
+                  <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                    {t('remainingToPay')}
                   </th>
                 )}
                 <th className="text-center py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                  Statut
+                  {t('status')}
                 </th>
               </tr>
             </thead>
@@ -555,7 +557,7 @@ export function DocumentTable({
                   <td colSpan={columnCount} className="py-8 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-500"></div>
-                      <p className="text-xs text-slate-500">Chargement...</p>
+                      <p className="text-xs text-slate-500">{t('loading')}</p>
                     </div>
                   </td>
                 </tr>
@@ -603,10 +605,10 @@ export function DocumentTable({
                           {doc.number}
                         </button>
                       </td>
-                      <td className="py-2 px-3 whitespace-nowrap">
+                      <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                         <span className="text-xs font-medium text-slate-800">{doc.partnerName}</span>
                       </td>
-                      <td className="py-2 px-3 whitespace-nowrap">
+                      <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                         <span className="text-xs text-slate-600">
                           {new Date(doc.date).toLocaleDateString('fr-FR', {
                             day: '2-digit',
@@ -616,7 +618,7 @@ export function DocumentTable({
                         </span>
                       </td>
                       {documentType === 'facture' && (
-                        <td className="py-2 px-3 whitespace-nowrap">
+                        <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                           <span className="text-xs text-slate-600">
                             {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', {
                               day: '2-digit',
@@ -627,7 +629,7 @@ export function DocumentTable({
                         </td>
                       )}
                       {showValidationColumn && (
-                        <td className="py-2 px-3 whitespace-nowrap">
+                        <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                           <span className="text-xs text-slate-600">
                             {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', {
                               day: '2-digit',
@@ -637,34 +639,34 @@ export function DocumentTable({
                           </span>
                         </td>
                       )}
-                      <td className="py-2 px-3 text-right whitespace-nowrap">
+                      <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                         <span className="text-xs font-medium text-slate-700">
-                          {doc.subtotal.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                          {doc.subtotal.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                         </span>
                       </td>
                       {visibleColumns.tax && (
-                        <td className="py-2 px-3 text-right whitespace-nowrap">
+                        <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                           <span className="text-xs font-medium text-slate-700">
-                            {doc.tax.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                            {doc.tax.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                           </span>
                         </td>
                       )}
-                      <td className="py-2 px-3 text-right whitespace-nowrap">
+                      <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                         <span className="text-xs font-bold text-slate-900">
-                          {doc.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                          {doc.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                         </span>
                       </td>
                       {showPaymentColumns && visibleColumns.paidAmount && (
-                        <td className="py-2 px-3 text-right whitespace-nowrap">
+                        <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                           <span className="text-xs font-medium text-green-700">
-                            {doc.paidAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                            {doc.paidAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                           </span>
                         </td>
                       )}
                       {showPaymentColumns && visibleColumns.remainingAmount && (
-                        <td className="py-2 px-3 text-right whitespace-nowrap">
+                        <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                           <span className={`text-xs font-medium ${doc.remainingAmount > 0 ? 'text-red-700' : 'text-slate-500'}`}>
-                              {doc.remainingAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                              {doc.remainingAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                           </span>
                         </td>
                       )}
@@ -682,7 +684,7 @@ export function DocumentTable({
                   <td colSpan={columnCount} className="py-8 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Filter className="w-10 h-10 text-slate-300" />
-                      <p className="text-xs text-slate-500">Aucun document trouvé</p>
+                      <p className="text-xs text-slate-500">{t('noDocumentFound')}</p>
                     </div>
                   </td>
                 </tr>
@@ -695,7 +697,7 @@ export function DocumentTable({
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
             <div className="text-xs text-slate-600">
-              Affichage de {startIndex + 1} à {Math.min(startIndex + itemsPerPage, filteredDocuments.length)} sur {filteredDocuments.length} {itemLabel}s
+              {t('showingFrom')} {startIndex + 1} {t('to')} {Math.min(startIndex + itemsPerPage, filteredDocuments.length)} {t('on')} {filteredDocuments.length} {itemLabel}s
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -703,7 +705,7 @@ export function DocumentTable({
                 disabled={currentPage === 1}
                 className="px-2.5 py-1 border border-slate-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
               >
-                Précédent
+                {t('previous')}
               </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
@@ -723,7 +725,7 @@ export function DocumentTable({
                 disabled={currentPage === totalPages}
                 className="px-2.5 py-1 border border-slate-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
               >
-                Suivant
+                {t('next')}
               </button>
             </div>
           </div>

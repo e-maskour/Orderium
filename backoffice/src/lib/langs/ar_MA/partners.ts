@@ -3,14 +3,19 @@ export default {
   customers: 'العملاء',
   customer: 'العميل',
   manageCustomers: 'إدارة العملاء',
+  customerName: 'اسم العميل',
   searchCustomers: 'ابحث عن العملاء...',
   noCustomersFound: 'لا يوجد عملاء',
   customerUpdated: 'تم تحديث العميل بنجاح',
   customerCreated: 'تم إنشاء العميل بنجاح',
   customerDeleted: 'تم حذف العميل بنجاح',
   addCustomer: 'إضافة عميل',
+  editCustomer: 'تعديل العميل',
+  newCustomer: 'عميل جديد',
+  customerNotFound: 'العميل غير موجود',
   phoneNumberRequired: 'رقم الهاتف مطلوب',
   city: 'المدينة',
+  typeCustomerName: 'اكتب اسم العميل',
   
   // Suppliers
   suppliers: 'الموردين',
@@ -22,6 +27,9 @@ export default {
   supplierCreated: 'تم إنشاء المورد بنجاح',
   supplierDeleted: 'تم حذف المورد بنجاح',
   addSupplier: 'إضافة مورد',
+  editSupplier: 'تعديل المورد',
+  newSupplier: 'مورد جديد',
+  supplierNotFound: 'المورد غير موجود',
   
   // Partner Form
   partnerType: 'نوع الشريك',
@@ -51,4 +59,20 @@ export default {
   updatePartner: 'تحديث الشريك',
   createPartner: 'إنشاء شريك',
   deletePartnerConfirmation: 'هل أنت متأكد من حذف هذا الشريك؟ لا يمكن التراجع عن هذا الإجراء.',
+  
+  // Tabs
+  dashboard: 'لوحة القيادة',
+  customerList: 'قائمة العملاء',
+  supplierList: 'قائمة الموردين',
+  
+  // Placeholders
+  searchCustomersPlaceholder: 'البحث عن العملاء...',
+  searchSuppliersPlaceholder: 'البحث عن الموردين...',
+  
+  // Common Labels
+  seeDetails: 'عرض',
+  
+  // Supplier Detail
+  supplierDetails: 'تفاصيل المورد',
+  customerDetails: 'تفاصيل العميل',
 };

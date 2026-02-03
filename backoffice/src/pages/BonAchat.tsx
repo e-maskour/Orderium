@@ -11,8 +11,8 @@ export default function BonAchat() {
       <div className="max-w-7xl mx-auto">
         <PageHeader
           icon={ShoppingBag}
-          title="Bon d'Achat"
-          subtitle="Gérez vos bons d'achat"
+          title={t('purchaseOrder')}
+          subtitle={t('managePurchaseOrders')}
         />
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-slate-600">Page en construction...</p>

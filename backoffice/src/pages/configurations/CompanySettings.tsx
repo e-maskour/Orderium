@@ -18,18 +18,18 @@ const LEGAL_STRUCTURES = [
 ];
 
 const MONTHS = [
-  { value: 1, label: 'Janvier' },
-  { value: 2, label: 'Février' },
-  { value: 3, label: 'Mars' },
-  { value: 4, label: 'Avril' },
-  { value: 5, label: 'Mai' },
-  { value: 6, label: 'Juin' },
-  { value: 7, label: 'Juillet' },
-  { value: 8, label: 'Août' },
-  { value: 9, label: 'Septembre' },
-  { value: 10, label: 'Octobre' },
-  { value: 11, label: 'Novembre' },
-  { value: 12, label: 'Décembre' },
+  { value: 1, label: t => t('monthJanuary') },
+  { value: 2, label: t => t('monthFebruary') },
+  { value: 3, label: t => t('monthMarch') },
+  { value: 4, label: t => t('monthApril') },
+  { value: 5, label: t => t('monthMay') },
+  { value: 6, label: t => t('monthJune') },
+  { value: 7, label: t => t('monthJuly') },
+  { value: 8, label: t => t('monthAugust') },
+  { value: 9, label: t => t('monthSeptember') },
+  { value: 10, label: t => t('monthOctober') },
+  { value: 11, label: t => t('monthNovember') },
+  { value: 12, label: t => t('monthDecember') },
 ];
 
 export default function CompanySettings() {
@@ -84,8 +84,8 @@ export default function CompanySettings() {
     <AdminLayout>
       <PageHeader
         icon={Building2}
-        title="Informations de l'entreprise"
-        subtitle="Gérer les informations de votre entreprise"
+        title={t('companyInformation')}
+        subtitle={t('manageCompanyInfo')}
       />
 
       <div className="p-6">

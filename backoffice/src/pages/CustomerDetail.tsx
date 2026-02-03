@@ -5,6 +5,7 @@ import { partnersService } from '../modules/partners';
 import { invoicesService } from '../modules/invoices';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Users, 
   ArrowLeft,
@@ -19,6 +20,7 @@ import {
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
   const [chartMode, setChartMode] = useState<'count' | 'amount'>('count');
 
   const { data: partner, isLoading: partnerLoading } = useQuery({
@@ -76,7 +78,7 @@ export default function CustomerDetail() {
 
   // Generate chart data by month
   const generateChartData = () => {
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const months = [t('monthJan'), t('monthFeb'), t('monthMar'), t('monthApr'), t('monthMay'), t('monthJun'), t('monthJul'), t('monthAug'), t('monthSep'), t('monthOct'), t('monthNov'), t('monthDec')];
     const currentYear = new Date().getFullYear();
     
     return months.map((month, index) => {
@@ -102,7 +104,7 @@ export default function CustomerDetail() {
         <PageHeader
           icon={Users}
           title={partner.name}
-          subtitle="Détails du client"
+          subtitle={t('customerDetails')}
           actions={
             <div className="flex items-center gap-3">
               <button
@@ -137,7 +139,7 @@ export default function CustomerDetail() {
                   <span className="text-xs font-semibold text-blue-600 bg-blue-200 px-2 py-1 rounded-full">Factures</span>
                 </div>
                 <h3 className="text-2xl font-bold text-blue-900 mb-1">{totalInvoices}</h3>
-                <p className="text-sm text-blue-700">Total: {totalAmountTTC.toFixed(2)} DH</p>
+                <p className="text-sm text-blue-700">Total: {totalAmountTTC.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
               </div>
 
               {/* Remaining Amount KPI */}
@@ -148,7 +150,7 @@ export default function CustomerDetail() {
                   </div>
                   <span className="text-xs font-semibold text-amber-600 bg-amber-200 px-2 py-1 rounded-full">Impayé</span>
                 </div>
-                <h3 className="text-2xl font-bold text-amber-900 mb-1">{remainingAmount.toFixed(2)} DH</h3>
+                <h3 className="text-2xl font-bold text-amber-900 mb-1">{remainingAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</h3>
                 <p className="text-sm text-amber-700">Reste à payer</p>
               </div>
 
@@ -161,7 +163,7 @@ export default function CustomerDetail() {
                   <span className="text-xs font-semibold text-emerald-600 bg-emerald-200 px-2 py-1 rounded-full">Livraisons</span>
                 </div>
                 <h3 className="text-2xl font-bold text-emerald-900 mb-1">{totalOrders}</h3>
-                <p className="text-sm text-emerald-700">Total: {totalOrdersAmount.toFixed(2)} DH</p>
+                <p className="text-sm text-emerald-700">Total: {totalOrdersAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
               </div>
 
               {/* Payment Status */}
@@ -173,10 +175,10 @@ export default function CustomerDetail() {
                   <span className="text-xs font-semibold text-purple-600 bg-purple-200 px-2 py-1 rounded-full">Status</span>
                 </div>
                 <h3 className="text-lg font-bold text-purple-900 mb-1">
-                  {remainingAmount > 0 ? 'En cours' : 'À jour'}
+                  {remainingAmount > 0 ? t('inProgress') : t('upToDate')}
                 </h3>
                 <p className="text-sm text-purple-700">
-                  {remainingAmount > 0 ? 'Paiements en attente' : 'Tous les paiements à jour'}
+                  {remainingAmount > 0 ? t('pendingPayments') : t('allPaymentsUpToDate')}
                 </p>
               </div>
             </div>

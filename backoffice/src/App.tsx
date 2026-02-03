@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { OverlayPanelProvider } from './context/OverlayPanelContext';
+import { GlobalOverlayPanel } from './components/GlobalOverlayPanel';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
 import Login from './pages/Login';
@@ -60,13 +62,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
-          <BrowserRouter
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true,
-            }}
-          >
-            <Routes>
+          <OverlayPanelProvider>
+            <BrowserRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
+              <Routes>
               {/* Public Routes - No Authentication Required */}
               <Route path="/login" element={<Login />} />
               <Route path="/preview/quote/:token" element={<QuotePreviewPage />} />
@@ -435,7 +438,9 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
             <Toaster />
+            <GlobalOverlayPanel />
           </BrowserRouter>
+        </OverlayPanelProvider>
         </AuthProvider>
       </LanguageProvider>
     </QueryClientProvider>

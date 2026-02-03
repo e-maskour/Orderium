@@ -144,6 +144,8 @@ export default function CheckoutPage() {
     const orderData = {
       customerId: state.customer.id,
       fromPortal: true,
+      fromClient: false,
+      deliveryStatus: 'pending',
       date: new Date().toISOString(),
       subtotal: subtotal,
       tax: totalTax,

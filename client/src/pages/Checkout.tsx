@@ -253,6 +253,8 @@ const Checkout = () => {
         discountType: 0,
         total: orderTotal,
         fromPortal: true,
+        fromClient: true,
+        deliveryStatus: 'pending',
       });
 
       // 3. Navigate to success with order data (before clearing cart)

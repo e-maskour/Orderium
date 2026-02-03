@@ -6,8 +6,10 @@ import { Modal } from '../components/Modal';
 import { FolderTree, Plus, Pencil, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
 import { categoriesService, Category, CreateCategoryDTO, UpdateCategoryDTO } from '../modules/categories';
 import { toast } from 'sonner';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Categories() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -35,11 +37,11 @@ export default function Categories() {
     mutationFn: (data: CreateCategoryDTO) => categoriesService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success('Category created successfully');
+      toast.success(t('categoryCreated'));
       closeModal();
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to create category');
+      toast.error(error.message || t('failedToCreate'));
     },
   });
 
@@ -48,11 +50,11 @@ export default function Categories() {
       categoriesService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success('Category updated successfully');
+      toast.success(t('categoryUpdated'));
       closeModal();
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to update category');
+      toast.error(error.message || t('failedToUpdate'));
     },
   });
 
@@ -60,10 +62,10 @@ export default function Categories() {
     mutationFn: (id: number) => categoriesService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success('Category deleted successfully');
+      toast.success(t('categoryDeleted'));
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to delete category');
+      toast.error(error.message || t('failedToDelete'));
     },
   });
 
@@ -105,7 +107,7 @@ export default function Categories() {
 
   const handleSubmit = () => {
     if (!formData.name.trim()) {
-      toast.error('Category name is required');
+      toast.error(t('nameRequired'));
       return;
     }
 
@@ -175,7 +177,7 @@ export default function Categories() {
             <button
               onClick={() => openCreateModal(category.id)}
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Add subcategory"
+              title={t('addSubcategory')}
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -207,15 +209,15 @@ export default function Categories() {
     <AdminLayout>
       <PageHeader
         icon={FolderTree}
-        title="Categories"
-        subtitle="Manage product categories"
+        title={t('categories')}
+        subtitle={t('manageCategories')}
         actions={
           <button
             onClick={() => openCreateModal()}
             className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Category
+            {t('addCategory')}
           </button>
         }
       />
@@ -223,10 +225,10 @@ export default function Categories() {
       {/* Categories List */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Loading...</div>
+          <div className="p-8 text-center text-slate-500">{t('loading')}</div>
         ) : categories.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
-            No categories found. Create your first category to get started.
+            {t('noCategoriesFound')}. {t('createFirstCategory')}.
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -239,26 +241,25 @@ export default function Categories() {
       <Modal
         isOpen={showModal}
         onClose={closeModal}
-        title={editingCategory ? 'Edit Category' : 'Create Category'}
+        title={editingCategory ? t('editCategory') : t('createCategory')}
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Category Name <span className="text-red-500">*</span>
+              {t('categoryName')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-              placeholder="Enter category name"
+              placeholder={t('enterCategoryName')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-
-              Parent Category
+              {t('parentCategory')}
             </label>
             <select
               value={formData.parentId || ''}
@@ -313,14 +314,14 @@ export default function Categories() {
             onClick={closeModal}
             className="px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={createMutation.isPending || updateMutation.isPending}
-            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
+            className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50"
           >
-            {editingCategory ? 'Update' : 'Create'}
+            {editingCategory ? t('update') : t('create')}
           </button>
         </div>
       </Modal>

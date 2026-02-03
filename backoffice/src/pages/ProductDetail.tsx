@@ -13,11 +13,13 @@ import { ImageUpload } from '../components/ImageUpload';
 import { Package, ArrowLeft, Save, Plus, ArrowRightLeft, Edit2, CheckSquare, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'info' | 'stock' | 'pricing'>('info');
   const [isEditing, setIsEditing] = useState(true);
   const [showStockCorrection, setShowStockCorrection] = useState(false);
@@ -71,10 +73,10 @@ export default function ProductDetail() {
       const uniqueCode = await generateUniqueProductCode();
       setFormData(prev => ({ ...prev, code: uniqueCode }));
       clearFieldError('code');
-      toast.success('New unique product code generated');
+      toast.success(t('newUniqueCodeGenerated'));
     } catch (error) {
       console.error('Failed to generate unique code:', error);
-      toast.error('Failed to generate unique code. Please try again.');
+      toast.error(t('failedToGenerateUniqueCode'));
     } finally {
       setIsGeneratingCode(false);
     }
@@ -91,10 +93,10 @@ export default function ProductDetail() {
       
       setImageUrlInput('');
       setShowUrlInput(false);
-      toast.success('Image URL saved successfully');
+      toast.success(t('imageUrlSavedSuccessfully'));
       queryClient.invalidateQueries({ queryKey: ['product', id] });
     } catch (error) {
-      toast.error('Failed to save image URL');
+      toast.error(t('failedToSaveImageUrl'));
     }
   };
 
@@ -204,7 +206,7 @@ export default function ProductDetail() {
       queryClient.invalidateQueries({ queryKey: ['product', id] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       setIsEditing(false);
-      toast.success('Product updated successfully');
+      toast.success(t('productUpdatedSuccessfully'));
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to update product');
@@ -235,7 +237,7 @@ export default function ProductDetail() {
         unitPrice: '',
         notes: '',
       });
-      toast.success('Stock corrected successfully');
+      toast.success(t('stockCorrectedSuccessfully'));
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to correct stock');
@@ -260,7 +262,7 @@ export default function ProductDetail() {
         quantity: '',
         notes: '',
       });
-      toast.success('Stock transferred successfully');
+      toast.success(t('stockTransferredSuccessfully'));
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to transfer stock');
@@ -396,7 +398,7 @@ export default function ProductDetail() {
             </button>
             <div>
               <h1 className="text-xl font-semibold text-slate-900">{product.name}</h1>
-              <p className="text-sm text-slate-500">{product.code || 'No code'}</p>
+              <p className="text-sm text-slate-500">{product.code || t('noCode')}</p>
             </div>
           </div>
         </div>
@@ -447,7 +449,7 @@ export default function ProductDetail() {
             <div className="space-y-6">
               {/* Basic Info Section */}
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Basic Information</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('basicInformation')}</h3>
                 
                 {/* Image + Name/Code Layout */}
                 <div className="grid grid-cols-3 gap-6 mb-6">
@@ -459,11 +461,11 @@ export default function ProductDetail() {
                         currentImage={(product as any)?.imageUrl}
                         onImageUpload={(url, publicId) => {
                           queryClient.invalidateQueries({ queryKey: ['product', id] });
-                          toast.success('Image updated successfully');
+                          toast.success(t('imageUpdatedSuccessfully'));
                         }}
                         onImageRemove={() => {
                           queryClient.invalidateQueries({ queryKey: ['product', id] });
-                          toast.success('Image removed successfully');
+                          toast.success(t('imageRemovedSuccessfully'));
                         }}
                         folder="products"
                         maxSizeMB={5}
@@ -478,21 +480,20 @@ export default function ProductDetail() {
                       {/* Product Name */}
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Product Name <span className="text-red-500">*</span>
+                          {t('productName')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                          placeholder="Enter product name"
+                          placeholder={t('enterProductName')}
                         />
                       </div>
-
                       {/* Product Code */}
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Product Code (EAN-13)
+                          {t('productCodeEAN13')}
                         </label>
                         <div className="relative">
                           <input
@@ -505,24 +506,24 @@ export default function ProductDetail() {
                             className={`w-full px-3 py-2 rounded-lg border ${
                               validationErrors.code ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
                             } focus:ring-2`}
-                            placeholder="EAN-13 barcode"
+                            placeholder={t('eanBarcodeePlaceholder')}
                             maxLength={13}
                           />
                           {validationErrors.code && (
                             <p className="mt-1 text-sm text-red-600">{validationErrors.code}</p>
                           )}
                           {!validationErrors.code && formData.code && (
-                            <p className="mt-1 text-xs text-slate-500">13-digit EAN-13 barcode for Morocco (611)</p>
+                            <p className="mt-1 text-xs text-slate-500">{t('eanBarcodeHint')}</p>
                           )}
                           <button
                             type="button"
                             onClick={handleRegenerateCode}
                             disabled={isGeneratingCode}
                             className="mt-1 inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Generate new unique EAN-13 code"
+                            title={t('generateNewUniqueCode')}
                           >
                             <RefreshCw className={`w-3 h-3 ${isGeneratingCode ? 'animate-spin' : ''}`} />
-                            {isGeneratingCode ? 'Generating...' : 'Generate new code'}
+                            {isGeneratingCode ? t('generating') : t('generateCode')}
                           </button>
                         </div>
                       </div>
@@ -534,14 +535,14 @@ export default function ProductDetail() {
                 {showUrlInput && (
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Image URL
+                      {t('imageUrl')}
                     </label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={imageUrlInput}
                         onChange={(e) => setImageUrlInput(e.target.value)}
-                        placeholder="https://example.com/image.jpg"
+                        placeholder={t('exampleImageUrl')}
                         className="flex-1 px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-sm"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -556,11 +557,11 @@ export default function ProductDetail() {
                         disabled={!imageUrlInput.trim() || updateMutation.isPending}
                         className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        Save URL
+                        {t('saveUrl')}
                       </button>
                     </div>
                     <p className="mt-1 text-xs text-slate-500">
-                      Enter a web image URL or relative CDN path
+                      {t('enterWebImageUrl')}
                     </p>
                   </div>
                 )}
@@ -569,7 +570,7 @@ export default function ProductDetail() {
                 <div className="grid grid-cols-2 gap-6 mt-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Warehouse <span className="text-red-500">*</span>
+                      {t('warehouse')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative" ref={warehouseSearchRef}>
                       <input
@@ -581,7 +582,7 @@ export default function ProductDetail() {
                         }}
                         onFocus={() => setShowWarehouseSearch(true)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                        placeholder="Select or search warehouse"
+                        placeholder={t('selectOrSearchWarehouse')}
                       />
                       {showWarehouseSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -611,7 +612,7 @@ export default function ProductDetail() {
                               ))
                           ) : (
                             <div className="p-4 text-center text-slate-500 text-sm">
-                              No warehouses found
+                              {t('noWarehousesFound')}
                             </div>
                           )}
                         </div>
@@ -621,7 +622,7 @@ export default function ProductDetail() {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Categories
+                      {t('categories')}
                     </label>
                     <div className="relative" ref={categorySearchRef}>
                       {/* Input container with chips inside */}
@@ -658,7 +659,7 @@ export default function ProductDetail() {
                           }}
                           onFocus={() => setShowCategorySearch(true)}
                           className="flex-1 min-w-[120px] outline-none border-none focus:ring-0"
-                          placeholder={selectedCategories.length === 0 ? "Type to search and add categories" : ""}
+                          placeholder={selectedCategories.length === 0 ? t('typeToSearchAndAddCategories') : ""}
                         />
                       </div>
                       {showCategorySearch && (
@@ -694,7 +695,7 @@ export default function ProductDetail() {
                               ))
                           ) : (
                             <div className="p-4 text-center text-slate-500 text-sm">
-                              {categorySearchTerm ? 'No categories found' : 'Start typing to search categories'}
+                              {categorySearchTerm ? t('noCategoriesFound') : t('startTypingToSearchCategories')}
                             </div>
                           )}
                         </div>
@@ -705,21 +706,21 @@ export default function ProductDetail() {
 
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Description
+                    {t('description')}
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={4}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                    placeholder="Enter product description"
+                    placeholder={t('enterProductDescription')}
                   />
                 </div>
               </div>
 
               {/* Product Options Section */}
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Options</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('options')}</h3>
                 <div className="space-y-3">
                   <label className="flex items-center gap-3">
                     <div
@@ -733,9 +734,9 @@ export default function ProductDetail() {
                       {formData.isService && <CheckSquare className="w-4 h-4" />}
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-slate-700">Is Service</span>
+                      <span className="text-sm font-medium text-slate-700">{t('isService')}</span>
                       <p className="text-xs text-slate-500">
-                        Check if this is a service (no physical inventory)
+                        {t('serviceDescription')}
                       </p>
                     </div>
                   </label>
@@ -752,9 +753,9 @@ export default function ProductDetail() {
                       {formData.isEnabled && <CheckSquare className="w-4 h-4" />}
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-slate-700">Enabled</span>
+                      <span className="text-sm font-medium text-slate-700">{t('enabled')}</span>
                       <p className="text-xs text-slate-500">
-                        Product is active and available for sale
+                        {t('enabledDescription')}
                       </p>
                     </div>
                   </label>
@@ -771,9 +772,9 @@ export default function ProductDetail() {
                       {formData.isPriceChangeAllowed && <CheckSquare className="w-4 h-4" />}
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-slate-700">Allow Price Change</span>
+                      <span className="text-sm font-medium text-slate-700">{t('allowPriceChange')}</span>
                       <p className="text-xs text-slate-500">
-                        Users can modify price during order creation
+                        {t('allowPriceChangeDescription')}
                       </p>
                     </div>
                   </label>
@@ -796,7 +797,7 @@ export default function ProductDetail() {
                   className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all flex items-center gap-2 disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
-                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateMutation.isPending ? t('saving') : t('saveChanges')}
                 </button>
               </div>
             </div>
@@ -806,21 +807,21 @@ export default function ProductDetail() {
           {activeTab === 'stock' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-slate-900">Stock Management</h3>
+                <h3 className="text-lg font-semibold text-slate-900">{t('stockManagement')}</h3>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowStockCorrection(true)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                   >
                     <Plus className="w-5 h-5" />
-                    Correct Stock
+                    {t('correctStock')}
                   </button>
                   <button
                     onClick={() => setShowStockTransfer(true)}
                     className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
                   >
                     <ArrowRightLeft className="w-5 h-5" />
-                    Transfer Stock
+                    {t('transferStock')}
                   </button>
                 </div>
               </div>
@@ -830,26 +831,26 @@ export default function ProductDetail() {
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Location</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">On Hand</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Reserved</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Available</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Incoming</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Outgoing</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">{t('location')}</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">{t('onHand')}</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">{t('reserved')}</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">{t('available')}</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">{t('incoming')}</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">{t('outgoing')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {stockQuants.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
-                          No stock records found
+                          {t('noStockRecordsFound')}
                         </td>
                       </tr>
                     ) : (
                       stockQuants.map((sq) => (
                         <tr key={sq.id} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-sm text-slate-900">
-                            {sq.location?.name || 'Unknown'}
+                            {sq.location?.name || t('unknown')}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">
                             {parseFloat(sq.quantity.toString()).toFixed(2)}
@@ -872,7 +873,7 @@ export default function ProductDetail() {
                   </tbody>
                   <tfoot className="bg-slate-50 border-t-2 border-slate-200">
                     <tr>
-                      <td className="px-4 py-3 text-sm font-bold text-slate-900">Total</td>
+                      <td className="px-4 py-3 text-sm font-bold text-slate-900">{t('total')}</td>
                       <td className="px-4 py-3 text-sm font-bold text-slate-900 text-right">
                         {stockQuants.reduce((sum, sq) => sum + parseFloat(sq.quantity?.toString() || '0'), 0).toFixed(2)}
                       </td>
@@ -898,15 +899,15 @@ export default function ProductDetail() {
           {/* Pricing Tab */}
           {activeTab === 'pricing' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-slate-900">Tarification</h3>
+              <h3 className="text-lg font-semibold text-slate-900">{t('pricing')}</h3>
               
               {/* Sale Price Section */}
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                <h4 className="font-medium text-slate-900 mb-3">Prix de vente</h4>
+                <h4 className="font-medium text-slate-900 mb-3">{t('salePrice')}</h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Prix <span className="text-red-500">*</span>
+                      {t('price')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -916,10 +917,12 @@ export default function ProductDetail() {
                         value={formData.price}
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         disabled={!isEditing}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-50 disabled:text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="0.00"
+                        className={`w-full py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-50 disabled:text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
+                        placeholder={t('numericPlaceholder')}
                       />
-                      <span className="absolute right-3 top-2.5 text-slate-500 text-sm">DH</span>
+                      <span className={`absolute top-2.5 text-slate-500 text-sm ${language === 'ar' ? 'left-3' : 'right-3'}`}>
+                        {language === 'ar' ? 'د.م' : 'DH'}
+                      </span>
                     </div>
                   </div>
 
@@ -937,7 +940,7 @@ export default function ProductDetail() {
                         }}
                         onFocus={() => setShowSaleUnitSearch(true)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                        placeholder="Unité(s)"
+                        placeholder={t('unit')}
                       />
                       {showSaleUnitSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -975,7 +978,7 @@ export default function ProductDetail() {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Taxe
+                      {t('tax')}
                     </label>
                     <div className="relative" ref={saleTaxSearchRef}>
                       <input
@@ -987,7 +990,7 @@ export default function ProductDetail() {
                         }}
                         onFocus={() => setShowSaleTaxSearch(true)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                        placeholder="20"
+                        placeholder={t('taxPlaceholder')}
                       />
                       {showSaleTaxSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -1007,7 +1010,7 @@ export default function ProductDetail() {
                             ))
                           ) : (
                             <div className="p-4 text-center text-slate-500 text-sm">
-                              No tax rates configured
+                              {t('noTaxRatesConfigured')}
                             </div>
                           )}
                         </div>
@@ -1017,18 +1020,18 @@ export default function ProductDetail() {
                 </div>
                 {parseFloat(formData.saleTax) > 0 && formData.price && (
                   <p className="mt-2 text-sm text-slate-600">
-                    Prix TTC: {(parseFloat(formData.price) * (1 + parseFloat(formData.saleTax) / 100)).toFixed(2)} DH par {formData.saleUnit}
+                    {t('priceWithTax')}: {(parseFloat(formData.price) * (1 + parseFloat(formData.saleTax) / 100)).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'} par {formData.saleUnit}
                   </p>
                 )}
               </div>
 
               {/* Cost Price Section */}
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                <h4 className="font-medium text-slate-900 mb-3">Prix d'achat</h4>
+                <h4 className="font-medium text-slate-900 mb-3">{t('costPrice')}</h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Prix <span className="text-red-500">*</span>
+                      {t('price')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -1037,16 +1040,18 @@ export default function ProductDetail() {
                         min="0"
                         value={formData.cost}
                         onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="0.00"
+                        className={`w-full py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
+                        placeholder={t('numericPlaceholder')}
                       />
-                      <span className="absolute right-3 top-2.5 text-slate-500 text-sm">DH</span>
+                      <span className={`absolute top-2.5 text-slate-500 text-sm ${language === 'ar' ? 'left-3' : 'right-3'}`}>
+                        {language === 'ar' ? 'د.م' : 'DH'}
+                      </span>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Unité
+                      {t('unitLabel')}
                     </label>
                     <div className="relative" ref={purchaseUnitSearchRef}>
                       <input
@@ -1058,7 +1063,7 @@ export default function ProductDetail() {
                         }}
                         onFocus={() => setShowPurchaseUnitSearch(true)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                        placeholder="Unité(s)"
+                        placeholder={t('unit')}
                       />
                       {showPurchaseUnitSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -1096,7 +1101,7 @@ export default function ProductDetail() {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Taxe
+                      {t('tax')}
                     </label>
                     <div className="relative" ref={purchaseTaxSearchRef}>
                       <input
@@ -1108,7 +1113,7 @@ export default function ProductDetail() {
                         }}
                         onFocus={() => setShowPurchaseTaxSearch(true)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                        placeholder="20"
+                        placeholder={t('taxPlaceholder')}
                       />
                       {showPurchaseTaxSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -1128,7 +1133,7 @@ export default function ProductDetail() {
                             ))
                           ) : (
                             <div className="p-4 text-center text-slate-500 text-sm">
-                              No tax rates configured
+                              {t('noTaxRatesConfigured')}
                             </div>
                           )}
                         </div>
@@ -1142,7 +1147,7 @@ export default function ProductDetail() {
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Prix minimum
+                    {t('minPrice')}
                   </label>
                   <div className="relative">
                     <input
@@ -1152,10 +1157,12 @@ export default function ProductDetail() {
                       value={formData.minPrice}
                       onChange={(e) => setFormData({ ...formData, minPrice: e.target.value })}
                       disabled={!isEditing}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-50 disabled:text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="0.00"
+                      className={`w-full py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-50 disabled:text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
+                      placeholder={t('numericPlaceholder')}
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500">DH</span>
+                    <span className={`absolute top-2.5 text-slate-500 ${language === 'ar' ? 'left-3' : 'right-3'}`}>
+                      {language === 'ar' ? 'د.م' : 'DH'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1163,16 +1170,16 @@ export default function ProductDetail() {
               {/* Margin Preview */}
               {formData.price && formData.cost && (
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-slate-900 mb-3">Analyse de marge</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3">{t('marginAnalysis')}</h4>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <p className="text-sm text-slate-600">Montant de la marge</p>
+                      <p className="text-sm text-slate-600">{t('marginAmount')}</p>
                       <p className="text-lg font-bold text-slate-900">
-                        {(parseFloat(formData.price) - parseFloat(formData.cost)).toFixed(2)} DH
+                        {(parseFloat(formData.price) - parseFloat(formData.cost)).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-600">Marge %</p>
+                      <p className="text-sm text-slate-600">{t('marginPercent')}</p>
                       <p className="text-lg font-bold text-green-600">
                         {parseFloat(formData.cost) > 0
                           ? (((parseFloat(formData.price) - parseFloat(formData.cost)) /
@@ -1184,7 +1191,7 @@ export default function ProductDetail() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-600">Markup %</p>
+                      <p className="text-sm text-slate-600">{t('markupPercent')}</p>
                       <p className="text-lg font-bold text-blue-600">
                         {parseFloat(formData.price) > 0
                           ? (((parseFloat(formData.price) - parseFloat(formData.cost)) /
@@ -1215,7 +1222,7 @@ export default function ProductDetail() {
                   className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all flex items-center gap-2 disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
-                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateMutation.isPending ? t('saving') : t('saveChanges')}
                 </button>
               </div>
             </div>
@@ -1267,10 +1274,10 @@ export default function ProductDetail() {
                 >
                   <option value="">
                     {warehousesLoading 
-                      ? 'Chargement...' 
+                      ? t('loading') 
                       : warehouses.length === 0 
-                        ? 'Aucun entrepôt - Veuillez en créer un' 
-                        : 'Sélectionner un entrepôt'}
+                        ? t('noWarehouseCreateOne') 
+                        : t('selectWarehouse')}
                   </option>
                   {warehouses.map((wh) => (
                     <option key={wh.id} value={wh.id}>
@@ -1299,7 +1306,7 @@ export default function ProductDetail() {
                       }
                       className="text-amber-600 focus:ring-amber-500"
                     />
-                    <span className="text-sm">Ajouter</span>
+                    <span className="text-sm">{t('add')}</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input
@@ -1310,7 +1317,7 @@ export default function ProductDetail() {
                       }
                       className="text-amber-600 focus:ring-amber-500"
                     />
-                    <span className="text-sm">Supprimer</span>
+                    <span className="text-sm">{t('remove')}</span>
                   </label>
                 </div>
               </div>
@@ -1385,7 +1392,7 @@ export default function ProductDetail() {
                 }
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
               >
-                {stockCorrectionMutation.isPending ? 'En cours...' : 'Valider'}
+                {stockCorrectionMutation.isPending ? t('validating') : t('validate')}
               </button>
             </div>
           </div>
@@ -1436,10 +1443,10 @@ export default function ProductDetail() {
                 >
                   <option value="">
                     {warehousesLoading 
-                      ? 'Chargement...' 
+                      ? t('loading') 
                       : warehouses.length === 0 
-                        ? 'Aucun entrepôt - Veuillez en créer un' 
-                        : "Sélectionner l'entrepôt source"}
+                        ? t('noWarehouseCreateOne') 
+                        : t('selectSourceWarehouse')}
                   </option>
                   {warehouses.map((wh) => (
                     <option key={wh.id} value={wh.id}>
@@ -1463,10 +1470,10 @@ export default function ProductDetail() {
                 >
                   <option value="">
                     {warehousesLoading 
-                      ? 'Chargement...' 
+                      ? t('loading') 
                       : warehouses.length === 0 
-                        ? 'Aucun entrepôt - Veuillez en créer un' 
-                        : "Sélectionner l'entrepôt destination"}
+                        ? t('noWarehouseCreateOne') 
+                        : t('selectDestinationWarehouse')}
                   </option>
                   {warehouses
                     .filter((wh) => wh.id.toString() !== stockTransferData.sourceWarehouseId)
@@ -1533,7 +1540,7 @@ export default function ProductDetail() {
                 }
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
               >
-                {stockTransferMutation.isPending ? 'En cours...' : 'Transférer'}
+                {stockTransferMutation.isPending ? t('transferring') : t('transfer')}
               </button>
             </div>
           </div>

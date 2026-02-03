@@ -24,7 +24,7 @@ export function DocumentItemsTable({
   showTaxColumn = true,
   showDiscountColumn = true
 }: DocumentItemsTableProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isVente = direction === 'vente';
 
   const [showProductSearch, setShowProductSearch] = useState<string | null>(null);
@@ -157,35 +157,36 @@ export function DocumentItemsTable({
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-slate-200 p-4 overflow-visible">
-        <div className="mb-2">
-          <h3 className="text-lg font-bold text-slate-800">{t('invoice.articlesTitle')}</h3>
+      <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-4 md:p-6 overflow-visible">
+        <div className="mb-3 sm:mb-4 md:mb-6">
+          <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-800">{t('invoice.articlesTitle')}</h3>
         </div>
 
-        <div className="overflow-x-auto" style={{overflowY: 'visible'}}>
+        {/* Desktop Table View - Hidden on mobile and tablet */}
+        <div className="hidden lg:block overflow-x-auto" style={{overflowY: 'visible'}}>
           <table className="w-full" style={{overflow: 'visible'}}>
             <thead>
               <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-2 text-sm font-semibold text-slate-700">
+                <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-[45%] min-w-[280px]">
                   {t('invoice.descriptionHeader')}
                 </th>
-                <th className="text-left py-2 px-2 text-sm font-semibold text-slate-700 w-24">
+                <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-24">
                   {t('invoice.quantityHeader')}
                 </th>
-                <th className="text-left py-2 px-2 text-sm font-semibold text-slate-700 w-32">
+                <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-56">
                   {t('invoice.unitPriceHeader')}
                 </th>
                 {showDiscountColumn && (
-                  <th className="text-left py-2 px-2 text-sm font-semibold text-slate-700 w-24">
+                  <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-16">
                     {t('invoice.discountHeader')}
                   </th>
                 )}
                 {showTaxColumn && (
-                  <th className="text-left py-2 px-2 text-sm font-semibold text-slate-700 w-20">
+                  <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-24">
                     {t('invoice.tax')}
                   </th>
                 )}
-                <th className="text-center py-2 px-2 text-sm font-semibold text-slate-700 w-32">
+                <th className="text-center py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-32">
                   {t('invoice.totalHeader')}
                 </th>
                 <th className="w-10"></th>
@@ -193,8 +194,8 @@ export function DocumentItemsTable({
             </thead>
             <tbody style={{overflow: 'visible'}}>
               {items.map((item) => (
-                <tr key={item.id} className="border-b border-slate-100" style={{overflow: 'visible'}}>
-                  <td className="py-2 px-2" style={{overflow: 'visible'}}>
+                <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50" style={{overflow: 'visible'}}>
+                  <td className="py-3 px-3 w-[45%] min-w-[280px]" style={{overflow: 'visible'}}>
                     <div className="relative">
                       <input
                         ref={showProductSearch === item.id ? productSearchRef : null}
@@ -237,7 +238,7 @@ export function DocumentItemsTable({
                                 >
                                   <div className="font-medium text-slate-800">{product.name}</div>
                                   <div className="text-sm text-slate-500">
-                                    {isVente ? product.price : product.cost} DH
+                                    {isVente ? product.price : product.cost} {language === 'ar' ? 'د.م' : 'DH'}
                                     {product.code && ` • ${product.code}`}
                                   </div>
                                 </div>
@@ -256,30 +257,30 @@ export function DocumentItemsTable({
                       )}
                     </div>
                   </td>
-                  <td className="py-2 px-2">
+                  <td className="py-3 px-3">
                     <input
                       type="number"
                       min="0.1"
                       step="0.1"
                       value={item.quantity}
                       onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                      className="w-20 px-2 py-2 border border-slate-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
                       disabled={readOnly}
                     />
                   </td>
-                  <td className="py-2 px-2">
+                  <td className="py-3 px-3">
                     <input
                       type="number"
                       min="0"
                       step="0.1"
                       value={item.unitPrice}
                       onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                      className="w-20 px-2 py-2 border border-slate-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
                       disabled={readOnly}
                     />
                   </td>
                   {showDiscountColumn && (
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-500">
                         <input
                           type="number"
@@ -287,7 +288,7 @@ export function DocumentItemsTable({
                           step="0.1"
                           value={item.discount}
                           onChange={(e) => handleItemChange(item.id, 'discount', parseFloat(e.target.value) || 0)}
-                          className="w-20 flex-1 px-2 py-2 text-sm text-right focus:outline-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                          className="w-14 flex-none px-2 py-2 text-sm text-center focus:outline-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
                           disabled={readOnly}
                         />
                         <button
@@ -302,7 +303,7 @@ export function DocumentItemsTable({
                     </td>
                   )}
                   {showTaxColumn && (
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       <select
                         value={item.tax}
                         onChange={(e) => handleItemChange(item.id, 'tax', parseFloat(e.target.value))}
@@ -315,12 +316,12 @@ export function DocumentItemsTable({
                       </select>
                     </td>
                   )}
-                  <td className="py-2 px-2">
-                    <div className="text-right font-semibold text-slate-800 px-3 py-2">
-                      {calculateItemTotal(item).toFixed(2)} DH
+                  <td className="py-3 px-3">
+                    <div className="text-center font-semibold text-slate-800 text-sm">
+                      {calculateItemTotal(item).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
                     </div>
                   </td>
-                  <td className="py-2 px-2">
+                  <td className="py-3 px-3">
                     {!readOnly && items.length > 1 && (
                       <button
                         type="button"
@@ -335,28 +336,228 @@ export function DocumentItemsTable({
               ))}
             </tbody>
           </table>
-          
-          {!readOnly && (
-            <div className="mt-4 flex justify-start gap-2">
-              <button
-                type="button"
-                onClick={handleAddItem}
-                className="flex items-center justify-center w-8 h-8 bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-colors"
-                title="Ajouter une ligne"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCatalogueModal(true)}
-                className="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-                title="Catalogue produits"
-              >
-                <BookOpen className="w-4 h-4" />
-              </button>
-            </div>
-          )}
         </div>
+
+        {/* Mobile & Tablet Card View - Shown on mobile and tablet */}
+        <div className="lg:hidden space-y-3 sm:space-y-4">
+          {items.map((item, index) => (
+            <div key={item.id} className="border border-slate-200 rounded-lg p-3 sm:p-4 bg-gradient-to-br from-slate-50 to-white">
+              {/* Item Number */}
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm sm:text-base font-semibold text-slate-800">
+                  Item {index + 1}
+                </h4>
+                {!readOnly && items.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveItem(item.id)}
+                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 sm:w-5 h-4 sm:h-5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Description Field */}
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
+                  {t('invoice.descriptionHeader')} <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    ref={showProductSearch === item.id ? productSearchRef : null}
+                    type="text"
+                    value={item.description}
+                    onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                    onFocus={() => {
+                      if (!readOnly) {
+                        setShowProductSearch(item.id);
+                        if (!products[item.id]) {
+                          searchProducts(item.id, item.description);
+                        }
+                      }
+                    }}
+                    placeholder={t('invoice.itemDescriptionPlaceholder')}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
+                    disabled={readOnly}
+                  />
+                  {showProductSearch === item.id && productSearchRef.current && (
+                    <div 
+                      ref={productDropdownRef}
+                      className="fixed z-[9999] bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                      style={{
+                        top: `${productSearchRef.current.getBoundingClientRect().bottom + 4}px`,
+                        left: `${productSearchRef.current.getBoundingClientRect().left}px`,
+                        width: `${productSearchRef.current.getBoundingClientRect().width}px`,
+                      }}
+                    >
+                      {loadingProducts[item.id] ? (
+                        <div className="p-4 text-center text-slate-500 text-sm">
+                          {t('loading')}
+                        </div>
+                      ) : (products[item.id] || []).length > 0 ? (
+                        <div>
+                          {(products[item.id] || []).map(product => (
+                            <div
+                              key={product.id}
+                              onClick={() => handleSelectProduct(item.id, product)}
+                              className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
+                            >
+                              <div className="font-medium text-slate-800">{product.name}</div>
+                              <div className="text-sm text-slate-500">
+                                {isVente ? product.price : product.cost} {language === 'ar' ? 'د.م' : 'DH'}
+                                {product.code && ` • ${product.code}`}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : item.description.trim() ? (
+                        <div className="p-4 text-center text-slate-500 text-sm">
+                          {t('invoice.noProductsFound')}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-slate-500 text-sm">
+                          {t('invoice.productSearchPlaceholder')}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quantity & Unit Price - Side by side on mobile */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
+                    {t('invoice.quantityHeader')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    value={item.quantity}
+                    onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg text-sm sm:text-base text-center focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                    disabled={readOnly}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
+                    {t('invoice.unitPriceHeader')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={item.unitPrice}
+                    onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg text-sm sm:text-base text-center focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                    disabled={readOnly}
+                  />
+                </div>
+              </div>
+
+              {/* Discount & Tax - Side by side on mobile */}
+              <div className="space-y-3 sm:space-y-4">
+                {showDiscountColumn && (
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <div className="col-span-1">
+                      <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
+                        {t('invoice.discountHeader')}
+                      </label>
+                      <div className="flex items-center gap-1.5 border border-slate-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-500">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={item.discount}
+                          onChange={(e) => handleItemChange(item.id, 'discount', parseFloat(e.target.value) || 0)}
+                          className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 text-sm sm:text-base text-center focus:outline-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                          disabled={readOnly}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
+                          className="px-2 py-2.5 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-medium min-w-[44px] transition-colors disabled:bg-slate-200 disabled:text-slate-400"
+                          disabled={readOnly}
+                        >
+                          {item.discountType === 0 ? 'DH' : '%'}
+                        </button>
+                      </div>
+                    </div>
+                    {showTaxColumn && (
+                      <div className="col-span-1">
+                        <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
+                          {t('invoice.tax')}
+                        </label>
+                        <select
+                          value={item.tax}
+                          onChange={(e) => handleItemChange(item.id, 'tax', parseFloat(e.target.value))}
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg text-sm sm:text-base text-center focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
+                          disabled={readOnly}
+                        >
+                          <option value={0}>0%</option>
+                          <option value={10}>10%</option>
+                          <option value={20}>20%</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {showDiscountColumn === false && showTaxColumn && (
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
+                      {t('invoice.tax')}
+                    </label>
+                    <select
+                      value={item.tax}
+                      onChange={(e) => handleItemChange(item.id, 'tax', parseFloat(e.target.value))}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg text-sm sm:text-base text-center focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
+                      disabled={readOnly}
+                    >
+                      <option value={0}>0%</option>
+                      <option value={10}>10%</option>
+                      <option value={20}>20%</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Total - Highlighted */}
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50 -mx-3 sm:-mx-4 px-3 sm:px-4 py-2.5 sm:py-3 rounded-b-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm font-semibold text-slate-700">{t('invoice.totalHeader')}:</span>
+                  <span className="text-base sm:text-lg md:text-xl font-bold text-amber-700">
+                    {calculateItemTotal(item).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {!readOnly && (
+          <div className="mt-4 sm:mt-6 flex flex-wrap justify-start gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={handleAddItem}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm sm:text-base"
+              title={t('invoice.addLine')}
+            >
+              <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
+              <span className="hidden sm:inline">{t('invoice.addLine')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCatalogueModal(true)}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
+              title={t('invoice.productCatalogue')}
+            >
+              <BookOpen className="w-4 sm:w-5 h-4 sm:h-5" />
+              <span className="hidden sm:inline">{t('invoice.productCatalogue')}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <ProductCatalogueModal

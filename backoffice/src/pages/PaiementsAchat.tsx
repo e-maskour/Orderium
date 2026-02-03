@@ -1,5 +1,6 @@
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
+import { useLanguage } from '../context/LanguageContext';
 import { useState, useEffect } from 'react';
 import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard, FileText, Plus } from 'lucide-react';
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
@@ -9,6 +10,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import AlertDialog from '../components/AlertDialog';
 
 export default function PaiementsAchat() {
+  const { t, language } = useLanguage();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,8 +69,8 @@ export default function PaiementsAchat() {
       console.error('Error deleting payment:', error);
       setShowDeleteConfirm(false);
       setAlertMessage({
-        title: 'Erreur',
-        message: 'Erreur lors de la suppression du paiement',
+        title: t('error'),
+        message: t('errorDeletingPayment'),
         type: 'error'
       });
       setShowAlert(true);
@@ -117,8 +119,8 @@ export default function PaiementsAchat() {
       <div className="max-w-7xl mx-auto">
         <PageHeader
           icon={Wallet}
-          title="Paiements d'Achat"
-          subtitle="Gérez les paiements effectués aux fournisseurs"
+          title={t('purchasePayments')}
+          subtitle={t('managePurchasePayments')}
         />
 
         {/* Stats Cards */}
@@ -126,7 +128,7 @@ export default function PaiementsAchat() {
           <div className="bg-white rounded-lg border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Total des paiements</p>
+                <p className="text-sm text-slate-600 mb-1">{t('totalPayments')}</p>
                 <p className="text-2xl font-bold text-slate-900">{filteredPayments.length}</p>
               </div>
               <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -138,8 +140,8 @@ export default function PaiementsAchat() {
           <div className="bg-white rounded-lg border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Montant total</p>
-                <p className="text-2xl font-bold text-red-600">{totalAmount.toFixed(2)} MAD</p>
+                <p className="text-sm text-slate-600 mb-1">{t('totalAmount')}</p>
+                <p className="text-2xl font-bold text-red-600">{totalAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
               </div>
               <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
                 <Wallet className="w-6 h-6 text-red-600" />
@@ -150,7 +152,7 @@ export default function PaiementsAchat() {
           <div className="bg-white rounded-lg border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Ce mois</p>
+                <p className="text-sm text-slate-600 mb-1">{t('thisMonth')}</p>
                 <p className="text-2xl font-bold text-slate-900">
                   {filteredPayments.filter(p => {
                     const date = new Date(p.paymentDate);
@@ -172,7 +174,7 @@ export default function PaiementsAchat() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Rechercher par facture, fournisseur, référence..."
+              placeholder={t('searchByInvoice')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -187,25 +189,25 @@ export default function PaiementsAchat() {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Date
+                    {t('invoice.date')}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Facture
+                    {t('invoice')}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Fournisseur
+                    {t('supplier')}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Mode de paiement
+                    {t('paymentMethod')}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Référence
+                    {t('reference')}
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Montant
+                    {t('amount')}
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Actions
+                    {t('invoice.actions')}
                   </th>
                 </tr>
               </thead>
@@ -238,21 +240,21 @@ export default function PaiementsAchat() {
                         {payment.referenceNumber || '-'}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-right text-red-600">
-                        {payment.amount.toFixed(2)} MAD
+                        {payment.amount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleEdit(payment)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Modifier"
+                            title={t('modify')}
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(payment.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Supprimer"
+                            title={t('delete')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -299,11 +301,11 @@ export default function PaiementsAchat() {
           setDeletePaymentId(null);
         }}
         onConfirm={confirmDelete}
-        title="Supprimer le paiement"
-        message="Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible."
+        title={t('deletePayment')}
+        message={t('confirmDeletePayment')}
         type="danger"
-        confirmText="Supprimer"
-        cancelText="Annuler"
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
       />
 
       <AlertDialog

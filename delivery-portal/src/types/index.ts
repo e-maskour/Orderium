@@ -9,7 +9,8 @@ export interface Order {
   googleMapsUrl?: string;
   wazeUrl?: string;
   totalAmount: number;
-  status: 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
+  status?: string; // Main order status
+  deliveryStatus: 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
   confirmedAt?: string;
   pickedUpAt?: string;
   deliveredAt?: string;

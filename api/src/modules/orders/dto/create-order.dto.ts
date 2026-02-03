@@ -8,9 +8,11 @@ import {
   ArrayMinSize,
   IsString,
   IsBoolean,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { DeliveryStatus } from '../entities/order.entity';
 
 export class CreateOrderItemDto {
   @ApiProperty({ description: 'Product ID' })
@@ -148,4 +150,20 @@ export class CreateOrderDto {
   @IsOptional()
   @IsBoolean()
   fromPortal?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Indicates if order was created from client app',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  fromClient?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Delivery status of the order',
+    enum: ['pending', 'assigned', 'confirmed', 'picked_up', 'to_delivery', 'in_delivery', 'delivered', 'canceled'],
+  })
+  @IsOptional()
+  @IsEnum(DeliveryStatus)
+  deliveryStatus?: DeliveryStatus;
 }

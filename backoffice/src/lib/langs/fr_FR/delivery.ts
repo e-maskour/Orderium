@@ -20,4 +20,25 @@ export default {
   // Validation
   passwordRequired: 'Mot de passe requis pour les nouveaux livreurs',
   minSixCharacters: 'Min. 6 caractères',
+  
+  // Button States
+  updating: 'Modification...',
+  creatingDeliveryPerson: 'Création...',
+  
+  // Tabs
+  dashboard: 'Tableau de bord',
+  deliveryPersonList: 'Liste des livreurs',
+  
+  // Placeholders & Labels
+  searchDeliveryPersons: 'Rechercher livreurs...',
+  seeDetails: 'Voir',
+  edit: 'Modifier',
+  delete: 'Supprimer',
+  confirmDelete: 'Supprimer le livreur',
+  addDeliveryPersonTitle: 'Ajouter un livreur',
+  editDeliveryPersonTitle: 'Modifier le livreur',
+  
+  // Error Messages
+  error: 'Erreur',
+  passwordRequiredError: 'Le mot de passe est requis',
 };

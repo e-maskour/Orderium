@@ -325,6 +325,8 @@ export default function POS() {
     const orderData = {
       customerId: selectedCustomer.id,
       fromPortal: true,
+      fromClient: false,
+      deliveryStatus: 'pending',
       date: new Date().toISOString(),
       subtotal: subtotal,
       tax: totalTax,

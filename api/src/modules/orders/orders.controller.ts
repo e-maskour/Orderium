@@ -34,30 +34,43 @@ export class OrdersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all orders' })
+  @ApiOperation({ summary: 'Get all orders with filtering' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({
-    name: 'fromPortal',
-    required: false,
-    type: Boolean,
-    description: 'Filter by fromPortal field',
-  })
+  @ApiQuery({ name: 'fromPortal', required: false, type: Boolean })
+  @ApiQuery({ name: 'deliveryStatus', required: false, type: String })
+  @ApiQuery({ name: 'fromClient', required: false, type: Boolean })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
   async findAll(
     @Query('limit') limit?: string,
     @Query('fromPortal') fromPortal?: string,
+    @Query('deliveryStatus') deliveryStatus?: string,
+    @Query('fromClient') fromClient?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
     const limitNum = limit ? parseInt(limit, 10) : 100;
     const fromPortalBool =
       fromPortal !== undefined ? fromPortal === 'true' : undefined;
-    const orders = await this.ordersService.getAllOrders(
+    const fromClientBool =
+      fromClient !== undefined ? fromClient === 'true' : undefined;
+    const startDateObj = startDate ? new Date(startDate) : undefined;
+    const endDateObj = endDate ? new Date(endDate) : undefined;
+
+    const result = await this.ordersService.getAllOrders(
       limitNum,
       fromPortalBool,
+      deliveryStatus,
+      fromClientBool,
+      startDateObj,
+      endDateObj,
     );
     return {
       success: true,
-      orders,
-      count: orders.length,
+      orders: result.orders,
+      count: result.count,
+      statusCounts: result.statusCounts,
     };
   }
 

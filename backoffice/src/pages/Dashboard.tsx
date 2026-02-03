@@ -38,7 +38,7 @@ export default function Dashboard() {
         <PageHeader
           icon={LayoutDashboard}
           title={t('dashboard')}
-          subtitle="Vue d'ensemble de votre activité"
+          subtitle={t('dashboardOverview')}
         />
           
           {/* KPI Cards */}

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Loader, CheckCircle, AlertCircle, Image as ImageIcon, Link } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, imagePublicId?: string) => void;
@@ -38,6 +39,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   showPreview = true,
   onModeChange,
 }) => {
+  const { t } = useLanguage();
   // Get environment-based URLs
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
   const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
@@ -90,12 +92,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const validateFile = (file: File): string | null => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      return 'Invalid file type. Allowed: JPEG, PNG, WebP';
+      return t('invalidFileType');
     }
 
     const maxBytes = maxSizeMB * 1024 * 1024;
     if (file.size > maxBytes) {
-      return `File size exceeds ${maxSizeMB}MB limit`;
+      return `${t('fileSizeExceeds')} ${maxSizeMB}MB`;
     }
 
     return null;
@@ -139,7 +141,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Upload failed');
+        throw new Error(error.message || t('uploadFailed'));
       }
 
       const result = await response.json();
@@ -152,7 +154,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       // Construct full API URL by using the helper function
       let fullImageUrl = getFullImageUrl(relativePath);
       if (!fullImageUrl) {
-        throw new Error('Failed to construct image URL');
+        throw new Error(t('failedToConstructImageUrl'));
       }
 
       // Update local preview with actual uploaded image
@@ -160,7 +162,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       setUploadStatus({
         state: 'success',
-        message: 'Image uploaded successfully',
+        message: t('imageUploadedSuccessfully'),
         imageData: {
           url: fullImageUrl,
           publicId: imagePublicId,
@@ -174,7 +176,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     } catch (error: any) {
       setUploadStatus({
         state: 'error',
-        message: error.message || 'Upload failed. Please try again.',
+        message: error.message || `${t('uploadFailed')}. ${t('pleaseTryAgain')}.`,
       });
     }
   };
@@ -211,7 +213,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to remove image');
+        throw new Error(t('failedToRemoveImage'));
       }
 
       // Clear all image states
@@ -225,7 +227,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     } catch (error: any) {
       setUploadStatus({
         state: 'error',
-        message: 'Failed to remove image',
+        message: t('failedToRemoveImage'),
       });
     }
   };
@@ -273,7 +275,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             {!imageLoadError ? (
               <img
                 src={displayImage}
-                alt="Product preview"
+                alt={t('productPreview')}
                 className="w-full h-full object-contain"
                 onLoad={() => setImageLoadError(false)}
                 onError={() => {
@@ -299,7 +301,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                   handleRemoveImage();
                 }}
                 className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors shadow-md z-10"
-                title="Remove image"
+                title={t('removeImage')}
               >
                 <X className="w-4 h-4" />
               </button>

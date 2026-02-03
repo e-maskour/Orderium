@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function Fournisseurs() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
@@ -100,7 +100,7 @@ export default function Fournisseurs() {
       return [
         {
           id: 'view',
-          label: 'Voir',
+          label: t('view'),
           icon: <Eye className="w-4 h-4" />,
           onClick: () => {
             if (supplier) {
@@ -135,8 +135,8 @@ export default function Fournisseurs() {
   };
 
   const tabs = [
-    { key: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-    { key: 'list', label: 'Liste des fournisseurs', icon: List },
+    { key: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
+    { key: 'list', label: t('supplierList'), icon: List },
   ];
 
   // Calculate statistics
@@ -289,7 +289,7 @@ export default function Fournisseurs() {
                       </div>
                       <span className="text-xs font-semibold text-purple-600 bg-purple-200 px-2 py-1 rounded-full">Dépenses</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-purple-900 mb-1">{totalExpenses.toFixed(2)} DH</h3>
+                    <h3 className="text-2xl font-bold text-purple-900 mb-1">{totalExpenses.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</h3>
                     <p className="text-sm text-purple-700">Dépenses totales</p>
                   </div>
                 </div>
@@ -357,7 +357,7 @@ export default function Fournisseurs() {
                               <p className="text-xs font-semibold text-slate-900 truncate">{supplier.name}</p>
                               <p className="text-xs text-slate-600">{percentage}%</p>
                             </div>
-                            <p className="text-xs font-bold text-slate-900">{supplier.total.toFixed(2)} DH</p>
+                            <p className="text-xs font-bold text-slate-900">{supplier.total.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
                           </div>
                         );
                       })}
@@ -437,7 +437,7 @@ export default function Fournisseurs() {
                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
                       type="text"
-                      placeholder="Rechercher fournisseurs..."
+                      placeholder={t('searchSuppliersPlaceholder')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-96 ps-10 pe-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
@@ -635,7 +635,7 @@ export default function Fournisseurs() {
                                     navigate(`/fournisseurs/${supplier.id}`);
                                   }}
                                   className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                                  title="Voir"
+                                  title={t('view')}
                                 >
                                   <Eye className="w-4 h-4" />
                                 </button>

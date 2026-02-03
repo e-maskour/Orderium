@@ -21,6 +21,7 @@ export interface CreateOrderRequest {
   discount?: number;  // Order-level discount
   discountType?: number;  // 0=amount, 1=percentage
   fromPortal?: boolean;  // Indicates if order is from portal
+  fromClient?: boolean;  // Indicates if order is from client app
 }
 
 export interface Order {
@@ -43,6 +44,7 @@ export interface Order {
   dateUpdated: string;
   isValidated?: boolean;
   fromPortal?: boolean;  // Default to true
+  fromClient?: boolean;  // Indicates if order is from client app
 }
 
 export interface OrderItem {
