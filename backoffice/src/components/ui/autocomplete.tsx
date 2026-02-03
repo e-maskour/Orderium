@@ -44,7 +44,6 @@ export function Autocomplete({
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value || "")
   const inputRef = React.useRef<HTMLInputElement>(null)
-  const ignoreBlur = React.useRef(false)
 
   React.useEffect(() => {
     if (value !== undefined) {
@@ -94,23 +93,22 @@ export function Autocomplete({
     }, 0)
   }
 
-  const handleInputFocus = () => {
-    setTimeout(() => {
-      setOpen(true)
-    }, 100)
+  const handleInputClick = () => {
+    setOpen(true)
   }
 
-  const handleInputBlur = () => {
-    if (!ignoreBlur.current) {
+  const handleInputBlur = (e: React.FocusEvent) => {
+    // Check if blur is moving to the popover content
+    const popoverContent = e.relatedTarget as HTMLElement
+    if (!popoverContent?.closest('[role="dialog"]')) {
       setTimeout(() => {
         setOpen(false)
-      }, 150)
+      }, 200)
     }
   }
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePopoverMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
-    ignoreBlur.current = true
   }
 
   return (
@@ -122,7 +120,7 @@ export function Autocomplete({
             type="text"
             value={inputValue}
             onChange={handleInputChange}
-            onFocus={handleInputFocus}
+            onClick={handleInputClick}
             onBlur={handleInputBlur}
             placeholder={placeholder}
             disabled={disabled}
@@ -150,7 +148,7 @@ export function Autocomplete({
         align="start"
         style={{ width: 'var(--radix-popover-trigger-width)' }}
         onOpenAutoFocus={(e) => e.preventDefault()}
-        onMouseDown={handleMouseDown}
+        onMouseDown={handlePopoverMouseDown}
       >
         <Command shouldFilter={false} className="rounded-lg border-0">
           <CommandList>
