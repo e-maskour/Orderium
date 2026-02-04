@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useOverlayPanel } from '../context/OverlayPanelContext';
 import { X, Check } from 'lucide-react';
-import './GlobalOverlayPanel.css';
+import '../GlobalOverlayPanel.css';
 
 export const GlobalOverlayPanel: React.FC = () => {
   const { isOpen, config, closePanel } = useOverlayPanel();

@@ -59,6 +59,7 @@ export default {
   filters: 'Filtres',
   dateRange: 'Plage de dates',
   deliveryStatus: 'Statut de livraison',
+  noDeliveryPersons: 'Aucun livreur disponible',
   orderSource: 'Source de la commande',
   local: 'Local',
   client: 'Client',

@@ -16,21 +16,48 @@ export class OrdersService {
     return await response.json();
   }
 
-  async getAll(search?: string, startDate?: Date, endDate?: Date, fromPortal?: boolean, deliveryStatus?: string, fromClient?: boolean): Promise<any> {
+  async getAll(search?: string, startDate?: Date, endDate?: Date, fromPortal?: boolean, deliveryStatus?: string, fromClient?: boolean, orderNumber?: string, page: number = 1, perPage: number = 50): Promise<any> {
+    // Parse search string for filters
+    const filters: any = {};
+    
+    if (search) {
+      const searchParts = search.split(' ');
+      searchParts.forEach(part => {
+        if (part.startsWith('customerId:')) {
+          filters.customerId = parseInt(part.split(':')[1]);
+        } else if (part.startsWith('deliveryPersonId:')) {
+          filters.deliveryPersonId = parseInt(part.split(':')[1]);
+        }
+      });
+    }
+    
+    // Build query params (only fromPortal goes in query string)
     const params = new URLSearchParams();
-    if (search) params.append('search', search);
-    if (startDate) params.append('startDate', startDate.toISOString());
-    if (endDate) params.append('endDate', endDate.toISOString());
     if (fromPortal !== undefined) params.append('fromPortal', fromPortal.toString());
-    if (deliveryStatus) params.append('deliveryStatus', deliveryStatus);
-    if (fromClient !== undefined) params.append('fromClient', fromClient.toString());
+    
+    // Build POST body with filters
+    const body: any = {};
+    if (startDate) body.startDate = startDate.toISOString();
+    if (endDate) body.endDate = endDate.toISOString();
+    if (deliveryStatus) body.deliveryStatus = deliveryStatus;
+    if (orderNumber) body.orderNumber = orderNumber;
+    if (filters.customerId) body.customerId = filters.customerId;
+    if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
+    if (fromClient !== undefined) body.fromClient = fromClient;
+    if (page) body.page = page;
+    if (perPage) body.per_page = perPage;
     
     const queryString = params.toString();
-    const response = await fetch(`${API_URL}/orders${queryString ? `?${queryString}` : ''}`);
+    const response = await fetch(`${API_URL}/orders/filter${queryString ? `?${queryString}` : ''}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    
     if (!response.ok) throw new Error('Failed to fetch orders');
     const data = await response.json();
     
-    // API now returns { orders, count, statusCounts }
+    // API now returns { orders, count, totalCount, statusCounts }
     if (data.orders && Array.isArray(data.orders)) {
       return {
         ...data,
@@ -43,6 +70,7 @@ export class OrdersService {
     return {
       orders: orders.map((o: any) => Order.fromApiResponse(o)),
       count: orders.length,
+      totalCount: orders.length,
       statusCounts: {}
     };
   }
@@ -163,6 +191,18 @@ export class OrdersService {
       }
       throw new Error(errorMessage);
     }
+  }
+
+  async getOrderNumbers(search?: string): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    params.append('limit', '50');
+
+    const response = await fetch(`${API_URL}/orders/search/order-numbers?${params.toString()}`);
+    if (!response.ok) throw new Error('Failed to fetch order numbers');
+    
+    const data = await response.json();
+    return data.data || [];
   }
 }
 

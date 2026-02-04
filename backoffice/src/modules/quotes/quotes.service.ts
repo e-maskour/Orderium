@@ -118,18 +118,6 @@ export class QuotesService {
     return QuoteWithDetails.fromApiResponse(result.quote);
   }
 
-  async reject(id: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}/reject`, {
-      method: 'PUT',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to reject quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
-  }
-
   async generateShareLink(id: number): Promise<{ shareToken: string; expiresAt: Date }> {
     const response = await fetch(`${API_URL}/quotes/${id}/share`, {
       method: 'POST',

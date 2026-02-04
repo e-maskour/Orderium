@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Order, OrderItem, OrderStatus } from './entities/order.entity';
+import { Order, OrderItem, OrderStatus, DeliveryStatus } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
@@ -102,28 +102,28 @@ export class OrdersService {
       if (order.deliveryStatus) {
         const now = new Date();
         switch (order.deliveryStatus) {
-          case 'pending':
+          case DeliveryStatus.PENDING:
             order.pendingAt = now;
             break;
-          case 'assigned':
+          case DeliveryStatus.ASSIGNED:
             order.assignedAt = now;
             break;
-          case 'confirmed':
+          case DeliveryStatus.CONFIRMED:
             order.confirmedAt = now;
             break;
-          case 'picked_up':
+          case DeliveryStatus.PICKED_UP:
             order.pickedUpAt = now;
             break;
-          case 'to_delivery':
+          case DeliveryStatus.TO_DELIVERY:
             order.toDeliveryAt = now;
             break;
-          case 'in_delivery':
+          case DeliveryStatus.IN_DELIVERY:
             order.inDeliveryAt = now;
             break;
-          case 'delivered':
+          case DeliveryStatus.DELIVERED:
             order.deliveredAt = now;
             break;
-          case 'canceled':
+          case DeliveryStatus.CANCELED:
             order.canceledAt = now;
             break;
           default:
@@ -374,31 +374,29 @@ export class OrdersService {
     const statusCounts = {
       all: allOrdersForCounts.length,
       pending: allOrdersForCounts.filter(
-        (o) => o.deliveryStatus === 'pending',
+        (o) => o.deliveryStatus === DeliveryStatus.PENDING,
       ).length,
       assigned: allOrdersForCounts.filter(
-        (o) => o.deliveryStatus === 'assigned',
+        (o) => o.deliveryStatus === DeliveryStatus.ASSIGNED,
       ).length,
       confirmed: allOrdersForCounts.filter(
-        (o) => o.deliveryStatus === 'confirmed',
+        (o) => o.deliveryStatus === DeliveryStatus.CONFIRMED,
       ).length,
       picked_up: allOrdersForCounts.filter(
-        (o) => o.deliveryStatus === 'picked_up',
+        (o) => o.deliveryStatus === DeliveryStatus.PICKED_UP,
       ).length,
       to_delivery: allOrdersForCounts.filter(
-        (o) => o.deliveryStatus === 'to_delivery',
+        (o) => o.deliveryStatus === DeliveryStatus.TO_DELIVERY,
       ).length,
       in_delivery: allOrdersForCounts.filter(
-        (o) => o.deliveryStatus === 'in_delivery',
+        (o) => o.deliveryStatus === DeliveryStatus.IN_DELIVERY,
       ).length,
       delivered: allOrdersForCounts.filter(
-        (o) => o.deliveryStatus === 'delivered',
+        (o) => o.deliveryStatus === DeliveryStatus.DELIVERED,
       ).length,
       canceled: allOrdersForCounts.filter(
-        (o) => o.deliveryStatus === 'canceled',
+        (o) => o.deliveryStatus === DeliveryStatus.CANCELED,
       ).length,
-      locale: allOrdersForCounts.filter((o) => !o.fromClient).length,
-      client: allOrdersForCounts.filter((o) => o.fromClient).length,
     };
 
     return {
@@ -435,6 +433,216 @@ export class OrdersService {
         items: [], // Items not needed for list view
       })),
       count: orders.length,
+      statusCounts,
+    };
+  }
+
+  async filterOrders(
+    startDate?: Date,
+    endDate?: Date,
+    deliveryStatus?: string,
+    orderNumber?: string,
+    customerId?: number,
+    deliveryPersonId?: number,
+    fromPortal?: boolean,
+    fromClient?: boolean,
+    page: number = 1,
+    pageSize: number = 50,
+  ): Promise<{ orders: any[]; count: number; totalCount: number; statusCounts: any }> {
+    const offset = (page - 1) * pageSize;
+
+    // Build main query with filters
+    const queryBuilder = this.dataSource
+      .createQueryBuilder(Order, 'order')
+      .leftJoin('order.customer', 'customer')
+      .leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id')
+      .select([
+        'order.id',
+        'order.documentNumber',
+        'order.receiptNumber',
+        'order.date',
+        'order.subtotal',
+        'order.tax',
+        'order.discount',
+        'order.discountType',
+        'order.total',
+        'order.status',
+        'order.isValidated',
+        'order.notes',
+        'order.fromPortal',
+        'order.fromClient',
+        'order.deliveryStatus',
+        'order.pendingAt',
+        'order.assignedAt',
+        'order.confirmedAt',
+        'order.pickedUpAt',
+        'order.toDeliveryAt',
+        'order.inDeliveryAt',
+        'order.deliveredAt',
+        'order.canceledAt',
+        'order.dateCreated',
+        'order.dateUpdated',
+        'customer.id',
+        'customer.name',
+        'customer.phoneNumber',
+        'customer.address',
+      ])
+      .orderBy('order.dateCreated', 'DESC');
+
+    // Apply filters
+    if (fromPortal !== undefined) {
+      queryBuilder.where('order.fromPortal = :fromPortal', { fromPortal });
+    }
+
+    if (fromClient !== undefined) {
+      if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
+        queryBuilder.andWhere('order.fromClient = :fromClient', { fromClient });
+      } else {
+        queryBuilder.where('order.fromClient = :fromClient', { fromClient });
+      }
+    }
+
+    if (orderNumber) {
+      queryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
+    }
+
+    if (deliveryStatus) {
+      if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
+        queryBuilder.andWhere('order.deliveryStatus = :deliveryStatus', {
+          deliveryStatus,
+        });
+      } else {
+        queryBuilder.where('order.deliveryStatus = :deliveryStatus', {
+          deliveryStatus,
+        });
+      }
+    }
+
+    if (customerId) {
+      queryBuilder.andWhere('order.customerId = :customerId', { customerId });
+    }
+
+    if (deliveryPersonId) {
+      queryBuilder.andWhere('delivery.deliveryPersonId = :deliveryPersonId', {
+        deliveryPersonId,
+      });
+    }
+
+    // Apply date range filter
+    if (startDate && endDate) {
+      queryBuilder.andWhere('order.dateCreated >= :startDate', { startDate });
+      queryBuilder.andWhere('order.dateCreated <= :endDate', { endDate });
+    }
+
+    // Add pagination
+    queryBuilder.skip(offset).take(pageSize);
+
+    const orders = await queryBuilder.getMany();
+
+    // Get count of each delivery status
+    const countQueryBuilder = this.dataSource
+      .createQueryBuilder(Order, 'order')
+      .leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id');
+
+    // Apply same filters for counting
+    if (fromPortal !== undefined) {
+      countQueryBuilder.where('order.fromPortal = :fromPortal', { fromPortal });
+    }
+    if (fromClient !== undefined) {
+      if (Object.keys(countQueryBuilder.expressionMap.wheres).length > 0) {
+        countQueryBuilder.andWhere('order.fromClient = :fromClient', { fromClient });
+      } else {
+        countQueryBuilder.where('order.fromClient = :fromClient', { fromClient });
+      }
+    }
+    if (orderNumber) {
+      countQueryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
+    }
+    if (startDate && endDate) {
+      countQueryBuilder.andWhere('order.dateCreated >= :startDate', {
+        startDate,
+      });
+      countQueryBuilder.andWhere('order.dateCreated <= :endDate', {
+        endDate,
+      });
+    }
+    if (customerId) {
+      countQueryBuilder.andWhere('order.customerId = :customerId', {
+        customerId,
+      });
+    }
+    if (deliveryPersonId) {
+      countQueryBuilder.andWhere('delivery.deliveryPersonId = :deliveryPersonId', {
+        deliveryPersonId,
+      });
+    }
+
+    const allOrdersForCounts = await countQueryBuilder.getMany();
+    const totalCount = allOrdersForCounts.length;
+
+    const statusCounts = {
+      all: allOrdersForCounts.length,
+      pending: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === DeliveryStatus.PENDING,
+      ).length,
+      assigned: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === DeliveryStatus.ASSIGNED,
+      ).length,
+      confirmed: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === DeliveryStatus.CONFIRMED,
+      ).length,
+      picked_up: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === DeliveryStatus.PICKED_UP,
+      ).length,
+      to_delivery: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === DeliveryStatus.TO_DELIVERY,
+      ).length,
+      in_delivery: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === DeliveryStatus.IN_DELIVERY,
+      ).length,
+      delivered: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === DeliveryStatus.DELIVERED,
+      ).length,
+      canceled: allOrdersForCounts.filter(
+        (o) => o.deliveryStatus === DeliveryStatus.CANCELED,
+      ).length,
+    };
+
+    return {
+      orders: orders.map((order) => ({
+        id: order.id,
+        orderNumber: order.documentNumber,
+        receiptNumber: order.receiptNumber,
+        date: order.date,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        discount: order.discount,
+        discountType: order.discountType,
+        total: order.total,
+        status: order.status || 'draft',
+        isValidated: order.isValidated || false,
+        note: order.notes,
+        fromPortal: order.fromPortal || false,
+        fromClient: order.fromClient || false,
+        deliveryStatus: order.deliveryStatus || null,
+        pendingAt: order.pendingAt,
+        assignedAt: order.assignedAt,
+        confirmedAt: order.confirmedAt,
+        pickedUpAt: order.pickedUpAt,
+        toDeliveryAt: order.toDeliveryAt,
+        inDeliveryAt: order.inDeliveryAt,
+        deliveredAt: order.deliveredAt,
+        canceledAt: order.canceledAt,
+        dateCreated: order.dateCreated,
+        dateUpdated: order.dateUpdated,
+        customerId: order.customer?.id,
+        customerName: order.customer?.name,
+        customerPhone: order.customer?.phoneNumber,
+        customerAddress: order.customer?.address,
+        items: [], // Items not needed for list view
+      })),
+      count: orders.length,
+      totalCount,
       statusCounts,
     };
   }
@@ -642,8 +850,16 @@ export class OrdersService {
     };
   }
 
-  async getCustomerOrders(customerId: number, limit = 50): Promise<any[]> {
-    const orders = await this.dataSource
+  async getCustomerOrders(
+    customerId: number,
+    page: number = 1,
+    pageSize: number = 10,
+    orderNumber?: string,
+    deliveryStatus?: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<{ orders: any[]; total: number; page: number; pageSize: number; totalPages: number }> {
+    let query = this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
       .select([
@@ -677,43 +893,79 @@ export class OrdersService {
         'customer.phoneNumber',
         'customer.address',
       ])
-      .where('order.customerId = :customerId', { customerId })
-      .take(limit)
-      .orderBy('order.dateCreated', 'DESC')
-      .getMany();
+      .where('order.customerId = :customerId', { customerId });
 
-    return orders.map((order) => ({
-      id: order.id,
-      orderNumber: order.documentNumber,
-      receiptNumber: order.receiptNumber,
-      date: order.date,
-      subtotal: order.subtotal,
-      tax: order.tax,
-      discount: order.discount,
-      discountType: order.discountType,
-      total: order.total,
-      status: order.status || 'draft',
-      isValidated: order.isValidated || false,
-      note: order.notes,
-      fromPortal: order.fromPortal || false,
-      fromClient: order.fromClient || false,
-      deliveryStatus: order.deliveryStatus || null,
-      pendingAt: order.pendingAt,
-      assignedAt: order.assignedAt,
-      confirmedAt: order.confirmedAt,
-      pickedUpAt: order.pickedUpAt,
-      toDeliveryAt: order.toDeliveryAt,
-      inDeliveryAt: order.inDeliveryAt,
-      deliveredAt: order.deliveredAt,
-      canceledAt: order.canceledAt,
-      dateCreated: order.dateCreated,
-      dateUpdated: order.dateUpdated,
-      customerId: order.customer?.id,
-      customerName: order.customer?.name,
-      customerPhone: order.customer?.phoneNumber,
-      customerAddress: order.customer?.address,
-      items: [], // Items not needed for list view
-    }));
+    // Apply order number filter
+    if (orderNumber && orderNumber.trim()) {
+      query = query.andWhere('order.documentNumber LIKE :orderNumber', {
+        orderNumber: `%${orderNumber}%`,
+      });
+    }
+
+    // Apply delivery status filter
+    if (deliveryStatus && deliveryStatus !== 'all') {
+      query = query.andWhere('order.deliveryStatus = :deliveryStatus', { deliveryStatus });
+    }
+
+    // Apply date range filter
+    if (startDate) {
+      query = query.andWhere('order.dateCreated >= :startDate', { startDate });
+    }
+    if (endDate) {
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      query = query.andWhere('order.dateCreated <= :endDate', { endDate: endOfDay });
+    }
+
+    // Get total count before pagination
+    const total = await query.getCount();
+
+    // Apply pagination
+    const skip = (page - 1) * pageSize;
+    query = query.skip(skip).take(pageSize);
+
+    const orders = await query.orderBy('order.dateCreated', 'DESC').getMany();
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      orders: orders.map((order) => ({
+        id: order.id,
+        orderNumber: order.documentNumber,
+        receiptNumber: order.receiptNumber,
+        date: order.date,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        discount: order.discount,
+        discountType: order.discountType,
+        total: order.total,
+        status: order.status || 'draft',
+        isValidated: order.isValidated || false,
+        note: order.notes,
+        fromPortal: order.fromPortal || false,
+        fromClient: order.fromClient || false,
+        deliveryStatus: order.deliveryStatus || null,
+        pendingAt: order.pendingAt,
+        assignedAt: order.assignedAt,
+        confirmedAt: order.confirmedAt,
+        pickedUpAt: order.pickedUpAt,
+        toDeliveryAt: order.toDeliveryAt,
+        inDeliveryAt: order.inDeliveryAt,
+        deliveredAt: order.deliveredAt,
+        canceledAt: order.canceledAt,
+        dateCreated: order.dateCreated,
+        dateUpdated: order.dateUpdated,
+        customerId: order.customer?.id,
+        customerName: order.customer?.name,
+        customerPhone: order.customer?.phoneNumber,
+        customerAddress: order.customer?.address,
+        items: [],
+      })),
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   }
 
   private async getOrCreateSequence(entityType: string): Promise<any> {
@@ -1189,5 +1441,22 @@ export class OrdersService {
     
     // Delete the order
     await this.orderRepository.delete(id);
+  }
+
+  async getOrderNumbers(search?: string, limit: number = 50): Promise<string[]> {
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .select('DISTINCT order.documentNumber', 'documentNumber')
+      .orderBy('order.documentNumber', 'DESC')
+      .take(limit);
+
+    if (search) {
+      queryBuilder.where('order.documentNumber LIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    const results = await queryBuilder.getRawMany();
+    return results.map((r) => r.documentNumber);
   }
 }

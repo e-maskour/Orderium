@@ -20,6 +20,8 @@ export default {
   customerInfo: 'معلومات العميل',
   orderSummary: 'ملخص الطلب',
   placeOrder: 'تأكيد الطلب',
+  note: 'ملاحظة',
+  notePlaceholder: 'أضف ملاحظة للطلب (اختياري)',
   
   // Customer Selection
   existingCustomer: 'عميل موجود',

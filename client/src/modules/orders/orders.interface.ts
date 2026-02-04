@@ -37,6 +37,7 @@ export interface Order {
   discountAmount?: number;
   total: number;
   status: string;
+  deliveryStatus?: string;
   note?: string;
   internalNote?: string;
   date?: string;  // API returns 'date' field
@@ -71,5 +72,8 @@ export interface OrderResponse {
 export interface OrdersListResponse {
   success: boolean;
   orders: Order[];
-  count: number;
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }

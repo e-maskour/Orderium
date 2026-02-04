@@ -59,6 +59,7 @@ export default {
   filters: 'الفلاتر',
   dateRange: 'نطاق التاريخ',
   deliveryStatus: 'حالة التسليم',
+  noDeliveryPersons: 'لا يوجد مندوبي توصيل متاحين',
   orderSource: 'مصدر الطلب',
   local: 'محلي',
   client: 'العميل',

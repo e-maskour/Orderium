@@ -48,6 +48,7 @@ interface FormData {
   name: string;
   phone: string;
   address: string;
+  note: string;
   latitude?: number;
   longitude?: number;
 }
@@ -74,6 +75,7 @@ const Checkout = () => {
     name: '',
     phone: user?.phoneNumber || '',
     address: '',
+    note: '',
     latitude: undefined,
     longitude: undefined,
   });
@@ -111,6 +113,7 @@ const Checkout = () => {
           ...prev,
           name: customer.name,
           address: customer.address || '',
+          note: '',
           latitude: customer.latitude,
           longitude: customer.longitude,
         }));
@@ -130,6 +133,7 @@ const Checkout = () => {
           ...prev,
           name: '',
           address: '',
+          note: '',
           latitude: undefined,
           longitude: undefined,
         }));
@@ -206,7 +210,7 @@ const Checkout = () => {
         const partnerResult = await partnersService.upsert({
           phoneNumber: formData.phone,
           name: formData.name,
-          address: formData.address,
+          deliveryAddress: formData.address,
           latitude: formData.latitude,
           longitude: formData.longitude,
           googleMapsUrl: mapsLink || undefined,
@@ -246,7 +250,7 @@ const Checkout = () => {
         customerId: customerId,
         customerPhone: formData.phone,
         items: orderItems,
-        note: formData.address,
+        note: formData.note,
         subtotal: orderSubtotal,
         tax: orderTax,
         discount: orderDiscount,
@@ -398,6 +402,19 @@ const Checkout = () => {
                       placeholder={t('addressPlaceholder')}
                       googleMapsUrl={mapsLink}
                       wazeUrl={wazeLink}
+                    />
+                  </div>
+
+                  {/* Note - Optional */}
+                  <div className="space-y-2">
+                    <Label htmlFor="note">{t('note')}</Label>
+                    <textarea
+                      id="note"
+                      value={formData.note}
+                      onChange={(e) => updateField('note', e.target.value)}
+                      placeholder={t('notePlaceholder')}
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                      rows={3}
                     />
                   </div>
                 </div>

@@ -436,9 +436,9 @@ function App() {
                 }
               />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-            <Toaster />
-            <GlobalOverlayPanel />
+              </Routes>
+              <Toaster />
+              <GlobalOverlayPanel />
           </BrowserRouter>
         </OverlayPanelProvider>
         </AuthProvider>

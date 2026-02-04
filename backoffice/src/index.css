@@ -114,4 +114,14 @@
     scrollbar-width: thin;
     scrollbar-color: rgb(203 213 225) rgb(241 245 249);
   }
+
+  /* Hide scrollbar completely */
+  .scrollbar-hide {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
+  }
 }

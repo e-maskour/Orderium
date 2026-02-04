@@ -14,6 +14,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { FilterOrdersDto } from './dto/filter-orders.dto';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -30,6 +31,51 @@ export class OrdersController {
       success: true,
       order,
       documentNumber: order.orderNumber,
+    };
+  }
+
+  @Post('filter')
+  @ApiOperation({ summary: 'Filter orders (POST method)' })
+  @ApiQuery({ name: 'fromPortal', required: false, type: Boolean })
+  @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
+  async filterOrders(
+    @Body() filterDto: FilterOrdersDto,
+    @Query('fromPortal') fromPortal?: string,
+  ) {
+    const fromPortalBool =
+      fromPortal !== undefined ? fromPortal === 'true' : undefined;
+    const startDateObj = filterDto.startDate
+      ? new Date(filterDto.startDate)
+      : undefined;
+    const endDateObj = filterDto.endDate
+      ? new Date(filterDto.endDate)
+      : undefined;
+    const page = filterDto.page || 1;
+    // Allowed page sizes with fallback to 50
+    const allowedPageSizes = [10, 50, 100, 500, 1000];
+    const pageSize = filterDto.per_page && allowedPageSizes.includes(filterDto.per_page) 
+      ? filterDto.per_page 
+      : 50;
+
+    const result = await this.ordersService.filterOrders(
+      startDateObj,
+      endDateObj,
+      filterDto.deliveryStatus,
+      filterDto.orderNumber,
+      filterDto.customerId,
+      filterDto.deliveryPersonId,
+      fromPortalBool,
+      filterDto.fromClient,
+      page,
+      pageSize,
+    );
+
+    return {
+      success: true,
+      orders: result.orders,
+      count: result.count,
+      totalCount: result.totalCount,
+      statusCounts: result.statusCounts,
     };
   }
 
@@ -50,7 +96,7 @@ export class OrdersController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 100;
+    const limitNum = limit ? parseInt(limit, 10) : 50;
     const fromPortalBool =
       fromPortal !== undefined ? fromPortal === 'true' : undefined;
     const fromClientBool =
@@ -71,6 +117,33 @@ export class OrdersController {
       orders: result.orders,
       count: result.count,
       statusCounts: result.statusCounts,
+    };
+  }
+
+  @Get('search/order-numbers')
+  @ApiOperation({ summary: 'Search order numbers for autocomplete' })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Order numbers retrieved successfully',
+  })
+  async searchOrderNumbers(
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const limitNum = limit ? Math.min(parseInt(limit, 10), 50) : 50;
+    const orderNumbers = await this.ordersService.getOrderNumbers(
+      search,
+      limitNum,
+    );
+
+    return {
+      success: true,
+      data: orderNumbers.map((num: string) => ({
+        value: num,
+        label: num,
+      })),
     };
   }
 
@@ -107,25 +180,42 @@ export class OrdersController {
   }
 
   @Get('customer/:customerId')
-  @ApiOperation({ summary: 'Get customer orders' })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiOperation({ summary: 'Get customer orders with pagination and filters' })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'orderNumber', required: false, type: String })
+  @ApiQuery({ name: 'deliveryStatus', required: false, type: String })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({
     status: 200,
-    description: 'Customer orders retrieved successfully',
+    description: 'Customer orders retrieved successfully with pagination',
   })
   async findByCustomer(
     @Param('customerId', ParseIntPipe) customerId: number,
-    @Query('limit') limit?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('orderNumber') orderNumber?: string,
+    @Query('deliveryStatus') deliveryStatus?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 50;
-    const orders = await this.ordersService.getCustomerOrders(
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : 10;
+    
+    const result = await this.ordersService.getCustomerOrders(
       customerId,
-      limitNum,
+      pageNum,
+      pageSizeNum,
+      orderNumber,
+      deliveryStatus,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
     );
+
     return {
       success: true,
-      orders,
-      count: orders.length,
+      ...result,
     };
   }
 

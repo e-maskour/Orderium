@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
-import { Package, Loader2, MapPin, Calendar, ArrowLeft, ShoppingBag, Eye, Search, X } from 'lucide-react';
+import { Package, Loader2, MapPin, Calendar, ArrowLeft, ShoppingBag, Eye, Search, X, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -24,27 +24,24 @@ export default function MyOrders() {
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   
-  // Date filter states
-  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>(() => {
-    // Initialize with today's date
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    return { start: startOfDay, end: endOfDay };
+  // Applied filters - only these trigger API requests
+  const [appliedFilters, setAppliedFilters] = useState({
+    orderNumber: '',
+    dateRange: { start: undefined as Date | undefined, end: undefined as Date | undefined },
   });
-
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchQuery(searchInput);
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  
+  // Temporary filter states (used in filter panel)
+  const [orderNumberSearch, setOrderNumberSearch] = useState('');
+  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({ start: undefined, end: undefined });
+  
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -53,59 +50,51 @@ export default function MyOrders() {
         return;
       }
 
+      setIsLoading(true);
       try {
-        const response = await ordersService.getCustomerOrders(user.customerId);
+        const response = await ordersService.getCustomerOrders(
+          user.customerId,
+          currentPage,
+          pageSize,
+          appliedFilters.orderNumber || undefined,
+          statusFilter !== 'all' ? statusFilter : undefined,
+          appliedFilters.dateRange.start,
+          appliedFilters.dateRange.end,
+        );
+
         if (response.success) {
           setOrders(response.orders);
+          setTotalCount(response.total);
+          setTotalPages(response.totalPages);
         }
       } catch (error) {
         console.error('Failed to fetch orders:', error);
+        toast.error(t('error'));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchOrders();
-  }, [user]);
+  }, [user, currentPage, pageSize, appliedFilters.orderNumber, statusFilter, appliedFilters.dateRange, t]);
 
-  // Filter orders by search, date, and status
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      // Date filter
-      if (dateRange.start && dateRange.end) {
-        const orderDate = new Date(order.dateCreated);
-        if (orderDate < dateRange.start || orderDate > dateRange.end) {
-          return false;
-        }
-      }
+  // Sync temporary filters with applied filters when panel opens
+  useEffect(() => {
+    if (filtersExpanded) {
+      setOrderNumberSearch(appliedFilters.orderNumber);
+      setDateRange(appliedFilters.dateRange);
+    }
+  }, [filtersExpanded, appliedFilters]);
 
-      // Search filter
-      if (searchQuery) {
-        const matchesOrderNumber = order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCustomer = order.customerName?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesPhone = order.customerPhone?.toLowerCase().includes(searchQuery.toLowerCase());
-        if (!matchesOrderNumber && !matchesCustomer && !matchesPhone) {
-          return false;
-        }
-      }
 
-      // Status filter
-      if (statusFilter !== 'all') {
-        const normalizedStatus = order.status || 'pending';
-        if (normalizedStatus !== statusFilter) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [orders, searchQuery, dateRange, statusFilter]);
-
-  // Count orders by status
+  // Count orders by status (from API results)
   const statusCounts = useMemo(() => {
     const counts = {
-      all: orders.length,
+      all: totalCount,
       pending: 0,
+      assigned: 0,
+      confirmed: 0,
+      picked_up: 0,
       to_delivery: 0,
       in_delivery: 0,
       delivered: 0,
@@ -113,23 +102,29 @@ export default function MyOrders() {
     };
 
     orders.forEach(order => {
-      const status = order.status || 'pending';
+      const status = order.deliveryStatus || 'pending';
       if (status in counts) {
         counts[status as keyof typeof counts]++;
       }
     });
 
     return counts;
-  }, [orders]);
+  }, [orders, totalCount]);
+
+  // Pagination calculation
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalCount);
 
   const getStatusLabel = (status?: string) => {
     const statusMap: Record<string, { label: string; color: string }> = {
       pending: { label: t('statusPending'), color: 'bg-blue-100 text-blue-700' },
+      assigned: { label: t('statusAssigned'), color: 'bg-purple-100 text-purple-700' },
+      confirmed: { label: t('statusConfirmed'), color: 'bg-indigo-100 text-indigo-700' },
+      picked_up: { label: t('statusPickedUp'), color: 'bg-cyan-100 text-cyan-700' },
       to_delivery: { label: t('statusToDelivery'), color: 'bg-orange-100 text-orange-700' },
       in_delivery: { label: t('statusInDelivery'), color: 'bg-yellow-100 text-yellow-700' },
       delivered: { label: t('statusDelivered'), color: 'bg-green-100 text-green-700' },
       canceled: { label: t('statusCanceled'), color: 'bg-red-100 text-red-700' },
-      assigned: { label: t('statusAssigned'), color: 'bg-purple-100 text-purple-700' },
     };
 
     // If no status, default to pending
@@ -218,87 +213,87 @@ export default function MyOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-4 sm:py-6 px-3 sm:px-4" dir={dir}>
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-background py-3 sm:py-4 md:py-6 px-2 sm:px-3 md:px-4" dir={dir}>
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-4">
+        <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="ghost"
                 onClick={() => navigate('/')}
-                className="h-10 w-10 p-0"
+                className="h-8 w-8 sm:h-10 sm:w-10 p-0"
               >
-                <ArrowLeft className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+                <ArrowLeft className={`h-4 w-4 sm:h-5 sm:w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
               </Button>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-                  <ShoppingBag className="w-7 h-7 text-primary" />
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-primary" />
                   {t('myOrders')}
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
                   {t('trackAndManage')}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Search and Date Filter */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search Bar */}
-            <div className="relative flex-1">
-              <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5`} />
-              <input
-                type="text"
-                placeholder={t('searchPlaceholder')}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className={`w-full ${dir === 'rtl' ? 'pr-10 pl-10' : 'pl-10 pr-10'} py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all bg-background`}
-              />
-              {searchInput && (
-                <button
-                  onClick={() => setSearchInput('')}
-                  className={`absolute ${dir === 'rtl' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`}
-                >
-                  <X className="w-4 h-4" />
-                </button>
+          {/* Filter Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setFiltersExpanded(!filtersExpanded)}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all ${
+                filtersExpanded
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'bg-card text-foreground border border-border hover:bg-muted'
+              }`}
+            >
+              <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">{t('filters')}</span>
+              {filtersExpanded ? (
+                <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               )}
-            </div>
-
-            {/* Date Range Picker */}
-            <DateRangePicker
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              placeholder={t('filterByDate')}
-            />
+              {/* Active Filter Count Badge */}
+              {(appliedFilters.orderNumber || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && !filtersExpanded && (
+                <span className={`${dir === 'rtl' ? 'mr-1' : 'ml-1'} px-1.5 sm:px-2 py-0.5 bg-primary text-primary-foreground text-xs font-bold rounded-full`}>
+                  {[Boolean(appliedFilters.orderNumber), Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end)].filter(Boolean).length}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Status Filter Tabs */}
-        <div className="mb-6">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+        {/* Delivery Status Filter */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-2">
             {[
-              { key: 'all', label: t('all') },
-              { key: 'pending', label: t('statusPending') },
-              { key: 'to_delivery', label: t('statusToDelivery') },
-              { key: 'in_delivery', label: t('statusInDelivery') },
-              { key: 'delivered', label: t('statusDelivered') },
-              { key: 'canceled', label: t('statusCanceled') }
+              { key: 'all', label: t('all'), icon: '📦' },
+              { key: 'pending', label: t('statusPending'), icon: '⏳' },
+              { key: 'assigned', label: t('statusAssigned'), icon: '👤' },
+              { key: 'confirmed', label: t('statusConfirmed'), icon: '✓' },
+              { key: 'picked_up', label: t('statusPickedUp'), icon: '📦' },
+              { key: 'to_delivery', label: t('statusToDelivery'), icon: '⚠️' },
+              { key: 'in_delivery', label: t('statusInDelivery'), icon: '🚗' },
+              { key: 'delivered', label: t('statusDelivered'), icon: '✅' },
+              { key: 'canceled', label: t('statusCanceled'), icon: '❌' }
             ].map((filter) => (
               <button
                 key={filter.key}
-                onClick={() => setStatusFilter(filter.key as any)}
-                className={`px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                onClick={() => setStatusFilter(filter.key as 'all' | 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled')}
+                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1 sm:gap-1.5 ${
                   statusFilter === filter.key
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'bg-card text-foreground hover:bg-muted border border-border'
+                    ? 'bg-amber-500 text-white shadow-md sm:shadow-lg shadow-amber-500/30'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 sm:border-2 hover:border-slate-300'
                 }`}
               >
-                {filter.label}
-                <span className={`ml-2 rtl:mr-2 rtl:ml-0 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                <span className="text-xs sm:text-sm">{filter.icon}</span>
+                <span className="hidden sm:inline">{filter.label}</span>
+                <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-semibold ${
                   statusFilter === filter.key 
-                    ? 'bg-primary-foreground/20 text-primary-foreground' 
-                    : 'bg-muted text-muted-foreground'
+                    ? 'bg-white/25 text-white' 
+                    : 'bg-slate-200 text-slate-600'
                 }`}>
                   {statusCounts[filter.key as keyof typeof statusCounts]}
                 </span>
@@ -307,83 +302,252 @@ export default function MyOrders() {
           </div>
         </div>
 
+        {/* Filters Overlay Panel */}
+        {filtersExpanded && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[40] transition-opacity"
+              onClick={() => setFiltersExpanded(false)}
+            />
+            
+            {/* Slide-in Panel */}
+            <div className={`fixed inset-y-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-full sm:w-[520px] md:w-[560px] bg-background shadow-2xl z-[45] flex flex-col animate-in ${dir === 'rtl' ? 'slide-in-from-left' : 'slide-in-from-right'} duration-300`}>
+              {/* Panel Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-gradient-to-r from-primary to-primary/90">
+                <div className="flex items-center gap-3">
+                  <Filter className="w-5 h-5 text-primary-foreground" />
+                  <h2 className="text-lg font-bold text-primary-foreground">{t('filters')}</h2>
+                </div>
+                <button
+                  onClick={() => setFiltersExpanded(false)}
+                  className="p-2 hover:bg-primary-foreground/20 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-primary-foreground" />
+                </button>
+              </div>
+
+              {/* Panel Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                {/* Search Section */}
+                <div className="pb-6 border-b border-border">
+                  <label className="text-xs font-bold text-foreground uppercase tracking-wide mb-4 block flex items-center gap-2">
+                    <Search className="w-4 h-4 text-primary" />
+                    {t('search')}
+                  </label>
+                  
+                  {/* Order Number Search */}
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground mb-2 block">{t('orderNumber')}</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder={t('enterOrderNumber')}
+                        value={orderNumberSearch}
+                        onChange={(e) => setOrderNumberSearch(e.target.value)}
+                        className="w-full px-3 py-2.5 text-sm border-2 border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all bg-background"
+                      />
+                      {orderNumberSearch && (
+                        <button
+                          onClick={() => setOrderNumberSearch('')}
+                          className={`absolute ${dir === 'rtl' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date Range Section */}
+                <div>
+                  <label className="text-xs font-bold text-foreground uppercase tracking-wide mb-3 block flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    {t('dateRange')}
+                  </label>
+                  <DateRangePicker
+                    dateRange={dateRange}
+                    onDateRangeChange={setDateRange}
+                    placeholder={t('selectDate')}
+                  />
+                </div>
+
+              </div>
+
+              {/* Panel Footer */}
+              <div className="border-t border-border p-4 bg-muted flex gap-3">
+                <button
+                  onClick={() => {
+                    setOrderNumberSearch('');
+                    setDateRange({ start: undefined, end: undefined });
+                    setStatusFilter('all');
+                    setCurrentPage(1);
+                    setAppliedFilters({
+                      orderNumber: '',
+                      dateRange: { start: undefined, end: undefined },
+                    });
+                    setFiltersExpanded(false);
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-background text-foreground rounded-lg font-medium text-sm hover:bg-muted border border-border transition-colors"
+                >
+                  {t('reset')}
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentPage(1);
+                    setAppliedFilters({
+                      orderNumber: orderNumberSearch,
+                      dateRange: { start: dateRange.start, end: dateRange.end },
+                    });
+                    setFiltersExpanded(false);
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 shadow-lg transition-colors"
+                >
+                  {t('apply')}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Orders List */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
           </div>
-        ) : filteredOrders.length === 0 ? (
+        ) : orders.length === 0 ? (
           <div className="bg-card rounded-xl shadow-sm border border-border p-12 text-center">
             <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
               {t('noOrdersFound')}
             </h3>
             <p className="text-muted-foreground">
-              {searchQuery ? t('noResultsMessage') : t('noOrdersYet')}
+              {appliedFilters.orderNumber ? t('noResultsMessage') : t('noOrdersYet')}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            {filteredOrders.map((order) => {
-              const status = getStatusLabel(order.status);
+          <>
+            {/* Pagination Info Bar - Top */}
+            {totalCount > 0 && (
+              <div className="px-2 sm:px-3 md:px-4 py-2.5 sm:py-3 flex flex-row items-center justify-between gap-1.5 sm:gap-3 text-xs sm:text-sm">
+                {/* Left: Showing info */}
+                <div className="text-muted-foreground hidden md:block flex-shrink-0">
+                  {t('showing')} <span className="font-semibold text-foreground">{startIndex}</span> {t('to')}
+                  {' '}<span className="font-semibold text-foreground">{endIndex}</span> {t('of')}{' '}
+                  <span className="font-semibold text-foreground">{totalCount}</span> {t('results')}
+                </div>
+                
+                {/* Center: Page Size Selector */}
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                  <label className="text-xs font-medium text-muted-foreground hidden lg:inline">{t('perPage')}</label>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="px-1.5 sm:px-2 py-1 sm:py-1.5 border border-border rounded-md sm:rounded-lg text-xs sm:text-sm font-medium text-foreground bg-background hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+
+                {/* Right: Pagination Buttons */}
+                <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-shrink-0 ml-auto">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex items-center justify-center px-1.5 sm:px-2 py-1 sm:py-1.5 border border-border rounded-md sm:rounded-lg text-xs sm:text-sm font-medium text-foreground bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title={t('previous')}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </button>
+                  
+                  <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2">
+                    <span className="text-xs sm:text-sm font-medium text-foreground">{currentPage}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">/</span>
+                    <span className="text-xs sm:text-sm font-medium text-foreground">{totalPages}</span>
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="inline-flex items-center justify-center px-1.5 sm:px-2 py-1 sm:py-1.5 border border-border rounded-md sm:rounded-lg text-xs sm:text-sm font-medium text-foreground bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title={t('next')}
+                  >
+                    <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Orders Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 md:gap-4">
+              {orders.map((order) => {
+              const status = getStatusLabel(order.deliveryStatus);
               return (
                 <div
                   key={order.id}
-                  className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-all group"
+                  className="bg-card rounded-xl sm:rounded-2xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-all group"
                 >
                   {/* Order Header */}
-                  <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-4 border-b border-border">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Package className="w-5 h-5 text-primary" />
+                  <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-3 sm:p-4 border-b border-border">
+                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                         <span className="text-xs font-medium text-muted-foreground">
                           {t('orderNumber')}
                         </span>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}>
+                      <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${status.color}`}>
                         {status.label}
                       </span>
                     </div>
-                    <p className="font-mono font-bold text-lg text-foreground">
+                    <p className="font-mono font-bold text-base sm:text-lg text-foreground">
                       {order.orderNumber}
                     </p>
                   </div>
 
                   {/* Order Details */}
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatDate(order.dateCreated)}</span>
+                  <div className="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="text-xs sm:text-sm">{formatDate(order.dateCreated)}</span>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
-                      <span className="text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-border">
+                      <span className="text-xs sm:text-sm font-medium text-muted-foreground">
                         {t('totalAmount')}
                       </span>
-                      <span className="text-xl font-bold text-primary">
+                      <span className="text-lg sm:text-xl font-bold text-primary">
                         {formatCurrency(order.total || 0, language)}
                       </span>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 pt-3">
+                    <div className="flex gap-1.5 sm:gap-2 pt-2 sm:pt-3">
                       {/* View Items Button */}
                       <Button
                         onClick={() => handleViewItems(order)}
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
                         variant="outline"
                       >
-                        <Eye className="w-4 h-4 mr-2" />
-                        {t('viewDetails')}
+                        <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">{t('viewDetails')}</span>
+                        <span className="sm:hidden">Details</span>
                       </Button>
 
                       {/* Track Button */}
-                      {(order.status !== 'delivered' && order.status !== 'canceled') && (
+                      {(order.deliveryStatus !== 'delivered' && order.deliveryStatus !== 'canceled') && (
                         <Button
                           onClick={() => setSelectedOrder(order.orderNumber)}
-                          className="flex-1"
+                          className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
                         >
-                          <MapPin className="w-4 h-4 mr-2" />
+                          <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           {t('track')}
                         </Button>
                       )}
@@ -392,7 +556,8 @@ export default function MyOrders() {
                 </div>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
       </div>
 

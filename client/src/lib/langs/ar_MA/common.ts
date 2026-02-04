@@ -24,6 +24,8 @@ export default {
   edit: 'تعديل',
   delete: 'حذف',
   create: 'إنشاء',
+  apply: 'تطبيق',
+  reset: 'إعادة تعيين',
   
   // Common Fields
   name: 'الاسم الكامل',
@@ -78,6 +80,13 @@ export default {
   // Pagination
   previous: 'السابق',
   next: 'التالي',
+  first: 'الأول',
+  last: 'الأخير',
+  showing: 'عرض',
+  to: 'إلى',
+  of: 'من',
+  results: 'النتائج',
+  perPage: 'لكل صفحة',
   gridView: 'عرض شبكي',
   listView: 'عرض قائمة',
   

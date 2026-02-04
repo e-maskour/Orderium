@@ -24,6 +24,8 @@ export default {
   edit: 'Modifier',
   delete: 'Supprimer',
   create: 'Créer',
+  apply: 'Appliquer',
+  reset: 'Réinitialiser',
   
   // Common Fields
   name: 'Nom complet',
@@ -78,6 +80,13 @@ export default {
   // Pagination
   previous: 'Précédent',
   next: 'Suivant',
+  first: 'Premier',
+  last: 'Dernier',
+  showing: 'Affichage',
+  to: 'à',
+  of: 'de',
+  results: 'résultats',
+  perPage: 'par page',
   gridView: 'Vue grille',
   listView: 'Vue liste',
   

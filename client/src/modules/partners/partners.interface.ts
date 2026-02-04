@@ -35,6 +35,7 @@ export interface PartnerFormData {
   name: string;
   email?: string;
   address?: string;
+  deliveryAddress?: string;
   city?: string;
   postalCode?: string;
   latitude?: number;

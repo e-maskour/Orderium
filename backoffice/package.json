@@ -3,12 +3,17 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
+  "description": "Professional backoffice and management system for Orderium",
+  "author": "Orderium Team",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:analyze": "vite build --mode development && tsc --noEmit",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -42,3 +47,4 @@
     "vite": "^5.0.8"
   }
 }
+

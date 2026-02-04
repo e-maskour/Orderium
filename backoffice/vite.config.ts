@@ -18,4 +18,39 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            '@tanstack/react-query',
+            'socket.io-client',
+          ],
+          'ui': [
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-scroll-area',
+            '@radix-ui/react-slot',
+            'lucide-react',
+            'sonner',
+            'cmdk',
+          ],
+        },
+      },
+    },
+  },
+  preview: {
+    port: 3001,
+  },
 });

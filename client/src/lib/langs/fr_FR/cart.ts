@@ -20,6 +20,8 @@ export default {
   customerInfo: 'Informations client',
   orderSummary: 'Résumé de la commande',
   placeOrder: 'Confirmer la commande',
+  note: 'Note',
+  notePlaceholder: 'Ajouter une note pour la commande (optionnel)',
   
   // Customer Selection
   existingCustomer: 'Client existant',

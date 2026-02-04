@@ -12,11 +12,13 @@ export default {
   
   // Order Status
   statusPending: 'En attente',
+  statusAssigned: 'Assigné',
+  statusConfirmed: 'Confirmé',
+  statusPickedUp: 'Récupéré',
   statusToDelivery: 'À livrer',
   statusInDelivery: 'En livraison',
   statusDelivered: 'Livré',
   statusCanceled: 'Annulé',
-  statusAssigned: 'Assigné',
   statustodelivery: 'À livrer',
   statusindelivery: 'En livraison',
   statusdelivered: 'Livré',
@@ -45,4 +47,9 @@ export default {
   enterOrderNumber: 'Entrez le numéro',
   searchPlaceholder: 'Rechercher par numéro, client ou téléphone...',
   noResultsMessage: 'Aucune commande ne correspond à votre recherche',
+  filters: 'Filtres',
+  dateRange: 'Plage de dates',
+  selectDate: 'Sélectionnez la date',
+  apply: 'Appliquer',
+  reset: 'Réinitialiser',
 };

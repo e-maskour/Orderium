@@ -4,17 +4,82 @@ import { LanguageToggle } from './LanguageToggle';
 import { NotificationBell } from './NotificationBell';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface HeaderProps {
   isSidebarOpen?: boolean;
   onMenuToggle?: () => void;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => {
   const { admin, logout } = useAuth();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    const iOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
+    setIsIOS(iOS);
+
+    if (isStandalone) {
+      setCanInstall(false);
+      return;
+    }
+
+    if (iOS) {
+      setCanInstall(true);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+      setCanInstall(true);
+    };
+
+    const handleAppInstalled = () => {
+      setCanInstall(false);
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) {
+      if (isIOS) {
+        window.alert('To install on iOS, tap Share and choose “Add to Home Screen”.');
+      }
+      return;
+    }
+    try {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setCanInstall(false);
+        setInstallPrompt(null);
+      }
+    } catch {
+      setCanInstall(false);
+      setInstallPrompt(null);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -45,6 +110,14 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
 
       {/* Right Section - Actions */}
       <div className={`flex items-center gap-2 sm:gap-4 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+        {canInstall && (
+          <button
+            onClick={handleInstallClick}
+            className="text-xs sm:text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 px-2.5 sm:px-3 py-1.5 rounded-md"
+          >
+            Install
+          </button>
+        )}
         {/* Notification Bell */}
         <NotificationBell />
 

@@ -47,9 +47,11 @@ export function Autocomplete({
 
   React.useEffect(() => {
     if (value !== undefined) {
-      setInputValue(value)
+      // Find the option with this value and display its label
+      const selectedOption = options.find((opt) => opt.value === value)
+      setInputValue(selectedOption?.label || value)
     }
-  }, [value])
+  }, [value, options])
 
   // Filter options based on input value
   const filteredOptions = React.useMemo(() => {
@@ -59,17 +61,6 @@ export function Autocomplete({
       option.value.toLowerCase().includes(inputValue.toLowerCase())
     )
   }, [options, inputValue])
-
-  const handleSelect = (selectedValue: string) => {
-    const selectedOption = options.find((opt) => opt.value === selectedValue)
-    const newValue = selectedValue === value ? "" : selectedValue
-    setInputValue(selectedOption?.label || selectedValue)
-    onValueChange?.(newValue)
-    setOpen(false)
-    setTimeout(() => {
-      inputRef.current?.focus()
-    }, 0)
-  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
@@ -97,22 +88,23 @@ export function Autocomplete({
     setOpen(true)
   }
 
-  const handleInputBlur = (e: React.FocusEvent) => {
-    // Check if blur is moving to the popover content
-    const popoverContent = e.relatedTarget as HTMLElement
-    if (!popoverContent?.closest('[role="dialog"]')) {
-      setTimeout(() => {
-        setOpen(false)
-      }, 200)
-    }
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
   }
 
-  const handlePopoverMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
+  const handleItemSelect = (selectedValue: string) => {
+    const selectedOption = options.find((opt) => opt.value === selectedValue)
+    const newValue = selectedValue === value ? "" : selectedValue
+    setInputValue(selectedOption?.label || selectedValue)
+    onValueChange?.(newValue)
+    setOpen(false)
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 0)
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
+    <Popover open={open} onOpenChange={handleOpenChange} modal={false}>
       <PopoverAnchor asChild>
         <div className="relative w-full">
           <input
@@ -121,7 +113,6 @@ export function Autocomplete({
             value={inputValue}
             onChange={handleInputChange}
             onClick={handleInputClick}
-            onBlur={handleInputBlur}
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
@@ -144,24 +135,22 @@ export function Autocomplete({
         </div>
       </PopoverAnchor>
       <PopoverContent 
-        className="p-0" 
+        className="p-0 bg-white" 
         align="start"
         style={{ width: 'var(--radix-popover-trigger-width)' }}
         onOpenAutoFocus={(e) => e.preventDefault()}
-        onMouseDown={handlePopoverMouseDown}
       >
-        <Command shouldFilter={false} className="rounded-lg border-0">
+        <Command shouldFilter={false} className="rounded-lg border-0 bg-white">
           <CommandList>
             {filteredOptions.length === 0 ? (
               <CommandEmpty>{emptyMessage}</CommandEmpty>
             ) : (
-              <CommandGroup>
+              <div className="p-1">
                 {filteredOptions.map((option) => (
-                  <CommandItem
+                  <div
                     key={option.value}
-                    value={option.value}
-                    onSelect={() => handleSelect(option.value)}
-                    className="cursor-pointer"
+                    onClick={() => handleItemSelect(option.value)}
+                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100 active:bg-slate-200 bg-white"
                   >
                     <Check
                       className={cn(
@@ -170,9 +159,9 @@ export function Autocomplete({
                       )}
                     />
                     {option.label}
-                  </CommandItem>
+                  </div>
                 ))}
-              </CommandGroup>
+              </div>
             )}
           </CommandList>
         </Command>

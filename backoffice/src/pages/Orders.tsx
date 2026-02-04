@@ -3,8 +3,8 @@ import { ordersService, deliveryPersonService, partnersService } from '../module
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrderNotifications } from '../hooks/useOrderNotifications';
-import { useState, useEffect, useMemo } from 'react';
-import { Phone, MapPin, X, Search, Package, Eye, CheckSquare, Square, UserPlus, Grid3x3, List, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Phone, MapPin, X, Search, Package, Eye, CheckSquare, Square, UserPlus, Grid3x3, List, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -42,36 +42,46 @@ export default function Orders() {
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<'all' | 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
   const [fromClientFilter, setFromClientFilter] = useState<'all' | 'locale' | 'client'>('all');
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   
   // Applied filters state - only these trigger API requests
   const [appliedFilters, setAppliedFilters] = useState({
     search: '',
+    orderNumber: '',
     deliveryStatus: 'all' as any,
     fromClient: 'all' as any,
-    dateFilterType: 'today' as any,
-    dateRange: (() => {
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-      return { start: startOfDay, end: endOfDay };
-    })(),
+    dateFilterType: 'custom' as any,
+    dateRange: { start: undefined, end: undefined },
   });
   
   // Search filter states - individual fields
   const [orderNumberSearch, setOrderNumberSearch] = useState('');
-  const [customerNameSearch, setCustomerNameSearch] = useState('');
+  const [orderNumbers, setOrderNumbers] = useState<any[]>([]);
+  const [orderNumbersLoading, setOrderNumbersLoading] = useState(false);
+  const [customerIdSearch, setCustomerIdSearch] = useState('');
   const [customerPhoneSearch, setCustomerPhoneSearch] = useState('');
-  const [deliveryPersonSearch, setDeliveryPersonSearch] = useState('');
+  const [deliveryPersonIdSearch, setDeliveryPersonIdSearch] = useState('');
   
   // Date filter states
-  const [dateFilterType, setDateFilterType] = useState<'today' | 'yesterday' | 'week' | 'month' | 'year' | 'custom'>('today');
-  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>(() => {
-    // Initialize with today's date
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    return { start: startOfDay, end: endOfDay };
-  });
+  const [dateFilterType, setDateFilterType] = useState<'today' | 'yesterday' | 'week' | 'month' | 'year' | 'custom'>('custom');
+  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({ start: undefined, end: undefined });
+
+  // Ref for status filter scroll
+  const statusScrollRef = useRef<HTMLDivElement>(null);
+
+  // Scroll functions for mobile status filter
+  const scrollStatusLeft = () => {
+    if (statusScrollRef.current) {
+      statusScrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollStatusRight = () => {
+    if (statusScrollRef.current) {
+      statusScrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
 
   // Get date range based on applied filter type
   const getDateRange = useMemo(() => {
@@ -117,10 +127,10 @@ export default function Orders() {
           endCustom.setHours(23, 59, 59, 999);
           return { start: appliedFilters.dateRange.start, end: endCustom };
         }
-        return { start: startOfDay, end: endOfDay };
+        return { start: undefined, end: undefined };
       
       default:
-        return { start: startOfDay, end: endOfDay };
+        return { start: undefined, end: undefined };
     }
   }, [appliedFilters.dateFilterType, appliedFilters.dateRange]);
 
@@ -130,25 +140,24 @@ export default function Orders() {
     enabled: !!admin,
   });
 
-  const { data: ordersData = { orders: [], count: 0, statusCounts: {} }, isLoading: ordersLoading } = useQuery({
-    queryKey: ['orders', JSON.stringify(appliedFilters)],
+  const { data: ordersData = { orders: [], count: 0, totalCount: 0, statusCounts: {} }, isLoading: ordersLoading } = useQuery({
+    queryKey: ['orders', JSON.stringify(appliedFilters), currentPage, pageSize],
     queryFn: () => ordersService.getAll(
       appliedFilters.search,
       getDateRange.start,
       getDateRange.end,
       true,
       appliedFilters.deliveryStatus !== 'all' ? appliedFilters.deliveryStatus : undefined,
-      appliedFilters.fromClient !== 'locale' ? (appliedFilters.fromClient === 'client' ? true : undefined) : false,
+      appliedFilters.fromClient === 'client' ? true : appliedFilters.fromClient === 'locale' ? false : undefined,
+      appliedFilters.orderNumber,
+      currentPage,
+      pageSize,
     ),
   });
 
   const orders = ordersData.orders || [];
   const deliveryStatusCounts = ordersData.statusCounts || {};
-  const fromClientCounts = {
-    all: (deliveryStatusCounts.locale || 0) + (deliveryStatusCounts.client || 0),
-    locale: deliveryStatusCounts.locale || 0,
-    client: deliveryStatusCounts.client || 0,
-  };
+  const totalCount = ordersData.totalCount || 0;
 
   const { data: deliveryPersons = [] } = useQuery({
     queryKey: ['deliveryPersons'],
@@ -218,6 +227,25 @@ export default function Orders() {
     },
   });
 
+  const handleOrderNumberSearch = async (searchValue: string) => {
+    setOrderNumberSearch(searchValue);
+    if (!searchValue) {
+      setOrderNumbers([]);
+      return;
+    }
+
+    try {
+      setOrderNumbersLoading(true);
+      const results = await ordersService.getOrderNumbers(searchValue);
+      setOrderNumbers(results);
+    } catch (error) {
+      console.error('Failed to fetch order numbers:', error);
+      setOrderNumbers([]);
+    } finally {
+      setOrderNumbersLoading(false);
+    }
+  };
+
   const handleAssign = (orderId: number, deliveryPersonId: string) => {
     if (!deliveryPersonId) return;
     assignMutation.mutate({ orderId, deliveryPersonId: parseInt(deliveryPersonId) });
@@ -244,38 +272,6 @@ export default function Orders() {
     setPdfTitle(`${label} ${order?.orderNumber || ''}`.trim());
     setShowPDFPreview(true);
   };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'to_delivery': return 'bg-amber-50 text-amber-700 border border-amber-200/50';
-      case 'in_delivery': return 'bg-blue-50 text-blue-700 border border-blue-200/50';
-      case 'delivered': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/50';
-      case 'canceled': return 'bg-red-50 text-red-700 border border-red-200/50';
-      default: return 'bg-slate-50 text-slate-600 border border-slate-200/50';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'to_delivery': return '📋';
-      case 'in_delivery': return '🚚';
-      case 'delivered': return '✅';
-      case 'canceled': return '❌';
-      default: return '⏳';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'to_delivery': return t('toDelivery');
-      case 'in_delivery': return t('inDelivery');
-      case 'delivered': return t('delivered');
-      case 'canceled': return t('canceled');
-      default: return status || t('unassigned');
-    }
-  };
-
-  const getSourceLabel = (order: any) => (order?.fromClient ? t('client') : t('local'));
 
   const getSourceBadge = (order: any) => {
     if (order?.fromClient) {
@@ -398,7 +394,7 @@ export default function Orders() {
 
   return (
     <AdminLayout>
-      <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col max-w-7xl mx-auto w-full">
+      <div className="min-h-[calc(100vh-64px)] flex flex-col max-w-7xl mx-auto w-full">
         {/* Header */}
         <div className="mb-4 sm:mb-6 flex-shrink-0">
           <PageHeader
@@ -448,9 +444,9 @@ export default function Orders() {
                     <ChevronDown className="w-4 h-4" />
                   )}
                   {/* Active Filter Count Badge */}
-                  {(appliedFilters.search || appliedFilters.deliveryStatus !== 'all' || appliedFilters.fromClient !== 'all' || appliedFilters.dateFilterType !== 'today') && !filtersExpanded && (
+                  {(appliedFilters.search || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && !filtersExpanded && (
                     <span className="ml-1 px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">
-                      {[appliedFilters.search, appliedFilters.deliveryStatus !== 'all', appliedFilters.fromClient !== 'all', appliedFilters.dateFilterType !== 'today'].filter(Boolean).length}
+                      {[appliedFilters.search, appliedFilters.fromClient !== 'all', Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end)].filter(Boolean).length}
                     </span>
                   )}
                 </button>
@@ -494,27 +490,18 @@ export default function Orders() {
                     {t('search')}
                   </label>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Order Number Search */}
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Order Number Search - Autocomplete */}
                     <div>
                       <label className="text-xs font-semibold text-slate-600 mb-2 block">{t('orderNumber')}</label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="E.g., ORD-1001"
-                          value={orderNumberSearch}
-                          onChange={(e) => setOrderNumberSearch(e.target.value)}
-                          className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
-                        />
-                        {orderNumberSearch && (
-                          <button
-                            onClick={() => setOrderNumberSearch('')}
-                            className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
+                      <Autocomplete
+                        options={orderNumbers}
+                        value={orderNumberSearch}
+                        onValueChange={handleOrderNumberSearch}
+                        placeholder="E.g., ORD-1001"
+                        emptyMessage={t('noOrdersFound')}
+                        allowCustomValue={true}
+                      />
                     </div>
 
                     {/* Customer Name Search - Autocomplete */}
@@ -522,14 +509,14 @@ export default function Orders() {
                       <label className="text-xs font-semibold text-slate-600 mb-2 block">{t('customerName')}</label>
                       <Autocomplete
                         options={partners.map((partner: any) => ({
-                          value: partner.name,
+                          value: String(partner.id),
                           label: `${partner.name}${partner.phone ? ` (${partner.phone})` : ''}`
                         }))}
-                        value={customerNameSearch}
-                        onValueChange={setCustomerNameSearch}
+                        value={customerIdSearch}
+                        onValueChange={setCustomerIdSearch}
                         placeholder={t('typeCustomerName')}
                         emptyMessage={t('noCustomersFound')}
-                        allowCustomValue={true}
+                        allowCustomValue={false}
                       />
                     </div>
 
@@ -555,19 +542,20 @@ export default function Orders() {
                       </div>
                     </div>
 
-                    {/* Delivery Person Search */}
+                    {/* Delivery Person Search - Autocomplete */}
                     <div>
                       <label className="text-xs font-semibold text-slate-600 mb-2 block">{t('deliveryPerson')}</label>
-                      <select
-                        value={deliveryPersonSearch}
-                        onChange={(e) => setDeliveryPersonSearch(e.target.value)}
-                        className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all bg-white"
-                      >
-                        <option value="">{t('selectDeliveryPerson')}</option>
-                        {deliveryPersons.filter((p: any) => p.isActive).map((person: any) => (
-                          <option key={person.id} value={person.name}>{person.name}</option>
-                        ))}
-                      </select>
+                      <Autocomplete
+                        options={deliveryPersons.filter((p: any) => p.isActive).map((person: any) => ({
+                          value: String(person.id),
+                          label: person.name
+                        }))}
+                        value={deliveryPersonIdSearch}
+                        onValueChange={setDeliveryPersonIdSearch}
+                        placeholder={t('selectDeliveryPerson')}
+                        emptyMessage={t('noDeliveryPersons')}
+                        allowCustomValue={false}
+                      />
                     </div>
                   </div>
                 </div>
@@ -590,54 +578,13 @@ export default function Orders() {
                   />
                 </div>
 
-                {/* Delivery Status Filter - 3 Column Grid */}
-                <div>
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 block flex items-center gap-2">
-                    <Truck className="w-4 h-4 text-amber-600" />
-                    {t('deliveryStatus')}
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { key: 'all', label: t('all'), icon: '📦' },
-                      { key: 'pending', label: t('pending'), icon: '⏳' },
-                      { key: 'assigned', label: t('assigned'), icon: '👤' },
-                      { key: 'confirmed', label: t('confirmed'), icon: '✓' },
-                      { key: 'picked_up', label: t('pickedUp'), icon: '📦' },
-                      { key: 'to_delivery', label: t('toDelivery'), icon: '⚠️' },
-                      { key: 'in_delivery', label: t('inDelivery'), icon: '🚗' },
-                      { key: 'delivered', label: t('delivered'), icon: '✅' },
-                      { key: 'canceled', label: t('canceled'), icon: '❌' }
-                    ].map((filter) => (
-                      <button
-                        key={filter.key}
-                        onClick={() => setDeliveryStatusFilter(filter.key as any)}
-                        className={`px-3 py-2.5 rounded-lg text-xs font-semibold transition-all flex flex-col items-center gap-1 ${
-                          deliveryStatusFilter === filter.key
-                            ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                            : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <span className="text-lg">{filter.icon}</span>
-                        <span className="line-clamp-2 text-center leading-tight">{filter.label}</span>
-                        <span className={`text-[10px] font-bold ${
-                          deliveryStatusFilter === filter.key 
-                            ? 'bg-white/25 text-white' 
-                            : 'text-slate-500'
-                        }`}>
-                          {deliveryStatusCounts[filter.key as keyof typeof deliveryStatusCounts]}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Source Filter */}
                 <div>
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 block flex items-center gap-2">
                     <ShoppingCart className="w-4 h-4 text-amber-600" />
                     {t('orderSource')}
                   </label>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {[
                       { key: 'all', label: t('all') },
                       { key: 'locale', label: t('local') },
@@ -646,24 +593,18 @@ export default function Orders() {
                       <button
                         key={filter.key}
                         onClick={() => setFromClientFilter(filter.key as any)}
-                        className={`w-full px-4 py-3 rounded-lg text-sm font-semibold transition-all flex items-center justify-between ${
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                           fromClientFilter === filter.key
                             ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
                             : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         <span>{filter.label}</span>
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                          fromClientFilter === filter.key 
-                            ? 'bg-white/25 text-white' 
-                            : 'bg-slate-200 text-slate-700'
-                        }`}>
-                          {fromClientCounts[filter.key as keyof typeof fromClientCounts]}
-                        </span>
                       </button>
                     ))}
                   </div>
                 </div>
+
               </div>
 
               {/* Panel Footer */}
@@ -672,23 +613,22 @@ export default function Orders() {
                   onClick={() => {
                     // Reset temporary filters
                     setOrderNumberSearch('');
-                    setCustomerNameSearch('');
+                    setCustomerIdSearch('');
                     setCustomerPhoneSearch('');
-                    setDeliveryPersonSearch('');
+                    setDeliveryPersonIdSearch('');
                     setSearchInput('');
-                    setDeliveryStatusFilter('all');
                     setFromClientFilter('all');
-                    setDateFilterType('today');
-                    // Update applied filters with reset values and today's date
-                    const now = new Date();
-                    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+                    setDateFilterType('custom');
+                    setDateRange({ start: undefined, end: undefined });
+                    setCurrentPage(1);
+                    setPageSize(50);
                     setAppliedFilters({
                       search: '',
+                      orderNumber: '',
                       deliveryStatus: 'all',
                       fromClient: 'all',
-                      dateFilterType: 'today',
-                      dateRange: { start: startOfDay, end: endOfDay },
+                      dateFilterType: 'custom',
+                      dateRange: { start: undefined, end: undefined },
                     });
                   }}
                   className="flex-1 px-4 py-2.5 bg-white text-slate-700 rounded-lg font-medium text-sm hover:bg-slate-100 border border-slate-300 transition-colors"
@@ -700,29 +640,21 @@ export default function Orders() {
                     // Combine all search fields into a search string
                     const searchParts = [];
                     if (orderNumberSearch) searchParts.push(`order:${orderNumberSearch}`);
-                    if (customerNameSearch) searchParts.push(`name:${customerNameSearch}`);
+                    if (customerIdSearch) searchParts.push(`customerId:${customerIdSearch}`);
                     if (customerPhoneSearch) searchParts.push(`phone:${customerPhoneSearch}`);
-                    if (deliveryPersonSearch) searchParts.push(`delivery:${deliveryPersonSearch}`);
+                    if (deliveryPersonIdSearch) searchParts.push(`deliveryPersonId:${deliveryPersonIdSearch}`);
                     const combinedSearch = searchParts.join(' ');
 
-                    // Apply current temporary filters
-                    const now = new Date();
-                    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+                    let finalDateRange = { start: dateRange.start, end: dateRange.end };
                     
-                    let finalDateRange = { start: startOfDay, end: endOfDay };
-                    if (dateFilterType === 'custom') {
-                      finalDateRange = {
-                        start: dateRange.start || startOfDay,
-                        end: dateRange.end || endOfDay,
-                      };
-                    }
-                    
+                    setCurrentPage(1);
+                    setPageSize(50);
                     setAppliedFilters({
                       search: combinedSearch,
-                      deliveryStatus: deliveryStatusFilter,
+                      orderNumber: orderNumberSearch,
+                      deliveryStatus: appliedFilters.deliveryStatus, // Keep delivery status as is
                       fromClient: fromClientFilter,
-                      dateFilterType: dateFilterType,
+                      dateFilterType: 'custom',
                       dateRange: finalDateRange,
                     });
                     setFiltersExpanded(false);
@@ -736,8 +668,137 @@ export default function Orders() {
           </>
         )}
 
+        {/* Delivery Status Filter Bar - Always Visible */}
+        <div className="mb-3 flex-shrink-0">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-2.5 sm:p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <Truck className="w-4 h-4 text-amber-600" />
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">{t('deliveryStatus')}</h3>
+              </div>
+              
+              {/* Left/Right scroll buttons - Mobile only */}
+              <div className="flex items-center gap-1 lg:hidden">
+                <button
+                  onClick={scrollStatusLeft}
+                  className="bg-slate-100 hover:bg-slate-200 rounded-full p-1.5 transition-colors"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="w-4 h-4 text-slate-600" />
+                </button>
+                <button
+                  onClick={scrollStatusRight}
+                  className="bg-slate-100 hover:bg-slate-200 rounded-full p-1.5 transition-colors"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="w-4 h-4 text-slate-600" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Status buttons container */}
+            <div 
+              ref={statusScrollRef}
+              className="flex gap-2 overflow-x-auto scrollbar-hide lg:flex-wrap scroll-smooth"
+            >
+                {[
+                  { key: 'all', label: t('all'), icon: '📦' },
+                  { key: 'pending', label: t('pending'), icon: '⏳' },
+                  { key: 'assigned', label: t('assigned'), icon: '👤' },
+                  { key: 'confirmed', label: t('confirmed'), icon: '✓' },
+                  { key: 'picked_up', label: t('pickedUp'), icon: '📦' },
+                  { key: 'to_delivery', label: t('toDelivery'), icon: '⚠️' },
+                  { key: 'in_delivery', label: t('inDelivery'), icon: '🚗' },
+                  { key: 'delivered', label: t('delivered'), icon: '✅' },
+                  { key: 'canceled', label: t('canceled'), icon: '❌' }
+                ].map((filter) => (
+                  <button
+                    key={filter.key}
+                    onClick={() => {
+                      setDeliveryStatusFilter(filter.key as any);
+                      setAppliedFilters(prev => ({
+                        ...prev,
+                        deliveryStatus: filter.key as any,
+                        dateFilterType: 'custom',
+                        dateRange: { start: prev.dateRange.start, end: prev.dateRange.end },
+                      }));
+                    }}
+                    className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                      deliveryStatusFilter === filter.key
+                        ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className="text-sm">{filter.icon}</span>
+                    <span className="whitespace-nowrap">{filter.label}</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      deliveryStatusFilter === filter.key 
+                        ? 'bg-white/25 text-white' 
+                        : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {deliveryStatusCounts[filter.key as keyof typeof deliveryStatusCounts]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+          </div>
+        </div>
+
+        {/* Pagination Info Bar - Top */}
+        {orders.length > 0 && (
+          <div className="bg-slate-50 px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-sm text-slate-600">
+                {t('showing')} <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
+                <span className="font-semibold">{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
+              </div>
+              
+              {/* Page Size Selector */}
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-slate-600">{t('perPage')}</label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value={10}>10</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={500}>500</option>
+                  <option value={1000}>1000</option>
+                </select>
+              </div>
+              
+              {/* Navigation */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium text-slate-700">{currentPage}</span>
+                  <span className="text-sm text-slate-500">/</span>
+                  <span className="text-sm font-medium text-slate-700">{Math.ceil(totalCount / pageSize)}</span>
+                </div>
+                <button
+                  onClick={() => setCurrentPage(Math.min(Math.ceil(totalCount / pageSize), currentPage + 1))}
+                  disabled={currentPage === Math.ceil(totalCount / pageSize)}
+                  className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Orders Content - Scrollable */}
-        <div className="flex-1 bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
           {ordersLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
@@ -756,7 +817,8 @@ export default function Orders() {
               </div>
             </div>
           ) : viewMode === 'list' ? (
-            <div className="flex-1 overflow-y-auto overflow-x-auto">
+            <>
+            <div className="flex-1">
               <div className="space-y-2 sm:space-y-3 p-2 sm:p-3">
                 {orders.map((order: any) => (
               <div
@@ -842,8 +904,10 @@ export default function Orders() {
             ))}
               </div>
             </div>
+            </>
           ) : (
-            <div className="flex-1 overflow-y-auto p-2 sm:p-3">
+            <>
+            <div className="flex-1 p-2 sm:p-3">
               <div className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {orders.map((order: any) => (
               <div 
@@ -869,14 +933,14 @@ export default function Orders() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                        className={`w-5 sm:w-6 h-5 sm:h-6 rounded-md border-2 flex items-center justify-center transition-all ${
                           selectedOrders.includes(order.id)
-                            ? 'bg-amber-400 border-amber-400 text-slate-900'
-                            : 'bg-white border-slate-300 hover:border-slate-400'
+                            ? 'bg-amber-500 border-amber-500 text-white'
+                            : 'bg-white border-slate-300'
                         }`}
                       >
                         {selectedOrders.includes(order.id) && (
-                          <CheckSquare className="w-3 h-3" />
+                          <CheckSquare className="w-4 h-4" />
                         )}
                       </div>
                     </div>
@@ -934,8 +998,8 @@ export default function Orders() {
                 ))}
               </div>
             </div>
+            </>
           )}
-        </div>
       </div>
 
       {/* Order Details Modal */}

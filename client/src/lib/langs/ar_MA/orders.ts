@@ -12,11 +12,13 @@ export default {
   
   // Order Status
   statusPending: 'قيد الانتظار',
+  statusAssigned: 'تم التعيين',
+  statusConfirmed: 'تم التأكيد',
+  statusPickedUp: 'تم الاستلام',
   statusToDelivery: 'للتوصيل',
   statusInDelivery: 'قيد التوصيل',
   statusDelivered: 'تم التسليم',
   statusCanceled: 'ملغي',
-  statusAssigned: 'تم التعيين',
   statustodelivery: 'للتوصيل',
   statusindelivery: 'قيد التوصيل',
   statusdelivered: 'تم التسليم',
@@ -45,4 +47,9 @@ export default {
   enterOrderNumber: 'أدخل رقم الطلب',
   searchPlaceholder: 'البحث برقم الطلب أو العميل أو الهاتف...',
   noResultsMessage: 'لا توجد طلبات تطابق بحثك',
+  filters: 'الفلاتر',
+  dateRange: 'نطاق التاريخ',
+  selectDate: 'اختر التاريخ',
+  apply: 'تطبيق',
+  reset: 'إعادة تعيين',
 };

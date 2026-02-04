@@ -212,7 +212,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
       <div className="h-16 flex items-center justify-between px-2 sm:px-4 border-b border-slate-200 flex-shrink-0">
         {!isCollapsed && (
           <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-            <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg shadow-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)'}}>
+            <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg shadow-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{background: 'linear-gradient(to bottom right, #dd7c1a, #c86b14)'}}>
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
               <span className="text-lg sm:text-xl font-bold text-white relative z-10">O</span>
             </div>
@@ -221,7 +221,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         )}
         {isCollapsed && (
           <div className="w-full flex justify-center">
-            <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg shadow-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)'}}>
+            <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg shadow-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{background: 'linear-gradient(to bottom right, #dd7c1a, #c86b14)'}}>
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
               <span className="text-lg sm:text-xl font-bold text-white relative z-10">O</span>
             </div>
