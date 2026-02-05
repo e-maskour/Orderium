@@ -1,0 +1,26 @@
+{
+  "name": "Orderium Client Portal",
+  "short_name": "Orderium",
+  "description": "Orderium client portal",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#f4511e",
+  "background_color": "#ffffff",
+  "categories": ["shopping", "business"],
+  "icons": [
+    {
+      "src": "/Eo_circle_deep-orange_white_letter-o.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/Eo_circle_deep-orange_white_letter-o.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

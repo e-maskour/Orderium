@@ -23,6 +23,11 @@ interface HeaderProps {
   onCartClick: () => void;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export const Header = ({ onCartClick }: HeaderProps) => {
   const { t, dir, language } = useLanguage();
   const { itemCount } = useCart();
@@ -30,11 +35,14 @@ export const Header = ({ onCartClick }: HeaderProps) => {
   const [showTracking, setShowTracking] = useState(false);
   const [trackingOrderNumber, setTrackingOrderNumber] = useState('');
   const [hasActiveOrders, setHasActiveOrders] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   // Check for active orders
   useEffect(() => {
     const checkActiveOrders = async () => {
-      if (!user?.CustomerId) {
+      if (!user?.customerId) {
         setHasActiveOrders(false);
         return;
       }
@@ -60,7 +68,64 @@ export const Header = ({ onCartClick }: HeaderProps) => {
     // Recheck every 30 seconds
     const interval = setInterval(checkActiveOrders, 30000);
     return () => clearInterval(interval);
-  }, [user?.CustomerId]);
+  }, [user?.customerId]);
+  
+  useEffect(() => {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    const iOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
+    setIsIOS(iOS);
+
+    if (isStandalone) {
+      setCanInstall(false);
+      return;
+    }
+
+    if (iOS) {
+      setCanInstall(true);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+      setCanInstall(true);
+    };
+
+    const handleAppInstalled = () => {
+      setCanInstall(false);
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) {
+      if (isIOS) {
+        window.alert('To install on iOS, tap Share and choose “Add to Home Screen”.');
+      }
+      return;
+    }
+    try {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setCanInstall(false);
+        setInstallPrompt(null);
+      }
+    } catch {
+      setCanInstall(false);
+      setInstallPrompt(null);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
@@ -77,6 +142,16 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {canInstall && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleInstallClick}
+              className="text-white bg-amber-600 hover:bg-amber-700"
+            >
+              Install
+            </Button>
+          )}
           {user?.customerId && <NotificationBell customerId={user.customerId} />}
           <LanguageToggle />
           
@@ -170,7 +245,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
                 className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
-            {trackingOrderNumber && user?.CustomerId && (
+            {trackingOrderNumber && user?.customerId && (
               <>
                 <div className="bg-secondary/50 rounded-lg p-3 mb-4">
                   <p className="text-xs text-muted-foreground">

@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-comp
 
 // Firebase configuration - Replace with your actual values
 const firebaseConfig = {
-  apiKey: "AIzaSyD1r4pCQDBE0xyWj62u9QGorFTp2DyVLDE",
+  apiKey: "",
   authDomain: "orderium-9df24.firebaseapp.com",
   projectId: "orderium-9df24",
   storageBucket: "orderium-9df24.firebasestorage.app",
@@ -14,10 +14,40 @@ const firebaseConfig = {
 
 // Initialize Firebase only if config is available
 let messaging = null;
+let isMessagingReady = false;
+
+const getNotificationIconUrl = () => `${self.location.origin}/Eo_circle_deep-orange_white_letter-o.svg`;
+
+// Ensure push handler exists at initial evaluation (required by Firebase SDK)
+self.addEventListener('push', (event) => {
+  if (isMessagingReady) {
+    return;
+  }
+
+  try {
+    const payload = event.data ? event.data.json() : {};
+    const notificationTitle =
+      payload.notification?.title || payload.data?.title || 'Orderium Backoffice';
+    const notificationOptions = {
+      body: payload.notification?.body || payload.data?.body || '',
+      icon: getNotificationIconUrl(),
+      badge: getNotificationIconUrl(),
+      tag: payload.data?.type || 'orderium-backoffice-notification',
+      data: payload.data || {},
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+    };
+
+    event.waitUntil(self.registration.showNotification(notificationTitle, notificationOptions));
+  } catch (error) {
+    console.error('[FCM SW] Fallback push handler error:', error);
+  }
+});
 try {
   if (firebaseConfig.apiKey) {
     firebase.initializeApp(firebaseConfig);
     messaging = firebase.messaging();
+    isMessagingReady = true;
   } else {
     console.warn('[FCM SW] Firebase config not available');
   }
@@ -29,11 +59,12 @@ try {
 if (messaging) {
     messaging.onBackgroundMessage((payload) => {
 
-    const notificationTitle = payload.notification?.title || 'Orderium Backoffice';
+    const notificationTitle =
+      payload.notification?.title || payload.data?.title || 'Orderium Backoffice';
     const notificationOptions = {
-      body: payload.notification?.body || '',
-      icon: '/Eo_circle_deep-orange_white_letter-o.svg',
-      badge: '/Eo_circle_deep-orange_white_letter-o.svg',
+      body: payload.notification?.body || payload.data?.body || '',
+      icon: getNotificationIconUrl(),
+      badge: getNotificationIconUrl(),
       tag: payload.data?.type || 'orderium-backoffice-notification',
       data: payload.data || {},
       requireInteraction: true,
@@ -214,6 +245,7 @@ self.addEventListener('message', (event) => {
       try {
         firebase.initializeApp(newConfig);
         messaging = firebase.messaging();
+        isMessagingReady = true;
       } catch (error) {
         console.error('[FCM SW] Failed to update Firebase config:', error);
       }

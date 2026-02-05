@@ -109,7 +109,10 @@ class NotificationsService {
    * Get unread count
    */
   async getUnreadCount(): Promise<{ count: number }> {
-    return this.request<{ count: number }>('/api/notifications/unread-count');
+    const response = await this.request<{ success: boolean; count: number }>(
+      '/api/notifications/unread-count'
+    );
+    return { count: response.count };
   }
 
   /**
