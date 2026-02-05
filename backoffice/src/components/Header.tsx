@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageToggle } from './LanguageToggle';
-import { NotificationBell } from './NotificationBell';
+import { NotificationBellPro } from './NotificationBellPro';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -119,7 +119,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
           </button>
         )}
         {/* Notification Bell */}
-        <NotificationBell />
+        <NotificationBellPro />
 
         {/* Language Toggle */}
         <LanguageToggle />

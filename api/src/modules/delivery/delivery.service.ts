@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +11,7 @@ import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
 import { Order, DeliveryStatus, OrderStatus } from '../orders/entities/order.entity';
 import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
+import { OrderNotificationService } from '../notifications/order-notification.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -20,6 +23,8 @@ export class DeliveryService {
     private readonly orderDeliveryRepository: Repository<OrderDelivery>,
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    @Inject(forwardRef(() => OrderNotificationService))
+    private readonly orderNotificationService: OrderNotificationService,
   ) {}
 
   async getAllDeliveryPersons(): Promise<DeliveryPerson[]> {
@@ -202,6 +207,7 @@ export class DeliveryService {
     // Update order deliveryStatus to assigned
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
+      relations: ['customer'],
     });
     if (order) {
       order.deliveryStatus = DeliveryStatus.ASSIGNED;
@@ -209,7 +215,25 @@ export class DeliveryService {
       await this.orderRepository.save(order);
     }
 
-    return this.orderDeliveryRepository.save(orderDelivery);
+    const savedDelivery = await this.orderDeliveryRepository.save(orderDelivery);
+
+    // RULE 2: When admin assigns order, notify customer and delivery person
+    if (order) {
+      const deliveryPerson = await this.deliveryPersonRepository.findOne({
+        where: { id: deliveryPersonId },
+      });
+      if (deliveryPerson) {
+        this.orderNotificationService.notifyOrderAssigned(
+          order,
+          deliveryPersonId,
+          deliveryPerson.name,
+        ).catch((err) => {
+          console.error('Failed to send order assignment notification:', err);
+        });
+      }
+    }
+
+    return savedDelivery;
   }
 
   async unassignOrder(orderId: number): Promise<void> {
@@ -253,6 +277,9 @@ export class DeliveryService {
       );
     }
 
+    // Store old status for notification
+    const oldStatus = orderDelivery.status;
+
     // Update status and corresponding timestamp
     const now = new Date();
     orderDelivery.status = status;
@@ -289,6 +316,7 @@ export class DeliveryService {
     // Also update the order's deliveryStatus and corresponding timestamp
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
+      relations: ['customer'],
     });
 
     if (order) {
@@ -341,6 +369,15 @@ export class DeliveryService {
       }
 
       await this.orderRepository.save(order);
+
+      // RULE 3: When delivery status changes, notify customer
+      this.orderNotificationService.notifyDeliveryStatusChanged(
+        order,
+        oldStatus,
+        status,
+      ).catch((err) => {
+        console.error('Failed to send delivery status notification:', err);
+      });
     }
   }
 }

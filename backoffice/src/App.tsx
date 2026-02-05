@@ -5,6 +5,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { OverlayPanelProvider } from './context/OverlayPanelContext';
 import { GlobalOverlayPanel } from './components/GlobalOverlayPanel';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { PushNotificationProvider } from './components/PushNotificationProvider';
 import { Toaster } from './components/ui/sonner';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -54,6 +55,7 @@ import CompanySettings from './pages/configurations/CompanySettings';
 import Warehouses from './pages/Warehouses';
 import StockMovements from './pages/StockMovements';
 import InventoryAdjustments from './pages/InventoryAdjustments';
+import Notifications from './pages/Notifications';
 
 const queryClient = new QueryClient();
 
@@ -62,6 +64,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
+          <PushNotificationProvider />
           <OverlayPanelProvider>
             <BrowserRouter
               future={{
@@ -432,6 +435,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <InventoryAdjustments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Notifications />
                   </ProtectedRoute>
                 }
               />

@@ -74,6 +74,9 @@ web_modules/
 .env.test
 .env.production
 
+# Firebase service account keys (sensitive)
+*firebase-adminsdk*.json
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache

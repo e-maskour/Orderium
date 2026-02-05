@@ -36,8 +36,14 @@ export class Notification {
   @Column({ type: 'jsonb', nullable: true })
   data: Record<string, unknown> | null;
 
+  @Column({ type: 'varchar', length: 20, default: 'MEDIUM' })
+  priority: string;
+
   @Column({ type: 'boolean', default: false })
   isRead: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isArchived: boolean;
 
   @CreateDateColumn()
   dateCreated: Date;

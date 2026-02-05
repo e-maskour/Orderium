@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -11,6 +13,7 @@ import { Order, OrderItem, OrderStatus, DeliveryStatus } from './entities/order.
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
+import { OrderNotificationService } from '../notifications/order-notification.service';
 
 // Removed composite response interface; service now returns `Order` directly.
 
@@ -25,6 +28,8 @@ export class OrdersService {
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
     private readonly configurationsService: ConfigurationsService,
+    @Inject(forwardRef(() => OrderNotificationService))
+    private readonly orderNotificationService: OrderNotificationService,
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<any> {
@@ -32,7 +37,7 @@ export class OrdersService {
       throw new BadRequestException('Order must have at least one item');
     }
 
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const year = now.getFullYear();
@@ -267,6 +272,22 @@ export class OrdersService {
           })) || [],
       };
     });
+
+    // RULE 1: When a client creates an order, notify admins
+    if (createOrderDto.fromClient && result) {
+      // Load the full order with customer relation for notification
+      const fullOrder = await this.orderRepository.findOne({
+        where: { id: result.id },
+        relations: ['customer'],
+      });
+      if (fullOrder) {
+        this.orderNotificationService.notifyNewOrderFromClient(fullOrder).catch((err) => {
+          console.error('Failed to send new order notification:', err);
+        });
+      }
+    }
+
+    return result;
   }
 
   async getAllOrders(
