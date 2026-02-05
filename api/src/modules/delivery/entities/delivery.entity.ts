@@ -8,7 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Order } from '../../orders/entities/order.entity';
+import { Order, DeliveryStatus } from '../../orders/entities/order.entity';
 
 @Entity('delivery_persons')
 @Index(['email'])
@@ -59,17 +59,36 @@ export class OrderDelivery {
   @Column({ type: 'int', nullable: true })
   deliveryPersonId: number | null;
 
-  @Column({ type: 'varchar', length: 50, default: 'pending' })
-  status: string;
+  @Column({
+    type: 'enum',
+    enum: DeliveryStatus,
+    default: DeliveryStatus.PENDING,
+  })
+  status: DeliveryStatus;
+
+  @Column({ type: 'timestamp', nullable: true })
+  pendingAt: Date | null;
 
   @Column({ type: 'timestamp', nullable: true })
   assignedAt: Date | null;
 
   @Column({ type: 'timestamp', nullable: true })
+  confirmedAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
   pickedUpAt: Date | null;
 
   @Column({ type: 'timestamp', nullable: true })
+  toDeliveryAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  inDeliveryAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
   deliveredAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  canceledAt: Date | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string;

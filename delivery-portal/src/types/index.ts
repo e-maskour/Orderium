@@ -11,11 +11,15 @@ export interface Order {
   totalAmount: number;
   status?: string; // Main order status
   deliveryStatus: 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
+  pendingAt?: string;
+  assignedAt?: string;
   confirmedAt?: string;
   pickedUpAt?: string;
+  toDeliveryAt?: string;
+  inDeliveryAt?: string;
   deliveredAt?: string;
+  canceledAt?: string;
   createdAt: string;
-  assignedAt?: string;
   items?: OrderItem[];
 }
 

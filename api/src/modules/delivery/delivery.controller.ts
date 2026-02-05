@@ -12,7 +12,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { DeliveryService } from './delivery.service';
 import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
@@ -96,13 +96,36 @@ export class DeliveryController {
     return { success: true, orders };
   }
 
-  @Get('person/:id/orders')
+  @Post('person/:id/orders')
   @ApiOperation({ summary: 'Get orders for a delivery person' })
-  async getDeliveryPersonOrders(@Param('id', ParseIntPipe) id: number) {
-    const orderDeliveries = await this.deliveryService.getDeliveryPersonOrders(id);
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  async getDeliveryPersonOrders(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Body() filters?: {
+      orderNumber?: string;
+      customerName?: string;
+      startDate?: string;
+      endDate?: string;
+    },
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : 50;
+    
+    const result = await this.deliveryService.getDeliveryPersonOrders(
+      id,
+      pageNum,
+      pageSizeNum,
+      filters?.orderNumber,
+      filters?.customerName,
+      filters?.startDate ? new Date(filters.startDate) : undefined,
+      filters?.endDate ? new Date(filters.endDate) : undefined,
+    );
     
     // Transform OrderDelivery to match frontend Order interface
-    const orders = orderDeliveries.map(od => ({
+    const orders = result.orderDeliveries.map(od => ({
       orderId: od.order.id,
       orderNumber: od.order.orderNumber,
       customerName: od.order.customer?.name || 'N/A',
@@ -116,13 +139,17 @@ export class DeliveryController {
           ? `https://waze.com/ul?ll=${od.order.customer.latitude},${od.order.customer.longitude}&navigate=yes`
           : undefined
       ),
-      totalAmount: od.order.total,
+      totalAmount: Number(od.order.total),
       status: od.status,
-      confirmedAt: od.assignedAt?.toISOString(),
-      pickedUpAt: od.pickedUpAt?.toISOString(),
-      deliveredAt: od.deliveredAt?.toISOString(),
-      createdAt: od.order.dateCreated.toISOString(),
+      pendingAt: od.pendingAt?.toISOString(),
       assignedAt: od.assignedAt?.toISOString(),
+      confirmedAt: od.confirmedAt?.toISOString(),
+      pickedUpAt: od.pickedUpAt?.toISOString(),
+      toDeliveryAt: od.toDeliveryAt?.toISOString(),
+      inDeliveryAt: od.inDeliveryAt?.toISOString(),
+      deliveredAt: od.deliveredAt?.toISOString(),
+      canceledAt: od.canceledAt?.toISOString(),
+      createdAt: od.order.dateCreated.toISOString(),
       items: od.order.items?.map(item => ({
         productName: item.product?.name || 'Unknown Product',
         quantity: Number(item.quantity),
@@ -130,7 +157,14 @@ export class DeliveryController {
       })),
     }));
     
-    return { success: true, orders };
+    return { 
+      success: true, 
+      orders,
+      total: result.total,
+      page: pageNum,
+      pageSize: pageSizeNum,
+      totalPages: Math.ceil(result.total / pageSizeNum),
+    };
   }
 
   @Post('assign')
@@ -149,6 +183,21 @@ export class DeliveryController {
   @ApiOperation({ summary: 'Unassign order from delivery person' })
   async unassignOrder(@Param('orderId', ParseIntPipe) orderId: number) {
     await this.deliveryService.unassignOrder(orderId);
+    return { success: true };
+  }
+
+  @Put('person/:deliveryPersonId/order/:orderId/status')
+  @ApiOperation({ summary: 'Update order delivery status' })
+  async updateOrderStatus(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Param('deliveryPersonId', ParseIntPipe) deliveryPersonId: number,
+    @Body() body: { status: string },
+  ) {
+    await this.deliveryService.updateOrderStatus(
+      orderId,
+      body.status as any,
+      deliveryPersonId,
+    );
     return { success: true };
   }
 }

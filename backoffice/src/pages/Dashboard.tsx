@@ -2,7 +2,6 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '../modules/statistics';
 import { Package, Truck, CheckCircle, Clock, TrendingUp, LayoutDashboard } from 'lucide-react';
@@ -11,12 +10,6 @@ import { Link } from 'react-router-dom';
 export default function Dashboard() {
   const { admin } = useAuth();
   const { t } = useLanguage();
-
-  // Connect to real-time notifications
-  useOrderNotifications({
-    token: localStorage.getItem('adminToken') || '',
-    enabled: !!admin,
-  });
 
   // Fetch all statistics (no date filter)
   const { data: statistics, isLoading } = useQuery({

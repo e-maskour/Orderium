@@ -25,7 +25,6 @@ import { ConfigurationsModule } from './modules/configurations/configurations.mo
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { PDFModule } from './modules/pdf/pdf.module';
-import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -54,7 +53,6 @@ import { GatewayModule } from './gateway/gateway.module';
     InventoryModule,
     CategoriesModule,
     PDFModule,
-    GatewayModule,
   ],
   controllers: [AppController],
   providers: [AppService],

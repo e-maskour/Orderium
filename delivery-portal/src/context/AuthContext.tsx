@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { deliveryService } from '../services/api';
 
 interface DeliveryPerson {
   id: number;

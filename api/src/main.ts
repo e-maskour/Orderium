@@ -66,6 +66,5 @@ async function bootstrap() {
   // Start server
   await app.listen(port);
   logger.log(`🚀 Server running on http://localhost:${port}`);
-  logger.log(`🔌 Socket.io ready for connections`);
 }
 void bootstrap();

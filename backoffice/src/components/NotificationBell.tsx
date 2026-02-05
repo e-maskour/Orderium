@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
-import { useSocket } from '../hooks/useSocket';
 import {
   Popover,
   PopoverContent,
@@ -29,14 +28,6 @@ export function NotificationBell() {
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const token = localStorage.getItem('adminToken');
-
-  // Socket connection
-  const { socket } = useSocket({
-    token: token || undefined,
-    userType: 'admin',
-    autoConnect: !!admin && !!token,
-  });
 
   // Fetch notifications
   const { data: notificationsData } = useQuery({
@@ -65,25 +56,6 @@ export function NotificationBell() {
   });
 
   const unreadCount = unreadData?.count || 0;
-
-  // Listen for real-time notifications
-  useEffect(() => {
-    if (!admin || !socket) return;
-
-    const handleNewNotification = (notification: Notification) => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      const { title, message } = translateNotification(notification);
-      toast.info(title, {
-        description: message,
-      });
-    };
-
-    socket.on('notification:new', handleNewNotification);
-
-    return () => {
-      socket.off('notification:new', handleNewNotification);
-    };
-  }, [admin, queryClient, t]);
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({

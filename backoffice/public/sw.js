@@ -64,8 +64,9 @@ self.addEventListener('fetch', (event) => {
       .then((res) => {
         // Do not cache opaque responses
         if (shouldCache && res.ok && res.type !== 'opaque') {
+          const responseToCache = res.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(req, res.clone());
+            cache.put(req, responseToCache);
           });
         }
         return res;

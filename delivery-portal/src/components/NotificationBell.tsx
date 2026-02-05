@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
-import { useSocket } from '../hooks/useSocket';
 interface Notification {
   Id: number;
   Title: string;
@@ -21,21 +20,12 @@ export function NotificationBell() {
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const token = localStorage.getItem('authToken');
-
-  // Socket connection
-  const { socket } = useSocket({
-    token: token || undefined,
-    userType: 'delivery',
-    deliveryPersonId: deliveryPerson?.Id,
-    autoConnect: !!deliveryPerson && !!token,
-  });
 
   // Fetch notifications
   const { data: notifications = [] } = useQuery({
-    queryKey: ['notifications', 'delivery', deliveryPerson?.Id],
+    queryKey: ['notifications', 'delivery', deliveryPerson?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/notifications?userType=delivery&deliveryPersonId=${deliveryPerson?.Id}`);
+      const response = await fetch(`/api/notifications?userType=delivery&deliveryPersonId=${deliveryPerson?.id}`);
       if (!response.ok) throw new Error('Failed to fetch notifications');
       return response.json();
     },
@@ -45,9 +35,9 @@ export function NotificationBell() {
 
   // Fetch unread count
   const { data: unreadData } = useQuery({
-    queryKey: ['notifications', 'delivery', deliveryPerson?.Id, 'unread-count'],
+    queryKey: ['notifications', 'delivery', deliveryPerson?.id, 'unread-count'],
     queryFn: async () => {
-      const response = await fetch(`/api/notifications/unread-count?userType=delivery&deliveryPersonId=${deliveryPerson?.Id}`);
+      const response = await fetch(`/api/notifications/unread-count?userType=delivery&deliveryPersonId=${deliveryPerson?.id}`);
       if (!response.ok) throw new Error('Failed to fetch unread count');
       return response.json();
     },
@@ -56,25 +46,6 @@ export function NotificationBell() {
   });
 
   const unreadCount = unreadData?.count || 0;
-
-  // Listen for real-time notifications
-  useEffect(() => {
-    if (!deliveryPerson || !socket) return;
-
-    const handleNewNotification = (notification: Notification) => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      const { title, message } = translateNotification(notification);
-      toast.info(title, {
-        description: message,
-      });
-    };
-
-    socket.on('notification:new', handleNewNotification);
-
-    return () => {
-      socket.off('notification:new', handleNewNotification);
-    };
-  }, [deliveryPerson, queryClient, t]);
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
@@ -96,7 +67,7 @@ export function NotificationBell() {
       const response = await fetch('/api/notifications/mark-all-read', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userType: 'delivery', deliveryPersonId: deliveryPerson?.Id }),
+        body: JSON.stringify({ userType: 'delivery', deliveryPersonId: deliveryPerson?.id }),
       });
       if (!response.ok) throw new Error('Failed to mark all as read');
       return response.json();

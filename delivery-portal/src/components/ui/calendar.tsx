@@ -1,54 +1,152 @@
-import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import * as React from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
-
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
-
-function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
-  return (
-    <DayPicker
-      showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
-      classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
-        nav_button: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-        ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: cn(buttonVariants({ variant: "ghost" }), "h-9 w-9 p-0 font-normal aria-selected:opacity-100"),
-        day_range_end: "day-range-end",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
-        day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-        day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-        day_hidden: "invisible",
-        ...classNames,
-      }}
-      components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
-      }}
-      {...props}
-    />
-  );
+export type CalendarProps = {
+  mode?: "single"
+  selected?: Date
+  onSelect?: (date: Date | undefined) => void
+  className?: string
+  defaultMonth?: Date
 }
-Calendar.displayName = "Calendar";
 
-export { Calendar };
+export function Calendar({
+  selected,
+  onSelect,
+  className = "",
+  defaultMonth,
+}: CalendarProps) {
+  const [currentMonth, setCurrentMonth] = React.useState(
+    defaultMonth || selected || new Date()
+  )
+
+  // Update currentMonth when selected date changes
+  React.useEffect(() => {
+    if (selected) {
+      setCurrentMonth(new Date(selected.getFullYear(), selected.getMonth(), 1))
+    }
+  }, [selected])
+
+  const monthStart = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth(),
+    1
+  )
+  const monthEnd = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() + 1,
+    0
+  )
+  const startDate = new Date(monthStart)
+  startDate.setDate(startDate.getDate() - startDate.getDay())
+
+  const endDate = new Date(monthEnd)
+  endDate.setDate(endDate.getDate() + (6 - endDate.getDay()))
+
+  const dates: Date[] = []
+  const current = new Date(startDate)
+  while (current <= endDate) {
+    dates.push(new Date(current))
+    current.setDate(current.getDate() + 1)
+  }
+
+  const handlePrevMonth = () => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+    )
+  }
+
+  const handleNextMonth = () => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+    )
+  }
+
+  const isSameDay = (date1: Date, date2: Date) => {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    )
+  }
+
+  const isToday = (date: Date) => {
+    return isSameDay(date, new Date())
+  }
+
+  const isCurrentMonth = (date: Date) => {
+    return date.getMonth() === currentMonth.getMonth()
+  }
+
+  const handleDateClick = (date: Date) => {
+    if (onSelect) {
+      onSelect(date)
+    }
+  }
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ]
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+  return (
+    <div className={`p-4 ${className}`}>
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={handlePrevMonth}
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          type="button"
+        >
+          <ChevronLeft className="w-5 h-5 text-slate-600" />
+        </button>
+        <div className="font-semibold text-slate-800">
+          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+        </div>
+        <button
+          onClick={handleNextMonth}
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          type="button"
+        >
+          <ChevronRight className="w-5 h-5 text-slate-600" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {dayNames.map((day) => (
+          <div
+            key={day}
+            className="text-center text-xs font-semibold text-slate-500 py-2"
+          >
+            {day}
+          </div>
+        ))}
+        {dates.map((date, index) => {
+          const isSelected = selected && isSameDay(date, selected)
+          const isTodayDate = isToday(date)
+          const isCurrentMonthDate = isCurrentMonth(date)
+
+          return (
+            <button
+              key={index}
+              onClick={() => handleDateClick(date)}
+              type="button"
+              className={`
+                p-2 text-sm rounded-lg transition-all
+                ${!isCurrentMonthDate ? "text-slate-300" : "text-slate-700"}
+                ${isSelected
+                  ? "bg-amber-500 text-white font-semibold shadow-md"
+                  : isTodayDate
+                  ? "bg-amber-50 text-amber-700 font-semibold border border-amber-200"
+                  : "hover:bg-slate-100"
+                }
+              `}
+            >
+              {date.getDate()}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

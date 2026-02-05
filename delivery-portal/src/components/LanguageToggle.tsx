@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Languages } from 'lucide-react';
 
 export const LanguageToggle = () => {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   const toggleLanguage = () => {
     setLanguage(language === 'ar' ? 'fr' : 'ar');

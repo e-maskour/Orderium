@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSocket } from '@/hooks/useSocket';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -25,38 +24,6 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const { t, language, dir } = useLanguage();
-  const token = localStorage.getItem('authToken');
-
-  // Socket connection
-  const { socket } = useSocket({
-    token: token || undefined,
-    userType: 'customer',
-    customerId: customerId,
-    autoConnect: !!customerId && !!token,
-  });
-
-  // Listen for real-time notifications
-  useEffect(() => {
-    if (!socket || !customerId) return;
-
-    const handleNewNotification = (notification: Notification) => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      const { title, message } = translateNotification(notification);
-      // Optional: Show browser notification
-      if (Notification.permission === 'granted') {
-        new Notification(title, {
-          body: message,
-          icon: '/favicon.ico',
-        });
-      }
-    };
-
-    socket.on('notification:new', handleNewNotification);
-
-    return () => {
-      socket.off('notification:new', handleNewNotification);
-    };
-  }, [socket, customerId, queryClient]);
 
   // Fetch notifications
   const { data: notifications = [] } = useQuery({

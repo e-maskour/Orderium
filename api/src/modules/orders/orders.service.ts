@@ -1332,6 +1332,50 @@ export class OrdersService {
         order.customerName = updateOrderDto.customerName;
       }
 
+      // Update deliveryStatus and corresponding timestamp
+      if (updateOrderDto.deliveryStatus !== undefined) {
+        // Validate cancellation - only allow if current status is pending, assigned, or confirmed
+        if (updateOrderDto.deliveryStatus === 'canceled') {
+          const allowedStatuses = [DeliveryStatus.PENDING, DeliveryStatus.ASSIGNED, DeliveryStatus.CONFIRMED];
+          if (order.deliveryStatus && !allowedStatuses.includes(order.deliveryStatus as DeliveryStatus)) {
+            throw new BadRequestException(
+              `Cannot cancel delivery. Order status is '${order.deliveryStatus}'. Cancellation is only allowed for pending, assigned, or confirmed orders.`
+            );
+          }
+        }
+
+        order.deliveryStatus = updateOrderDto.deliveryStatus as any;
+        const now = new Date();
+        switch (updateOrderDto.deliveryStatus as any) {
+          case DeliveryStatus.PENDING:
+            order.pendingAt = now;
+            break;
+          case DeliveryStatus.ASSIGNED:
+            order.assignedAt = now;
+            break;
+          case DeliveryStatus.CONFIRMED:
+            order.confirmedAt = now;
+            break;
+          case DeliveryStatus.PICKED_UP:
+            order.pickedUpAt = now;
+            break;
+          case DeliveryStatus.TO_DELIVERY:
+            order.toDeliveryAt = now;
+            break;
+          case DeliveryStatus.IN_DELIVERY:
+            order.inDeliveryAt = now;
+            break;
+          case DeliveryStatus.DELIVERED:
+            order.deliveredAt = now;
+            break;
+          case DeliveryStatus.CANCELED:
+            order.canceledAt = now;
+            break;
+          default:
+            break;
+        }
+      }
+
       // Save order updates first
       await manager.save(Order, order);
 

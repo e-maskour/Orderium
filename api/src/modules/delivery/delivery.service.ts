@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
+import { Order, DeliveryStatus, OrderStatus } from '../orders/entities/order.entity';
 import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
 import * as bcrypt from 'bcrypt';
@@ -13,6 +18,8 @@ export class DeliveryService {
     private readonly deliveryPersonRepository: Repository<DeliveryPerson>,
     @InjectRepository(OrderDelivery)
     private readonly orderDeliveryRepository: Repository<OrderDelivery>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
   ) {}
 
   async getAllDeliveryPersons(): Promise<DeliveryPerson[]> {
@@ -118,12 +125,54 @@ export class DeliveryService {
 
   async getDeliveryPersonOrders(
     deliveryPersonId: number,
-  ): Promise<OrderDelivery[]> {
-    return this.orderDeliveryRepository.find({
-      where: { deliveryPerson: { id: deliveryPersonId } },
-      relations: ['order', 'order.items', 'order.items.product', 'order.customer'],
-      order: { dateCreated: 'DESC' },
-    });
+    page: number = 1,
+    pageSize: number = 50,
+    orderNumber?: string,
+    customerName?: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<{ orderDeliveries: OrderDelivery[]; total: number }> {
+    const queryBuilder = this.orderDeliveryRepository
+      .createQueryBuilder('orderDelivery')
+      .leftJoinAndSelect('orderDelivery.order', 'ord')
+      .leftJoinAndSelect('ord.items', 'items')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('ord.customer', 'customer')
+      .where('orderDelivery.deliveryPersonId = :deliveryPersonId', { deliveryPersonId })
+      .andWhere('ord.fromClient = :fromClient', { fromClient: true }); // Only fromClient orders
+
+    // Apply filters
+    if (orderNumber) {
+      queryBuilder.andWhere('ord.orderNumber LIKE :orderNumber', {
+        orderNumber: `%${orderNumber}%`,
+      });
+    }
+
+    if (customerName) {
+      queryBuilder.andWhere('customer.name LIKE :customerName', {
+        customerName: `%${customerName}%`,
+      });
+    }
+
+    if (startDate) {
+      queryBuilder.andWhere('ord.dateCreated >= :startDate', { startDate });
+    }
+
+    if (endDate) {
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      queryBuilder.andWhere('ord.dateCreated <= :endDate', { endDate: endOfDay });
+    }
+
+    const total = await queryBuilder.getCount();
+
+    const orderDeliveries = await queryBuilder
+      .orderBy('ord.dateCreated', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getMany();
+
+    return { orderDeliveries, total };
   }
 
   async assignOrderToDelivery(
@@ -139,15 +188,25 @@ export class DeliveryService {
       // Update existing delivery
       orderDelivery.deliveryPersonId = deliveryPersonId;
       orderDelivery.assignedAt = new Date();
-      orderDelivery.status = 'assigned';
+      orderDelivery.status = DeliveryStatus.ASSIGNED;
     } else {
       // Create new delivery
       orderDelivery = this.orderDeliveryRepository.create({
         orderId,
         deliveryPersonId,
         assignedAt: new Date(),
-        status: 'assigned',
+        status: DeliveryStatus.ASSIGNED,
       });
+    }
+
+    // Update order deliveryStatus to assigned
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
+    if (order) {
+      order.deliveryStatus = DeliveryStatus.ASSIGNED;
+      order.assignedAt = new Date();
+      await this.orderRepository.save(order);
     }
 
     return this.orderDeliveryRepository.save(orderDelivery);
@@ -161,8 +220,127 @@ export class DeliveryService {
     if (orderDelivery) {
       orderDelivery.deliveryPersonId = null;
       orderDelivery.assignedAt = null;
-      orderDelivery.status = 'pending';
+      orderDelivery.status = DeliveryStatus.PENDING;
+      orderDelivery.pendingAt = new Date();
       await this.orderDeliveryRepository.save(orderDelivery);
+    }
+
+    // Update order deliveryStatus to pending
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
+    if (order) {
+      order.deliveryStatus = DeliveryStatus.PENDING;
+      order.assignedAt = null;
+      order.pendingAt = new Date();
+      await this.orderRepository.save(order);
+    }
+  }
+
+  async updateOrderStatus(
+    orderId: number,
+    status: DeliveryStatus,
+    deliveryPersonId: number,
+  ): Promise<void> {
+    // Find order delivery
+    const orderDelivery = await this.orderDeliveryRepository.findOne({
+      where: { orderId, deliveryPersonId },
+    });
+
+    if (!orderDelivery) {
+      throw new NotFoundException(
+        `Order delivery not found for order ${orderId} and delivery person ${deliveryPersonId}`,
+      );
+    }
+
+    // Update status and corresponding timestamp
+    const now = new Date();
+    orderDelivery.status = status;
+
+    switch (status) {
+      case DeliveryStatus.PENDING:
+        orderDelivery.pendingAt = now;
+        break;
+      case DeliveryStatus.ASSIGNED:
+        orderDelivery.assignedAt = now;
+        break;
+      case DeliveryStatus.CONFIRMED:
+        orderDelivery.confirmedAt = now;
+        break;
+      case DeliveryStatus.PICKED_UP:
+        orderDelivery.pickedUpAt = now;
+        break;
+      case DeliveryStatus.TO_DELIVERY:
+        orderDelivery.toDeliveryAt = now;
+        break;
+      case DeliveryStatus.IN_DELIVERY:
+        orderDelivery.inDeliveryAt = now;
+        break;
+      case DeliveryStatus.DELIVERED:
+        orderDelivery.deliveredAt = now;
+        break;
+      case DeliveryStatus.CANCELED:
+        orderDelivery.canceledAt = now;
+        break;
+    }
+
+    await this.orderDeliveryRepository.save(orderDelivery);
+
+    // Also update the order's deliveryStatus and corresponding timestamp
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
+
+    if (order) {
+      order.deliveryStatus = status;
+
+      // Update order status based on delivery status
+      switch (status) {
+        case DeliveryStatus.PENDING:
+        case DeliveryStatus.ASSIGNED:
+        case DeliveryStatus.CONFIRMED:
+        case DeliveryStatus.PICKED_UP:
+        case DeliveryStatus.TO_DELIVERY:
+        case DeliveryStatus.IN_DELIVERY:
+          order.status = OrderStatus.IN_PROGRESS;
+          break;
+        case DeliveryStatus.DELIVERED:
+          order.status = OrderStatus.DELIVERED;
+          break;
+        case DeliveryStatus.CANCELED:
+          order.status = OrderStatus.CANCELLED;
+          break;
+      }
+
+      // Update delivery timestamps
+      switch (status) {
+        case DeliveryStatus.PENDING:
+          order.pendingAt = now;
+          break;
+        case DeliveryStatus.ASSIGNED:
+          order.assignedAt = now;
+          break;
+        case DeliveryStatus.CONFIRMED:
+          order.confirmedAt = now;
+          break;
+        case DeliveryStatus.PICKED_UP:
+          order.pickedUpAt = now;
+          break;
+        case DeliveryStatus.TO_DELIVERY:
+          order.toDeliveryAt = now;
+          break;
+        case DeliveryStatus.IN_DELIVERY:
+          order.inDeliveryAt = now;
+          break;
+        case DeliveryStatus.DELIVERED:
+          order.deliveredAt = now;
+          break;
+        case DeliveryStatus.CANCELED:
+          order.canceledAt = now;
+          break;
+      }
+
+      await this.orderRepository.save(order);
     }
   }
 }

@@ -31,7 +31,7 @@ export default {
   customerInformation: 'معلومات العميل',
   
   // Order Actions
-  assignToDelivery: 'تعيين للتوصيل',
+  assignToDelivery: 'مندوب',
   downloadReceipt: 'تحميل الإيصال',
   downloadInvoice: 'تحميل الفاتورة',
   receipts: 'إيصالات',
@@ -42,6 +42,7 @@ export default {
   selectDeliveryPerson: 'اختر مندوب التوصيل',
   unassignOrder: 'إلغاء تعيين الطلب',
   unassignOrderConfirm: 'هل أنت متأكد من إلغاء تعيين هذا الطلب؟',
+  cancelDelivery: 'إلغاء التوصيل',
   
   // Order Notifications
   orderAssigned: 'تم تعيين الطلب بنجاح',
@@ -49,9 +50,13 @@ export default {
   orderCreated: 'تم إنشاء الطلب',
   createOrder: 'إنشاء طلب',
   orderCreatedSuccessfully: 'تم إنشاء الطلب بنجاح',
+  ordersAssigned: 'طلبات تم تعيينها',
+  ordersSkippedNotPending: 'طلبات تم تجاهلها (ليست قيد الانتظار)',
   failedToAssign: 'فشل تعيين الطلب',
   failedToUnassign: 'فشل إلغاء تعيين الطلب',
   failedToDelete: 'فشل الحذف',
+  deliveryCanceled: 'تم إلغاء التوصيل بنجاح',
+  failedToCancelDelivery: 'فشل إلغاء التوصيل',
   
   // Search & Filter
   searchPlaceholder: 'ابحث برقم الطلب، اسم العميل، الهاتف، أو مندوب التوصيل...',
@@ -79,6 +84,6 @@ export default {
   selectOneOrder: 'يرجى تحديد طلب واحد فقط للمعاينة',
   
   // Additional
-  previewReceipt: 'معاينة الإيصال',
-  previewDeliveryNote: 'معاينة وصل التسليم',
+  previewReceipt: 'إيصال',
+  previewDeliveryNote: 'وصل',
 };

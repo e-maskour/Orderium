@@ -31,7 +31,7 @@ export default {
   customerInformation: 'Informations client',
   
   // Order Actions
-  assignToDelivery: 'Assigner à la livraison',
+  assignToDelivery: 'Livreur',
   downloadReceipt: 'Télécharger le reçu',
   downloadInvoice: 'Télécharger la facture',
   receipts: 'reçus',
@@ -42,6 +42,7 @@ export default {
   selectDeliveryPerson: 'Sélectionner un livreur',
   unassignOrder: 'Désassigner la commande',
   unassignOrderConfirm: 'Êtes-vous sûr de vouloir désassigner cette commande ?',
+  cancelDelivery: 'Annuler livraison',
   
   // Order Notifications
   orderAssigned: 'Commande assignée avec succès',
@@ -49,9 +50,13 @@ export default {
   orderCreated: 'Commande créée',
   createOrder: 'Créer une commande',
   orderCreatedSuccessfully: 'Commande créée avec succès',
+  ordersAssigned: 'commandes assignées',
+  ordersSkippedNotPending: 'commandes ignorées (pas en attente)',
   failedToAssign: 'Échec d\'assignation',
   failedToUnassign: 'Échec de désassignation',
   failedToDelete: 'Échec de la suppression',
+  deliveryCanceled: 'Livraison annulée avec succès',
+  failedToCancelDelivery: 'Échec de l\'annulation de la livraison',
   
   // Search & Filter
   searchPlaceholder: 'Rechercher par n° commande, client, téléphone ou livreur...',
@@ -79,6 +84,6 @@ export default {
   selectOneOrder: 'Veuillez sélectionner une seule commande pour l\'aperçu',
   
   // Additional
-  previewReceipt: 'Aperçu du reçu',
-  previewDeliveryNote: 'Aperçu du bon de livraison',
+  previewReceipt: 'Reçu',
+  previewDeliveryNote: 'Bon',
 };

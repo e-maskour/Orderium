@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersService, deliveryPersonService, partnersService } from '../modules';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { useOrderNotifications } from '../hooks/useOrderNotifications';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Phone, MapPin, X, Search, Package, Eye, CheckSquare, Square, UserPlus, Grid3x3, List, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -134,12 +133,6 @@ export default function Orders() {
     }
   }, [appliedFilters.dateFilterType, appliedFilters.dateRange]);
 
-  // Enable real-time notifications
-  useOrderNotifications({
-    token: (localStorage.getItem('adminToken') ?? undefined) as string | undefined,
-    enabled: !!admin,
-  });
-
   const { data: ordersData = { orders: [], count: 0, totalCount: 0, statusCounts: {} }, isLoading: ordersLoading } = useQuery({
     queryKey: ['orders', JSON.stringify(appliedFilters), currentPage, pageSize],
     queryFn: () => ordersService.getAll(
@@ -224,6 +217,22 @@ export default function Orders() {
       console.error('Delete mutation error:', error);
       toast.error(`${t('failedToDelete')}: ${error.message}`);
       setDeleteConfirmOpen(false);
+    },
+  });
+
+  const cancelDeliveryMutation = useMutation({
+    mutationFn: async (orderIds: number[]) => {
+      return Promise.all(orderIds.map(async id => {
+        return ordersService.update(id, { deliveryStatus: 'canceled' });
+      }));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success(t('deliveryCanceled'));
+      clearSelection();
+    },
+    onError: (error: Error) => {
+      toast.error(`${t('failedToCancelDelivery')}: ${error.message}`);
     },
   });
 
@@ -1040,6 +1049,17 @@ export default function Orders() {
             hidden: selectedOrders.length !== 1,
           },
           {
+            id: 'cancel-delivery',
+            label: t('cancelDelivery'),
+            icon: <XCircle className="w-3.5 h-3.5" />,
+            onClick: () => cancelDeliveryMutation.mutate(selectedOrders),
+            variant: 'warning' as const,
+            hidden: !selectedOrders.every(orderId => {
+              const order = orders.find((o: any) => o.id === orderId);
+              return order && ['pending', 'assigned', 'confirmed'].includes(order.deliveryStatus);
+            }),
+          },
+          {
             id: 'delete',
             label: t('delete'),
             icon: <Trash2 className="w-3.5 h-3.5" />,
@@ -1050,20 +1070,36 @@ export default function Orders() {
       >
         {/* Assign to Delivery - Custom Dropdown */}
         <div className="relative group">
+          <User className="w-3.5 h-3.5 text-amber-600 absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
           <select
             onChange={(e) => {
               if (e.target.value) {
+                const deliveryPersonId = e.target.value;
+                let assignedCount = 0;
+                let skippedCount = 0;
+                
                 selectedOrders.forEach(orderId => {
                   const order = orders.find((o: any) => o.id === orderId);
-                  if (order && order.status !== 'delivered') {
-                    handleAssign(orderId, e.target.value);
+                  if (order && order.deliveryStatus === 'pending') {
+                    handleAssign(orderId, deliveryPersonId);
+                    assignedCount++;
+                  } else {
+                    skippedCount++;
                   }
                 });
+                
+                if (assignedCount > 0) {
+                  toast.success(`${assignedCount} ${t('ordersAssigned')}`);
+                }
+                if (skippedCount > 0) {
+                  toast.warning(`${skippedCount} ${t('ordersSkippedNotPending')}`);
+                }
+                
                 clearSelection();
                 e.target.value = '';
               }
             }}
-            className="px-3 py-1.5 bg-white text-amber-600 rounded-lg hover:bg-amber-50 transition-all shadow-md font-semibold text-sm cursor-pointer appearance-none pr-8"
+            className="max-w-[120px] pl-8 sm:pl-9 pr-8 py-2 sm:py-2.5 bg-white text-amber-600 rounded-xl hover:bg-amber-50 transition-all duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 font-semibold text-xs sm:text-sm cursor-pointer appearance-none truncate"
           >
             <option value="">
               {t('assignToDelivery')}

@@ -27,15 +27,56 @@ export const translations = {
     // Orders
     orders: 'الطلبات',
     order: 'طلب',
+    all: 'الكل',
     allOrders: 'جميع الطلبات',
+    pending: 'قيد الانتظار',
+    assigned: 'معين',
+    confirmed: 'مؤكد',
+    pickedUp: 'تم الاستلام',
     toDelivery: 'للتوصيل',
     inDelivery: 'قيد التوصيل',
     delivered: 'تم التوصيل',
     canceled: 'ملغي',
+    deliveryStatus: 'حالة التسليم',
+    total: 'المجموع',
     noOrdersFound: 'لا توجد طلبات',
-    noOrdersMessage: 'لا توجد طلبات {status} في الوقت الحالي',
+    noOrdersMessage: 'لا توجد طلبات',
     noOrdersAssigned: 'لم يتم تعيين أي طلبات لك بعد',
     searchOrders: 'ابحث برقم الطلب، اسم العميل أو رقم الهاتف',
+    
+    // Filters
+    filters: 'الفلاتر',
+    enterOrderNumber: 'أدخل رقم الطلب',
+    enterCustomerName: 'أدخل اسم العميل',
+    startDate: 'تاريخ البداية',
+    endDate: 'تاريخ النهاية',
+    dateRange: 'نطاق التاريخ',
+    apply: 'تطبيق',
+    reset: 'إعادة تعيين',
+    
+    // Date Range Picker
+    period: 'الفترة',
+    start: 'البداية',
+    end: 'النهاية',
+    selectDates: 'اختر التواريخ',
+    selectDateRange: 'اختر نطاق التاريخ',
+    predefinedPeriod: 'فترة محددة مسبقاً',
+    today: 'اليوم',
+    yesterday: 'أمس',
+    thisWeek: 'هذا الأسبوع',
+    lastWeek: 'الأسبوع الماضي',
+    thisMonth: 'هذا الشهر',
+    lastMonth: 'الشهر الماضي',
+    thisYear: 'هذا العام',
+    lastYear: 'العام الماضي',
+    ok: 'موافق',
+    
+    // Pagination
+    showing: 'عرض',
+    to: 'إلى',
+    of: 'من',
+    results: 'نتائج',
+    perPage: 'لكل صفحة',
     
     // Order Details
     orderNumber: 'رقم الطلب',
@@ -49,10 +90,17 @@ export const translations = {
     totalAmount: 'المبلغ الإجمالي',
     
     // Actions
-    startDelivery: 'بدء التوصيل',
+    confirmOrder: 'تأكيد الطلب',
+    pickUpOrder: 'استلام الطلب',
+    startToDelivery: 'بدء التوصيل',
+    startDelivery: 'في طريق التوصيل',
     markAsDelivered: 'تأكيد التسليم',
+    orderDelivered: 'تم التسليم بنجاح',
+    orderCanceled: 'تم إلغاء الطلب',
     googleMaps: 'خرائط جوجل',
     waze: 'ويز',
+    statusUpdated: 'تم تحديث الحالة بنجاح',
+    statusUpdateFailed: 'فشل تحديث الحالة',
     
     // Status
     status: 'الحالة',
@@ -136,15 +184,56 @@ export const translations = {
     // Orders
     orders: 'Commandes',
     order: 'Commande',
+    all: 'Tout',
     allOrders: 'Toutes',
+    pending: 'En attente',
+    assigned: 'Assigné',
+    confirmed: 'Confirmé',
+    pickedUp: 'Récupéré',
     toDelivery: 'À livrer',
     inDelivery: 'En livraison',
     delivered: 'Livrées',
     canceled: 'Annulées',
+    deliveryStatus: 'Statut de livraison',
+    total: 'Total',
     noOrdersFound: 'Aucune commande',
-    noOrdersMessage: 'Aucune commande {status} pour le moment',
+    noOrdersMessage: 'Aucune commande pour le moment',
     noOrdersAssigned: 'Aucune commande ne vous a été assignée',
     searchOrders: 'Rechercher par N° commande, nom client ou téléphone',
+    
+    // Filters
+    filters: 'Filtres',
+    enterOrderNumber: 'Entrez le N° de commande',
+    enterCustomerName: 'Entrez le nom du client',
+    startDate: 'Date de début',
+    endDate: 'Date de fin',
+    dateRange: 'Plage de dates',
+    apply: 'Appliquer',
+    reset: 'Réinitialiser',
+    
+    // Date Range Picker
+    period: 'Période',
+    start: 'Début',
+    end: 'Fin',
+    selectDates: 'Sélectionner les dates',
+    selectDateRange: 'Sélectionner une plage',
+    predefinedPeriod: 'Période prédéfinie',
+    today: 'Aujourd\'hui',
+    yesterday: 'Hier',
+    thisWeek: 'Cette semaine',
+    lastWeek: 'Semaine dernière',
+    thisMonth: 'Ce mois',
+    lastMonth: 'Mois dernier',
+    thisYear: 'Cette année',
+    lastYear: 'Année dernière',
+    ok: 'OK',
+    
+    // Pagination
+    showing: 'Affichage',
+    to: 'à',
+    of: 'sur',
+    results: 'résultats',
+    perPage: 'par page',
     
     // Order Details
     orderNumber: 'N° Commande',
@@ -158,10 +247,17 @@ export const translations = {
     totalAmount: 'Montant total',
     
     // Actions
-    startDelivery: 'Démarrer livraison',
+    confirmOrder: 'Confirmer',
+    pickUpOrder: 'Récupérer',
+    startToDelivery: 'À livrer',
+    startDelivery: 'En livraison',
     markAsDelivered: 'Marquer livré',
+    orderDelivered: 'Commande livrée',
+    orderCanceled: 'Commande annulée',
     googleMaps: 'Google Maps',
     waze: 'Waze',
+    statusUpdated: 'Statut mis à jour',
+    statusUpdateFailed: 'Échec de mise à jour',
     
     // Status
     status: 'Statut',

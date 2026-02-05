@@ -35,7 +35,6 @@ export default defineConfig({
             'react-dom',
             'react-router-dom',
             '@tanstack/react-query',
-            'socket.io-client',
           ],
           'ui': [
             '@radix-ui/react-alert-dialog',
