@@ -5,15 +5,38 @@ const API_URL = '/api';
 
 export class ProductsService {
   async getProducts(params: GetProductsParams = {}): Promise<ProductsResponse> {
-    const { search = '', page = 1, limit = 50 } = params;
+    const { 
+      search = '', 
+      code = '',
+      stockFilter,
+      categoryIds = [],
+      isService,
+      page = 1, 
+      limit = 50 
+    } = params;
     
+    // Calculate offset from page number
+    const offset = (page - 1) * limit;
+    
+    // Build query params for pagination
     const queryParams = new URLSearchParams();
-    if (search) queryParams.append('search', search);
-    queryParams.append('page', page.toString());
+    queryParams.append('offset', offset.toString());
     queryParams.append('limit', limit.toString());
     
+    // Build request body for filters
+    const filterBody: any = {};
+    if (search) filterBody.search = search;
+    if (code) filterBody.code = code;
+    if (stockFilter) filterBody.stockFilter = stockFilter;
+    if (categoryIds.length > 0) filterBody.categoryIds = categoryIds;
+    if (isService !== undefined) filterBody.isService = isService;
+    
     const queryString = queryParams.toString();
-    const response = await fetch(`${API_URL}/products${queryString ? `?${queryString}` : ''}`);
+    const response = await fetch(`${API_URL}/products/filter${queryString ? `?${queryString}` : ''}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filterBody),
+    });
     if (!response.ok) throw new Error('Failed to fetch products');
     const data = await response.json();
     
@@ -22,7 +45,22 @@ export class ProductsService {
       data.products = data.products.map((p: any) => Product.fromApiResponse(p));
     }
     
-    return data;
+    // Transform offset-based pagination to page-based
+    const totalPages = Math.ceil((data.total || 0) / limit);
+    const hasNext = page < totalPages;
+    const hasPrev = page > 1;
+    
+    return {
+      products: data.products || [],
+      pagination: {
+        page,
+        limit,
+        total: data.total || 0,
+        totalPages,
+        hasNext,
+        hasPrev,
+      },
+    };
   }
 
   async getProduct(id: number): Promise<Product> {
@@ -35,7 +73,7 @@ export class ProductsService {
   }
 
   async createProduct(data: CreateProductDTO): Promise<{ product: Product }> {
-    const response = await fetch(`${API_URL}/products`, {
+    const response = await fetch(`${API_URL}/products/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

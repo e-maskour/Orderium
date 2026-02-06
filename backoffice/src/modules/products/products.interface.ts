@@ -34,6 +34,10 @@ export interface ProductsResponse {
 
 export interface GetProductsParams {
   search?: string;
+  code?: string;
+  stockFilter?: 'negative' | 'zero' | 'positive';
+  categoryIds?: number[];
+  isService?: boolean;
   page?: number;
   limit?: number;
 }

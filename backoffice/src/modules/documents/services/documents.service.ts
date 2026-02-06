@@ -41,8 +41,8 @@ export class DocumentsService {
       return this.transformQuotesToDocuments(quotes);
     } else if (type === 'bon_livraison') {
       // Fetch only orders NOT created from portal (fromPortal = false)
-      const orders = await ordersService.getAll(undefined, undefined, undefined, false);
-      return this.transformOrdersToDocuments(orders);
+      const result = await ordersService.getAll(undefined, undefined, undefined, false);
+      return this.transformOrdersToDocuments(result.orders || []);
     }
     
     return [];

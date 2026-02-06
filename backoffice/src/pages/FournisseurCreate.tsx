@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
-import { PageHeader } from '../components/PageHeader';
 import { PartnerForm } from '../components/PartnerForm';
 import { Users, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -37,20 +36,28 @@ export default function FournisseurCreate() {
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto">
-        <PageHeader
-          icon={Users}
-          title={t('newSupplier')}
-          subtitle={t('addSupplier')}
-          actions={
-            <button
-              onClick={() => navigate('/fournisseurs')}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {t('back')}
-            </button>
-          }
-        />
+        {/* Compact Header */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/fournisseurs')}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-slate-600" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900">{t('newSupplier')}</h1>
+                  <p className="text-sm text-slate-500">{t('addSupplier')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
           <PartnerForm

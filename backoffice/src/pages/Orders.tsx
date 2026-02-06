@@ -755,7 +755,7 @@ export default function Orders() {
 
         {/* Pagination Info Bar - Top */}
         {orders.length > 0 && (
-          <div className="bg-slate-50 px-4 py-3">
+          <div className="bg-slate-50 py-2 px-1">
             <div className="flex items-center justify-between gap-4">
               <div className="text-sm text-slate-600">
                 {t('showing')} <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
@@ -791,7 +791,25 @@ export default function Orders() {
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium text-slate-700">{currentPage}</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={Math.ceil(totalCount / pageSize)}
+                    value={currentPage}
+                    onChange={(e) => {
+                      const page = parseInt(e.target.value, 10);
+                      const maxPage = Math.ceil(totalCount / pageSize);
+                      if (!isNaN(page) && page >= 1 && page <= maxPage) {
+                        setCurrentPage(page);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    className="w-12 px-2 py-1 text-sm font-medium text-slate-700 text-center border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  />
                   <span className="text-sm text-slate-500">/</span>
                   <span className="text-sm font-medium text-slate-700">{Math.ceil(totalCount / pageSize)}</span>
                 </div>
@@ -814,21 +832,62 @@ export default function Orders() {
             </div>
           ) : orders.length === 0 ? (
             <div className="flex items-center justify-center flex-1 p-16">
-              <div className="text-center">
-                <Package className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-800 font-semibold text-lg mb-2">{t('noOrdersFound')}</p>
-                <p className="text-sm text-slate-500">
-                  {deliveryStatusFilter === 'all' 
-                    ? t('noOrdersFound')
-                    : `${t('noOrdersFound')}`
-                  }
+              <div className="flex flex-col items-center justify-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full"></div>
+                  <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-100">
+                    <Package className="w-16 h-16 text-amber-500 mx-auto" strokeWidth={1.5} />
+                  </div>
+                </div>
+                <h3 className="mt-6 text-xl font-bold text-slate-800">{t('noOrdersFound')}</h3>
+                <p className="mt-2 text-sm text-slate-500 max-w-sm text-center">
+                  {(appliedFilters.search || 
+                    appliedFilters.orderNumber || 
+                    appliedFilters.deliveryStatus !== 'all' || 
+                    appliedFilters.fromClient !== 'all' ||
+                    appliedFilters.dateRange.start ||
+                    appliedFilters.dateRange.end)
+                    ? "Aucune commande ne correspond à vos critères de recherche. Essayez de modifier les filtres."
+                    : "Aucune commande pour le moment. Les nouvelles commandes apparaîtront ici."}
                 </p>
+                {(appliedFilters.search || 
+                  appliedFilters.orderNumber || 
+                  appliedFilters.deliveryStatus !== 'all' || 
+                  appliedFilters.fromClient !== 'all' ||
+                  appliedFilters.dateRange.start ||
+                  appliedFilters.dateRange.end) && (
+                  <button
+                    onClick={() => {
+                      setOrderNumberSearch('');
+                      setCustomerIdSearch('');
+                      setCustomerPhoneSearch('');
+                      setDeliveryPersonIdSearch('');
+                      setSearchInput('');
+                      setFromClientFilter('all');
+                      setDateFilterType('custom');
+                      setDateRange({ start: undefined, end: undefined });
+                      setDeliveryStatusFilter('all');
+                      setCurrentPage(1);
+                      setAppliedFilters({
+                        search: '',
+                        orderNumber: '',
+                        deliveryStatus: 'all',
+                        fromClient: 'all',
+                        dateFilterType: 'custom',
+                        dateRange: { start: undefined, end: undefined },
+                      });
+                    }}
+                    className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30"
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                )}
               </div>
             </div>
           ) : viewMode === 'list' ? (
             <>
             <div className="flex-1">
-              <div className="space-y-2 sm:space-y-3 p-2 sm:p-3">
+              <div className="space-y-1 sm:space-y-2">
                 {orders.map((order: any) => (
               <div
                 key={order.id}
@@ -916,7 +975,7 @@ export default function Orders() {
             </>
           ) : (
             <>
-            <div className="flex-1 p-2 sm:p-3">
+            <div className="flex-1">
               <div className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {orders.map((order: any) => (
               <div 

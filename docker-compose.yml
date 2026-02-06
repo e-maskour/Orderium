@@ -1,0 +1,217 @@
+# ==================================
+# Production-Grade Docker Compose for Orderium Platform
+# ==================================
+# 
+# This compose file orchestrates:
+# - PostgreSQL database
+# - NestJS API backend
+# - Backoffice React/Vite frontend
+# - Client Portal React/Vite frontend
+# - Delivery Portal React/Vite frontend
+#
+# Network: All services communicate via 'orderium-network'
+# Volumes: Database persistence + API uploads persistence
+# ==================================
+
+services:
+
+  # ==================================
+  # NestJS API Backend
+  # ==================================
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: orderium-api
+    restart: unless-stopped
+    
+    environment:
+      # Server
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      
+      # Database
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-orderium_db}
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
+      DB_LOGGING: ${DB_LOGGING:-false}
+      
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      
+      # CORS - Allow all frontends in Docker network
+      CORS_ORIGIN: http://localhost:3001,http://localhost:3002,http://localhost:3003,http://backoffice,http://client,http://delivery-portal
+      
+      # Defaults
+      DEFAULT_CASH_REGISTER_ID: ${DEFAULT_CASH_REGISTER_ID:-1}
+      DEFAULT_WAREHOUSE_ID: ${DEFAULT_WAREHOUSE_ID:-1}
+      DEFAULT_DOCUMENT_TYPE_ID: ${DEFAULT_DOCUMENT_TYPE_ID:-2}
+      DEFAULT_PAID_STATUS: ${DEFAULT_PAID_STATUS:-2}
+      
+      # Storage
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-LOCAL}
+      
+      # Firebase Admin SDK
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+    
+    volumes:
+      # Persist uploaded images
+      - api_uploads:/app/uploads
+    
+    ports:
+      - "3000:3000"
+    
+    networks:
+      - orderium-network
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==================================
+  # Backoffice Frontend (Admin Panel)
+  # ==================================
+  backoffice:
+    build:
+      context: ./backoffice
+      dockerfile: Dockerfile
+      args:
+        # Pass environment variables at build time
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}
+        VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
+        VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
+    container_name: orderium-backoffice
+    restart: unless-stopped
+    
+    ports:
+      - "3001:80"
+    
+    networks:
+      - orderium-network
+    
+    depends_on:
+      api:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ==================================
+  # Client Portal Frontend
+  # ==================================
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}
+        VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
+        VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
+    container_name: orderium-client
+    restart: unless-stopped
+    
+    ports:
+      - "3002:80"
+    
+    networks:
+      - orderium-network
+    
+    depends_on:
+      api:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ==================================
+  # Delivery Portal Frontend
+  # ==================================
+  delivery-portal:
+    build:
+      context: ./delivery-portal
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}
+        VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
+        VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
+    container_name: orderium-delivery
+    restart: unless-stopped
+    
+    ports:
+      - "3003:80"
+    
+    networks:
+      - orderium-network
+    
+    depends_on:
+      api:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# ==================================
+# Networks
+# ==================================
+networks:
+  orderium-network:
+    driver: bridge
+    name: orderium-network
+
+# ==================================
+# Volumes
+# ==================================
+volumes:
+  # PostgreSQL data persistence
+  postgres_data:
+    driver: local
+    name: orderium_postgres_data
+  
+  # API uploads persistence
+  api_uploads:
+    driver: local
+    name: orderium_api_uploads

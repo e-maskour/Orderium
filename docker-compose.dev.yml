@@ -1,0 +1,103 @@
+# ==================================
+# Development Docker Compose
+# ==================================
+# This file provides development-specific configurations
+# Note: PostgreSQL is expected to be running externally on localhost:5432
+# Use: docker compose -f docker-compose.dev.yml up -d --build
+# ==================================
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: development  # Use development stage with all dependencies
+    container_name: orderium-api-dev
+    command: npm run start:dev  # Hot reload in development
+    env_file:
+      - ./api/.env
+    environment:
+      NODE_ENV: development
+      DB_HOST: host.docker.internal  # Override to connect to host's PostgreSQL
+      DB_SYNCHRONIZE: "true"  # Auto-sync schema in development
+      DB_LOGGING: "true"
+      CORS_ORIGIN: http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:5173
+    volumes:
+      # Mount source code for hot reload
+      - ./api/src:/app/src:ro
+      - ./api/package.json:/app/package.json:ro
+      - ./api/uploads:/app/uploads  # Mount host uploads directory for images
+    ports:
+      - "3000:3000"
+    networks:
+      - orderium-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Enable host access on Linux
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  backoffice:
+    build:
+      context: ./backoffice
+      dockerfile: Dockerfile
+      target: development
+    container_name: orderium-backoffice-dev
+    env_file:
+      - ./backoffice/.env
+    environment:
+      NODE_ENV: development
+      VITE_API_PROXY_TARGET: http://api:3000
+    volumes:
+      - ./backoffice/src:/app/src:ro
+      - ./backoffice/public:/app/public:ro
+    ports:
+      - "3001:3001" 
+    networks:
+      - orderium-network
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    container_name: orderium-client-dev
+    env_file:
+      - ./client/.env
+    environment:
+      NODE_ENV: development
+      VITE_API_PROXY_TARGET: http://api:3000
+    volumes:
+      - ./client/src:/app/src:ro
+      - ./client/public:/app/public:ro
+    ports:
+      - "3002:3002"
+    networks:
+      - orderium-network
+
+  delivery-portal:
+    build:
+      context: ./delivery-portal
+      dockerfile: Dockerfile
+      target: development
+    container_name: orderium-delivery-dev
+    env_file:
+      - ./delivery-portal/.env
+    environment:
+      NODE_ENV: development
+      VITE_API_PROXY_TARGET: http://api:3000
+    volumes:
+      - ./delivery-portal/src:/app/src:ro
+      - ./delivery-portal/public:/app/public:ro
+    ports:
+      - "3003:3003"  # Uses custom port in package.json
+    networks:
+      - orderium-network
+
+networks:
+  orderium-network:
+    driver: bridge
+    name: orderium-network

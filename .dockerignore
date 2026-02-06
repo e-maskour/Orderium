@@ -1,0 +1,30 @@
+# Root-level .dockerignore
+# Prevents copying unnecessary files when building from root context
+
+node_modules
+npm-debug.log*
+yarn-debug.log*
+
+.env
+.env.local
+.env.*.local
+
+.git
+.gitignore
+
+*.md
+!README.md
+
+.vscode
+.idea
+
+.DS_Store
+Thumbs.db
+
+dist
+build
+coverage
+
+docker-compose*.yml
+Dockerfile
+.dockerignore

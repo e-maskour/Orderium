@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
+import { categoriesService } from '../modules/categories';
 import type { Product } from '../modules/products/products.interface';
-import { Plus, Eye, Trash2, Search, Package, Grid3x3, List, CheckSquare, X } from 'lucide-react';
+import { Plus, Eye, Trash2, Search, Package, Grid3x3, List, CheckSquare, X, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
@@ -31,11 +32,28 @@ export default function Products() {
     return `${apiBaseUrl}/uploads/images/${imageUrl}`;
   };
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); // Keep for potential future use
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(24);
+  const [pageSize, setPageSize] = useState(50);
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+
+  // Filter states
+  const [nameFilter, setNameFilter] = useState('');
+  const [codeFilter, setCodeFilter] = useState('');
+  const [stockFilter, setStockFilter] = useState<'all' | 'negative' | 'zero' | 'positive'>('all');
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [isServiceFilter, setIsServiceFilter] = useState<boolean | undefined>(undefined);
+
+  // Applied filters - only these trigger API requests
+  const [appliedFilters, setAppliedFilters] = useState({
+    name: '',
+    code: '',
+    stockFilter: undefined as 'negative' | 'zero' | 'positive' | undefined,
+    categoryIds: [] as number[],
+    isService: undefined as boolean | undefined,
+  });
 
   // Confirmation dialog
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -46,10 +64,26 @@ export default function Products() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState({ title: '', message: '' });
 
-  // Fetch products
+  // Fetch categories for filter
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesService.getAll(),
+  });
+
+  const categoriesList = (categories as any)?.categories || categories || [];
+
+  // Fetch products with applied filters
   const { data: products, isLoading } = useQuery({
-    queryKey: ['products', searchTerm, currentPage, pageSize],
-    queryFn: () => productsService.getProducts({ search: searchTerm, page: currentPage, limit: pageSize }),
+    queryKey: ['products', appliedFilters, currentPage, pageSize],
+    queryFn: () => productsService.getProducts({ 
+      search: appliedFilters.name,
+      code: appliedFilters.code,
+      stockFilter: appliedFilters.stockFilter,
+      categoryIds: appliedFilters.categoryIds,
+      isService: appliedFilters.isService,
+      page: currentPage, 
+      limit: pageSize 
+    }),
   });
 
   const productsList = products?.products || [];
@@ -136,16 +170,60 @@ export default function Products() {
     navigate(`/products/${id}`);
   };
 
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      name: nameFilter,
+      code: codeFilter,
+      stockFilter: stockFilter === 'all' ? undefined : stockFilter,
+      categoryIds: selectedCategories,
+      isService: isServiceFilter,
+    });
+    setCurrentPage(1);
+    setFiltersExpanded(false);
+  };
+
+  const handleClearFilters = () => {
+    setNameFilter('');
+    setCodeFilter('');
+    setStockFilter('all');
+    setSelectedCategories([]);
+    setIsServiceFilter(undefined);
+    setAppliedFilters({
+      name: '',
+      code: '',
+      stockFilter: undefined,
+      categoryIds: [],
+      isService: undefined,
+    });
+    setCurrentPage(1);
+  };
+
+  const toggleCategory = (categoryId: number) => {
+    setSelectedCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const activeFiltersCount = [
+    appliedFilters.name,
+    appliedFilters.code,
+    appliedFilters.stockFilter,
+    appliedFilters.categoryIds.length > 0,
+    appliedFilters.isService !== undefined,
+  ].filter(Boolean).length;
+
   return (
     <AdminLayout>
-      <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col max-w-7xl mx-auto">
+      <div className="flex flex-col max-w-7xl mx-auto">
         {/* Page Header */}
-        <div className="flex-shrink-0">
+        <div>
           <PageHeader icon={Package} title={t('products')} subtitle={t('manageProducts')} />
         </div>
 
         {/* Toolbar: Search, View Toggle, Add Button */}
-        <div className="mb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 flex-shrink-0">
+        <div className="mb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           {/* View Mode Toggle */}
           <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
             <button
@@ -170,29 +248,20 @@ export default function Products() {
             </button>
           </div>
 
-          <div className="flex items-center gap-3 flex-1 sm:flex-none w-full sm:w-auto">
-            {/* Search */}
-            <div className="relative flex-1 sm:flex-none">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder={t('searchProducts')}
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full sm:w-96 ps-10 pe-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+          <div className="flex items-center gap-3 flex-1 sm:flex-none w-full sm:w-auto justify-end">
+            {/* Filters Button */}
+            <button
+              onClick={() => setFiltersExpanded(true)}
+              className="relative flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+            >
+              <Filter className="w-5 h-5" />
+              {t('filters')}
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
               )}
-            </div>
+            </button>
 
             {/* Add Product Button */}
             <button
@@ -205,23 +274,88 @@ export default function Products() {
           </div>
         </div>
 
+        {/* Pagination Info Bar - Top */}
+        {productsList && productsList.length > 0 && (
+          <div className="bg-slate-50 py-2 px-1">
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-sm text-slate-600">
+                {t('showing')} <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
+                <span className="font-semibold">{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
+              </div>
+              
+              {/* Page Size Selector */}
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-slate-600">{t('perPage')}</label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value={10}>10</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={500}>500</option>
+                  <option value={1000}>1000</option>
+                </select>
+              </div>
+              
+              {/* Navigation */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min="1"
+                    max={totalPages}
+                    value={currentPage}
+                    onChange={(e) => {
+                      const page = parseInt(e.target.value, 10);
+                      if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                        setCurrentPage(page);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    className="w-12 px-2 py-1 text-sm font-medium text-slate-700 text-center border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  />
+                  <span className="text-sm text-slate-500">/</span>
+                  <span className="text-sm font-medium text-slate-700">{totalPages}</span>
+                </div>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Products View */}
-        <div
-          className={`flex-1 ${
-            viewMode === 'card'
-              ? 'bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col'
-              : 'overflow-hidden flex flex-col'
-          }`}
-        >
+        <div className="flex flex-col">
           {isLoading ? (
-            <div className="flex-1 flex items-center justify-center bg-white rounded-lg">
+            <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="inline-block w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
                 <p className="mt-2 text-slate-500">{t('loading')}...</p>
               </div>
             </div>
           ) : viewMode === 'list' ? (
-            <div className="flex-1 overflow-y-auto p-3 space-y-2 border border-slate-200/60 rounded-lg bg-white">
+            <div className="space-y-2">
               {/* Product Rows */}
               {productsList && productsList.length > 0 ? (
                 productsList.map((product: Product) => (
@@ -331,20 +465,47 @@ export default function Products() {
                   </div>
                 ))
               ) : (
-                <div className="bg-white rounded-lg shadow-sm border border-slate-200 px-4 py-12 text-center text-slate-500">
-                  {t('noProductsFound')}
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full"></div>
+                    <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-100">
+                      <Package className="w-16 h-16 text-amber-500 mx-auto" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  <h3 className="mt-6 text-xl font-bold text-slate-800">{t('noProductsFound')}</h3>
+                  <p className="mt-2 text-sm text-slate-500 max-w-sm text-center">
+                    {activeFiltersCount > 0 
+                      ? "Aucun produit ne correspond à vos critères de recherche. Essayez de modifier les filtres."
+                      : "Commencez par ajouter votre premier produit pour le voir apparaître ici."}
+                  </p>
+                  {activeFiltersCount > 0 ? (
+                    <button
+                      onClick={handleClearFilters}
+                      className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30"
+                    >
+                      Réinitialiser les filtres
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/products/create')}
+                      className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30 flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Ajouter un produit
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-3">
-              <div className="grid gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+            <div>
+              <div className="grid gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
                 {productsList && productsList.length > 0 ? (
                   productsList.map((product: Product) => (
                     <div
                       key={product.id}
                       onClick={() => handleViewProduct(product.id)}
-                      className={`relative bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${
+                      className={`relative bg-white rounded-lg sm:rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${
                         selectedProducts.includes(product.id)
                           ? 'border-amber-500 ring-2 ring-amber-500/20'
                           : 'border-slate-200/60 hover:border-slate-300/60'
@@ -457,119 +618,37 @@ export default function Products() {
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-full flex items-center justify-center py-12">
-                    <p className="text-slate-500">{t('noProductsFound')}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Pagination - Fixed at bottom */}
-          {productsList && productsList.length > 0 && (
-            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                {/* Page info and size selector */}
-                <div className="flex items-center gap-4">
-                  <p className="text-sm text-slate-600">
-                    {t('showing')} <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
-                    <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')}{' '}
-                    <span className="font-medium">{totalCount}</span> {t('results')}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-slate-600">{t('perPage')}:</label>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none"
-                    >
-                      <option value={12}>12</option>
-                      <option value={24}>24</option>
-                      <option value={48}>48</option>
-                      <option value={96}>96</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Pagination buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={!hasPrevPage}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {t('previous')}
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setCurrentPage(1)}
-                      className={`min-w-[2.5rem] px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        currentPage === 1
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
-                          : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      1
-                    </button>
-
-                    {currentPage > 3 && <span className="px-2 text-slate-500">...</span>}
-
-                    {Array.from({ length: Math.min(5, totalPages - 2) }, (_, i) => {
-                      let pageNum;
-                      if (currentPage <= 3) {
-                        pageNum = i + 2;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 5 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-
-                      if (pageNum > 1 && pageNum < totalPages) {
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`min-w-[2.5rem] px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                              currentPage === pageNum
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
-                                : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      }
-                      return null;
-                    })}
-
-                    {currentPage < totalPages - 2 && <span className="px-2 text-slate-500">...</span>}
-
-                    {totalPages > 1 && (
+                  <div className="col-span-full flex flex-col items-center justify-center py-20 px-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full"></div>
+                      <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-100">
+                        <Package className="w-16 h-16 text-amber-500 mx-auto" strokeWidth={1.5} />
+                      </div>
+                    </div>
+                    <h3 className="mt-6 text-xl font-bold text-slate-800">{t('noProductsFound')}</h3>
+                    <p className="mt-2 text-sm text-slate-500 max-w-sm text-center">
+                      {activeFiltersCount > 0 
+                        ? "Aucun produit ne correspond à vos critères de recherche. Essayez de modifier les filtres."
+                        : "Commencez par ajouter votre premier produit pour le voir apparaître ici."}
+                    </p>
+                    {activeFiltersCount > 0 ? (
                       <button
-                        onClick={() => setCurrentPage(totalPages)}
-                        className={`min-w-[2.5rem] px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                          currentPage === totalPages
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
-                            : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
-                        }`}
+                        onClick={handleClearFilters}
+                        className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30"
                       >
-                        {totalPages}
+                        Réinitialiser les filtres
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => navigate('/products/create')}
+                        className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30 flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Ajouter un produit
                       </button>
                     )}
                   </div>
-
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={!hasNextPage}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {t('next')}
-                  </button>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -630,6 +709,164 @@ export default function Products() {
         message={alertMessage.message}
         type="warning"
       />
+
+      {/* Filters Overlay Panel */}
+      {filtersExpanded && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+            onClick={() => setFiltersExpanded(false)}
+          />
+          
+          {/* Slide-in Panel */}
+          <div className="fixed inset-y-0 end-0 w-full sm:w-[520px] md:w-[560px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+            {/* Panel Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-amber-500 to-amber-600">
+              <div className="flex items-center gap-3">
+                <Filter className="w-5 h-5 text-white" />
+                <h2 className="text-lg font-bold text-white">{t('filters')}</h2>
+                {activeFiltersCount > 0 && (
+                  <span className="bg-white text-amber-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setFiltersExpanded(false)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            {/* Panel Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Search Filters Section */}
+              <div className="pb-6 border-b border-slate-200">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
+                  {t('search')}
+                </label>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Name Filter */}
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 mb-2 block">
+                      {t('name')}
+                    </label>
+                    <input
+                      type="text"
+                      value={nameFilter}
+                      onChange={(e) => setNameFilter(e.target.value)}
+                      placeholder={t('search')}
+                      className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Code Filter */}
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 mb-2 block">
+                      {t('code')}
+                    </label>
+                    <input
+                      type="text"
+                      value={codeFilter}
+                      onChange={(e) => setCodeFilter(e.target.value)}
+                      placeholder={t('search')}
+                      className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Stock Filter */}
+              <div className="pb-6 border-b border-slate-200">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
+                  {t('stock')}
+                </label>
+                <select
+                  value={stockFilter}
+                  onChange={(e) => setStockFilter(e.target.value as 'all' | 'negative' | 'zero' | 'positive')}
+                  className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all bg-white"
+                >
+                  <option value="all">{t('all')}</option>
+                  <option value="negative">Negative Stock</option>
+                  <option value="zero">Zero Stock</option>
+                  <option value="positive">Positive Stock</option>
+                </select>
+              </div>
+
+              {/* Category Filter */}
+              <div className="pb-6 border-b border-slate-200">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
+                  {t('categories')}
+                </label>
+                <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto">
+                  {categoriesList.length > 0 ? (
+                    categoriesList.map((category: any) => (
+                      <button
+                        key={category.id}
+                        onClick={() => toggleCategory(category.id)}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          selectedCategories.includes(category.id)
+                            ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                            : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <span>{category.name}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-500">No categories available</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Is Service Filter */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
+                  Type
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: undefined, label: t('all') },
+                    { key: true, label: 'Service' },
+                    { key: false, label: t('product') }
+                  ].map((filter) => (
+                    <button
+                      key={String(filter.key)}
+                      onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        isServiceFilter === filter.key
+                          ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <span>{filter.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Panel Footer */}
+            <div className="border-t border-slate-200 p-4 bg-slate-50 flex gap-3">
+              <button
+                onClick={handleClearFilters}
+                className="flex-1 px-4 py-2.5 bg-white text-slate-700 rounded-lg font-medium text-sm hover:bg-slate-100 border border-slate-300 transition-colors"
+              >
+                {t('reset')}
+              </button>
+              <button
+                onClick={handleApplyFilters}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
+              >
+                {t('apply')}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </AdminLayout>
   );
 }

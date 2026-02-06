@@ -526,39 +526,6 @@ export default function Fournisseurs() {
                                     <span className="truncate">{supplier.email || '-'}</span>
                                   </div>
                                 </div>
-
-                                {/* Actions */}
-                                <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigate(`/fournisseurs/${supplier.id}`);
-                                    }}
-                                    className="flex-1 px-2 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors text-xs font-medium flex items-center justify-center gap-1.5"
-                                  >
-                                    <Eye className="w-3 h-3" />
-                                    Voir
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigate(`/fournisseurs/edit/${supplier.id}`);
-                                    }}
-                                    className="flex-1 px-2 py-1.5 bg-slate-50 text-slate-700 rounded hover:bg-slate-100 transition-colors text-xs font-medium flex items-center justify-center gap-1.5"
-                                  >
-                                    <Edit2 className="w-3 h-3" />
-                                    {t('edit')}
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeletePartner(supplier);
-                                    }}
-                                    className="px-2 py-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors text-xs font-medium"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
-                                </div>
                               </div>
                             </div>
                           );
@@ -625,40 +592,6 @@ export default function Fournisseurs() {
                                 }`}>
                                   {supplier.isEnabled ? t('active') : t('inactive')}
                                 </span>
-                              </div>
-
-                              {/* Actions */}
-                              <div className="w-24 flex justify-center gap-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/fournisseurs/${supplier.id}`);
-                                  }}
-                                  className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                                  title={t('view')}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/fournisseurs/edit/${supplier.id}`);
-                                  }}
-                                  className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
-                                  title={t('edit')}
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeletePartner(supplier);
-                                  }}
-                                  className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                  title={t('delete')}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
                               </div>
                             </div>
                           </div>

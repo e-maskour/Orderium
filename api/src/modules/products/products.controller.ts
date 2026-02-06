@@ -20,6 +20,7 @@ import { ProductsService } from './products.service';
 import { ImageService } from '../images/services/image.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { FilterProductsDto } from './dto/filter-products.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { ProductImageResponseDto } from '../images/dto/product-image.dto';
 
@@ -31,7 +32,7 @@ export class ProductsController {
     private readonly imageService: ImageService,
   ) {}
 
-  @Post()
+  @Post('create')
   @ApiOperation({ summary: 'Create a new product' })
   @ApiResponse({
     status: 201,
@@ -46,11 +47,52 @@ export class ProductsController {
     };
   }
 
+  @Post('filter')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Filter products with POST body' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Products retrieved successfully',
+    type: [ProductResponseDto],
+  })
+  async filterProducts(
+    @Body() filterDto: FilterProductsDto,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    const limitNum = limit ? parseInt(limit, 10) : 50;
+    const offsetNum = offset ? parseInt(offset, 10) : 0;
+
+    const { products, total } = await this.productsService.findAll(
+      limitNum,
+      offsetNum,
+      filterDto.search,
+      filterDto.code,
+      filterDto.stockFilter,
+      filterDto.categoryIds,
+      filterDto.isService,
+    );
+
+    return {
+      success: true,
+      products,
+      total,
+      limit: limitNum,
+      offset: offsetNum,
+    };
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get all products' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'code', required: false, type: String })
+  @ApiQuery({ name: 'stockFilter', required: false, enum: ['negative', 'zero', 'positive'] })
+  @ApiQuery({ name: 'categoryIds', required: false, type: [Number] })
+  @ApiQuery({ name: 'isService', required: false, type: Boolean })
   @ApiResponse({
     status: 200,
     description: 'Products retrieved successfully',
@@ -60,14 +102,24 @@ export class ProductsController {
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('search') search?: string,
+    @Query('code') code?: string,
+    @Query('stockFilter') stockFilter?: 'negative' | 'zero' | 'positive',
+    @Query('categoryIds') categoryIds?: string,
+    @Query('isService') isService?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 100;
+    const limitNum = limit ? parseInt(limit, 10) : 50;
     const offsetNum = offset ? parseInt(offset, 10) : 0;
+    const categoryIdsArray = categoryIds ? categoryIds.split(',').map(id => parseInt(id, 10)) : undefined;
+    const isServiceBool = isService === 'true' ? true : isService === 'false' ? false : undefined;
 
     const { products, total } = await this.productsService.findAll(
       limitNum,
       offsetNum,
       search,
+      code,
+      stockFilter,
+      categoryIdsArray,
+      isServiceBool,
     );
 
     return {
