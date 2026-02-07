@@ -9,21 +9,33 @@ import { InvoiceWithDetails } from './invoices.model';
 const API_URL = '/api';
 
 export class InvoicesService {
-  async getAll(filters?: InvoiceFilters): Promise<InvoiceWithDetails[]> {
+  async getAll(filters?: InvoiceFilters): Promise<{ invoices: InvoiceWithDetails[]; count: number; totalCount: number }> {
+    const body: any = {};
+    if (filters?.status) body.status = filters.status;
+    if (filters?.customerId) body.customerId = filters.customerId;
+    if (filters?.supplierId) body.supplierId = filters.supplierId;
+    if (filters?.dateFrom) body.dateFrom = filters.dateFrom;
+    if (filters?.dateTo) body.dateTo = filters.dateTo;
+    if (filters?.search) body.search = filters.search;
+    
     const params = new URLSearchParams();
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.customerId) params.append('customerId', filters.customerId.toString());
-    if (filters?.supplierId) params.append('supplierId', filters.supplierId.toString());
-    if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
-    if (filters?.dateTo) params.append('dateTo', filters.dateTo);
-    if (filters?.search) params.append('search', filters.search);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString());
     
     const queryString = params.toString();
-    const response = await fetch(`${API_URL}/invoices${queryString ? `?${queryString}` : ''}`);
+    const response = await fetch(`${API_URL}/invoices/list${queryString ? `?${queryString}` : ''}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
     if (!response.ok) throw new Error('Failed to fetch invoices');
     const data = await response.json();
     const invoices = data.invoices || [];
-    return invoices.map((inv: any) => InvoiceWithDetails.fromApiResponse(inv));
+    return {
+      invoices: invoices.map((inv: any) => InvoiceWithDetails.fromApiResponse(inv)),
+      count: data.count || 0,
+      totalCount: data.totalCount || 0,
+    };
   }
 
   async getById(id: number): Promise<InvoiceWithDetails> {

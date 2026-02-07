@@ -8,20 +8,32 @@ import { QuoteWithDetails } from './quotes.model';
 const API_URL = '/api';
 
 export class QuotesService {
-  async getAll(filters?: QuoteFilters): Promise<QuoteWithDetails[]> {
+  async getAll(filters?: QuoteFilters): Promise<{ quotes: QuoteWithDetails[]; count: number; totalCount: number }> {
+    const body: any = {};
+    if (filters?.status) body.status = filters.status;
+    if (filters?.customerId) body.customerId = filters.customerId;
+    if (filters?.dateFrom) body.dateFrom = filters.dateFrom;
+    if (filters?.dateTo) body.dateTo = filters.dateTo;
+    if (filters?.search) body.search = filters.search;
+    
     const params = new URLSearchParams();
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.customerId) params.append('customerId', filters.customerId.toString());
-    if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
-    if (filters?.dateTo) params.append('dateTo', filters.dateTo);
-    if (filters?.search) params.append('search', filters.search);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString());
     
     const queryString = params.toString();
-    const response = await fetch(`${API_URL}/quotes${queryString ? `?${queryString}` : ''}`);
+    const response = await fetch(`${API_URL}/quotes/list${queryString ? `?${queryString}` : ''}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
     if (!response.ok) throw new Error('Failed to fetch quotes');
     const data = await response.json();
     const quotes = data.quotes || [];
-    return quotes.map((quote: any) => QuoteWithDetails.fromApiResponse(quote));
+    return {
+      quotes: quotes.map((quote: any) => QuoteWithDetails.fromApiResponse(quote)),
+      count: data.count || 0,
+      totalCount: data.totalCount || 0,
+    };
   }
 
   async getById(id: number): Promise<QuoteWithDetails> {

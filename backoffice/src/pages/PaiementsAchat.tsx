@@ -46,7 +46,7 @@ export default function PaiementsAchat() {
   const loadInvoices = async () => {
     try {
       const data = await invoicesService.getAll();
-      setInvoices(data);
+      setInvoices(data.invoices);
     } catch (error) {
       console.error('Error loading invoices:', error);
     }

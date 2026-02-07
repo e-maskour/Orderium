@@ -23,29 +23,100 @@ export interface DocumentItem {
   itemsCount: number;
 }
 
+export interface DocumentFilters {
+  search?: string;
+  status?: string;
+  partnerId?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface DocumentsResult {
+  documents: DocumentItem[];
+  count: number;
+  totalCount: number;
+}
+
 export class DocumentsService {
   async getDocuments(
     type: DocumentType,
-    direction: DocumentDirection
-  ): Promise<DocumentItem[]> {
+    direction: DocumentDirection,
+    filters?: DocumentFilters
+  ): Promise<DocumentsResult> {
     if (type === 'facture') {
-      const invoices = await invoicesService.getAll();
       const isVente = direction === 'vente';
+      const invoiceFilters = {
+        search: filters?.search,
+        status: filters?.status !== 'all' ? filters?.status : undefined,
+        customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
+        supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
+        dateFrom: filters?.dateFrom,
+        dateTo: filters?.dateTo,
+        page: filters?.page,
+        pageSize: filters?.pageSize,
+      };
+      
+      const result = await invoicesService.getAll(invoiceFilters);
+      const invoices = result.invoices || [];
+      
       const filtered = invoices.filter(inv => 
         isVente ? inv.invoice.customerId : inv.invoice.supplierId
       );
       
-      return this.transformInvoicesToDocuments(filtered, isVente);
+      const transformed = this.transformInvoicesToDocuments(filtered, isVente);
+      
+      return {
+        documents: transformed,
+        count: result.count,
+        totalCount: result.totalCount
+      };
     } else if (type === 'devis') {
-      const quotes = await quotesService.getAll();
-      return this.transformQuotesToDocuments(quotes);
+      const quoteFilters = {
+        search: filters?.search,
+        status: filters?.status !== 'all' ? filters?.status : undefined,
+        customerId: filters?.partnerId,
+        dateFrom: filters?.dateFrom,
+        dateTo: filters?.dateTo,
+        page: filters?.page,
+        pageSize: filters?.pageSize,
+      };
+      
+      const result = await quotesService.getAll(quoteFilters);
+      const quotes = result.quotes || [];
+      
+      const transformed = this.transformQuotesToDocuments(quotes);
+      
+      return {
+        documents: transformed,
+        count: result.count,
+        totalCount: result.totalCount
+      };
     } else if (type === 'bon_livraison') {
       // Fetch only orders NOT created from portal (fromPortal = false)
-      const result = await ordersService.getAll(undefined, undefined, undefined, false);
-      return this.transformOrdersToDocuments(result.orders || []);
+      const result = await ordersService.getAll(
+        filters?.search,
+        filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
+        filters?.dateTo ? new Date(filters.dateTo) : undefined,
+        false,
+        filters?.status !== 'all' ? filters?.status : undefined,
+        undefined,
+        undefined,
+        filters?.page,
+        filters?.pageSize
+      );
+      
+      const transformed = this.transformOrdersToDocuments(result.orders || []);
+      
+      return {
+        documents: transformed,
+        count: result.count || 0,
+        totalCount: result.totalCount || 0
+      };
     }
     
-    return [];
+    return { documents: [], count: 0, totalCount: 0 };
   }
 
   async validateDocument(type: DocumentType, id: number): Promise<void> {
@@ -105,8 +176,8 @@ export class DocumentsService {
       id: q.quote.id,
       number: q.quote.quoteNumber,
       date: q.quote.date,
-      dueDate: q.quote.expirationDate || undefined,
-      validationDate: null,
+      dueDate: q.quote.dueDate || q.quote.expirationDate || undefined,
+      validationDate: q.quote.validationDate || null,
       partnerName: q.quote.customerName || 'Inconnu',
       subtotal: q.quote.subtotal,
       tax: q.quote.tax,
@@ -124,8 +195,8 @@ export class DocumentsService {
       id: order.id,
       number: order.orderNumber || `#${order.id}`,
       date: order.date || order.dateCreated,
-      dueDate: undefined,
-      validationDate: null,
+      dueDate: order.dueDate || undefined,
+      validationDate: order.validationDate || null,
       partnerName: order.customerName || 'Inconnu',
       subtotal: order.total || 0,
       tax: 0,

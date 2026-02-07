@@ -38,12 +38,18 @@ export class Quote extends BaseDocument {
   @Column({ type: 'date', nullable: true })
   expirationDate: Date | null;
 
+  @Column({ type: 'date', nullable: true })
+  dueDate: Date | null;
+
   @Column({
     type: 'enum',
     enum: QuoteStatus,
     default: QuoteStatus.DRAFT,
   })
   status: QuoteStatus;
+
+  @Column({ type: 'date', nullable: true })
+  validationDate: Date | null;
 
   // isValidated and notes inherited from BaseDocument
 

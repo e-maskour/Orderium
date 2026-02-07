@@ -78,6 +78,7 @@ export class Order implements IOrder {
   customerAddress?: string | null;
   date: string;
   dueDate?: string | null;
+  validationDate?: string | null;
   subtotal: number;
   tax: number;
   discount: number;
@@ -105,6 +106,7 @@ export class Order implements IOrder {
     this.customerAddress = data.customerAddress;
     this.date = data.date;
     this.dueDate = data.dueDate;
+    this.validationDate = data.validationDate;
     this.subtotal = data.subtotal;
     this.tax = data.tax;
     this.discount = data.discount;
@@ -241,6 +243,7 @@ export class Order implements IOrder {
       customerAddress: data.customerAddress,
       date: data.date,
       dueDate: data.dueDate,
+      validationDate: data.validationDate,
       subtotal: parseFloat(data.subtotal) || 0,
       tax: parseFloat(data.tax) || 0,
       discount: parseFloat(data.discount) || 0,

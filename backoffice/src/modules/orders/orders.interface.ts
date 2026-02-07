@@ -10,6 +10,7 @@ export interface Order {
   customerAddress?: string | null;
   date: string;
   dueDate?: string | null;
+  validationDate?: string | null;
   subtotal: number;
   tax: number;
   discount: number;

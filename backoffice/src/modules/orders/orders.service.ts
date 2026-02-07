@@ -31,9 +31,11 @@ export class OrdersService {
       });
     }
     
-    // Build query params (only fromPortal goes in query string)
+    // Build query params
     const params = new URLSearchParams();
     if (fromPortal !== undefined) params.append('fromPortal', fromPortal.toString());
+    if (page) params.append('page', page.toString());
+    if (perPage) params.append('perPage', perPage.toString());
     
     // Build POST body with filters
     const body: any = {};
@@ -44,8 +46,6 @@ export class OrdersService {
     if (filters.customerId) body.customerId = filters.customerId;
     if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
     if (fromClient !== undefined) body.fromClient = fromClient;
-    if (page) body.page = page;
-    if (perPage) body.per_page = perPage;
     
     const queryString = params.toString();
     const response = await fetch(`${API_URL}/orders/filter${queryString ? `?${queryString}` : ''}`, {

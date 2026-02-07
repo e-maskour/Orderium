@@ -77,6 +77,8 @@ export class Quote implements IQuote {
   customerAddress?: string | null;
   date: string;
   expirationDate?: string | null;
+  dueDate?: string | null;
+  validationDate?: string | null;
   subtotal: number;
   tax: number;
   discount: number;
@@ -104,6 +106,8 @@ export class Quote implements IQuote {
     this.customerAddress = data.customerAddress;
     this.date = data.date;
     this.expirationDate = data.expirationDate;
+    this.dueDate = data.dueDate;
+    this.validationDate = data.validationDate;
     this.subtotal = data.subtotal;
     this.tax = data.tax;
     this.discount = data.discount;
@@ -205,6 +209,8 @@ export class Quote implements IQuote {
       customerAddress: data.customerAddress,
       date: data.date,
       expirationDate: data.expirationDate,
+      dueDate: data.dueDate,
+      validationDate: data.validationDate,
       subtotal: parseFloat(data.subtotal) || 0,
       tax: parseFloat(data.tax) || 0,
       discount: parseFloat(data.discount) || 0,

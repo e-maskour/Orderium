@@ -120,14 +120,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       { scope: '/' }
     );
 
-    if (firebaseConfig.apiKey) {
-      const readyRegistration = await navigator.serviceWorker.ready;
-      readyRegistration.active?.postMessage({
-        type: 'UPDATE_FIREBASE_CONFIG',
-        config: firebaseConfig,
-      });
-    }
-
     return registration;
   } catch (error) {
     console.error('Service worker registration failed:', error);

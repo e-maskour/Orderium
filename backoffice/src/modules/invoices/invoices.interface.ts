@@ -51,6 +51,8 @@ export interface InvoiceFilters {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface InvoiceStatistics {
@@ -80,9 +82,11 @@ export interface CreateInvoiceDTO {
     discountType?: number;
     tax?: number;
   }>;
+  subtotal: number;
   tax?: number;
   discount?: number;
   discountType?: number;
+  total: number;
   notes?: string;
 }
 
@@ -106,9 +110,11 @@ export interface UpdateInvoiceDTO {
     discountType?: number;
     tax?: number;
   }>;
+  subtotal?: number;
   tax?: number;
   discount?: number;
   discountType?: number;
+  total?: number;
   notes?: string;
 }
 

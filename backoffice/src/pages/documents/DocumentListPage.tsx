@@ -2,14 +2,18 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Plus, FileText, TrendingUp, TrendingDown, Clock, CheckCircle } from 'lucide-react';
-import { DocumentTable } from '../../components/documents';
+import { LayoutDashboard, List, Plus, FileText, TrendingUp, TrendingDown, Clock, CheckCircle, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { DocumentTable, DocumentAnalysisChart } from '../../components/documents';
 import { documentsService, DocumentItem } from '../../modules/documents/services/documents.service';
+import { partnersService } from '../../modules';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import AlertDialog from '../../components/AlertDialog';
 import { DocumentType, DocumentDirection, DocumentConfig } from '../../modules/documents/types';
 import { useLanguage } from '@/context/LanguageContext';
+import { DateRangePicker } from '../../components/ui/date-range-picker';
+import { Autocomplete } from '../../components/ui/autocomplete';
+import { useQuery } from '@tanstack/react-query';
 
 interface DocumentListPageProps {
   documentType: DocumentType;
@@ -29,10 +33,33 @@ export default function DocumentListPage({
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<{ id: number; number: string; total: number } | null>(null);
+  
+  // Filter states
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [documentNumberSearch, setDocumentNumberSearch] = useState('');
+  const [partnerIdSearch, setPartnerIdSearch] = useState('');
+  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({ start: undefined, end: undefined });
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  
+  // Applied filters - triggers API requests
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: '',
+    status: 'all',
+    partnerId: undefined as number | undefined,
+    dateRange: { start: undefined as Date | undefined, end: undefined as Date | undefined },
+  });
+  
+  // Fetch partners for autocomplete
+  const { data: partnersData } = useQuery({
+    queryKey: ['partners'],
+    queryFn: partnersService.getAll,
+  });
   
   // Confirmation dialogs
   const [showValidateConfirm, setShowValidateConfirm] = useState(false);
@@ -47,22 +74,22 @@ export default function DocumentListPage({
   const isVente = direction === 'vente';
   const partnerLabel = config.partnerLabel;
 
-  // Load documents from API
-  const loadDocuments = async () => {
-    try {
-      setLoading(true);
-      const data = await documentsService.getDocuments(documentType, direction);
-      setDocuments(data);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch documents with filters and pagination
+  const { data: documentsData = { documents: [], count: 0, totalCount: 0 }, isLoading: loading, refetch } = useQuery({
+    queryKey: ['documents', documentType, direction, JSON.stringify(appliedFilters), currentPage, pageSize],
+    queryFn: () => documentsService.getDocuments(documentType, direction, {
+      search: appliedFilters.search,
+      status: appliedFilters.status,
+      partnerId: appliedFilters.partnerId,
+      dateFrom: appliedFilters.dateRange.start ? appliedFilters.dateRange.start.toISOString().split('T')[0] : undefined,
+      dateTo: appliedFilters.dateRange.end ? appliedFilters.dateRange.end.toISOString().split('T')[0] : undefined,
+      page: currentPage,
+      pageSize: pageSize
+    }),
+  });
 
-  useEffect(() => {
-    loadDocuments();
-  }, [documentType, direction]);
+  const documents = documentsData.documents || [];
+  const totalCount = documentsData.totalCount || 0;
 
   // Documents are already in the correct format
   const transformedFactures = documents.map(doc => ({
@@ -101,7 +128,7 @@ export default function DocumentListPage({
     
     try {
       await documentsService.validateDocument(documentType, confirmInvoiceId);
-      await loadDocuments();
+      await refetch();
       setShowValidateConfirm(false);
       setConfirmInvoiceId(null);
     } catch (error) {
@@ -121,7 +148,7 @@ export default function DocumentListPage({
     
     try {
       await documentsService.devalidateDocument(documentType, confirmInvoiceId);
-      await loadDocuments();
+      await refetch();
       setShowDevalidateConfirm(false);
       setConfirmInvoiceId(null);
     } catch (error) {
@@ -146,7 +173,7 @@ export default function DocumentListPage({
     
     try {
       await documentsService.deleteDocument(documentType, confirmInvoiceId);
-      await loadDocuments();
+      await refetch();
       setShowDeleteConfirm(false);
       setConfirmInvoiceId(null);
     } catch (error: any) {
@@ -180,21 +207,110 @@ export default function DocumentListPage({
     }
   };
 
+  // Reset page when filters change
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      search: documentNumberSearch,
+      status: statusFilter,
+      partnerId: partnerIdSearch ? parseInt(partnerIdSearch) : undefined,
+      dateRange: { start: dateRange.start, end: dateRange.end },
+    });
+    setCurrentPage(1);
+    setFiltersExpanded(false);
+  };
+
+  const handleResetFilters = () => {
+    setDocumentNumberSearch('');
+    setPartnerIdSearch('');
+    setDateRange({ start: undefined, end: undefined });
+    setStatusFilter('all');
+    setAppliedFilters({
+      search: '',
+      status: 'all',
+      partnerId: undefined,
+      dateRange: { start: undefined, end: undefined },
+    });
+    setCurrentPage(1);
+  };
+
   const tabs = [
     { key: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
     { key: 'list', label: `${t('listOf')} ${config.title.toLowerCase()}`, icon: List },
   ];
 
-  // Calculate statistics
-  const totalInvoices = documents.length;
-  const draftInvoices = documents.filter(doc => doc.status === 'draft').length;
-  const unpaidInvoices = documents.filter(doc => doc.status === 'unpaid' || doc.status === 'overdue').length;
-  const partialInvoices = documents.filter(doc => doc.status === 'partial').length;
-  const paidInvoices = documents.filter(doc => doc.status === 'paid' || doc.status === 'accepted').length;
+  // Calculate statistics based on document type
+  const totalDocs = documents.length;
   const totalAmount = documents.reduce((sum, doc) => sum + doc.total, 0);
+  const draftInvoices = documents.filter(doc => doc.status === 'draft').length;
+  
+  // Color mapping for KPI cards
+  const colorClasses = {
+    blue: {
+      border: 'hover:border-blue-300',
+      bg: 'bg-blue-100',
+      text: 'text-blue-600'
+    },
+    emerald: {
+      border: 'hover:border-emerald-300',
+      bg: 'bg-emerald-100',
+      text: 'text-emerald-600'
+    },
+    amber: {
+      border: 'hover:border-amber-300',
+      bg: 'bg-amber-100',
+      text: 'text-amber-600'
+    },
+    purple: {
+      border: 'hover:border-purple-300',
+      bg: 'bg-purple-100',
+      text: 'text-purple-600'
+    },
+    red: {
+      border: 'hover:border-red-300',
+      bg: 'bg-red-100',
+      text: 'text-red-600'
+    }
+  };
+  
+  // Document type specific KPIs
+  let kpi1, kpi2, kpi3, kpi4;
+  
+  if (documentType === 'devis') {
+    // Devis-specific KPIs
+    const acceptedCount = documents.filter(doc => doc.status === 'signed' || doc.status === 'invoiced').length;
+    const pendingCount = documents.filter(doc => doc.status === 'open' || doc.status === 'draft').length;
+    const acceptedValue = documents.filter(doc => doc.status === 'signed' || doc.status === 'invoiced').reduce((sum, doc) => sum + doc.total, 0);
+    const conversionRate = totalDocs > 0 ? ((acceptedCount / totalDocs) * 100).toFixed(1) : '0';
+    
+    kpi1 = { count: totalDocs, label: t('totalQuotes'), icon: FileText, color: 'blue' };
+    kpi2 = { count: acceptedCount, label: t('acceptedQuotes'), icon: CheckCircle, color: 'emerald' };
+    kpi3 = { count: pendingCount, label: t('pendingQuotes'), icon: Clock, color: 'amber' };
+    kpi4 = { count: `${conversionRate}%`, label: t('conversionRate'), icon: TrendingUp, color: 'purple' };
+    
+  } else if (documentType === 'bon_livraison') {
+    // Bon de livraison-specific KPIs
+    const deliveredCount = documents.filter(doc => doc.status === 'delivered').length;
+    const inProgressCount = documents.filter(doc => doc.status === 'in_progress' || doc.status === 'validated').length;
+    const totalItems = documents.reduce((sum, doc) => sum + (doc.itemsCount || 0), 0);
+    
+    kpi1 = { count: totalDocs, label: t('totalDeliveries'), icon: FileText, color: 'blue' };
+    kpi2 = { count: deliveredCount, label: t('delivered'), icon: CheckCircle, color: 'emerald' };
+    kpi3 = { count: inProgressCount, label: t('inProgress'), icon: Clock, color: 'amber' };
+    kpi4 = { count: totalItems, label: t('totalItems'), icon: TrendingUp, color: 'purple' };
+    
+  } else {
+    // Facture-specific KPIs (default)
+    const unpaidCount = documents.filter(doc => doc.status === 'unpaid' || doc.status === 'overdue').length;
+    const paidCount = documents.filter(doc => doc.status === 'paid').length;
+    const unpaidAmount = documents.filter(doc => doc.status === 'unpaid' || doc.status === 'overdue' || doc.status === 'partial').reduce((sum, doc) => sum + (doc.remainingAmount || doc.total), 0);
+    
+    kpi1 = { count: totalDocs, label: t('totalInvoices'), icon: FileText, color: 'blue' };
+    kpi2 = { count: unpaidCount, label: t('unpaidInvoices'), icon: Clock, color: 'amber' };
+    kpi3 = { count: paidCount, label: t('paidInvoices'), icon: CheckCircle, color: 'emerald' };
+    kpi4 = { count: `${unpaidAmount.toFixed(2)} ${language === 'ar' ? 'د.م' : 'DH'}`, label: t('unpaidAmount'), icon: TrendingDown, color: 'red' };
+  }
 
   const Icon = config.icon;
-  const TrendIcon = isVente ? TrendingUp : TrendingDown;
 
   return (
     <AdminLayout>
@@ -224,7 +340,7 @@ export default function DocumentListPage({
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.key
                       ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
                       : 'text-slate-600 hover:bg-slate-50'
@@ -243,51 +359,64 @@ export default function DocumentListPage({
             {activeTab === 'dashboard' && (
               <div className="space-y-3 sm:space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-                  {/* Stats Cards */}
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl p-3 sm:p-5 border border-blue-200">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
+                  {/* KPI 1 */}
+                  <div className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 ${colorClasses[kpi1.color as keyof typeof colorClasses].border} transition-colors`}>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className={`w-10 sm:w-12 h-10 sm:h-12 ${colorClasses[kpi1.color as keyof typeof colorClasses].bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        <kpi1.icon className={`w-5 sm:w-6 h-5 sm:h-6 ${colorClasses[kpi1.color as keyof typeof colorClasses].text}`} />
                       </div>
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{t('total')}</span>
+                      <div>
+                        <p className="text-xs text-slate-600">{kpi1.label}</p>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900">{kpi1.count}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-blue-900 mb-0.5 sm:mb-1">{totalInvoices}</h3>
-                    <p className="text-xs sm:text-sm text-blue-700">{t('total')}</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg sm:rounded-xl p-3 sm:p-5 border border-amber-200">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
+                  {/* KPI 2 */}
+                  <div className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 ${colorClasses[kpi2.color as keyof typeof colorClasses].border} transition-colors`}>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className={`w-10 sm:w-12 h-10 sm:h-12 ${colorClasses[kpi2.color as keyof typeof colorClasses].bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        <kpi2.icon className={`w-5 sm:w-6 h-5 sm:h-6 ${colorClasses[kpi2.color as keyof typeof colorClasses].text}`} />
                       </div>
-                      <span className="text-xs font-semibold text-amber-600 bg-amber-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{t('partial')}</span>
+                      <div>
+                        <p className="text-xs text-slate-600">{kpi2.label}</p>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900">{kpi2.count}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-amber-900 mb-0.5 sm:mb-1">{partialInvoices}</h3>
-                    <p className="text-xs sm:text-sm text-amber-700">{t('partiallyPaid')}</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg sm:rounded-xl p-3 sm:p-5 border border-emerald-200">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
+                  {/* KPI 3 */}
+                  <div className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 ${colorClasses[kpi3.color as keyof typeof colorClasses].border} transition-colors`}>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className={`w-10 sm:w-12 h-10 sm:h-12 ${colorClasses[kpi3.color as keyof typeof colorClasses].bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        <kpi3.icon className={`w-5 sm:w-6 h-5 sm:h-6 ${colorClasses[kpi3.color as keyof typeof colorClasses].text}`} />
                       </div>
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{t('paid')}</span>
+                      <div>
+                        <p className="text-xs text-slate-600">{kpi3.label}</p>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900">{kpi3.count}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-emerald-900 mb-0.5 sm:mb-1">{paidInvoices}</h3>
-                    <p className="text-xs sm:text-sm text-emerald-700">{t('paid')}</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl p-3 sm:p-5 border border-purple-200">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <TrendIcon className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
+                  {/* KPI 4 */}
+                  <div className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 ${colorClasses[kpi4.color as keyof typeof colorClasses].border} transition-colors`}>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className={`w-10 sm:w-12 h-10 sm:h-12 ${colorClasses[kpi4.color as keyof typeof colorClasses].bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        <kpi4.icon className={`w-5 sm:w-6 h-5 sm:h-6 ${colorClasses[kpi4.color as keyof typeof colorClasses].text}`} />
                       </div>
-                      <span className="text-xs font-semibold text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{t('amount')}</span>
+                      <div>
+                        <p className="text-xs text-slate-600">{kpi4.label}</p>
+                        <h3 className="text-lg sm:text-xl font-bold text-slate-900">{kpi4.count}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-purple-900 mb-0.5 sm:mb-1">{totalAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</h3>
-                    <p className="text-xs sm:text-sm text-purple-700">{isVente ? t('totalRevenue') : t('totalExpenses')} {t('total').toLowerCase()}</p>
                   </div>
                 </div>
+
+                {/* Analysis Chart - Full Width */}
+                <DocumentAnalysisChart 
+                  documents={documents}
+                  documentType={documentType}
+                />
 
                 {/* Dashboard Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
@@ -356,12 +485,166 @@ export default function DocumentListPage({
 
             {activeTab === 'list' && (
               <div className="space-y-1">
+                {/* Filters Overlay Panel */}
+                {filtersExpanded && (
+                  <>
+                    {/* Backdrop */}
+                    <div 
+                      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+                      onClick={() => setFiltersExpanded(false)}
+                    />
+                    
+                    {/* Slide-in Panel */}
+                    <div className="fixed inset-y-0 end-0 w-full sm:w-[520px] md:w-[560px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+                      {/* Panel Header */}
+                      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-amber-500 to-amber-600">
+                        <div className="flex items-center gap-3">
+                          <Filter className="w-5 h-5 text-white" />
+                          <h2 className="text-lg font-bold text-white">{t('filters')}</h2>
+                        </div>
+                        <button
+                          onClick={() => setFiltersExpanded(false)}
+                          className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-white" />
+                        </button>
+                      </div>
+
+                      {/* Panel Content - Scrollable */}
+                      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        
+                        {/* Document Number Search */}
+                        <div>
+                          <label className="text-xs font-semibold text-slate-600 mb-2 block">
+                            {documentType === 'devis' ? t('quoteNumber') : documentType === 'bon_livraison' ? t('deliveryNumber') : t('invoiceNumber')}
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder={documentType === 'devis' ? 'DEV-001' : documentType === 'bon_livraison' ? 'BL-001' : 'FAC-001'}
+                              value={documentNumberSearch}
+                              onChange={(e) => setDocumentNumberSearch(e.target.value)}
+                              className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
+                            />
+                            {documentNumberSearch && (
+                              <button
+                                onClick={() => setDocumentNumberSearch('')}
+                                className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Partner Autocomplete */}
+                        <div>
+                          <label className="text-xs font-semibold text-slate-600 mb-2 block">
+                            {config.partnerLabel}
+                          </label>
+                          <Autocomplete
+                            options={(partnersData?.partners || [])
+                              .filter((p: any) => direction === 'vente' ? p.isCustomer : p.isSupplier)
+                              .map((partner: any) => ({
+                                value: String(partner.id),
+                                label: `${partner.name}${partner.phoneNumber ? ` (${partner.phoneNumber})` : ''}`
+                              }))}
+                            value={partnerIdSearch}
+                            onValueChange={setPartnerIdSearch}
+                            placeholder={`${t('selectPartner')} ${config.partnerLabel.toLowerCase()}`}
+                            emptyMessage={`${t('noPartnerFound').replace('{partner}', config.partnerLabel.toLowerCase())}`}
+                            allowCustomValue={false}
+                          />
+                        </div>
+
+                        {/* Date Range */}
+                        <div>
+                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 block flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-amber-600" />
+                            {documentType === 'devis' ? t('quoteDate') : documentType === 'bon_livraison' ? t('deliveryDate') : t('invoiceDate')}
+                          </label>
+                          <DateRangePicker
+                            dateRange={dateRange}
+                            onDateRangeChange={setDateRange}
+                            placeholder={t('selectDate')}
+                          />
+                        </div>
+
+                        {/* Status Filter */}
+                        <div>
+                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 block flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-amber-600" />
+                            {t('status')}
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {(documentType === 'devis' ? [
+                              { key: 'all', label: t('all'), icon: '📋' },
+                              { key: 'draft', label: t('draft'), icon: '📝' },
+                              { key: 'open', label: t('statusOpen'), icon: '🔓' },
+                              { key: 'signed', label: t('statusSigned'), icon: '✍️' },
+                              { key: 'closed', label: t('statusClosed'), icon: '🔒' },
+                              { key: 'invoiced', label: t('statusInvoiced'), icon: '✅' },
+                            ] : documentType === 'bon_livraison' ? [
+                              { key: 'all', label: t('all'), icon: '📋' },
+                              { key: 'draft', label: t('draft'), icon: '📝' },
+                              { key: 'validated', label: t('statusValidated'), icon: '✓' },
+                              { key: 'in_progress', label: t('statusInProgress'), icon: '🔄' },
+                              { key: 'delivered', label: t('statusDeliveredBon'), icon: '✅' },
+                              { key: 'cancelled', label: t('statusCancelled'), icon: '❌' },
+                              { key: 'invoiced', label: t('statusInvoicedBon'), icon: '📄' },
+                            ] : [
+                              { key: 'all', label: t('all'), icon: '📋' },
+                              { key: 'draft', label: t('draft'), icon: '📝' },
+                              { key: 'unpaid', label: t('statusUnpaid'), icon: '⏳' },
+                              { key: 'partial', label: t('statusPartial'), icon: '⚠️' },
+                              { key: 'paid', label: t('statusPaid'), icon: '✅' },
+                              { key: 'overdue', label: t('invoice.overdue'), icon: '🔴' },
+                            ]).map((filter) => (
+                              <button
+                                key={filter.key}
+                                onClick={() => setStatusFilter(filter.key)}
+                                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                  statusFilter === filter.key
+                                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                <span>{filter.icon}</span>
+                                <span>{filter.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Panel Footer */}
+                      <div className="border-t border-slate-200 p-4 bg-slate-50 flex gap-3">
+                        <button
+                          onClick={handleResetFilters}
+                          className="flex-1 px-4 py-2.5 bg-white text-slate-700 rounded-lg font-medium text-sm hover:bg-slate-100 border border-slate-300 transition-colors"
+                        >
+                          {t('reset')}
+                        </button>
+                        <button
+                          onClick={handleApplyFilters}
+                          className="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-lg font-medium text-sm hover:bg-amber-600 shadow-lg shadow-amber-500/30 transition-colors"
+                        >
+                          {t('apply')}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <DocumentTable
                   documentType={documentType}
                   direction={direction}
                   documents={transformedFactures}
                   partnerLabel={config.partnerLabel}
                   itemLabel={documentType === 'facture' ? 'facture' : documentType === 'devis' ? 'devis' : 'bon de livraison'}
+                  onFiltersToggle={() => setFiltersExpanded(!filtersExpanded)}
+                  filtersExpanded={filtersExpanded}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                   onDownload={config.features.canDownloadPDF ? handleDownload : undefined}
@@ -371,6 +654,14 @@ export default function DocumentListPage({
                   loading={loading}
                   showPaymentColumns={config.features.hasPayments}
                   showValidationColumn={config.features.hasValidation}
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalCount={totalCount}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setCurrentPage(1);
+                  }}
                 />
               </div>
             )}
@@ -388,7 +679,7 @@ export default function DocumentListPage({
           invoiceId={selectedInvoice.id}
           invoiceNumber={selectedInvoice.number}
           invoiceTotal={selectedInvoice.total}
-          onPaymentUpdate={loadDocuments}
+          onPaymentUpdate={refetch}
         />
       )}
 

@@ -27,6 +27,7 @@ interface CreateQuoteDTO {
   customerPhone?: string;
   customerAddress?: string;
   date: string;
+  dueDate?: string;
   expirationDate?: string;
   items: CreateQuoteItemDTO[];
   tax: number;
@@ -197,8 +198,9 @@ export class QuotesService {
     };
   }
 
-  private generateSequenceNumber(sequence: any): string {
-    const now = new Date();
+  private generateSequenceNumber(sequence: any, documentDate?: string | Date): string {
+    // Use document date if provided, otherwise fallback to current date
+    const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
@@ -273,12 +275,65 @@ export class QuotesService {
     }
   }
 
-  async findAll(limit = 100): Promise<Quote[]> {
-    return this.quoteRepository.find({
-      take: limit,
-      order: { dateCreated: 'DESC' },
-      relations: ['customer', 'items'],
-    });
+  async findAll(
+    search?: string,
+    status?: string,
+    customerId?: number,
+    dateFrom?: string,
+    dateTo?: string,
+    page?: number,
+    pageSize?: number,
+  ): Promise<{ quotes: Quote[]; count: number; totalCount: number }> {
+    const queryBuilder = this.quoteRepository
+      .createQueryBuilder('quote')
+      .leftJoinAndSelect('quote.customer', 'customer')
+      .leftJoinAndSelect('quote.items', 'items');
+
+    // Apply filters
+    if (search) {
+      queryBuilder.andWhere(
+        '(quote.quoteNumber ILIKE :search OR customer.name ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (status) {
+      queryBuilder.andWhere('quote.status = :status', { status });
+    }
+
+    if (customerId) {
+      queryBuilder.andWhere('quote.customerId = :customerId', { customerId });
+    }
+
+    if (dateFrom) {
+      queryBuilder.andWhere('quote.date >= :dateFrom', { dateFrom });
+    }
+
+    if (dateTo) {
+      queryBuilder.andWhere('quote.date <= :dateTo', { dateTo });
+    }
+
+    queryBuilder.orderBy('quote.dateCreated', 'DESC');
+
+    // Get total count before pagination
+    const totalCount = await queryBuilder.getCount();
+
+    // Apply pagination if provided
+    if (page && pageSize) {
+      queryBuilder.skip((page - 1) * pageSize).take(pageSize);
+    } else if (pageSize) {
+      queryBuilder.take(pageSize);
+    } else {
+      queryBuilder.take(100); // Default limit
+    }
+
+    const quotes = await queryBuilder.getMany();
+
+    return {
+      quotes,
+      count: quotes.length,
+      totalCount,
+    };
   }
 
   async findOne(id: number): Promise<Quote | null> {
@@ -335,6 +390,9 @@ export class QuotesService {
       customerPhone: createQuoteDto.customerPhone,
       customerAddress: createQuoteDto.customerAddress,
       date: new Date(createQuoteDto.date),
+      dueDate: createQuoteDto.dueDate
+        ? new Date(createQuoteDto.dueDate)
+        : undefined,
       expirationDate: createQuoteDto.expirationDate
         ? new Date(createQuoteDto.expirationDate)
         : undefined,
@@ -479,6 +537,9 @@ export class QuotesService {
           date: updateQuoteDto.date
             ? new Date(updateQuoteDto.date)
             : quote.date,
+          dueDate: updateQuoteDto.dueDate
+            ? new Date(updateQuoteDto.dueDate)
+            : quote.dueDate,
           expirationDate: updateQuoteDto.expirationDate
             ? new Date(updateQuoteDto.expirationDate)
             : quote.expirationDate,
@@ -488,6 +549,7 @@ export class QuotesService {
         await this.quoteRepository.update(id, {
           ...updateQuoteDto,
           date: updateQuoteDto.date ? new Date(updateQuoteDto.date) : undefined,
+          dueDate: updateQuoteDto.dueDate ? new Date(updateQuoteDto.dueDate) : undefined,
           expirationDate: updateQuoteDto.expirationDate
             ? new Date(updateQuoteDto.expirationDate)
             : undefined,
@@ -540,8 +602,8 @@ export class QuotesService {
       // Get sequence for quotes
       const sequence = await this.getOrCreateSequence('quote');
 
-      // Use the sequence's next document number directly
-      finalQuoteNumber = this.generateSequenceNumber(sequence);
+      // Use the sequence's next document number directly with quote date
+      finalQuoteNumber = this.generateSequenceNumber(sequence, quote.date);
 
       // Increment sequence next number
       await this.updateSequenceNextNumber('quote', sequence);
@@ -551,6 +613,7 @@ export class QuotesService {
     await this.quoteRepository.update(id, {
       documentNumber: finalQuoteNumber,
       isValidated: true,
+      validationDate: new Date(),
       status: QuoteStatus.OPEN,
     });
 
@@ -654,6 +717,7 @@ export class QuotesService {
     await this.quoteRepository.update(id, {
       documentNumber: nextProvNumber,
       isValidated: false,
+      validationDate: null,
       status: QuoteStatus.DRAFT,
     });
 

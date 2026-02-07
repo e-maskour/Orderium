@@ -1,18 +1,41 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { QuotesService } from './quotes.service';
+import { FilterQuotesDto } from './dto/filter-quotes.dto';
 
 @ApiTags('Quotes')
 @Controller('quotes')
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
 
+  @Post('list')
+  @ApiOperation({ summary: 'Get all quotes with filters (POST method)' })
+  async findAll(
+    @Body() filterDto: FilterQuotesDto,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : undefined;
+    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : undefined;
+    
+    const result = await this.quotesService.findAll(
+      filterDto.search,
+      filterDto.status,
+      filterDto.customerId,
+      filterDto.dateFrom,
+      filterDto.dateTo,
+      pageNum,
+      pageSizeNum,
+    );
+    return { success: true, quotes: result.quotes, count: result.count, totalCount: result.totalCount };
+  }
+
   @Get()
-  @ApiOperation({ summary: 'Get all quotes' })
-  async findAll(@Query('limit') limit?: string) {
+  @ApiOperation({ summary: 'Get all quotes (legacy - use POST /list instead)' })
+  async findAllLegacy(@Query('limit') limit?: string) {
     const limitNum = limit ? parseInt(limit, 10) : 100;
-    const quotes = await this.quotesService.findAll(limitNum);
-    return { success: true, quotes, count: quotes.length };
+    const result = await this.quotesService.findAll(undefined, undefined, undefined, undefined, undefined, undefined, limitNum);
+    return { success: true, quotes: result.quotes, count: result.count };
   }
 
   @Get(':id')

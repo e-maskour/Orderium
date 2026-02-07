@@ -1,18 +1,42 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { InvoicesService } from './invoices.service';
+import { FilterInvoicesDto } from './dto/filter-invoices.dto';
 
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
+  @Post('list')
+  @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
+  async findAll(
+    @Body() filterDto: FilterInvoicesDto,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : undefined;
+    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : undefined;
+    
+    const result = await this.invoicesService.findAll(
+      filterDto.search,
+      filterDto.status,
+      filterDto.customerId,
+      filterDto.supplierId,
+      filterDto.dateFrom,
+      filterDto.dateTo,
+      pageNum,
+      pageSizeNum,
+    );
+    return { success: true, invoices: result.invoices, count: result.count, totalCount: result.totalCount };
+  }
+
   @Get()
-  @ApiOperation({ summary: 'Get all invoices' })
-  async findAll(@Query('limit') limit?: string) {
+  @ApiOperation({ summary: 'Get all invoices (legacy - use POST /list instead)' })
+  async findAllLegacy(@Query('limit') limit?: string) {
     const limitNum = limit ? parseInt(limit, 10) : 100;
-    const invoices = await this.invoicesService.findAll(limitNum);
-    return { success: true, invoices, count: invoices.length };
+    const result = await this.invoicesService.findAll(undefined, undefined, undefined, undefined, undefined, undefined, undefined, limitNum);
+    return { success: true, invoices: result.invoices, count: result.count };
   }
 
   @Get(':id')

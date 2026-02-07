@@ -17,10 +17,11 @@ export default function InvoicesListExample() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch invoices
-  const { data: invoices = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['invoices'],
     queryFn: () => invoicesService.getAll(),
   });
+  const invoices = data?.invoices || [];
 
   // Filter invoices based on search
   const filteredInvoices = invoices.filter((item: any) => {

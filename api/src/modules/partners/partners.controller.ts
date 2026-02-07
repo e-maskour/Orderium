@@ -80,6 +80,34 @@ export class PartnersController {
     };
   }
 
+  @Get('dashboard/customers')
+  @ApiOperation({ summary: 'Get customers dashboard statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Dashboard statistics retrieved successfully',
+  })
+  async getCustomersDashboard() {
+    const stats = await this.partnersService.getCustomersDashboard();
+    return {
+      success: true,
+      data: stats,
+    };
+  }
+
+  @Get('dashboard/suppliers')
+  @ApiOperation({ summary: 'Get suppliers dashboard statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Dashboard statistics retrieved successfully',
+  })
+  async getSuppliersDashboard() {
+    const stats = await this.partnersService.getSuppliersDashboard();
+    return {
+      success: true,
+      data: stats,
+    };
+  }
+
   @Get('search')
   @ApiOperation({ summary: 'Search partners by phone' })
   @ApiQuery({ name: 'phone', required: true, type: String })
@@ -101,6 +129,50 @@ export class PartnersController {
     return {
       success: true,
       partner,
+    };
+  }
+
+  @Get(':id/customer-analytics')
+  @ApiOperation({ summary: 'Get customer analytics with chart data and KPIs' })
+  @ApiQuery({ name: 'year', required: false, type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Customer analytics retrieved successfully',
+  })
+  async getCustomerAnalytics(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('year') year?: string,
+  ) {
+    const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
+    const analytics = await this.partnersService.getCustomerAnalytics(
+      id,
+      yearNum,
+    );
+    return {
+      success: true,
+      data: analytics,
+    };
+  }
+
+  @Get(':id/supplier-analytics')
+  @ApiOperation({ summary: 'Get supplier analytics with chart data and KPIs' })
+  @ApiQuery({ name: 'year', required: false, type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Supplier analytics retrieved successfully',
+  })
+  async getSupplierAnalytics(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('year') year?: string,
+  ) {
+    const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
+    const analytics = await this.partnersService.getSupplierAnalytics(
+      id,
+      yearNum,
+    );
+    return {
+      success: true,
+      data: analytics,
     };
   }
 

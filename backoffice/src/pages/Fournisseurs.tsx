@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, CheckSquare } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
-import { invoicesService } from '../modules/invoices';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 import { FloatingActionBar } from '../components/FloatingActionBar';
+import { formatDH, formatFrenchNumber } from '../utils/formatNumber';
 
 export default function Fournisseurs() {
   const { t, language } = useLanguage();
@@ -30,10 +30,10 @@ export default function Fournisseurs() {
 
   const suppliers = data?.partners?.filter((p: Partner) => p.isSupplier) || [];
 
-  // Fetch invoices
-  const { data: invoicesData = [] } = useQuery({
-    queryKey: ['invoices'],
-    queryFn: () => invoicesService.getAll(),
+  // Fetch dashboard stats from API
+  const { data: dashboardData } = useQuery({
+    queryKey: ['suppliers-dashboard'],
+    queryFn: () => partnersService.getSuppliersDashboard(),
   });
 
   const deleteMutation = useMutation({
@@ -139,68 +139,14 @@ export default function Fournisseurs() {
     { key: 'list', label: t('supplierList'), icon: List },
   ];
 
-  // Calculate statistics
-  const totalSuppliers = suppliers.length;
-  const activeSuppliers = suppliers.filter((s: Partner) => s.isEnabled).length;
-  const inactiveSuppliers = suppliers.filter((s: Partner) => !s.isEnabled).length;
-  
-  // Calculate total purchases from suppliers
-  const supplierInvoices = invoicesData.filter((inv: any) => inv.invoice.supplierId);
-  const totalExpenses = supplierInvoices.reduce((sum: number, inv: any) => sum + inv.invoice.total, 0);
-
-  // Top suppliers by expenses
-  const getTopSuppliersByExpenses = () => {
-    const supplierExpenses = suppliers.map((supplier: Partner) => {
-      const suppInvoices = invoicesData.filter(
-        (inv: any) => inv.invoice.supplierId === supplier.id
-      );
-      const total = suppInvoices.reduce(
-        (sum: number, inv: any) => sum + inv.invoice.total,
-        0
-      );
-      return {
-        id: supplier.id,
-        name: supplier.name,
-        total,
-        invoicesCount: suppInvoices.length,
-      };
-    });
-
-    return supplierExpenses
-      .filter((s) => s.total > 0)
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-  };
-
-  const topSuppliers = getTopSuppliersByExpenses();
-
-  // Last 5 updated suppliers (suppliers with most recent invoices)
-  const getLastUpdatedSuppliers = () => {
-    const supplierLastUpdate = suppliers.map((supplier: Partner) => {
-      const suppInvoices = invoicesData.filter(
-        (inv: any) => inv.invoice.supplierId === supplier.id
-      );
-      const lastInvoiceDate = suppInvoices.length > 0
-        ? Math.max(...suppInvoices.map((inv: any) => new Date(inv.invoice.date).getTime()))
-        : 0;
-      return {
-        id: supplier.id,
-        name: supplier.name,
-        phoneNumber: supplier.phoneNumber,
-        lastUpdate: lastInvoiceDate,
-        invoicesCount: suppInvoices.length,
-      };
-    });
-
-    return supplierLastUpdate
-      .filter((s) => s.lastUpdate > 0)
-      .sort((a, b) => b.lastUpdate - a.lastUpdate)
-      .slice(0, 5);
-  };
-
-  const lastUpdatedSuppliers = getLastUpdatedSuppliers();
-
-  const totalPayments = topSuppliers.reduce((sum, s) => sum + s.total, 0);
+  // Get dashboard statistics from API
+  const totalSuppliers = dashboardData?.kpis?.totalSuppliers || 0;
+  const suppliersWithInvoices = dashboardData?.kpis?.suppliersWithInvoices || 0;
+  const totalExpenses = dashboardData?.kpis?.totalExpenses || 0;
+  const totalInvoices = dashboardData?.kpis?.totalInvoices || 0;
+  const topSuppliers = dashboardData?.topSuppliers || [];
+  const lastUpdatedSuppliers = dashboardData?.lastUpdatedSuppliers || [];
+  const totalPayments = topSuppliers.reduce((sum: number, s: any) => sum + s.total, 0);
   const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
   return (
@@ -222,22 +168,22 @@ export default function Fournisseurs() {
         />
 
         {/* Tabs Navigation */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-6">
-          <div className="flex items-center gap-2 p-2 border-b border-slate-200">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 mb-4 sm:mb-6">
+          <div className="flex items-center gap-1 sm:gap-2 p-2 border-b border-slate-200 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.key
                       ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
+                  <Icon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}
@@ -248,127 +194,130 @@ export default function Fournisseurs() {
             {activeTab === 'dashboard' && (
               <div className="space-y-4">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <Users className="w-5 h-5 text-white" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-blue-300 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Users className="w-6 h-6 text-blue-600" />
                       </div>
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-200 px-2 py-1 rounded-full">Total</span>
+                      <div>
+                        <p className="text-xs text-slate-600">Fournisseurs</p>
+                        <h3 className="text-2xl font-bold text-slate-900">{totalSuppliers}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-blue-900 mb-1">{totalSuppliers}</h3>
-                    <p className="text-sm text-blue-700">Fournisseurs totaux</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-5 border border-emerald-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
-                        <CheckCircle className="w-5 h-5 text-white" />
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-emerald-300 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-emerald-600" />
                       </div>
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-200 px-2 py-1 rounded-full">Actifs</span>
+                      <div>
+                        <p className="text-xs text-slate-600">Avec Factures</p>
+                        <h3 className="text-2xl font-bold text-slate-900">{suppliersWithInvoices}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-emerald-900 mb-1">{activeSuppliers}</h3>
-                    <p className="text-sm text-emerald-700">Fournisseurs actifs</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 border border-amber-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-white" />
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-purple-300 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-purple-600" />
                       </div>
-                      <span className="text-xs font-semibold text-amber-600 bg-amber-200 px-2 py-1 rounded-full">Inactifs</span>
+                      <div>
+                        <p className="text-xs text-slate-600">Dépenses</p>
+                        <h3 className="text-xl font-bold text-slate-900">{formatDH(totalExpenses, 0)}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-amber-900 mb-1">{inactiveSuppliers}</h3>
-                    <p className="text-sm text-amber-700">Fournisseurs inactifs</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                        <TrendingUp className="w-5 h-5 text-white" />
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-amber-300 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-amber-600" />
                       </div>
-                      <span className="text-xs font-semibold text-purple-600 bg-purple-200 px-2 py-1 rounded-full">Dépenses</span>
+                      <div>
+                        <p className="text-xs text-slate-600">Total Factures</p>
+                        <h3 className="text-2xl font-bold text-slate-900">{totalInvoices}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-purple-900 mb-1">{totalExpenses.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</h3>
-                    <p className="text-sm text-purple-700">Dépenses totales</p>
                   </div>
                 </div>
 
                 {/* Dashboard Grid - 2 Sections */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Pie Chart - Top 5 Suppliers by Expenses */}
+                  {/* Dynamic Bar Chart - Top 5 Suppliers by Expenses */}
                   <div className="bg-white rounded-xl p-6 border border-slate-200">
-                    <h3 className="text-base font-bold text-slate-800 mb-4">Top 5 fournisseurs par dépenses</h3>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-800">Top 5 fournisseurs par dépenses</h3>
+                        <p className="text-xs text-slate-500 mt-1">Classement par volume d'achats</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-purple-600">{formatFrenchNumber(totalPayments, 0)}</p>
+                        <p className="text-xs text-slate-500">DH Total</p>
+                      </div>
+                    </div>
                     {topSuppliers.length === 0 ? (
                       <div className="text-center py-16">
-                        <Users className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-                        <p className="text-slate-600">Aucune donnée de dépenses disponible</p>
+                        <TrendingUp className="w-16 h-16 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-600 text-sm">Aucune donnée de dépenses disponible</p>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center">
-                        <div className="relative w-64 h-64">
-                          <svg viewBox="0 0 200 200" className="transform -rotate-90">
-                            {topSuppliers.map((supplier, index) => {
-                              const percentage = (supplier.total / totalPayments) * 100;
-                              const previousPercentages = topSuppliers
-                                .slice(0, index)
-                                .reduce((sum, s) => sum + (s.total / totalPayments) * 100, 0);
-                              
-                              const circumference = 2 * Math.PI * 80;
-                              const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
-                              const strokeDashoffset = -((previousPercentages / 100) * circumference);
-
-                              return (
-                                <circle
-                                  key={index}
-                                  cx="100"
-                                  cy="100"
-                                  r="80"
-                                  fill="none"
-                                  stroke={colors[index]}
-                                  strokeWidth="40"
-                                  strokeDasharray={strokeDasharray}
-                                  strokeDashoffset={strokeDashoffset}
-                                  className="transition-all duration-300 hover:opacity-80"
-                                />
-                              );
-                            })}
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center flex-col">
-                            <p className="text-2xl font-bold text-slate-900">{totalPayments.toFixed(0)}</p>
-                            <p className="text-xs text-slate-600">DH Total</p>
-                          </div>
-                        </div>
+                      <div className="space-y-4">
+                        {topSuppliers.slice(0, 5).map((supplier: any, index: number) => {
+                          const percentage = ((supplier.total / totalPayments) * 100);
+                          const barColors = [
+                            { from: 'from-blue-500', to: 'to-blue-600', bg: 'bg-blue-50', text: 'text-blue-700' },
+                            { from: 'from-purple-500', to: 'to-purple-600', bg: 'bg-purple-50', text: 'text-purple-700' },
+                            { from: 'from-pink-500', to: 'to-pink-600', bg: 'bg-pink-50', text: 'text-pink-700' },
+                            { from: 'from-amber-500', to: 'to-amber-600', bg: 'bg-amber-50', text: 'text-amber-700' },
+                            { from: 'from-emerald-500', to: 'to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+                          ];
+                          const color = barColors[index];
+                          
+                          return (
+                            <div key={index} className="group">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <div className={`flex items-center justify-center w-6 h-6 rounded-full ${color.bg} ${color.text} text-xs font-bold`}>
+                                    {index + 1}
+                                  </div>
+                                  <button
+                                    onClick={() => navigate(`/fournisseurs/${supplier.id}`)}
+                                    className="text-sm font-semibold text-slate-800 hover:text-amber-600 transition-colors truncate max-w-[200px]"
+                                    title={supplier.name}
+                                  >
+                                    {supplier.name}
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs text-slate-500">{percentage.toFixed(1).replace('.', ',')}%</span>
+                                  <span className="text-sm font-bold text-slate-900 min-w-[80px] text-right">{formatDH(supplier.total, 0)}</span>
+                                </div>
+                              </div>
+                              <div className="relative h-8 bg-slate-100 rounded-lg overflow-hidden">
+                                <div
+                                  className={`absolute inset-y-0 left-0 bg-gradient-to-r ${color.from} ${color.to} rounded-lg transition-all duration-1000 ease-out group-hover:opacity-90 flex items-center justify-end pr-3`}
+                                  style={{ width: `${Math.max(percentage, 5)}%` }}
+                                >
+                                  <span className="text-xs font-bold text-white">
+                                    {percentage < 13 ? supplier.invoicesCount : `${supplier.invoicesCount} facture${supplier.invoicesCount > 1 ? 's' : ''}`}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
-                    <div className="mt-4 space-y-2">
-                      {topSuppliers.map((supplier, index) => {
-                        const percentage = ((supplier.total / totalPayments) * 100).toFixed(1);
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-2 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-                          >
-                            <div className="flex items-center gap-2 flex-1">
-                              <div
-                                className="w-3 h-3 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: colors[index] }}
-                              />
-                              <p className="text-xs font-semibold text-slate-900 truncate">{supplier.name}</p>
-                              <p className="text-xs text-slate-600">{percentage}%</p>
-                            </div>
-                            <p className="text-xs font-bold text-slate-900">{supplier.total.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
                   </div>
 
                   {/* Last 5 Updated Suppliers */}
-                  <div className="bg-white rounded-xl p-6 border border-slate-200">
+                  <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200">
                     <div className="mb-4">
-                      <h3 className="text-base font-bold text-slate-800 mb-2">Dernières mises à jour fournisseurs</h3>
-                      <div className="flex items-center justify-between">
+                      <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2">Dernières mises à jour fournisseurs</h3>
+                      <div className="hidden sm:flex items-center justify-between">
                         <span className="text-xs text-slate-500">Fournisseur</span>
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-slate-500 w-32">Téléphone</span>
@@ -380,20 +329,20 @@ export default function Fournisseurs() {
                       {lastUpdatedSuppliers.length === 0 ? (
                         <p className="text-sm text-slate-400 text-center py-4">Aucune mise à jour récente</p>
                       ) : (
-                        lastUpdatedSuppliers.map((supplier) => (
-                          <div key={supplier.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-                            <div className="flex items-center gap-2">
-                              <Users className="w-4 h-4 text-purple-500" />
+                        lastUpdatedSuppliers.map((supplier: any) => (
+                          <div key={supplier.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 last:border-0 gap-2 sm:gap-0">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
                               <button
                                 onClick={() => navigate(`/fournisseurs/${supplier.id}`)}
-                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors truncate"
                               >
                                 {supplier.name}
                               </button>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs text-slate-500 w-32 truncate">{supplier.phoneNumber || '-'}</span>
-                              <span className="text-sm font-bold text-purple-600 w-24 text-right">{supplier.invoicesCount}</span>
+                            <div className="flex items-center justify-between sm:justify-end gap-3 pl-6 sm:pl-0">
+                              <span className="text-xs text-slate-500 sm:w-32 truncate">{supplier.phoneNumber || '-'}</span>
+                              <span className="text-sm font-bold text-purple-600 sm:w-24 text-right">{supplier.invoicesCount}</span>
                             </div>
                           </div>
                         ))

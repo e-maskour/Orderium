@@ -33,7 +33,10 @@ export class CreateOrderItemDto {
   @Min(0)
   unitPrice: number;
 
-  @ApiPropertyOptional({ description: 'Price (alias for unitPrice)', minimum: 0 })
+  @ApiPropertyOptional({
+    description: 'Price (alias for unitPrice)',
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -161,7 +164,16 @@ export class CreateOrderDto {
 
   @ApiPropertyOptional({
     description: 'Delivery status of the order',
-    enum: ['pending', 'assigned', 'confirmed', 'picked_up', 'to_delivery', 'in_delivery', 'delivered', 'canceled'],
+    enum: [
+      'pending',
+      'assigned',
+      'confirmed',
+      'picked_up',
+      'to_delivery',
+      'in_delivery',
+      'delivered',
+      'canceled',
+    ],
   })
   @IsOptional()
   @IsEnum(DeliveryStatus)

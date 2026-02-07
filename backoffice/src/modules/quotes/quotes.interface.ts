@@ -9,6 +9,8 @@ export interface Quote {
   customerAddress?: string | null;
   date: string;
   expirationDate?: string | null;
+  dueDate?: string | null;
+  validationDate?: string | null;
   subtotal: number;
   tax: number;
   discount: number;
@@ -52,6 +54,8 @@ export interface QuoteFilters {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface CreateQuoteDTO {

@@ -42,14 +42,4 @@ export class FilterOrdersDto {
   @IsOptional()
   @IsBoolean()
   fromClient?: boolean;
-
-  @ApiProperty({ required: false, description: 'Page number for pagination', example: 1 })
-  @IsOptional()
-  @IsNumber()
-  page?: number;
-
-  @ApiProperty({ required: false, description: 'Number of items per page (10, 50, 100, 500, 1000)', example: 50 })
-  @IsOptional()
-  @IsNumber()
-  per_page?: number;
 }

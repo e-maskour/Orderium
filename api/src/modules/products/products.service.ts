@@ -33,14 +33,14 @@ export class ProductsService {
   }
 
   async findAll(
-    limit = 50,
-    offset = 0,
+    page = 1,
+    perPage = 50,
     search?: string,
     code?: string,
     stockFilter?: 'negative' | 'zero' | 'positive',
     categoryIds?: number[],
     isService?: boolean,
-  ): Promise<{ products: Product[]; total: number }> {
+  ): Promise<{ products: Product[]; count: number; totalCount: number }> {
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.categories', 'categories')
@@ -86,11 +86,17 @@ export class ProductsService {
       queryBuilder.andWhere('product.isService = :isService', { isService });
     }
 
-    queryBuilder.orderBy('product.name', 'ASC').skip(offset).take(limit);
+    // Get total count before pagination
+    const totalCount = await queryBuilder.getCount();
 
-    const [products, total] = await queryBuilder.getManyAndCount();
+    // Apply pagination
+    const skip = (page - 1) * perPage;
+    queryBuilder.orderBy('product.name', 'ASC').skip(skip).take(perPage);
 
-    return { products, total };
+    const products = await queryBuilder.getMany();
+    const count = products.length;
+
+    return { products, count, totalCount };
   }
 
   async findOne(id: number): Promise<Product> {

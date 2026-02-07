@@ -15,13 +15,10 @@ export class ProductsService {
       limit = 50 
     } = params;
     
-    // Calculate offset from page number
-    const offset = (page - 1) * limit;
-    
     // Build query params for pagination
     const queryParams = new URLSearchParams();
-    queryParams.append('offset', offset.toString());
-    queryParams.append('limit', limit.toString());
+    queryParams.append('page', page.toString());
+    queryParams.append('perPage', limit.toString());
     
     // Build request body for filters
     const filterBody: any = {};
@@ -45,8 +42,8 @@ export class ProductsService {
       data.products = data.products.map((p: any) => Product.fromApiResponse(p));
     }
     
-    // Transform offset-based pagination to page-based
-    const totalPages = Math.ceil((data.total || 0) / limit);
+    // Transform page-based pagination
+    const totalPages = Math.ceil((data.totalCount || 0) / limit);
     const hasNext = page < totalPages;
     const hasPrev = page > 1;
     
@@ -55,7 +52,7 @@ export class ProductsService {
       pagination: {
         page,
         limit,
-        total: data.total || 0,
+        total: data.totalCount || 0,
         totalPages,
         hasNext,
         hasPrev,

@@ -57,11 +57,11 @@ export class OrdersService {
       if (createOrderDto.fromPortal) {
         // Portal orders get immediate sequence number
         const sequence = await this.getOrCreateSequence('delivery_note');
-        documentNumber = this.generateSequenceNumber(sequence);
+        documentNumber = this.generateSequenceNumber(sequence, createOrderDto.date);
 
         // Portal orders also get receipt number
         const receiptSequence = await this.getOrCreateSequence('receipt');
-        receiptNumber = this.generateSequenceNumber(receiptSequence);
+        receiptNumber = this.generateSequenceNumber(receiptSequence, createOrderDto.date);
       } else {
         // Regular orders get PROV provisional number until validated
         const lastProvisional = await this.orderRepository
@@ -94,6 +94,7 @@ export class OrdersService {
       order.receiptNumber = receiptNumber;
       order.customerId = customerId ?? null;
       order.date = today;
+      order.dueDate = createOrderDto.dueDate ? new Date(createOrderDto.dueDate) : null;
       order.subtotal = createOrderDto.subtotal || 0;
       order.tax = createOrderDto.tax || 0;
       order.total = createOrderDto.total || 0;
@@ -184,6 +185,8 @@ export class OrdersService {
           'order.documentNumber',
           'order.receiptNumber',
           'order.date',
+          'order.dueDate',
+          'order.validationDate',
           'order.subtotal',
           'order.tax',
           'order.discount',
@@ -234,6 +237,8 @@ export class OrdersService {
         orderNumber: createdOrder.documentNumber,
         receiptNumber: createdOrder.receiptNumber,
         date: createdOrder.date,
+        dueDate: createdOrder.dueDate,
+        validationDate: createdOrder.validationDate,
         subtotal: createdOrder.subtotal,
         tax: createdOrder.tax,
         discount: createdOrder.discount,
@@ -307,6 +312,8 @@ export class OrdersService {
         'order.documentNumber',
         'order.receiptNumber',
         'order.date',
+        'order.dueDate',
+        'order.validationDate',
         'order.subtotal',
         'order.tax',
         'order.discount',
@@ -426,6 +433,8 @@ export class OrdersService {
         orderNumber: order.documentNumber,
         receiptNumber: order.receiptNumber,
         date: order.date,
+        dueDate: order.dueDate,
+        validationDate: order.validationDate,
         subtotal: order.subtotal,
         tax: order.tax,
         discount: order.discount,
@@ -482,6 +491,8 @@ export class OrdersService {
         'order.documentNumber',
         'order.receiptNumber',
         'order.date',
+        'order.dueDate',
+        'order.validationDate',
         'order.subtotal',
         'order.tax',
         'order.discount',
@@ -635,6 +646,8 @@ export class OrdersService {
         orderNumber: order.documentNumber,
         receiptNumber: order.receiptNumber,
         date: order.date,
+        dueDate: order.dueDate,
+        validationDate: order.validationDate,
         subtotal: order.subtotal,
         tax: order.tax,
         discount: order.discount,
@@ -679,6 +692,8 @@ export class OrdersService {
         'order.documentNumber',
         'order.receiptNumber',
         'order.date',
+        'order.dueDate',
+        'order.validationDate',
         'order.subtotal',
         'order.tax',
         'order.discount',
@@ -729,6 +744,8 @@ export class OrdersService {
       orderNumber: order.documentNumber,
       receiptNumber: order.receiptNumber,
       date: order.date,
+      dueDate: order.dueDate,
+      validationDate: order.validationDate,
       subtotal: order.subtotal,
       tax: order.tax,
       discount: order.discount,
@@ -780,6 +797,8 @@ export class OrdersService {
         'order.documentNumber',
         'order.receiptNumber',
         'order.date',
+        'order.dueDate',
+        'order.validationDate',
         'order.subtotal',
         'order.tax',
         'order.discount',
@@ -831,6 +850,8 @@ export class OrdersService {
       orderNumber: order.documentNumber,
       receiptNumber: order.receiptNumber,
       date: order.date,
+      dueDate: order.dueDate,
+      validationDate: order.validationDate,
       subtotal: order.subtotal,
       tax: order.tax,
       discount: order.discount,
@@ -1100,8 +1121,9 @@ export class OrdersService {
     return pattern;
   }
 
-  private generateSequenceNumber(sequence: any): string {
-    const now = new Date();
+  private generateSequenceNumber(sequence: any, documentDate?: string | Date): string {
+    // Use document date if provided, otherwise fallback to current date
+    const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
@@ -1193,12 +1215,13 @@ export class OrdersService {
     // Only convert PROV numbers to permanent sequence numbers
     if (order.documentNumber.startsWith('PROV')) {
       const sequence = await this.getOrCreateSequence('delivery_note');
-      const finalOrderNumber = this.generateSequenceNumber(sequence);
+      const finalOrderNumber = this.generateSequenceNumber(sequence, order.date);
 
       // Update order with permanent number, validated status, and in progress
       await this.orderRepository.update(id, {
         documentNumber: finalOrderNumber,
         isValidated: true,
+        validationDate: new Date(),
         status: OrderStatus.IN_PROGRESS,
       });
 
@@ -1208,6 +1231,7 @@ export class OrdersService {
       // Already has a sequence number (portal orders), just mark as validated
       await this.orderRepository.update(id, {
         isValidated: true,
+        validationDate: new Date(),
         status: OrderStatus.IN_PROGRESS,
       });
     }
@@ -1299,6 +1323,7 @@ export class OrdersService {
     await this.orderRepository.update(id, {
       documentNumber: nextProvNumber,
       isValidated: false,
+      validationDate: null,
       status: OrderStatus.DRAFT,
     });
 

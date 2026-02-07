@@ -10,6 +10,7 @@ import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
 
 interface CreateInvoiceItemDTO {
+  id?: number;
   productId?: number;
   description: string;
   quantity: number;
@@ -32,9 +33,11 @@ interface CreateInvoiceDTO {
   date: string;
   dueDate?: string;
   items: CreateInvoiceItemDTO[];
+  subtotal: number;
   tax: number;
   discount: number;
   discountType: number;
+  total: number;
   notes?: string;
 }
 
@@ -197,8 +200,9 @@ export class InvoicesService {
     return pattern;
   }
 
-  private generateSequenceNumber(sequence: any): string {
-    const now = new Date();
+  private generateSequenceNumber(sequence: any, documentDate?: string | Date): string {
+    // Use document date if provided, otherwise fallback to current date
+    const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
@@ -275,12 +279,71 @@ export class InvoicesService {
     }
   }
 
-  async findAll(limit = 100): Promise<Invoice[]> {
-    return this.invoiceRepository.find({
-      take: limit,
-      order: { dateCreated: 'DESC' },
-      relations: ['customer', 'supplier', 'items'],
-    });
+  async findAll(
+    search?: string,
+    status?: string,
+    customerId?: number,
+    supplierId?: number,
+    dateFrom?: string,
+    dateTo?: string,
+    page?: number,
+    pageSize?: number,
+  ): Promise<{ invoices: Invoice[]; count: number; totalCount: number }> {
+    const queryBuilder = this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.customer', 'customer')
+      .leftJoinAndSelect('invoice.supplier', 'supplier')
+      .leftJoinAndSelect('invoice.items', 'items');
+
+    // Apply filters
+    if (search) {
+      queryBuilder.andWhere(
+        '(invoice.invoiceNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (status) {
+      queryBuilder.andWhere('invoice.status = :status', { status });
+    }
+
+    if (customerId) {
+      queryBuilder.andWhere('invoice.customerId = :customerId', { customerId });
+    }
+
+    if (supplierId) {
+      queryBuilder.andWhere('invoice.supplierId = :supplierId', { supplierId });
+    }
+
+    if (dateFrom) {
+      queryBuilder.andWhere('invoice.date >= :dateFrom', { dateFrom });
+    }
+
+    if (dateTo) {
+      queryBuilder.andWhere('invoice.date <= :dateTo', { dateTo });
+    }
+
+    queryBuilder.orderBy('invoice.dateCreated', 'DESC');
+
+    // Get total count before pagination
+    const totalCount = await queryBuilder.getCount();
+
+    // Apply pagination if provided
+    if (page && pageSize) {
+      queryBuilder.skip((page - 1) * pageSize).take(pageSize);
+    } else if (pageSize) {
+      queryBuilder.take(pageSize);
+    } else {
+      queryBuilder.take(100); // Default limit
+    }
+
+    const invoices = await queryBuilder.getMany();
+
+    return {
+      invoices,
+      count: invoices.length,
+      totalCount,
+    };
   }
 
   async findOne(id: number): Promise<Invoice | null> {
@@ -344,11 +407,11 @@ export class InvoicesService {
       dueDate: createInvoiceDto.dueDate
         ? new Date(createInvoiceDto.dueDate)
         : undefined,
-      subtotal: 0,
+      subtotal: createInvoiceDto.subtotal,
       tax: createInvoiceDto.tax,
       discount: createInvoiceDto.discount,
       discountType: createInvoiceDto.discountType,
-      total: 0,
+      total: createInvoiceDto.total,
       notes: createInvoiceDto.notes,
       status: InvoiceStatus.DRAFT,
       isValidated: false,
@@ -434,11 +497,6 @@ export class InvoicesService {
           };
         });
 
-        // Delete old items
-        await this.invoiceItemRepository.delete({ invoiceId: id });
-        console.log(`Deleted old items for invoice ${id}`);
-
-        // Create new items
         // Validate minimum prices for items with productId
         for (const item of items) {
           if (item.productId) {
@@ -457,19 +515,63 @@ export class InvoicesService {
           }
         }
 
-        const invoiceItems = items.map((item) =>
-          this.invoiceItemRepository.create({
-            invoiceId: id,
-            productId: item.productId,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            discount: item.discount,
-            discountType: item.discountType,
-            tax: item.tax,
-            total: item.total,
-          }),
+        // Get existing items
+        const existingItems = await this.invoiceItemRepository.find({
+          where: { invoiceId: id },
+        });
+
+        const existingItemIds = new Set(existingItems.map(item => item.id));
+        const newItemIds = new Set(
+          items
+            .filter(item => item.id && typeof item.id === 'number')
+            .map(item => item.id)
         );
+
+        // Update or create items
+        const itemsToSave = items.map((item) => {
+          if (item.id && existingItemIds.has(item.id)) {
+            // Update existing item
+            return this.invoiceItemRepository.create({
+              id: item.id,
+              invoiceId: id,
+              productId: item.productId,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discount: item.discount,
+              discountType: item.discountType,
+              tax: item.tax,
+              total: item.total,
+            });
+          } else {
+            // Create new item
+            return this.invoiceItemRepository.create({
+              invoiceId: id,
+              productId: item.productId,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discount: item.discount,
+              discountType: item.discountType,
+              tax: item.tax,
+              total: item.total,
+            });
+          }
+        });
+
+        // Save all items (update existing, insert new)
+        await this.invoiceItemRepository.save(itemsToSave);
+
+        // Delete items that are no longer in the new items list
+        const itemsToDelete = existingItems.filter(
+          existing => !newItemIds.has(existing.id)
+        );
+        if (itemsToDelete.length > 0) {
+          await this.invoiceItemRepository.remove(itemsToDelete);
+          console.log(`Deleted ${itemsToDelete.length} removed items for invoice ${id}`);
+        }
+
+        console.log(`Updated/created ${itemsToSave.length} items for invoice ${id}`);
 
         // Prepare invoice update data (exclude items)
         const { items: _, ...invoiceUpdateData } = updateInvoiceDto;
@@ -538,8 +640,8 @@ export class InvoicesService {
       // Get sequence for invoice_sale
       const sequence = await this.getOrCreateSequence('invoice_sale');
 
-      // Use the sequence's next document number directly
-      finalInvoiceNumber = this.generateSequenceNumber(sequence);
+      // Use the sequence's next document number directly with invoice date
+      finalInvoiceNumber = this.generateSequenceNumber(sequence, invoice.date);
 
       // Increment sequence next number
       await this.updateSequenceNextNumber('invoice_sale', sequence);

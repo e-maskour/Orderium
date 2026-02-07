@@ -50,6 +50,9 @@ export class Order extends BaseDocument {
   @Column({ type: 'date', nullable: true })
   dueDate: Date | null;
 
+  @Column({ type: 'date', nullable: true })
+  validationDate: Date | null;
+
   @Column({ type: 'int', nullable: true })
   convertedToInvoiceId: number | null; // Reference to invoice if converted
 

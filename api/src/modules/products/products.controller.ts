@@ -50,8 +50,8 @@ export class ProductsController {
   @Post('filter')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Filter products with POST body' })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'perPage', required: false, type: Number })
   @ApiResponse({
     status: 200,
     description: 'Products retrieved successfully',
@@ -59,15 +59,15 @@ export class ProductsController {
   })
   async filterProducts(
     @Body() filterDto: FilterProductsDto,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string,
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 50;
-    const offsetNum = offset ? parseInt(offset, 10) : 0;
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const perPageNum = perPage ? parseInt(perPage, 10) : 50;
 
-    const { products, total } = await this.productsService.findAll(
-      limitNum,
-      offsetNum,
+    const { products, count, totalCount } = await this.productsService.findAll(
+      pageNum,
+      perPageNum,
       filterDto.search,
       filterDto.code,
       filterDto.stockFilter,
@@ -78,9 +78,8 @@ export class ProductsController {
     return {
       success: true,
       products,
-      total,
-      limit: limitNum,
-      offset: offsetNum,
+      count,
+      totalCount,
     };
   }
 

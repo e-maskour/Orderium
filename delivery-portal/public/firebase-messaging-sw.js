@@ -143,19 +143,6 @@ self.addEventListener('activate', (event) => {
 
 // Handle messages from the main thread
 self.addEventListener('message', (event) => {
-  if (event.data?.type === 'UPDATE_FIREBASE_CONFIG') {
-    const newConfig = event.data.config;
-    if (newConfig && newConfig.apiKey && !messaging) {
-      try {
-        firebase.initializeApp(newConfig);
-        messaging = firebase.messaging();
-        console.log('[FCM SW] Firebase config updated');
-      } catch (error) {
-        console.error('[FCM SW] Failed to update Firebase config:', error);
-      }
-    }
-  }
-
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }

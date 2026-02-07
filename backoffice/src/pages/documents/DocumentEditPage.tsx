@@ -60,6 +60,7 @@ export default function DocumentEditPage({
   const [date, setDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
+  const [validationDate, setValidationDate] = useState('');
   const [partner, setPartner] = useState<Partner | null>(null);
   const [items, setItems] = useState<DocumentItem[]>([]);
   const [notes, setNotes] = useState('');
@@ -295,17 +296,17 @@ export default function DocumentEditPage({
       const dateValue = doc.date || (doc as any).dateCreated || (doc as any).createdAt;
       setDate(dateValue ? dateValue.split('T')[0] : '');
       
-      // Only set dueDate and expirationDate for invoices and quotes, not orders
+      // Set dueDate and expirationDate for all document types
+      setDueDate(doc.dueDate ? doc.dueDate.split('T')[0] : '');
       if (documentType !== 'bon_livraison') {
-        setDueDate(doc.dueDate ? doc.dueDate.split('T')[0] : '');
         setExpirationDate(doc.expirationDate ? doc.expirationDate.split('T')[0] : '');
       } else {
-        setDueDate('');
         setExpirationDate('');
       }
       
       setStatus(doc.status || 'draft');
       setIsValidated(doc.isValidated ?? false);
+      setValidationDate(doc.validationDate ? doc.validationDate.split('T')[0] : '');
       setNotes(doc.notes || doc.note || '');
       
       // Load payment data for invoices
@@ -427,7 +428,6 @@ export default function DocumentEditPage({
       setItems(mappedItems);
       
     } catch (error) {
-      console.error('Error loading document:', error);
       setAlertMessage({
         title: t('error'),
         message: t('errorLoadingDocument'),
@@ -1075,7 +1075,7 @@ export default function DocumentEditPage({
               <div className="space-y-2 sm:space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
-                    {t('date')}
+                    {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}
                   </label>
                   <input
                     type="date"
@@ -1102,20 +1102,19 @@ export default function DocumentEditPage({
                   </div>
                 )}
 
-                {documentType === 'facture' && (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                      {t('dueDate')}
-                    </label>
-                    <input
-                      type="date"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
-                      disabled={isValidated}
-                    />
-                  </div>
-                )}
+                {/* Due Date - Show for all document types */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
+                    {t('dueDate')}
+                  </label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
+                    disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -37,8 +37,9 @@ export default function DocumentCreatePage({
 
   // Form state
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [dueDate, setDueDate] = useState('');
-  const [expirationDate, setExpirationDate] = useState('');
+  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  // Expiration date is 1 month from now by default for quotes
+  const [expirationDate, setExpirationDate] = useState(new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]);
   const [partner, setPartner] = useState<Partner | null>(null);
   const [items, setItems] = useState<DocumentItem[]>([]);
   const [notes, setNotes] = useState('');
@@ -268,7 +269,7 @@ export default function DocumentCreatePage({
               <div className="space-y-2 sm:space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
-                    {t('date')} <span className="text-red-500">*</span>
+                    {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
@@ -293,19 +294,18 @@ export default function DocumentCreatePage({
                   </div>
                 )}
 
-                {documentType === 'facture' && (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
-                      {t('dueDate')}
-                    </label>
-                    <input
-                      type="date"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-                )}
+                {/* Due Date - Show for all document types */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
+                    {t('dueDate')}
+                  </label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
               </div>
             </div>
           </div>

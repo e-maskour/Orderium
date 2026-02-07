@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Edit, Trash2, Download, Filter, ChevronDown, CreditCard, CheckCircle, Eye, Columns, FileText } from 'lucide-react';
+import { Search, Edit, Trash2, Download, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, CheckCircle, Eye, Columns, FileText } from 'lucide-react';
 import { FloatingActionBar } from '../FloatingActionBar';
 import { DocumentType } from '../../modules/documents/types';
 import { pdfService } from '../../services/pdf.service';
@@ -38,6 +38,13 @@ interface DocumentTableProps {
   loading?: boolean;
   showPaymentColumns?: boolean;
   showValidationColumn?: boolean;
+  onFiltersToggle?: () => void;
+  filtersExpanded?: boolean;
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
 }
 
 export function DocumentTable({ 
@@ -54,14 +61,18 @@ export function DocumentTable({
   onDevalidate, 
   loading,
   showPaymentColumns = false,
-  showValidationColumn = false
+  showValidationColumn = false,
+  onFiltersToggle,
+  filtersExpanded = false,
+  currentPage,
+  pageSize,
+  totalCount,
+  onPageChange,
+  onPageSizeChange
 }: DocumentTableProps) {
   const { t, language } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'number'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [showColumnsMenu, setShowColumnsMenu] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({
@@ -75,14 +86,13 @@ export function DocumentTable({
   const [pdfTitle, setPdfTitle] = useState('');
   const columnsMenuRef = useRef<HTMLDivElement>(null);
   const tableScrollRef = useRef<HTMLDivElement>(null);
-  const itemsPerPage = 10;
 
   // Selection functions
   const handleSelectAll = () => {
-    if (selectedDocuments.length === paginatedDocuments.length) {
+    if (selectedDocuments.length === documents.length) {
       setSelectedDocuments([]);
     } else {
-      setSelectedDocuments(paginatedDocuments.map(d => d.id));
+      setSelectedDocuments(documents.map(d => d.id));
     }
   };
 
@@ -143,6 +153,10 @@ export function DocumentTable({
       };
     }
   }, [documents, visibleColumns]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -227,39 +241,6 @@ export function DocumentTable({
     }
   };
 
-  const filteredDocuments = documents
-    .filter(doc => {
-      const matchesSearch = 
-        doc.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.partnerName.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || doc.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      let aValue, bValue;
-      switch (sortBy) {
-        case 'date':
-          aValue = new Date(a.date).getTime();
-          bValue = new Date(b.date).getTime();
-          break;
-        case 'amount':
-          aValue = a.total;
-          bValue = b.total;
-          break;
-        case 'number':
-          aValue = a.number;
-          bValue = b.number;
-          break;
-        default:
-          return 0;
-      }
-      return sortOrder === 'asc' ? aValue > bValue ? 1 : -1 : aValue < bValue ? 1 : -1;
-    });
-
-  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedDocuments = filteredDocuments.slice(startIndex, startIndex + itemsPerPage);
-
   // Calculate column count based on features and visible columns
   const columnCount = 5 + 
     (documentType === 'facture' ? 1 : 0) + 
@@ -270,7 +251,7 @@ export function DocumentTable({
 
   return (
     <div className="space-y-3">
-      {/* Search and Column Toggle */}
+      {/* Column Toggle and Filter Button */}
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-3">
         <div className="relative" ref={columnsMenuRef}>
           <button
@@ -323,28 +304,105 @@ export function DocumentTable({
             </div>
           )}
         </div>
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-          <input
-            type="text"
-            placeholder={t('searchByNumberOrName')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
-          />
-        </div>
+        
+        {/* Filter Button */}
+        {onFiltersToggle && (
+          <button
+            onClick={onFiltersToggle}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              filtersExpanded
+                ? 'bg-amber-500 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            <Filter className="w-4 h-4" />
+            <span>{t('filters')}</span>
+            {filtersExpanded ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Separator Line */}
       <div className="border-t border-slate-200"></div>
+
+      {/* Pagination Info Bar - Top */}
+      {totalCount > 0 && (
+        <div className="bg-slate-50 py-2 px-4 rounded-lg">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-sm text-slate-600">
+              {t('showing')} <span className="font-semibold">{startIndex + 1}</span> {t('to')}{' '}
+              <span className="font-semibold">{Math.min(startIndex + pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
+            </div>
+            
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-slate-600">{t('perPage')}</label>
+              <select
+                value={pageSize}
+                onChange={(e) => onPageSizeChange(Number(e.target.value))}
+                className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            
+            {/* Navigation */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  min="1"
+                  max={totalPages}
+                  value={currentPage}
+                  onChange={(e) => {
+                    const page = parseInt(e.target.value, 10);
+                    if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                      onPageChange(page);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.currentTarget.blur();
+                    }
+                  }}
+                  className="w-12 px-2 py-1 text-sm font-medium text-slate-700 text-center border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+                <span className="text-sm text-slate-500">/</span>
+                <span className="text-sm font-medium text-slate-700">{totalPages}</span>
+              </div>
+              <button
+                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Action Bar */}
       <FloatingActionBar
         selectedCount={selectedDocuments.length}
         onClearSelection={clearSelection}
         onSelectAll={handleSelectAll}
-        isAllSelected={selectedDocuments.length === paginatedDocuments.length && paginatedDocuments.length > 0}
-        totalCount={paginatedDocuments.length}
+        isAllSelected={selectedDocuments.length === documents.length && documents.length > 0}
+        totalCount={documents.length}
         itemLabel={itemLabel}
         actions={(() => {
           // Check if selected documents have mixed validation states
@@ -413,8 +471,8 @@ export function DocumentTable({
             },
             {
               id: 'pdf-preview',
-              label: t('pdfPreview'),
-              icon: <Eye className="w-4 h-4" />,
+              label: 'Aperçu',
+              icon: <FileText className="w-4 h-4" />,
               onClick: () => {
                 if (selectedDocuments.length === 1) {
                   const doc = selectedDocumentsData[0];
@@ -431,35 +489,6 @@ export function DocumentTable({
               hidden: selectedDocuments.length !== 1 || selectedDocumentsData.every(doc => 
                 !doc?.isValidated || doc?.status === 'draft'
               )
-            },
-            {
-              id: 'pdf-download',
-              label: t('downloadPDF'),
-              icon: <FileText className="w-4 h-4" />,
-              onClick: () => {
-                selectedDocuments.forEach(id => {
-                  const doc = documents.find(d => d.id === id);
-                  if (doc && doc.isValidated && doc.status !== 'draft') {
-                    pdfService.download({
-                      documentType: getPDFDocumentType(documentType),
-                      documentId: id
-                    });
-                  }
-                });
-                clearSelection();
-              },
-              hidden: selectedDocumentsData.every(doc => 
-                !doc?.isValidated || doc?.status === 'draft'
-              )
-            },
-            {
-              id: 'download',
-              label: t('download'),
-              icon: <Download className="w-4 h-4" />,
-              onClick: () => {
-                selectedDocuments.forEach(id => onDownload?.(id));
-                clearSelection();
-              }
             },
             {
               id: 'delete',
@@ -496,12 +525,12 @@ export function DocumentTable({
                   <div
                     onClick={handleSelectAll}
                     className={`w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                      selectedDocuments.length === paginatedDocuments.length && paginatedDocuments.length > 0
+                      selectedDocuments.length === documents.length && documents.length > 0
                         ? 'bg-amber-500 border-amber-500 text-white'
                         : 'bg-white border-slate-300 hover:border-slate-400'
                     }`}
                   >
-                    {selectedDocuments.length === paginatedDocuments.length && paginatedDocuments.length > 0 && (
+                    {selectedDocuments.length === documents.length && documents.length > 0 && (
                       <CheckCircle className="w-3.5 h-3.5" />
                     )}
                   </div>
@@ -561,8 +590,8 @@ export function DocumentTable({
                     </div>
                   </td>
                 </tr>
-              ) : paginatedDocuments.length > 0 ? (
-                paginatedDocuments.map((doc) => (
+              ) : documents.length > 0 ? (
+                documents.map((doc) => (
                   <tr 
                       key={doc.id} 
                       className={`transition-all duration-200 cursor-pointer border-l-4 border-b border-slate-200 group ${
@@ -697,11 +726,11 @@ export function DocumentTable({
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
             <div className="text-xs text-slate-600">
-              {t('showingFrom')} {startIndex + 1} {t('to')} {Math.min(startIndex + itemsPerPage, filteredDocuments.length)} {t('on')} {filteredDocuments.length} {itemLabel}s
+              {t('showingFrom')} {startIndex + 1} {t('to')} {Math.min(startIndex + pageSize, totalCount)} {t('on')} {totalCount} {itemLabel}s
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className="px-2.5 py-1 border border-slate-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
               >
@@ -710,7 +739,7 @@ export function DocumentTable({
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
-                  onClick={() => setCurrentPage(page)}
+                  onClick={() => onPageChange(page)}
                   className={`px-2.5 py-1 rounded-lg transition-colors text-xs font-medium ${
                     currentPage === page
                       ? 'bg-amber-500 text-white'
@@ -721,7 +750,7 @@ export function DocumentTable({
                 </button>
               ))}
               <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className="px-2.5 py-1 border border-slate-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
               >

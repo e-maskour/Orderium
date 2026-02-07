@@ -12,53 +12,22 @@ const firebaseConfig = {
   appId: "1:199921288199:web:63e59398df7cc0617096a2",
 };
 
-// Initialize Firebase only if config is available
-let messaging = null;
-let isMessagingReady = false;
-
 const getNotificationIconUrl = () => `${self.location.origin}/Eo_circle_deep-orange_white_letter-o.svg`;
 
-// Ensure push handler exists at initial evaluation (required by Firebase SDK)
-self.addEventListener('push', (event) => {
-  if (isMessagingReady) {
-    return;
-  }
-
+// Initialize Firebase immediately to register event handlers during initial evaluation
+let messaging = null;
+if (firebaseConfig.apiKey) {
   try {
-    const payload = event.data ? event.data.json() : {};
-    const notificationTitle =
-      payload.notification?.title || payload.data?.title || 'Orderium Backoffice';
-    const notificationOptions = {
-      body: payload.notification?.body || payload.data?.body || '',
-      icon: getNotificationIconUrl(),
-      badge: getNotificationIconUrl(),
-      tag: payload.data?.type || 'orderium-backoffice-notification',
-      data: payload.data || {},
-      requireInteraction: true,
-      vibrate: [200, 100, 200],
-    };
-
-    event.waitUntil(self.registration.showNotification(notificationTitle, notificationOptions));
-  } catch (error) {
-    console.error('[FCM SW] Fallback push handler error:', error);
-  }
-});
-try {
-  if (firebaseConfig.apiKey) {
     firebase.initializeApp(firebaseConfig);
     messaging = firebase.messaging();
-    isMessagingReady = true;
-  } else {
-    console.warn('[FCM SW] Firebase config not available');
+  } catch (error) {
+    console.error('[FCM SW] Firebase initialization error:', error);
   }
-} catch (error) {
-  console.error('[FCM SW] Firebase initialization error:', error);
 }
 
-// Handle background messages
+// Handle background messages using Firebase's handler
 if (messaging) {
-    messaging.onBackgroundMessage((payload) => {
-
+  messaging.onBackgroundMessage((payload) => {
     const notificationTitle =
       payload.notification?.title || payload.data?.title || 'Orderium Backoffice';
     const notificationOptions = {
@@ -239,19 +208,6 @@ self.addEventListener('fetch', (event) => {
 
 // Handle messages from the main thread
 self.addEventListener('message', (event) => {
-  if (event.data?.type === 'UPDATE_FIREBASE_CONFIG') {
-    const newConfig = event.data.config;
-    if (newConfig && newConfig.apiKey && !messaging) {
-      try {
-        firebase.initializeApp(newConfig);
-        messaging = firebase.messaging();
-        isMessagingReady = true;
-      } catch (error) {
-        console.error('[FCM SW] Failed to update Firebase config:', error);
-      }
-    }
-  }
-
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }

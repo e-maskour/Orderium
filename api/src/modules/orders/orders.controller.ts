@@ -37,10 +37,14 @@ export class OrdersController {
   @Post('filter')
   @ApiOperation({ summary: 'Filter orders (POST method)' })
   @ApiQuery({ name: 'fromPortal', required: false, type: Boolean })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'perPage', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
   async filterOrders(
     @Body() filterDto: FilterOrdersDto,
     @Query('fromPortal') fromPortal?: string,
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
   ) {
     const fromPortalBool =
       fromPortal !== undefined ? fromPortal === 'true' : undefined;
@@ -50,12 +54,11 @@ export class OrdersController {
     const endDateObj = filterDto.endDate
       ? new Date(filterDto.endDate)
       : undefined;
-    const page = filterDto.page || 1;
+    const pageNum = page ? parseInt(page, 10) : 1;
     // Allowed page sizes with fallback to 50
     const allowedPageSizes = [10, 50, 100, 500, 1000];
-    const pageSize = filterDto.per_page && allowedPageSizes.includes(filterDto.per_page) 
-      ? filterDto.per_page 
-      : 50;
+    const pageSizeNum = perPage ? parseInt(perPage, 10) : 50;
+    const pageSize = allowedPageSizes.includes(pageSizeNum) ? pageSizeNum : 50;
 
     const result = await this.ordersService.filterOrders(
       startDateObj,
@@ -66,7 +69,7 @@ export class OrdersController {
       filterDto.deliveryPersonId,
       fromPortalBool,
       filterDto.fromClient,
-      page,
+      pageNum,
       pageSize,
     );
 
