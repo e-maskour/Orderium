@@ -72,8 +72,8 @@ export default function OrderSuccessPage() {
 
   const formatCurrency = (price: number) => {
     return language === 'ar' 
-      ? `${price.toFixed(2)} د.م.`
-      : `${price.toFixed(2)} DH`;
+      ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م.`
+      : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
   };
 
   const ensureOrderId = () => {

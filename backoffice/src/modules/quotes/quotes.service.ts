@@ -208,6 +208,13 @@ export class QuotesService {
     const result = await response.json();
     return QuoteWithDetails.fromApiResponse(result.quote);
   }
+
+  async getAnalytics(year: number): Promise<any> {
+    const response = await fetch(`${API_URL}/quotes/analytics/data?year=${year}`);
+    if (!response.ok) throw new Error('Failed to fetch quote analytics');
+    const result = await response.json();
+    return result.data;
+  }
 }
 
 export const quotesService = new QuotesService();

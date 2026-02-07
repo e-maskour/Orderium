@@ -80,7 +80,7 @@ export const PriceConfirmModal = ({
 
   useEffect(() => {
     if (isOpen && product) {
-      setPrice(product.price.toFixed(2));
+      setPrice(product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       setDecimalMode(false);
       setTimeout(() => {
         inputRef.current?.focus();
@@ -214,11 +214,11 @@ export const PriceConfirmModal = ({
             />
             <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
               <span>
-                {t('originalPrice')}: {product.price.toFixed(2)} {t('currency')}
+                {t('originalPrice')}: {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
               </span>
               {product.cost != null && (
                 <span className="text-amber-600 font-medium">
-                  {t('cost')}: {product.cost.toFixed(2)} {t('currency')}
+                  {t('cost')}: {product.cost.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                 </span>
               )}
             </div>

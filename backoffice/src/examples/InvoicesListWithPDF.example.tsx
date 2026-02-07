@@ -105,7 +105,7 @@ export default function InvoicesListExample() {
                       {new Date(invoice.date).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="py-3 px-4 text-right font-semibold text-slate-900">
-                      {Number(invoice.total).toLocaleString('fr-FR', {
+                      {Number(invoice.total).toLocaleString('de-DE', {
                         minimumFractionDigits: 2,
                       })}{' '}
                       DH
@@ -182,7 +182,7 @@ export default function InvoicesListExample() {
           <div className="text-2xl font-bold text-blue-600">
             {invoices
               .reduce((sum: number, i: any) => sum + Number(i.invoice.total), 0)
-              .toLocaleString('fr-FR', { minimumFractionDigits: 2 })}{' '}
+              .toLocaleString('de-DE', { minimumFractionDigits: 2 })}{' '}
             DH
           </div>
         </div>

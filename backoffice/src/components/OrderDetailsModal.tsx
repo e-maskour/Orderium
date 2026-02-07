@@ -249,19 +249,19 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                           </span>
                         </td>
                         <td className="py-2 px-2 text-right font-semibold text-xs text-slate-700">
-                          {parseFloat(item.unitPrice || 0).toFixed(2)} {t('currency')}
+                          {parseFloat(item.unitPrice || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                         </td>
                         <td className="py-2 px-2 text-right">
                           {parseFloat(item.discount || 0) > 0 ? (
                             <span className="text-red-600 font-semibold text-xs">
-                              -{parseFloat(item.discount || 0).toFixed(2)} {t('currency')}
+                              -{parseFloat(item.discount || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                             </span>
                           ) : (
                             <span className="text-slate-400 text-xs">-</span>
                           )}
                         </td>
                         <td className="py-2 px-3 text-right font-bold text-xs text-slate-800">
-                          {parseFloat(item.total || 0).toFixed(2)} {t('currency')}
+                          {parseFloat(item.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                         </td>
                       </tr>
                     ))}
@@ -275,21 +275,21 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-slate-600">{t('subtotal')}</span>
                 <span className="text-sm font-bold text-slate-800">
-                  {(order.items || []).reduce((sum: number, item: any) => sum + parseFloat(item.total || 0), 0).toFixed(2)} {t('currency')}
+                  {(order.items || []).reduce((sum: number, item: any) => sum + parseFloat(item.total || 0), 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                 </span>
               </div>
               {parseFloat(order.discount || 0) > 0 && (
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-semibold text-slate-600">{t('discount')}</span>
                   <span className="text-sm font-bold text-red-600">
-                    -{parseFloat(order.discount || 0).toFixed(2)} {t('currency')}
+                    -{parseFloat(order.discount || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                   </span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-2 border-t border-slate-200">
                 <span className="text-sm font-bold text-slate-800">{t('grandTotal')}</span>
                 <span className="text-lg font-bold text-amber-600">
-                  {parseFloat(order.total || 0).toFixed(2)} <span className="text-sm">{t('currency')}</span>
+                  {parseFloat(order.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm">{t('currency')}</span>
                 </span>
               </div>
             </div>

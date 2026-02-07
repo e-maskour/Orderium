@@ -204,10 +204,10 @@ export default function QuotePreviewPage() {
                     <td className="py-3 px-4 text-sm text-slate-900">{item.description}</td>
                     <td className="py-3 px-4 text-sm text-slate-700 text-center">{item.quantity}</td>
                     <td className="py-3 px-4 text-sm text-slate-700 text-right">
-                      {item.unitPrice.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                      {item.unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
                     </td>
                     <td className="py-3 px-4 text-sm font-semibold text-slate-900 text-right">
-                      {item.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                      {item.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
                     </td>
                   </tr>
                 ))}
@@ -311,19 +311,19 @@ export default function QuotePreviewPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Sous-total HT:</span>
                   <span className="font-semibold text-slate-900">
-                    {q.subtotal.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                    {q.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">TVA:</span>
                   <span className="font-semibold text-slate-900">
-                    {q.tax.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                    {q.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
                   </span>
                 </div>
                 <div className="flex justify-between text-lg border-t border-slate-200 pt-2">
                   <span className="font-bold text-slate-900">Total TTC:</span>
                   <span className="font-bold text-blue-600">
-                    {q.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} DH
+                    {q.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
                   </span>
                 </div>
               </div>

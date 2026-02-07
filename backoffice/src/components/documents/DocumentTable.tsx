@@ -670,32 +670,32 @@ export function DocumentTable({
                       )}
                       <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                         <span className="text-xs font-medium text-slate-700">
-                          {doc.subtotal.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                          {doc.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                         </span>
                       </td>
                       {visibleColumns.tax && (
                         <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                           <span className="text-xs font-medium text-slate-700">
-                            {doc.tax.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                            {doc.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                           </span>
                         </td>
                       )}
                       <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                         <span className="text-xs font-bold text-slate-900">
-                          {doc.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                          {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                         </span>
                       </td>
                       {showPaymentColumns && visibleColumns.paidAmount && (
                         <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                           <span className="text-xs font-medium text-green-700">
-                            {doc.paidAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                            {doc.paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                           </span>
                         </td>
                       )}
                       {showPaymentColumns && visibleColumns.remainingAmount && (
                         <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                           <span className={`text-xs font-medium ${doc.remainingAmount > 0 ? 'text-red-700' : 'text-slate-500'}`}>
-                              {doc.remainingAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                              {doc.remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                           </span>
                         </td>
                       )}

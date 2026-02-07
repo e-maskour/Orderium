@@ -1549,4 +1549,58 @@ export class OrdersService {
     const results = await queryBuilder.getRawMany();
     return results.map((r) => r.documentNumber);
   }
+
+  async getAnalytics(year: number) {
+    // Get all orders for the specified year (excluding portal orders)
+    const orders = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.fromPortal = :fromPortal', { fromPortal: false })
+      .andWhere('EXTRACT(YEAR FROM COALESCE(order.date, order.dateCreated)) = :year', { year })
+      .getMany();
+
+    // Calculate monthly chart data
+    const monthlyData = Array.from({ length: 12 }, (_, monthIndex) => {
+      const monthOrders = orders.filter((order) => {
+        const orderDate = new Date(order.date || order.dateCreated);
+        return orderDate.getMonth() === monthIndex;
+      });
+
+      return {
+        month: monthIndex + 1,
+        count: monthOrders.length,
+        amount: monthOrders.reduce((sum, order) => sum + Number(order.total || 0), 0),
+      };
+    });
+
+    // Calculate KPIs
+    const totalOrders = orders.length;
+    const totalAmount = orders.reduce(
+      (sum, order) => sum + Number(order.total || 0),
+      0,
+    );
+    const deliveredCount = orders.filter(
+      (order) => order.status === OrderStatus.DELIVERED,
+    ).length;
+    const inProgressCount = orders.filter(
+      (order) =>
+        order.status === OrderStatus.IN_PROGRESS ||
+        order.status === OrderStatus.VALIDATED,
+    ).length;
+    const totalItems = orders.reduce(
+      (sum, order) => sum + (order.items?.length || 0),
+      0,
+    );
+
+    return {
+      year,
+      chartData: monthlyData,
+      kpis: {
+        totalOrders,
+        totalAmount,
+        deliveredCount,
+        inProgressCount,
+        totalItems,
+      },
+    };
+  }
 }

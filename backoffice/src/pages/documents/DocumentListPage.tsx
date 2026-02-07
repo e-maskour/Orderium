@@ -54,6 +54,9 @@ export default function DocumentListPage({
     partnerId: undefined as number | undefined,
     dateRange: { start: undefined as Date | undefined, end: undefined as Date | undefined },
   });
+
+  // Year selection for analytics
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   
   // Fetch partners for autocomplete
   const { data: partnersData } = useQuery({
@@ -86,6 +89,12 @@ export default function DocumentListPage({
       page: currentPage,
       pageSize: pageSize
     }),
+  });
+
+  // Fetch analytics from API
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['documents-analytics', documentType, direction, selectedYear],
+    queryFn: () => documentsService.getAnalytics(documentType, direction, selectedYear),
   });
 
   const documents = documentsData.documents || [];
@@ -238,11 +247,6 @@ export default function DocumentListPage({
     { key: 'list', label: `${t('listOf')} ${config.title.toLowerCase()}`, icon: List },
   ];
 
-  // Calculate statistics based on document type
-  const totalDocs = documents.length;
-  const totalAmount = documents.reduce((sum, doc) => sum + doc.total, 0);
-  const draftInvoices = documents.filter(doc => doc.status === 'draft').length;
-  
   // Color mapping for KPI cards
   const colorClasses = {
     blue: {
@@ -272,43 +276,47 @@ export default function DocumentListPage({
     }
   };
   
-  // Document type specific KPIs
+  // Document type specific KPIs from API analytics
   let kpi1, kpi2, kpi3, kpi4;
   
-  if (documentType === 'devis') {
-    // Devis-specific KPIs
-    const acceptedCount = documents.filter(doc => doc.status === 'signed' || doc.status === 'invoiced').length;
-    const pendingCount = documents.filter(doc => doc.status === 'open' || doc.status === 'draft').length;
-    const acceptedValue = documents.filter(doc => doc.status === 'signed' || doc.status === 'invoiced').reduce((sum, doc) => sum + doc.total, 0);
-    const conversionRate = totalDocs > 0 ? ((acceptedCount / totalDocs) * 100).toFixed(1) : '0';
-    
-    kpi1 = { count: totalDocs, label: t('totalQuotes'), icon: FileText, color: 'blue' };
-    kpi2 = { count: acceptedCount, label: t('acceptedQuotes'), icon: CheckCircle, color: 'emerald' };
-    kpi3 = { count: pendingCount, label: t('pendingQuotes'), icon: Clock, color: 'amber' };
-    kpi4 = { count: `${conversionRate}%`, label: t('conversionRate'), icon: TrendingUp, color: 'purple' };
-    
-  } else if (documentType === 'bon_livraison') {
-    // Bon de livraison-specific KPIs
-    const deliveredCount = documents.filter(doc => doc.status === 'delivered').length;
-    const inProgressCount = documents.filter(doc => doc.status === 'in_progress' || doc.status === 'validated').length;
-    const totalItems = documents.reduce((sum, doc) => sum + (doc.itemsCount || 0), 0);
-    
-    kpi1 = { count: totalDocs, label: t('totalDeliveries'), icon: FileText, color: 'blue' };
-    kpi2 = { count: deliveredCount, label: t('delivered'), icon: CheckCircle, color: 'emerald' };
-    kpi3 = { count: inProgressCount, label: t('inProgress'), icon: Clock, color: 'amber' };
-    kpi4 = { count: totalItems, label: t('totalItems'), icon: TrendingUp, color: 'purple' };
-    
+  if (analytics && analytics.kpis) {
+    if (documentType === 'devis') {
+      // Devis-specific KPIs from API
+      const { totalQuotes, acceptedCount, pendingCount, conversionRate } = analytics.kpis;
+      
+      kpi1 = { count: totalQuotes, label: t('totalQuotes'), icon: FileText, color: 'blue' };
+      kpi2 = { count: acceptedCount, label: t('acceptedQuotes'), icon: CheckCircle, color: 'emerald' };
+      kpi3 = { count: pendingCount, label: t('pendingQuotes'), icon: Clock, color: 'amber' };
+      kpi4 = { count: `${conversionRate.toFixed(1)}%`, label: t('conversionRate'), icon: TrendingUp, color: 'purple' };
+      
+    } else if (documentType === 'bon_livraison') {
+      // Bon de livraison-specific KPIs from API
+      const { totalOrders, deliveredCount, inProgressCount, totalItems } = analytics.kpis;
+      
+      kpi1 = { count: totalOrders, label: t('totalDeliveries'), icon: FileText, color: 'blue' };
+      kpi2 = { count: deliveredCount, label: t('delivered'), icon: CheckCircle, color: 'emerald' };
+      kpi3 = { count: inProgressCount, label: t('inProgress'), icon: Clock, color: 'amber' };
+      kpi4 = { count: totalItems, label: t('totalItems'), icon: TrendingUp, color: 'purple' };
+      
+    } else {
+      // Facture-specific KPIs from API
+      const { totalInvoices, unpaidCount, paidCount, unpaidAmount } = analytics.kpis;
+      
+      kpi1 = { count: totalInvoices, label: t('totalInvoices'), icon: FileText, color: 'blue' };
+      kpi2 = { count: unpaidCount, label: t('unpaidInvoices'), icon: Clock, color: 'amber' };
+      kpi3 = { count: paidCount, label: t('paidInvoices'), icon: CheckCircle, color: 'emerald' };
+      kpi4 = { count: `${unpaidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`, label: t('unpaidAmount'), icon: TrendingDown, color: 'red' };
+    }
   } else {
-    // Facture-specific KPIs (default)
-    const unpaidCount = documents.filter(doc => doc.status === 'unpaid' || doc.status === 'overdue').length;
-    const paidCount = documents.filter(doc => doc.status === 'paid').length;
-    const unpaidAmount = documents.filter(doc => doc.status === 'unpaid' || doc.status === 'overdue' || doc.status === 'partial').reduce((sum, doc) => sum + (doc.remainingAmount || doc.total), 0);
-    
-    kpi1 = { count: totalDocs, label: t('totalInvoices'), icon: FileText, color: 'blue' };
-    kpi2 = { count: unpaidCount, label: t('unpaidInvoices'), icon: Clock, color: 'amber' };
-    kpi3 = { count: paidCount, label: t('paidInvoices'), icon: CheckCircle, color: 'emerald' };
-    kpi4 = { count: `${unpaidAmount.toFixed(2)} ${language === 'ar' ? 'د.م' : 'DH'}`, label: t('unpaidAmount'), icon: TrendingDown, color: 'red' };
+    // Fallback to empty KPIs while loading
+    kpi1 = { count: 0, label: t('total'), icon: FileText, color: 'blue' };
+    kpi2 = { count: 0, label: t('pending'), icon: Clock, color: 'amber' };
+    kpi3 = { count: 0, label: t('completed'), icon: CheckCircle, color: 'emerald' };
+    kpi4 = { count: 0, label: t('amount'), icon: TrendingUp, color: 'purple' };
   }
+
+  // Calculate draft count from current documents (for the draft section)
+  const draftInvoices = documents.filter(doc => doc.status === 'draft').length;
 
   const Icon = config.icon;
 
@@ -416,6 +424,8 @@ export default function DocumentListPage({
                 <DocumentAnalysisChart 
                   documents={documents}
                   documentType={documentType}
+                  analytics={analytics}
+                  onYearChange={setSelectedYear}
                 />
 
                 {/* Dashboard Grid */}
@@ -440,7 +450,7 @@ export default function DocumentListPage({
                           <div className="flex items-center gap-3">
                             <span className="text-xs text-slate-500 w-32 truncate">{facture.partnerName}</span>
                             <span className="text-xs text-slate-500 w-24">{new Date(facture.date).toLocaleDateString('fr-FR')}</span>
-                            <span className="text-sm font-bold text-emerald-600 w-24 text-right">{facture.total.toFixed(2)}</span>
+                            <span className="text-sm font-bold text-emerald-600 w-24 text-right">{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                         </div>
                       ))}
@@ -473,7 +483,7 @@ export default function DocumentListPage({
                                 {facture.number}
                               </button>
                             </div>
-                            <span className="text-sm font-bold text-slate-600">{facture.total.toFixed(2)}</span>
+                            <span className="text-sm font-bold text-slate-600">{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                         ))
                       )}

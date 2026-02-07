@@ -214,7 +214,7 @@ export const ProductQuantityModal = ({
             </h2>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-xl font-bold text-primary">
-                {product.price.toFixed(2)} {t('currency')}
+                {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
               </span>
               <span className="text-xs sm:text-sm text-gray-500">
                 / {unitCode}
@@ -285,7 +285,7 @@ export const ProductQuantityModal = ({
                 {t('total')}
               </span>
               <span className="text-xl font-bold text-primary">
-                {totalPrice.toFixed(2)} {t('currency')}
+                {totalPrice.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
               </span>
             </div>
           )}

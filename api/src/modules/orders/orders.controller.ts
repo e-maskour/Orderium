@@ -222,6 +222,21 @@ export class OrdersController {
     };
   }
 
+  @Get('analytics/data')
+  @ApiOperation({ summary: 'Get order analytics with chart data and KPIs' })
+  @ApiResponse({
+    status: 200,
+    description: 'Order analytics retrieved successfully',
+  })
+  async getAnalytics(@Query('year') year?: string) {
+    const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
+    const analytics = await this.ordersService.getAnalytics(yearNum);
+    return {
+      success: true,
+      data: analytics,
+    };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get order by ID' })
   @ApiResponse({ status: 200, description: 'Order retrieved successfully' })

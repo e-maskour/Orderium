@@ -204,6 +204,13 @@ export class OrdersService {
     const data = await response.json();
     return data.data || [];
   }
+
+  async getAnalytics(year: number): Promise<any> {
+    const response = await fetch(`${API_URL}/orders/analytics/data?year=${year}`);
+    if (!response.ok) throw new Error('Failed to fetch order analytics');
+    const result = await response.json();
+    return result.data;
+  }
 }
 
 export const ordersService = new OrdersService();

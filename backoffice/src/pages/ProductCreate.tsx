@@ -605,7 +605,7 @@ export default function ProductCreate() {
               </div>
               {parseFloat(formData.saleTax) > 0 && formData.price && (
                 <p className="mt-2 text-slate-600">
-                  {t('priceWithTax')}: {(parseFloat(formData.price) * (1 + parseFloat(formData.saleTax) / 100)).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'} {t('per')} {formData.saleUnit}
+                  {t('priceWithTax')}: {(parseFloat(formData.price) * (1 + parseFloat(formData.saleTax) / 100)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'} {t('per')} {formData.saleUnit}
                 </p>
               )}
             </div>
@@ -767,7 +767,7 @@ export default function ProductCreate() {
                   <div>
                     <p className="text-sm text-slate-600">{t('marginAmount')}</p>
                     <p className="text-lg font-bold text-slate-900">
-                      {(parseFloat(formData.price) - parseFloat(formData.cost)).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                      {(parseFloat(formData.price) - parseFloat(formData.cost)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                     </p>
                   </div>
                   <div>

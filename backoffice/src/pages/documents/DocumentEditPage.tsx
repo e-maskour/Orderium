@@ -1017,7 +1017,7 @@ export default function DocumentEditPage({
               <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-blue-100 shadow-sm">
                 <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('totalAmount')}</p>
                 <p className="text-base sm:text-xl font-bold text-slate-900 truncate">
-                  {items.reduce((sum, item) => sum + (item.total || 0), 0).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {items.reduce((sum, item) => sum + (item.total || 0), 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                 </p>
               </div>
               
@@ -1025,7 +1025,7 @@ export default function DocumentEditPage({
               <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-green-100 shadow-sm">
                 <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('paidAmount')}</p>
                 <p className="text-base sm:text-xl font-bold text-green-600 truncate">
-                  {paidAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                 </p>
               </div>
               
@@ -1033,7 +1033,7 @@ export default function DocumentEditPage({
               <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-orange-100 shadow-sm">
                 <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('remainingAmount')}</p>
                 <p className="text-base sm:text-xl font-bold text-orange-600 truncate">
-                  {remainingAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                 </p>
               </div>
             </div>

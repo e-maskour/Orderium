@@ -412,7 +412,7 @@ export default function Products() {
                       <div className="w-28">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('price')}</p>
                         <span className="text-sm font-semibold text-amber-600">
-                          {(product.price || 0).toFixed(2)} {t('currency')}
+                          {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                         </span>
                       </div>
 
@@ -420,7 +420,7 @@ export default function Products() {
                       <div className="w-28">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('cost')}</p>
                         <span className="text-sm text-slate-600">
-                          {(product.cost || 0).toFixed(2)} {t('currency')}
+                          {(product.cost || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                         </span>
                       </div>
 
@@ -577,14 +577,14 @@ export default function Products() {
                           <div className="flex-1">
                             <p className="text-[8px] text-slate-500 uppercase tracking-wide">{t('price')}</p>
                             <p className="text-xs font-bold text-amber-600">
-                              {(product.price || 0).toFixed(2)}{' '}
+                              {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
                               <span className="text-[8px]">{t('currency')}</span>
                             </p>
                           </div>
                           <div className="text-right flex-1">
                             <p className="text-[8px] text-slate-500 uppercase tracking-wide">{t('cost')}</p>
                             <p className="text-[9px] text-slate-600">
-                              {(product.cost || 0).toFixed(2)} {t('currency')}
+                              {(product.cost || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                             </p>
                           </div>
                         </div>

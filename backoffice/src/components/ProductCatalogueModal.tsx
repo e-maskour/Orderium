@@ -214,7 +214,7 @@ export function ProductCatalogueModal({
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <div className="font-semibold text-slate-900">
-                          {(isVente ? product.price : product.cost).toFixed(2)} DH
+                        {(isVente ? product.price : product.cost).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
                         </div>
                         {product.stock !== undefined && (
                           <div className="text-sm text-slate-500">Stock: {product.stock}</div>

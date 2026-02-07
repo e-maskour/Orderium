@@ -754,4 +754,66 @@ export class InvoicesService {
     }
     return result;
   }
+
+  async getAnalytics(direction: 'vente' | 'achat', year: number) {
+    const isVente = direction === 'vente';
+    
+    // Get all invoices for the specified year and direction
+    const queryBuilder = this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .andWhere('EXTRACT(YEAR FROM invoice.date) = :year', { year });
+
+    if (isVente) {
+      queryBuilder.andWhere('invoice.customerId IS NOT NULL');
+    } else {
+      queryBuilder.andWhere('invoice.supplierId IS NOT NULL');
+    }
+
+    const invoices = await queryBuilder.getMany();
+
+    // Calculate monthly chart data
+    const monthlyData = Array.from({ length: 12 }, (_, monthIndex) => {
+      const monthInvoices = invoices.filter(
+        (inv) => new Date(inv.date).getMonth() === monthIndex,
+      );
+
+      return {
+        month: monthIndex + 1,
+        count: monthInvoices.length,
+        amount: monthInvoices.reduce((sum, inv) => sum + Number(inv.total), 0),
+      };
+    });
+
+    // Calculate KPIs
+    const totalInvoices = invoices.length;
+    const totalAmount = invoices.reduce(
+      (sum, inv) => sum + Number(inv.total),
+      0,
+    );
+    const draftCount = invoices.filter((inv) => inv.status === InvoiceStatus.DRAFT).length;
+    const unpaidCount = invoices.filter(
+      (inv) => inv.status === InvoiceStatus.UNPAID,
+    ).length;
+    const paidCount = invoices.filter((inv) => inv.status === InvoiceStatus.PAID).length;
+    const unpaidAmount = invoices
+      .filter(
+        (inv) =>
+          inv.status === InvoiceStatus.UNPAID ||
+          inv.status === InvoiceStatus.PARTIAL,
+      )
+      .reduce((sum, inv) => sum + Number(inv.remainingAmount || inv.total), 0);
+
+    return {
+      year,
+      chartData: monthlyData,
+      kpis: {
+        totalInvoices,
+        totalAmount,
+        draftCount,
+        unpaidCount,
+        paidCount,
+        unpaidAmount,
+      },
+    };
+  }
 }

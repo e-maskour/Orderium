@@ -141,7 +141,7 @@ export default function PaiementsAchat() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600 mb-1">{t('totalAmount')}</p>
-                <p className="text-2xl font-bold text-red-600">{totalAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
+                <p className="text-2xl font-bold text-red-600">{totalAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</p>
               </div>
               <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
                 <Wallet className="w-6 h-6 text-red-600" />
@@ -240,7 +240,7 @@ export default function PaiementsAchat() {
                         {payment.referenceNumber || '-'}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-right text-red-600">
-                        {payment.amount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                        {payment.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">

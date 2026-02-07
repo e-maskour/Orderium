@@ -384,7 +384,7 @@ export default function CustomerDetail() {
                                     </div>
                                     <div class="flex items-center justify-between gap-8">
                                       <span class="text-slate-300 text-xs">Montant:</span>
-                                      <span class="font-bold text-emerald-400">${value.toFixed(2)} DH</span>
+                                      <span class="font-bold text-emerald-400">${value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH</span>
                                     </div>
                                   </div>`;
                                 },

@@ -9,18 +9,28 @@ import { TrendingUp, Calendar, BarChart3, LineChart } from 'lucide-react';
 interface DocumentAnalysisChartProps {
   documents: DocumentItem[];
   documentType: DocumentType;
+  analytics?: any; // Analytics data from API
+  onYearChange?: (year: number) => void; // Callback when year changes
 }
 
 type MeasureType = 'subtotal' | 'total' | 'margin' | 'count' | 'status';
 type ChartType = 'bar' | 'line';
 
-export function DocumentAnalysisChart({ documents, documentType }: DocumentAnalysisChartProps) {
+export function DocumentAnalysisChart({ documents, documentType, analytics, onYearChange }: DocumentAnalysisChartProps) {
   const { t, language } = useLanguage();
   const currentYear = new Date().getFullYear();
   
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMeasure, setSelectedMeasure] = useState<MeasureType>('total');
   const [chartType, setChartType] = useState<ChartType>('line');
+
+  // Notify parent when year changes
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+    if (onYearChange) {
+      onYearChange(year);
+    }
+  };
 
   // French number formatter (12.392,34 format)
   const formatFrenchNumber = (value: number, decimals: number = 2): string => {
@@ -30,8 +40,15 @@ export function DocumentAnalysisChart({ documents, documentType }: DocumentAnaly
     return decimal ? `${formattedInteger},${decimal}` : formattedInteger;
   };
 
-  // Get available years from documents
+  // Get available years from documents or a default range
   const availableYears = useMemo(() => {
+    // If using analytics, show last 5 years from current year
+    if (analytics) {
+      const currentYear = new Date().getFullYear();
+      return Array.from({ length: 5 }, (_, i) => currentYear - i);
+    }
+
+    // Otherwise, get years from documents
     const years = new Set<number>();
     documents.forEach(doc => {
       const year = new Date(doc.date).getFullYear();
@@ -40,7 +57,7 @@ export function DocumentAnalysisChart({ documents, documentType }: DocumentAnaly
       }
     });
     return Array.from(years).sort((a, b) => b - a);
-  }, [documents]);
+  }, [documents, analytics]);
 
   // Calculate status data (for status measure)
   const statusData = useMemo(() => {
@@ -61,6 +78,16 @@ export function DocumentAnalysisChart({ documents, documentType }: DocumentAnaly
 
   // Calculate monthly data
   const monthlyData = useMemo(() => {
+    // If analytics data is available and showing total/count, use it
+    if (analytics && analytics.chartData && (selectedMeasure === 'total' || selectedMeasure === 'count')) {
+      return analytics.chartData.map((data: any) => ({
+        month: data.month - 1, // Convert from 1-based to 0-based
+        value: selectedMeasure === 'count' ? data.count : data.amount,
+        count: data.count
+      }));
+    }
+
+    // Otherwise, calculate from documents (fallback)
     const monthsData = Array(12).fill(0).map((_, index) => ({
       month: index,
       value: 0,
@@ -99,7 +126,7 @@ export function DocumentAnalysisChart({ documents, documentType }: DocumentAnaly
     });
 
     return monthsData;
-  }, [documents, selectedYear, selectedMeasure, documentType]);
+  }, [documents, selectedYear, selectedMeasure, documentType, analytics]);
 
   // Chart title based on document type
   const chartTitle = useMemo(() => {
@@ -195,7 +222,7 @@ export function DocumentAnalysisChart({ documents, documentType }: DocumentAnaly
       return {
         series: [{
           name: measureOptions.find(m => m.value === selectedMeasure)?.label || '',
-          data: monthlyData.map(m => m.value)
+          data: monthlyData.map((m: any) => m.value)
         }],
         labels: monthNames
       };
@@ -320,9 +347,9 @@ export function DocumentAnalysisChart({ documents, documentType }: DocumentAnaly
   // Calculate total for selected year
   const yearTotal = useMemo(() => {
     if (selectedMeasure === 'status') {
-      return Object.values(statusData).reduce((sum, count) => sum + count, 0);
+      return Object.values(statusData).reduce((sum: any, count: any) => sum + count, 0);
     }
-    return monthlyData.reduce((sum, m) => sum + m.value, 0);
+    return monthlyData.reduce((sum: any, m: any) => sum + m.value, 0);
   }, [selectedMeasure, statusData, monthlyData]);
 
   if (availableYears.length === 0) {
@@ -393,7 +420,7 @@ export function DocumentAnalysisChart({ documents, documentType }: DocumentAnaly
             <Calendar className="w-3.5 h-3.5 text-slate-500" />
             <select
               value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              onChange={(e) => handleYearChange(Number(e.target.value))}
               className="text-xs font-medium text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer"
             >
               {availableYears.map(year => (

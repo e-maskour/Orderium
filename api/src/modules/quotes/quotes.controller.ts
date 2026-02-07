@@ -144,4 +144,12 @@ export class QuotesController {
     const quote = await this.quotesService.convertToInvoice(id, body.invoiceId);
     return { success: true, quote };
   }
+
+  @Get('analytics/data')
+  @ApiOperation({ summary: 'Get quote analytics with chart data and KPIs' })
+  async getAnalytics(@Query('year') year?: string) {
+    const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
+    const analytics = await this.quotesService.getAnalytics(yearNum);
+    return { success: true, data: analytics };
+  }
 }

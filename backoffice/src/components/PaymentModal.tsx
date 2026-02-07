@@ -85,7 +85,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       if (!payment) {
         const newTotal = totalPaid + amount;
         if (newTotal > invoiceTotal) {
-          throw new Error(`${t('errorPaymentExceedsInvoice')} (${newTotal.toFixed(2)} ${language === 'ar' ? 'د.م' : 'DH'} > ${invoiceTotal.toFixed(2)} ${language === 'ar' ? 'د.م' : 'DH'})`);
+          throw new Error(`${t('errorPaymentExceedsInvoice')} (${newTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'} > ${invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'})`);
         }
       }
 
@@ -147,15 +147,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="bg-slate-50 p-4 rounded-lg space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">{t('invoice.totalInvoice')}:</span>
-              <span className="font-semibold text-slate-900">{invoiceTotal.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</span>
+              <span className="font-semibold text-slate-900">{invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">{t('invoice.totalPaid')}:</span>
-              <span className="font-semibold text-emerald-600">{totalPaid.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</span>
+              <span className="font-semibold text-emerald-600">{totalPaid.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
             </div>
             <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
               <span className="text-slate-600 font-medium">{t('invoice.remaining')}:</span>
-              <span className="font-semibold text-amber-600">{remainingAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</span>
+              <span className="font-semibold text-amber-600">{remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
             </div>
           </div>
 
@@ -168,10 +168,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               {remainingAmount > 0 && !payment && (
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, amount: remainingAmount.toFixed(2) })}
+                  onClick={() => setFormData({ ...formData, amount: remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}
                   className="text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-1 rounded-md transition-colors"
                 >
-                  {t('invoice.payRemainingAmount')} ({remainingAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'})
+                  {t('invoice.payRemainingAmount')} ({remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'})
                 </button>
               )}
             </div>

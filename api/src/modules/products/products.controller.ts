@@ -111,7 +111,7 @@ export class ProductsController {
     const categoryIdsArray = categoryIds ? categoryIds.split(',').map(id => parseInt(id, 10)) : undefined;
     const isServiceBool = isService === 'true' ? true : isService === 'false' ? false : undefined;
 
-    const { products, total } = await this.productsService.findAll(
+    const { products, totalCount } = await this.productsService.findAll(
       limitNum,
       offsetNum,
       search,
@@ -124,7 +124,7 @@ export class ProductsController {
     return {
       success: true,
       products,
-      total,
+      total: totalCount,
       limit: limitNum,
       offset: offsetNum,
     };

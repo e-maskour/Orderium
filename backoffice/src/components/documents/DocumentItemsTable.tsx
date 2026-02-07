@@ -318,7 +318,7 @@ export function DocumentItemsTable({
                   )}
                   <td className="py-3 px-3">
                     <div className="text-center font-semibold text-slate-800 text-sm">
-                      {calculateItemTotal(item).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                      {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                     </div>
                   </td>
                   <td className="py-3 px-3">
@@ -528,7 +528,7 @@ export function DocumentItemsTable({
                 <div className="flex items-center justify-between">
                   <span className="text-xs sm:text-sm font-semibold text-slate-700">{t('invoice.totalHeader')}:</span>
                   <span className="text-base sm:text-lg md:text-xl font-bold text-amber-700">
-                    {calculateItemTotal(item).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                  {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                   </span>
                 </div>
               </div>

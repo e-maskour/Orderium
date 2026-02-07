@@ -342,7 +342,7 @@ export default function FournisseurDetail() {
                                 },
                                 formatter: (value) => {
                                   if (value >= 1000) {
-                                    return `${(value / 1000).toFixed(1).replace('.', ',')}k`;
+                                    return `${(value / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k`;
                                   }
                                   return formatFrenchNumber(value, 0);
                                 },

@@ -215,10 +215,10 @@ export const DiscountModal = ({
             </p>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-xl font-bold text-gray-900">
-                {subtotal.toFixed(2)} {t('currency')}
+                {subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
               </span>
               <span className="text-xs sm:text-sm text-gray-500">
-                ({quantity} × {unitPrice.toFixed(2)})
+                ({quantity} × {unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
               </span>
             </div>
           </div>
@@ -319,19 +319,19 @@ export const DiscountModal = ({
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">{t('subtotal')}</span>
                 <span className="font-semibold text-gray-900">
-                  {subtotal.toFixed(2)} {t('currency')}
+                  {subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">{t('discount')}</span>
                 <span className="font-semibold text-orange-600">
-                  -{discountAmount.toFixed(2)} {t('currency')}
+                  -{discountAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-orange-500/20">
                 <span className="font-semibold text-gray-700">{t('total')}</span>
                 <span className="text-xl font-bold text-orange-600">
-                  {total.toFixed(2)} {t('currency')}
+                  {total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                 </span>
               </div>
             </div>

@@ -39,6 +39,17 @@ export class InvoicesController {
     return { success: true, invoices: result.invoices, count: result.count };
   }
 
+  @Get('analytics/:direction')
+  @ApiOperation({ summary: 'Get invoice analytics with chart data and KPIs' })
+  async getAnalytics(
+    @Param('direction') direction: 'vente' | 'achat',
+    @Query('year') year?: string,
+  ) {
+    const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
+    const analytics = await this.invoicesService.getAnalytics(direction, yearNum);
+    return { success: true, data: analytics };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get invoice by ID' })
   async findOne(@Param('id', ParseIntPipe) id: number) {

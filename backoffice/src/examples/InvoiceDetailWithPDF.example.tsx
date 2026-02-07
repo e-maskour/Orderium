@@ -173,13 +173,13 @@ export default function InvoiceDetailExample() {
                   {item.quantity}
                 </td>
                 <td className="py-3 px-4 text-right text-slate-700">
-                  {Number(item.unitPrice).toLocaleString('fr-FR', {
+                  {Number(item.unitPrice).toLocaleString('de-DE', {
                     minimumFractionDigits: 2,
                   })}{' '}
                   DH
                 </td>
-                <td className="py-3 px-4 text-right font-semibold text-slate-900">
-                  {Number(item.total).toLocaleString('fr-FR', {
+                <td className="py-3 px-4 text-sm font-semibold text-slate-900 text-right">
+                  {Number(item.total).toLocaleString('de-DE', {
                     minimumFractionDigits: 2,
                   })}{' '}
                   DH
@@ -196,7 +196,7 @@ export default function InvoiceDetailExample() {
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">Sous-total HT:</span>
             <span className="font-semibold text-slate-900">
-              {Number(invoice.subtotal).toLocaleString('fr-FR', {
+              {Number(invoice.subtotal).toLocaleString('de-DE', {
                 minimumFractionDigits: 2,
               })}{' '}
               DH
@@ -205,7 +205,7 @@ export default function InvoiceDetailExample() {
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">TVA (20%):</span>
             <span className="font-semibold text-slate-900">
-              {Number(invoice.tax).toLocaleString('fr-FR', {
+              {Number(invoice.tax).toLocaleString('de-DE', {
                 minimumFractionDigits: 2,
               })}{' '}
               DH
@@ -214,7 +214,7 @@ export default function InvoiceDetailExample() {
           <div className="flex justify-between pt-3 border-t border-slate-200">
             <span className="font-bold text-slate-900">Total TTC:</span>
             <span className="font-bold text-xl text-blue-600">
-              {Number(invoice.total).toLocaleString('fr-FR', {
+              {Number(invoice.total).toLocaleString('de-DE', {
                 minimumFractionDigits: 2,
               })}{' '}
               DH
@@ -225,16 +225,16 @@ export default function InvoiceDetailExample() {
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Montant payé:</span>
                 <span className="font-semibold text-green-600">
-                  {Number(invoice.paidAmount || 0).toLocaleString('fr-FR', {
+                  {Number(invoice.paidAmount || 0).toLocaleString('de-DE', {
                     minimumFractionDigits: 2,
                   })}{' '}
                   DH
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Reste à payer:</span>
+                <span className="text-slate-600">Montant restant:</span>
                 <span className="font-semibold text-orange-600">
-                  {Number(invoice.remainingAmount || invoice.total).toLocaleString('fr-FR', {
+                  {Number(invoice.remainingAmount || invoice.total).toLocaleString('de-DE', {
                     minimumFractionDigits: 2,
                   })}{' '}
                   DH

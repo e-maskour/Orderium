@@ -130,6 +130,13 @@ export class InvoicesService {
     const result = await response.json();
     return InvoiceWithDetails.fromApiResponse(result.invoice);
   }
+
+  async getAnalytics(direction: 'vente' | 'achat', year: number): Promise<any> {
+    const response = await fetch(`${API_URL}/invoices/analytics/${direction}?year=${year}`);
+    if (!response.ok) throw new Error('Failed to fetch invoice analytics');
+    const result = await response.json();
+    return result.data;
+  }
 }
 
 export const invoicesService = new InvoicesService();

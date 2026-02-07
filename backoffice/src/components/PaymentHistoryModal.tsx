@@ -132,16 +132,16 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-slate-600 mb-1">{t('totalInvoice')}</p>
-                  <p className="text-2xl font-bold text-slate-900">{invoiceTotal.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
+                  <p className="text-2xl font-bold text-slate-900">{invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-600 mb-1">{t('totalPaid')}</p>
-                  <p className="text-2xl font-bold text-emerald-600">{totalPaid.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}</p>
+                  <p className="text-2xl font-bold text-emerald-600">{totalPaid.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-600 mb-1">{t('remainingToPay')}</p>
                   <p className={`text-2xl font-bold ${isFullyPaid ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {remainingAmount.toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                    {remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                   </p>
                 </div>
               </div>
@@ -189,7 +189,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                         <div>
                           <p className="text-xs text-slate-500 mb-1">{t('amount')}</p>
                           <p className="text-lg font-semibold text-slate-900">
-                            {parseFloat(payment.amount.toString()).toFixed(2)} {language === 'ar' ? 'د.م' : 'DH'}
+                            {parseFloat(payment.amount.toString()).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                           </p>
                         </div>
                         <div>

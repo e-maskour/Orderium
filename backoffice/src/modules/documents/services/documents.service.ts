@@ -218,6 +218,24 @@ export class DocumentsService {
     }
     return 'unpaid';
   }
+
+  async getAnalytics(
+    type: DocumentType,
+    direction: DocumentDirection,
+    year?: number
+  ): Promise<any> {
+    const currentYear = year || new Date().getFullYear();
+
+    if (type === 'facture') {
+      return invoicesService.getAnalytics(direction, currentYear);
+    } else if (type === 'devis') {
+      return quotesService.getAnalytics(currentYear);
+    } else if (type === 'bon_livraison') {
+      return ordersService.getAnalytics(currentYear);
+    }
+
+    return null;
+  }
 }
 
 export const documentsService = new DocumentsService();

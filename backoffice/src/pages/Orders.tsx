@@ -963,7 +963,7 @@ export default function Orders() {
                     <div className="flex-shrink-0 text-right min-w-fit">
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block hidden sm:block">{t('total')}</span>
                       <span className="text-sm sm:text-base font-bold text-amber-600 block mt-0.5">
-                        {order.total?.toFixed(2)} <span className="text-xs">{t('currency')}</span>
+                        {order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-xs">{t('currency')}</span>
                       </span>
                     </div>
                   </div>
@@ -1058,7 +1058,7 @@ export default function Orders() {
                 <div className="border-t border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 px-4 py-3 flex items-center justify-between flex-shrink-0">
                   <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">{t('total')}</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold text-amber-600">{order.total?.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-amber-600">{order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     <span className="text-xs font-semibold text-slate-500">{t('currency')}</span>
                   </div>
                 </div>

@@ -112,7 +112,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-500 mb-1">{t('totalRevenue')}</p>
-                      <p className="text-3xl font-bold text-slate-800">{totalRevenue.toFixed(2)} <span className="text-lg text-slate-500">{t('currency')}</span></p>
+                      <p className="text-3xl font-bold text-slate-800">{totalRevenue.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-lg text-slate-500">{t('currency')}</span></p>
                     </div>
                     <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-md shadow-green-500/30">
                       <TrendingUp className="w-7 h-7 text-white" />

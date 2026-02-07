@@ -932,4 +932,65 @@ export class QuotesService {
     }
     return result;
   }
+
+  async getAnalytics(year: number) {
+    // Get all quotes for the specified year
+    const quotes = await this.quoteRepository
+      .createQueryBuilder('quote')
+      .andWhere('EXTRACT(YEAR FROM quote.date) = :year', { year })
+      .getMany();
+
+    // Calculate monthly chart data
+    const monthlyData = Array.from({ length: 12 }, (_, monthIndex) => {
+      const monthQuotes = quotes.filter(
+        (quote) => new Date(quote.date).getMonth() === monthIndex,
+      );
+
+      return {
+        month: monthIndex + 1,
+        count: monthQuotes.length,
+        amount: monthQuotes.reduce((sum, quote) => sum + Number(quote.total), 0),
+      };
+    });
+
+    // Calculate KPIs
+    const totalQuotes = quotes.length;
+    const totalAmount = quotes.reduce(
+      (sum, quote) => sum + Number(quote.total),
+      0,
+    );
+    const acceptedCount = quotes.filter(
+      (quote) =>
+        quote.status === QuoteStatus.SIGNED ||
+        quote.status === QuoteStatus.INVOICED ||
+        quote.status === QuoteStatus.DELIVERED,
+    ).length;
+    const pendingCount = quotes.filter(
+      (quote) =>
+        quote.status === QuoteStatus.OPEN || quote.status === QuoteStatus.DRAFT,
+    ).length;
+    const acceptedValue = quotes
+      .filter(
+        (quote) =>
+          quote.status === QuoteStatus.SIGNED ||
+          quote.status === QuoteStatus.INVOICED ||
+          quote.status === QuoteStatus.DELIVERED,
+      )
+      .reduce((sum, quote) => sum + Number(quote.total), 0);
+    const conversionRate =
+      totalQuotes > 0 ? (acceptedCount / totalQuotes) * 100 : 0;
+
+    return {
+      year,
+      chartData: monthlyData,
+      kpis: {
+        totalQuotes,
+        totalAmount,
+        acceptedCount,
+        pendingCount,
+        acceptedValue,
+        conversionRate,
+      },
+    };
+  }
 }
