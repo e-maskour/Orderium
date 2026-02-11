@@ -30,10 +30,20 @@ const DOCUMENT_TRANSLATION_KEYS = {
     titleShort: 'quote',
     partnerLabel: 'client'
   },
+  devis_achat: {
+    title: 'priceRequests',
+    titleShort: 'priceRequest',
+    partnerLabel: 'supplier'
+  },
   bon_livraison_vente: {
     title: 'deliveryNotes',
     titleShort: 'deliveryNote',
     partnerLabel: 'client'
+  },
+  bon_livraison_achat: {
+    title: 'purchaseOrders',
+    titleShort: 'purchaseOrder',
+    partnerLabel: 'supplier'
   }
 };
 
@@ -101,6 +111,42 @@ export function getDocumentConfigs(t: (key: string) => string): Record<string, D
       prefix: 'BL',
       icon: Truck,
       partnerLabel: t('client'),
+      features: {
+        hasValidation: true,
+        canDownloadPDF: true,
+        linkedToInvoice: true,
+        requiresSignature: true,
+        showTax: true,
+        showDiscount: true
+      },
+      statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled']
+    },
+    devis_achat: {
+      type: 'devis',
+      direction: 'achat',
+      title: t('priceRequests'),
+      titleShort: t('priceRequest'),
+      prefix: 'DP',
+      icon: FileEdit,
+      partnerLabel: t('supplier'),
+      features: {
+        hasValidation: true,
+        canDownloadPDF: true,
+        canConvertToInvoice: true,
+        expirationDate: true,
+        showTax: true,
+        showDiscount: true
+      },
+      statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced']
+    },
+    bon_livraison_achat: {
+      type: 'bon_livraison',
+      direction: 'achat',
+      title: t('purchaseOrders'),
+      titleShort: t('purchaseOrder'),
+      prefix: 'BA',
+      icon: Truck,
+      partnerLabel: t('supplier'),
       features: {
         hasValidation: true,
         canDownloadPDF: true,
@@ -178,6 +224,42 @@ export const DOCUMENT_CONFIGS: Record<string, DocumentConfig> = {
     prefix: 'BL',
     icon: Truck,
     partnerLabel: 'Client',
+    features: {
+      hasValidation: true,
+      canDownloadPDF: true,
+      linkedToInvoice: true,
+      requiresSignature: true,
+      showTax: true,
+      showDiscount: true
+    },
+    statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled']
+  },
+  devis_achat: {
+    type: 'devis',
+    direction: 'achat',
+    title: 'Demandes de Prix',
+    titleShort: 'Demande de Prix',
+    prefix: 'DP',
+    icon: FileEdit,
+    partnerLabel: 'Fournisseur',
+    features: {
+      hasValidation: true,
+      canDownloadPDF: true,
+      canConvertToInvoice: true,
+      expirationDate: true,
+      showTax: true,
+      showDiscount: true
+    },
+    statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced']
+  },
+  bon_livraison_achat: {
+    type: 'bon_livraison',
+    direction: 'achat',
+    title: 'Bons d\'Achat',
+    titleShort: 'Bon d\'Achat',
+    prefix: 'BA',
+    icon: Truck,
+    partnerLabel: 'Fournisseur',
     features: {
       hasValidation: true,
       canDownloadPDF: true,

@@ -7,6 +7,10 @@ export interface Quote {
   customerName?: string | null;
   customerPhone?: string | null;
   customerAddress?: string | null;
+  supplierId?: number | null;
+  supplierName?: string | null;
+  supplierPhone?: string | null;
+  supplierAddress?: string | null;
   date: string;
   expirationDate?: string | null;
   dueDate?: string | null;
@@ -51,6 +55,7 @@ export interface QuoteWithDetails {
 export interface QuoteFilters {
   status?: QuoteStatus;
   customerId?: number;
+  supplierId?: number;
   dateFrom?: string;
   dateTo?: string;
   search?: string;
@@ -63,6 +68,10 @@ export interface CreateQuoteDTO {
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
+  supplierId?: number;
+  supplierName?: string;
+  supplierPhone?: string;
+  supplierAddress?: string;
   date: string;
   expirationDate?: string;
   subtotal: number;

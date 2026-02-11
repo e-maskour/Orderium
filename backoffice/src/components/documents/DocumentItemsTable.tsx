@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, BookOpen } from 'lucide-react';
 import { DocumentItem } from '../../modules/documents/types';
 import { calculateItemTotal } from '../../modules/documents/hooks';
@@ -6,6 +6,7 @@ import { Product } from '../../modules/products/products.interface';
 import { productsService } from '../../modules/products/products.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductCatalogueModal } from '../ProductCatalogueModal';
+import { Autocomplete } from '../ui/autocomplete';
 
 interface DocumentItemsTableProps {
   items: DocumentItem[];
@@ -14,6 +15,8 @@ interface DocumentItemsTableProps {
   onItemsChange: (items: DocumentItem[]) => void;
   showTaxColumn?: boolean;
   showDiscountColumn?: boolean;
+  showPriceColumn?: boolean;
+  showTotalColumn?: boolean;
 }
 
 export function DocumentItemsTable({
@@ -22,57 +25,29 @@ export function DocumentItemsTable({
   readOnly = false,
   onItemsChange,
   showTaxColumn = true,
-  showDiscountColumn = true
+  showDiscountColumn = true,
+  showPriceColumn = true,
+  showTotalColumn = true
 }: DocumentItemsTableProps) {
   const { t, language } = useLanguage();
   const isVente = direction === 'vente';
 
-  const [showProductSearch, setShowProductSearch] = useState<string | null>(null);
-  const [products, setProducts] = useState<Record<string, Product[]>>({});
-  const [loadingProducts, setLoadingProducts] = useState<Record<string, boolean>>({});
+  const [products, setProducts] = useState<Product[]>([]);
   const [showCatalogueModal, setShowCatalogueModal] = useState(false);
-  const productSearchRef = useRef<HTMLInputElement>(null);
-  const productDropdownRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<Record<string, number>>({});
 
-  // Debounced product search
-  const searchProducts = async (itemId: string, query: string) => {
-    if (searchTimeoutRef.current[itemId]) {
-      clearTimeout(searchTimeoutRef.current[itemId]);
-    }
-
-    setLoadingProducts(prev => ({ ...prev, [itemId]: true }));
-
-    searchTimeoutRef.current[itemId] = setTimeout(async () => {
-      try {
-        const response = await productsService.getProducts({ 
-          search: query.trim() || undefined, 
-          limit: 20 
-        });
-        setProducts(prev => ({ ...prev, [itemId]: response.products || [] }));
-      } catch (error) {
-        console.error('Error searching products:', error);
-        setProducts(prev => ({ ...prev, [itemId]: [] }));
-      } finally {
-        setLoadingProducts(prev => ({ ...prev, [itemId]: false }));
-      }
-    }, query.trim() ? 300 : 0) as unknown as number;
-  };
-
-  // Handle click outside to close dropdowns
+  // Load products
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const clickedInput = productSearchRef.current?.contains(event.target as Node);
-      const clickedDropdown = productDropdownRef.current?.contains(event.target as Node);
-      if (!clickedInput && !clickedDropdown) {
-        setShowProductSearch(null);
+    const loadProducts = async () => {
+      try {
+        const response = await productsService.getProducts({ limit: 100 });
+        setProducts(response.products || []);
+      } catch (error) {
+        console.error('Error loading products:', error);
+        setProducts([]);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    
+    loadProducts();
   }, []);
 
   const handleAddItem = () => {
@@ -102,11 +77,6 @@ export function DocumentItemsTable({
       if (item.id === id) {
         const updated = { ...item, [field]: value };
         updated.total = calculateItemTotal(updated);
-        
-        if (field === 'description' && typeof value === 'string') {
-          searchProducts(id, value);
-        }
-        
         return updated;
       }
       return item;
@@ -114,7 +84,11 @@ export function DocumentItemsTable({
     onItemsChange(newItems);
   };
 
-  const handleSelectProduct = (itemId: string, product: Product) => {
+  const handleSelectProduct = (itemId: string, productIdStr: string) => {
+    const productId = Number(productIdStr);
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
     const existingItemIndex = items.findIndex(item => item.productId === product.id);
     
     if (existingItemIndex !== -1) {
@@ -137,7 +111,7 @@ export function DocumentItemsTable({
             ...item, 
             productId: product.id,
             description: product.name,
-            unitPrice: isVente ? product.price : product.cost,
+            unitPrice: isVente ? product.price : (product.cost || product.price),
             tax: (isVente ? product.saleTax : product.purchaseTax) || 0
           };
           updated.total = calculateItemTotal(updated);
@@ -147,8 +121,6 @@ export function DocumentItemsTable({
       });
       onItemsChange(newItems);
     }
-    
-    setShowProductSearch(null);
   };
 
   const handleCatalogueItemsChange = (newItems: DocumentItem[]) => {
@@ -173,9 +145,11 @@ export function DocumentItemsTable({
                 <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-24">
                   {t('invoice.quantityHeader')}
                 </th>
-                <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-56">
-                  {t('invoice.unitPriceHeader')}
-                </th>
+                {showPriceColumn && (
+                  <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-56">
+                    {t('invoice.unitPriceHeader')}
+                  </th>
+                )}
                 {showDiscountColumn && (
                   <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-16">
                     {t('invoice.discountHeader')}
@@ -186,9 +160,11 @@ export function DocumentItemsTable({
                     {t('invoice.tax')}
                   </th>
                 )}
-                <th className="text-center py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-32">
-                  {t('invoice.totalHeader')}
-                </th>
+                {showTotalColumn && (
+                  <th className="text-center py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-32">
+                    {t('invoice.totalHeader')}
+                  </th>
+                )}
                 <th className="w-10"></th>
               </tr>
             </thead>
@@ -196,66 +172,19 @@ export function DocumentItemsTable({
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50" style={{overflow: 'visible'}}>
                   <td className="py-3 px-3 w-[45%] min-w-[280px]" style={{overflow: 'visible'}}>
-                    <div className="relative">
-                      <input
-                        ref={showProductSearch === item.id ? productSearchRef : null}
-                        type="text"
-                        value={item.description}
-                        onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
-                        onFocus={() => {
-                          if (!readOnly) {
-                            setShowProductSearch(item.id);
-                            if (!products[item.id]) {
-                              searchProducts(item.id, item.description);
-                            }
-                          }
-                        }}
-                        placeholder={t('invoice.itemDescriptionPlaceholder')}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
-                        disabled={readOnly}
-                      />
-                      {showProductSearch === item.id && productSearchRef.current && (
-                        <div 
-                          ref={productDropdownRef}
-                          className="fixed z-[9999] bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                          style={{
-                            top: `${productSearchRef.current.getBoundingClientRect().bottom + 4}px`,
-                            left: `${productSearchRef.current.getBoundingClientRect().left}px`,
-                            width: `${productSearchRef.current.getBoundingClientRect().width}px`,
-                          }}
-                        >
-                          {loadingProducts[item.id] ? (
-                            <div className="p-4 text-center text-slate-500 text-sm">
-                              {t('loading')}
-                            </div>
-                          ) : (products[item.id] || []).length > 0 ? (
-                            <div>
-                              {(products[item.id] || []).map(product => (
-                                <div
-                                  key={product.id}
-                                  onClick={() => handleSelectProduct(item.id, product)}
-                                  className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
-                                >
-                                  <div className="font-medium text-slate-800">{product.name}</div>
-                                  <div className="text-sm text-slate-500">
-                                    {isVente ? product.price : product.cost} {language === 'ar' ? 'د.م' : 'DH'}
-                                    {product.code && ` • ${product.code}`}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : item.description.trim() ? (
-                            <div className="p-4 text-center text-slate-500 text-sm">
-                              {t('invoice.noProductsFound')}
-                            </div>
-                          ) : (
-                            <div className="p-4 text-center text-slate-500 text-sm">
-                              {t('invoice.productSearchPlaceholder')}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <Autocomplete
+                      options={products.map(product => ({
+                        value: String(product.id),
+                        label: product.name
+                      }))}
+                      value={item.productId ? String(item.productId) : ''}
+                      onValueChange={(value) => handleSelectProduct(item.id, value)}
+                      placeholder={t('invoice.itemDescriptionPlaceholder')}
+                      emptyMessage={t('invoice.noProductsFound')}
+                      disabled={readOnly}
+                      allowCustomValue={false}
+                      className="text-sm"
+                    />
                   </td>
                   <td className="py-3 px-3">
                     <input
@@ -268,17 +197,19 @@ export function DocumentItemsTable({
                       disabled={readOnly}
                     />
                   </td>
-                  <td className="py-3 px-3">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={item.unitPrice}
-                      onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
-                      disabled={readOnly}
-                    />
-                  </td>
+                  {showPriceColumn && (
+                    <td className="py-3 px-3">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={item.unitPrice}
+                        onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                        disabled={readOnly}
+                      />
+                    </td>
+                  )}
                   {showDiscountColumn && (
                     <td className="py-3 px-3">
                       <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-500">
@@ -316,11 +247,13 @@ export function DocumentItemsTable({
                       </select>
                     </td>
                   )}
-                  <td className="py-3 px-3">
-                    <div className="text-center font-semibold text-slate-800 text-sm">
-                      {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                    </div>
-                  </td>
+                  {showTotalColumn && (
+                    <td className="py-3 px-3">
+                      <div className="text-center font-semibold text-slate-800 text-sm">
+                        {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                      </div>
+                    </td>
+                  )}
                   <td className="py-3 px-3">
                     {!readOnly && items.length > 1 && (
                       <button
@@ -363,70 +296,22 @@ export function DocumentItemsTable({
                 <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                   {t('invoice.descriptionHeader')} <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <input
-                    ref={showProductSearch === item.id ? productSearchRef : null}
-                    type="text"
-                    value={item.description}
-                    onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
-                    onFocus={() => {
-                      if (!readOnly) {
-                        setShowProductSearch(item.id);
-                        if (!products[item.id]) {
-                          searchProducts(item.id, item.description);
-                        }
-                      }
-                    }}
-                    placeholder={t('invoice.itemDescriptionPlaceholder')}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
-                    disabled={readOnly}
-                  />
-                  {showProductSearch === item.id && productSearchRef.current && (
-                    <div 
-                      ref={productDropdownRef}
-                      className="fixed z-[9999] bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                      style={{
-                        top: `${productSearchRef.current.getBoundingClientRect().bottom + 4}px`,
-                        left: `${productSearchRef.current.getBoundingClientRect().left}px`,
-                        width: `${productSearchRef.current.getBoundingClientRect().width}px`,
-                      }}
-                    >
-                      {loadingProducts[item.id] ? (
-                        <div className="p-4 text-center text-slate-500 text-sm">
-                          {t('loading')}
-                        </div>
-                      ) : (products[item.id] || []).length > 0 ? (
-                        <div>
-                          {(products[item.id] || []).map(product => (
-                            <div
-                              key={product.id}
-                              onClick={() => handleSelectProduct(item.id, product)}
-                              className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
-                            >
-                              <div className="font-medium text-slate-800">{product.name}</div>
-                              <div className="text-sm text-slate-500">
-                                {isVente ? product.price : product.cost} {language === 'ar' ? 'د.م' : 'DH'}
-                                {product.code && ` • ${product.code}`}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : item.description.trim() ? (
-                        <div className="p-4 text-center text-slate-500 text-sm">
-                          {t('invoice.noProductsFound')}
-                        </div>
-                      ) : (
-                        <div className="p-4 text-center text-slate-500 text-sm">
-                          {t('invoice.productSearchPlaceholder')}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <Autocomplete
+                  options={products.map(product => ({
+                    value: String(product.id),
+                    label: product.name
+                  }))}
+                  value={item.productId ? String(item.productId) : ''}
+                  onValueChange={(value) => handleSelectProduct(item.id, value)}
+                  placeholder={t('invoice.itemDescriptionPlaceholder')}
+                  emptyMessage={t('invoice.noProductsFound')}
+                  disabled={readOnly}
+                  allowCustomValue={false}
+                />
               </div>
 
               {/* Quantity & Unit Price - Side by side on mobile */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className={`grid gap-2 sm:gap-3 mb-3 sm:mb-4 ${showPriceColumn ? 'grid-cols-3' : 'grid-cols-1'}`}>
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                     {t('invoice.quantityHeader')}
@@ -441,20 +326,22 @@ export function DocumentItemsTable({
                     disabled={readOnly}
                   />
                 </div>
-                <div className="col-span-2">
-                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
-                    {t('invoice.unitPriceHeader')}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={item.unitPrice}
-                    onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg text-sm sm:text-base text-center focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
-                    disabled={readOnly}
-                  />
-                </div>
+                {showPriceColumn && (
+                  <div className="col-span-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
+                      {t('invoice.unitPriceHeader')}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={item.unitPrice}
+                      onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg text-sm sm:text-base text-center focus:outline-none focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                      disabled={readOnly}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Discount & Tax - Side by side on mobile */}
@@ -524,14 +411,16 @@ export function DocumentItemsTable({
               </div>
 
               {/* Total - Highlighted */}
-              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50 -mx-3 sm:-mx-4 px-3 sm:px-4 py-2.5 sm:py-3 rounded-b-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm font-semibold text-slate-700">{t('invoice.totalHeader')}:</span>
-                  <span className="text-base sm:text-lg md:text-xl font-bold text-amber-700">
-                  {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                  </span>
+              {showTotalColumn && (
+                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50 -mx-3 sm:-mx-4 px-3 sm:px-4 py-2.5 sm:py-3 rounded-b-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm font-semibold text-slate-700">{t('invoice.totalHeader')}:</span>
+                    <span className="text-base sm:text-lg md:text-xl font-bold text-amber-700">
+                    {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ))}
         </div>

@@ -121,6 +121,7 @@ export default {
   editSequence: 'تعديل التسلسل',
   entityType: 'نوع المستند',
   format: 'التنسيق',
+  nextDocumentNumber: 'رقم المستند التالي',
   nextNumber: 'الرقم التالي',
   numberLength: 'طول الرقم',
   resetPeriod: 'فترة إعادة التعيين',

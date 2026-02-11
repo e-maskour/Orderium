@@ -10,6 +10,7 @@ import {
   BaseDocument,
   BaseStandardItem,
 } from '../../../common/entities/base-document.entity';
+import { Partner } from '../../partners/entities/partner.entity';
 
 export enum QuoteStatus {
   DRAFT = 'draft', // Brouillons
@@ -23,6 +24,7 @@ export enum QuoteStatus {
 @Entity('quotes')
 @Index(['documentNumber'])
 @Index(['customerId'])
+@Index(['supplierId'])
 @Index(['date'])
 @Index(['expirationDate'])
 export class Quote extends BaseDocument {
@@ -34,6 +36,23 @@ export class Quote extends BaseDocument {
   set quoteNumber(value: string) {
     this.documentNumber = value;
   }
+
+  // Supplier fields for purchase quotes (demande de prix)
+  @Column({ type: 'int', nullable: true })
+  supplierId: number | null;
+
+  @ManyToOne(() => Partner, { nullable: true })
+  @JoinColumn({ name: 'supplierId' })
+  supplier: Partner;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  supplierName: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  supplierPhone: string;
+
+  @Column({ type: 'text', nullable: true })
+  supplierAddress: string;
 
   @Column({ type: 'date', nullable: true })
   expirationDate: Date | null;

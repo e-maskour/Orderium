@@ -125,6 +125,7 @@ export default {
   editSequence: 'Modifier la séquence',
   entityType: 'Type de document',
   format: 'Format',
+  nextDocumentNumber: 'Prochain numéro de document',
   nextNumber: 'Prochain numéro',
   numberLength: 'Longueur du numéro',
   resetPeriod: 'Période de remise à zéro',

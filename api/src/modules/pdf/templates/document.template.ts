@@ -21,6 +21,9 @@ interface DocumentTemplateData {
   notes?: string;
   styles: string;
   hideVAT?: boolean;
+  isPurchaseDocument?: boolean;
+  isDemandePrix?: boolean;
+  totalQuantity?: string;
 }
 
 interface HeaderTemplateData {
@@ -191,11 +194,11 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
         <div class="invoice-page">
             <!-- Content -->
             <main class="content-wrapper">
-                <!-- Customer Section -->
+                <!-- Customer/Supplier Section -->
                 <section class="customer-section">
                     <div class="customer-grid">
                         <div class="bill-to">
-                            <div class="section-title">Client</div>
+                            <div class="section-title">${data.isPurchaseDocument ? 'Fournisseur' : 'Client'}</div>
                             <div class="info-box">
                             <div style="font-weight: bold; margin-bottom: 1mm;">${data.customerName}</div>
                             ${data.customerPhone ? `<div style="font-size: 8pt; color: #666666;">Tél: ${data.customerPhone}</div>` : ''}
@@ -210,12 +213,17 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                     <table class="invoice-table">
                         <thead class="table-header">
                             <tr>
+                                ${data.isDemandePrix ? `
+                                <th style="text-align: left; width: 70%;">Description</th>
+                                <th style="text-align: center; width: 30%;">Qté</th>
+                                ` : `
                                 <th style="text-align: left; width: ${data.hideVAT ? '48%' : '40%'};">Description</th>
                                 <th style="text-align: center; width: ${data.hideVAT ? '13%' : '10%'};">Qté</th>
                                 <th style="text-align: center; width: ${data.hideVAT ? '13%' : '12%'};">P.U.</th>
                                 <th style="text-align: center; width: ${data.hideVAT ? '13%' : '12%'};">Remise</th>
                                 ${!data.hideVAT ? '<th style="text-align: center; width: 12%;">TVA</th>' : ''}
                                 <th style="text-align: center; width: ${data.hideVAT ? '13%' : '14%'};">Total</th>
+                                `}
                             </tr>
                         </thead>
                         <tbody>
@@ -225,7 +233,12 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
 
                     <!-- Totals -->
                     <div class="totals-section">
-                      ${!data.hideVAT ? `
+                      ${data.isDemandePrix ? `
+                      <div class="totals-row totals-grand">
+                        <span class="totals-label">Total Quantité Demandée</span>
+                        <span class="totals-value">${data.totalQuantity || '0'}</span>
+                      </div>
+                      ` : !data.hideVAT ? `
                       <div class="totals-row">
                         <span class="totals-label">Sous-total HT</span>
                         <span class="totals-value">${data.subtotal} DH</span>

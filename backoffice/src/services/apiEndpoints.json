@@ -1,0 +1,178 @@
+{
+  "health": {
+    "root": {
+      "method": "GET",
+      "path": "/",
+      "description": "Root endpoint",
+      "requiresAuth": false,
+      "minimumRole": "public",
+      "category": "health"
+    },
+    "healthCheck": {
+      "method": "GET",
+      "path": "/health",
+      "description": "Health check endpoint",
+      "requiresAuth": false,
+      "minimumRole": "public",
+      "category": "health"
+    }
+  },
+  "statistics": {
+    "getStatistics": {
+      "method": "GET",
+      "path": "/statistics",
+      "description": "Get all statistics",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "getOrderStatistics": {
+      "method": "GET",
+      "path": "/statistics/orders",
+      "description": "Get order statistics",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "getDailyStats": {
+      "method": "GET",
+      "path": "/statistics/daily",
+      "description": "Get daily statistics",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    }
+  },
+  "orders": {
+    "create": {
+      "method": "POST",
+      "path": "/orders",
+      "description": "Create a new order",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "write"
+    },
+    "filter": {
+      "method": "POST",
+      "path": "/orders/filter",
+      "description": "Filter orders (POST method)",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "findAll": {
+      "method": "GET",
+      "path": "/orders",
+      "description": "Get all orders with filtering",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "getAnalytics": {
+      "method": "GET",
+      "path": "/orders/analytics/:direction",
+      "description": "Get order analytics with chart data and KPIs",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "findOne": {
+      "method": "GET",
+      "path": "/orders/:id",
+      "description": "Get order by ID",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    }
+  },
+  "products": {
+    "filter": {
+      "method": "POST",
+      "path": "/products/filter",
+      "description": "Filter products with POST body",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "findAll": {
+      "method": "GET",
+      "path": "/products",
+      "description": "Get all products",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "findOne": {
+      "method": "GET",
+      "path": "/products/:id",
+      "description": "Get product by ID",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    }
+  },
+  "partners": {
+    "findAll": {
+      "method": "GET",
+      "path": "/partners",
+      "description": "Get all partners",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "getCustomersDashboard": {
+      "method": "GET",
+      "path": "/partners/dashboard/customers",
+      "description": "Get customers dashboard statistics",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "getSuppliersDashboard": {
+      "method": "GET",
+      "path": "/partners/dashboard/suppliers",
+      "description": "Get suppliers dashboard statistics",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    }
+  },
+  "invoices": {
+    "findAll": {
+      "method": "POST",
+      "path": "/invoices/list",
+      "description": "Get all invoices with filters (POST method)",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    },
+    "getAnalytics": {
+      "method": "GET",
+      "path": "/invoices/analytics/:direction",
+      "description": "Get invoice analytics with chart data and KPIs",
+      "requiresAuth": true,
+      "minimumRole": "user",
+      "category": "read"
+    }
+  },
+  "inventory": {
+    "stock": {
+      "getAllStock": {
+        "method": "GET",
+        "path": "/inventory/stock",
+        "description": "Get all stock (aggregated across warehouses)",
+        "requiresAuth": true,
+        "minimumRole": "user",
+        "category": "read"
+      },
+      "getLowStockProducts": {
+        "method": "GET",
+        "path": "/inventory/stock/low",
+        "description": "Get low stock products",
+        "requiresAuth": true,
+        "minimumRole": "user",
+        "category": "read"
+      }
+    }
+  }
+}

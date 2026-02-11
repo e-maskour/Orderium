@@ -10,8 +10,11 @@ import {
   ParseIntPipe,
   BadRequestException,
   NotFoundException,
+  Res,
+  Header,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrdersDto } from './dto/filter-orders.dto';
@@ -71,6 +74,7 @@ export class OrdersController {
       filterDto.fromClient,
       pageNum,
       pageSize,
+      filterDto.supplierId,
     );
 
     return {
@@ -222,15 +226,18 @@ export class OrdersController {
     };
   }
 
-  @Get('analytics/data')
+  @Get('analytics/:direction')
   @ApiOperation({ summary: 'Get order analytics with chart data and KPIs' })
   @ApiResponse({
     status: 200,
     description: 'Order analytics retrieved successfully',
   })
-  async getAnalytics(@Query('year') year?: string) {
+  async getAnalytics(
+    @Param('direction') direction: 'vente' | 'achat',
+    @Query('year') year?: string,
+  ) {
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
-    const analytics = await this.ordersService.getAnalytics(yearNum);
+    const analytics = await this.ordersService.getAnalytics(direction, yearNum);
     return {
       success: true,
       data: analytics,
@@ -346,5 +353,25 @@ export class OrdersController {
       success: true,
       order,
     };
+  }
+
+  @Get('export/xlsx')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @ApiOperation({ summary: 'Export orders (bon de livraison / bon d\'achat) to XLSX file' })
+  async exportToXlsx(
+    @Query('supplierId') supplierId?: string,
+    @Res() res?: Response,
+  ) {
+    const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
+    const buffer = await this.ordersService.exportToXlsx(supplierIdNum);
+    
+    const filename = supplierIdNum !== undefined 
+      ? (supplierIdNum ? 'bons-achat.xlsx' : 'bons-livraison.xlsx')
+      : 'bons.xlsx';
+      
+    if (res) {
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.send(buffer);
+    }
   }
 }

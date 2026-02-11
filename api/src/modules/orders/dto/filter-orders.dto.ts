@@ -33,6 +33,11 @@ export class FilterOrdersDto {
   @IsNumber()
   customerId?: number;
 
+  @ApiProperty({ required: false, description: 'Supplier ID filter' })
+  @IsOptional()
+  @IsNumber()
+  supplierId?: number;
+
   @ApiProperty({ required: false, description: 'Delivery person ID filter' })
   @IsOptional()
   @IsNumber()

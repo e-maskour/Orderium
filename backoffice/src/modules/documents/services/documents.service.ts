@@ -73,10 +73,12 @@ export class DocumentsService {
         totalCount: result.totalCount
       };
     } else if (type === 'devis') {
+      const isVente = direction === 'vente';
       const quoteFilters = {
         search: filters?.search,
         status: filters?.status !== 'all' ? filters?.status : undefined,
-        customerId: filters?.partnerId,
+        customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
+        supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
         dateFrom: filters?.dateFrom,
         dateTo: filters?.dateTo,
         page: filters?.page,
@@ -86,14 +88,20 @@ export class DocumentsService {
       const result = await quotesService.getAll(quoteFilters);
       const quotes = result.quotes || [];
       
-      const transformed = this.transformQuotesToDocuments(quotes);
+      // Filter quotes based on direction
+      const filtered = quotes.filter(q => 
+        isVente ? q.quote.customerId : q.quote.supplierId
+      );
+      
+      const transformed = this.transformQuotesToDocuments(filtered, isVente);
       
       return {
         documents: transformed,
-        count: result.count,
-        totalCount: result.totalCount
+        count: filtered.length,
+        totalCount: filtered.length
       };
     } else if (type === 'bon_livraison') {
+      const isVente = direction === 'vente';
       // Fetch only orders NOT created from portal (fromPortal = false)
       const result = await ordersService.getAll(
         filters?.search,
@@ -107,12 +115,18 @@ export class DocumentsService {
         filters?.pageSize
       );
       
-      const transformed = this.transformOrdersToDocuments(result.orders || []);
+      // Filter orders based on direction
+      const allOrders = result.orders || [];
+      const filtered = allOrders.filter(order => 
+        isVente ? order.customerId : order.supplierId
+      );
+      
+      const transformed = this.transformOrdersToDocuments(filtered, isVente);
       
       return {
         documents: transformed,
-        count: result.count || 0,
-        totalCount: result.totalCount || 0
+        count: filtered.length,
+        totalCount: filtered.length
       };
     }
     
@@ -171,14 +185,14 @@ export class DocumentsService {
     }));
   }
 
-  private transformQuotesToDocuments(quotes: QuoteWithDetails[]): DocumentItem[] {
+  private transformQuotesToDocuments(quotes: QuoteWithDetails[], isVente: boolean): DocumentItem[] {
     return quotes.map(q => ({
       id: q.quote.id,
       number: q.quote.quoteNumber,
       date: q.quote.date,
       dueDate: q.quote.dueDate || q.quote.expirationDate || undefined,
       validationDate: q.quote.validationDate || null,
-      partnerName: q.quote.customerName || 'Inconnu',
+      partnerName: (isVente ? q.quote.customerName : q.quote.supplierName) || 'Inconnu',
       subtotal: q.quote.subtotal,
       tax: q.quote.tax,
       total: q.quote.total,
@@ -190,14 +204,14 @@ export class DocumentsService {
     }));
   }
 
-  private transformOrdersToDocuments(orders: Order[]): DocumentItem[] {
+  private transformOrdersToDocuments(orders: Order[], isVente: boolean): DocumentItem[] {
     return orders.map(order => ({
       id: order.id,
       number: order.orderNumber || `#${order.id}`,
       date: order.date || order.dateCreated,
       dueDate: order.dueDate || undefined,
       validationDate: order.validationDate || null,
-      partnerName: order.customerName || 'Inconnu',
+      partnerName: (isVente ? order.customerName : order.supplierName) || 'Inconnu',
       subtotal: order.total || 0,
       tax: 0,
       total: order.total || 0,
@@ -229,9 +243,9 @@ export class DocumentsService {
     if (type === 'facture') {
       return invoicesService.getAnalytics(direction, currentYear);
     } else if (type === 'devis') {
-      return quotesService.getAnalytics(currentYear);
+      return quotesService.getAnalytics(direction, currentYear);
     } else if (type === 'bon_livraison') {
-      return ordersService.getAnalytics(currentYear);
+      return ordersService.getAnalytics(direction, currentYear);
     }
 
     return null;

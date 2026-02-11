@@ -1,23 +1,18 @@
-import { AdminLayout } from '../components/AdminLayout';
-import { PageHeader } from '../components/PageHeader';
-import { useLanguage } from '../context/LanguageContext';
-import { ShoppingBag } from 'lucide-react';
+import DocumentListPage from './documents/DocumentListPage';
+import { getDocumentConfig } from '../modules/documents/types/document-config';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function BonAchat() {
   const { t } = useLanguage();
-
+  const config = getDocumentConfig('bon_livraison', 'achat', t);
+  
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto">
-        <PageHeader
-          icon={ShoppingBag}
-          title={t('purchaseOrder')}
-          subtitle={t('managePurchaseOrders')}
-        />
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-slate-600">Page en construction...</p>
-        </div>
-      </div>
-    </AdminLayout>
+    <DocumentListPage
+      documentType="bon_livraison"
+      direction="achat"
+      config={config}
+      createRoute="/bon-achat/create"
+      editRoute="/bon-achat"
+    />
   );
 }

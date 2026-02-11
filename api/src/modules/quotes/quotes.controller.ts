@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { Res, Header } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 import { FilterQuotesDto } from './dto/filter-quotes.dto';
 
@@ -26,6 +28,7 @@ export class QuotesController {
       filterDto.dateTo,
       pageNum,
       pageSizeNum,
+      filterDto.supplierId,
     );
     return { success: true, quotes: result.quotes, count: result.count, totalCount: result.totalCount };
   }
@@ -145,11 +148,32 @@ export class QuotesController {
     return { success: true, quote };
   }
 
-  @Get('analytics/data')
+  @Get('analytics/:direction')
   @ApiOperation({ summary: 'Get quote analytics with chart data and KPIs' })
-  async getAnalytics(@Query('year') year?: string) {
+  async getAnalytics(
+    @Param('direction') direction: 'vente' | 'achat',
+    @Query('year') year?: string,
+  ) {
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
-    const analytics = await this.quotesService.getAnalytics(yearNum);
+    const analytics = await this.quotesService.getAnalytics(direction, yearNum);
     return { success: true, data: analytics };
+  }
+
+  @Get('export/xlsx')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @ApiOperation({ summary: 'Export quotes/devis to XLSX file' })
+  async exportToXlsx(
+    @Res() res: Response,
+    @Query('supplierId') supplierId?: string,
+  ) {
+    const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
+    const buffer = await this.quotesService.exportToXlsx(supplierIdNum);
+    
+    const filename = supplierIdNum !== undefined 
+      ? (supplierIdNum ? 'demandes-de-prix.xlsx' : 'devis.xlsx')
+      : 'devis-et-demandes.xlsx';
+      
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.send(buffer);
   }
 }

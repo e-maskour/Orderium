@@ -721,44 +721,6 @@ export function DocumentTable({
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
-            <div className="text-xs text-slate-600">
-              {t('showingFrom')} {startIndex + 1} {t('to')} {Math.min(startIndex + pageSize, totalCount)} {t('on')} {totalCount} {itemLabel}s
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="px-2.5 py-1 border border-slate-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
-              >
-                {t('previous')}
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => onPageChange(page)}
-                  className={`px-2.5 py-1 rounded-lg transition-colors text-xs font-medium ${
-                    currentPage === page
-                      ? 'bg-amber-500 text-white'
-                      : 'border border-slate-200 hover:bg-white'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="px-2.5 py-1 border border-slate-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
-              >
-                {t('next')}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* PDF Preview Modal */}

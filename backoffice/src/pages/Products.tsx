@@ -5,12 +5,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
 import type { Product } from '../modules/products/products.interface';
-import { Plus, Eye, Trash2, Search, Package, Grid3x3, List, CheckSquare, X, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Eye, Trash2, Search, Package, Grid3x3, List, CheckSquare, X, Filter, ChevronDown, ChevronLeft, ChevronRight, Download, Upload, FileSpreadsheet } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AlertDialog from '../components/AlertDialog';
+import { toast } from 'sonner';
 
 export default function Products() {
   const { t } = useLanguage();
@@ -214,6 +215,79 @@ export default function Products() {
     appliedFilters.isService !== undefined,
   ].filter(Boolean).length;
 
+  // Export to XLSX
+  const handleExport = async () => {
+    try {
+      const blob = await productsService.exportToXlsx();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `produits-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Produits exportés avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de l\'exportation');
+      console.error(error);
+    }
+  };
+
+  // Download template
+  const handleDownloadTemplate = async () => {
+    try {
+      const blob = await productsService.downloadTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'template-produits.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Modèle téléchargé avec succès');
+    } catch (error) {
+      toast.error('Erreur lors du téléchargement du modèle');
+      console.error(error);
+    }
+  };
+
+  // Import from XLSX
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        toast.info('Import en cours...');
+        const result = await productsService.importFromXlsx(file);
+        
+        if (result.success) {
+          toast.success(
+            `Import réussi: ${result.imported} créés, ${result.updated} mis à jour`
+          );
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+        } else {
+          toast.warning(
+            `Import terminé avec des erreurs: ${result.imported} créés, ${result.updated} mis à jour, ${result.failed} échoués`
+          );
+          if (result.errors.length > 0) {
+            console.error('Import errors:', result.errors);
+          }
+        }
+      } catch (error: any) {
+        toast.error(`Erreur lors de l'import: ${error.message}`);
+        console.error(error);
+      }
+    };
+    input.click();
+  };
+
   return (
     <AdminLayout>
       <div className="flex flex-col max-w-7xl mx-auto">
@@ -261,6 +335,29 @@ export default function Products() {
                   {activeFiltersCount}
                 </span>
               )}
+            </button>
+
+            {/* Import/Export Buttons */}
+            <button
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+              title="Télécharger le modèle"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleImport}
+              className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+              title="Importer"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+              title="Exporter"
+            >
+              <Download className="w-4 h-4" />
             </button>
 
             {/* Add Product Button */}

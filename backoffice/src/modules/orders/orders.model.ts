@@ -76,6 +76,10 @@ export class Order implements IOrder {
   customerName?: string | null;
   customerPhone?: string | null;
   customerAddress?: string | null;
+  supplierId?: number | null;
+  supplierName?: string | null;
+  supplierPhone?: string | null;
+  supplierAddress?: string | null;
   date: string;
   dueDate?: string | null;
   validationDate?: string | null;
@@ -104,6 +108,10 @@ export class Order implements IOrder {
     this.customerName = data.customerName;
     this.customerPhone = data.customerPhone;
     this.customerAddress = data.customerAddress;
+    this.supplierId = data.supplierId;
+    this.supplierName = data.supplierName;
+    this.supplierPhone = data.supplierPhone;
+    this.supplierAddress = data.supplierAddress;
     this.date = data.date;
     this.dueDate = data.dueDate;
     this.validationDate = data.validationDate;
@@ -128,15 +136,15 @@ export class Order implements IOrder {
 
   // Getters
   get partnerName(): string {
-    return this.customerName || 'N/A';
+    return this.customerName || this.supplierName || 'N/A';
   }
 
   get partnerPhone(): string {
-    return this.customerPhone || 'N/A';
+    return this.customerPhone || this.supplierPhone || 'N/A';
   }
 
   get partnerAddress(): string {
-    return this.customerAddress || 'N/A';
+    return this.customerAddress || this.supplierAddress || 'N/A';
   }
 
   get hasDeliveryPerson(): boolean {
@@ -241,6 +249,10 @@ export class Order implements IOrder {
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       customerAddress: data.customerAddress,
+      supplierId: data.supplierId,
+      supplierName: data.supplierName,
+      supplierPhone: data.supplierPhone,
+      supplierAddress: data.supplierAddress,
       date: data.date,
       dueDate: data.dueDate,
       validationDate: data.validationDate,

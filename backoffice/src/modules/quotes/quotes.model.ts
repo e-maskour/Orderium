@@ -75,6 +75,10 @@ export class Quote implements IQuote {
   customerName?: string | null;
   customerPhone?: string | null;
   customerAddress?: string | null;
+  supplierId?: number | null;
+  supplierName?: string | null;
+  supplierPhone?: string | null;
+  supplierAddress?: string | null;
   date: string;
   expirationDate?: string | null;
   dueDate?: string | null;
@@ -104,6 +108,10 @@ export class Quote implements IQuote {
     this.customerName = data.customerName;
     this.customerPhone = data.customerPhone;
     this.customerAddress = data.customerAddress;
+    this.supplierId = data.supplierId;
+    this.supplierName = data.supplierName;
+    this.supplierPhone = data.supplierPhone;
+    this.supplierAddress = data.supplierAddress;
     this.date = data.date;
     this.expirationDate = data.expirationDate;
     this.dueDate = data.dueDate;
@@ -128,15 +136,15 @@ export class Quote implements IQuote {
   }
 
   get partnerName(): string {
-    return this.customerName || 'N/A';
+    return this.customerName || this.supplierName || 'N/A';
   }
 
   get partnerPhone(): string {
-    return this.customerPhone || 'N/A';
+    return this.customerPhone || this.supplierPhone || 'N/A';
   }
 
   get partnerAddress(): string {
-    return this.customerAddress || 'N/A';
+    return this.customerAddress || this.supplierAddress || 'N/A';
   }
 
   get isDraft(): boolean {
@@ -207,6 +215,10 @@ export class Quote implements IQuote {
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       customerAddress: data.customerAddress,
+      supplierId: data.supplierId,
+      supplierName: data.supplierName,
+      supplierPhone: data.supplierPhone,
+      supplierAddress: data.supplierAddress,
       date: data.date,
       expirationDate: data.expirationDate,
       dueDate: data.dueDate,

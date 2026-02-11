@@ -137,6 +137,14 @@ export class InvoicesService {
     const result = await response.json();
     return result.data;
   }
+
+  async exportToXlsx(supplierId?: number): Promise<Blob> {
+    const params = new URLSearchParams();
+    if (supplierId !== undefined) params.append('supplierId', supplierId.toString());
+    const response = await fetch(`${API_URL}/invoices/export/xlsx${params.toString() ? '?' + params.toString() : ''}`);
+    if (!response.ok) throw new Error('Failed to export invoices');
+    return response.blob();
+  }
 }
 
 export const invoicesService = new InvoicesService();

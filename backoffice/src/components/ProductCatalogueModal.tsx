@@ -78,10 +78,10 @@ export function ProductCatalogueModal({
           productId: product.id,
           description: product.name,
           quantity: newQuantity,
-          unitPrice: isVente ? product.price : product.cost,
+          unitPrice: isVente ? product.price : (product.cost || product.price),
           discount: 0,
           discountType: 0,
-          tax: product.defaultTax || 0,
+          tax: (isVente ? product.saleTax : product.purchaseTax) || 0,
           total: 0
         };
         newItem.total = calculateItemTotal(newItem);
@@ -214,7 +214,7 @@ export function ProductCatalogueModal({
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <div className="font-semibold text-slate-900">
-                        {(isVente ? product.price : product.cost).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
+                        {(isVente ? product.price : (product.cost || product.price)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
                         </div>
                         {product.stock !== undefined && (
                           <div className="text-sm text-slate-500">Stock: {product.stock}</div>

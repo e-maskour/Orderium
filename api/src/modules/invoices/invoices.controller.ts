@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { Res, Header } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { FilterInvoicesDto } from './dto/filter-invoices.dto';
 
@@ -90,5 +92,23 @@ export class InvoicesController {
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.devalidate(id);
     return { success: true, invoice };
+  }
+
+  @Get('export/xlsx')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @ApiOperation({ summary: 'Export invoices to XLSX file' })
+  async exportToXlsx(
+    @Res() res: Response,
+    @Query('supplierId') supplierId?: string,
+  ) {
+    const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
+    const buffer = await this.invoicesService.exportToXlsx(supplierIdNum);
+    
+    const filename = supplierIdNum !== undefined 
+      ? (supplierIdNum ? 'factures-achat.xlsx' : 'factures-vente.xlsx')
+      : 'factures.xlsx';
+      
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.send(buffer);
   }
 }

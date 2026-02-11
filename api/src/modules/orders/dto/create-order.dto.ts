@@ -28,10 +28,11 @@ export class CreateOrderItemDto {
   @Min(0)
   quantity: number;
 
-  @ApiProperty({ description: 'Unit price', minimum: 0 })
+  @ApiPropertyOptional({ description: 'Unit price', minimum: 0 })
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  unitPrice: number;
+  unitPrice?: number | null;
 
   @ApiPropertyOptional({
     description: 'Price (alias for unitPrice)',
@@ -66,7 +67,7 @@ export class CreateOrderItemDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  total?: number;
+  total?: number | null;
 }
 
 export class CreateOrderDto {
@@ -84,6 +85,31 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   customerPhone?: string;
+
+  @ApiPropertyOptional({ description: 'Customer address' })
+  @IsOptional()
+  @IsString()
+  customerAddress?: string;
+
+  @ApiPropertyOptional({ description: 'Supplier ID (for purchase orders)' })
+  @IsOptional()
+  @IsInt()
+  supplierId?: number;
+
+  @ApiPropertyOptional({ description: 'Supplier name (for purchase orders)' })
+  @IsOptional()
+  @IsString()
+  supplierName?: string;
+
+  @ApiPropertyOptional({ description: 'Supplier phone (for purchase orders)' })
+  @IsOptional()
+  @IsString()
+  supplierPhone?: string;
+
+  @ApiPropertyOptional({ description: 'Supplier address (for purchase orders)' })
+  @IsOptional()
+  @IsString()
+  supplierAddress?: string;
 
   @ApiProperty({ description: 'Order items', type: [CreateOrderItemDto] })
   @IsArray()

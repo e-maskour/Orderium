@@ -1,23 +1,18 @@
-import { AdminLayout } from '../components/AdminLayout';
-import { PageHeader } from '../components/PageHeader';
-import { useLanguage } from '../context/LanguageContext';
-import { FileQuestion } from 'lucide-react';
+import DocumentListPage from './documents/DocumentListPage';
+import { getDocumentConfig } from '../modules/documents/types/document-config';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function DemandePrix() {
   const { t } = useLanguage();
-
+  const config = getDocumentConfig('devis', 'achat', t);
+  
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto">
-        <PageHeader
-          icon={FileQuestion}
-          title={t('priceRequest')}
-          subtitle={t('managePriceRequests')}
-        />
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-slate-600">Page en construction...</p>
-        </div>
-      </div>
-    </AdminLayout>
+    <DocumentListPage
+      documentType="devis"
+      direction="achat"
+      config={config}
+      createRoute="/demande-prix/create"
+      editRoute="/demande-prix"
+    />
   );
 }

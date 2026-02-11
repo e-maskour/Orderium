@@ -205,11 +205,19 @@ export class OrdersService {
     return data.data || [];
   }
 
-  async getAnalytics(year: number): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/analytics/data?year=${year}`);
+  async getAnalytics(direction: 'vente' | 'achat', year: number): Promise<any> {
+    const response = await fetch(`${API_URL}/orders/analytics/${direction}?year=${year}`);
     if (!response.ok) throw new Error('Failed to fetch order analytics');
     const result = await response.json();
     return result.data;
+  }
+
+  async exportToXlsx(supplierId?: number): Promise<Blob> {
+    const params = new URLSearchParams();
+    if (supplierId !== undefined) params.append('supplierId', supplierId.toString());
+    const response = await fetch(`${API_URL}/orders/export/xlsx${params.toString() ? '?' + params.toString() : ''}`);
+    if (!response.ok) throw new Error('Failed to export orders');
+    return response.blob();
   }
 }
 

@@ -466,8 +466,11 @@ export default function DocumentEditPage({
     try {
       setSaving(true);
 
+      // For demande de prix, don't calculate totals (no prices)
+      const isDemandePrix = documentType === 'devis' && direction === 'achat';
+
       // Calculate totals
-      const subtotal = items.reduce((sum, item) => {
+      const subtotal = isDemandePrix ? 0 : items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
         const discountAmount = item.discountType === 1 
           ? itemTotal * (item.discount / 100) 
@@ -476,7 +479,7 @@ export default function DocumentEditPage({
         return sum + afterDiscount;
       }, 0);
 
-      const totalTax = items.reduce((sum, item) => {
+      const totalTax = isDemandePrix ? 0 : items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
         const discountAmount = item.discountType === 1 
           ? itemTotal * (item.discount / 100) 
@@ -504,6 +507,9 @@ export default function DocumentEditPage({
         total,
         notes: notes || undefined,
         items: items.map(item => {
+          // For demande de prix, send null for unitPrice and total
+          const isDemandePrix = documentType === 'devis' && direction === 'achat';
+          
           // Calculate item total (HT: before tax)
           const itemSubtotal = item.quantity * item.unitPrice;
           const discountAmount = item.discountType === 1 
@@ -516,11 +522,11 @@ export default function DocumentEditPage({
             productId: item.productId,
             description: item.description,
             quantity: item.quantity,
-            unitPrice: item.unitPrice,
+            unitPrice: isDemandePrix ? null : item.unitPrice,
             discount: item.discount || 0,
             discountType: item.discountType || 0,
             tax: item.tax || 0,
-            total: itemTotal
+            total: isDemandePrix ? null : itemTotal
           };
         })
       };
@@ -705,10 +711,14 @@ export default function DocumentEditPage({
 
       const total = subtotal + totalTax;
 
+      const isVente = direction === 'vente';
+
       // Create invoice data
       const invoiceData = {
-        customerId: partner.id,
-        customerName: partner.name,
+        customerId: isVente ? partner.id : undefined,
+        supplierId: isVente ? undefined : partner.id,
+        customerName: isVente ? partner.name : undefined,
+        supplierName: isVente ? undefined : partner.name,
         date,
         dueDate: dueDate || undefined,
         subtotal,
@@ -757,7 +767,7 @@ export default function DocumentEditPage({
       
       // Navigate to the invoice edit page after delay
       setTimeout(() => {
-        navigate(`/factures/vente/${createdInvoice.invoice.id}`);
+        navigate(`/factures/${direction}/${createdInvoice.invoice.id}`);
       }, 1500);
       
     } catch (error: any) {
@@ -781,9 +791,12 @@ export default function DocumentEditPage({
     try {
       setSaving(true);
       
+      const isVente = direction === 'vente';
+      
       // Create order data
       const orderData = {
-        customerId: partner.id,
+        customerId: isVente ? partner.id : undefined,
+        supplierId: isVente ? undefined : partner.id,
         items: items.map(item => ({
           productId: item.productId,
           description: item.description || 'Product',
@@ -814,7 +827,10 @@ export default function DocumentEditPage({
       
       // Navigate to the bon edit page after delay
       setTimeout(() => {
-        navigate(`/bons-livraison/${createdOrder.order.id}`);
+        const bonRoute = direction === 'vente' 
+          ? `/bons-livraison/${createdOrder.order.id}`
+          : `/bon-achat/${createdOrder.order.id}`;
+        navigate(bonRoute);
       }, 1500);
       
     } catch (error: any) {
@@ -1127,6 +1143,8 @@ export default function DocumentEditPage({
               onItemsChange={setItems}
               showTaxColumn={config.features.showTax}
               showDiscountColumn={config.features.showDiscount}
+              showPriceColumn={!(documentType === 'devis' && direction === 'achat')}
+              showTotalColumn={!(documentType === 'devis' && direction === 'achat')}
               readOnly={isValidated || (documentType === 'devis' && status === 'closed')}
             />
           </div>

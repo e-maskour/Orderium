@@ -41,6 +41,8 @@ interface DocumentData {
   signedDate?: Date;
   orderNumber?: string;
   fromPortal?: boolean;
+  isDemandePrix?: boolean; // For purchase quotes (achat)
+  supplierName?: string;
 }
 
 interface DocumentItemData {
@@ -119,12 +121,14 @@ export class PDFService {
   private async fetchInvoiceData(invoiceId: number): Promise<DocumentData> {
     const invoice = await this.invoiceRepository.findOne({
       where: { id: invoiceId },
-      relations: ['items', 'items.product', 'customer'],
+      relations: ['items', 'items.product', 'customer', 'supplier'],
     });
 
     if (!invoice) {
       throw new NotFoundException(`Invoice with ID ${invoiceId} not found`);
     }
+
+    const isDemandePrix = !!invoice.supplierId;
 
     return {
       id: invoice.id,
@@ -132,9 +136,15 @@ export class PDFService {
       invoiceNumber: invoice.invoiceNumber,
       date: invoice.date,
       dueDate: invoice.dueDate || undefined,
-      customerName: invoice.customerName || invoice.customer?.name || 'Client',
-      customerPhone: invoice.customerPhone || invoice.customer?.phoneNumber,
-      customerAddress: invoice.customerAddress || invoice.customer?.address,
+      customerName: isDemandePrix
+        ? (invoice.supplierName || invoice.supplier?.name || 'Fournisseur')
+        : (invoice.customerName || invoice.customer?.name || 'Client'),
+      customerPhone: isDemandePrix
+        ? (invoice.supplierPhone || invoice.supplier?.phoneNumber)
+        : (invoice.customerPhone || invoice.customer?.phoneNumber),
+      customerAddress: isDemandePrix
+        ? (invoice.supplierAddress || invoice.supplier?.address)
+        : (invoice.customerAddress || invoice.customer?.address),
       subtotal: Number(invoice.subtotal) || 0,
       discount: Number(invoice.discount) || 0,
       discountType: Number(invoice.discountType) || 0,
@@ -142,6 +152,8 @@ export class PDFService {
       total: Number(invoice.total) || 0,
       notes: invoice.notes || undefined,
       status: invoice.status,
+      isDemandePrix,
+      supplierName: isDemandePrix ? (invoice.supplierName || invoice.supplier?.name) : undefined,
       items: invoice.items.map((item) => ({
         description: item.description || item.product?.name || 'Article',
         quantity: Number(item.quantity) || 0,
@@ -156,12 +168,14 @@ export class PDFService {
   private async fetchQuoteData(quoteId: number): Promise<DocumentData> {
     const quote = await this.quoteRepository.findOne({
       where: { id: quoteId },
-      relations: ['items', 'items.product', 'customer'],
+      relations: ['items', 'items.product', 'customer', 'supplier'],
     });
 
     if (!quote) {
       throw new NotFoundException(`Quote with ID ${quoteId} not found`);
     }
+
+    const isDemandePrix = !!quote.supplierId;
 
     return {
       id: quote.id,
@@ -169,9 +183,15 @@ export class PDFService {
       quoteNumber: quote.quoteNumber,
       date: quote.date,
       expirationDate: quote.expirationDate || undefined,
-      customerName: quote.customerName || quote.customer?.name || 'Client',
-      customerPhone: quote.customerPhone || quote.customer?.phoneNumber,
-      customerAddress: quote.customerAddress || quote.customer?.address,
+      customerName: isDemandePrix 
+        ? (quote.supplierName || quote.supplier?.name || 'Fournisseur')
+        : (quote.customerName || quote.customer?.name || 'Client'),
+      customerPhone: isDemandePrix
+        ? (quote.supplierPhone || quote.supplier?.phoneNumber)
+        : (quote.customerPhone || quote.customer?.phoneNumber),
+      customerAddress: isDemandePrix
+        ? (quote.supplierAddress || quote.supplier?.address)
+        : (quote.customerAddress || quote.customer?.address),
       subtotal: Number(quote.subtotal) || 0,
       discount: Number(quote.discount) || 0,
       discountType: Number(quote.discountType) || 0,
@@ -180,6 +200,8 @@ export class PDFService {
       notes: quote.notes || undefined,
       signedBy: quote.signedBy || undefined,
       signedDate: quote.signedDate || undefined,
+      isDemandePrix,
+      supplierName: isDemandePrix ? (quote.supplierName || quote.supplier?.name) : undefined,
       items: quote.items.map((item) => ({
         description: item.description || item.product?.name || 'Article',
         quantity: Number(item.quantity) || 0,
@@ -197,7 +219,7 @@ export class PDFService {
   ): Promise<DocumentData> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
-      relations: ['items', 'items.product', 'customer'],
+      relations: ['items', 'items.product', 'customer', 'supplier'],
     });
 
     if (!order) {
@@ -209,20 +231,30 @@ export class PDFService {
         ? order.receiptNumber
         : order.orderNumber;
 
+    const isDemandePrix = !!order.supplierId;
+
     return {
       id: order.id,
       documentNumber,
       orderNumber: order.orderNumber,
       date: order.dateCreated,
-      customerName: order.customerName || order.customer?.name || 'Client',
-      customerPhone: order.customerPhone || order.customer?.phoneNumber,
-      customerAddress: order.customerAddress || order.customer?.address,
+      customerName: isDemandePrix
+        ? (order.supplierName || order.supplier?.name || 'Fournisseur')
+        : (order.customerName || order.customer?.name || 'Client'),
+      customerPhone: isDemandePrix
+        ? (order.supplierPhone || order.supplier?.phoneNumber)
+        : (order.customerPhone || order.customer?.phoneNumber),
+      customerAddress: isDemandePrix
+        ? (order.supplierAddress || order.supplier?.address)
+        : (order.customerAddress || order.customer?.address),
       subtotal: Number(order.subtotal) || 0,
       discount: Number(order.discount) || 0,
       discountType: Number(order.discountType) || 0,
       tax: Number(order.tax) || 0,
       total: Number(order.total) || 0,
       fromPortal: order.fromPortal || false,
+      isDemandePrix,
+      supplierName: isDemandePrix ? (order.supplierName || order.supplier?.name) : undefined,
       items: order.items.map((item) => ({
         description: item.description || item.product?.name || 'Article',
         quantity: Number(item.quantity) || 0,
@@ -235,6 +267,15 @@ export class PDFService {
   }
 
   private getFileName(documentType: DocumentType, data: DocumentData): string {
+    if (data.isDemandePrix) {
+      if (documentType === 'quote') {
+        return `DemandeDePrix_${data.documentNumber}.pdf`;
+      } else if (documentType === 'invoice') {
+        return `FactureAchat_${data.documentNumber}.pdf`;
+      } else if (documentType === 'delivery-note') {
+        return `BonAchat_${data.documentNumber}.pdf`;
+      }
+    }
     const typeMap = {
       'invoice': 'Facture',
       'quote': 'Devis',
@@ -281,7 +322,7 @@ export class PDFService {
       const headerTemplate = renderHeaderTemplate({
         companyName: companyConfig.companyName || '',
         companyLines,
-        documentLabel: this.getDocumentLabel(documentType),
+        documentLabel: this.getDocumentLabel(documentType, data.isDemandePrix),
         documentNumber: data.documentNumber,
         date: new Date(data.date).toLocaleDateString('fr-FR'),
         dueDate: data.dueDate ? new Date(data.dueDate).toLocaleDateString('fr-FR') : undefined,
@@ -359,25 +400,45 @@ export class PDFService {
   }
 
   private renderDocumentHTML(documentType: DocumentType, data: DocumentData): string {
-    const documentTitle = this.getDocumentTitle(documentType);
-    const documentLabel = this.getDocumentLabel(documentType);
+    const documentTitle = this.getDocumentTitle(documentType, data.isDemandePrix);
+    const documentLabel = this.getDocumentLabel(documentType, data.isDemandePrix);
     const hideVAT = data.fromPortal || false;
+    // Only hide prices for demande de prix (quotes with supplier), not for facture achat or bon d'achat
+    const hidePrices = (documentType === 'quote' && data.isDemandePrix) || false;
 
     // Generate items HTML
     const itemsHtml = data.items
       .map(
-        (item, index) => `
-            <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
-              <td style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
-              <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
-              <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.unitPrice)}</td>
-              <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.discount)}</td>
-              ${!hideVAT ? `<td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${item.tax}%</td>` : ''}
-              <td style="text-align: right; font-weight: bold; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.total)}</td>
-            </tr>
-          `,
+        (item, index) => {
+          if (hidePrices) {
+            // For demande de prix, only show description and quantity
+            return `
+              <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
+                <td style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
+                <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
+              </tr>
+            `;
+          } else {
+            // Normal quote/invoice with prices
+            return `
+              <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
+                <td style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
+                <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
+                <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.unitPrice)}</td>
+                <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.discount)}</td>
+                ${!hideVAT ? `<td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${item.tax}%</td>` : ''}
+                <td style="text-align: right; font-weight: bold; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.total)}</td>
+              </tr>
+            `;
+          }
+        },
       )
       .join('');
+
+    // Calculate total quantity for demande de prix (only for quotes with supplier)
+    const totalQuantity = hidePrices 
+      ? data.items.reduce((sum, item) => sum + item.quantity, 0)
+      : 0;
 
     return renderDocumentTemplate({
       documentTitle,
@@ -393,11 +454,16 @@ export class PDFService {
       signedBy: data.signedBy,
       itemsHtml,
       subtotal: this.formatCurrency(data.subtotal),
+      discount: data.discount ? this.formatCurrency(data.discount) : undefined,
+      discountType: data.discountType,
       tax: this.formatCurrency(data.tax),
       total: this.formatCurrency(data.total),
       notes: data.notes,
       styles: this.getDocumentStyles(),
       hideVAT,
+      isPurchaseDocument: data.isDemandePrix,
+      isDemandePrix: hidePrices,
+      totalQuantity: totalQuantity.toString(),
     });
   }
 
@@ -443,7 +509,16 @@ export class PDFService {
     return getDocumentStyles();
   }
 
-  private getDocumentTitle(documentType: DocumentType): string {
+  private getDocumentTitle(documentType: DocumentType, isDemandePrix?: boolean): string {
+    if (isDemandePrix) {
+      if (documentType === 'quote') {
+        return 'Demande de Prix';
+      } else if (documentType === 'invoice') {
+        return "Facture d'Achat";
+      } else if (documentType === 'delivery-note') {
+        return "Bon d'Achat";
+      }
+    }
     const titles = {
       'invoice': 'Facture',
       'quote': 'Devis',
@@ -453,7 +528,16 @@ export class PDFService {
     return titles[documentType];
   }
 
-  private getDocumentLabel(documentType: DocumentType): string {
+  private getDocumentLabel(documentType: DocumentType, isDemandePrix?: boolean): string {
+    if (isDemandePrix) {
+      if (documentType === 'quote') {
+        return 'DEMANDE DE PRIX';
+      } else if (documentType === 'invoice') {
+        return "FACTURE D'ACHAT";
+      } else if (documentType === 'delivery-note') {
+        return "BON D'ACHAT";
+      }
+    }
     const labels = {
       'invoice': 'FACTURE',
       'quote': 'DEVIS',

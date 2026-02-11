@@ -130,6 +130,35 @@ export class ProductsService {
       return false;
     }
   }
+
+  async exportToXlsx(): Promise<Blob> {
+    const response = await fetch(`${API_URL}/products/export/xlsx`);
+    if (!response.ok) throw new Error('Failed to export products');
+    return response.blob();
+  }
+
+  async downloadTemplate(): Promise<Blob> {
+    const response = await fetch(`${API_URL}/products/import/template`);
+    if (!response.ok) throw new Error('Failed to download template');
+    return response.blob();
+  }
+
+  async importFromXlsx(file: File): Promise<{ success: boolean; imported: number; updated: number; failed: number; errors: any[] }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_URL}/products/import/xlsx`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to import products');
+    }
+
+    return response.json();
+  }
 }
 
 export const productsService = new ProductsService();

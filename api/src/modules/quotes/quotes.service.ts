@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as XLSX from 'xlsx';
 import { Quote, QuoteItem, QuoteStatus } from './entities/quote.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
@@ -14,11 +15,11 @@ interface CreateQuoteItemDTO {
   productId?: number;
   description: string;
   quantity: number;
-  unitPrice: number;
+  unitPrice?: number | null; // Optional for demande de prix
   discount: number;
   discountType: number;
   tax?: number;
-  total?: number;
+  total?: number | null; // Optional for demande de prix
 }
 
 interface CreateQuoteDTO {
@@ -26,6 +27,10 @@ interface CreateQuoteDTO {
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
+  supplierId?: number; // For demande de prix (achat)
+  supplierName?: string;
+  supplierPhone?: string;
+  supplierAddress?: string;
   date: string;
   dueDate?: string;
   expirationDate?: string;
@@ -58,13 +63,18 @@ export class QuotesService {
       );
 
       if (!sequence) {
-        // Create default sequence for quotes
+        // Create default sequence with appropriate prefix
         const now = new Date();
+        let prefix = 'DV'; // Default for quote
+        if (entityType === 'price_request') {
+          prefix = 'DP';
+        }
+        
         const defaultSequence = {
           id: this.generateSequenceId(),
           name: `Sequence ${entityType}`,
           entityType,
-          prefix: 'DV',
+          prefix,
           suffix: '',
           nextNumber: 1,
           numberLength: 4,
@@ -88,11 +98,16 @@ export class QuotesService {
       return sequence;
     } catch (error) {
       // Fallback to default if configurations service fails
+      let prefix = 'DV'; // Default for quote
+      if (entityType === 'price_request') {
+        prefix = 'DP';
+      }
+      
       return {
         id: 'fallback',
         name: 'Default Sequence',
         entityType,
-        prefix: 'DV',
+        prefix,
         suffix: '',
         nextNumber: 1,
         numberLength: 4,
@@ -109,8 +124,9 @@ export class QuotesService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
-  private buildSequencePattern(sequence: any): string {
-    const now = new Date();
+  private buildSequencePattern(sequence: any, documentDate?: string | Date): string {
+    // Use document date if provided, otherwise fallback to current date
+    const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
@@ -283,16 +299,18 @@ export class QuotesService {
     dateTo?: string,
     page?: number,
     pageSize?: number,
+    supplierId?: number,
   ): Promise<{ quotes: Quote[]; count: number; totalCount: number }> {
     const queryBuilder = this.quoteRepository
       .createQueryBuilder('quote')
       .leftJoinAndSelect('quote.customer', 'customer')
+      .leftJoinAndSelect('quote.supplier', 'supplier')
       .leftJoinAndSelect('quote.items', 'items');
 
     // Apply filters
     if (search) {
       queryBuilder.andWhere(
-        '(quote.quoteNumber ILIKE :search OR customer.name ILIKE :search)',
+        '(quote.quoteNumber ILIKE :search OR customer.name ILIKE :search OR supplier.name ILIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -303,6 +321,10 @@ export class QuotesService {
 
     if (customerId) {
       queryBuilder.andWhere('quote.customerId = :customerId', { customerId });
+    }
+
+    if (supplierId) {
+      queryBuilder.andWhere('quote.supplierId = :supplierId', { supplierId });
     }
 
     if (dateFrom) {
@@ -389,6 +411,10 @@ export class QuotesService {
       customerName: createQuoteDto.customerName,
       customerPhone: createQuoteDto.customerPhone,
       customerAddress: createQuoteDto.customerAddress,
+      supplierId: createQuoteDto.supplierId,
+      supplierName: createQuoteDto.supplierName,
+      supplierPhone: createQuoteDto.supplierPhone,
+      supplierAddress: createQuoteDto.supplierAddress,
       date: new Date(createQuoteDto.date),
       dueDate: createQuoteDto.dueDate
         ? new Date(createQuoteDto.dueDate)
@@ -408,20 +434,23 @@ export class QuotesService {
 
     const savedQuote = await this.quoteRepository.save(quote);
 
-    // Validate minimum prices for items with productId
-    for (const item of createQuoteDto.items) {
-      if (item.productId) {
-        const product = await this.productRepository.findOne({
-          where: { id: item.productId },
-        });
-        if (
-          product &&
-          product.minPrice > 0 &&
-          item.unitPrice < product.minPrice
-        ) {
-          throw new BadRequestException(
-            `Unit price ${item.unitPrice} is below minimum price ${product.minPrice} for product "${product.name}"`,
-          );
+    // Validate minimum prices for items with productId (only for vente documents)
+    const isVente = !createQuoteDto.supplierId;
+    if (isVente) {
+      for (const item of createQuoteDto.items) {
+        if (item.productId && item.unitPrice != null) {
+          const product = await this.productRepository.findOne({
+            where: { id: item.productId },
+          });
+          if (
+            product &&
+            product.minPrice > 0 &&
+            item.unitPrice < product.minPrice
+          ) {
+            throw new BadRequestException(
+              `Unit price ${item.unitPrice} is below minimum price ${product.minPrice} for product "${product.name}"`,
+            );
+          }
         }
       }
     }
@@ -433,11 +462,11 @@ export class QuotesService {
         productId: item.productId,
         description: item.description,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
+        unitPrice: item.unitPrice ?? 0, // Convert null to 0 for demande de prix
         discount: item.discount,
         discountType: item.discountType,
         tax: item.tax,
-        total: item.total,
+        total: item.total ?? 0, // Convert null to 0 for demande de prix
       }),
     );
 
@@ -494,20 +523,23 @@ export class QuotesService {
         // Delete old items
         await this.quoteItemRepository.delete({ quoteId: id });
 
-        // Create new items
-        for (const item of items) {
-          if (item.productId) {
-            const product = await this.productRepository.findOne({
-              where: { id: item.productId },
-            });
-            if (
-              product &&
-              product.minPrice > 0 &&
-              item.unitPrice < product.minPrice
-            ) {
-              throw new BadRequestException(
-                `Unit price ${item.unitPrice} is below minimum price ${product.minPrice} for product "${product.name}"`,
-              );
+        // Validate minimum prices for items with productId (only for vente documents)
+        const isVente = !quote.supplierId;
+        if (isVente) {
+          for (const item of items) {
+            if (item.productId && item.unitPrice != null) {
+              const product = await this.productRepository.findOne({
+                where: { id: item.productId },
+              });
+              if (
+                product &&
+                product.minPrice > 0 &&
+                item.unitPrice < product.minPrice
+              ) {
+                throw new BadRequestException(
+                  `Unit price ${item.unitPrice} is below minimum price ${product.minPrice} for product "${product.name}"`,
+                );
+              }
             }
           }
         }
@@ -518,11 +550,11 @@ export class QuotesService {
             productId: item.productId,
             description: item.description,
             quantity: item.quantity,
-            unitPrice: item.unitPrice,
+            unitPrice: item.unitPrice ?? 0, // Convert null to 0 for demande de prix
             discount: item.discount,
             discountType: item.discountType,
             tax: item.tax,
-            total: item.total,
+            total: item.total ?? 0, // Convert null to 0 for demande de prix
           }),
         );
 
@@ -545,9 +577,10 @@ export class QuotesService {
             : quote.expirationDate,
         });
       } else {
-        // Update quote without items
+        // Update quote without items - exclude items from the update
+        const { items: _, ...quoteUpdateData } = updateQuoteDto;
         await this.quoteRepository.update(id, {
-          ...updateQuoteDto,
+          ...quoteUpdateData,
           date: updateQuoteDto.date ? new Date(updateQuoteDto.date) : undefined,
           dueDate: updateQuoteDto.dueDate ? new Date(updateQuoteDto.dueDate) : undefined,
           expirationDate: updateQuoteDto.expirationDate
@@ -599,14 +632,17 @@ export class QuotesService {
 
     // Only generate a new number if this is the first validation (provisional number)
     if (quote.documentNumber.startsWith('PROV')) {
-      // Get sequence for quotes
-      const sequence = await this.getOrCreateSequence('quote');
+      // Determine sequence type based on quote direction
+      const sequenceType = quote.supplierId ? 'price_request' : 'quote';
+      
+      // Get sequence for appropriate quote type
+      const sequence = await this.getOrCreateSequence(sequenceType);
 
       // Use the sequence's next document number directly with quote date
       finalQuoteNumber = this.generateSequenceNumber(sequence, quote.date);
 
       // Increment sequence next number
-      await this.updateSequenceNextNumber('quote', sequence);
+      await this.updateSequenceNextNumber(sequenceType, sequence);
     }
 
     // Update quote with final number (or keep existing) and validated status
@@ -642,7 +678,10 @@ export class QuotesService {
 
     // Update sequence nextNumber to match the last document in database
     try {
-      const sequence = await this.getOrCreateSequence('quote');
+      // Determine sequence type based on quote direction
+      const sequenceType = quote.supplierId ? 'price_request' : 'quote';
+      
+      const sequence = await this.getOrCreateSequence(sequenceType);
       const config = await this.configurationsService.findByEntity('sequences');
       const sequences = config?.values?.sequences || [];
       const sequenceIndex = sequences.findIndex(
@@ -651,7 +690,7 @@ export class QuotesService {
 
       if (sequenceIndex !== -1) {
         // Find the highest document number in database with this sequence pattern
-        const pattern = this.buildSequencePattern(sequence);
+        const pattern = this.buildSequencePattern(sequence, quote.date);
         const lastQuote = await this.quoteRepository
           .createQueryBuilder('quote')
           .where('quote.documentNumber LIKE :pattern', {
@@ -933,12 +972,20 @@ export class QuotesService {
     return result;
   }
 
-  async getAnalytics(year: number) {
-    // Get all quotes for the specified year
-    const quotes = await this.quoteRepository
+  async getAnalytics(direction: 'vente' | 'achat', year: number) {
+    // Get all quotes for the specified year and direction
+    const queryBuilder = this.quoteRepository
       .createQueryBuilder('quote')
-      .andWhere('EXTRACT(YEAR FROM quote.date) = :year', { year })
-      .getMany();
+      .andWhere('EXTRACT(YEAR FROM quote.date) = :year', { year });
+
+    // Filter by direction (vente: customer quotes, achat: supplier quotes)
+    if (direction === 'vente') {
+      queryBuilder.andWhere('quote.customerId IS NOT NULL');
+    } else {
+      queryBuilder.andWhere('quote.supplierId IS NOT NULL');
+    }
+
+    const quotes = await queryBuilder.getMany();
 
     // Calculate monthly chart data
     const monthlyData = Array.from({ length: 12 }, (_, monthIndex) => {
@@ -992,5 +1039,111 @@ export class QuotesService {
         conversionRate,
       },
     };
+  }
+
+  /**
+   * Export quotes/devis to XLSX format
+   */
+  async exportToXlsx(supplierId?: number): Promise<Buffer> {
+    const queryBuilder = this.quoteRepository
+      .createQueryBuilder('quote')
+      .leftJoinAndSelect('quote.items', 'items')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('quote.customer', 'customer')
+      .leftJoinAndSelect('quote.supplier', 'supplier')
+      .orderBy('quote.dateCreated', 'DESC');
+
+    if (supplierId !== undefined) {
+      if (supplierId) {
+        queryBuilder.where('quote.supplierId = :supplierId', { supplierId });
+      } else {
+        queryBuilder.where('quote.supplierId IS NULL');
+      }
+    }
+
+    const quotes = await queryBuilder.getMany();
+
+    // Flatten data for export - one row per item
+    const exportData: any[] = [];
+    
+    quotes.forEach((quote) => {
+      const isDemandePrix = !!quote.supplierId;
+      const baseData = {
+        'Numéro': quote.documentNumber,
+        'Date': quote.date ? new Date(quote.date).toLocaleDateString('fr-FR') : '',
+        'Date expiration': quote.expirationDate ? new Date(quote.expirationDate).toLocaleDateString('fr-FR') : '',
+        'Type': isDemandePrix ? 'Demande de prix' : 'Devis',
+        'Client/Fournisseur': isDemandePrix ? (quote.supplierName || quote.supplier?.name || '') : (quote.customerName || quote.customer?.name || ''),
+        'Téléphone': isDemandePrix ? quote.supplierPhone || '' : quote.customerPhone || '',
+        'Adresse': isDemandePrix ? (quote.supplierAddress || quote.supplier?.address || '') : (quote.customerAddress || quote.customer?.address || ''),
+        'Statut': this.getQuoteStatusLabel(quote.status),
+        'Sous-total': Number(quote.subtotal),
+        'Remise': Number(quote.discount),
+        'Type remise': quote.discountType === 0 ? 'Montant' : 'Pourcentage',
+        'Taxe': Number(quote.tax),
+        'Total': Number(quote.total),
+        'Notes': quote.notes || '',
+      };
+
+      if (quote.items && quote.items.length > 0) {
+        quote.items.forEach((item, index) => {
+          exportData.push({
+            ...baseData,
+            'Ligne': index + 1,
+            'Code produit': item.product?.code || '',
+            'Produit/Service': item.description,
+            'Quantité': Number(item.quantity),
+            'Prix unitaire': item.unitPrice !== null ? Number(item.unitPrice) : '',
+            'Remise ligne': Number(item.discount),
+            'Type remise ligne': item.discountType === 0 ? 'Montant' : 'Pourcentage',
+            'Taxe ligne (%)': Number(item.tax),
+            'Total ligne': item.total !== null ? Number(item.total) : '',
+          });
+        });
+      } else {
+        exportData.push({
+          ...baseData,
+          'Ligne': '',
+          'Code produit': '',
+          'Produit/Service': '',
+          'Quantité': '',
+          'Prix unitaire': '',
+          'Remise ligne': '',
+          'Type remise ligne': '',
+          'Taxe ligne (%)': '',
+          'Total ligne': '',
+        });
+      }
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 25 },
+      { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 12 }, { wch: 10 },
+      { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 30 }, { wch: 8 },
+      { wch: 15 }, { wch: 25 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
+      { wch: 18 }, { wch: 12 }, { wch: 12 },
+    ];
+
+    const sheetName = supplierId !== undefined ? (supplierId ? 'Demandes de prix' : 'Devis') : 'Devis et Demandes';
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    return buffer;
+  }
+
+  private getQuoteStatusLabel(status: QuoteStatus): string {
+    const labels = {
+      [QuoteStatus.DRAFT]: 'Brouillon',
+      [QuoteStatus.OPEN]: 'Ouvert',
+      [QuoteStatus.SIGNED]: 'Signée',
+      [QuoteStatus.CLOSED]: 'Fermée',
+      [QuoteStatus.DELIVERED]: 'Bon de livraison',
+      [QuoteStatus.INVOICED]: 'Facturée',
+    };
+    return labels[status] || status;
   }
 }

@@ -1,10 +1,15 @@
 import { Statistics as IStatistics } from './statistics.interface';
 
 export class Statistics implements IStatistics {
-  totalRevenue?: number;
-  totalOrders?: number;
-  totalCustomers?: number;
-  averageOrderValue?: number;
+  TotalRevenue?: number;
+  TotalOrders?: number;
+  TotalCustomers?: number;
+  AverageOrderValue?: number;
+  PendingOrders?: number;
+  InDeliveryOrders?: number;
+  DeliveredOrders?: number;
+  CancelledOrders?: number;
+  ActiveDeliveryPersons?: number;
   [key: string]: any;
 
   constructor(data: IStatistics) {
@@ -13,15 +18,15 @@ export class Statistics implements IStatistics {
 
   // Getters
   get displayTotalRevenue(): string {
-    return this.totalRevenue ? this.totalRevenue.toFixed(2) : '0.00';
+    return this.TotalRevenue ? this.TotalRevenue.toFixed(2) : '0.00';
   }
 
   get displayAverageOrderValue(): string {
-    return this.averageOrderValue ? this.averageOrderValue.toFixed(2) : '0.00';
+    return this.AverageOrderValue ? this.AverageOrderValue.toFixed(2) : '0.00';
   }
 
   get hasData(): boolean {
-    return this.totalOrders !== undefined && this.totalOrders > 0;
+    return this.TotalOrders !== undefined && this.TotalOrders > 0;
   }
 
   // Methods
@@ -33,10 +38,15 @@ export class Statistics implements IStatistics {
   // Static factory method
   static fromApiResponse(data: any): Statistics {
     return new Statistics({
-      totalRevenue: data.totalRevenue ? parseFloat(data.totalRevenue) : undefined,
-      totalOrders: data.totalOrders ? parseInt(data.totalOrders) : undefined,
-      totalCustomers: data.totalCustomers ? parseInt(data.totalCustomers) : undefined,
-      averageOrderValue: data.averageOrderValue ? parseFloat(data.averageOrderValue) : undefined,
+      TotalRevenue: data.totalRevenue !== undefined ? parseFloat(data.totalRevenue) : undefined,
+      TotalOrders: data.totalOrders !== undefined ? parseInt(data.totalOrders.toString()) : undefined,
+      TotalCustomers: data.totalCustomers !== undefined ? parseInt(data.totalCustomers.toString()) : undefined,
+      AverageOrderValue: data.averageOrderValue !== undefined ? parseFloat(data.averageOrderValue) : undefined,
+      PendingOrders: data.pendingOrders !== undefined ? parseInt(data.pendingOrders.toString()) : undefined,
+      InDeliveryOrders: data.inDeliveryOrders !== undefined ? parseInt(data.inDeliveryOrders.toString()) : undefined,
+      DeliveredOrders: data.deliveredOrders !== undefined ? parseInt(data.deliveredOrders.toString()) : undefined,
+      CancelledOrders: data.cancelledOrders !== undefined ? parseInt(data.cancelledOrders.toString()) : undefined,
+      ActiveDeliveryPersons: data.activeDeliveryPersons !== undefined ? parseInt(data.activeDeliveryPersons.toString()) : undefined,
       ...data,
     });
   }

@@ -94,8 +94,11 @@ export default function DocumentCreatePage({
     try {
       setSaving(true);
 
+      // For demande de prix, don't calculate totals (no prices)
+      const isDemandePrix = documentType === 'devis' && direction === 'achat';
+
       // Calculate totals
-      const subtotal = items.reduce((sum, item) => {
+      const subtotal = isDemandePrix ? 0 : items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
         const discountAmount = item.discountType === 1 
           ? itemTotal * (item.discount / 100) 
@@ -104,7 +107,7 @@ export default function DocumentCreatePage({
         return sum + afterDiscount;
       }, 0);
 
-      const totalTax = items.reduce((sum, item) => {
+      const totalTax = isDemandePrix ? 0 : items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
         const discountAmount = item.discountType === 1 
           ? itemTotal * (item.discount / 100) 
@@ -132,6 +135,9 @@ export default function DocumentCreatePage({
         total,
         notes: notes || undefined,
         items: items.map(item => {
+          // For demande de prix, send null for unitPrice and total
+          const isDemandePrix = documentType === 'devis' && direction === 'achat';
+          
           // Calculate item total (HT: before tax)
           const itemSubtotal = item.quantity * item.unitPrice;
           const discountAmount = item.discountType === 1 
@@ -143,11 +149,11 @@ export default function DocumentCreatePage({
             productId: item.productId,
             description: item.description,
             quantity: item.quantity,
-            unitPrice: item.unitPrice,
+            unitPrice: isDemandePrix ? null : item.unitPrice,
             discount: item.discount || 0,
             discountType: item.discountType || 0,
             tax: item.tax || 0,
-            total: itemTotal
+            total: isDemandePrix ? null : itemTotal
           };
         })
       };
@@ -159,9 +165,10 @@ export default function DocumentCreatePage({
       } else if (documentType === 'devis') {
         created = await quotesService.create(documentData);
       } else if (documentType === 'bon_livraison') {
-        // Create bon de livraison as an order
+        // Create bon de livraison/achat as an order
         created = await ordersService.create({
-          customerId: documentData.customerId,
+          customerId: isVente ? documentData.customerId : undefined,
+          supplierId: isVente ? undefined : documentData.supplierId,
           items: documentData.items.map((item: any) => ({
             productId: item.productId,
             description: item.description || item.name || 'Product',
@@ -190,10 +197,16 @@ export default function DocumentCreatePage({
         editRoute = `/factures/${direction}/${createdInvoice.invoice.id}`;
       } else if (documentType === 'devis') {
         const createdQuote = created as any;
-        editRoute = `/devis/${createdQuote.quote.id}`;
+        // For vente devis use /devis/:id, for achat devis (demande de prix) use /demande-prix/:id
+        editRoute = direction === 'vente' 
+          ? `/devis/${createdQuote.quote.id}`
+          : `/demande-prix/${createdQuote.quote.id}`;
       } else if (documentType === 'bon_livraison') {
         const createdOrder = created as any;
-        editRoute = `/bons-livraison/${createdOrder.order.id}`;
+        // For vente bon use /bons-livraison/:id, for achat bon use /bon-achat/:id
+        editRoute = direction === 'vente'
+          ? `/bons-livraison/${createdOrder.order.id}`
+          : `/bon-achat/${createdOrder.order.id}`;
       }
       
       // Navigate to edit page after a short delay
@@ -318,6 +331,8 @@ export default function DocumentCreatePage({
               onItemsChange={setItems}
               showTaxColumn={config.features.showTax}
               showDiscountColumn={config.features.showDiscount}
+              showPriceColumn={!(documentType === 'devis' && direction === 'achat')}
+              showTotalColumn={!(documentType === 'devis' && direction === 'achat')}
             />
           </div>
 

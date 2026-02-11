@@ -12,6 +12,7 @@ export class QuotesService {
     const body: any = {};
     if (filters?.status) body.status = filters.status;
     if (filters?.customerId) body.customerId = filters.customerId;
+    if (filters?.supplierId) body.supplierId = filters.supplierId;
     if (filters?.dateFrom) body.dateFrom = filters.dateFrom;
     if (filters?.dateTo) body.dateTo = filters.dateTo;
     if (filters?.search) body.search = filters.search;
@@ -209,11 +210,19 @@ export class QuotesService {
     return QuoteWithDetails.fromApiResponse(result.quote);
   }
 
-  async getAnalytics(year: number): Promise<any> {
-    const response = await fetch(`${API_URL}/quotes/analytics/data?year=${year}`);
+  async getAnalytics(direction: 'vente' | 'achat', year: number): Promise<any> {
+    const response = await fetch(`${API_URL}/quotes/analytics/${direction}?year=${year}`);
     if (!response.ok) throw new Error('Failed to fetch quote analytics');
     const result = await response.json();
     return result.data;
+  }
+
+  async exportToXlsx(supplierId?: number): Promise<Blob> {
+    const params = new URLSearchParams();
+    if (supplierId !== undefined) params.append('supplierId', supplierId.toString());
+    const response = await fetch(`${API_URL}/quotes/export/xlsx${params.toString() ? '?' + params.toString() : ''}`);
+    if (!response.ok) throw new Error('Failed to export quotes');
+    return response.blob();
   }
 }
 

@@ -17,6 +17,11 @@ export class FilterQuotesDto {
   @IsNumber()
   customerId?: number;
 
+  @ApiProperty({ required: false, description: 'Supplier ID filter' })
+  @IsOptional()
+  @IsNumber()
+  supplierId?: number;
+
   @ApiProperty({ required: false, description: 'Start date for filtering quotes' })
   @IsOptional()
   @IsDateString()

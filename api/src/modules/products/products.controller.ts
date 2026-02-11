@@ -13,9 +13,12 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  Res,
+  Header,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiConsumes } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { ProductsService } from './products.service';
 import { ImageService } from '../images/services/image.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -318,5 +321,52 @@ export class ProductsController {
       url: optimizedUrl,
       originalUrl: product.imageUrl,
     };
+  }
+
+  @Get('export/xlsx')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header('Content-Disposition', 'attachment; filename=produits.xlsx')
+  @ApiOperation({ summary: 'Export all products to XLSX file' })
+  @ApiResponse({
+    status: 200,
+    description: 'Products exported successfully',
+  })
+  async exportToXlsx(@Res() res: Response) {
+    const buffer = await this.productsService.exportToXlsx();
+    res.send(buffer);
+  }
+
+  @Post('import/xlsx')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Import products from XLSX file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 200,
+    description: 'Products imported successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid file' })
+  async importFromXlsx(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    const result = await this.productsService.importFromXlsx(file);
+    return {
+      message: `Import terminé: ${result.imported} créés, ${result.updated} mis à jour, ${result.failed} échoués`,
+      ...result,
+    };
+  }
+
+  @Get('import/template')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header('Content-Disposition', 'attachment; filename=template-produits.xlsx')
+  @ApiOperation({ summary: 'Download XLSX import template for products' })
+  @ApiResponse({
+    status: 200,
+    description: 'Template downloaded successfully',
+  })
+  async getImportTemplate(@Res() res: Response) {
+    const buffer = await this.productsService.getImportTemplate();
+    res.send(buffer);
   }
 }

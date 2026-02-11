@@ -12,6 +12,7 @@ import {
   BaseDocument,
   BaseStandardItem,
 } from '../../../common/entities/base-document.entity';
+import { Partner } from '../../partners/entities/partner.entity';
 
 export enum OrderStatus {
   DRAFT = 'draft', // Brouillon
@@ -36,6 +37,7 @@ export enum DeliveryStatus {
 @Entity('orders')
 @Index(['documentNumber'])
 @Index(['customerId'])
+@Index(['supplierId'])
 @Index(['date'])
 export class Order extends BaseDocument {
   // Override documentNumber to use orderNumber for backwards compatibility
@@ -46,6 +48,23 @@ export class Order extends BaseDocument {
   set orderNumber(value: string) {
     this.documentNumber = value;
   }
+
+  // Supplier fields for purchase orders (bon d'achat)
+  @Column({ type: 'int', nullable: true })
+  supplierId: number | null;
+
+  @ManyToOne(() => Partner, { nullable: true })
+  @JoinColumn({ name: 'supplierId' })
+  supplier: Partner;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  supplierName: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  supplierPhone: string;
+
+  @Column({ type: 'text', nullable: true })
+  supplierAddress: string;
 
   @Column({ type: 'date', nullable: true })
   dueDate: Date | null;

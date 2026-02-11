@@ -8,6 +8,10 @@ export interface Order {
   customerName?: string | null;
   customerPhone?: string | null;
   customerAddress?: string | null;
+  supplierId?: number | null;
+  supplierName?: string | null;
+  supplierPhone?: string | null;
+  supplierAddress?: string | null;
   date: string;
   dueDate?: string | null;
   validationDate?: string | null;
@@ -66,6 +70,10 @@ export interface CreateOrderDTO {
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
+  supplierId?: number;
+  supplierName?: string;
+  supplierPhone?: string;
+  supplierAddress?: string;
   date: string;
   dueDate?: string;
   subtotal: number;

@@ -2,7 +2,7 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Plus, FileText, TrendingUp, TrendingDown, Clock, CheckCircle, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { LayoutDashboard, List, Plus, FileText, TrendingUp, TrendingDown, Clock, CheckCircle, Filter, X, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { DocumentTable, DocumentAnalysisChart } from '../../components/documents';
 import { documentsService, DocumentItem } from '../../modules/documents/services/documents.service';
 import { partnersService } from '../../modules';
@@ -14,6 +14,10 @@ import { useLanguage } from '@/context/LanguageContext';
 import { DateRangePicker } from '../../components/ui/date-range-picker';
 import { Autocomplete } from '../../components/ui/autocomplete';
 import { useQuery } from '@tanstack/react-query';
+import { quotesService } from '../../modules/quotes/quotes.service';
+import { invoicesService } from '../../modules/invoices/invoices.service';
+import { ordersService } from '../../modules/orders/orders.service';
+import { toast } from 'sonner';
 
 interface DocumentListPageProps {
   documentType: DocumentType;
@@ -320,6 +324,43 @@ export default function DocumentListPage({
 
   const Icon = config.icon;
 
+  // Export to XLSX
+  const handleExport = async () => {
+    try {
+      let blob: Blob;
+      let filename: string;
+
+      const supplierId = direction === 'achat' ? 1 : undefined; // Use appropriate supplierId logic
+
+      if (documentType === 'devis') {
+        blob = await quotesService.exportToXlsx(supplierId);
+        filename = direction === 'achat' ? 'demandes-prix' : 'devis';
+      } else if (documentType === 'facture') {
+        blob = await invoicesService.exportToXlsx(supplierId);
+        filename = direction === 'achat' ? 'factures-achat' : 'factures-vente';
+      } else if (documentType === 'bon_livraison') {
+        blob = await ordersService.exportToXlsx(supplierId);
+        filename = direction === 'achat' ? 'bons-achat' : 'bons-livraison';
+      } else {
+        toast.error('Type de document non pris en charge');
+        return;
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Export réussi');
+    } catch (error) {
+      toast.error('Erreur lors de l\'export');
+      console.error(error);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto w-full">
@@ -328,14 +369,24 @@ export default function DocumentListPage({
           title={config.title}
           subtitle={`${t('manageYour')} ${config.title.toLowerCase()}`}
           actions={
-            <button
-              onClick={() => navigate(createRoute)}
-              className="px-2 sm:px-4 py-1.5 sm:py-2 bg-amber-500 text-white rounded-lg sm:rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium"
-            >
-              <Plus className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              <span className="hidden sm:inline">{t('nouveau')}</span>
-              <span className="sm:hidden">+</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExport}
+                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-xs sm:text-sm font-medium"
+                title="Exporter"
+              >
+                <Download className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                <span className="hidden sm:inline">Exporter</span>
+              </button>
+              <button
+                onClick={() => navigate(createRoute)}
+                className="px-2 sm:px-4 py-1.5 sm:py-2 bg-amber-500 text-white rounded-lg sm:rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium"
+              >
+                <Plus className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                <span className="hidden sm:inline">{t('nouveau')}</span>
+                <span className="sm:hidden">+</span>
+              </button>
+            </div>
           }
         />
 

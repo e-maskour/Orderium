@@ -9,6 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import * as XLSX from 'xlsx';
 import { Order, OrderItem, OrderStatus, DeliveryStatus } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
@@ -93,6 +94,13 @@ export class OrdersService {
       order.documentNumber = documentNumber;
       order.receiptNumber = receiptNumber;
       order.customerId = customerId ?? null;
+      order.supplierId = createOrderDto.supplierId ?? null;
+      order.supplierName = createOrderDto.supplierName ?? '';
+      order.supplierPhone = createOrderDto.supplierPhone ?? '';
+      order.supplierAddress = createOrderDto.supplierAddress ?? '';
+      order.customerName = createOrderDto.customerName ?? '';
+      order.customerPhone = createOrderDto.customerPhone ?? '';
+      order.customerAddress = createOrderDto.customerAddress ?? '';
       order.date = today;
       order.dueDate = createOrderDto.dueDate ? new Date(createOrderDto.dueDate) : null;
       order.subtotal = createOrderDto.subtotal || 0;
@@ -164,11 +172,11 @@ export class OrdersService {
           productId: item.productId,
           description: item.description,
           quantity: item.quantity,
-          unitPrice: item.unitPrice,
+          unitPrice: item.unitPrice ?? 0,
           discount: item.discount || 0,
           discountType: item.discountType || 0,
           tax: item.tax,
-          total: item.total,
+          total: item.total ?? 0,
         }),
       );
 
@@ -178,6 +186,7 @@ export class OrdersService {
       const createdOrder = await manager
         .createQueryBuilder(Order, 'order')
         .leftJoin('order.customer', 'customer')
+        .leftJoin('order.supplier', 'supplier')
         .leftJoinAndSelect('order.items', 'items')
         .leftJoin('items.product', 'product')
         .select([
@@ -211,6 +220,10 @@ export class OrdersService {
           'customer.name',
           'customer.phoneNumber',
           'customer.address',
+          'supplier.id',
+          'supplier.name',
+          'supplier.phoneNumber',
+          'supplier.address',
           'items.id',
           'items.orderId',
           'items.productId',
@@ -263,6 +276,10 @@ export class OrdersService {
         customerName: createdOrder.customer?.name,
         customerPhone: createdOrder.customer?.phoneNumber,
         customerAddress: createdOrder.customer?.address,
+        supplierId: createdOrder.supplier?.id,
+        supplierName: createdOrder.supplier?.name,
+        supplierPhone: createdOrder.supplier?.phoneNumber,
+        supplierAddress: createdOrder.supplier?.address,
         items:
           createdOrder.items?.map((item) => ({
             id: item.id,
@@ -478,6 +495,7 @@ export class OrdersService {
     fromClient?: boolean,
     page: number = 1,
     pageSize: number = 50,
+    supplierId?: number,
   ): Promise<{ orders: any[]; count: number; totalCount: number; statusCounts: any }> {
     const offset = (page - 1) * pageSize;
 
@@ -485,6 +503,7 @@ export class OrdersService {
     const queryBuilder = this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
+      .leftJoin('order.supplier', 'supplier')
       .leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id')
       .select([
         'order.id',
@@ -518,6 +537,10 @@ export class OrdersService {
         'customer.name',
         'customer.phoneNumber',
         'customer.address',
+        'supplier.id',
+        'supplier.name',
+        'supplier.phoneNumber',
+        'supplier.address',
       ])
       .orderBy('order.dateCreated', 'DESC');
 
@@ -552,6 +575,10 @@ export class OrdersService {
 
     if (customerId) {
       queryBuilder.andWhere('order.customerId = :customerId', { customerId });
+    }
+
+    if (supplierId) {
+      queryBuilder.andWhere('order.supplierId = :supplierId', { supplierId });
     }
 
     if (deliveryPersonId) {
@@ -685,6 +712,7 @@ export class OrdersService {
     const order = await this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
+      .leftJoin('order.supplier', 'supplier')
       .leftJoinAndSelect('order.items', 'items')
       .leftJoin('items.product', 'product')
       .select([
@@ -719,6 +747,10 @@ export class OrdersService {
         'customer.name',
         'customer.phoneNumber',
         'customer.address',
+        'supplier.id',
+        'supplier.name',
+        'supplier.phoneNumber',
+        'supplier.address',
         'items.id',
         'items.productId',
         'items.description',
@@ -771,6 +803,10 @@ export class OrdersService {
       customerName: order.customer?.name,
       customerPhone: order.customer?.phoneNumber,
       customerAddress: order.customer?.address,
+      supplierId: order.supplier?.id,
+      supplierName: order.supplier?.name,
+      supplierPhone: order.supplier?.phoneNumber,
+      supplierAddress: order.supplier?.address,
       items:
         order.items?.map((item) => ({
           id: item.id,
@@ -790,6 +826,7 @@ export class OrdersService {
     const order = await this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
+      .leftJoin('order.supplier', 'supplier')
       .leftJoinAndSelect('order.items', 'items')
       .leftJoin('items.product', 'product')
       .select([
@@ -824,6 +861,10 @@ export class OrdersService {
         'customer.name',
         'customer.phoneNumber',
         'customer.address',
+        'supplier.id',
+        'supplier.name',
+        'supplier.phoneNumber',
+        'supplier.address',
         'items.id',
         'items.orderId',
         'items.productId',
@@ -877,6 +918,10 @@ export class OrdersService {
       customerName: order.customer?.name,
       customerPhone: order.customer?.phoneNumber,
       customerAddress: order.customer?.address,
+      supplierId: order.supplier?.id,
+      supplierName: order.supplier?.name,
+      supplierPhone: order.supplier?.phoneNumber,
+      supplierAddress: order.supplier?.address,
       items:
         order.items?.map((item) => ({
           id: item.id,
@@ -1020,9 +1065,16 @@ export class OrdersService {
       );
 
       if (!sequence) {
-        // Create default sequence
+        // Create default sequence with appropriate prefix
         const now = new Date();
-        const prefix = entityType === 'delivery_note' ? 'BL' : entityType === 'receipt' ? '' : 'CMD';
+        let prefix = 'CMD'; // Default
+        if (entityType === 'delivery_note') {
+          prefix = 'BL';
+        } else if (entityType === 'purchase_order') {
+          prefix = 'BA';
+        } else if (entityType === 'receipt') {
+          prefix = '';
+        }
         const isReceipt = entityType === 'receipt';
         const defaultSequence = {
           id: this.generateSequenceId(),
@@ -1052,7 +1104,14 @@ export class OrdersService {
       return sequence;
     } catch (error) {
       // Fallback to default if configurations service fails
-      const prefix = entityType === 'delivery_note' ? 'BL' : entityType === 'receipt' ? '' : 'CMD';
+      let prefix = 'CMD'; // Default
+      if (entityType === 'delivery_note') {
+        prefix = 'BL';
+      } else if (entityType === 'purchase_order') {
+        prefix = 'BA';
+      } else if (entityType === 'receipt') {
+        prefix = '';
+      }
       const isReceipt = entityType === 'receipt';
       return {
         id: 'fallback',
@@ -1075,8 +1134,9 @@ export class OrdersService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
-  private buildSequencePattern(sequence: any): string {
-    const now = new Date();
+  private buildSequencePattern(sequence: any, documentDate?: string | Date): string {
+    // Use document date if provided, otherwise fallback to current date
+    const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
@@ -1086,10 +1146,10 @@ export class OrdersService {
       currentMonth <= 3
         ? '01'
         : currentMonth <= 6
-          ? '04'
+          ? '02'
           : currentMonth <= 9
-            ? '07'
-            : '10';
+            ? '03'
+            : '04';
 
     let pattern = sequence.prefix || '';
     let dateComponents: string[] = [];
@@ -1214,7 +1274,10 @@ export class OrdersService {
 
     // Only convert PROV numbers to permanent sequence numbers
     if (order.documentNumber.startsWith('PROV')) {
-      const sequence = await this.getOrCreateSequence('delivery_note');
+      // Determine sequence type based on order direction
+      const sequenceType = order.supplierId ? 'purchase_order' : 'delivery_note';
+      
+      const sequence = await this.getOrCreateSequence(sequenceType);
       const finalOrderNumber = this.generateSequenceNumber(sequence, order.date);
 
       // Update order with permanent number, validated status, and in progress
@@ -1226,7 +1289,7 @@ export class OrdersService {
       });
 
       // Increment sequence counter
-      await this.updateSequenceNextNumber('delivery_note', sequence);
+      await this.updateSequenceNextNumber(sequenceType, sequence);
     } else {
       // Already has a sequence number (portal orders), just mark as validated
       await this.orderRepository.update(id, {
@@ -1255,14 +1318,17 @@ export class OrdersService {
 
     // Update sequence nextNumber to match the last document in database
     try {
-      const sequence = await this.getOrCreateSequence('delivery_note');
+      // Determine sequence type based on order direction
+      const sequenceType = order.supplierId ? 'purchase_order' : 'delivery_note';
+      
+      const sequence = await this.getOrCreateSequence(sequenceType);
       const config = await this.configurationsService.findByEntity('sequences');
       const sequences = config?.values?.sequences || [];
       const sequenceIndex = sequences.findIndex((seq) => seq.id === sequence.id);
 
       if (sequenceIndex !== -1) {
         // Find the highest document number in database with this sequence pattern
-        const pattern = this.buildSequencePattern(sequence);
+        const pattern = this.buildSequencePattern(sequence, order.date);
         const lastOrder = await this.orderRepository
           .createQueryBuilder('order')
           .where('order.documentNumber LIKE :pattern', { pattern: pattern + '%' })
@@ -1377,6 +1443,24 @@ export class OrdersService {
       if (updateOrderDto.customerName !== undefined) {
         order.customerName = updateOrderDto.customerName;
       }
+      if (updateOrderDto.customerPhone !== undefined) {
+        order.customerPhone = updateOrderDto.customerPhone;
+      }
+      if (updateOrderDto.customerAddress !== undefined) {
+        order.customerAddress = updateOrderDto.customerAddress;
+      }
+      if (updateOrderDto.supplierId !== undefined) {
+        order.supplierId = updateOrderDto.supplierId;
+      }
+      if (updateOrderDto.supplierName !== undefined) {
+        order.supplierName = updateOrderDto.supplierName;
+      }
+      if (updateOrderDto.supplierPhone !== undefined) {
+        order.supplierPhone = updateOrderDto.supplierPhone;
+      }
+      if (updateOrderDto.supplierAddress !== undefined) {
+        order.supplierAddress = updateOrderDto.supplierAddress;
+      }
 
       // Update deliveryStatus and corresponding timestamp
       if (updateOrderDto.deliveryStatus !== undefined) {
@@ -1436,11 +1520,11 @@ export class OrdersService {
           productId: item.productId,
           description: item.description,
           quantity: item.quantity,
-          unitPrice: item.unitPrice,
+          unitPrice: item.unitPrice ?? 0,
           discount: item.discount || 0,
           discountType: item.discountType || 0,
           tax: item.tax || 0,
-          total: item.total || 0,
+          total: item.total ?? 0,
         }));
 
         await manager.insert(OrderItem, itemsToInsert);
@@ -1550,13 +1634,21 @@ export class OrdersService {
     return results.map((r) => r.documentNumber);
   }
 
-  async getAnalytics(year: number) {
-    // Get all orders for the specified year (excluding portal orders)
-    const orders = await this.orderRepository
+  async getAnalytics(direction: 'vente' | 'achat', year: number) {
+    // Get all orders for the specified year and direction (excluding portal orders)
+    const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .where('order.fromPortal = :fromPortal', { fromPortal: false })
-      .andWhere('EXTRACT(YEAR FROM COALESCE(order.date, order.dateCreated)) = :year', { year })
-      .getMany();
+      .andWhere('EXTRACT(YEAR FROM COALESCE(order.date, order.dateCreated)) = :year', { year });
+
+    // Filter by direction (vente: customer orders, achat: supplier orders)
+    if (direction === 'vente') {
+      queryBuilder.andWhere('order.customerId IS NOT NULL');
+    } else {
+      queryBuilder.andWhere('order.supplierId IS NOT NULL');
+    }
+
+    const orders = await queryBuilder.getMany();
 
     // Calculate monthly chart data
     const monthlyData = Array.from({ length: 12 }, (_, monthIndex) => {
@@ -1602,5 +1694,129 @@ export class OrdersService {
         totalItems,
       },
     };
+  }
+
+  /**
+   * Export orders (bon de livraison / bon d'achat) to XLSX format
+   */
+  async exportToXlsx(supplierId?: number): Promise<Buffer> {
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('order.customer', 'customer')
+      .leftJoinAndSelect('order.supplier', 'supplier')
+      .orderBy('order.dateCreated', 'DESC');
+
+    if (supplierId !== undefined) {
+      if (supplierId) {
+        queryBuilder.where('order.supplierId = :supplierId', { supplierId });
+      } else {
+        queryBuilder.where('order.supplierId IS NULL');
+      }
+    }
+
+    const orders = await queryBuilder.getMany();
+
+    // Flatten data for export - one row per item
+    const exportData: any[] = [];
+    
+    orders.forEach((order) => {
+      const isBonAchat = !!order.supplierId;
+      const baseData = {
+        'Numéro': order.documentNumber,
+        'Date': order.date ? new Date(order.date).toLocaleDateString('fr-FR') : '',
+        'Date échéance': order.dueDate ? new Date(order.dueDate).toLocaleDateString('fr-FR') : '',
+        'Type': isBonAchat ? 'Bon d\'achat' : 'Bon de livraison',
+        'Client/Fournisseur': isBonAchat ? (order.supplierName || order.supplier?.name || '') : (order.customerName || order.customer?.name || ''),
+        'Téléphone': isBonAchat ? order.supplierPhone || '' : order.customerPhone || '',
+        'Adresse': isBonAchat ? (order.supplierAddress || order.supplier?.address || '') : (order.customerAddress || order.customer?.address || ''),
+        'Statut': this.getOrderStatusLabel(order.status),
+        'Statut livraison': order.deliveryStatus ? this.getDeliveryStatusLabel(order.deliveryStatus) : '',
+        'Sous-total': Number(order.subtotal),
+        'Remise': Number(order.discount),
+        'Type remise': order.discountType === 0 ? 'Montant' : 'Pourcentage',
+        'Taxe': Number(order.tax),
+        'Total': Number(order.total),
+        'Du portail': order.fromPortal ? 'Oui' : 'Non',
+        'Du client': order.fromClient ? 'Oui' : 'Non',
+        'Notes': order.notes || '',
+      };
+
+      if (order.items && order.items.length > 0) {
+        order.items.forEach((item, index) => {
+          exportData.push({
+            ...baseData,
+            'Ligne': index + 1,
+            'Code produit': item.product?.code || '',
+            'Produit/Service': item.description,
+            'Quantité': Number(item.quantity),
+            'Prix unitaire': Number(item.unitPrice),
+            'Remise ligne': Number(item.discount),
+            'Type remise ligne': item.discountType === 0 ? 'Montant' : 'Pourcentage',
+            'Taxe ligne (%)': Number(item.tax),
+            'Total ligne': Number(item.total),
+          });
+        });
+      } else {
+        exportData.push({
+          ...baseData,
+          'Ligne': '',
+          'Code produit': '',
+          'Produit/Service': '',
+          'Quantité': '',
+          'Prix unitaire': '',
+          'Remise ligne': '',
+          'Type remise ligne': '',
+          'Taxe ligne (%)': '',
+          'Total ligne': '',
+        });
+      }
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 25 },
+      { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 18 }, { wch: 12 },
+      { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
+      { wch: 12 }, { wch: 30 }, { wch: 8 }, { wch: 15 }, { wch: 25 },
+      { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 12 },
+      { wch: 12 },
+    ];
+
+    const sheetName = supplierId !== undefined ? (supplierId ? 'Bons d\'achat' : 'Bons de livraison') : 'Bons';
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    return buffer;
+  }
+
+  private getOrderStatusLabel(status: OrderStatus): string {
+    const labels = {
+      [OrderStatus.DRAFT]: 'Brouillon',
+      [OrderStatus.VALIDATED]: 'Validée',
+      [OrderStatus.IN_PROGRESS]: 'En cours',
+      [OrderStatus.DELIVERED]: 'Livrée',
+      [OrderStatus.INVOICED]: 'Facturée',
+      [OrderStatus.CANCELLED]: 'Annulée',
+    };
+    return labels[status] || status;
+  }
+
+  private getDeliveryStatusLabel(status: DeliveryStatus): string {
+    const labels = {
+      [DeliveryStatus.PENDING]: 'En attente',
+      [DeliveryStatus.ASSIGNED]: 'Assignée',
+      [DeliveryStatus.CONFIRMED]: 'Confirmée',
+      [DeliveryStatus.PICKED_UP]: 'Récupérée',
+      [DeliveryStatus.TO_DELIVERY]: 'Vers livraison',
+      [DeliveryStatus.IN_DELIVERY]: 'En livraison',
+      [DeliveryStatus.DELIVERED]: 'Livrée',
+      [DeliveryStatus.CANCELED]: 'Annulée',
+    };
+    return labels[status] || status;
   }
 }

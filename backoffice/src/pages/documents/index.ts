@@ -22,3 +22,11 @@ export { default as DevisVenteEdit } from './DevisVenteEditWrapper';
 export { default as BonLivraisonList } from './BonLivraisonList';
 export { default as BonLivraisonCreate } from './BonLivraisonCreateWrapper';
 export { default as BonLivraisonEdit } from './BonLivraisonEditWrapper';
+
+// Demande de Prix (Purchase Quote) pages
+export { default as DemandeAchatCreate } from './DemandeAchatCreateWrapper';
+export { default as DemandeAchatEdit } from './DemandeAchatEditWrapper';
+
+// Bon d'Achat (Purchase Order) pages
+export { default as BonAchatCreate } from './BonAchatCreateWrapper';
+export { default as BonAchatEdit } from './BonAchatEditWrapper';

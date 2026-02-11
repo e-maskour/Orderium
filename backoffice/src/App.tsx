@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
@@ -7,6 +8,7 @@ import { GlobalOverlayPanel } from './components/GlobalOverlayPanel';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PushNotificationProvider } from './components/PushNotificationProvider';
 import { Toaster } from './components/ui/sonner';
+import { AIAssistantOverlay, AIAssistantButton } from './components/AIAssistant';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DeliveryPersons from './pages/DeliveryPersons';
@@ -39,6 +41,10 @@ import {
   BonLivraisonList,
   BonLivraisonCreate,
   BonLivraisonEdit,
+  DemandeAchatCreate,
+  DemandeAchatEdit,
+  BonAchatCreate,
+  BonAchatEdit,
 } from './pages/documents';
 import QuotePreviewPage from './pages/QuotePreviewPage';
 import DemandePrix from './pages/DemandePrix';
@@ -58,8 +64,26 @@ import InventoryAdjustments from './pages/InventoryAdjustments';
 import Notifications from './pages/Notifications';
 
 const queryClient = new QueryClient();
+const ENABLE_CHAT_AI_AGENT = import.meta.env.VITE_ENABLE_CHAT_AI_AGENT === 'true';
 
 function App() {
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+
+  // Keyboard shortcut: Cmd+K / Ctrl+K to toggle AI assistant
+  useEffect(() => {
+    if (!ENABLE_CHAT_AI_AGENT) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsAIAssistantOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
@@ -350,10 +374,42 @@ function App() {
                 }
               />
               <Route
+                path="/demande-prix/create"
+                element={
+                  <ProtectedRoute>
+                    <DemandeAchatCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/demande-prix/:id"
+                element={
+                  <ProtectedRoute>
+                    <DemandeAchatEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/bon-achat"
                 element={
                   <ProtectedRoute>
                     <BonAchat />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bon-achat/create"
+                element={
+                  <ProtectedRoute>
+                    <BonAchatCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bon-achat/:id"
+                element={
+                  <ProtectedRoute>
+                    <BonAchatEdit />
                   </ProtectedRoute>
                 }
               />
@@ -450,6 +506,19 @@ function App() {
               </Routes>
               <Toaster />
               <GlobalOverlayPanel />
+              
+              {/* AI Assistant - Available on all pages */}
+              {ENABLE_CHAT_AI_AGENT && (
+                <>
+                  {!isAIAssistantOpen && (
+                    <AIAssistantButton onClick={() => setIsAIAssistantOpen(true)} />
+                  )}
+                  <AIAssistantOverlay
+                    isOpen={isAIAssistantOpen}
+                    onClose={() => setIsAIAssistantOpen(false)}
+                  />
+                </>
+              )}
           </BrowserRouter>
         </OverlayPanelProvider>
         </AuthProvider>
