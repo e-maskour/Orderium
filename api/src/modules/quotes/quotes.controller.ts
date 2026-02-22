@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Query,
+  Body,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Res, Header } from '@nestjs/common';
@@ -16,10 +26,17 @@ export class QuotesController {
     @Body() filterDto: FilterQuotesDto,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
+    @Query('direction') direction?: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : undefined;
     const pageSizeNum = pageSize ? parseInt(pageSize, 10) : undefined;
-    
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+
     const result = await this.quotesService.findAll(
       filterDto.search,
       filterDto.status,
@@ -29,15 +46,40 @@ export class QuotesController {
       pageNum,
       pageSizeNum,
       filterDto.supplierId,
+      directionValue,
     );
-    return { success: true, quotes: result.quotes, count: result.count, totalCount: result.totalCount };
+    return {
+      success: true,
+      quotes: result.quotes,
+      count: result.count,
+      totalCount: result.totalCount,
+    };
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all quotes (legacy - use POST /list instead)' })
-  async findAllLegacy(@Query('limit') limit?: string) {
+  async findAllLegacy(
+    @Query('limit') limit?: string,
+    @Query('direction') direction?: string,
+  ) {
     const limitNum = limit ? parseInt(limit, 10) : 100;
-    const result = await this.quotesService.findAll(undefined, undefined, undefined, undefined, undefined, undefined, limitNum);
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+    const result = await this.quotesService.findAll(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      limitNum,
+      undefined,
+      directionValue,
+    );
     return { success: true, quotes: result.quotes, count: result.count };
   }
 
@@ -57,7 +99,10 @@ export class QuotesController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update a quote' })
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateQuoteDto: any) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateQuoteDto: any,
+  ) {
     const quote = await this.quotesService.update(id, updateQuoteDto);
     return { success: true, quote };
   }
@@ -115,24 +160,32 @@ export class QuotesController {
   @ApiOperation({ summary: 'Sign quote via share link (public)' })
   async signQuote(
     @Param('token') token: string,
-    @Body() signData: { signedBy: string; clientNotes?: string }
+    @Body() signData: { signedBy: string; clientNotes?: string },
   ) {
-    const quote = await this.quotesService.signQuote(token, signData.signedBy, signData.clientNotes);
+    const quote = await this.quotesService.signQuote(
+      token,
+      signData.signedBy,
+      signData.clientNotes,
+    );
     return { success: true, quote };
   }
 
   @Put(':id/unsign')
-  @ApiOperation({ summary: 'Refuse a signed quote and set status to closed (admin only)' })
+  @ApiOperation({
+    summary: 'Refuse a signed quote and set status to closed (admin only)',
+  })
   async unsignQuote(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.unsignQuote(id);
     return { success: true, quote };
   }
 
   @Put(':id/convert-to-order')
-  @ApiOperation({ summary: 'Mark quote as converted to order (bon de livraison)' })
+  @ApiOperation({
+    summary: 'Mark quote as converted to order (bon de livraison)',
+  })
   async convertToOrder(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { orderId: number }
+    @Body() body: { orderId: number },
   ) {
     const quote = await this.quotesService.convertToOrder(id, body.orderId);
     return { success: true, quote };
@@ -142,7 +195,7 @@ export class QuotesController {
   @ApiOperation({ summary: 'Mark quote as converted to invoice (facture)' })
   async convertToInvoice(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { invoiceId: number }
+    @Body() body: { invoiceId: number },
   ) {
     const quote = await this.quotesService.convertToInvoice(id, body.invoiceId);
     return { success: true, quote };
@@ -160,7 +213,10 @@ export class QuotesController {
   }
 
   @Get('export/xlsx')
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
   @ApiOperation({ summary: 'Export quotes/devis to XLSX file' })
   async exportToXlsx(
     @Res() res: Response,
@@ -168,11 +224,14 @@ export class QuotesController {
   ) {
     const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
     const buffer = await this.quotesService.exportToXlsx(supplierIdNum);
-    
-    const filename = supplierIdNum !== undefined 
-      ? (supplierIdNum ? 'demandes-de-prix.xlsx' : 'devis.xlsx')
-      : 'devis-et-demandes.xlsx';
-      
+
+    const filename =
+      supplierIdNum !== undefined
+        ? supplierIdNum
+          ? 'demandes-de-prix.xlsx'
+          : 'devis.xlsx'
+        : 'devis-et-demandes.xlsx';
+
     res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
     res.send(buffer);
   }

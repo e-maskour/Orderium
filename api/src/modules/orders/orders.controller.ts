@@ -48,9 +48,16 @@ export class OrdersController {
     @Query('fromPortal') fromPortal?: string,
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
+    @Query('direction') direction?: string,
   ) {
     const fromPortalBool =
       fromPortal !== undefined ? fromPortal === 'true' : undefined;
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
     const startDateObj = filterDto.startDate
       ? new Date(filterDto.startDate)
       : undefined;
@@ -75,6 +82,7 @@ export class OrdersController {
       pageNum,
       pageSize,
       filterDto.supplierId,
+      directionValue,
     );
 
     return {
@@ -102,12 +110,19 @@ export class OrdersController {
     @Query('fromClient') fromClient?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('direction') direction?: string,
   ) {
     const limitNum = limit ? parseInt(limit, 10) : 50;
     const fromPortalBool =
       fromPortal !== undefined ? fromPortal === 'true' : undefined;
     const fromClientBool =
       fromClient !== undefined ? fromClient === 'true' : undefined;
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
     const startDateObj = startDate ? new Date(startDate) : undefined;
     const endDateObj = endDate ? new Date(endDate) : undefined;
 
@@ -118,6 +133,7 @@ export class OrdersController {
       fromClientBool,
       startDateObj,
       endDateObj,
+      directionValue,
     );
     return {
       success: true,

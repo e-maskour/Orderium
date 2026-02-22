@@ -20,6 +20,7 @@ export class QuotesService {
     const params = new URLSearchParams();
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString());
+    if (filters?.direction) params.append('direction', filters.direction);
     
     const queryString = params.toString();
     const response = await fetch(`${API_URL}/quotes/list${queryString ? `?${queryString}` : ''}`, {

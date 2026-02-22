@@ -4,6 +4,7 @@ export type DeliveryStatus = 'pending' | 'assigned' | 'confirmed' | 'picked_up' 
 export interface Order {
   id: number;
   orderNumber: string;
+  direction: 'ACHAT' | 'VENTE';
   customerId?: number | null;
   customerName?: string | null;
   customerPhone?: string | null;
@@ -70,6 +71,7 @@ export interface CreateOrderDTO {
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
+  direction?: 'ACHAT' | 'VENTE';
   supplierId?: number;
   supplierName?: string;
   supplierPhone?: string;

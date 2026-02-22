@@ -3,6 +3,7 @@ export type QuoteStatus = 'draft' | 'open' | 'signed' | 'closed' | 'delivered' |
 export interface Quote {
   id: number;
   quoteNumber: string;
+  direction: 'ACHAT' | 'VENTE';
   customerId?: number | null;
   customerName?: string | null;
   customerPhone?: string | null;
@@ -56,6 +57,7 @@ export interface QuoteFilters {
   status?: QuoteStatus;
   customerId?: number;
   supplierId?: number;
+  direction?: 'ACHAT' | 'VENTE';
   dateFrom?: string;
   dateTo?: string;
   search?: string;
@@ -68,6 +70,7 @@ export interface CreateQuoteDTO {
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
+  direction?: 'ACHAT' | 'VENTE';
   supplierId?: number;
   supplierName?: string;
   supplierPhone?: string;

@@ -1,6 +1,7 @@
 export interface Invoice {
   id: number;
   invoiceNumber: string;
+  direction: 'ACHAT' | 'VENTE';
   customerId?: number | null;
   customerName?: string | null;
   customerPhone?: string | null;
@@ -48,6 +49,7 @@ export interface InvoiceFilters {
   status?: 'draft' | 'unpaid' | 'partial' | 'paid';
   customerId?: number;
   supplierId?: number;
+  direction?: 'ACHAT' | 'VENTE';
   dateFrom?: string;
   dateTo?: string;
   search?: string;
@@ -67,6 +69,7 @@ export interface CreateInvoiceDTO {
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
+  direction?: 'ACHAT' | 'VENTE';
   supplierId?: number;
   supplierName?: string;
   supplierPhone?: string;

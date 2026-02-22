@@ -72,6 +72,7 @@ export class OrderItem implements IOrderItem {
 export class Order implements IOrder {
   id: number;
   orderNumber: string;
+  direction: 'ACHAT' | 'VENTE';
   customerId?: number | null;
   customerName?: string | null;
   customerPhone?: string | null;
@@ -104,6 +105,7 @@ export class Order implements IOrder {
   constructor(data: IOrder) {
     this.id = data.id;
     this.orderNumber = data.orderNumber;
+    this.direction = data.direction;
     this.customerId = data.customerId;
     this.customerName = data.customerName;
     this.customerPhone = data.customerPhone;
@@ -245,6 +247,7 @@ export class Order implements IOrder {
     return new Order({
       id: data.id,
       orderNumber: data.orderNumber || data.documentNumber,
+      direction: data.direction || (data.supplierId ? 'ACHAT' : 'VENTE'),
       customerId: data.customerId,
       customerName: data.customerName,
       customerPhone: data.customerPhone,

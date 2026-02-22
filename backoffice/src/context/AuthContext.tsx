@@ -3,11 +3,31 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 interface Admin {
   id: number;
   phoneNumber: string;
-  FullName?: string;
-  IsCustomer: boolean;
-  IsDelivery: boolean;
-  IsAdmin: boolean;
+  name?: string;
+  fullName?: string;
+  isCustomer: boolean;
+  isDelivery: boolean;
+  isAdmin: boolean;
 }
+
+const normalizeAdmin = (raw: any): Admin | null => {
+  if (!raw) return null;
+  const isAdmin = raw.isAdmin ?? raw.IsAdmin;
+  const isCustomer = raw.isCustomer ?? raw.IsCustomer ?? false;
+  const isDelivery = raw.isDelivery ?? raw.IsDelivery ?? false;
+
+  if (typeof raw.id !== 'number' || !raw.phoneNumber) return null;
+
+  return {
+    id: raw.id,
+    phoneNumber: raw.phoneNumber,
+    name: raw.name ?? raw.FullName,
+    fullName: raw.fullName ?? raw.FullName,
+    isAdmin: Boolean(isAdmin),
+    isCustomer: Boolean(isCustomer),
+    isDelivery: Boolean(isDelivery),
+  };
+};
 
 interface AuthContextType {
   admin: Admin | null;
@@ -29,8 +49,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedAdmin = localStorage.getItem('admin');
     const storedToken = localStorage.getItem('adminToken');
     if (storedAdmin && storedToken) {
-      setAdmin(JSON.parse(storedAdmin));
-      setIsAuthenticated(true);
+      const parsed = normalizeAdmin(JSON.parse(storedAdmin));
+      if (parsed?.isAdmin) {
+        setAdmin(parsed);
+        setIsAuthenticated(true);
+      } else {
+        localStorage.removeItem('admin');
+        localStorage.removeItem('adminToken');
+      }
     }
     setIsLoading(false);
   }, []);
@@ -52,20 +78,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const data = await response.json();
-      
+
       // Check if login was successful
       if (!data.success) {
         throw new Error(data.message || 'Login failed');
       }
-      
+
+      const normalized = normalizeAdmin(data.user);
+
       // Verify it's an admin account
-      if (!data.user.isAdmin) {
+      if (!normalized?.isAdmin) {
         throw new Error('Access denied: Admin credentials required');
       }
-      
-      setAdmin(data.user);
+
+      setAdmin(normalized);
       setIsAuthenticated(true);
-      localStorage.setItem('admin', JSON.stringify(data.user));
+      localStorage.setItem('admin', JSON.stringify(normalized));
       localStorage.setItem('adminToken', data.token);
     } catch (error) {
       throw error;

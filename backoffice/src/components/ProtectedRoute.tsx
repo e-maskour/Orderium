@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { ReactNode } from 'react';
 
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, admin } = useAuth();
   const { t } = useLanguage();
 
   if (isLoading) {
@@ -15,7 +15,7 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !admin?.isAdmin) {
     return <Navigate to="/login" replace />;
   }
 

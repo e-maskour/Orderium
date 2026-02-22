@@ -16,9 +16,16 @@ export class InvoicesController {
     @Body() filterDto: FilterInvoicesDto,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
+    @Query('direction') direction?: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : undefined;
     const pageSizeNum = pageSize ? parseInt(pageSize, 10) : undefined;
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
     
     const result = await this.invoicesService.findAll(
       filterDto.search,
@@ -29,15 +36,35 @@ export class InvoicesController {
       filterDto.dateTo,
       pageNum,
       pageSizeNum,
+      directionValue,
     );
     return { success: true, invoices: result.invoices, count: result.count, totalCount: result.totalCount };
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all invoices (legacy - use POST /list instead)' })
-  async findAllLegacy(@Query('limit') limit?: string) {
+  async findAllLegacy(
+    @Query('limit') limit?: string,
+    @Query('direction') direction?: string,
+  ) {
     const limitNum = limit ? parseInt(limit, 10) : 100;
-    const result = await this.invoicesService.findAll(undefined, undefined, undefined, undefined, undefined, undefined, undefined, limitNum);
+    const directionValue =
+      direction?.toUpperCase() === 'ACHAT'
+        ? 'ACHAT'
+        : direction?.toUpperCase() === 'VENTE'
+          ? 'VENTE'
+          : undefined;
+    const result = await this.invoicesService.findAll(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      limitNum,
+      directionValue,
+    );
     return { success: true, invoices: result.invoices, count: result.count };
   }
 

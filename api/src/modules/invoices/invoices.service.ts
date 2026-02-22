@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as XLSX from 'xlsx';
 import { Invoice, InvoiceItem, InvoiceStatus } from './entities/invoice.entity';
+import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
 
@@ -52,7 +53,7 @@ export class InvoicesService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly configurationsService: ConfigurationsService,
-  ) {}
+  ) { }
 
   private async calculateInvoiceStatus(
     invoiceId: number,
@@ -93,7 +94,7 @@ export class InvoicesService {
     return parseFloat(result[0]?.total || '0');
   }
 
-  private async getOrCreateSequence(entityType: string): Promise<any> {
+  private async getOrCreateSequence(entityType: string, documentDate?: string | Date): Promise<any> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
 
@@ -109,7 +110,7 @@ export class InvoicesService {
         if (entityType === 'invoice_purchase') {
           prefix = 'FB';
         }
-        
+
         const defaultSequence = {
           id: this.generateSequenceId(),
           name: `Sequence ${entityType}`,
@@ -120,7 +121,7 @@ export class InvoicesService {
           numberLength: 4,
           isActive: true,
           yearInPrefix: true,
-          monthInPrefix: false,
+          monthInPrefix: true,
           dayInPrefix: false,
           trimesterInPrefix: false,
           createdAt: now.toISOString(),
@@ -135,6 +136,9 @@ export class InvoicesService {
         sequence = defaultSequence;
       }
 
+      // Sync sequence with actual database to handle deleted documents
+      await this.syncSequenceWithDatabase(sequence, documentDate);
+
       return sequence;
     } catch (error) {
       // Fallback to default if configurations service fails
@@ -143,7 +147,7 @@ export class InvoicesService {
       if (entityType === 'invoice_purchase') {
         prefix = 'FB';
       }
-      
+
       return {
         id: 'fallback',
         name: 'Default Sequence',
@@ -154,7 +158,7 @@ export class InvoicesService {
         numberLength: 4,
         isActive: true,
         yearInPrefix: true,
-        monthInPrefix: false,
+        monthInPrefix: true,
         dayInPrefix: false,
         trimesterInPrefix: false,
       };
@@ -163,6 +167,53 @@ export class InvoicesService {
 
   private generateSequenceId(): string {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  }
+
+  private async syncSequenceWithDatabase(sequence: any, documentDate?: string | Date): Promise<void> {
+    try {
+      // Build the current pattern for this sequence using document date (e.g., "FA 2026-02-")
+      const pattern = this.buildSequencePattern(sequence, documentDate);
+
+      // Find all invoices with document numbers matching this pattern
+      const invoices = await this.invoiceRepository
+        .createQueryBuilder('invoice')
+        .where('invoice.documentNumber LIKE :pattern', {
+          pattern: `${pattern}%`
+        })
+        .andWhere('invoice.documentNumber NOT LIKE :provisional', {
+          provisional: 'PROV%'
+        })
+        .getMany();
+
+      if (invoices.length === 0) {
+        // No invoices found for this pattern, reset to 1
+        sequence.nextNumber = 1;
+        return;
+      }
+
+      // Extract all sequence numbers from the invoices
+      const numbers = invoices
+        .map(invoice => {
+          // Remove the pattern prefix to get just the number part
+          const numberPart = invoice.documentNumber.replace(pattern, '');
+          // Remove any suffix
+          const cleanNumber = numberPart.replace(sequence.suffix || '', '');
+          return parseInt(cleanNumber, 10);
+        })
+        .filter(num => !isNaN(num));
+
+      if (numbers.length === 0) {
+        sequence.nextNumber = 1;
+        return;
+      }
+
+      // Set nextNumber to max + 1
+      const maxNumber = Math.max(...numbers);
+      sequence.nextNumber = maxNumber + 1;
+    } catch (error) {
+      console.error('Failed to sync sequence with database:', error);
+      // Keep existing nextNumber if sync fails
+    }
   }
 
   private buildSequencePattern(sequence: any, documentDate?: string | Date): string {
@@ -300,6 +351,7 @@ export class InvoicesService {
     dateTo?: string,
     page?: number,
     pageSize?: number,
+    direction?: 'ACHAT' | 'VENTE',
   ): Promise<{ invoices: Invoice[]; count: number; totalCount: number }> {
     const queryBuilder = this.invoiceRepository
       .createQueryBuilder('invoice')
@@ -325,6 +377,10 @@ export class InvoicesService {
 
     if (supplierId) {
       queryBuilder.andWhere('invoice.supplierId = :supplierId', { supplierId });
+    }
+
+    if (direction) {
+      queryBuilder.andWhere('invoice.direction = :direction', { direction });
     }
 
     if (dateFrom) {
@@ -407,6 +463,9 @@ export class InvoicesService {
     // Values (subtotal, tax, total, discount) come directly from frontend
     const invoice = this.invoiceRepository.create({
       documentNumber: invoiceNumber,
+      direction: createInvoiceDto.supplierId
+        ? DocumentDirection.ACHAT
+        : DocumentDirection.VENTE,
       customerId: createInvoiceDto.customerId,
       customerName: createInvoiceDto.customerName,
       customerPhone: createInvoiceDto.customerPhone,
@@ -485,6 +544,14 @@ export class InvoicesService {
     if (!invoice) {
       throw new NotFoundException('Invoice not found');
     }
+
+    const finalSupplierId =
+      updateInvoiceDto.supplierId !== undefined
+        ? updateInvoiceDto.supplierId
+        : invoice.supplierId;
+    const direction = finalSupplierId
+      ? DocumentDirection.ACHAT
+      : DocumentDirection.VENTE;
 
     // Prevent updates to validated invoices
     if (invoice.isValidated) {
@@ -597,6 +664,7 @@ export class InvoicesService {
         // Update invoice with values from frontend
         await this.invoiceRepository.update(id, {
           ...invoiceUpdateData,
+          direction,
           date: updateInvoiceDto.date
             ? new Date(updateInvoiceDto.date)
             : invoice.date,
@@ -608,6 +676,7 @@ export class InvoicesService {
         // Update invoice without items
         await this.invoiceRepository.update(id, {
           ...updateInvoiceDto,
+          direction,
           date: updateInvoiceDto.date
             ? new Date(updateInvoiceDto.date)
             : undefined,
@@ -657,9 +726,9 @@ export class InvoicesService {
     if (invoice.documentNumber.startsWith('PROV')) {
       // Determine sequence type based on invoice direction
       const sequenceType = invoice.supplierId ? 'invoice_purchase' : 'invoice_sale';
-      
+
       // Get sequence for appropriate invoice type
-      const sequence = await this.getOrCreateSequence(sequenceType);
+      const sequence = await this.getOrCreateSequence(sequenceType, invoice.date);
 
       // Use the sequence's next document number directly with invoice date
       finalInvoiceNumber = this.generateSequenceNumber(sequence, invoice.date);
@@ -699,12 +768,12 @@ export class InvoicesService {
     try {
       // Determine sequence type based on invoice direction
       const sequenceType = invoice.supplierId ? 'invoice_purchase' : 'invoice_sale';
-      
-      const sequence = await this.getOrCreateSequence(sequenceType);
+
+      const sequence = await this.getOrCreateSequence(sequenceType, invoice.date);
       const config = await this.configurationsService.findByEntity('sequences');
       const sequences = config?.values?.sequences || [];
       const sequenceIndex = sequences.findIndex((seq) => seq.id === sequence.id);
-      
+
       if (sequenceIndex !== -1) {
         // Find the highest document number in database with this sequence pattern
         const pattern = this.buildSequencePattern(sequence, invoice.date);
@@ -726,7 +795,7 @@ export class InvoicesService {
 
         sequences[sequenceIndex].nextNumber = nextNumber;
         sequences[sequenceIndex].updatedAt = new Date().toISOString();
-        
+
         await this.configurationsService.update(config.id, {
           values: { sequences },
         });
@@ -781,7 +850,7 @@ export class InvoicesService {
 
   async getAnalytics(direction: 'vente' | 'achat', year: number) {
     const isVente = direction === 'vente';
-    
+
     // Get all invoices for the specified year and direction
     const queryBuilder = this.invoiceRepository
       .createQueryBuilder('invoice')
@@ -865,7 +934,7 @@ export class InvoicesService {
 
     // Flatten data for export - one row per item
     const exportData: any[] = [];
-    
+
     invoices.forEach((invoice) => {
       const isFactureAchat = !!invoice.supplierId;
       const baseData = {

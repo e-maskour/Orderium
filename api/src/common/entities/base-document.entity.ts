@@ -5,10 +5,14 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-  Index,
 } from 'typeorm';
 import { Partner } from '../../modules/partners/entities/partner.entity';
 import { Product } from '../../modules/products/entities/product.entity';
+
+export enum DocumentDirection {
+  VENTE = 'VENTE',
+  ACHAT = 'ACHAT',
+}
 
 // Minimal base for all document entities
 export abstract class BaseEntity {
@@ -43,6 +47,13 @@ export abstract class BaseEntity {
 
 // Extended base for Quote and Invoice (with customer details)
 export abstract class BaseDocument extends BaseEntity {
+  @Column({
+    type: 'enum',
+    enum: DocumentDirection,
+    default: DocumentDirection.VENTE,
+  })
+  direction: DocumentDirection;
+
   @Column({ type: 'varchar', length: 50, unique: true })
   documentNumber: string;
 

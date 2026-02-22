@@ -11,6 +11,7 @@ import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as XLSX from 'xlsx';
 import { Order, OrderItem, OrderStatus, DeliveryStatus } from './entities/order.entity';
+import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
@@ -31,7 +32,7 @@ export class OrdersService {
     private readonly configurationsService: ConfigurationsService,
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
-  ) {}
+  ) { }
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<any> {
     if (!createOrderDto.items || createOrderDto.items.length === 0) {
@@ -57,11 +58,11 @@ export class OrdersService {
       let receiptNumber: string | null = null;
       if (createOrderDto.fromPortal) {
         // Portal orders get immediate sequence number
-        const sequence = await this.getOrCreateSequence('delivery_note');
+        const sequence = await this.getOrCreateSequence('delivery_note', createOrderDto.date);
         documentNumber = this.generateSequenceNumber(sequence, createOrderDto.date);
 
         // Portal orders also get receipt number
-        const receiptSequence = await this.getOrCreateSequence('receipt');
+        const receiptSequence = await this.getOrCreateSequence('receipt', createOrderDto.date);
         receiptNumber = this.generateSequenceNumber(receiptSequence, createOrderDto.date);
       } else {
         // Regular orders get PROV provisional number until validated
@@ -98,6 +99,9 @@ export class OrdersService {
       order.supplierName = createOrderDto.supplierName ?? '';
       order.supplierPhone = createOrderDto.supplierPhone ?? '';
       order.supplierAddress = createOrderDto.supplierAddress ?? '';
+      order.direction = createOrderDto.supplierId
+        ? DocumentDirection.ACHAT
+        : DocumentDirection.VENTE;
       order.customerName = createOrderDto.customerName ?? '';
       order.customerPhone = createOrderDto.customerPhone ?? '';
       order.customerAddress = createOrderDto.customerAddress ?? '';
@@ -144,7 +148,7 @@ export class OrdersService {
             break;
         }
       }
-      
+
       // Orders from POS/Portal are automatically validated and in progress
       if (createOrderDto.fromPortal) {
         order.status = OrderStatus.IN_PROGRESS;
@@ -158,10 +162,10 @@ export class OrdersService {
 
       // Update sequence number only for portal orders (those with immediate sequence)
       if (createOrderDto.fromPortal) {
-        const sequence = await this.getOrCreateSequence('delivery_note');
+        const sequence = await this.getOrCreateSequence('delivery_note', createOrderDto.date);
         await this.updateSequenceNextNumber('delivery_note', sequence);
 
-        const receiptSequence = await this.getOrCreateSequence('receipt');
+        const receiptSequence = await this.getOrCreateSequence('receipt', createOrderDto.date);
         await this.updateSequenceNextNumber('receipt', receiptSequence);
       }
 
@@ -202,6 +206,7 @@ export class OrdersService {
           'order.discountType',
           'order.total',
           'order.status',
+          'order.direction',
           'order.notes',
           'order.fromPortal',
           'order.fromClient',
@@ -258,6 +263,7 @@ export class OrdersService {
         discountType: createdOrder.discountType,
         total: createdOrder.total,
         status: createdOrder.status || 'draft',
+        direction: createdOrder.direction,
         note: createdOrder.notes,
         fromPortal: createdOrder.fromPortal || false,
         fromClient: createdOrder.fromClient || false,
@@ -319,6 +325,7 @@ export class OrdersService {
     fromClient?: boolean,
     startDate?: Date,
     endDate?: Date,
+    direction?: 'ACHAT' | 'VENTE',
   ): Promise<{ orders: any[]; count: number; statusCounts: any }> {
     // Build main query with filters
     const queryBuilder = this.dataSource
@@ -337,6 +344,7 @@ export class OrdersService {
         'order.discountType',
         'order.total',
         'order.status',
+        'order.direction',
         'order.isValidated',
         'order.notes',
         'order.fromPortal',
@@ -389,6 +397,10 @@ export class OrdersService {
       }
     }
 
+    if (direction) {
+      queryBuilder.andWhere('order.direction = :direction', { direction });
+    }
+
     // Apply date range filter
     if (startDate && endDate) {
       queryBuilder.andWhere('order.dateCreated >= :startDate', { startDate });
@@ -404,6 +416,9 @@ export class OrdersService {
     // Apply same filters for counting
     if (fromPortal !== undefined) {
       countQueryBuilder.where('order.fromPortal = :fromPortal', { fromPortal });
+    }
+    if (direction) {
+      countQueryBuilder.andWhere('order.direction = :direction', { direction });
     }
     if (startDate && endDate) {
       countQueryBuilder.andWhere('order.dateCreated >= :startDate', {
@@ -458,6 +473,7 @@ export class OrdersService {
         discountType: order.discountType,
         total: order.total,
         status: order.status || 'draft',
+        direction: order.direction,
         isValidated: order.isValidated || false,
         note: order.notes,
         fromPortal: order.fromPortal || false,
@@ -496,6 +512,7 @@ export class OrdersService {
     page: number = 1,
     pageSize: number = 50,
     supplierId?: number,
+    direction?: 'ACHAT' | 'VENTE',
   ): Promise<{ orders: any[]; count: number; totalCount: number; statusCounts: any }> {
     const offset = (page - 1) * pageSize;
 
@@ -518,6 +535,7 @@ export class OrdersService {
         'order.discountType',
         'order.total',
         'order.status',
+        'order.direction',
         'order.isValidated',
         'order.notes',
         'order.fromPortal',
@@ -581,6 +599,10 @@ export class OrdersService {
       queryBuilder.andWhere('order.supplierId = :supplierId', { supplierId });
     }
 
+    if (direction) {
+      queryBuilder.andWhere('order.direction = :direction', { direction });
+    }
+
     if (deliveryPersonId) {
       queryBuilder.andWhere('delivery.deliveryPersonId = :deliveryPersonId', {
         deliveryPersonId,
@@ -635,6 +657,9 @@ export class OrdersService {
         deliveryPersonId,
       });
     }
+    if (direction) {
+      countQueryBuilder.andWhere('order.direction = :direction', { direction });
+    }
 
     const allOrdersForCounts = await countQueryBuilder.getMany();
     const totalCount = allOrdersForCounts.length;
@@ -681,6 +706,7 @@ export class OrdersService {
         discountType: order.discountType,
         total: order.total,
         status: order.status || 'draft',
+        direction: order.direction,
         isValidated: order.isValidated || false,
         note: order.notes,
         fromPortal: order.fromPortal || false,
@@ -728,6 +754,7 @@ export class OrdersService {
         'order.discountType',
         'order.total',
         'order.status',
+        'order.direction',
         'order.isValidated',
         'order.notes',
         'order.fromPortal',
@@ -784,6 +811,7 @@ export class OrdersService {
       discountType: order.discountType,
       total: order.total,
       status: order.status || 'draft',
+      direction: order.direction,
       isValidated: order.isValidated || false,
       note: order.notes,
       fromPortal: order.fromPortal || false,
@@ -842,6 +870,7 @@ export class OrdersService {
         'order.discountType',
         'order.total',
         'order.status',
+        'order.direction',
         'order.isValidated',
         'order.notes',
         'order.fromPortal',
@@ -899,6 +928,7 @@ export class OrdersService {
       discountType: order.discountType,
       total: order.total,
       status: order.status || 'draft',
+      direction: order.direction,
       isValidated: order.isValidated || false,
       note: order.notes,
       fromPortal: order.fromPortal || false,
@@ -960,6 +990,7 @@ export class OrdersService {
         'order.discountType',
         'order.total',
         'order.status',
+        'order.direction',
         'order.isValidated',
         'order.notes',
         'order.fromPortal',
@@ -1027,6 +1058,7 @@ export class OrdersService {
         discountType: order.discountType,
         total: order.total,
         status: order.status || 'draft',
+        direction: order.direction,
         isValidated: order.isValidated || false,
         note: order.notes,
         fromPortal: order.fromPortal || false,
@@ -1055,7 +1087,7 @@ export class OrdersService {
     };
   }
 
-  private async getOrCreateSequence(entityType: string): Promise<any> {
+  private async getOrCreateSequence(entityType: string, documentDate?: string | Date): Promise<any> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
       const sequences = config?.values?.sequences || [];
@@ -1086,7 +1118,7 @@ export class OrdersService {
           numberLength: 4,
           isActive: true,
           yearInPrefix: true,
-          monthInPrefix: isReceipt,
+          monthInPrefix: true,
           dayInPrefix: isReceipt,
           trimesterInPrefix: false,
           createdAt: now.toISOString(),
@@ -1100,6 +1132,9 @@ export class OrdersService {
 
         sequence = defaultSequence;
       }
+
+      // Sync sequence with actual database to handle deleted documents
+      await this.syncSequenceWithDatabase(sequence, documentDate);
 
       return sequence;
     } catch (error) {
@@ -1123,7 +1158,7 @@ export class OrdersService {
         numberLength: 4,
         isActive: true,
         yearInPrefix: true,
-        monthInPrefix: isReceipt,
+        monthInPrefix: true,
         dayInPrefix: isReceipt,
         trimesterInPrefix: false,
       };
@@ -1132,6 +1167,53 @@ export class OrdersService {
 
   private generateSequenceId(): string {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  }
+
+  private async syncSequenceWithDatabase(sequence: any, documentDate?: string | Date): Promise<void> {
+    try {
+      // Build the current pattern for this sequence using document date (e.g., "BL 2026-02-")
+      const pattern = this.buildSequencePattern(sequence, documentDate);
+
+      // Find all orders with document numbers matching this pattern
+      const orders = await this.orderRepository
+        .createQueryBuilder('order')
+        .where('order.documentNumber LIKE :pattern', {
+          pattern: `${pattern}%`
+        })
+        .andWhere('order.documentNumber NOT LIKE :provisional', {
+          provisional: 'PROV%'
+        })
+        .getMany();
+
+      if (orders.length === 0) {
+        // No orders found for this pattern, reset to 1
+        sequence.nextNumber = 1;
+        return;
+      }
+
+      // Extract all sequence numbers from the orders
+      const numbers = orders
+        .map(order => {
+          // Remove the pattern prefix to get just the number part
+          const numberPart = order.documentNumber.replace(pattern, '');
+          // Remove any suffix
+          const cleanNumber = numberPart.replace(sequence.suffix || '', '');
+          return parseInt(cleanNumber, 10);
+        })
+        .filter(num => !isNaN(num));
+
+      if (numbers.length === 0) {
+        sequence.nextNumber = 1;
+        return;
+      }
+
+      // Set nextNumber to max + 1
+      const maxNumber = Math.max(...numbers);
+      sequence.nextNumber = maxNumber + 1;
+    } catch (error) {
+      console.error('Failed to sync sequence with database:', error);
+      // Keep existing nextNumber if sync fails
+    }
   }
 
   private buildSequencePattern(sequence: any, documentDate?: string | Date): string {
@@ -1276,8 +1358,8 @@ export class OrdersService {
     if (order.documentNumber.startsWith('PROV')) {
       // Determine sequence type based on order direction
       const sequenceType = order.supplierId ? 'purchase_order' : 'delivery_note';
-      
-      const sequence = await this.getOrCreateSequence(sequenceType);
+
+      const sequence = await this.getOrCreateSequence(sequenceType, order.date);
       const finalOrderNumber = this.generateSequenceNumber(sequence, order.date);
 
       // Update order with permanent number, validated status, and in progress
@@ -1320,8 +1402,8 @@ export class OrdersService {
     try {
       // Determine sequence type based on order direction
       const sequenceType = order.supplierId ? 'purchase_order' : 'delivery_note';
-      
-      const sequence = await this.getOrCreateSequence(sequenceType);
+
+      const sequence = await this.getOrCreateSequence(sequenceType, order.date);
       const config = await this.configurationsService.findByEntity('sequences');
       const sequences = config?.values?.sequences || [];
       const sequenceIndex = sequences.findIndex((seq) => seq.id === sequence.id);
@@ -1461,6 +1543,14 @@ export class OrdersService {
       if (updateOrderDto.supplierAddress !== undefined) {
         order.supplierAddress = updateOrderDto.supplierAddress;
       }
+
+      const finalSupplierId =
+        updateOrderDto.supplierId !== undefined
+          ? updateOrderDto.supplierId
+          : order.supplierId;
+      order.direction = finalSupplierId
+        ? DocumentDirection.ACHAT
+        : DocumentDirection.VENTE;
 
       // Update deliveryStatus and corresponding timestamp
       if (updateOrderDto.deliveryStatus !== undefined) {
@@ -1605,14 +1695,14 @@ export class OrdersService {
 
   async remove(id: number): Promise<void> {
     const order = await this.orderRepository.findOne({ where: { id } });
-    
+
     if (!order) {
       throw new NotFoundException('Order not found');
     }
 
     // Delete order items first (cascade should handle this, but being explicit)
     await this.orderItemRepository.delete({ orderId: id });
-    
+
     // Delete the order
     await this.orderRepository.delete(id);
   }
@@ -1720,7 +1810,7 @@ export class OrdersService {
 
     // Flatten data for export - one row per item
     const exportData: any[] = [];
-    
+
     orders.forEach((order) => {
       const isBonAchat = !!order.supplierId;
       const baseData = {

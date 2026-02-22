@@ -266,10 +266,10 @@ export default function DocumentEditPage({
 
   const loadDocument = async () => {
     if (!id) return;
-    
+
     try {
       setLoading(true);
-      
+
       // Call appropriate service based on document type
       let data: any;
       let doc: any;
@@ -285,17 +285,17 @@ export default function DocumentEditPage({
       }
 
       if (!data || !doc) return;
-      
+
       // Set form values
       const docNumber = documentType === 'facture' ? (doc as any).invoiceNumber :
-                       documentType === 'devis' ? (doc as any).quoteNumber :
-                       (doc as any).orderNumber;
+        documentType === 'devis' ? (doc as any).quoteNumber :
+          (doc as any).orderNumber;
       setInvoiceNumber(docNumber);
-      
+
       // Handle date fields based on document type and available data
       const dateValue = doc.date || (doc as any).dateCreated || (doc as any).createdAt;
       setDate(dateValue ? dateValue.split('T')[0] : '');
-      
+
       // Set dueDate and expirationDate for all document types
       setDueDate(doc.dueDate ? doc.dueDate.split('T')[0] : '');
       if (documentType !== 'bon_livraison') {
@@ -303,18 +303,18 @@ export default function DocumentEditPage({
       } else {
         setExpirationDate('');
       }
-      
+
       setStatus(doc.status || 'draft');
       setIsValidated(doc.isValidated ?? false);
       setValidationDate(doc.validationDate ? doc.validationDate.split('T')[0] : '');
       setNotes(doc.notes || doc.note || '');
-      
+
       // Load payment data for invoices
       if (documentType === 'facture') {
         setPaidAmount(parseFloat(doc.paidAmount?.toString() || '0'));
         setRemainingAmount(parseFloat(doc.remainingAmount?.toString() || '0'));
       }
-      
+
       // Load share token and signature data for devis
       if (documentType === 'devis') {
         setShareToken((doc as any).shareToken || null);
@@ -323,13 +323,13 @@ export default function DocumentEditPage({
         setSignedDate((doc as any).signedDate ? new Date((doc as any).signedDate) : null);
         setClientNotes((doc as any).clientNotes || '');
       }
-      
+
       // Set partner - fetch full partner details from partnersService
       const customerId = doc.customerId || doc.customer?.id;
       const customerName = doc.customerName || doc.customer?.name;
       const customerPhone = doc.customerPhone || doc.customer?.phone || doc.customer?.phoneNumber;
       const customerAddress = doc.customerAddress || doc.customer?.address;
-      
+
       if (isVente && customerId) {
         try {
           const partnerData = await partnersService.getById(customerId);
@@ -411,7 +411,7 @@ export default function DocumentEditPage({
           });
         }
       }
-      
+
       // Set items
       const itemsData = documentType === 'bon_livraison' ? doc.items : data.items;
       const mappedItems: DocumentItem[] = (itemsData || []).map((item: any) => ({
@@ -426,7 +426,7 @@ export default function DocumentEditPage({
         total: parseFloat(item.total || 0)
       }));
       setItems(mappedItems);
-      
+
     } catch (error) {
       setAlertMessage({
         title: t('error'),
@@ -470,26 +470,26 @@ export default function DocumentEditPage({
       const isDemandePrix = documentType === 'devis' && direction === 'achat';
 
       // Calculate totals
-      const subtotal = isDemandePrix ? 0 : items.reduce((sum, item) => {
+      const subtotal = isDemandePrix ? null : items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1 
-          ? itemTotal * (item.discount / 100) 
+        const discountAmount = item.discountType === 1
+          ? itemTotal * (item.discount / 100)
           : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         return sum + afterDiscount;
       }, 0);
 
-      const totalTax = isDemandePrix ? 0 : items.reduce((sum, item) => {
+      const totalTax = isDemandePrix ? null : items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1 
-          ? itemTotal * (item.discount / 100) 
+        const discountAmount = item.discountType === 1
+          ? itemTotal * (item.discount / 100)
           : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         const tax = afterDiscount * (item.tax / 100);
         return sum + tax;
       }, 0);
 
-      const total = subtotal + totalTax;
+      const total = isDemandePrix ? null : (subtotal! + totalTax!);
 
       // Update document data
       const documentData: any = {
@@ -509,14 +509,14 @@ export default function DocumentEditPage({
         items: items.map(item => {
           // For demande de prix, send null for unitPrice and total
           const isDemandePrix = documentType === 'devis' && direction === 'achat';
-          
+
           // Calculate item total (HT: before tax)
           const itemSubtotal = item.quantity * item.unitPrice;
-          const discountAmount = item.discountType === 1 
-            ? itemSubtotal * (item.discount / 100) 
+          const discountAmount = item.discountType === 1
+            ? itemSubtotal * (item.discount / 100)
             : item.discount;
           const itemTotal = itemSubtotal - discountAmount;
-          
+
           return {
             id: Number(item.id),
             productId: item.productId,
@@ -525,7 +525,7 @@ export default function DocumentEditPage({
             unitPrice: isDemandePrix ? null : item.unitPrice,
             discount: item.discount || 0,
             discountType: item.discountType || 0,
-            tax: item.tax || 0,
+            tax: isDemandePrix ? null : (item.tax || 0),
             total: isDemandePrix ? null : itemTotal
           };
         })
@@ -539,17 +539,17 @@ export default function DocumentEditPage({
       } else if (documentType === 'bon_livraison') {
         await ordersService.update(Number(id), documentData);
       }
-      
+
       setAlertMessage({
         title: t('success'),
         message: `${config.titleShort} ${t('successUpdated')}`,
         type: 'success'
       });
       setShowAlert(true);
-      
+
       // Reload document to get fresh data
       await loadDocument();
-      
+
     } catch (error: any) {
       console.error('Error updating document:', error);
       setAlertMessage({
@@ -565,7 +565,7 @@ export default function DocumentEditPage({
 
   const handleValidate = async () => {
     if (!id) return;
-    
+
     try {
       // Call appropriate service based on document type
       if (documentType === 'facture') {
@@ -575,7 +575,7 @@ export default function DocumentEditPage({
       } else if (documentType === 'bon_livraison') {
         await ordersService.validate(Number(id));
       }
-      
+
       setIsValidated(true);
       setShowValidateConfirm(false);
       setAlertMessage({
@@ -599,7 +599,7 @@ export default function DocumentEditPage({
 
   const handleDevalidate = async () => {
     if (!id) return;
-    
+
     try {
       // Call appropriate service based on document type
       if (documentType === 'facture') {
@@ -609,7 +609,7 @@ export default function DocumentEditPage({
       } else if (documentType === 'bon_livraison') {
         await ordersService.devalidate(Number(id));
       }
-      
+
       setIsValidated(false);
       setShowDevalidateConfirm(false);
       setAlertMessage({
@@ -633,7 +633,7 @@ export default function DocumentEditPage({
 
   const handleDeliver = async () => {
     if (!id) return;
-    
+
     try {
       await ordersService.deliver(Number(id));
       setShowDeliverConfirm(false);
@@ -658,7 +658,7 @@ export default function DocumentEditPage({
 
   const handleCancel = async () => {
     if (!id) return;
-    
+
     try {
       await ordersService.cancel(Number(id));
       setShowCancelConfirm(false);
@@ -683,17 +683,17 @@ export default function DocumentEditPage({
 
   const handleCreateInvoice = async () => {
     setShowCreateInvoiceConfirm(false);
-    
+
     if (!id || !partner) return;
-    
+
     try {
       setSaving(true);
-      
+
       // Calculate totals
       const subtotal = items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1 
-          ? itemTotal * (item.discount / 100) 
+        const discountAmount = item.discountType === 1
+          ? itemTotal * (item.discount / 100)
           : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         return sum + afterDiscount;
@@ -701,8 +701,8 @@ export default function DocumentEditPage({
 
       const totalTax = items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1 
-          ? itemTotal * (item.discount / 100) 
+        const discountAmount = item.discountType === 1
+          ? itemTotal * (item.discount / 100)
           : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         const tax = afterDiscount * (item.tax / 100);
@@ -715,6 +715,7 @@ export default function DocumentEditPage({
 
       // Create invoice data
       const invoiceData = {
+        direction: direction === 'achat' ? 'ACHAT' : 'VENTE',
         customerId: isVente ? partner.id : undefined,
         supplierId: isVente ? undefined : partner.id,
         customerName: isVente ? partner.name : undefined,
@@ -741,7 +742,7 @@ export default function DocumentEditPage({
       // Create the invoice
       const created = await invoicesService.create(invoiceData);
       const createdInvoice = created as any;
-      
+
       // Mark document as converted to invoice based on type
       if (documentType === 'devis') {
         await quotesService.convertToInvoice(Number(id), createdInvoice.invoice.id);
@@ -759,17 +760,17 @@ export default function DocumentEditPage({
           type: 'success'
         });
       }
-      
+
       setShowAlert(true);
-      
+
       // Reload document to get updated status
       await loadDocument();
-      
+
       // Navigate to the invoice edit page after delay
       setTimeout(() => {
         navigate(`/factures/${direction}/${createdInvoice.invoice.id}`);
       }, 1500);
-      
+
     } catch (error: any) {
       console.error('Error creating invoice:', error);
       setAlertMessage({
@@ -785,54 +786,102 @@ export default function DocumentEditPage({
 
   const handleCreateBon = async () => {
     setShowCreateBonConfirm(false);
-    
+
     if (!id || !partner) return;
-    
+
     try {
       setSaving(true);
-      
+
       const isVente = direction === 'vente';
-      
-      // Create order data
+
+      // Calculate totals
+      const subtotal = items.reduce((sum, item) => {
+        const itemTotal = item.quantity * item.unitPrice;
+        const discountAmount = item.discountType === 1
+          ? itemTotal * (item.discount / 100)
+          : item.discount;
+        const afterDiscount = itemTotal - discountAmount;
+        return sum + afterDiscount;
+      }, 0);
+
+      const totalTax = items.reduce((sum, item) => {
+        const itemTotal = item.quantity * item.unitPrice;
+        const discountAmount = item.discountType === 1
+          ? itemTotal * (item.discount / 100)
+          : item.discount;
+        const afterDiscount = itemTotal - discountAmount;
+        const tax = afterDiscount * (item.tax / 100);
+        return sum + tax;
+      }, 0);
+
+      const total = subtotal + totalTax;
+
+      // Create order data with all totals
       const orderData = {
+        direction: direction === 'achat' ? 'ACHAT' : 'VENTE',
         customerId: isVente ? partner.id : undefined,
+        customerName: isVente ? partner.name : undefined,
+        customerPhone: isVente ? partner.phone : undefined,
+        customerAddress: isVente ? partner.address : undefined,
         supplierId: isVente ? undefined : partner.id,
-        items: items.map(item => ({
-          productId: item.productId,
-          description: item.description || 'Product',
-          quantity: item.quantity,
-          price: item.unitPrice,
-          discount: item.discount || 0,
-          discountType: item.discountType || 0,
-        })),
+        supplierName: isVente ? undefined : partner.name,
+        supplierPhone: isVente ? undefined : partner.phone,
+        supplierAddress: isVente ? undefined : partner.address,
+        date,
+        dueDate: dueDate || undefined,
+        subtotal,
+        tax: totalTax,
+        discount: 0,
+        discountType: 0,
+        total,
+        items: items.map(item => {
+          // Calculate item total (HT: before tax)
+          const itemSubtotal = item.quantity * item.unitPrice;
+          const discountAmount = item.discountType === 1
+            ? itemSubtotal * (item.discount / 100)
+            : item.discount;
+          const itemTotal = itemSubtotal - discountAmount;
+
+          return {
+            productId: item.productId,
+            description: item.description || 'Product',
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            price: item.unitPrice,
+            discount: item.discount || 0,
+            discountType: item.discountType || 0,
+            tax: item.tax || 0,
+            total: itemTotal
+          };
+        }),
         note: notes || '',
       };
 
       // Create the order
       const created = await ordersService.create(orderData);
       const createdOrder = created as any;
-      
+
       // Mark quote as converted to order
       await quotesService.convertToOrder(Number(id), createdOrder.order.id);
-      
+
       setAlertMessage({
         title: t('success'),
         message: t('successDeliveryCreatedQuoteUpdated'),
         type: 'success'
       });
       setShowAlert(true);
-      
+
       // Update local status
       setStatus('delivered');
-      
+
       // Navigate to the bon edit page after delay
       setTimeout(() => {
-        const bonRoute = direction === 'vente' 
+        const bonRoute = direction === 'vente'
           ? `/bons-livraison/${createdOrder.order.id}`
           : `/bon-achat/${createdOrder.order.id}`;
         navigate(bonRoute);
       }, 1500);
-      
+
     } catch (error: any) {
       console.error('Error creating bon:', error);
       setAlertMessage({
@@ -848,7 +897,7 @@ export default function DocumentEditPage({
 
   const handleGenerateShareLink = async () => {
     if (!id) return;
-    
+
     try {
       const result = await quotesService.generateShareLink(Number(id));
       setShareToken(result.shareToken);
@@ -872,7 +921,7 @@ export default function DocumentEditPage({
 
   const handleSignQuote = async () => {
     if (!id) return;
-    
+
     try {
       await quotesService.accept(Number(id));
       setShowSignConfirm(false);
@@ -897,7 +946,7 @@ export default function DocumentEditPage({
 
   const handleUnsignQuote = async () => {
     if (!id) return;
-    
+
     try {
       await quotesService.unsignQuote(Number(id));
       setShowUnsignConfirm(false);
@@ -972,7 +1021,7 @@ export default function DocumentEditPage({
                       </div>
                     )
                   )}
-                  
+
                   {/* Document status badge - different for each document type */}
                   {documentType === 'facture' && (() => {
                     const statusConfig = getPaymentStatusBadge(status);
@@ -986,7 +1035,7 @@ export default function DocumentEditPage({
                       </div>
                     );
                   })()}
-                  
+
                   {documentType === 'devis' && (() => {
                     const statusConfig = getDevisStatusBadge(status);
                     const StatusIcon = statusConfig.icon;
@@ -999,7 +1048,7 @@ export default function DocumentEditPage({
                       </div>
                     );
                   })()}
-                  
+
                   {documentType === 'bon_livraison' && (() => {
                     const statusConfig = getBonStatusBadge(status);
                     const StatusIcon = statusConfig.icon;
@@ -1027,7 +1076,7 @@ export default function DocumentEditPage({
               </div>
               <h3 className="text-xs sm:text-sm font-bold text-blue-900">{t('paymentDetails')}</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
               {/* Total Amount */}
               <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-blue-100 shadow-sm">
@@ -1036,7 +1085,7 @@ export default function DocumentEditPage({
                   {items.reduce((sum, item) => sum + (item.total || 0), 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                 </p>
               </div>
-              
+
               {/* Paid Amount */}
               <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-green-100 shadow-sm">
                 <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('paidAmount')}</p>
@@ -1044,7 +1093,7 @@ export default function DocumentEditPage({
                   {paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                 </p>
               </div>
-              
+
               {/* Remaining Amount */}
               <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-orange-100 shadow-sm">
                 <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('remainingAmount')}</p>
@@ -1087,7 +1136,7 @@ export default function DocumentEditPage({
               <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 sm:mb-3">
                 {t('documentInformation')}
               </h3>
-              
+
               <div className="space-y-2 sm:space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
@@ -1229,171 +1278,171 @@ export default function DocumentEditPage({
                   </button>
                 )}
               </div>
-              
+
               {/* Right side - Action buttons */}
               <div className="flex items-center gap-3">
-              {/* Validation actions */}
-              {config.features.hasValidation && (
-                isValidated ? (
-                  <button
-                    onClick={() => setShowDevalidateConfirm(true)}
-                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2 font-medium"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    {t('devalidateDocument')}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowValidateConfirm(true)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    {t('validateDocument')}
-                  </button>
-                )
-              )}
-              
-              {/* Deliver and Cancel buttons for bon_livraison */}
-              {documentType === 'bon_livraison' && status === 'in_progress' && (
-                <>
-                  <button
-                    onClick={() => setShowDeliverConfirm(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                  >
-                    <Truck className="w-4 h-4" />
-                    {t('markAsDelivered')}
-                  </button>
-                  <button
-                    onClick={() => setShowCancelConfirm(true)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                  >
-                    <Ban className="w-4 h-4" />
-                    {t('cancel')}
-                  </button>
-                </>
-              )}
-              
-              {/* Actions menu for bon_livraison */}
-              {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
-                <div className="relative" ref={actionsMenuRef}>
-                  <button
-                    onClick={() => setShowActionsMenu(!showActionsMenu)}
-                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                  >
-                    {t('actions')}
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                  {showActionsMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
-                      {/* Create Invoice from Bon */}
-                      <button
-                        onClick={() => {
-                          setShowActionsMenu(false);
-                          setShowCreateInvoiceConfirm(true);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-lg"
-                      >
-                        <FileText className="w-4 h-4 text-amber-600" />
-                        <span className="text-sm font-medium text-slate-700">{t('convertToInvoice')}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Sign/Unsign buttons for devis */}
-              {documentType === 'devis' && isValidated && status !== 'closed' && (
-                <>
-                  <button
-                    onClick={() => setShowSignConfirm(true)}
-                    disabled={status === 'signed'}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <PenTool className="w-4 h-4" />
-                    {t('signQuote')}
-                  </button>
-                  <button
-                    onClick={() => setShowUnsignConfirm(true)}
-                    disabled={status !== 'signed'}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    {t('rejectQuote')}
-                  </button>
-                </>
-              )}
-              
-              {/* Actions menu for devis */}
-              {documentType === 'devis' && status === 'signed' && (
-                <div className="relative" ref={actionsMenuRef}>
-                  <button
-                    onClick={() => setShowActionsMenu(!showActionsMenu)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                  >
-                    {t('actions')}
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                  {showActionsMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50 divide-y divide-slate-100">
-                      {/* Share Quote */}
-                      {isValidated && (
+                {/* Validation actions */}
+                {config.features.hasValidation && (
+                  isValidated ? (
+                    <button
+                      onClick={() => setShowDevalidateConfirm(true)}
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2 font-medium"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      {t('devalidateDocument')}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowValidateConfirm(true)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      {t('validateDocument')}
+                    </button>
+                  )
+                )}
+
+                {/* Deliver and Cancel buttons for bon_livraison */}
+                {documentType === 'bon_livraison' && status === 'in_progress' && (
+                  <>
+                    <button
+                      onClick={() => setShowDeliverConfirm(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                    >
+                      <Truck className="w-4 h-4" />
+                      {t('markAsDelivered')}
+                    </button>
+                    <button
+                      onClick={() => setShowCancelConfirm(true)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                    >
+                      <Ban className="w-4 h-4" />
+                      {t('cancel')}
+                    </button>
+                  </>
+                )}
+
+                {/* Actions menu for bon_livraison */}
+                {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
+                  <div className="relative" ref={actionsMenuRef}>
+                    <button
+                      onClick={() => setShowActionsMenu(!showActionsMenu)}
+                      className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                    >
+                      {t('actions')}
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    {showActionsMenu && (
+                      <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
+                        {/* Create Invoice from Bon */}
                         <button
                           onClick={() => {
                             setShowActionsMenu(false);
-                            setShowShareDialog(true);
+                            setShowCreateInvoiceConfirm(true);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-t-lg"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-lg"
                         >
-                          <Share2 className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-medium text-slate-700">{t('shareWithClient')}</span>
+                          <FileText className="w-4 h-4 text-amber-600" />
+                          <span className="text-sm font-medium text-slate-700">{t('convertToInvoice')}</span>
                         </button>
-                      )}
-                      
-                      {/* Create Invoice */}
-                      <button
-                        onClick={() => {
-                          setShowActionsMenu(false);
-                          setShowCreateInvoiceConfirm(true);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3"
-                      >
-                        <FileText className="w-4 h-4 text-amber-600" />
-                        <span className="text-sm font-medium text-slate-700">{t('createAnInvoice')}</span>
-                      </button>
-                      
-                      {/* Create Bon de Livraison */}
-                      <button
-                        onClick={() => {
-                          setShowActionsMenu(false);
-                          setShowCreateBonConfirm(true);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-b-lg"
-                      >
-                        <Truck className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-medium text-slate-700">{t('createDeliveryNote')}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* PDF Action Buttons - Show when validated and not draft */}
-              {isValidated && status !== 'draft' && id && (
-                <PDFActionButtons
-                  documentType={getPDFDocumentType(documentType)}
-                  documentId={Number(id)}
-                />
-              )}
-              
-              {/* Save button */}
-              <button
-                onClick={handleSave}
-                className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
-              >
-                <Save className="w-4 h-4" />
-                {saving ? t('saving') : t('save')}
-              </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sign/Unsign buttons for devis */}
+                {documentType === 'devis' && isValidated && status !== 'closed' && (
+                  <>
+                    <button
+                      onClick={() => setShowSignConfirm(true)}
+                      disabled={status === 'signed'}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <PenTool className="w-4 h-4" />
+                      {t('signQuote')}
+                    </button>
+                    <button
+                      onClick={() => setShowUnsignConfirm(true)}
+                      disabled={status !== 'signed'}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      {t('rejectQuote')}
+                    </button>
+                  </>
+                )}
+
+                {/* Actions menu for devis */}
+                {documentType === 'devis' && status === 'signed' && (
+                  <div className="relative" ref={actionsMenuRef}>
+                    <button
+                      onClick={() => setShowActionsMenu(!showActionsMenu)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                    >
+                      {t('actions')}
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    {showActionsMenu && (
+                      <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50 divide-y divide-slate-100">
+                        {/* Share Quote */}
+                        {isValidated && (
+                          <button
+                            onClick={() => {
+                              setShowActionsMenu(false);
+                              setShowShareDialog(true);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-t-lg"
+                          >
+                            <Share2 className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-medium text-slate-700">{t('shareWithClient')}</span>
+                          </button>
+                        )}
+
+                        {/* Create Invoice */}
+                        <button
+                          onClick={() => {
+                            setShowActionsMenu(false);
+                            setShowCreateInvoiceConfirm(true);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3"
+                        >
+                          <FileText className="w-4 h-4 text-amber-600" />
+                          <span className="text-sm font-medium text-slate-700">{t('createAnInvoice')}</span>
+                        </button>
+
+                        {/* Create Bon de Livraison */}
+                        <button
+                          onClick={() => {
+                            setShowActionsMenu(false);
+                            setShowCreateBonConfirm(true);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-b-lg"
+                        >
+                          <Truck className="w-4 h-4 text-emerald-600" />
+                          <span className="text-sm font-medium text-slate-700">{t('createDeliveryNote')}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* PDF Action Buttons - Show when validated and not draft */}
+                {isValidated && status !== 'draft' && id && (
+                  <PDFActionButtons
+                    documentType={getPDFDocumentType(documentType)}
+                    documentId={Number(id)}
+                  />
+                )}
+
+                {/* Save button */}
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                  disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
+                >
+                  <Save className="w-4 h-4" />
+                  {saving ? t('saving') : t('save')}
+                </button>
               </div>
             </div>
           </div>

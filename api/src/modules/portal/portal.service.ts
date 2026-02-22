@@ -15,15 +15,18 @@ export class PortalService {
     return this.portalRepository.findOne({ where: { email } });
   }
 
-  async validateUser(emailOrPhone: string, password: string): Promise<Portal | null> {
+  async validateUser(
+    emailOrPhone: string,
+    password: string,
+  ): Promise<Portal | null> {
     // Try to find by email first
     let user = await this.findByEmail(emailOrPhone);
-    
+
     // If not found by email, try phone number
     if (!user) {
       user = await this.findByPhoneNumber(emailOrPhone);
     }
-    
+
     // Validate password if user found
     if (user && user.password && password) {
       const isPasswordValid = await bcrypt.compare(password, user.password);

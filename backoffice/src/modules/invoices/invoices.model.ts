@@ -73,6 +73,7 @@ export class InvoiceItem implements IInvoiceItem {
 export class Invoice implements IInvoice {
   id: number;
   invoiceNumber: string;
+  direction: 'ACHAT' | 'VENTE';
   customerId?: number | null;
   customerName?: string | null;
   customerPhone?: string | null;
@@ -100,6 +101,7 @@ export class Invoice implements IInvoice {
   constructor(data: IInvoice) {
     this.id = data.id;
     this.invoiceNumber = data.invoiceNumber;
+    this.direction = data.direction;
     this.customerId = data.customerId;
     this.customerName = data.customerName;
     this.customerPhone = data.customerPhone;
@@ -215,6 +217,7 @@ export class Invoice implements IInvoice {
     return new Invoice({
       id: data.id,
       invoiceNumber: data.invoiceNumber || data.documentNumber,
+      direction: data.direction || (data.supplierId ? 'ACHAT' : 'VENTE'),
       customerId: data.customerId,
       customerName: data.customerName,
       customerPhone: data.customerPhone,

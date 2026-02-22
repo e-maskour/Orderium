@@ -16,7 +16,18 @@ export class OrdersService {
     return await response.json();
   }
 
-  async getAll(search?: string, startDate?: Date, endDate?: Date, fromPortal?: boolean, deliveryStatus?: string, fromClient?: boolean, orderNumber?: string, page: number = 1, perPage: number = 50): Promise<any> {
+  async getAll(
+    search?: string,
+    startDate?: Date,
+    endDate?: Date,
+    fromPortal?: boolean,
+    deliveryStatus?: string,
+    fromClient?: boolean,
+    orderNumber?: string,
+    page: number = 1,
+    perPage: number = 50,
+    direction?: 'ACHAT' | 'VENTE',
+  ): Promise<any> {
     // Parse search string for filters
     const filters: any = {};
     
@@ -36,6 +47,7 @@ export class OrdersService {
     if (fromPortal !== undefined) params.append('fromPortal', fromPortal.toString());
     if (page) params.append('page', page.toString());
     if (perPage) params.append('perPage', perPage.toString());
+    if (direction) params.append('direction', direction);
     
     // Build POST body with filters
     const body: any = {};

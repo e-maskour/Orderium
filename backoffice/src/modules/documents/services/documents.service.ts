@@ -52,6 +52,7 @@ export class DocumentsService {
         status: filters?.status !== 'all' ? filters?.status : undefined,
         customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
         supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
+        direction: isVente ? 'VENTE' : 'ACHAT',
         dateFrom: filters?.dateFrom,
         dateTo: filters?.dateTo,
         page: filters?.page,
@@ -79,6 +80,7 @@ export class DocumentsService {
         status: filters?.status !== 'all' ? filters?.status : undefined,
         customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
         supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
+        direction: isVente ? 'VENTE' : 'ACHAT',
         dateFrom: filters?.dateFrom,
         dateTo: filters?.dateTo,
         page: filters?.page,
@@ -112,7 +114,8 @@ export class DocumentsService {
         undefined,
         undefined,
         filters?.page,
-        filters?.pageSize
+        filters?.pageSize,
+        isVente ? 'VENTE' : 'ACHAT'
       );
       
       // Filter orders based on direction

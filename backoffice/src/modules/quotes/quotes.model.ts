@@ -71,6 +71,7 @@ export class QuoteItem implements IQuoteItem {
 export class Quote implements IQuote {
   id: number;
   quoteNumber: string;
+  direction: 'ACHAT' | 'VENTE';
   customerId?: number | null;
   customerName?: string | null;
   customerPhone?: string | null;
@@ -104,6 +105,7 @@ export class Quote implements IQuote {
   constructor(data: IQuote) {
     this.id = data.id;
     this.quoteNumber = data.quoteNumber;
+    this.direction = data.direction;
     this.customerId = data.customerId;
     this.customerName = data.customerName;
     this.customerPhone = data.customerPhone;
@@ -211,6 +213,7 @@ export class Quote implements IQuote {
     return new Quote({
       id: data.id,
       quoteNumber: data.quoteNumber || data.documentNumber,
+      direction: data.direction || (data.supplierId ? 'ACHAT' : 'VENTE'),
       customerId: data.customerId,
       customerName: data.customerName,
       customerPhone: data.customerPhone,

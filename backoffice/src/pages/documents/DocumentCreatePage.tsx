@@ -98,29 +98,30 @@ export default function DocumentCreatePage({
       const isDemandePrix = documentType === 'devis' && direction === 'achat';
 
       // Calculate totals
-      const subtotal = isDemandePrix ? 0 : items.reduce((sum, item) => {
+      const subtotal = isDemandePrix ? null : items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1 
-          ? itemTotal * (item.discount / 100) 
+        const discountAmount = item.discountType === 1
+          ? itemTotal * (item.discount / 100)
           : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         return sum + afterDiscount;
       }, 0);
 
-      const totalTax = isDemandePrix ? 0 : items.reduce((sum, item) => {
+      const totalTax = isDemandePrix ? null : items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1 
-          ? itemTotal * (item.discount / 100) 
+        const discountAmount = item.discountType === 1
+          ? itemTotal * (item.discount / 100)
           : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         const tax = afterDiscount * (item.tax / 100);
         return sum + tax;
       }, 0);
 
-      const total = subtotal + totalTax;
+      const total = isDemandePrix ? null : (subtotal! + totalTax!);
 
       // Create document data
       const documentData: any = {
+        direction: direction === 'achat' ? 'ACHAT' : 'VENTE',
         customerId: isVente ? partner.id : undefined,
         supplierId: isVente ? undefined : partner.id,
         customerName: isVente ? partner.name : undefined,
@@ -137,14 +138,14 @@ export default function DocumentCreatePage({
         items: items.map(item => {
           // For demande de prix, send null for unitPrice and total
           const isDemandePrix = documentType === 'devis' && direction === 'achat';
-          
+
           // Calculate item total (HT: before tax)
           const itemSubtotal = item.quantity * item.unitPrice;
-          const discountAmount = item.discountType === 1 
-            ? itemSubtotal * (item.discount / 100) 
+          const discountAmount = item.discountType === 1
+            ? itemSubtotal * (item.discount / 100)
             : item.discount;
           const itemTotal = itemSubtotal - discountAmount;
-          
+
           return {
             productId: item.productId,
             description: item.description,
@@ -152,7 +153,7 @@ export default function DocumentCreatePage({
             unitPrice: isDemandePrix ? null : item.unitPrice,
             discount: item.discount || 0,
             discountType: item.discountType || 0,
-            tax: item.tax || 0,
+            tax: isDemandePrix ? null : (item.tax || 0),
             total: isDemandePrix ? null : itemTotal
           };
         })
@@ -165,31 +166,48 @@ export default function DocumentCreatePage({
       } else if (documentType === 'devis') {
         created = await quotesService.create(documentData);
       } else if (documentType === 'bon_livraison') {
-        // Create bon de livraison/achat as an order
+        // Create bon de livraison/achat as an order with all calculated totals
         created = await ordersService.create({
+          direction: direction === 'achat' ? 'ACHAT' : 'VENTE',
           customerId: isVente ? documentData.customerId : undefined,
+          customerName: isVente ? documentData.customerName : undefined,
+          customerPhone: isVente ? documentData.customerPhone : undefined,
+          customerAddress: isVente ? documentData.customerAddress : undefined,
           supplierId: isVente ? undefined : documentData.supplierId,
+          supplierName: isVente ? undefined : documentData.supplierName,
+          supplierPhone: isVente ? undefined : documentData.supplierPhone,
+          supplierAddress: isVente ? undefined : documentData.supplierAddress,
+          date: documentData.date,
+          dueDate: documentData.dueDate,
+          subtotal: documentData.subtotal,
+          tax: documentData.tax,
+          discount: documentData.discount,
+          discountType: documentData.discountType,
+          total: documentData.total,
           items: documentData.items.map((item: any) => ({
             productId: item.productId,
             description: item.description || item.name || 'Product',
             quantity: item.quantity,
+            unitPrice: item.unitPrice,
             price: item.unitPrice,
             discount: item.discount || 0,
             discountType: item.discountType || 0,
+            tax: item.tax,
+            total: item.total,
           })),
           note: documentData.notes || '',
         });
       } else {
         throw new Error(t('unsupportedDocumentType'));
       }
-      
+
       setAlertMessage({
         title: t('success'),
         message: `${config.titleShort} ${t('createdSuccessfully')}`,
         type: 'success'
       });
       setShowAlert(true);
-      
+
       // Construct edit route based on document type and direction
       let editRoute = '';
       if (documentType === 'facture') {
@@ -198,7 +216,7 @@ export default function DocumentCreatePage({
       } else if (documentType === 'devis') {
         const createdQuote = created as any;
         // For vente devis use /devis/:id, for achat devis (demande de prix) use /demande-prix/:id
-        editRoute = direction === 'vente' 
+        editRoute = direction === 'vente'
           ? `/devis/${createdQuote.quote.id}`
           : `/demande-prix/${createdQuote.quote.id}`;
       } else if (documentType === 'bon_livraison') {
@@ -208,12 +226,12 @@ export default function DocumentCreatePage({
           ? `/bons-livraison/${createdOrder.order.id}`
           : `/bon-achat/${createdOrder.order.id}`;
       }
-      
+
       // Navigate to edit page after a short delay
       setTimeout(() => {
         navigate(editRoute);
       }, 1000);
-      
+
     } catch (error: any) {
       console.error('Error creating document:', error);
       setAlertMessage({
@@ -278,7 +296,7 @@ export default function DocumentCreatePage({
               <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 sm:mb-3">
                 {t('documentInformation')}
               </h3>
-              
+
               <div className="space-y-2 sm:space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">

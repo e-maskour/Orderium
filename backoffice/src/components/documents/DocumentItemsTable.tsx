@@ -46,7 +46,7 @@ export function DocumentItemsTable({
         setProducts([]);
       }
     };
-    
+
     loadProducts();
   }, []);
 
@@ -90,12 +90,12 @@ export function DocumentItemsTable({
     if (!product) return;
 
     const existingItemIndex = items.findIndex(item => item.productId === product.id);
-    
+
     if (existingItemIndex !== -1) {
       const updatedItems = items.map((item, index) => {
         if (index === existingItemIndex) {
-          const updated = { 
-            ...item, 
+          const updated = {
+            ...item,
             quantity: item.quantity + 1
           };
           updated.total = calculateItemTotal(updated);
@@ -107,8 +107,8 @@ export function DocumentItemsTable({
     } else {
       const newItems = items.map(item => {
         if (item.id === itemId) {
-          const updated = { 
-            ...item, 
+          const updated = {
+            ...item,
             productId: product.id,
             description: product.name,
             unitPrice: isVente ? product.price : (product.cost || product.price),
@@ -135,11 +135,11 @@ export function DocumentItemsTable({
         </div>
 
         {/* Desktop Table View - Hidden on mobile and tablet */}
-        <div className="hidden lg:block overflow-x-auto" style={{overflowY: 'visible'}}>
-          <table className="w-full" style={{overflow: 'visible'}}>
+        <div className="hidden lg:block overflow-x-auto" style={{ overflowY: 'visible' }}>
+          <table className="w-full" style={{ overflow: 'visible' }}>
             <thead>
               <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-[45%] min-w-[280px]">
+                <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-[35%] min-w-[240px]">
                   {t('invoice.descriptionHeader')}
                 </th>
                 <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-24">
@@ -156,7 +156,7 @@ export function DocumentItemsTable({
                   </th>
                 )}
                 {showTaxColumn && (
-                  <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-24">
+                  <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-32">
                     {t('invoice.tax')}
                   </th>
                 )}
@@ -168,10 +168,10 @@ export function DocumentItemsTable({
                 <th className="w-10"></th>
               </tr>
             </thead>
-            <tbody style={{overflow: 'visible'}}>
+            <tbody style={{ overflow: 'visible' }}>
               {items.map((item) => (
-                <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50" style={{overflow: 'visible'}}>
-                  <td className="py-3 px-3 w-[45%] min-w-[280px]" style={{overflow: 'visible'}}>
+                <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50" style={{ overflow: 'visible' }}>
+                  <td className="py-3 px-3 w-[35%] min-w-[240px]" style={{ overflow: 'visible' }}>
                     <Autocomplete
                       options={products.map(product => ({
                         value: String(product.id),
@@ -416,7 +416,7 @@ export function DocumentItemsTable({
                   <div className="flex items-center justify-between">
                     <span className="text-xs sm:text-sm font-semibold text-slate-700">{t('invoice.totalHeader')}:</span>
                     <span className="text-base sm:text-lg md:text-xl font-bold text-amber-700">
-                    {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                      {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
                 </div>
@@ -424,7 +424,7 @@ export function DocumentItemsTable({
             </div>
           ))}
         </div>
-        
+
         {!readOnly && (
           <div className="mt-4 sm:mt-6 flex flex-wrap justify-start gap-2 sm:gap-3">
             <button
