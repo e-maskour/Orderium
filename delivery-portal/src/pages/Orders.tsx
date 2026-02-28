@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '../components/ui/use-toast';
+import { toastSuccess, toastError } from '../services/toast.service';
 import { deliveryService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,12 +23,12 @@ export default function Orders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Filter states
   const [orderNumberFilter, setOrderNumberFilter] = useState('');
   const [customerNameFilter, setCustomerNameFilter] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>({});
-  
+
   // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     orderNumber: '',
@@ -36,7 +36,7 @@ export default function Orders() {
     startDate: '',
     endDate: '',
   });
-  
+
   const statusScrollRef = useRef<HTMLDivElement>(null);
 
   const { data: ordersData, isLoading, error } = useQuery({
@@ -55,24 +55,18 @@ export default function Orders() {
 
   // Mutation for updating order status
   const updateStatusMutation = useMutation({
-    mutationFn: ({ orderId, status }: { orderId: number; status: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' }) => 
+    mutationFn: ({ orderId, status }: { orderId: number; status: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' }) =>
       deliveryService.updateOrderStatus(orderId, status, deliveryPerson!.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast({
-        title: t('statusUpdated'),
-        variant: 'default',
-      });
+      toastSuccess(t('statusUpdated'));
     },
     onError: () => {
-      toast({
-        title: t('statusUpdateFailed'),
-        variant: 'destructive',
-      });
+      toastError(t('statusUpdateFailed'));
     },
   });
 
-  const filteredOrders = orders.filter((order: Order) => 
+  const filteredOrders = orders.filter((order: Order) =>
     deliveryStatusFilter === 'all' || order.status === deliveryStatusFilter
   );
 
@@ -207,11 +201,11 @@ export default function Orders() {
   // Open navigation apps
   const openNavigation = (order: Order, app: 'google' | 'waze') => {
     if (!order.latitude || !order.longitude) return;
-    
+
     const url = app === 'waze'
       ? `https://waze.com/ul?ll=${order.latitude},${order.longitude}&navigate=yes`
       : `https://www.google.com/maps/dir/?api=1&destination=${order.latitude},${order.longitude}`;
-    
+
     window.open(url, '_blank');
   };
 
@@ -288,9 +282,9 @@ export default function Orders() {
 
   const formatOrderDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
-      day: '2-digit', 
-      month: '2-digit', 
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -351,11 +345,11 @@ export default function Orders() {
         {showFilters && (
           <>
             {/* Backdrop */}
-            <div 
+            <div
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
               onClick={() => setShowFilters(false)}
             />
-            
+
             {/* Slide-in Panel */}
             <div className="fixed inset-y-0 end-0 w-full sm:w-[520px] md:w-[560px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
               {/* Panel Header */}
@@ -436,7 +430,7 @@ export default function Orders() {
                 <Truck className="w-4 h-4 text-amber-600" />
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">{t('deliveryStatus')}</h3>
               </div>
-              
+
               {/* Left/Right scroll buttons - Mobile only */}
               <div className="flex items-center gap-1 lg:hidden">
                 <button
@@ -455,9 +449,9 @@ export default function Orders() {
                 </button>
               </div>
             </div>
-            
+
             {/* Status buttons container */}
-            <div 
+            <div
               ref={statusScrollRef}
               className="flex gap-2 overflow-x-auto scrollbar-hide lg:flex-wrap scroll-smooth"
             >
@@ -475,19 +469,17 @@ export default function Orders() {
                 <button
                   key={filter.key}
                   onClick={() => setDeliveryStatusFilter(filter.key)}
-                  className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 ${
-                    deliveryStatusFilter === filter.key
+                  className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 ${deliveryStatusFilter === filter.key
                       ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                  }`}
+                    }`}
                 >
                   <span className="text-sm">{filter.icon}</span>
                   <span className="whitespace-nowrap">{filter.label}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                    deliveryStatusFilter === filter.key 
-                      ? 'bg-white/25 text-white' 
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${deliveryStatusFilter === filter.key
+                      ? 'bg-white/25 text-white'
                       : 'bg-slate-200 text-slate-600'
-                  }`}>
+                    }`}>
                     {deliveryStatusCounts[filter.key as keyof typeof deliveryStatusCounts]}
                   </span>
                 </button>
@@ -504,7 +496,7 @@ export default function Orders() {
                 {t('showing')} <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
                 <span className="font-semibold">{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
               </div>
-              
+
               {/* Page Size Selector */}
               <div className="flex items-center gap-2">
                 <label className="text-xs font-medium text-slate-600">{t('perPage')}</label>
@@ -521,7 +513,7 @@ export default function Orders() {
                   <option value={100}>100</option>
                 </select>
               </div>
-              
+
               {/* Navigation */}
               <div className="flex items-center gap-2">
                 <button
@@ -562,7 +554,7 @@ export default function Orders() {
             <Package className="w-16 h-16 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-900 mb-2">{t('noOrdersFound')}</h3>
             <p className="text-slate-600">
-              {deliveryStatusFilter === 'all' 
+              {deliveryStatusFilter === 'all'
                 ? t('noOrdersAssigned')
                 : `${t('noOrdersMessage')} ${getDeliveryStatusBadge(deliveryStatusFilter).label}`
               }
@@ -571,8 +563,8 @@ export default function Orders() {
         ) : (
           <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredOrders.map((order: Order) => (
-              <div 
-                key={order.orderId} 
+              <div
+                key={order.orderId}
                 className="group relative bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col"
               >
                 {/* Fixed Header */}
@@ -585,7 +577,7 @@ export default function Orders() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Delivery Status Badge */}
                   <div className="mt-2.5 flex items-center gap-2 flex-wrap">
                     <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm w-fit ${getDeliveryStatusBadge(order.status || null).className}`}>

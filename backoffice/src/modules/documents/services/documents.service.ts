@@ -49,25 +49,25 @@ export class DocumentsService {
       const isVente = direction === 'vente';
       const invoiceFilters = {
         search: filters?.search,
-        status: filters?.status !== 'all' ? filters?.status : undefined,
+        status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
         customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
         supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
-        direction: isVente ? 'VENTE' : 'ACHAT',
+        direction: isVente ? 'VENTE' as const : 'ACHAT' as const,
         dateFrom: filters?.dateFrom,
         dateTo: filters?.dateTo,
         page: filters?.page,
         pageSize: filters?.pageSize,
       };
-      
+
       const result = await invoicesService.getAll(invoiceFilters);
       const invoices = result.invoices || [];
-      
-      const filtered = invoices.filter(inv => 
+
+      const filtered = invoices.filter(inv =>
         isVente ? inv.invoice.customerId : inv.invoice.supplierId
       );
-      
+
       const transformed = this.transformInvoicesToDocuments(filtered, isVente);
-      
+
       return {
         documents: transformed,
         count: result.count,
@@ -77,26 +77,26 @@ export class DocumentsService {
       const isVente = direction === 'vente';
       const quoteFilters = {
         search: filters?.search,
-        status: filters?.status !== 'all' ? filters?.status : undefined,
+        status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
         customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
         supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
-        direction: isVente ? 'VENTE' : 'ACHAT',
+        direction: isVente ? 'VENTE' as const : 'ACHAT' as const,
         dateFrom: filters?.dateFrom,
         dateTo: filters?.dateTo,
         page: filters?.page,
         pageSize: filters?.pageSize,
       };
-      
+
       const result = await quotesService.getAll(quoteFilters);
       const quotes = result.quotes || [];
-      
+
       // Filter quotes based on direction
-      const filtered = quotes.filter(q => 
+      const filtered = quotes.filter(q =>
         isVente ? q.quote.customerId : q.quote.supplierId
       );
-      
+
       const transformed = this.transformQuotesToDocuments(filtered, isVente);
-      
+
       return {
         documents: transformed,
         count: filtered.length,
@@ -117,22 +117,22 @@ export class DocumentsService {
         filters?.pageSize,
         isVente ? 'VENTE' : 'ACHAT'
       );
-      
+
       // Filter orders based on direction
       const allOrders = result.orders || [];
-      const filtered = allOrders.filter(order => 
+      const filtered = allOrders.filter((order: any) =>
         isVente ? order.customerId : order.supplierId
       );
-      
+
       const transformed = this.transformOrdersToDocuments(filtered, isVente);
-      
+
       return {
         documents: transformed,
         count: filtered.length,
         totalCount: filtered.length
       };
     }
-    
+
     return { documents: [], count: 0, totalCount: 0 };
   }
 

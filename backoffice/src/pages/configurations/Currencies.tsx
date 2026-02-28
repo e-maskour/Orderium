@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Trash2, DollarSign, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, DollarSign } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Checkbox } from '../../components/ui/checkbox';
+import { FormField } from '../../components/ui/form-field';
+import { Button } from '../../components/ui/button';
 import { Link } from 'react-router-dom';
-import { currenciesService, Currency, CreateCurrencyDTO, UpdateCurrencyDTO } from '../../modules/currencies';
+import { currenciesService, Currency, ICurrency, CreateCurrencyDTO, UpdateCurrencyDTO } from '../../modules/currencies';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
+import { toastConfirm } from '../../services/toast.service';
 
 export default function Currencies() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Currency>({
+  const [formData, setFormData] = useState<ICurrency>({
     code: '',
     name: '',
     symbol: '',
@@ -81,8 +86,9 @@ export default function Currencies() {
   };
 
   const handleDelete = (index: number) => {
-    if (!confirm(t('confirmDeleteCurrency'))) return;
-    deleteMutation.mutate(index);
+    toastConfirm(t('confirmDeleteCurrency'), () => {
+      deleteMutation.mutate(index);
+    });
   };
 
   if (isLoading) {
@@ -115,69 +121,67 @@ export default function Currencies() {
       <div className="bg-white rounded-lg border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <input
+            <Input
               type="text"
               placeholder={t('searchCurrencies')}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 w-64"
+              className="w-64"
             />
           </div>
-          <button
-            onClick={openCreateModal}
-            className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
+          <Button variant="warning" onClick={openCreateModal} leadingIcon={<Plus className="w-4 h-4" />}>
             {t('addCurrency')}
-          </button>
+          </Button>
         </div>
-        <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('code')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('name')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('symbol')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {currencies.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                  {t('noCurrenciesConfigured')}
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('code')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('name')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('symbol')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
               </tr>
-            ) : (
-              currencies.map((currency, index) => (
-                <tr key={index} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 text-sm font-medium text-slate-800">{currency.code}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{currency.name}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{currency.symbol}</td>
-                  <td className="px-6 py-4">
-                    {currency.isDefault && (
-                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                        {t('default')}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openEditModal(index)}
-                      className="text-blue-600 hover:text-blue-800 mr-3"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {currencies.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                    {t('noCurrenciesConfigured')}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                currencies.map((currency, index) => (
+                  <tr key={index} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-800">{currency.code}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{currency.name}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{currency.symbol}</td>
+                    <td className="px-6 py-4">
+                      {currency.isDefault && (
+                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                          {t('default')}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => openEditModal(index)}
+                        className="text-blue-600 hover:text-blue-800 mr-3"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
@@ -187,64 +191,46 @@ export default function Currencies() {
         title={editingIndex !== null ? t('editCurrency') : t('addCurrency')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('code')}
-            </label>
-            <input
+          <FormField label={t('code')} htmlFor="curr-code">
+            <Input
+              id="curr-code"
               type="text"
               value={formData.code}
               onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder={t('currencyCodePlaceholder')}
               maxLength={3}
               required
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('name')}
-            </label>
-            <input
+          <FormField label={t('name')} htmlFor="curr-name">
+            <Input
+              id="curr-name"
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder={t('currencyNamePlaceholder')}
               required
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('symbol')}
-            </label>
-            <input
+          <FormField label={t('symbol')} htmlFor="curr-symbol">
+            <Input
+              id="curr-symbol"
               type="text"
               value={formData.symbol}
               onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder={t('currencySymbolPlaceholder')}
               required
             />
-          </div>
+          </FormField>
 
-          <div className="flex items-center gap-2">
-            <div
-              onClick={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
-              className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                formData.isDefault
-                  ? 'bg-amber-500 border-amber-500 text-white'
-                  : 'bg-white border-slate-300'
-              }`}
-            >
-              {formData.isDefault && <CheckSquare className="w-4 h-4" />}
-            </div>
-            <label htmlFor="isDefault" className="text-sm text-slate-700">
-              {t('setAsDefaultCurrency')}
-            </label>
-          </div>
+          <Checkbox
+            id="isDefault"
+            checked={formData.isDefault}
+            onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+            label={t('setAsDefaultCurrency')}
+          />
 
           <div className="flex justify-end gap-2 pt-4">
             <button

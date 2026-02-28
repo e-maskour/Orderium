@@ -1,4 +1,4 @@
-import { DeliveryPerson as IDeliveryPerson, CreateDeliveryPersonDTO, UpdateDeliveryPersonDTO } from './delivery.interface';
+import { IDeliveryPerson, CreateDeliveryPersonDTO, UpdateDeliveryPersonDTO } from './delivery.interface';
 
 export class DeliveryPerson implements IDeliveryPerson {
   id: number;
@@ -19,7 +19,6 @@ export class DeliveryPerson implements IDeliveryPerson {
     this.dateUpdated = data.dateUpdated;
   }
 
-  // Getters
   get displayName(): string {
     return this.name;
   }
@@ -28,21 +27,28 @@ export class DeliveryPerson implements IDeliveryPerson {
     return this.isActive ? 'Active' : 'Inactive';
   }
 
-  get formattedPhone(): string {
-    // Format phone number if needed
-    return this.phoneNumber;
+  get initials(): string {
+    return this.name
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   }
 
-  // Methods
-  isCurrentlyActive(): boolean {
-    return this.isActive;
+  get hasValidEmail(): boolean {
+    if (!this.email) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email);
+  }
+
+  get hasValidPhone(): boolean {
+    return !!this.phoneNumber && this.phoneNumber.length > 0;
   }
 
   canBeAssigned(): boolean {
     return this.isActive;
   }
 
-  // Static factory method
   static fromApiResponse(data: any): DeliveryPerson {
     return new DeliveryPerson({
       id: data.id,
@@ -55,13 +61,34 @@ export class DeliveryPerson implements IDeliveryPerson {
     });
   }
 
-  // Convert to DTO for updates
   toUpdateDTO(): UpdateDeliveryPersonDTO {
     return {
       name: this.name,
       phoneNumber: this.phoneNumber,
       email: this.email,
       isActive: this.isActive,
+    };
+  }
+
+  toCreateDTO(password: string): CreateDeliveryPersonDTO {
+    return {
+      name: this.name,
+      phoneNumber: this.phoneNumber,
+      email: this.email,
+      password,
+      isActive: this.isActive,
+    };
+  }
+
+  toJSON(): IDeliveryPerson {
+    return {
+      id: this.id,
+      name: this.name,
+      phoneNumber: this.phoneNumber,
+      email: this.email,
+      isActive: this.isActive,
+      dateCreated: this.dateCreated,
+      dateUpdated: this.dateUpdated,
     };
   }
 }

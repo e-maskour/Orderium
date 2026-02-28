@@ -13,15 +13,23 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { JwtService } from '@nestjs/jwt';
 import { DeliveryService } from './delivery.service';
 import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
+import { Public } from '../auth/decorators/public.decorator';
+import { ApiRes } from '../../common/api-response';
+import { DLV } from '../../common/response-codes';
 
 @ApiTags('Delivery')
 @Controller('delivery')
 export class DeliveryController {
-  constructor(private readonly deliveryService: DeliveryService) {}
+  constructor(
+    private readonly deliveryService: DeliveryService,
+    private readonly jwtService: JwtService,
+  ) { }
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Login delivery person' })
   async login(@Body() body: { PhoneNumber: string; Password: string }) {
@@ -29,20 +37,27 @@ export class DeliveryController {
       body.PhoneNumber,
       body.Password,
     );
-    
+
     // Return without password
     const { password, ...personData } = deliveryPerson;
-    
-    return {
-      success: true,
+
+    const token = this.jwtService.sign({
+      sub: personData.id,
+      phoneNumber: personData.phoneNumber,
+      isAdmin: false,
+      isCustomer: false,
+      isDelivery: true,
+    });
+
+    return ApiRes(DLV.LOGIN, {
       deliveryPerson: {
         Id: personData.id,
         Name: personData.name,
         PhoneNumber: personData.phoneNumber,
         Email: personData.email,
       },
-      token: `delivery-${personData.id}-${Date.now()}`, // Simple token for now
-    };
+      token,
+    });
   }
 
   @Get('persons')
@@ -50,14 +65,14 @@ export class DeliveryController {
   async getAllDeliveryPersons() {
     const deliveryPersons =
       await this.deliveryService.getAllDeliveryPersons();
-    return { success: true, deliveryPersons };
+    return ApiRes(DLV.PERSONS_LIST, deliveryPersons);
   }
 
   @Get('persons/:id')
   @ApiOperation({ summary: 'Get a delivery person by ID' })
   async getDeliveryPersonById(@Param('id', ParseIntPipe) id: number) {
     const deliveryPerson = await this.deliveryService.getDeliveryPersonById(id);
-    return { success: true, deliveryPerson };
+    return ApiRes(DLV.PERSON_DETAIL, deliveryPerson);
   }
 
   @Post()
@@ -65,7 +80,7 @@ export class DeliveryController {
   async createDeliveryPerson(@Body() createDto: CreateDeliveryPersonDto) {
     const deliveryPerson =
       await this.deliveryService.createDeliveryPerson(createDto);
-    return { success: true, deliveryPerson };
+    return ApiRes(DLV.PERSON_CREATED, deliveryPerson);
   }
 
   @Put(':id')
@@ -78,7 +93,7 @@ export class DeliveryController {
       id,
       updateDto,
     );
-    return { success: true, deliveryPerson };
+    return ApiRes(DLV.PERSON_UPDATED, deliveryPerson);
   }
 
   @Delete(':id')
@@ -91,9 +106,9 @@ export class DeliveryController {
   @Get('orders')
   @ApiOperation({ summary: 'Get all delivery orders' })
   async getOrderDeliveries(@Query('limit') limit?: string) {
-    const limitNum = limit ? parseInt(limit, 10) : 100;
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
     const orders = await this.deliveryService.getOrderDeliveries(limitNum);
-    return { success: true, orders };
+    return ApiRes(DLV.ORDERS_LIST, orders);
   }
 
   @Post('person/:id/orders')
@@ -111,9 +126,9 @@ export class DeliveryController {
       endDate?: string;
     },
   ) {
-    const pageNum = page ? parseInt(page, 10) : 1;
-    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : 50;
-    
+    const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize ?? '50', 10) || 50));
+
     const result = await this.deliveryService.getDeliveryPersonOrders(
       id,
       pageNum,
@@ -123,7 +138,7 @@ export class DeliveryController {
       filters?.startDate ? new Date(filters.startDate) : undefined,
       filters?.endDate ? new Date(filters.endDate) : undefined,
     );
-    
+
     // Transform OrderDelivery to match frontend Order interface
     const orders = result.orderDeliveries.map(od => ({
       orderId: od.order.id,
@@ -135,7 +150,7 @@ export class DeliveryController {
       longitude: od.order.customer?.longitude,
       googleMapsUrl: od.order.customer?.googleMapsUrl,
       wazeUrl: od.order.customer?.wazeUrl || (
-        od.order.customer?.latitude && od.order.customer?.longitude 
+        od.order.customer?.latitude && od.order.customer?.longitude
           ? `https://waze.com/ul?ll=${od.order.customer.latitude},${od.order.customer.longitude}&navigate=yes`
           : undefined
       ),
@@ -156,15 +171,15 @@ export class DeliveryController {
         price: Number(item.unitPrice),
       })),
     }));
-    
-    return { 
-      success: true, 
-      orders,
+
+    const offset = (pageNum - 1) * pageSizeNum;
+    return ApiRes(DLV.PERSON_ORDERS, orders, {
+      limit: pageSizeNum,
+      offset,
       total: result.total,
-      page: pageNum,
-      pageSize: pageSizeNum,
-      totalPages: Math.ceil(result.total / pageSizeNum),
-    };
+      hasNext: pageNum < Math.ceil(result.total / pageSizeNum),
+      hasPrev: pageNum > 1,
+    });
   }
 
   @Post('assign')
@@ -176,14 +191,14 @@ export class DeliveryController {
       body.OrderId,
       body.DeliveryPersonId,
     );
-    return { success: true, orderDelivery };
+    return ApiRes(DLV.ASSIGNED, orderDelivery);
   }
 
   @Post('unassign/:orderId')
   @ApiOperation({ summary: 'Unassign order from delivery person' })
   async unassignOrder(@Param('orderId', ParseIntPipe) orderId: number) {
     await this.deliveryService.unassignOrder(orderId);
-    return { success: true };
+    return ApiRes(DLV.UNASSIGNED, null);
   }
 
   @Put('person/:deliveryPersonId/order/:orderId/status')
@@ -198,6 +213,6 @@ export class DeliveryController {
       body.status as any,
       deliveryPersonId,
     );
-    return { success: true };
+    return ApiRes(DLV.STATUS_UPDATED, null);
   }
 }

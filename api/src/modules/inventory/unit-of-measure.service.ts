@@ -9,7 +9,7 @@ export class UnitOfMeasureService {
   constructor(
     @InjectRepository(UnitOfMeasure)
     private readonly uomRepository: Repository<UnitOfMeasure>,
-  ) {}
+  ) { }
 
   async create(createDto: CreateUnitOfMeasureDto): Promise<UnitOfMeasure> {
     // Check if code already exists
@@ -118,7 +118,7 @@ export class UnitOfMeasureService {
       .select('DISTINCT uom.category', 'category')
       .where('uom.isActive = :isActive', { isActive: true })
       .orderBy('uom.category', 'ASC')
-      .getRawMany();
+      .getRawMany<{ category: string }>();
 
     return result.map(r => r.category);
   }

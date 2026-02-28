@@ -1,85 +1,42 @@
-import { UnitOfMeasure, CreateUomDTO, UpdateUomDTO } from './uom.interface';
-
-const API_URL = '/api';
+import type { CreateUomDTO, UpdateUomDTO } from './uom.interface';
+import { UnitOfMeasure } from './uom.model';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class UomService {
   async getAll(category?: string): Promise<UnitOfMeasure[]> {
-    const url = category 
-      ? `${API_URL}/inventory/uom?category=${encodeURIComponent(category)}`
-      : `${API_URL}/inventory/uom`;
-    
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch units of measure');
-    return response.json();
+    const response = await apiClient.get<any[]>(API_ROUTES.UOM.LIST, {
+      params: category ? { category } : undefined,
+    });
+    return (response.data || []).map((u: any) => UnitOfMeasure.fromApiResponse(u));
   }
 
   async getCategories(): Promise<string[]> {
-    const response = await fetch(`${API_URL}/inventory/uom/categories`);
-    if (!response.ok) throw new Error('Failed to fetch categories');
-    return response.json();
+    const response = await apiClient.get<string[]>(API_ROUTES.UOM.CATEGORIES);
+    return response.data;
   }
 
   async getOne(id: number): Promise<UnitOfMeasure> {
-    const response = await fetch(`${API_URL}/inventory/uom/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch unit of measure');
-    return response.json();
+    const response = await apiClient.get<any>(API_ROUTES.UOM.DETAIL(id));
+    return UnitOfMeasure.fromApiResponse(response.data);
   }
 
   async create(data: CreateUomDTO): Promise<UnitOfMeasure> {
-    const response = await fetch(`${API_URL}/inventory/uom`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create unit of measure');
-    }
-
-    return response.json();
+    const response = await apiClient.post<any>(API_ROUTES.UOM.CREATE, data);
+    return UnitOfMeasure.fromApiResponse(response.data);
   }
 
   async update(id: number, data: UpdateUomDTO): Promise<UnitOfMeasure> {
-    const response = await fetch(`${API_URL}/inventory/uom/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update unit of measure');
-    }
-
-    return response.json();
+    const response = await apiClient.patch<any>(API_ROUTES.UOM.UPDATE(id), data);
+    return UnitOfMeasure.fromApiResponse(response.data);
   }
 
   async delete(id: number): Promise<void> {
-    const response = await fetch(`${API_URL}/inventory/uom/${id}`, {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete unit of measure');
-    }
+    await apiClient.delete(API_ROUTES.UOM.DELETE(id));
   }
 
   async convertQuantity(quantity: number, fromUomId: number, toUomId: number): Promise<number> {
-    const response = await fetch(`${API_URL}/inventory/uom/convert`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity, fromUomId, toUomId }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to convert quantity');
-    }
-
-    const data = await response.json();
-    return data.convertedQuantity;
+    const response = await apiClient.post<any>(API_ROUTES.UOM.CONVERT, { quantity, fromUomId, toUomId });
+    return response.data.convertedQuantity;
   }
 }
 

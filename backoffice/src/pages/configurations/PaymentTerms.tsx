@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Trash2, Calendar, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Calendar, Search } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Checkbox } from '../../components/ui/checkbox';
+import { FormField } from '../../components/ui/form-field';
 import { Link } from 'react-router-dom';
-import { paymentTermsService, PaymentTerm, CreatePaymentTermDTO, UpdatePaymentTermDTO } from '../../modules/payment-terms';
+import { paymentTermsService, PaymentTerm, IPaymentTerm, CreatePaymentTermDTO, UpdatePaymentTermDTO } from '../../modules/payment-terms';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
+import { toastConfirm } from '../../services/toast.service';
 
 export default function PaymentTerms() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [formData, setFormData] = useState<PaymentTerm>({
+  const [formData, setFormData] = useState<IPaymentTerm>({
     key: '',
     label: '',
     days: 0,
@@ -89,8 +94,9 @@ export default function PaymentTerms() {
   };
 
   const handleDelete = (index: number) => {
-    if (!confirm(t('confirmDeletePaymentTerm'))) return;
-    deleteMutation.mutate(index);
+    toastConfirm(t('confirmDeletePaymentTerm'), () => {
+      deleteMutation.mutate(index);
+    });
   };
 
   if (isLoading) {
@@ -123,69 +129,68 @@ export default function PaymentTerms() {
       <div className="bg-white rounded-lg border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <input
+            <Input
               type="text"
               placeholder={t('searchPaymentTerms')}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 w-64"
+              leadingIcon={Search}
+              className="w-64"
             />
           </div>
-          <button
-            onClick={openCreateModal}
-            className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
+          <Button onClick={openCreateModal} leadingIcon={Plus}>
             {t('addPaymentTerm')}
-          </button>
+          </Button>
         </div>
-        <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('label')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('key')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('days')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {terms.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                  {t('noPaymentTermsConfigured')}
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('label')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('key')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('days')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
               </tr>
-            ) : (
-              terms.map((term, index) => (
-                <tr key={index} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 text-sm font-medium text-slate-800">{term.label}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{term.key}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{term.days} {t('daysLabel')}</td>
-                  <td className="px-6 py-4">
-                    {term.isDefault && (
-                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                        {t('default')}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openEditModal(index)}
-                      className="text-blue-600 hover:text-blue-800 mr-3"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {terms.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                    {t('noPaymentTermsConfigured')}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                terms.map((term, index) => (
+                  <tr key={index} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-800">{term.label}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{term.key}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{term.days} {t('daysLabel')}</td>
+                    <td className="px-6 py-4">
+                      {term.isDefault && (
+                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                          {t('default')}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => openEditModal(index)}
+                        className="text-blue-600 hover:text-blue-800 mr-3"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
@@ -195,91 +200,65 @@ export default function PaymentTerms() {
         title={editingIndex !== null ? t('editPaymentTerm') : t('addPaymentTerm')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('label')}
-            </label>
-            <input
+          <FormField label={t('label')} required>
+            <Input
               type="text"
               value={formData.label}
               onChange={(e) => {
                 const newLabel = e.target.value;
-                setFormData({ 
-                  ...formData, 
+                setFormData({
+                  ...formData,
                   label: newLabel,
                   key: editingIndex === null ? generateSlug(newLabel) : formData.key
                 });
               }}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder={t('paymentTermLabelPlaceholder')}
               required
+              fullWidth
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('key')}
-            </label>
-            <input
+          <FormField label={t('key')} hint={editingIndex === null ? t('autoGeneratedFromLabel') : t('lowercaseWithUnderscores')} required>
+            <Input
               type="text"
               value={formData.key}
               onChange={(e) => setFormData({ ...formData, key: generateSlug(e.target.value) })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-slate-50"
               placeholder={t('paymentTermKeyPlaceholder')}
               readOnly={editingIndex === null}
               required
+              fullWidth
+              className={editingIndex === null ? 'bg-slate-50' : ''}
             />
-            <p className="mt-1 text-xs text-slate-500">
-              {editingIndex === null ? t('autoGeneratedFromLabel') : t('lowercaseWithUnderscores')}
-            </p>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('days')}
-            </label>
-            <input
+          <FormField label={t('days')} hint={t('numberOfDaysUntilDue')} required>
+            <Input
               type="number"
               min="0"
               value={formData.days}
               onChange={(e) => setFormData({ ...formData, days: parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
+              fullWidth
             />
-            <p className="mt-1 text-xs text-slate-500">{t('numberOfDaysUntilDue')}</p>
-          </div>
+          </FormField>
 
-          <div className="flex items-center gap-2">
-            <div
-              onClick={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
-              className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                formData.isDefault
-                  ? 'bg-amber-500 border-amber-500 text-white'
-                  : 'bg-white border-slate-300'
-              }`}
-            >
-              {formData.isDefault && <CheckSquare className="w-4 h-4" />}
-            </div>
-            <label htmlFor="isDefault" className="text-sm text-slate-700">
-              {t('setAsDefaultPaymentTerm')}
-            </label>
-          </div>
+          <Checkbox
+            checked={formData.isDefault}
+            onChange={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
+            label={t('setAsDefaultPaymentTerm')}
+          />
 
           <div className="flex justify-end gap-2 pt-4">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
-            >
+            <Button type="button" variant="outline" onClick={closeModal}>
               {t('cancel')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={updateMutation.isPending}
-              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
+              loading={updateMutation.isPending}
+              loadingText={t('saving')}
             >
-              {updateMutation.isPending ? t('saving') : t('save')}
-            </button>
+              {t('save')}
+            </Button>
           </div>
         </form>
       </Modal>

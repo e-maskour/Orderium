@@ -21,11 +21,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is already logged in
     const savedUser = authService.getUser();
     const token = authService.getToken();
-    
+
     if (savedUser && token) {
       setUser(savedUser);
     }
-    
+
     setIsLoading(false);
   }, []);
 
@@ -46,13 +46,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     if (!user?.phoneNumber) return;
-    
+
     try {
-      const response = await fetch(`/api/portal/user/${user.phoneNumber}`);
+      const token = localStorage.getItem('orderium_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
+      const response = await fetch(`${apiBase}/api/portal/user/${user.phoneNumber}`, { headers });
       const data = await response.json();
-      
-      if (data.success && data.user) {
-        const updatedUser = { ...user, ...data.user };
+
+      if (data.success && data.data) {
+        const updatedUser = { ...user, ...data.data };
         setUser(updatedUser);
         localStorage.setItem('orderium_user', JSON.stringify(updatedUser));
       }

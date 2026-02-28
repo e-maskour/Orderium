@@ -5,6 +5,7 @@ import { DocumentType } from '../../modules/documents/types';
 import { DocumentItem } from '../../modules/documents/services/documents.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { TrendingUp, Calendar, BarChart3, LineChart } from 'lucide-react';
+import { NativeSelect } from '../ui/native-select';
 
 interface DocumentAnalysisChartProps {
   documents: DocumentItem[];
@@ -19,7 +20,7 @@ type ChartType = 'bar' | 'line';
 export function DocumentAnalysisChart({ documents, documentType, analytics, onYearChange }: DocumentAnalysisChartProps) {
   const { t, language } = useLanguage();
   const currentYear = new Date().getFullYear();
-  
+
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMeasure, setSelectedMeasure] = useState<MeasureType>('total');
   const [chartType, setChartType] = useState<ChartType>('line');
@@ -62,17 +63,17 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
   // Calculate status data (for status measure)
   const statusData = useMemo(() => {
     const statusCounts: Record<string, number> = {};
-    
+
     documents.forEach(doc => {
       const docDate = new Date(doc.date);
       const year = docDate.getFullYear();
-      
+
       if (year === selectedYear) {
         const status = doc.status || 'draft';
         statusCounts[status] = (statusCounts[status] || 0) + 1;
       }
     });
-    
+
     return statusCounts;
   }, [documents, selectedYear]);
 
@@ -209,7 +210,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
         };
         return statusTranslations[s] || s;
       });
-      
+
       return {
         series: [{
           name: t('status') || 'Statut',
@@ -367,7 +368,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           <div>
             <h3 className="text-sm sm:text-base font-bold text-slate-800">{chartTitle}</h3>
             <p className="text-xs text-slate-500">
-              {(selectedMeasure === 'count' || selectedMeasure === 'status') 
+              {(selectedMeasure === 'count' || selectedMeasure === 'status')
                 ? `${yearTotal} ${t('documents') || 'documents'}`
                 : `${formatFrenchNumber(yearTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`
               }
@@ -379,11 +380,10 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           {/* Chart type buttons */}
           <button
             onClick={() => setChartType('bar')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
-              chartType === 'bar'
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${chartType === 'bar'
                 ? 'bg-amber-100 text-amber-700 border border-amber-300'
                 : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-            }`}
+              }`}
             title="Bar Chart"
           >
             <BarChart3 className="w-4 h-4" />
@@ -391,11 +391,10 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           </button>
           <button
             onClick={() => setChartType('line')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
-              chartType === 'line'
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${chartType === 'line'
                 ? 'bg-amber-100 text-amber-700 border border-amber-300'
                 : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-            }`}
+              }`}
             title="Line Chart"
           >
             <LineChart className="w-4 h-4" />
@@ -403,33 +402,30 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           </button>
 
           {/* Measure selector */}
-          <select
+          <NativeSelect
             value={selectedMeasure}
             onChange={(e) => setSelectedMeasure(e.target.value as MeasureType)}
-            className="px-3 py-1.5 text-xs font-medium border border-slate-300 rounded-lg bg-white text-slate-700 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors"
+            selectSize="sm"
           >
             {measureOptions.map(option => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
 
           {/* Year selector */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg bg-white">
-            <Calendar className="w-3.5 h-3.5 text-slate-500" />
-            <select
-              value={selectedYear}
-              onChange={(e) => handleYearChange(Number(e.target.value))}
-              className="text-xs font-medium text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer"
-            >
-              {availableYears.map(year => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
+          <NativeSelect
+            value={selectedYear}
+            onChange={(e) => handleYearChange(Number(e.target.value))}
+            selectSize="sm"
+          >
+            {availableYears.map(year => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </NativeSelect>
         </div>
       </div>
 

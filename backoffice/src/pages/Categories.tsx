@@ -5,8 +5,14 @@ import { PageHeader } from '../components/PageHeader';
 import { Modal } from '../components/Modal';
 import { FolderTree, Plus, Pencil, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
 import { categoriesService, Category, CreateCategoryDTO, UpdateCategoryDTO } from '../modules/categories';
-import { toast } from 'sonner';
+import { toastCreated, toastUpdated, toastDeleted, toastError, toastConfirm } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
+import { Input } from '../components/ui/input';
+import { NativeSelect } from '../components/ui/native-select';
+import { Textarea } from '../components/ui/textarea';
+import { Checkbox } from '../components/ui/checkbox';
+import { FormField } from '../components/ui/form-field';
+import { Button } from '../components/ui/button';
 
 export default function Categories() {
   const { t } = useLanguage();
@@ -14,7 +20,7 @@ export default function Categories() {
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
-  
+
   const [formData, setFormData] = useState<CreateCategoryDTO>({
     name: '',
     description: '',
@@ -37,11 +43,11 @@ export default function Categories() {
     mutationFn: (data: CreateCategoryDTO) => categoriesService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success(t('categoryCreated'));
+      toastCreated(t('categoryCreated'));
       closeModal();
     },
     onError: (error: any) => {
-      toast.error(error.message || t('failedToCreate'));
+      toastError(error.message || t('failedToCreate'));
     },
   });
 
@@ -50,11 +56,11 @@ export default function Categories() {
       categoriesService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success(t('categoryUpdated'));
+      toastUpdated(t('categoryUpdated'));
       closeModal();
     },
     onError: (error: any) => {
-      toast.error(error.message || t('failedToUpdate'));
+      toastError(error.message || t('failedToUpdate'));
     },
   });
 
@@ -62,10 +68,10 @@ export default function Categories() {
     mutationFn: (id: number) => categoriesService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success(t('categoryDeleted'));
+      toastDeleted(t('categoryDeleted'));
     },
     onError: (error: any) => {
-      toast.error(error.message || t('failedToDelete'));
+      toastError(error.message || t('failedToDelete'));
     },
   });
 
@@ -107,7 +113,7 @@ export default function Categories() {
 
   const handleSubmit = () => {
     if (!formData.name.trim()) {
-      toast.error(t('nameRequired'));
+      toastError(t('nameRequired'));
       return;
     }
 
@@ -119,9 +125,9 @@ export default function Categories() {
   };
 
   const handleDelete = (id: number, name: string) => {
-    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
+    toastConfirm(t('confirmDeleteCategory').replace('{{name}}', name), () => {
       deleteMutation.mutate(id);
-    }
+    });
   };
 
   const toggleExpand = (id: number) => {
@@ -212,13 +218,13 @@ export default function Categories() {
         title={t('categories')}
         subtitle={t('manageCategories')}
         actions={
-          <button
+          <Button
             onClick={() => openCreateModal()}
-            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all flex items-center gap-2"
+            variant="warning"
+            leadingIcon={<Plus className="w-4 h-4" />}
           >
-            <Plus className="w-4 h-4" />
             {t('addCategory')}
-          </button>
+          </Button>
         }
       />
 
@@ -244,24 +250,19 @@ export default function Categories() {
         title={editingCategory ? t('editCategory') : t('createCategory')}
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              {t('categoryName')} <span className="text-red-500">*</span>
-            </label>
-            <input
+          <FormField label={t('categoryName')} htmlFor="cat-name" required>
+            <Input
+              id="cat-name"
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
               placeholder={t('enterCategoryName')}
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              {t('parentCategory')}
-            </label>
-            <select
+          <FormField label={t('parentCategory')} htmlFor="cat-parent">
+            <NativeSelect
+              id="cat-parent"
               value={formData.parentId || ''}
               onChange={(e) =>
                 setFormData({
@@ -269,7 +270,6 @@ export default function Categories() {
                   parentId: e.target.value ? parseInt(e.target.value) : undefined,
                 })
               }
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
             >
               <option value="">No Parent (Root Category)</option>
               {allCategories
@@ -279,50 +279,38 @@ export default function Categories() {
                     {cat.name}
                   </option>
                 ))}
-            </select>
-          </div>
+            </NativeSelect>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Description
-            </label>
-            <textarea
+          <FormField label="Description" htmlFor="cat-desc">
+            <Textarea
+              id="cat-desc"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
               placeholder="Optional description"
             />
-          </div>
+          </FormField>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500"
-            />
-            <label htmlFor="isActive" className="text-sm font-medium text-slate-700">
-              Active
-            </label>
-          </div>
+          <Checkbox
+            id="isActive"
+            checked={formData.isActive}
+            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            label="Active"
+          />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={closeModal}
-            className="px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-          >
+          <Button variant="outline" onClick={closeModal}>
             {t('cancel')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="warning"
             onClick={handleSubmit}
-            disabled={createMutation.isPending || updateMutation.isPending}
-            className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50"
+            loading={createMutation.isPending || updateMutation.isPending}
           >
             {editingCategory ? t('update') : t('create')}
-          </button>
+          </Button>
         </div>
       </Modal>
     </AdminLayout>

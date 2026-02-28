@@ -34,7 +34,7 @@ export default {
   today: 'Aujourd\'hui',
   thisWeek: 'Cette Semaine',
   
-  // Notification Types
+  // INotification Types
   newOrders: 'Nouvelles Commandes',
   assigned: 'Assignées',
   statusChanged: 'Statut modifié',
@@ -46,7 +46,7 @@ export default {
   medium: 'Moyen',
   low: 'Faible',
   
-  // Notification Titles (Translation Keys)
+  // INotification Titles (Translation Keys)
   'notification.title.new_order': '🛒 Nouvelle commande',
   'notification.title.order_assigned': '👤 Commande assignée',
   'notification.title.order_status_changed': '📦 Mise à jour du statut',
@@ -59,7 +59,7 @@ export default {
   'notification.title.warning': '⚠️ Avertissement',
   'notification.title.error': '🚨 Erreur',
   
-  // Notification Messages (Translation Keys with placeholders)
+  // INotification Messages (Translation Keys with placeholders)
   'notification.message.new_order': 'Commande {{orderNumber}} reçue de {{customerName}}',
   'notification.message.order_assigned': 'La commande {{orderNumber}} vous a été assignée',
   'notification.message.order_status_changed': 'Le statut de la commande {{orderNumber}} a été mis à jour à {{status}}',
@@ -85,7 +85,7 @@ export default {
   deleteNotifications: 'Supprimer les notifications',
   confirmDeleteMessage: 'Êtes-vous sûr de vouloir supprimer {{count}} notification(s) ? Cette action ne peut pas être annulée.',
   notificationsMarkedAsRead: '{{count}} notifications marquées comme lues',
-  notificationArchived: 'Notification archivée',
+  notificationArchived: 'INotification archivée',
   notificationsArchived: '{{count}} notifications archivées',
   notificationsDeleted: '{{count}} notifications supprimées',
   notifyWhenSomethingHappens: 'Nous vous préviendrons quand quelque chose se produit',

@@ -5,141 +5,76 @@ import {
   InternalTransferDTO,
   StockFilters,
 } from './stock.interface';
-import { StockMovementModel, StockQuantModel } from './stock.model';
-
-const API_URL = '/api/inventory';
+import { StockMovement, StockQuant } from './stock.model';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class StockService {
-  // Stock Movements
-  async getAllMovements(filters?: StockFilters): Promise<StockMovementModel[]> {
-    const params = new URLSearchParams();
-    if (filters?.productId) params.append('productId', filters.productId.toString());
-    if (filters?.warehouseId) params.append('warehouseId', filters.warehouseId.toString());
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.movementType) params.append('movementType', filters.movementType);
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
+  async getAllMovements(filters?: StockFilters): Promise<StockMovement[]> {
+    const params: Record<string, string | number | boolean | undefined> = {};
+    if (filters?.productId) params.productId = filters.productId;
+    if (filters?.warehouseId) params.warehouseId = filters.warehouseId;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.movementType) params.movementType = filters.movementType;
+    if (filters?.startDate) params.startDate = filters.startDate;
+    if (filters?.endDate) params.endDate = filters.endDate;
 
-    const queryString = params.toString();
-    const url = `${API_URL}/movements${queryString ? `?${queryString}` : ''}`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch stock movements');
-    const data = await response.json();
-    const movements = data.movements || data || [];
-    return movements.map((m: any) => StockMovementModel.fromApiResponse(m));
+    const response = await apiClient.get<any[]>(API_ROUTES.STOCK.MOVEMENTS, { params });
+    return (response.data || []).map((m: any) => StockMovement.fromApiResponse(m));
   }
 
-  async getMovementById(id: number): Promise<StockMovementModel> {
-    const response = await fetch(`${API_URL}/movements/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch stock movement');
-    const data = await response.json();
-    return StockMovementModel.fromApiResponse(data.movement || data);
+  async getMovementById(id: number): Promise<StockMovement> {
+    const response = await apiClient.get<any>(API_ROUTES.STOCK.MOVEMENT_DETAIL(id));
+    return StockMovement.fromApiResponse(response.data);
   }
 
-  async createMovement(data: CreateStockMovementDTO): Promise<StockMovementModel> {
-    const response = await fetch(`${API_URL}/movements`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create stock movement');
-    }
-    const result = await response.json();
-    return StockMovementModel.fromApiResponse(result.movement || result);
+  async createMovement(data: CreateStockMovementDTO): Promise<StockMovement> {
+    const response = await apiClient.post<any>(API_ROUTES.STOCK.MOVEMENTS, data);
+    return StockMovement.fromApiResponse(response.data);
   }
 
-  async updateMovement(id: number, data: UpdateStockMovementDTO): Promise<StockMovementModel> {
-    const response = await fetch(`${API_URL}/movements/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update stock movement');
-    }
-    const result = await response.json();
-    return StockMovementModel.fromApiResponse(result.movement || result);
+  async updateMovement(id: number, data: UpdateStockMovementDTO): Promise<StockMovement> {
+    const response = await apiClient.patch<any>(API_ROUTES.STOCK.MOVEMENT_DETAIL(id), data);
+    return StockMovement.fromApiResponse(response.data);
   }
 
-  async validateMovement(data: ValidateMovementDTO): Promise<StockMovementModel> {
-    const response = await fetch(`${API_URL}/movements/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to validate stock movement');
-    }
-    const result = await response.json();
-    return StockMovementModel.fromApiResponse(result.movement || result);
+  async validateMovement(data: ValidateMovementDTO): Promise<StockMovement> {
+    const response = await apiClient.post<any>(API_ROUTES.STOCK.MOVEMENT_VALIDATE, data);
+    return StockMovement.fromApiResponse(response.data);
   }
 
-  async cancelMovement(id: number): Promise<StockMovementModel> {
-    const response = await fetch(`${API_URL}/movements/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to cancel stock movement');
-    }
-    const result = await response.json();
-    return StockMovementModel.fromApiResponse(result.movement || result);
+  async cancelMovement(id: number): Promise<StockMovement> {
+    const response = await apiClient.delete<any>(API_ROUTES.STOCK.MOVEMENT_DETAIL(id));
+    return StockMovement.fromApiResponse(response.data);
   }
 
-  async internalTransfer(data: InternalTransferDTO): Promise<StockMovementModel> {
-    const response = await fetch(`${API_URL}/movements/transfer`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create internal transfer');
-    }
-    const result = await response.json();
-    return StockMovementModel.fromApiResponse(result.movement || result);
+  async internalTransfer(data: InternalTransferDTO): Promise<StockMovement> {
+    const response = await apiClient.post<any>(API_ROUTES.STOCK.MOVEMENT_TRANSFER, data);
+    return StockMovement.fromApiResponse(response.data);
   }
 
-  // Stock Quants
-  async getProductStock(productId: number): Promise<StockQuantModel[]> {
-    const response = await fetch(`${API_URL}/stock/product/${productId}`);
-    if (!response.ok) throw new Error('Failed to fetch product stock');
-    const data = await response.json();
-    const quants = data.quants || data || [];
-    return quants.map((q: any) => StockQuantModel.fromApiResponse(q));
+  async getProductStock(productId: number): Promise<StockQuant[]> {
+    const response = await apiClient.get<any[]>(API_ROUTES.STOCK.BY_PRODUCT(productId));
+    return (response.data || []).map((q: any) => StockQuant.fromApiResponse(q));
   }
 
-  async getWarehouseStock(warehouseId: number): Promise<StockQuantModel[]> {
-    const response = await fetch(`${API_URL}/stock/warehouse/${warehouseId}`);
-    if (!response.ok) throw new Error('Failed to fetch warehouse stock');
-    const data = await response.json();
-    const quants = data.quants || data || [];
-    return quants.map((q: any) => StockQuantModel.fromApiResponse(q));
+  async getWarehouseStock(warehouseId: number): Promise<StockQuant[]> {
+    const response = await apiClient.get<any[]>(API_ROUTES.STOCK.BY_WAREHOUSE(warehouseId));
+    return (response.data || []).map((q: any) => StockQuant.fromApiResponse(q));
   }
 
-  async getAllStock(): Promise<any[]> {
-    const response = await fetch(`${API_URL}/stock`);
-    if (!response.ok) throw new Error('Failed to fetch all stock');
-    const data = await response.json();
-    return data.stock || data || [];
+  async getAllStock(): Promise<StockQuant[]> {
+    const response = await apiClient.get<any[]>(API_ROUTES.STOCK.ALL);
+    return (response.data || []).map((q: any) => StockQuant.fromApiResponse(q));
   }
 
-  async getLowStockProducts(threshold: number = 10): Promise<any[]> {
-    const response = await fetch(`${API_URL}/stock/low?threshold=${threshold}`);
-    if (!response.ok) throw new Error('Failed to fetch low stock products');
-    const data = await response.json();
-    return data.products || data || [];
+  async getLowStockProducts(threshold: number = 10): Promise<StockQuant[]> {
+    const response = await apiClient.get<any[]>(API_ROUTES.STOCK.LOW, { params: { threshold } });
+    return (response.data || []).map((q: any) => StockQuant.fromApiResponse(q));
   }
 
   async getStockValue(): Promise<{ totalValue: number; productCount: number }> {
-    const response = await fetch(`${API_URL}/stock/value`);
-    if (!response.ok) throw new Error('Failed to fetch stock value');
-    const data = await response.json();
-    return data;
+    const response = await apiClient.get<{ totalValue: number; productCount: number }>(API_ROUTES.STOCK.VALUE);
+    return response.data;
   }
 }
 

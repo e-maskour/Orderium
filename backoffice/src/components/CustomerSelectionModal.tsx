@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Search, User, MapPin, Plus } from 'lucide-react';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toastCreated, toastError } from '../services/toast.service';
+import { partnersService } from '../modules/partners';
+import { IPosCustomer as Customer } from '../modules/pos';
 
 // Keyframe animations for Apple-style entrance
 const backdropAnimation = `
@@ -49,15 +53,6 @@ if (typeof document !== 'undefined') {
     styleSheet.setAttribute('data-modal-animations-customer', 'true');
     document.head.appendChild(styleSheet);
   }
-}
-
-interface Customer {
-  id: number;
-  name: string;
-  phoneNumber: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
 }
 
 interface CustomerSelectionModalProps {
@@ -112,12 +107,17 @@ export const CustomerSelectionModal = ({
 
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/partners?search=${encodeURIComponent(customerSearch)}&type=customer&limit=10`);
-        if (!response.ok) throw new Error('Failed to search customers');
-        const data = await response.json();
-        
-        if (data.partners && data.partners.length > 0) {
-          setCustomerSuggestions(data.partners);
+        const results = await partnersService.searchCustomers(customerSearch, 10);
+
+        if (results.length > 0) {
+          setCustomerSuggestions(results.map((p) => ({
+            id: p.id,
+            name: p.name,
+            phoneNumber: p.phoneNumber ?? '',
+            address: p.address ?? undefined,
+            latitude: p.latitude ?? undefined,
+            longitude: p.longitude ?? undefined,
+          })));
           setShowCustomerForm(false);
         } else {
           setCustomerSuggestions([]);
@@ -134,23 +134,21 @@ export const CustomerSelectionModal = ({
 
   // Create customer mutation
   const createCustomerMutation = useMutation({
-    mutationFn: async (customerData: typeof newCustomer) => {
-      const response = await fetch('/api/partners', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(customerData),
-      });
-      if (!response.ok) throw new Error('Failed to create customer');
-      const data = await response.json();
-      return data.partner;
-    },
+    mutationFn: (customerData: typeof newCustomer) => partnersService.create(customerData as any),
     onSuccess: (customer) => {
-      toast.success(t('customerCreated'));
-      onSelectCustomer(customer);
+      toastCreated(t('customerCreated'));
+      onSelectCustomer({
+        id: customer.id,
+        name: customer.name,
+        phoneNumber: customer.phoneNumber ?? '',
+        address: customer.address ?? undefined,
+        latitude: customer.latitude ?? undefined,
+        longitude: customer.longitude ?? undefined,
+      });
       onClose();
     },
     onError: () => {
-      toast.error(t('failedToCreate'));
+      toastError(t('failedToCreate'));
     },
   });
 
@@ -164,16 +162,16 @@ export const CustomerSelectionModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" dir={dir}>
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         style={{
           animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
         }}
       />
-      
+
       {/* Modal */}
-      <div 
+      <div
         className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden max-h-[85vh] flex flex-col"
         style={{
           animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
@@ -197,7 +195,7 @@ export const CustomerSelectionModal = ({
         </div>
 
         {/* Content */}
-        <div 
+        <div
           className="flex-1 overflow-y-auto p-4 space-y-4"
           style={{
             animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
@@ -205,14 +203,14 @@ export const CustomerSelectionModal = ({
         >
           {/* Search Input */}
           <div className="relative">
-            <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} />
-            <input
+            <Input
               ref={searchInputRef}
               type="text"
               placeholder={t('searchByNameOrPhone')}
               value={customerSearch}
               onChange={(e) => setCustomerSearch(e.target.value)}
-              className={`w-full ${dir === 'rtl' ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent`}
+              leadingIcon={Search}
+              fullWidth
             />
           </div>
 
@@ -267,39 +265,38 @@ export const CustomerSelectionModal = ({
                 <Plus className="w-5 h-5" />
                 <p className="font-semibold">{t('createNewCustomer')}</p>
               </div>
-              <input
+              <Input
                 type="text"
                 placeholder={t('name')}
                 value={newCustomer.name}
                 onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                className="w-full px-3 py-2.5 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                fullWidth
               />
-              <input
+              <Input
                 type="tel"
                 placeholder={t('phoneNumber')}
                 value={newCustomer.phoneNumber}
                 onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
-                className="w-full px-3 py-2.5 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                fullWidth
               />
-              <input
+              <Input
                 type="text"
                 placeholder={t('address')}
                 value={newCustomer.address}
                 onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                className="w-full px-3 py-2.5 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                leadingIcon={MapPin}
+                fullWidth
               />
-              <button
+              <Button
                 onClick={() => createCustomerMutation.mutate(newCustomer)}
-                disabled={!newCustomer.name || !newCustomer.phoneNumber || createCustomerMutation.isPending}
-                className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-semibold flex items-center justify-center gap-2"
+                disabled={!newCustomer.name || !newCustomer.phoneNumber}
+                loading={createCustomerMutation.isPending}
+                loadingText={t('loading')}
+                leadingIcon={Plus}
+                className="w-full"
               >
-                {createCustomerMutation.isPending ? t('loading') : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    {t('createCustomer')}
-                  </>
-                )}
-              </button>
+                {t('createCustomer')}
+              </Button>
             </div>
           )}
 

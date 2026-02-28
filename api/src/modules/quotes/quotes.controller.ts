@@ -14,11 +14,15 @@ import type { Response } from 'express';
 import { Res, Header } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 import { FilterQuotesDto } from './dto/filter-quotes.dto';
+import { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto';
+import { Public } from '../auth/decorators/public.decorator';
+import { ApiRes } from '../../common/api-response';
+import { QUO } from '../../common/response-codes';
 
 @ApiTags('Quotes')
 @Controller('quotes')
 export class QuotesController {
-  constructor(private readonly quotesService: QuotesService) {}
+  constructor(private readonly quotesService: QuotesService) { }
 
   @Post('list')
   @ApiOperation({ summary: 'Get all quotes with filters (POST method)' })
@@ -28,8 +32,8 @@ export class QuotesController {
     @Query('pageSize') pageSize?: string,
     @Query('direction') direction?: string,
   ) {
-    const pageNum = page ? parseInt(page, 10) : undefined;
-    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : undefined;
+    const pageNum = page ? (parseInt(page, 10) || undefined) : undefined;
+    const pageSizeNum = pageSize ? Math.min(100, Math.max(1, parseInt(pageSize, 10) || 50)) : undefined;
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
@@ -48,12 +52,16 @@ export class QuotesController {
       filterDto.supplierId,
       directionValue,
     );
-    return {
-      success: true,
-      quotes: result.quotes,
-      count: result.count,
-      totalCount: result.totalCount,
-    };
+    const effectivePage = pageNum ?? 1;
+    const effectiveLimit = pageSizeNum ?? 50;
+    const offset = (effectivePage - 1) * effectiveLimit;
+    return ApiRes(QUO.FILTERED, result.quotes, {
+      limit: effectiveLimit,
+      offset,
+      total: result.totalCount,
+      hasNext: offset + effectiveLimit < result.totalCount,
+      hasPrev: offset > 0,
+    });
   }
 
   @Get()
@@ -62,7 +70,7 @@ export class QuotesController {
     @Query('limit') limit?: string,
     @Query('direction') direction?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 100;
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
@@ -80,82 +88,90 @@ export class QuotesController {
       undefined,
       directionValue,
     );
-    return { success: true, quotes: result.quotes, count: result.count };
+    return ApiRes(QUO.LIST, result.quotes, {
+      limit: limitNum,
+      offset: 0,
+      total: result.count,
+      hasNext: false,
+      hasPrev: false,
+    });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get quote by ID' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.findOne(id);
-    return { success: true, quote };
+    return ApiRes(QUO.DETAIL, quote);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new quote' })
-  async create(@Body() createQuoteDto: any) {
-    const quote = await this.quotesService.create(createQuoteDto);
-    return { success: true, quote };
+  async create(@Body() createQuoteDto: CreateQuoteDto) {
+    const quote = await this.quotesService.create(createQuoteDto as any);
+    return ApiRes(QUO.CREATED, quote);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update a quote' })
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateQuoteDto: any,
+    @Body() updateQuoteDto: UpdateQuoteDto,
   ) {
-    const quote = await this.quotesService.update(id, updateQuoteDto);
-    return { success: true, quote };
+    const quote = await this.quotesService.update(id, updateQuoteDto as any);
+    return ApiRes(QUO.UPDATED, quote);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a quote' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.quotesService.remove(id);
-    return { success: true, message: 'Quote deleted successfully' };
+    return ApiRes(QUO.DELETED, null);
   }
 
   @Put(':id/validate')
   @ApiOperation({ summary: 'Validate a quote (change from draft to sent)' })
   async validate(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.validate(id);
-    return { success: true, quote };
+    return ApiRes(QUO.VALIDATED, quote);
   }
 
   @Put(':id/devalidate')
   @ApiOperation({ summary: 'Devalidate a quote (change back to draft)' })
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.devalidate(id);
-    return { success: true, quote };
+    return ApiRes(QUO.DEVALIDATED, quote);
   }
 
   @Put(':id/accept')
   @ApiOperation({ summary: 'Accept a quote' })
   async accept(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.accept(id);
-    return { success: true, quote };
+    return ApiRes(QUO.ACCEPTED, quote);
   }
 
   @Put(':id/reject')
   @ApiOperation({ summary: 'Reject a quote' })
   async reject(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.reject(id);
-    return { success: true, quote };
+    return ApiRes(QUO.REJECTED, quote);
   }
 
   @Post(':id/share')
   @ApiOperation({ summary: 'Generate share link for quote' })
   async generateShareLink(@Param('id', ParseIntPipe) id: number) {
     const result = await this.quotesService.generateShareLink(id);
-    return { success: true, ...result };
+    return ApiRes(QUO.SHARED, result);
   }
 
+  @Public()
   @Get('shared/:token')
   @ApiOperation({ summary: 'Get quote by share token (public)' })
   async getByShareToken(@Param('token') token: string) {
     const quote = await this.quotesService.getByShareToken(token);
-    return { success: true, quote };
+    return ApiRes(QUO.SHARED_DETAIL, quote);
   }
 
+  @Public()
   @Post('shared/:token/sign')
   @ApiOperation({ summary: 'Sign quote via share link (public)' })
   async signQuote(
@@ -167,7 +183,7 @@ export class QuotesController {
       signData.signedBy,
       signData.clientNotes,
     );
-    return { success: true, quote };
+    return ApiRes(QUO.SIGNED, quote);
   }
 
   @Put(':id/unsign')
@@ -176,7 +192,7 @@ export class QuotesController {
   })
   async unsignQuote(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.unsignQuote(id);
-    return { success: true, quote };
+    return ApiRes(QUO.UNSIGNED, quote);
   }
 
   @Put(':id/convert-to-order')
@@ -188,7 +204,7 @@ export class QuotesController {
     @Body() body: { orderId: number },
   ) {
     const quote = await this.quotesService.convertToOrder(id, body.orderId);
-    return { success: true, quote };
+    return ApiRes(QUO.CONVERTED_ORDER, quote);
   }
 
   @Put(':id/convert-to-invoice')
@@ -198,7 +214,7 @@ export class QuotesController {
     @Body() body: { invoiceId: number },
   ) {
     const quote = await this.quotesService.convertToInvoice(id, body.invoiceId);
-    return { success: true, quote };
+    return ApiRes(QUO.CONVERTED_INVOICE, quote);
   }
 
   @Get('analytics/:direction')
@@ -209,7 +225,7 @@ export class QuotesController {
   ) {
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
     const analytics = await this.quotesService.getAnalytics(direction, yearNum);
-    return { success: true, data: analytics };
+    return ApiRes(QUO.ANALYTICS, analytics);
   }
 
   @Get('export/xlsx')

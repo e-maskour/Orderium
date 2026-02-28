@@ -7,17 +7,18 @@ import { DocumentTable, DocumentAnalysisChart } from '../../components/documents
 import { documentsService, DocumentItem } from '../../modules/documents/services/documents.service';
 import { partnersService } from '../../modules';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
-import ConfirmDialog from '../../components/ConfirmDialog';
-import AlertDialog from '../../components/AlertDialog';
 import { DocumentType, DocumentDirection, DocumentConfig } from '../../modules/documents/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { DateRangePicker } from '../../components/ui/date-range-picker';
 import { Autocomplete } from '../../components/ui/autocomplete';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { FormField } from '../../components/ui/form-field';
 import { useQuery } from '@tanstack/react-query';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import { ordersService } from '../../modules/orders/orders.service';
-import { toast } from 'sonner';
+import { toastExported, toastError, toastConfirm } from '../../services/toast.service';
 
 interface DocumentListPageProps {
   documentType: DocumentType;
@@ -39,18 +40,18 @@ export default function DocumentListPage({
   const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<{ id: number; number: string; total: number } | null>(null);
-  
+
   // Filter states
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [documentNumberSearch, setDocumentNumberSearch] = useState('');
   const [partnerIdSearch, setPartnerIdSearch] = useState('');
   const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({ start: undefined, end: undefined });
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  
+
   // Applied filters - triggers API requests
   const [appliedFilters, setAppliedFilters] = useState({
     search: '',
@@ -61,22 +62,12 @@ export default function DocumentListPage({
 
   // Year selection for analytics
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  
+
   // Fetch partners for autocomplete
   const { data: partnersData } = useQuery({
     queryKey: ['partners'],
     queryFn: partnersService.getAll,
   });
-  
-  // Confirmation dialogs
-  const [showValidateConfirm, setShowValidateConfirm] = useState(false);
-  const [showDevalidateConfirm, setShowDevalidateConfirm] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [confirmInvoiceId, setConfirmInvoiceId] = useState<number | null>(null);
-  
-  // Alert dialog
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState({ title: '', message: '', type: 'error' as const });
 
   const isVente = direction === 'vente';
   const partnerLabel = config.partnerLabel;
@@ -127,78 +118,39 @@ export default function DocumentListPage({
   };
 
   const handleValidate = async (id: number) => {
-    setConfirmInvoiceId(id);
-    setShowValidateConfirm(true);
+    toastConfirm(t('validateDocument'), async () => {
+      try {
+        await documentsService.validateDocument(documentType, id);
+        await refetch();
+      } catch (error) {
+        console.error('Error validating document:', error);
+        toastError(t('error'), { description: t('errorValidatingDocument') });
+      }
+    }, { description: t('confirmValidate'), confirmLabel: t('validate') });
   };
 
   const handleDevalidate = async (id: number) => {
-    setConfirmInvoiceId(id);
-    setShowDevalidateConfirm(true);
-  };
-
-  const confirmValidate = async () => {
-    if (confirmInvoiceId === null) return;
-    
-    try {
-      await documentsService.validateDocument(documentType, confirmInvoiceId);
-      await refetch();
-      setShowValidateConfirm(false);
-      setConfirmInvoiceId(null);
-    } catch (error) {
-      console.error('Error validating document:', error);
-      setShowValidateConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: t('errorValidatingDocument'),
-        type: 'error'
-      });
-      setShowAlert(true);
-    }
-  };
-
-  const confirmDevalidate = async () => {
-    if (confirmInvoiceId === null) return;
-    
-    try {
-      await documentsService.devalidateDocument(documentType, confirmInvoiceId);
-      await refetch();
-      setShowDevalidateConfirm(false);
-      setConfirmInvoiceId(null);
-    } catch (error) {
-      console.error('Error devalidating document:', error);
-      setShowDevalidateConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: t('errorDevalidatingDocument'),
-        type: 'error'
-      });
-      setShowAlert(true);
-    }
+    toastConfirm(t('devalidateDocument'), async () => {
+      try {
+        await documentsService.devalidateDocument(documentType, id);
+        await refetch();
+      } catch (error) {
+        console.error('Error devalidating document:', error);
+        toastError(t('error'), { description: t('errorDevalidatingDocument') });
+      }
+    }, { description: t('confirmDevalidate'), confirmLabel: t('devalidate') });
   };
 
   const handleDelete = async (id: number) => {
-    setConfirmInvoiceId(id);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    if (confirmInvoiceId === null) return;
-    
-    try {
-      await documentsService.deleteDocument(documentType, confirmInvoiceId);
-      await refetch();
-      setShowDeleteConfirm(false);
-      setConfirmInvoiceId(null);
-    } catch (error: any) {
-      console.error('Error deleting document:', error);
-      setShowDeleteConfirm(false);
-      setAlertMessage({
-        title: t('deletionImpossible'),
-        message: error.message || t('errorDeletingDocument'),
-        type: 'error'
-      });
-      setShowAlert(true);
-    }
+    toastConfirm(t('deleteTitle'), async () => {
+      try {
+        await documentsService.deleteDocument(documentType, id);
+        await refetch();
+      } catch (error: any) {
+        console.error('Error deleting document:', error);
+        toastError(t('deletionImpossible'), { description: error.message || t('errorDeletingDocument') });
+      }
+    }, { description: t('confirmDeleteDocument'), confirmLabel: t('delete') });
   };
 
   const handleDownload = (id: number) => {
@@ -208,7 +160,7 @@ export default function DocumentListPage({
 
   const handleViewPayments = (id: number) => {
     if (!config.features.hasPayments) return;
-    
+
     const doc = documents.find(d => d.id === id);
     if (doc) {
       setSelectedInvoice({
@@ -279,33 +231,33 @@ export default function DocumentListPage({
       text: 'text-red-600'
     }
   };
-  
+
   // Document type specific KPIs from API analytics
   let kpi1, kpi2, kpi3, kpi4;
-  
+
   if (analytics && analytics.kpis) {
     if (documentType === 'devis') {
       // Devis-specific KPIs from API
       const { totalQuotes, acceptedCount, pendingCount, conversionRate } = analytics.kpis;
-      
+
       kpi1 = { count: totalQuotes, label: t('totalQuotes'), icon: FileText, color: 'blue' };
       kpi2 = { count: acceptedCount, label: t('acceptedQuotes'), icon: CheckCircle, color: 'emerald' };
       kpi3 = { count: pendingCount, label: t('pendingQuotes'), icon: Clock, color: 'amber' };
       kpi4 = { count: `${conversionRate.toFixed(1)}%`, label: t('conversionRate'), icon: TrendingUp, color: 'purple' };
-      
+
     } else if (documentType === 'bon_livraison') {
       // Bon de livraison-specific KPIs from API
       const { totalOrders, deliveredCount, inProgressCount, totalItems } = analytics.kpis;
-      
+
       kpi1 = { count: totalOrders, label: t('totalDeliveries'), icon: FileText, color: 'blue' };
       kpi2 = { count: deliveredCount, label: t('delivered'), icon: CheckCircle, color: 'emerald' };
       kpi3 = { count: inProgressCount, label: t('inProgress'), icon: Clock, color: 'amber' };
       kpi4 = { count: totalItems, label: t('totalItems'), icon: TrendingUp, color: 'purple' };
-      
+
     } else {
       // Facture-specific KPIs from API
       const { totalInvoices, unpaidCount, paidCount, unpaidAmount } = analytics.kpis;
-      
+
       kpi1 = { count: totalInvoices, label: t('totalInvoices'), icon: FileText, color: 'blue' };
       kpi2 = { count: unpaidCount, label: t('unpaidInvoices'), icon: Clock, color: 'amber' };
       kpi3 = { count: paidCount, label: t('paidInvoices'), icon: CheckCircle, color: 'emerald' };
@@ -342,7 +294,7 @@ export default function DocumentListPage({
         blob = await ordersService.exportToXlsx(supplierId);
         filename = direction === 'achat' ? 'bons-achat' : 'bons-livraison';
       } else {
-        toast.error('Type de document non pris en charge');
+        toastError(t('unsupportedDocumentType'));
         return;
       }
 
@@ -354,9 +306,9 @@ export default function DocumentListPage({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Export réussi');
+      toastExported(t('exportSuccess'));
     } catch (error) {
-      toast.error('Erreur lors de l\'export');
+      toastError(t('exportError'));
       console.error(error);
     }
   };
@@ -370,22 +322,22 @@ export default function DocumentListPage({
           subtitle={`${t('manageYour')} ${config.title.toLowerCase()}`}
           actions={
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 onClick={handleExport}
-                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-xs sm:text-sm font-medium"
-                title="Exporter"
+                variant="outline"
+                size="sm"
+                leadingIcon={Download}
               >
-                <Download className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                 <span className="hidden sm:inline">Exporter</span>
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => navigate(createRoute)}
-                className="px-2 sm:px-4 py-1.5 sm:py-2 bg-amber-500 text-white rounded-lg sm:rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium"
+                size="sm"
+                leadingIcon={Plus}
               >
-                <Plus className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                 <span className="hidden sm:inline">{t('nouveau')}</span>
                 <span className="sm:hidden">+</span>
-              </button>
+              </Button>
             </div>
           }
         />
@@ -399,11 +351,10 @@ export default function DocumentListPage({
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                    activeTab === tab.key
-                      ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${activeTab === tab.key
+                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
+                    : 'text-slate-600 hover:bg-slate-50'
+                    }`}
                 >
                   <TabIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                   <span className="hidden sm:inline">{tab.label}</span>
@@ -472,7 +423,7 @@ export default function DocumentListPage({
                 </div>
 
                 {/* Analysis Chart - Full Width */}
-                <DocumentAnalysisChart 
+                <DocumentAnalysisChart
                   documents={documents}
                   documentType={documentType}
                   analytics={analytics}
@@ -550,11 +501,11 @@ export default function DocumentListPage({
                 {filtersExpanded && (
                   <>
                     {/* Backdrop */}
-                    <div 
+                    <div
                       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
                       onClick={() => setFiltersExpanded(false)}
                     />
-                    
+
                     {/* Slide-in Panel */}
                     <div className="fixed inset-y-0 end-0 w-full sm:w-[520px] md:w-[560px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
                       {/* Panel Header */}
@@ -573,36 +524,30 @@ export default function DocumentListPage({
 
                       {/* Panel Content - Scrollable */}
                       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                        
+
                         {/* Document Number Search */}
-                        <div>
-                          <label className="text-xs font-semibold text-slate-600 mb-2 block">
-                            {documentType === 'devis' ? t('quoteNumber') : documentType === 'bon_livraison' ? t('deliveryNumber') : t('invoiceNumber')}
-                          </label>
+                        <FormField label={documentType === 'devis' ? t('quoteNumber') : documentType === 'bon_livraison' ? t('deliveryNumber') : t('invoiceNumber')}>
                           <div className="relative">
-                            <input
+                            <Input
                               type="text"
                               placeholder={documentType === 'devis' ? 'DEV-001' : documentType === 'bon_livraison' ? 'BL-001' : 'FAC-001'}
                               value={documentNumberSearch}
                               onChange={(e) => setDocumentNumberSearch(e.target.value)}
-                              className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
+                              fullWidth
                             />
                             {documentNumberSearch && (
                               <button
                                 onClick={() => setDocumentNumberSearch('')}
-                                className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 z-10"
                               >
                                 <X className="w-4 h-4" />
                               </button>
                             )}
                           </div>
-                        </div>
+                        </FormField>
 
                         {/* Partner Autocomplete */}
-                        <div>
-                          <label className="text-xs font-semibold text-slate-600 mb-2 block">
-                            {config.partnerLabel}
-                          </label>
+                        <FormField label={config.partnerLabel}>
                           <Autocomplete
                             options={(partnersData?.partners || [])
                               .filter((p: any) => direction === 'vente' ? p.isCustomer : p.isSupplier)
@@ -616,14 +561,14 @@ export default function DocumentListPage({
                             emptyMessage={`${t('noPartnerFound').replace('{partner}', config.partnerLabel.toLowerCase())}`}
                             allowCustomValue={false}
                           />
-                        </div>
+                        </FormField>
 
                         {/* Date Range */}
                         <div>
-                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 block flex items-center gap-2">
+                          <div className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                             <Clock className="w-4 h-4 text-amber-600" />
                             {documentType === 'devis' ? t('quoteDate') : documentType === 'bon_livraison' ? t('deliveryDate') : t('invoiceDate')}
-                          </label>
+                          </div>
                           <DateRangePicker
                             dateRange={dateRange}
                             onDateRangeChange={setDateRange}
@@ -633,10 +578,10 @@ export default function DocumentListPage({
 
                         {/* Status Filter */}
                         <div>
-                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 block flex items-center gap-2">
+                          <div className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                             <CheckCircle className="w-4 h-4 text-amber-600" />
                             {t('status')}
-                          </label>
+                          </div>
                           <div className="flex flex-wrap gap-2">
                             {(documentType === 'devis' ? [
                               { key: 'all', label: t('all'), icon: '📋' },
@@ -664,11 +609,10 @@ export default function DocumentListPage({
                               <button
                                 key={filter.key}
                                 onClick={() => setStatusFilter(filter.key)}
-                                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                                  statusFilter === filter.key
-                                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                                }`}
+                                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${statusFilter === filter.key
+                                  ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
+                                  }`}
                               >
                                 <span>{filter.icon}</span>
                                 <span>{filter.label}</span>
@@ -681,18 +625,19 @@ export default function DocumentListPage({
 
                       {/* Panel Footer */}
                       <div className="border-t border-slate-200 p-4 bg-slate-50 flex gap-3">
-                        <button
+                        <Button
+                          variant="outline"
+                          className="flex-1"
                           onClick={handleResetFilters}
-                          className="flex-1 px-4 py-2.5 bg-white text-slate-700 rounded-lg font-medium text-sm hover:bg-slate-100 border border-slate-300 transition-colors"
                         >
                           {t('reset')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          className="flex-1"
                           onClick={handleApplyFilters}
-                          className="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-lg font-medium text-sm hover:bg-amber-600 shadow-lg shadow-amber-500/30 transition-colors"
                         >
                           {t('apply')}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </>
@@ -743,60 +688,6 @@ export default function DocumentListPage({
           onPaymentUpdate={refetch}
         />
       )}
-
-      {config.features.hasValidation && (
-        <>
-          <ConfirmDialog
-            isOpen={showValidateConfirm}
-            onClose={() => {
-              setShowValidateConfirm(false);
-              setConfirmInvoiceId(null);
-            }}
-            onConfirm={confirmValidate}
-            title={t('validateDocument')}
-            message={t('confirmValidate')}
-            type="warning"
-            confirmText={t('validate')}
-            cancelText={t('cancel')}
-          />
-
-          <ConfirmDialog
-            isOpen={showDevalidateConfirm}
-            onClose={() => {
-              setShowDevalidateConfirm(false);
-              setConfirmInvoiceId(null);
-            }}
-            onConfirm={confirmDevalidate}
-            title={t('devalidateDocument')}
-            message={t('confirmDevalidate')}
-            type="warning"
-            confirmText={t('devalidate')}
-            cancelText={t('cancel')}
-          />
-        </>
-      )}
-
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => {
-          setShowDeleteConfirm(false);
-          setConfirmInvoiceId(null);
-        }}
-        onConfirm={confirmDelete}
-        title={t('deleteTitle')}
-        message={t('confirmDeleteDocument')}
-        type="danger"
-        confirmText={t('delete')}
-        cancelText={t('cancel')}
-      />
-
-      <AlertDialog
-        isOpen={showAlert}
-        onClose={() => setShowAlert(false)}
-        title={alertMessage.title}
-        message={alertMessage.message}
-        type={alertMessage.type}
-      />
     </AdminLayout>
   );
 }

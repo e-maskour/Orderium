@@ -1,18 +1,14 @@
 import { Currency, CurrenciesConfiguration } from './currencies.model';
 import { CreateCurrencyDTO, UpdateCurrencyDTO } from './currencies.interface';
-
-const API_URL = '/api';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class CurrenciesService {
   private configId: number | null = null;
 
   async getConfiguration(): Promise<CurrenciesConfiguration> {
-    const response = await fetch(`${API_URL}/configurations/entity/currencies`);
-    if (!response.ok) throw new Error('Failed to fetch currencies configuration');
-    const data = await response.json();
-    
-    this.configId = data.configuration.id;
-    return CurrenciesConfiguration.fromApiResponse(data.configuration.values);
+    const response = await apiClient.get<any>(API_ROUTES.CONFIGURATIONS.BY_ENTITY('currencies'));
+    this.configId = response.data.id;
+    return CurrenciesConfiguration.fromApiResponse(response.data.values);
   }
 
   async getAllCurrencies(): Promise<Currency[]> {
@@ -23,12 +19,12 @@ export class CurrenciesService {
   async createCurrency(data: CreateCurrencyDTO): Promise<CurrenciesConfiguration> {
     const config = await this.getConfiguration();
     const newCurrencies = [...config.currencies.map(c => c.toJSON())];
-    
+
     // If setting as default, remove default from others
     if (data.isDefault) {
       newCurrencies.forEach(c => c.isDefault = false);
     }
-    
+
     newCurrencies.push({
       code: data.code.toUpperCase(),
       name: data.name,
@@ -47,7 +43,7 @@ export class CurrenciesService {
   async updateCurrency(index: number, data: UpdateCurrencyDTO): Promise<CurrenciesConfiguration> {
     const config = await this.getConfiguration();
     const newCurrencies = config.currencies.map(c => c.toJSON());
-    
+
     if (index < 0 || index >= newCurrencies.length) {
       throw new Error('Invalid currency index');
     }
@@ -74,7 +70,7 @@ export class CurrenciesService {
   async deleteCurrency(index: number): Promise<CurrenciesConfiguration> {
     const config = await this.getConfiguration();
     const newCurrencies = config.currencies.map(c => c.toJSON()).filter((_, i) => i !== index);
-    
+
     const newDefault = newCurrencies.find(c => c.isDefault)?.code || (newCurrencies[0]?.code || '');
 
     return this.updateConfiguration({
@@ -87,20 +83,8 @@ export class CurrenciesService {
     if (!this.configId) {
       await this.getConfiguration();
     }
-
-    const response = await fetch(`${API_URL}/configurations/${this.configId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update configuration');
-    }
-
-    const data = await response.json();
-    return CurrenciesConfiguration.fromApiResponse(data.configuration.values);
+    const response = await apiClient.put<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), { values });
+    return CurrenciesConfiguration.fromApiResponse(response.data.values);
   }
 }
 

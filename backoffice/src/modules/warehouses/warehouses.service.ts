@@ -1,60 +1,30 @@
 import { CreateWarehouseDTO, UpdateWarehouseDTO } from './warehouses.interface';
-import { WarehouseModel } from './warehouses.model';
-
-const API_URL = '/api/inventory';
+import { Warehouse } from './warehouses.model';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class WarehousesService {
-  async getAll(): Promise<WarehouseModel[]> {
-    const response = await fetch(`${API_URL}/warehouses`);
-    if (!response.ok) throw new Error('Failed to fetch warehouses');
-    const data = await response.json();
-    const warehouses = data.warehouses || data || [];
-    return warehouses.map((wh: any) => WarehouseModel.fromApiResponse(wh));
+  async getAll(): Promise<Warehouse[]> {
+    const response = await apiClient.get<any[]>(API_ROUTES.WAREHOUSES.LIST);
+    return (response.data || []).map((wh: any) => Warehouse.fromApiResponse(wh));
   }
 
-  async getById(id: number): Promise<WarehouseModel> {
-    const response = await fetch(`${API_URL}/warehouses/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch warehouse');
-    const data = await response.json();
-    return WarehouseModel.fromApiResponse(data.warehouse || data);
+  async getById(id: number): Promise<Warehouse> {
+    const response = await apiClient.get<any>(API_ROUTES.WAREHOUSES.DETAIL(id));
+    return Warehouse.fromApiResponse(response.data);
   }
 
-  async create(data: CreateWarehouseDTO): Promise<WarehouseModel> {
-    const response = await fetch(`${API_URL}/warehouses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create warehouse');
-    }
-    const result = await response.json();
-    return WarehouseModel.fromApiResponse(result.warehouse || result);
+  async create(data: CreateWarehouseDTO): Promise<Warehouse> {
+    const response = await apiClient.post<any>(API_ROUTES.WAREHOUSES.CREATE, data);
+    return Warehouse.fromApiResponse(response.data);
   }
 
-  async update(id: number, data: UpdateWarehouseDTO): Promise<WarehouseModel> {
-    const response = await fetch(`${API_URL}/warehouses/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update warehouse');
-    }
-    const result = await response.json();
-    return WarehouseModel.fromApiResponse(result.warehouse || result);
+  async update(id: number, data: UpdateWarehouseDTO): Promise<Warehouse> {
+    const response = await apiClient.patch<any>(API_ROUTES.WAREHOUSES.UPDATE(id), data);
+    return Warehouse.fromApiResponse(response.data);
   }
 
   async delete(id: number): Promise<void> {
-    const response = await fetch(`${API_URL}/warehouses/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete warehouse');
-    }
+    await apiClient.delete(API_ROUTES.WAREHOUSES.DELETE(id));
   }
 }
 

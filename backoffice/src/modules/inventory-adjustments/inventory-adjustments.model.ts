@@ -1,20 +1,20 @@
-import { InventoryAdjustment, AdjustmentLine } from './inventory-adjustments.interface';
+import { IInventoryAdjustment, IAdjustmentLine, AdjustmentStatus, UpdateInventoryAdjustmentDTO } from './inventory-adjustments.interface';
 
-export class InventoryAdjustmentModel implements InventoryAdjustment {
+export class InventoryAdjustment implements IInventoryAdjustment {
   id: number;
   reference: string;
   name: string;
   locationId: number;
-  status: 'draft' | 'in_progress' | 'done' | 'cancelled';
+  status: AdjustmentStatus;
   adjustmentDate?: string | null;
   userId?: number | null;
   notes?: string | null;
   dateCreated: string;
   dateUpdated: string;
   location?: { id: number; name: string };
-  lines?: AdjustmentLine[];
+  lines?: IAdjustmentLine[];
 
-  constructor(data: InventoryAdjustment) {
+  constructor(data: IInventoryAdjustment) {
     this.id = data.id;
     this.reference = data.reference;
     this.name = data.name;
@@ -29,8 +29,54 @@ export class InventoryAdjustmentModel implements InventoryAdjustment {
     this.lines = data.lines;
   }
 
-  static fromApiResponse(data: any): InventoryAdjustmentModel {
-    return new InventoryAdjustmentModel({
+  get isDraft(): boolean {
+    return this.status === 'draft';
+  }
+
+  get isInProgress(): boolean {
+    return this.status === 'in_progress';
+  }
+
+  get isDone(): boolean {
+    return this.status === 'done';
+  }
+
+  get isCancelled(): boolean {
+    return this.status === 'cancelled';
+  }
+
+  get canStartCounting(): boolean {
+    return this.isDraft;
+  }
+
+  get canValidate(): boolean {
+    return this.isInProgress;
+  }
+
+  get canCancel(): boolean {
+    return this.isDraft || this.isInProgress;
+  }
+
+  get displayStatus(): string {
+    const map: Record<AdjustmentStatus, string> = {
+      draft: 'Draft',
+      in_progress: 'In Progress',
+      done: 'Done',
+      cancelled: 'Cancelled',
+    };
+    return map[this.status] ?? this.status;
+  }
+
+  get totalLines(): number {
+    return this.lines?.length ?? 0;
+  }
+
+  get locationDisplayName(): string {
+    return this.location?.name ?? `Location #${this.locationId}`;
+  }
+
+  static fromApiResponse(data: any): InventoryAdjustment {
+    return new InventoryAdjustment({
       id: data.id,
       reference: data.reference,
       name: data.name,
@@ -44,5 +90,30 @@ export class InventoryAdjustmentModel implements InventoryAdjustment {
       location: data.location,
       lines: data.lines,
     });
+  }
+
+  toUpdateDTO(): UpdateInventoryAdjustmentDTO {
+    return {
+      name: this.name,
+      status: this.status,
+      notes: this.notes ?? undefined,
+    };
+  }
+
+  toJSON(): IInventoryAdjustment {
+    return {
+      id: this.id,
+      reference: this.reference,
+      name: this.name,
+      locationId: this.locationId,
+      status: this.status,
+      adjustmentDate: this.adjustmentDate,
+      userId: this.userId,
+      notes: this.notes,
+      dateCreated: this.dateCreated,
+      dateUpdated: this.dateUpdated,
+      location: this.location,
+      lines: this.lines,
+    };
   }
 }

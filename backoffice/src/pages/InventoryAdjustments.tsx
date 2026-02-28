@@ -4,8 +4,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { ClipboardCheck, Plus, Search, Filter, Eye, Play, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
-import { inventoryAdjustmentService, InventoryAdjustment } from '../modules/inventory/inventory-adjustments.service';
-import { toast } from 'sonner';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { NativeSelect } from '../components/ui/native-select';
+import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjustments.service';
+import { InventoryAdjustment } from '../modules/inventory/inventory.model';
+import { toastSuccess, toastValidated, toastDeleted, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
 
 export default function InventoryAdjustments() {
   const { dir, t } = useLanguage();
@@ -14,7 +18,7 @@ export default function InventoryAdjustments() {
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAdjustment, setSelectedAdjustment] = useState<InventoryAdjustment | null>(null);
-  
+
   const queryClient = useQueryClient();
 
   const { data: adjustments = [], isLoading } = useQuery({
@@ -29,22 +33,22 @@ export default function InventoryAdjustments() {
     mutationFn: (id: number) => inventoryAdjustmentService.startCounting(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-adjustments'] });
-      toast.success(t('countingStartedSuccess'));
+      toastSuccess(t('countingStartedSuccess'));
     },
     onError: (error: Error) => {
-      toast.error(`${t('errorPrefix')}: ${error.message}`);
+      toastError(`${t('errorPrefix')}: ${error.message}`);
     },
   });
 
   const validateMutation = useMutation({
-    mutationFn: (data: { adjustmentId: number; lines: any[] }) => 
+    mutationFn: (data: { adjustmentId: number; lines: any[] }) =>
       inventoryAdjustmentService.validate(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-adjustments'] });
-      toast.success(t('adjustmentValidatedSuccess'));
+      toastValidated(t('adjustmentValidatedSuccess'));
     },
     onError: (error: Error) => {
-      toast.error(`${t('errorPrefix')}: ${error.message}`);
+      toastError(`${t('errorPrefix')}: ${error.message}`);
     },
   });
 
@@ -52,10 +56,10 @@ export default function InventoryAdjustments() {
     mutationFn: (id: number) => inventoryAdjustmentService.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-adjustments'] });
-      toast.success(t('adjustmentCancelled'));
+      toastCancelled(t('adjustmentCancelled'));
     },
     onError: (error: Error) => {
-      toast.error(`${t('errorPrefix')}: ${error.message}`);
+      toastError(`${t('errorPrefix')}: ${error.message}`);
     },
   });
 
@@ -63,10 +67,10 @@ export default function InventoryAdjustments() {
     mutationFn: (id: number) => inventoryAdjustmentService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-adjustments'] });
-      toast.success(t('adjustmentDeleted'));
+      toastDeleted(t('adjustmentDeleted'));
     },
     onError: (error: Error) => {
-      toast.error(`${t('errorPrefix')}: ${error.message}`);
+      toastError(`${t('errorPrefix')}: ${error.message}`);
     },
   });
 
@@ -103,39 +107,37 @@ export default function InventoryAdjustments() {
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder={t('searchByReference')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              />
-            </div>
+            <Input
+              id="search-adjustments"
+              type="text"
+              placeholder={t('searchByReference')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leadingIcon={Search}
+              fullWidth
+              aria-label={t('searchByReference')}
+            />
           </div>
 
           {/* Status Filter */}
-          <select
+          <NativeSelect
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           >
             <option value="all">Tous les statuts</option>
             <option value="draft">Brouillon</option>
             <option value="in_progress">En cours</option>
             <option value="done">Validé</option>
             <option value="cancelled">Annulé</option>
-          </select>
+          </NativeSelect>
 
           {/* Create Button */}
-          <button
+          <Button
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold flex items-center gap-2 transition-colors"
+            leadingIcon={Plus}
           >
-            <Plus className="w-5 h-5" />
             {t('newAdjustment')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -196,7 +198,7 @@ export default function InventoryAdjustments() {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className="text-sm text-slate-600">
-                        {adjustment.adjustmentDate 
+                        {adjustment.adjustmentDate
                           ? new Date(adjustment.adjustmentDate).toLocaleDateString('fr-FR')
                           : '-'}
                       </span>
@@ -247,9 +249,9 @@ export default function InventoryAdjustments() {
                             </button>
                             <button
                               onClick={() => {
-                                if (confirm(t('confirmDeleteAdjustment'))) {
+                                toastConfirm(t('confirmDeleteAdjustment'), () => {
                                   deleteMutation.mutate(adjustment.id);
-                                }
+                                });
                               }}
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title={t('delete')}

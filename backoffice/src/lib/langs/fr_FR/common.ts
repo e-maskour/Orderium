@@ -2,12 +2,12 @@ export default {
   // App & Branding
   appName: 'Orderium',
   adminBackoffice: 'Backoffice Admin',
-  
+
   // Navigation
   dashboard: 'Tableau de bord',
   welcomeBack: 'Bon retour',
   welcome: 'Bienvenue',
-  
+
   // Common Actions
   create: 'Créer',
   update: 'Mettre à jour',
@@ -19,7 +19,7 @@ export default {
   back: 'Retour',
   confirm: 'Confirmer',
   add: 'Ajouter',
-  
+
   // Common Fields
   name: 'Nom',
   email: 'Email',
@@ -33,20 +33,20 @@ export default {
   description: 'Description',
   details: 'Détails',
   customer: 'Client',
-  
+
   // Status
   active: 'Actif',
   inactive: 'Inactif',
   enabled: 'Activé',
   disabled: 'Désactivé',
-  
+
   // Common Validation
   required: 'Requis',
   nameRequired: 'Le nom est requis',
-  
+
   // Search & Filter
   search: 'Rechercher',
-  
+
   // Pagination
   showing: 'Affichage',
   to: 'à',
@@ -57,7 +57,7 @@ export default {
   previous: 'Précédent',
   next: 'Suivant',
   last: 'Dernier',
-  
+
   // Loading & States
   loading: 'Chargement...',
   saving: 'Enregistrement',
@@ -71,22 +71,22 @@ export default {
   'common.saving': 'Enregistrement...',
   'common.close': 'Fermer',
   'common.cancel': 'Annuler',
-  
+
   // Selection
   selected: 'sélectionné(s)',
   selectAll: 'Tout sélectionner',
   deselectAll: 'Tout désélectionner',
-  
+
   // General
   items: 'articles',
   item: 'article',
   all: 'Tout',
   total: 'Total',
-  
+
   // Currency
   currency: 'DH',
   currencyCode: 'MAD',
-  
+
   // Date Filters
   today: 'Aujourd\'hui',
   yesterday: 'Hier',
@@ -103,22 +103,22 @@ export default {
   end: 'Fin',
   predefinedPeriod: 'Période prédéfinie',
   ok: 'OK',
-  
+
   // Confirmation
   areYouSure: 'Êtes-vous sûr ?',
   actionCannotBeUndone: 'Cette action ne peut pas être annulée',
-  
+
   // Dashboard
   quickAccess: 'Accès rapide',
   week: 'semaine',
   month: 'mois',
   year: 'année',
   custom: 'personnalisé',
-  
+
   // Language Toggle
   switchToFrench: 'Changer en français',
   switchToArabic: 'التبديل للعربية',
-  
+
   // Error Messages
   error: 'Une erreur est survenue',
   errorPrefix: 'Erreur',
@@ -127,7 +127,7 @@ export default {
   failedToDelete: 'Échec de suppression',
   useAuthError: 'useAuth doit être utilisé dans un AuthProvider',
   useLanguageError: 'useLanguage doit être utilisé dans un LanguageProvider',
-  
+
   // Menu Items
   sales: 'Ventes',
   purchases: 'Achats',
@@ -143,7 +143,7 @@ export default {
   stockMovements: 'Mouvements de stock',
   inventoryAdjustments: 'Ajustements d\'inventaire',
   warehouses: 'Entrepôts',
-  
+
   // Document Statuses
   paid: 'Payée',
   partial: 'Partielle',
@@ -164,7 +164,7 @@ export default {
   done: 'Effectué',
   allTypes: 'Tous les types',
   allStatuses: 'Tous les statuts',
-  
+
   // Image Upload
   invalidFileType: 'Type de fichier invalide. Autorisés: JPEG, PNG, WebP',
   fileSizeExceeds: 'La taille du fichier dépasse la limite de',
@@ -175,7 +175,7 @@ export default {
   failedToRemoveImage: 'Impossible de supprimer l\'image',
   productPreview: 'Aperçu du produit',
   removeImage: 'Supprimer l\'image',
-  
+
   // Dashboard
   dashboardOverview: 'Vue d\'ensemble de votre activité',
   revenueTrend: 'Tendance des revenus',
@@ -207,6 +207,13 @@ export default {
   successfulDeliveries: 'Livraisons réussies',
   currentlyActive: 'Actuellement actif',
   revenue: 'Revenu',
+
+  // Status Labels
+  upToDate: 'À jour',
+  pendingPayments: 'Paiements en attente',
+  allPaymentsUpToDate: 'Tous les paiements sont à jour',
+  invoicesIssuedPerMonth: 'Factures émises par mois',
+
   totalCustomers: 'Total clients',
   topProducts: 'Top produits',
   bestSellers: 'Meilleures ventes',
@@ -218,7 +225,7 @@ export default {
   hoursAgo: 'heures',
   daysAgo: 'jours',
   noRecentActivity: 'Aucune activité récente',
-  
+
   // Common Actions
   validate: 'Valider',
   devalidate: 'Dévalider',
@@ -229,7 +236,7 @@ export default {
   remove: 'Supprimer',
   validateDocument: 'Valider le document',
   devalidateDocument: 'Dévalider le document',
-  
+
   // Months (short)
   monthJan: 'Jan',
   monthFeb: 'Fév',
@@ -255,13 +262,13 @@ export default {
   monthOctober: 'Octobre',
   monthNovember: 'Novembre',
   monthDecember: 'Décembre',
-  
+
   // Preview/Download
   previewPDF: 'Aperçu PDF',
   downloadPDF: 'Télécharger PDF',
   download: 'Télécharger',
   generateLink: 'Générer le lien',
-  
+
   // Confirmations
   confirmCancelMovement: 'Êtes-vous sûr de vouloir annuler ce mouvement ?',
   confirmRejectQuote: 'Voulez-vous vraiment refuser ce devis ? Il sera marqué comme fermé.',
@@ -270,8 +277,60 @@ export default {
   newPasswordOptional: 'Nouveau mot de passe (optionnel)',
   minCharacters: 'Min 6 caractères',
   informationSavedSuccess: 'Informations enregistrées avec succès',
+  errorSaving: 'Erreur lors de l\'enregistrement',
   errorGeneratingPDF: 'Erreur lors de la génération du PDF',
+  pdfDownloaded: 'téléchargé avec succès',
+  pdfDownloadedShort: 'téléchargé',
   confirmDeletePayment: 'Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible.',
+  errorDeletingPayment: 'Erreur lors de la suppression du paiement',
   previewReceipt: 'Aperçu Reçu',
   previewDeliveryNote: 'Aperçu Bon',
+  iosInstallHint: 'Pour installer sur iOS, appuyez sur Partager et choisissez "Ajouter à l\'écran d\'accueil".',
+  deleteError: 'Erreur de suppression',
+  exportSuccess: 'Export réussi',
+  exportError: 'Erreur lors de l\'exportation',
+  templateDownloaded: 'Modèle téléchargé avec succès',
+  templateDownloadError: 'Erreur lors du téléchargement du modèle',
+  importInProgress: 'Import en cours...',
+  importSuccess: 'Import réussi: {{created}} créés, {{updated}} mis à jour',
+  importPartial: 'Import terminé avec des erreurs: {{created}} créés, {{updated}} mis à jour, {{failed}} échoués',
+  importError: 'Erreur lors de l\'import',
+  confirmBulkDelete: 'Êtes-vous sûr de vouloir supprimer {{count}} élément(s) sélectionné(s) ? Cette action est irréversible.',
+  deleteProducts: 'Supprimer les produits',
+  unsupportedDocumentType: 'Type de document non pris en charge',
+  confirmDeleteCategory: 'Êtes-vous sûr de vouloir supprimer "{{name}}" ?',
+  enterYourName: 'Veuillez entrer votre nom',
+  errorSigningQuote: 'Erreur lors de la signature du devis',
+  confirmRejectQuoteMessage: 'Voulez-vous vraiment refuser ce devis ? Il sera marqué comme fermé.',
+  rejectLabel: 'Refuser',
+  errorRejectingQuote: 'Erreur lors du refus du devis',
+  failedToGenerateCode: 'Échec de génération du code produit unique',
+  newCodeGenerated: 'Nouveau code produit unique généré',
+  failedToGenerateCodeRetry: 'Échec de génération du code unique. Veuillez réessayer.',
+  productCreatedSuccess: 'Produit créé avec succès',
+  failedToCreateProduct: 'Échec de création du produit',
+  failedToUpdateProduct: 'Échec de mise à jour du produit',
+  failedToCorrectStock: 'Échec de correction du stock',
+  failedToTransferStock: 'Échec de transfert du stock',
+  errorCreating: 'Erreur lors de la création',
+  failedToCreateWarehouse: 'Échec de création de l\'entrepôt',
+  failedToUpdateWarehouse: 'Échec de mise à jour de l\'entrepôt',
+  failedToDeleteWarehouse: 'Échec de suppression de l\'entrepôt',
+  deleteWarehouseTitle: 'Supprimer l\'entrepôt',
+  confirmDeleteWarehouse: 'Êtes-vous sûr de vouloir supprimer cet entrepôt ? Cette action est irréversible.',
+  errorCreatingDocument: 'Erreur lors de la création du document',
+  errorUpdatingDocument: 'Erreur lors de la mise à jour du document',
+  loadingQuote: 'Chargement du devis...',
+  errorLoadingQuote: 'Erreur lors du chargement du devis',
+  quoteNotFound: 'Devis introuvable',
+  no: 'Non',
+
+  // Accessibility
+  refresh: 'Actualiser',
+  moreOptions: 'Plus d\'options',
+  settings: 'Paramètres',
+  // General
+  noItems: 'Aucun \u00e9l\u00e9ment',
+  completed: 'Termin\u00e9',
+  type: 'Type',
 };

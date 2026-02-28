@@ -2,14 +2,14 @@ export default {
   // App & Branding
   appName: 'Orderium',
   tagline: 'Point de Vente',
-  
+
   // Navigation
   home: 'Accueil',
   menu: 'Menu',
   cart: 'Panier',
   orders: 'Commandes',
   profile: 'Profil',
-  
+
   // Common Actions
   add: 'Ajouter',
   remove: 'Supprimer',
@@ -26,7 +26,7 @@ export default {
   create: 'Créer',
   apply: 'Appliquer',
   reset: 'Réinitialiser',
-  
+
   // Common Fields
   name: 'Nom complet',
   namePlaceholder: 'Entrez votre nom',
@@ -48,7 +48,7 @@ export default {
   date: 'Date',
   coordinates: 'Coordonnées',
   customer: 'Client',
-  
+
   // General
   all: 'Tout',
   total: 'Total',
@@ -59,11 +59,11 @@ export default {
   piece: 'article',
   pieces: 'articles',
   perUnit: '/ unité',
-  
+
   // Currency
   currency: 'DH',
   currencyCode: 'MAD',
-  
+
   // Loading & States
   loading: 'Chargement...',
   processing: 'Traitement en cours...',
@@ -72,11 +72,11 @@ export default {
   generating: 'Génération...',
   searching: 'Recherche...',
   verifying: 'Vérification...',
-  
+
   // Search & Filter
   search: 'Rechercher',
   searchPlaceholder: 'Rechercher un produit, code ou code-barres...',
-  
+
   // Pagination
   previous: 'Précédent',
   next: 'Suivant',
@@ -89,12 +89,12 @@ export default {
   perPage: 'par page',
   gridView: 'Vue grille',
   listView: 'Vue liste',
-  
+
   // Error Messages
   error: 'Une erreur est survenue',
   warning: 'Avertissement',
   notSupported: 'Non supporté',
-  
+
   // Validation
   required: 'Requis',
   nameRequired: 'Le nom est requis',
@@ -102,11 +102,11 @@ export default {
   phoneInvalid: 'Numéro de téléphone invalide',
   emailInvalid: 'Email invalide',
   addressRequired: 'Adresse requise',
-  
+
   // Language Toggle
   switchToFrench: 'Changer en français',
   switchToArabic: 'التبديل للعربية',
-  
+
   // Date & Time
   period: 'Période',
   selectDates: 'Sélectionner les dates',
@@ -129,9 +129,12 @@ export default {
   minutesAgo: 'Il y a {minutes} min',
   hoursAgo: 'Il y a {hours} h',
   daysAgo: 'Il y a {days} j',
-  
+
   // Page Not Found
   pageNotFound: 'Page non trouvée',
   oopsPageNotFound: 'Oops! Page non trouvée',
   returnToHome: "Retour à l'accueil",
+
+  // Accessibility
+  goBack: 'Retour',
 };

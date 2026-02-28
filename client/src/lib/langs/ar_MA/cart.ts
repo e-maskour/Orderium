@@ -6,7 +6,7 @@ export default {
   continueShopping: 'تابع التسوق',
   clearCart: 'إفراغ السلة',
   checkout: 'تأكيد الطلب',
-  
+
   // Cart Items
   cartItems: 'عناصر',
   cartItem: 'عنصر',
@@ -14,7 +14,7 @@ export default {
   cartProduct: 'منتج',
   totalItems: 'إجمالي المنتجات',
   totalAmount: 'المبلغ الإجمالي',
-  
+
   // Checkout
   checkoutTitle: 'إتمام الطلب',
   customerInfo: 'معلومات العميل',
@@ -22,11 +22,11 @@ export default {
   placeOrder: 'تأكيد الطلب',
   note: 'ملاحظة',
   notePlaceholder: 'أضف ملاحظة للطلب (اختياري)',
-  
+
   // Customer Selection
   existingCustomer: 'عميل موجود',
   newCustomer: 'عميل جديد',
-  
+
   // Success
   orderSuccess: 'تم الطلب بنجاح!',
   orderNumber: 'رقم الطلب',
@@ -34,4 +34,5 @@ export default {
   orderConfirmation: 'سنتواصل معك قريباً لتأكيد الطلب',
   backToHome: 'العودة للرئيسية',
   orderCreationError: 'حدث خطأ أثناء إنشاء الطلب، يرجى المحاولة مجدداً',
+  removeFromCart: 'إزالة من السلة',
 };

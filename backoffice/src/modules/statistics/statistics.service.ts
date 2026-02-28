@@ -1,37 +1,28 @@
 import { Statistics } from './statistics.model';
-import type { ComprehensiveStatistics, RecentActivity } from './statistics.interface';
-
-const API_URL = '/api';
+import type { IComprehensiveStatistics, IRecentActivity } from './statistics.interface';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class StatisticsService {
   async getStatistics(startDate?: Date, endDate?: Date): Promise<Statistics> {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate.toISOString());
-    if (endDate) params.append('endDate', endDate.toISOString());
-    
-    const queryString = params.toString();
-    const response = await fetch(`${API_URL}/statistics${queryString ? `?${queryString}` : ''}`);
-    if (!response.ok) throw new Error('Failed to fetch statistics');
-    const data = await response.json();
-    return Statistics.fromApiResponse(data.stats);
+    const params: Record<string, string | number | boolean | undefined> = {};
+    if (startDate) params.startDate = startDate.toISOString();
+    if (endDate) params.endDate = endDate.toISOString();
+    const response = await apiClient.get<any>(API_ROUTES.STATISTICS.OVERVIEW, { params });
+    return Statistics.fromApiResponse(response.data);
   }
 
-  async getComprehensiveStats(days: number = 7): Promise<ComprehensiveStatistics> {
-    const response = await fetch(`${API_URL}/statistics/comprehensive?days=${days}`);
-    if (!response.ok) throw new Error('Failed to fetch comprehensive statistics');
-    const data = await response.json();
+  async getComprehensiveStats(days: number = 7): Promise<IComprehensiveStatistics> {
+    const response = await apiClient.get<any>(API_ROUTES.STATISTICS.COMPREHENSIVE, { params: { days } });
     return {
-      overview: Statistics.fromApiResponse(data.stats.overview),
-      dailyStats: data.stats.dailyStats,
-      topProducts: data.stats.topProducts,
+      overview: Statistics.fromApiResponse(response.data.overview),
+      dailyStats: response.data.dailyStats,
+      topProducts: response.data.topProducts,
     };
   }
 
-  async getRecentActivities(limit: number = 10): Promise<RecentActivity[]> {
-    const response = await fetch(`${API_URL}/statistics/recent-activities?limit=${limit}`);
-    if (!response.ok) throw new Error('Failed to fetch recent activities');
-    const data = await response.json();
-    return data.activities;
+  async getRecentActivities(limit: number = 10): Promise<IRecentActivity[]> {
+    const response = await apiClient.get<IRecentActivity[]>(API_ROUTES.STATISTICS.RECENT_ACTIVITIES, { params: { limit } });
+    return response.data;
   }
 }
 

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, ShoppingCart } from 'lucide-react';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 
 // Keyframe animations for Apple-style entrance
 const backdropAnimation = `
@@ -74,13 +76,13 @@ interface ProductQuantityModalProps {
   t: (key: string) => string;
 }
 
-export const ProductQuantityModal = ({ 
-  product, 
-  isOpen, 
-  onClose, 
+export const ProductQuantityModal = ({
+  product,
+  isOpen,
+  onClose,
   onAddToCart,
   initialQuantity = 0,
-  t 
+  t
 }: ProductQuantityModalProps) => {
   const [quantity, setQuantity] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -92,7 +94,7 @@ export const ProductQuantityModal = ({
       } else {
         setQuantity('');
       }
-      
+
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
@@ -144,7 +146,7 @@ export const ProductQuantityModal = ({
     // Only allow one decimal point
     const parts = value.split('.');
     let sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : value;
-    
+
     // Limit decimal places to 2
     if (sanitizedValue.includes('.')) {
       const [integer, decimal] = sanitizedValue.split('.');
@@ -152,7 +154,7 @@ export const ProductQuantityModal = ({
         sanitizedValue = integer + '.' + decimal.substring(0, 2);
       }
     }
-    
+
     if (sanitizedValue === '' || sanitizedValue === '0') {
       setQuantity('');
     } else {
@@ -177,23 +179,23 @@ export const ProductQuantityModal = ({
   const totalPrice = product.price * (parseFloat(quantity) || 0);
   const hasQuantity = quantity !== '' && parseFloat(quantity) > 0;
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
-  
+
   // Get the unit code from product's saleUnitOfMeasure, default to 'UNIT'
   const unitCode = product.saleUnitOfMeasure?.code || 'UNIT';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
         style={{
           animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
         }}
       />
-      
+
       {/* Modal */}
-      <div 
+      <div
         className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden"
         style={{
           animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
@@ -229,7 +231,7 @@ export const ProductQuantityModal = ({
         </div>
 
         {/* Content */}
-        <div 
+        <div
           className="p-3 sm:p-4 space-y-3 sm:space-y-4"
           style={{
             animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
@@ -240,13 +242,14 @@ export const ProductQuantityModal = ({
             <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
               {t('quantity')} {product.stock && `(${t('available')}: ${maxQuantity})`}
             </label>
-            <input
+            <Input
               ref={inputRef}
               type="text"
               inputMode="decimal"
               value={quantity}
               onChange={handleInputChange}
-              className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              className="h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center"
+              fullWidth
             />
           </div>
 
@@ -256,13 +259,12 @@ export const ProductQuantityModal = ({
               <button
                 key={num}
                 onClick={() => handleNumberClick(num)}
-                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${
-                  num === 'C'
+                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${num === 'C'
                     ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
                     : num === '.'
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
-                }`}
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                  }`}
               >
                 {num === 'C' ? (
                   <span className="text-xs sm:text-sm">{t('clear')}</span>
@@ -275,7 +277,7 @@ export const ProductQuantityModal = ({
 
           {/* Total Price */}
           {hasQuantity && (
-            <div 
+            <div
               className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20"
               style={{
                 animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
@@ -292,16 +294,16 @@ export const ProductQuantityModal = ({
 
           {/* Add to Cart Button */}
           {hasQuantity && (
-            <button
+            <Button
               onClick={handleAddToCart}
-              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90 text-white hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02]"
+              leadingIcon={ShoppingCart}
               style={{
                 animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
               }}
             >
-              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
               {initialQuantity > 0 ? t('updateQty') : t('addToCart')}
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -1,4 +1,4 @@
-export interface Product {
+export interface IProduct {
   id: number;
   name: string;
   code?: string | null;
@@ -21,7 +21,7 @@ export interface Product {
 }
 
 export interface ProductsResponse {
-  products: Product[];
+  products: IProduct[];
   pagination?: {
     page: number;
     limit: number;

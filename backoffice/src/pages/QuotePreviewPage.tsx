@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, Calendar, User, Phone, MapPin, CreditCard, CheckCircle, XCircle, AlertCircle, PenTool } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Textarea } from '../components/ui/textarea';
+import { FormField } from '../components/ui/form-field';
 import { quotesService } from '../modules/quotes/quotes.service';
 import { QuoteWithDetails } from '../modules/quotes/quotes.model';
+import { toastError, toastConfirm } from '../services/toast.service';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function QuotePreviewPage() {
+  const { t } = useLanguage();
   const { token } = useParams<{ token: string }>();
   const [quote, setQuote] = useState<QuoteWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +37,7 @@ export default function QuotePreviewPage() {
       setSigned(data.quote.status === 'signed');
     } catch (err: any) {
       console.error('Error loading quote:', err);
-      setError(err.message || 'Erreur lors du chargement du devis');
+      setError(err.message || t('errorLoadingQuote'));
     } finally {
       setLoading(false);
     }
@@ -38,7 +45,7 @@ export default function QuotePreviewPage() {
 
   const handleSign = async () => {
     if (!signedBy.trim()) {
-      alert('Veuillez entrer votre nom');
+      toastError(t('enterYourName'));
       return;
     }
 
@@ -49,28 +56,29 @@ export default function QuotePreviewPage() {
       await loadQuote();
     } catch (err: any) {
       console.error('Error signing quote:', err);
-      alert(err.message || 'Erreur lors de la signature du devis');
+      toastError(err.message || t('errorSigningQuote'));
     } finally {
       setSigning(false);
     }
   };
 
-  const handleReject = async () => {
-    if (!confirm('Voulez-vous vraiment refuser ce devis ? Il sera marqué comme fermé.')) {
-      return;
-    }
-
-    try {
-      setRejecting(true);
-      // Reject open quote - changes status to 'closed'
-      await quotesService.reject(quote!.quote.id);
-      await loadQuote();
-    } catch (err: any) {
-      console.error('Error rejecting quote:', err);
-      alert(err.message || 'Erreur lors du refus du devis');
-    } finally {
-      setRejecting(false);
-    }
+  const handleReject = () => {
+    toastConfirm(
+      t('confirmRejectQuoteMessage'),
+      async () => {
+        try {
+          setRejecting(true);
+          await quotesService.reject(quote!.quote.id);
+          await loadQuote();
+        } catch (err: any) {
+          console.error('Error rejecting quote:', err);
+          toastError(err.message || t('errorRejectingQuote'));
+        } finally {
+          setRejecting(false);
+        }
+      },
+      { confirmLabel: t('rejectLabel') },
+    );
   };
 
   if (loading) {
@@ -119,27 +127,25 @@ export default function QuotePreviewPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Status Badge */}
-            <div className={`px-4 py-2 rounded-full ${
-              q.status === 'signed'
-                ? 'bg-green-50 border border-green-200'
-                : q.status === 'closed'
+            <div className={`px-4 py-2 rounded-full ${q.status === 'signed'
+              ? 'bg-green-50 border border-green-200'
+              : q.status === 'closed'
                 ? 'bg-red-50 border border-red-200'
                 : 'bg-blue-50 border border-blue-200'
-            }`}>
-              <span className={`text-sm font-semibold ${
-                q.status === 'signed'
-                  ? 'text-green-700'
-                  : q.status === 'closed'
+              }`}>
+              <span className={`text-sm font-semibold ${q.status === 'signed'
+                ? 'text-green-700'
+                : q.status === 'closed'
                   ? 'text-red-700'
                   : 'text-blue-700'
-              }`}>
+                }`}>
                 {q.status === 'signed'
                   ? t('signedStatus')
                   : q.status === 'closed'
-                  ? t('closedStatus')
-                  : t('awaitingSignature')}
+                    ? t('closedStatus')
+                    : t('awaitingSignature')}
               </span>
             </div>
           </div>
@@ -278,28 +284,25 @@ export default function QuotePreviewPage() {
                         })}
                       </p>
                       <div>
-                        <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                          {t('signedByLabel')}
-                        </label>
-                        <input
-                          type="text"
-                          value={signedBy}
-                          onChange={(e) => setSignedBy(e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder={t('signedByPlaceholder')}
-                        />
+                        <FormField label={t('signedByLabel')}>
+                          <Input
+                            type="text"
+                            value={signedBy}
+                            onChange={(e) => setSignedBy(e.target.value)}
+                            placeholder={t('signedByPlaceholder')}
+                            fullWidth
+                          />
+                        </FormField>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                          Note:
-                        </label>
-                        <textarea
-                          value={clientNotes}
-                          onChange={(e) => setClientNotes(e.target.value)}
-                          rows={3}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Commentaire (optionnel)"
-                        />
+                        <FormField label="Note:">
+                          <Textarea
+                            value={clientNotes}
+                            onChange={(e) => setClientNotes(e.target.value)}
+                            rows={3}
+                            placeholder="Commentaire (optionnel)"
+                          />
+                        </FormField>
                       </div>
                     </div>
                   </div>
@@ -343,22 +346,27 @@ export default function QuotePreviewPage() {
         {q.status !== 'signed' && q.status !== 'closed' && q.status !== 'delivered' && q.status !== 'invoiced' && (
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
+              <Button
                 onClick={handleSign}
                 disabled={signing || !signedBy.trim()}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                loading={signing}
+                loadingText="Signature..."
+                leadingIcon={PenTool}
+                className="flex-1"
               >
-                <PenTool className="w-5 h-5" />
-                {signing ? 'Signature...' : 'Signer le devis'}
-              </button>
-              <button
+                Signer le devis
+              </Button>
+              <Button
                 onClick={handleReject}
                 disabled={rejecting || !signedBy.trim()}
-                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="destructive"
+                loading={rejecting}
+                loadingText="Refus..."
+                leadingIcon={XCircle}
+                className="flex-1"
               >
-                <XCircle className="w-5 h-5" />
-                {rejecting ? 'Refus...' : 'Refuser le devis'}
-              </button>
+                Refuser le devis
+              </Button>
             </div>
           </div>
         )}

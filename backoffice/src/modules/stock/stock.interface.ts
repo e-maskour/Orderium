@@ -17,7 +17,7 @@ export type MovementStatus =
   | 'done' 
   | 'cancelled';
 
-export interface StockMovement {
+export interface IStockMovement {
   id: number;
   reference: string;
   movementType: MovementType;
@@ -53,7 +53,7 @@ export interface StockMovement {
   };
 }
 
-export interface StockQuant {
+export interface IStockQuant {
   id: number;
   productId: number;
   warehouseId: number;
@@ -79,11 +79,11 @@ export interface StockQuant {
 }
 
 export interface StockMovementsResponse {
-  movements: StockMovement[];
+  movements: IStockMovement[];
 }
 
 export interface StockQuantsResponse {
-  quants: StockQuant[];
+  quants: IStockQuant[];
 }
 
 export interface CreateStockMovementDTO {

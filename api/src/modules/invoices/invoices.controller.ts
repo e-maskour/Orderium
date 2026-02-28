@@ -4,11 +4,14 @@ import type { Response } from 'express';
 import { Res, Header } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { FilterInvoicesDto } from './dto/filter-invoices.dto';
+import { CreateInvoiceDto, UpdateInvoiceDto } from './dto/invoice.dto';
+import { ApiRes } from '../../common/api-response';
+import { INV } from '../../common/response-codes';
 
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(private readonly invoicesService: InvoicesService) { }
 
   @Post('list')
   @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
@@ -18,15 +21,15 @@ export class InvoicesController {
     @Query('pageSize') pageSize?: string,
     @Query('direction') direction?: string,
   ) {
-    const pageNum = page ? parseInt(page, 10) : undefined;
-    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : undefined;
+    const pageNum = page ? (parseInt(page, 10) || undefined) : undefined;
+    const pageSizeNum = pageSize ? Math.min(100, Math.max(1, parseInt(pageSize, 10) || 50)) : undefined;
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
         : direction?.toUpperCase() === 'VENTE'
           ? 'VENTE'
           : undefined;
-    
+
     const result = await this.invoicesService.findAll(
       filterDto.search,
       filterDto.status,
@@ -38,7 +41,16 @@ export class InvoicesController {
       pageSizeNum,
       directionValue,
     );
-    return { success: true, invoices: result.invoices, count: result.count, totalCount: result.totalCount };
+    const effectivePage = pageNum ?? 1;
+    const effectiveLimit = pageSizeNum ?? 50;
+    const offset = (effectivePage - 1) * effectiveLimit;
+    return ApiRes(INV.FILTERED, result.invoices, {
+      limit: effectiveLimit,
+      offset,
+      total: result.totalCount,
+      hasNext: offset + effectiveLimit < result.totalCount,
+      hasPrev: offset > 0,
+    });
   }
 
   @Get()
@@ -47,7 +59,7 @@ export class InvoicesController {
     @Query('limit') limit?: string,
     @Query('direction') direction?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 100;
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
@@ -65,7 +77,13 @@ export class InvoicesController {
       limitNum,
       directionValue,
     );
-    return { success: true, invoices: result.invoices, count: result.count };
+    return ApiRes(INV.LIST, result.invoices, {
+      limit: limitNum,
+      offset: 0,
+      total: result.count,
+      hasNext: false,
+      hasPrev: false,
+    });
   }
 
   @Get('analytics/:direction')
@@ -76,49 +94,49 @@ export class InvoicesController {
   ) {
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
     const analytics = await this.invoicesService.getAnalytics(direction, yearNum);
-    return { success: true, data: analytics };
+    return ApiRes(INV.ANALYTICS, analytics);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get invoice by ID' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.findOne(id);
-    return { success: true, invoice };
+    return ApiRes(INV.DETAIL, invoice);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new invoice' })
-  async create(@Body() createInvoiceDto: any) {
-    const invoice = await this.invoicesService.create(createInvoiceDto);
-    return { success: true, invoice };
+  async create(@Body() createInvoiceDto: CreateInvoiceDto) {
+    const invoice = await this.invoicesService.create(createInvoiceDto as any);
+    return ApiRes(INV.CREATED, invoice);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update an invoice' })
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateInvoiceDto: any) {
-    const invoice = await this.invoicesService.update(id, updateInvoiceDto);
-    return { success: true, invoice };
+  async update(@Param('id', ParseIntPipe) id: number, @Body() updateInvoiceDto: UpdateInvoiceDto) {
+    const invoice = await this.invoicesService.update(id, updateInvoiceDto as any);
+    return ApiRes(INV.UPDATED, invoice);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an invoice' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.invoicesService.remove(id);
-    return { success: true, message: 'Invoice deleted successfully' };
+    return ApiRes(INV.DELETED, null);
   }
 
   @Put(':id/validate')
   @ApiOperation({ summary: 'Validate an invoice (change from draft to unpaid)' })
   async validate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.validate(id);
-    return { success: true, invoice };
+    return ApiRes(INV.VALIDATED, invoice);
   }
 
   @Put(':id/devalidate')
   @ApiOperation({ summary: 'Devalidate an invoice (change back to draft)' })
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.devalidate(id);
-    return { success: true, invoice };
+    return ApiRes(INV.DEVALIDATED, invoice);
   }
 
   @Get('export/xlsx')
@@ -130,11 +148,11 @@ export class InvoicesController {
   ) {
     const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
     const buffer = await this.invoicesService.exportToXlsx(supplierIdNum);
-    
-    const filename = supplierIdNum !== undefined 
+
+    const filename = supplierIdNum !== undefined
       ? (supplierIdNum ? 'factures-achat.xlsx' : 'factures-vente.xlsx')
       : 'factures.xlsx';
-      
+
     res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
     res.send(buffer);
   }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Product } from '../modules/products/products.interface';
+import { IProduct } from '../modules/products/products.interface';
 import { productsService } from '../modules/products/products.service';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 
 interface InvoiceItemRow {
   id: string;
@@ -22,14 +24,14 @@ interface ProductCatalogueModalProps {
   type?: 'vente' | 'achat';
 }
 
-export function ProductCatalogueModal({ 
-  isOpen, 
-  onClose, 
+export function ProductCatalogueModal({
+  isOpen,
+  onClose,
   onItemsChange,
   currentItems,
-  type = 'vente' 
+  type = 'vente'
 }: ProductCatalogueModalProps) {
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<IProduct[]>([]);
   const [catalogueLoading, setCatalogueLoading] = useState(false);
   const [catalogueSearch, setCatalogueSearch] = useState('');
 
@@ -44,8 +46,8 @@ export function ProductCatalogueModal({
   // Calculate item total
   const calculateItemTotal = (item: InvoiceItemRow): number => {
     const subtotal = item.quantity * item.unitPrice;
-    const discountAmount = item.discountType === 1 
-      ? (subtotal * item.discount / 100) 
+    const discountAmount = item.discountType === 1
+      ? (subtotal * item.discount / 100)
       : item.discount;
     const afterDiscount = subtotal - discountAmount;
     const taxAmount = afterDiscount * (item.tax / 100);
@@ -53,7 +55,7 @@ export function ProductCatalogueModal({
   };
 
   // Update or add product to items
-  const updateProductQuantity = (product: Product, newQuantity: number) => {
+  const updateProductQuantity = (product: IProduct, newQuantity: number) => {
     let updatedItems = [...currentItems];
     const existingItemIndex = updatedItems.findIndex(item => item.productId === product.id);
 
@@ -95,7 +97,7 @@ export function ProductCatalogueModal({
   // Load all products for catalogue
   const loadAllProducts = async () => {
     if (allProducts.length > 0) return; // Already loaded
-    
+
     try {
       setCatalogueLoading(true);
       const response = await productsService.getProducts({ limit: 1000 });
@@ -141,12 +143,9 @@ export function ProductCatalogueModal({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-            >
+            <Button onClick={handleClose}>
               Terminé
-            </button>
+            </Button>
             <button
               onClick={handleClose}
               className="text-slate-500 hover:text-slate-700"
@@ -159,12 +158,12 @@ export function ProductCatalogueModal({
         </div>
 
         <div className="p-4 border-b border-slate-200">
-          <input
+          <Input
             type="text"
             placeholder="Rechercher un produit..."
             value={catalogueSearch}
             onChange={(e) => setCatalogueSearch(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            fullWidth
           />
         </div>
 
@@ -182,7 +181,7 @@ export function ProductCatalogueModal({
               {filteredProducts.map((product) => {
                 const currentQuantity = getProductQuantity(product.id);
                 const isSelected = currentQuantity > 0;
-                
+
                 return (
                   <div
                     key={product.id}
@@ -191,16 +190,14 @@ export function ProductCatalogueModal({
                         updateProductQuantity(product, 1);
                       }
                     }}
-                    className={`flex items-center justify-between p-3 border rounded-lg ${
-                      isSelected 
-                        ? 'border-amber-300 bg-amber-50' 
+                    className={`flex items-center justify-between p-3 border rounded-lg ${isSelected
+                        ? 'border-amber-300 bg-amber-50'
                         : 'border-slate-200 hover:bg-slate-50 cursor-pointer'
-                    }`}
+                      }`}
                   >
                     <div className="flex-1">
-                      <div className={`font-medium ${
-                        isSelected ? 'text-amber-800' : 'text-slate-900'
-                      }`}>
+                      <div className={`font-medium ${isSelected ? 'text-amber-800' : 'text-slate-900'
+                        }`}>
                         {product.name}
                       </div>
                       {product.code && (
@@ -210,19 +207,19 @@ export function ProductCatalogueModal({
                         <div className="text-sm text-slate-600">{product.description}</div>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <div className="font-semibold text-slate-900">
-                        {(isVente ? product.price : (product.cost || product.price)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
+                          {(isVente ? product.price : (product.cost || product.price)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
                         </div>
                         {product.stock !== undefined && (
                           <div className="text-sm text-slate-500">Stock: {product.stock}</div>
                         )}
                       </div>
-                      
+
                       {isSelected && (
-                        <input
+                        <Input
                           type="number"
                           min="0"
                           step="1"
@@ -232,8 +229,8 @@ export function ProductCatalogueModal({
                             updateProductQuantity(product, newQuantity);
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          className="w-16 px-2 py-1 text-center border border-slate-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                          placeholder="0"
+                          className="w-16"
+                          inputSize="sm"
                         />
                       )}
                     </div>

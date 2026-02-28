@@ -15,11 +15,13 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PartnersService } from './partners.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { ApiRes } from '../../common/api-response';
+import { PTR } from '../../common/response-codes';
 
 @ApiTags('Partners')
 @Controller('partners')
 export class PartnersController {
-  constructor(private readonly partnersService: PartnersService) {}
+  constructor(private readonly partnersService: PartnersService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new partner' })
@@ -27,10 +29,7 @@ export class PartnersController {
   @ApiResponse({ status: 409, description: 'Phone number already exists' })
   async create(@Body() createPartnerDto: CreatePartnerDto) {
     const partner = await this.partnersService.create(createPartnerDto);
-    return {
-      success: true,
-      partner,
-    };
+    return ApiRes(PTR.CREATED, partner);
   }
 
   @Post('upsert')
@@ -45,10 +44,7 @@ export class PartnersController {
       createPartnerDto,
       portalPhoneNumber,
     );
-    return {
-      success: true,
-      partner,
-    };
+    return ApiRes(PTR.UPSERTED, partner);
   }
 
   @Get()
@@ -62,8 +58,8 @@ export class PartnersController {
     @Query('offset') offset?: string,
     @Query('search') search?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 100;
-    const offsetNum = offset ? parseInt(offset, 10) : 0;
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
+    const offsetNum = Math.max(0, parseInt(offset ?? '0', 10) || 0);
 
     const { partners, total } = await this.partnersService.findAll(
       limitNum,
@@ -71,13 +67,13 @@ export class PartnersController {
       search,
     );
 
-    return {
-      success: true,
-      partners,
-      total,
+    return ApiRes(PTR.LIST, partners, {
       limit: limitNum,
       offset: offsetNum,
-    };
+      total,
+      hasNext: offsetNum + limitNum < total,
+      hasPrev: offsetNum > 0,
+    });
   }
 
   @Get('dashboard/customers')
@@ -88,10 +84,7 @@ export class PartnersController {
   })
   async getCustomersDashboard() {
     const stats = await this.partnersService.getCustomersDashboard();
-    return {
-      success: true,
-      data: stats,
-    };
+    return ApiRes(PTR.CUSTOMER_DASHBOARD, stats);
   }
 
   @Get('dashboard/suppliers')
@@ -102,10 +95,7 @@ export class PartnersController {
   })
   async getSuppliersDashboard() {
     const stats = await this.partnersService.getSuppliersDashboard();
-    return {
-      success: true,
-      data: stats,
-    };
+    return ApiRes(PTR.SUPPLIER_DASHBOARD, stats);
   }
 
   @Get('search')
@@ -114,10 +104,7 @@ export class PartnersController {
   @ApiResponse({ status: 200, description: 'Partners found' })
   async search(@Query('phone') phone: string) {
     const partners = await this.partnersService.searchByPhone(phone);
-    return {
-      success: true,
-      partners,
-    };
+    return ApiRes(PTR.SEARCH, partners);
   }
 
   @Get('phone/:phoneNumber')
@@ -126,10 +113,7 @@ export class PartnersController {
   @ApiResponse({ status: 404, description: 'Partner not found' })
   async findByPhone(@Param('phoneNumber') phoneNumber: string) {
     const partner = await this.partnersService.findByPhone(phoneNumber);
-    return {
-      success: true,
-      partner,
-    };
+    return ApiRes(PTR.BY_PHONE, partner);
   }
 
   @Get(':id/customer-analytics')
@@ -148,10 +132,7 @@ export class PartnersController {
       id,
       yearNum,
     );
-    return {
-      success: true,
-      data: analytics,
-    };
+    return ApiRes(PTR.CUSTOMER_ANALYTICS, analytics);
   }
 
   @Get(':id/supplier-analytics')
@@ -170,10 +151,7 @@ export class PartnersController {
       id,
       yearNum,
     );
-    return {
-      success: true,
-      data: analytics,
-    };
+    return ApiRes(PTR.SUPPLIER_ANALYTICS, analytics);
   }
 
   @Get(':id')
@@ -182,10 +160,7 @@ export class PartnersController {
   @ApiResponse({ status: 404, description: 'Partner not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const partner = await this.partnersService.findOne(id);
-    return {
-      success: true,
-      partner,
-    };
+    return ApiRes(PTR.DETAIL, partner);
   }
 
   @Patch(':id')
@@ -198,10 +173,7 @@ export class PartnersController {
     @Body() updatePartnerDto: UpdatePartnerDto,
   ) {
     const partner = await this.partnersService.update(id, updatePartnerDto);
-    return {
-      success: true,
-      partner,
-    };
+    return ApiRes(PTR.UPDATED, partner);
   }
 
   @Delete(':id')
@@ -211,9 +183,6 @@ export class PartnersController {
   @ApiResponse({ status: 404, description: 'Partner not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.partnersService.remove(id);
-    return {
-      success: true,
-      message: 'Partner deleted successfully',
-    };
+    return ApiRes(PTR.DELETED, null);
   }
 }

@@ -24,7 +24,7 @@ export enum NotificationPriority {
   URGENT = 'urgent',
 }
 
-export interface Notification {
+export interface INotification {
   id: number;
   userId: number;
   type: NotificationType;

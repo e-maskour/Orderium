@@ -1,4 +1,4 @@
-import { Statistics as IStatistics } from './statistics.interface';
+import { IStatistics } from './statistics.interface';
 
 export class Statistics implements IStatistics {
   TotalRevenue?: number;
@@ -25,8 +25,31 @@ export class Statistics implements IStatistics {
     return this.AverageOrderValue ? this.AverageOrderValue.toFixed(2) : '0.00';
   }
 
+  get displayTotalOrders(): string {
+    return this.TotalOrders?.toString() ?? '0';
+  }
+
+  get displayTotalCustomers(): string {
+    return this.TotalCustomers?.toString() ?? '0';
+  }
+
   get hasData(): boolean {
     return this.TotalOrders !== undefined && this.TotalOrders > 0;
+  }
+
+  get deliveryRate(): number {
+    if (!this.TotalOrders || this.TotalOrders === 0) return 0;
+    return ((this.DeliveredOrders ?? 0) / this.TotalOrders) * 100;
+  }
+
+  get cancellationRate(): number {
+    if (!this.TotalOrders || this.TotalOrders === 0) return 0;
+    return ((this.CancelledOrders ?? 0) / this.TotalOrders) * 100;
+  }
+
+  get pendingRate(): number {
+    if (!this.TotalOrders || this.TotalOrders === 0) return 0;
+    return ((this.PendingOrders ?? 0) / this.TotalOrders) * 100;
   }
 
   // Methods
@@ -49,5 +72,19 @@ export class Statistics implements IStatistics {
       ActiveDeliveryPersons: data.activeDeliveryPersons !== undefined ? parseInt(data.activeDeliveryPersons.toString()) : undefined,
       ...data,
     });
+  }
+
+  toJSON(): IStatistics {
+    return {
+      TotalRevenue: this.TotalRevenue,
+      TotalOrders: this.TotalOrders,
+      TotalCustomers: this.TotalCustomers,
+      AverageOrderValue: this.AverageOrderValue,
+      PendingOrders: this.PendingOrders,
+      InDeliveryOrders: this.InDeliveryOrders,
+      DeliveredOrders: this.DeliveredOrders,
+      CancelledOrders: this.CancelledOrders,
+      ActiveDeliveryPersons: this.ActiveDeliveryPersons,
+    };
   }
 }

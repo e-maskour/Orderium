@@ -1,11 +1,11 @@
-export interface Category {
+export interface ICategory {
   id: number;
   name: string;
   description?: string;
   type: string;
   parentId?: number;
-  parent?: Category;
-  children?: Category[];
+  parent?: ICategory;
+  children?: ICategory[];
   isActive: boolean;
   dateCreated: string;
   dateUpdated: string;

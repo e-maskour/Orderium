@@ -1,8 +1,9 @@
 import {
-  Order as IOrder,
-  OrderItem as IOrderItem,
+  IOrder,
+  IOrderItem,
   OrderStatus,
-  OrderWithDetails as IOrderWithDetails
+  DeliveryStatus,
+  IOrderWithDetails
 } from './orders.interface';
 
 export class OrderItem implements IOrderItem {
@@ -67,6 +68,21 @@ export class OrderItem implements IOrderItem {
       total: parseFloat(data.total) || 0,
     });
   }
+
+  toJSON(): IOrderItem {
+    return {
+      id: this.id,
+      orderId: this.orderId,
+      productId: this.productId,
+      description: this.description,
+      quantity: this.quantity,
+      unitPrice: this.unitPrice,
+      discount: this.discount,
+      discountType: this.discountType,
+      tax: this.tax,
+      total: this.total,
+    };
+  }
 }
 
 export class Order implements IOrder {
@@ -95,7 +111,7 @@ export class Order implements IOrder {
   convertedToInvoiceId?: number | null;
   fromPortal?: boolean;
   fromClient?: boolean;
-  deliveryStatus?: string | null;
+  deliveryStatus?: DeliveryStatus | null;
   deliveryPersonId?: number | null;
   deliveryPersonName?: string | null;
   dateCreated: string;
@@ -208,38 +224,46 @@ export class Order implements IOrder {
     }
   }
 
-  // Status checks
-  isDraft(): boolean {
+  // Status getters
+  get isDraft(): boolean {
     return this.status === 'draft';
   }
 
-  isValidatedStatus(): boolean {
+  get isValidatedStatus(): boolean {
     return this.status === 'validated';
   }
 
-  isInProgress(): boolean {
+  get isInProgress(): boolean {
     return this.status === 'in_progress';
   }
 
-  isDelivered(): boolean {
+  get isDelivered(): boolean {
     return this.status === 'delivered';
   }
 
-  isCancelled(): boolean {
+  get isCancelled(): boolean {
     return this.status === 'cancelled';
+  }
+
+  get isConverted(): boolean {
+    return !!this.convertedToInvoiceId;
+  }
+
+  get isFromExternal(): boolean {
+    return !!(this.fromPortal || this.fromClient);
   }
 
   // Methods
   canBeAssigned(): boolean {
-    return !this.isDelivered() && !this.isCancelled();
+    return !this.isDelivered && !this.isCancelled;
   }
 
   canBeUnassigned(): boolean {
-    return this.hasDeliveryPerson && !this.isDelivered() && !this.isCancelled();
+    return this.hasDeliveryPerson && !this.isDelivered && !this.isCancelled;
   }
 
   canBeCancelled(): boolean {
-    return !this.isDelivered() && !this.isCancelled();
+    return !this.isDelivered && !this.isCancelled;
   }
 
   // Static factory method
@@ -278,6 +302,41 @@ export class Order implements IOrder {
       items: (data.items || []).map(OrderItem.fromApiResponse),
     });
   }
+
+  toJSON(): IOrder {
+    return {
+      id: this.id,
+      orderNumber: this.orderNumber,
+      direction: this.direction,
+      customerId: this.customerId,
+      customerName: this.customerName,
+      customerPhone: this.customerPhone,
+      customerAddress: this.customerAddress,
+      supplierId: this.supplierId,
+      supplierName: this.supplierName,
+      supplierPhone: this.supplierPhone,
+      supplierAddress: this.supplierAddress,
+      date: this.date,
+      dueDate: this.dueDate,
+      validationDate: this.validationDate,
+      subtotal: this.subtotal,
+      tax: this.tax,
+      discount: this.discount,
+      discountType: this.discountType,
+      total: this.total,
+      status: this.status,
+      isValidated: this.isValidated,
+      notes: this.notes,
+      convertedToInvoiceId: this.convertedToInvoiceId,
+      fromPortal: this.fromPortal,
+      fromClient: this.fromClient,
+      deliveryStatus: this.deliveryStatus,
+      deliveryPersonId: this.deliveryPersonId,
+      deliveryPersonName: this.deliveryPersonName,
+      dateCreated: this.dateCreated,
+      dateUpdated: this.dateUpdated,
+    };
+  }
 }
 
 export class OrderWithDetails implements IOrderWithDetails {
@@ -298,7 +357,7 @@ export class OrderWithDetails implements IOrderWithDetails {
   }
 
   canBeEdited(): boolean {
-    return this.order.isDraft();
+    return this.order.isDraft;
   }
 
   static fromApiResponse(data: any): OrderWithDetails {
@@ -307,5 +366,12 @@ export class OrderWithDetails implements IOrderWithDetails {
       order: Order.fromApiResponse(orderData),
       items: (orderData.items || []).map(OrderItem.fromApiResponse),
     });
+  }
+
+  toJSON(): IOrderWithDetails {
+    return {
+      order: this.order.toJSON(),
+      items: this.items.map((i) => i.toJSON()),
+    };
   }
 }

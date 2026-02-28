@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Trash2, Percent, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Percent, Search } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Checkbox } from '../../components/ui/checkbox';
+import { FormField } from '../../components/ui/form-field';
 import { Link } from 'react-router-dom';
-import { taxesService, TaxRate, CreateTaxRateDTO, UpdateTaxRateDTO } from '../../modules/taxes';
+import { taxesService, TaxRate, ITaxRate, CreateTaxRateDTO, UpdateTaxRateDTO } from '../../modules/taxes';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
+import { toastConfirm } from '../../services/toast.service';
 
 export default function Taxes() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [formData, setFormData] = useState<TaxRate>({
+  const [formData, setFormData] = useState<ITaxRate>({
     name: '',
     rate: 0,
     isDefault: false,
@@ -80,8 +85,9 @@ export default function Taxes() {
   };
 
   const handleDelete = (index: number) => {
-    if (!confirm(t('confirmDeleteTaxRate'))) return;
-    deleteMutation.mutate(index);
+    toastConfirm(t('confirmDeleteTaxRate'), () => {
+      deleteMutation.mutate(index);
+    });
   };
 
   if (isLoading) {
@@ -114,67 +120,66 @@ export default function Taxes() {
       <div className="bg-white rounded-lg border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <input
+            <Input
               type="text"
               placeholder={t('searchTaxRates')}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 w-64"
+              leadingIcon={Search}
+              className="w-64"
             />
           </div>
-          <button
-            onClick={openCreateModal}
-            className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
+          <Button onClick={openCreateModal} leadingIcon={Plus}>
             {t('addTaxRate')}
-          </button>
+          </Button>
         </div>
-        <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('name')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('ratePercentage')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {rates.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
-                  {t('noTaxRatesConfigured')}
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('name')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('ratePercentage')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
               </tr>
-            ) : (
-              rates.map((rate, index) => (
-                <tr key={index} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 text-sm font-medium text-slate-800">{rate.name}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{rate.rate}%</td>
-                  <td className="px-6 py-4">
-                    {rate.isDefault && (
-                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                          {t('default')}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openEditModal(index)}
-                      className="text-blue-600 hover:text-blue-800 mr-3"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {rates.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
+                    {t('noTaxRatesConfigured')}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                rates.map((rate, index) => (
+                  <tr key={index} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-800">{rate.name}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{rate.rate}%</td>
+                    <td className="px-6 py-4">
+                      {rate.isDefault && (
+                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                          {t('default')}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => openEditModal(index)}
+                        className="text-blue-600 hover:text-blue-800 mr-3"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
@@ -184,66 +189,47 @@ export default function Taxes() {
         title={editingIndex !== null ? t('editTaxRate') : t('addTaxRate')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('name')}
-            </label>
-            <input
+          <FormField label={t('name')} required>
+            <Input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
+              fullWidth
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('ratePercentage')}
-            </label>
-            <input
+          <FormField label={t('ratePercentage')} required>
+            <Input
               type="number"
               step="0.01"
               min="0"
               max="100"
               value={formData.rate}
               onChange={(e) => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+              trailingIcon={Percent}
               required
+              fullWidth
             />
-          </div>
+          </FormField>
 
-          <div className="flex items-center gap-2">
-            <div
-              onClick={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
-              className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                formData.isDefault
-                  ? 'bg-amber-500 border-amber-500 text-white'
-                  : 'bg-white border-slate-300'
-              }`}
-            >
-              {formData.isDefault && <CheckSquare className="w-4 h-4" />}
-            </div>
-            <label htmlFor="isDefault" className="text-sm text-slate-700">
-              {t('setAsDefaultTaxRate')}
-            </label>
-          </div>
+          <Checkbox
+            checked={formData.isDefault}
+            onChange={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
+            label={t('setAsDefaultTaxRate')}
+          />
 
           <div className="flex justify-end gap-2 pt-4">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
-            >
+            <Button type="button" variant="outline" onClick={closeModal}>
               {t('cancel')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={updateMutation.isPending}
-              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
+              loading={updateMutation.isPending}
+              loadingText={t('saving')}
             >
-              {updateMutation.isPending ? t('saving') : t('save')}
-            </button>
+              {t('save')}
+            </Button>
           </div>
         </form>
       </Modal>

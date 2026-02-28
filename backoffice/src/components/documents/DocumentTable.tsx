@@ -5,6 +5,8 @@ import { DocumentType } from '../../modules/documents/types';
 import { pdfService } from '../../services/pdf.service';
 import { PDFPreviewModal } from '../PDFPreviewModal';
 import { useLanguage } from '../../context/LanguageContext';
+import { Input } from '../ui/input';
+import { NativeSelect } from '../ui/native-select';
 
 interface Document {
   id: number;
@@ -47,18 +49,18 @@ interface DocumentTableProps {
   onPageSizeChange: (size: number) => void;
 }
 
-export function DocumentTable({ 
+export function DocumentTable({
   documentType,
   direction,
-  documents, 
+  documents,
   partnerLabel,
   itemLabel,
-  onEdit, 
-  onDelete, 
-  onDownload, 
-  onViewPayments, 
-  onValidate, 
-  onDevalidate, 
+  onEdit,
+  onDelete,
+  onDownload,
+  onViewPayments,
+  onValidate,
+  onDevalidate,
   loading,
   showPaymentColumns = false,
   showValidationColumn = false,
@@ -97,8 +99,8 @@ export function DocumentTable({
   };
 
   const handleSelectDocument = (id: number) => {
-    setSelectedDocuments(prev => 
-      prev.includes(id) 
+    setSelectedDocuments(prev =>
+      prev.includes(id)
         ? prev.filter(dId => dId !== id)
         : [...prev, id]
     );
@@ -170,7 +172,7 @@ export function DocumentTable({
         return 'bg-red-50 text-red-700 border-red-200';
       case 'unpaid':
         return 'bg-orange-50 text-orange-700 border-orange-200';
-      
+
       // Quote statuses
       case 'open':
         return 'bg-blue-50 text-blue-700 border-blue-200';
@@ -180,7 +182,7 @@ export function DocumentTable({
         return 'bg-red-50 text-red-700 border-red-200';
       case 'invoiced':
         return 'bg-purple-50 text-purple-700 border-purple-200';
-      
+
       // Bon de livraison statuses
       case 'validated':
         return 'bg-sky-50 text-sky-700 border-sky-200';
@@ -190,7 +192,7 @@ export function DocumentTable({
         return 'bg-teal-50 text-teal-700 border-teal-200';
       case 'cancelled':
         return 'bg-rose-50 text-rose-700 border-rose-200';
-      
+
       // Common
       case 'draft':
         return 'bg-slate-50 text-slate-700 border-slate-200';
@@ -212,7 +214,7 @@ export function DocumentTable({
         return t('overdue');
       case 'unpaid':
         return t('unpaid');
-      
+
       // Quote statuses
       case 'open':
         return t('open');
@@ -222,7 +224,7 @@ export function DocumentTable({
         return t('closed');
       case 'invoiced':
         return t('invoiced');
-      
+
       // Bon de livraison statuses
       case 'validated':
         return t('validated');
@@ -232,7 +234,7 @@ export function DocumentTable({
         return t('delivered');
       case 'cancelled':
         return t('cancelled');
-      
+
       // Common
       case 'draft':
         return t('draft');
@@ -242,11 +244,11 @@ export function DocumentTable({
   };
 
   // Calculate column count based on features and visible columns
-  const columnCount = 5 + 
-    (documentType === 'facture' ? 1 : 0) + 
-    (showValidationColumn ? 1 : 0) + 
-    (visibleColumns.tax ? 1 : 0) + 
-    (showPaymentColumns && visibleColumns.paidAmount ? 1 : 0) + 
+  const columnCount = 5 +
+    (documentType === 'facture' ? 1 : 0) +
+    (showValidationColumn ? 1 : 0) +
+    (visibleColumns.tax ? 1 : 0) +
+    (showPaymentColumns && visibleColumns.paidAmount ? 1 : 0) +
     (showPaymentColumns && visibleColumns.remainingAmount ? 1 : 0);
 
   return (
@@ -304,16 +306,15 @@ export function DocumentTable({
             </div>
           )}
         </div>
-        
+
         {/* Filter Button */}
         {onFiltersToggle && (
           <button
             onClick={onFiltersToggle}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              filtersExpanded
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${filtersExpanded
                 ? 'bg-amber-500 text-white shadow-md'
                 : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
-            }`}
+              }`}
           >
             <Filter className="w-4 h-4" />
             <span>{t('filters')}</span>
@@ -337,22 +338,22 @@ export function DocumentTable({
               {t('showing')} <span className="font-semibold">{startIndex + 1}</span> {t('to')}{' '}
               <span className="font-semibold">{Math.min(startIndex + pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
             </div>
-            
+
             {/* Page Size Selector */}
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-slate-600">{t('perPage')}</label>
-              <select
+              <span className="text-xs font-medium text-slate-600">{t('perPage')}</span>
+              <NativeSelect
                 value={pageSize}
                 onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                selectSize="sm"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
-              </select>
+              </NativeSelect>
             </div>
-            
+
             {/* Navigation */}
             <div className="flex items-center gap-2">
               <button
@@ -363,9 +364,9 @@ export function DocumentTable({
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <div className="flex items-center gap-1">
-                <input
+                <Input
                   type="number"
-                  min="1"
+                  min={1}
                   max={totalPages}
                   value={currentPage}
                   onChange={(e) => {
@@ -379,7 +380,9 @@ export function DocumentTable({
                       e.currentTarget.blur();
                     }
                   }}
-                  className="w-12 px-2 py-1 text-sm font-medium text-slate-700 text-center border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  inputSize="sm"
+                  className="w-12 text-center"
+                  aria-label="Page number"
                 />
                 <span className="text-sm text-slate-500">/</span>
                 <span className="text-sm font-medium text-slate-700">{totalPages}</span>
@@ -410,7 +413,7 @@ export function DocumentTable({
           const hasValidated = selectedDocumentsData.some(d => d.isValidated);
           const hasUnvalidated = selectedDocumentsData.some(d => !d.isValidated);
           const hasMixedValidation = hasValidated && hasUnvalidated;
-          
+
           return [
             {
               id: 'view',
@@ -442,7 +445,7 @@ export function DocumentTable({
             },
             {
               id: 'devalidate',
-              label: t('devalidate'), 
+              label: t('devalidate'),
               icon: <Edit className="w-4 h-4" />,
               onClick: () => {
                 selectedDocuments.forEach(id => {
@@ -465,7 +468,7 @@ export function DocumentTable({
                   clearSelection();
                 }
               },
-              hidden: !showPaymentColumns || selectedDocuments.length !== 1 || selectedDocumentsData.every(doc => 
+              hidden: !showPaymentColumns || selectedDocuments.length !== 1 || selectedDocumentsData.every(doc =>
                 !doc?.isValidated || doc?.status === 'draft'
               )
             },
@@ -486,7 +489,7 @@ export function DocumentTable({
                   clearSelection();
                 }
               },
-              hidden: selectedDocuments.length !== 1 || selectedDocumentsData.every(doc => 
+              hidden: selectedDocuments.length !== 1 || selectedDocumentsData.every(doc =>
                 !doc?.isValidated || doc?.status === 'draft'
               )
             },
@@ -506,10 +509,10 @@ export function DocumentTable({
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden relative">
-        <div 
+        <div
           ref={tableScrollRef}
           className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"
-          style={{ 
+          style={{
             scrollBehavior: 'smooth',
             WebkitOverflowScrolling: 'touch'
           }}
@@ -524,11 +527,10 @@ export function DocumentTable({
                 <th className="py-2 pl-3 pr-2 sticky left-0 z-20 bg-slate-50 whitespace-nowrap w-10">
                   <div
                     onClick={handleSelectAll}
-                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                      selectedDocuments.length === documents.length && documents.length > 0
+                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${selectedDocuments.length === documents.length && documents.length > 0
                         ? 'bg-amber-500 border-amber-500 text-white'
                         : 'bg-white border-slate-300 hover:border-slate-400'
-                    }`}
+                      }`}
                   >
                     {selectedDocuments.length === documents.length && documents.length > 0 && (
                       <CheckCircle className="w-3.5 h-3.5" />
@@ -592,123 +594,119 @@ export function DocumentTable({
                 </tr>
               ) : documents.length > 0 ? (
                 documents.map((doc) => (
-                  <tr 
-                      key={doc.id} 
-                      className={`transition-all duration-200 cursor-pointer border-l-4 border-b border-slate-200 group ${
-                        selectedDocuments.includes(doc.id) 
-                          ? 'bg-amber-50 border-l-amber-500 shadow-md !bg-amber-50' 
-                          : 'hover:bg-slate-50 border-l-transparent'
+                  <tr
+                    key={doc.id}
+                    className={`transition-all duration-200 cursor-pointer border-l-4 border-b border-slate-200 group ${selectedDocuments.includes(doc.id)
+                        ? 'bg-amber-50 border-l-amber-500 shadow-md !bg-amber-50'
+                        : 'hover:bg-slate-50 border-l-transparent'
                       }`}
-                      style={selectedDocuments.includes(doc.id) ? { backgroundColor: 'rgb(255 251 235)' } : {}}
-                      onClick={() => handleSelectDocument(doc.id)}
-                    >
-                      <td className={`py-2 pl-3 pr-2 sticky left-0 z-10 whitespace-nowrap w-10 ${
-                        selectedDocuments.includes(doc.id) ? 'bg-amber-50' : 'bg-white group-hover:bg-slate-50'
+                    style={selectedDocuments.includes(doc.id) ? { backgroundColor: 'rgb(255 251 235)' } : {}}
+                    onClick={() => handleSelectDocument(doc.id)}
+                  >
+                    <td className={`py-2 pl-3 pr-2 sticky left-0 z-10 whitespace-nowrap w-10 ${selectedDocuments.includes(doc.id) ? 'bg-amber-50' : 'bg-white group-hover:bg-slate-50'
                       }`}>
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectDocument(doc.id);
-                          }}
-                          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                            selectedDocuments.includes(doc.id)
-                              ? 'bg-amber-500 border-amber-500 text-white'
-                              : 'bg-white border-slate-300 hover:border-slate-400'
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectDocument(doc.id);
+                        }}
+                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${selectedDocuments.includes(doc.id)
+                            ? 'bg-amber-500 border-amber-500 text-white'
+                            : 'bg-white border-slate-300 hover:border-slate-400'
                           }`}
-                        >
-                          {selectedDocuments.includes(doc.id) && (
-                            <CheckCircle className="w-3.5 h-3.5" />
-                          )}
-                        </div>
-                      </td>
-                      <td className={`py-2 px-3 sticky left-10 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.05)] whitespace-nowrap ${
-                        selectedDocuments.includes(doc.id) ? 'bg-amber-50' : 'bg-white group-hover:bg-slate-50'
+                      >
+                        {selectedDocuments.includes(doc.id) && (
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        )}
+                      </div>
+                    </td>
+                    <td className={`py-2 px-3 sticky left-10 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.05)] whitespace-nowrap ${selectedDocuments.includes(doc.id) ? 'bg-amber-50' : 'bg-white group-hover:bg-slate-50'
                       }`}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit?.(doc.id);
-                          }}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                        >
-                          {doc.number}
-                        </button>
-                      </td>
-                      <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <span className="text-xs font-medium text-slate-800">{doc.partnerName}</span>
-                      </td>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit?.(doc.id);
+                        }}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                      >
+                        {doc.number}
+                      </button>
+                    </td>
+                    <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                      <span className="text-xs font-medium text-slate-800">{doc.partnerName}</span>
+                    </td>
+                    <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                      <span className="text-xs text-slate-600">
+                        {new Date(doc.date).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </td>
+                    {documentType === 'facture' && (
                       <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                         <span className="text-xs text-slate-600">
-                          {new Date(doc.date).toLocaleDateString('fr-FR', {
+                          {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric'
-                          })}
+                          }) : '-'}
                         </span>
                       </td>
-                      {documentType === 'facture' && (
-                        <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                          <span className="text-xs text-slate-600">
-                            {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            }) : '-'}
-                          </span>
-                        </td>
-                      )}
-                      {showValidationColumn && (
-                        <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                          <span className="text-xs text-slate-600">
-                            {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            }) : '-'}
-                          </span>
-                        </td>
-                      )}
+                    )}
+                    {showValidationColumn && (
+                      <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                        <span className="text-xs text-slate-600">
+                          {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          }) : '-'}
+                        </span>
+                      </td>
+                    )}
+                    <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
+                      <span className="text-xs font-medium text-slate-700">
+                        {doc.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                      </span>
+                    </td>
+                    {visibleColumns.tax && (
                       <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
                         <span className="text-xs font-medium text-slate-700">
-                          {doc.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                          {doc.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                         </span>
                       </td>
-                      {visibleColumns.tax && (
-                        <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                          <span className="text-xs font-medium text-slate-700">
-                            {doc.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                          </span>
-                        </td>
-                      )}
+                    )}
+                    <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
+                      <span className="text-xs font-bold text-slate-900">
+                        {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                      </span>
+                    </td>
+                    {showPaymentColumns && visibleColumns.paidAmount && (
                       <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                        <span className="text-xs font-bold text-slate-900">
-                          {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                        <span className="text-xs font-medium text-green-700">
+                          {doc.paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                         </span>
                       </td>
-                      {showPaymentColumns && visibleColumns.paidAmount && (
-                        <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                          <span className="text-xs font-medium text-green-700">
-                            {doc.paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                          </span>
-                        </td>
-                      )}
-                      {showPaymentColumns && visibleColumns.remainingAmount && (
-                        <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                          <span className={`text-xs font-medium ${doc.remainingAmount > 0 ? 'text-red-700' : 'text-slate-500'}`}>
-                              {doc.remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                          </span>
-                        </td>
-                      )}
-                      <td className="py-2 px-3 whitespace-nowrap">
-                        <div className="flex justify-center">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(doc.status)}`}>
-                            {getStatusLabel(doc.status)}
-                          </span>
-                        </div>
+                    )}
+                    {showPaymentColumns && visibleColumns.remainingAmount && (
+                      <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
+                        <span className={`text-xs font-medium ${doc.remainingAmount > 0 ? 'text-red-700' : 'text-slate-500'}`}>
+                          {doc.remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                        </span>
                       </td>
-                    </tr>
-                  ))
-                ) : (
+                    )}
+                    <td className="py-2 px-3 whitespace-nowrap">
+                      <div className="flex justify-center">
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(doc.status)}`}>
+                          {getStatusLabel(doc.status)}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan={columnCount} className="py-8 text-center">
                     <div className="flex flex-col items-center gap-2">

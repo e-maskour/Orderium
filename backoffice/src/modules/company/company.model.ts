@@ -1,6 +1,6 @@
-import { CompanyInfo } from './company.interface';
+import { ICompany } from './company.interface';
 
-export class Company implements CompanyInfo {
+export class Company implements ICompany {
   companyName: string;
   address?: string;
   zipCode?: string;
@@ -21,7 +21,7 @@ export class Company implements CompanyInfo {
   capital?: number;
   fiscalYearStartMonth?: number;
 
-  constructor(data: CompanyInfo) {
+  constructor(data: ICompany) {
     this.companyName = data.companyName;
     this.address = data.address;
     this.zipCode = data.zipCode;
@@ -43,11 +43,43 @@ export class Company implements CompanyInfo {
     this.fiscalYearStartMonth = data.fiscalYearStartMonth;
   }
 
+  get hasLogo(): boolean {
+    return !!this.logo;
+  }
+
+  get fullAddress(): string {
+    const parts = [this.address, this.zipCode, this.city, this.state, this.country].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : 'No address';
+  }
+
+  get hasContactInfo(): boolean {
+    return !!(this.phone || this.email || this.website);
+  }
+
+  get hasLegalIdentifiers(): boolean {
+    return !!(this.vatNumber || this.ice || this.taxId || this.registrationNumber);
+  }
+
+  get displayCapital(): string {
+    if (this.capital == null) return 'N/A';
+    return this.capital.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  get fiscalYearStartMonthName(): string {
+    if (this.fiscalYearStartMonth == null) return 'N/A';
+    const date = new Date(2000, this.fiscalYearStartMonth - 1, 1);
+    return date.toLocaleString('default', { month: 'long' });
+  }
+
   static fromApiResponse(data: any): Company {
     return new Company(data);
   }
 
-  toJSON(): CompanyInfo {
+  toUpdateDTO(): ICompany {
+    return this.toJSON();
+  }
+
+  toJSON(): ICompany {
     return {
       companyName: this.companyName,
       address: this.address,

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Tag, Percent, DollarSign } from 'lucide-react';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 
 // Keyframe animations for Apple-style entrance
 const backdropAnimation = `
@@ -61,16 +63,16 @@ interface DiscountModalProps {
   t: (key: string) => string;
 }
 
-export const DiscountModal = ({ 
+export const DiscountModal = ({
   productName,
   quantity,
   unitPrice,
   currentDiscount,
   currentDiscountType,
-  isOpen, 
-  onClose, 
+  isOpen,
+  onClose,
   onApply,
-  t 
+  t
 }: DiscountModalProps) => {
   const [discount, setDiscount] = useState('');
   const [discountType, setDiscountType] = useState<number>(0); // 0 = amount, 1 = percentage
@@ -80,7 +82,7 @@ export const DiscountModal = ({
     if (isOpen) {
       setDiscount(currentDiscount > 0 ? currentDiscount.toString() : '');
       setDiscountType(currentDiscountType);
-      
+
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
@@ -103,11 +105,11 @@ export const DiscountModal = ({
 
   const subtotal = unitPrice * quantity;
   const discountValue = parseFloat(discount) || 0;
-  const discountAmount = discountType === 1 
-    ? (subtotal * discountValue) / 100 
+  const discountAmount = discountType === 1
+    ? (subtotal * discountValue) / 100
     : discountValue;
   const total = subtotal - discountAmount;
-  
+
   const maxDiscount = discountType === 1 ? 100 : subtotal;
 
   const handleNumberClick = (num: string) => {
@@ -144,7 +146,7 @@ export const DiscountModal = ({
     // Only allow one decimal point
     const parts = value.split('.');
     let sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : value;
-    
+
     // Limit decimal places to 2
     if (sanitizedValue.includes('.')) {
       const [integer, decimal] = sanitizedValue.split('.');
@@ -152,13 +154,13 @@ export const DiscountModal = ({
         sanitizedValue = integer + '.' + decimal.substring(0, 2);
       }
     }
-    
+
     // Check max value
     const numValue = parseFloat(sanitizedValue);
     if (numValue > maxDiscount) {
       return;
     }
-    
+
     setDiscount(sanitizedValue);
   };
 
@@ -179,16 +181,16 @@ export const DiscountModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
         style={{
           animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
         }}
       />
-      
+
       {/* Modal */}
-      <div 
+      <div
         className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden"
         style={{
           animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
@@ -225,7 +227,7 @@ export const DiscountModal = ({
         </div>
 
         {/* Content */}
-        <div 
+        <div
           className="p-3 sm:p-4 space-y-3 sm:space-y-4"
           style={{
             animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
@@ -243,11 +245,10 @@ export const DiscountModal = ({
                   setDiscount('');
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className={`h-10 sm:h-11 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
-                  discountType === 0
+                className={`h-10 sm:h-11 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${discountType === 0
                     ? 'bg-orange-500 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 <DollarSign className="w-4 h-4" />
                 {t('amount') || 'Amount'}
@@ -258,11 +259,10 @@ export const DiscountModal = ({
                   setDiscount('');
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className={`h-10 sm:h-11 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
-                  discountType === 1
+                className={`h-10 sm:h-11 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${discountType === 1
                     ? 'bg-orange-500 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 <Percent className="w-4 h-4" />
                 {t('percentage') || 'Percentage'}
@@ -275,13 +275,14 @@ export const DiscountModal = ({
             <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
               {t('discount')} {discountType === 1 ? '(%)' : `(${t('currency')})`}
             </label>
-            <input
+            <Input
               ref={inputRef}
               type="text"
               inputMode="decimal"
               value={discount}
               onChange={handleInputChange}
-              className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+              className="h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center"
+              fullWidth
             />
           </div>
 
@@ -291,13 +292,12 @@ export const DiscountModal = ({
               <button
                 key={num}
                 onClick={() => handleNumberClick(num)}
-                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${
-                  num === 'C'
+                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${num === 'C'
                     ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
                     : num === '.'
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
-                }`}
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+                  }`}
               >
                 {num === 'C' ? (
                   <span className="text-xs sm:text-sm">{t('clear')}</span>
@@ -310,7 +310,7 @@ export const DiscountModal = ({
 
           {/* Discount Summary */}
           {discountValue > 0 && (
-            <div 
+            <div
               className="space-y-2 p-3 bg-gradient-to-r from-orange-500/5 to-orange-500/10 rounded-xl border border-orange-500/20"
               style={{
                 animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
@@ -338,16 +338,16 @@ export const DiscountModal = ({
           )}
 
           {/* Apply Button */}
-          <button
+          <Button
             onClick={handleApply}
-            className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all bg-orange-500 hover:bg-orange-600 text-white hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02]"
+            leadingIcon={Tag}
             style={{
               animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
             }}
           >
-            <Tag className="w-4 h-4 sm:w-5 sm:h-5" />
             {t('apply') || 'Apply'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

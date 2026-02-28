@@ -19,17 +19,20 @@ import {
   InternalTransferDto,
 } from './dto/stock-movement.dto';
 import { MovementStatus, MovementType } from './entities/stock-movement.entity';
+import { ApiRes } from '../../common/api-response';
+import { MOV } from '../../common/response-codes';
 
 @ApiTags('Inventory - Stock Movements')
 @Controller('inventory/movements')
 export class StockMovementController {
-  constructor(private readonly stockService: StockService) {}
+  constructor(private readonly stockService: StockService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new stock movement (draft)' })
   @ApiResponse({ status: 201, description: 'Movement created successfully' })
-  create(@Body() createDto: CreateStockMovementDto) {
-    return this.stockService.createMovement(createDto);
+  async create(@Body() createDto: CreateStockMovementDto) {
+    const movement = await this.stockService.createMovement(createDto);
+    return ApiRes(MOV.CREATED, movement);
   }
 
   @Get()
@@ -41,7 +44,7 @@ export class StockMovementController {
   @ApiQuery({ name: 'movementType', required: false, enum: MovementType })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
-  findAll(
+  async findAll(
     @Query('productId') productId?: string,
     @Query('warehouseId') warehouseId?: string,
     @Query('status') status?: MovementStatus,
@@ -57,15 +60,17 @@ export class StockMovementController {
     if (startDate) filters.startDate = new Date(startDate);
     if (endDate) filters.endDate = new Date(endDate);
 
-    return this.stockService.findAllMovements(filters);
+    const movements = await this.stockService.findAllMovements(filters);
+    return ApiRes(MOV.LIST, movements);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get movement by ID' })
   @ApiResponse({ status: 200, description: 'Movement details' })
   @ApiResponse({ status: 404, description: 'Movement not found' })
-  findOne(@Param('id') id: string) {
-    return this.stockService.findMovement(+id);
+  async findOne(@Param('id') id: string) {
+    const movement = await this.stockService.findMovement(+id);
+    return ApiRes(MOV.DETAIL, movement);
   }
 
   @Post('validate')
@@ -73,16 +78,18 @@ export class StockMovementController {
   @ApiResponse({ status: 200, description: 'Movement validated successfully' })
   @ApiResponse({ status: 400, description: 'Insufficient stock or already validated' })
   @ApiResponse({ status: 404, description: 'Movement not found' })
-  validate(@Body() validateDto: ValidateMovementDto) {
-    return this.stockService.validateMovement(validateDto);
+  async validate(@Body() validateDto: ValidateMovementDto) {
+    const movement = await this.stockService.validateMovement(validateDto);
+    return ApiRes(MOV.VALIDATED, movement);
   }
 
   @Post('transfer')
   @ApiOperation({ summary: 'Create and execute internal transfer' })
   @ApiResponse({ status: 201, description: 'Transfer completed successfully' })
   @ApiResponse({ status: 400, description: 'Insufficient stock or invalid warehouses' })
-  internalTransfer(@Body() transferDto: InternalTransferDto) {
-    return this.stockService.internalTransfer(transferDto);
+  async internalTransfer(@Body() transferDto: InternalTransferDto) {
+    const movement = await this.stockService.internalTransfer(transferDto);
+    return ApiRes(MOV.TRANSFERRED, movement);
   }
 
   @Patch(':id')
@@ -90,8 +97,9 @@ export class StockMovementController {
   @ApiResponse({ status: 200, description: 'Movement updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update validated movement' })
   @ApiResponse({ status: 404, description: 'Movement not found' })
-  update(@Param('id') id: string, @Body() updateDto: UpdateStockMovementDto) {
-    return this.stockService.updateMovement(+id, updateDto);
+  async update(@Param('id') id: string, @Body() updateDto: UpdateStockMovementDto) {
+    const movement = await this.stockService.updateMovement(+id, updateDto);
+    return ApiRes(MOV.UPDATED, movement);
   }
 
   @Delete(':id')
@@ -100,7 +108,8 @@ export class StockMovementController {
   @ApiResponse({ status: 200, description: 'Movement cancelled successfully' })
   @ApiResponse({ status: 400, description: 'Cannot cancel validated movement' })
   @ApiResponse({ status: 404, description: 'Movement not found' })
-  cancel(@Param('id') id: string) {
-    return this.stockService.cancelMovement(+id);
+  async cancel(@Param('id') id: string) {
+    const movement = await this.stockService.cancelMovement(+id);
+    return ApiRes(MOV.CANCELLED, movement);
   }
 }

@@ -5,7 +5,7 @@ import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
 import { PartnerForm } from '../components/PartnerForm';
 import { Users, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
+import { toastCreated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function FournisseurCreate() {
@@ -17,11 +17,11 @@ export default function FournisseurCreate() {
     mutationFn: (data: CreatePartnerDTO) => partnersService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['partners'] });
-      toast.success(t('supplierCreated'));
+      toastCreated(t('supplierCreated'));
       navigate('/fournisseurs');
     },
     onError: (error: Error) => {
-      toast.error(`${t('failedToCreate')}: ${error.message}`);
+      toastError(`${t('failedToCreate')}: ${error.message}`);
     },
   });
 

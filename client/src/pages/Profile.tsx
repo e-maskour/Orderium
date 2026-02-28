@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toastSuccess, toastError } from '@/services/toast.service';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AddressInput } from '@/components/AddressInput';
@@ -14,7 +14,6 @@ import { AddressInput } from '@/components/AddressInput';
 export default function Profile() {
   const { user, logout, refreshUser } = useAuth();
   const { language, dir, t } = useLanguage();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [mapsLink, setMapsLink] = useState<string | null>(null);
@@ -35,7 +34,7 @@ export default function Profile() {
 
   const loadCustomerData = async () => {
     if (!user?.phoneNumber) return;
-    
+
     try {
       const partner = await partnersService.getByPhone(user.phoneNumber);
       if (partner) {
@@ -45,13 +44,13 @@ export default function Profile() {
           latitude: partner.latitude,
           longitude: partner.longitude,
         });
-        
+
         // Set map links if available
         if (partner.googleMapsUrl) setMapsLink(partner.googleMapsUrl);
         else if (partner.latitude && partner.longitude) {
           setMapsLink(`https://www.google.com/maps?q=${partner.latitude},${partner.longitude}`);
         }
-        
+
         if (partner.wazeUrl) setWazeLink(partner.wazeUrl);
         else if (partner.latitude && partner.longitude) {
           setWazeLink(`https://waze.com/ul?ll=${partner.latitude},${partner.longitude}&navigate=yes`);
@@ -81,13 +80,9 @@ export default function Profile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
-      toast({
-        title: t('error'),
-        description: t('nameRequired'),
-        variant: 'destructive',
-      });
+      toastError(t('nameRequired'));
       return;
     }
 
@@ -118,17 +113,10 @@ export default function Profile() {
       // Refresh user data to get updated customerId
       await refreshUser();
 
-      toast({
-        title: t('saved'),
-        description: t('profileUpdated'),
-      });
+      toastSuccess(t('profileUpdated'));
     } catch (error) {
       console.error('Failed to update profile:', error);
-      toast({
-        title: t('error'),
-        description: t('updateFailed'),
-        variant: 'destructive',
-      });
+      toastError(t('updateFailed'));
     } finally {
       setIsLoading(false);
     }

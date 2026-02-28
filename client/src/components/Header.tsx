@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { LanguageToggle } from './LanguageToggle';
 import { NotificationBell } from './NotificationBell';
 import { Button } from '@/components/ui/button';
+import { toastInfo } from '@/services/toast.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { OrderTracking } from './OrderTracking';
 import { ShoppingBag, LogOut, User, Package, MapPin, List } from 'lucide-react';
@@ -53,7 +54,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
           // Check if there are any orders with active status
           // Orders without status or with pending/to_delivery/in_delivery are considered active
           const activeStatuses = ['pending', 'to_delivery', 'in_delivery'];
-          const hasActive = response.orders.some(order => 
+          const hasActive = response.orders.some(order =>
             !order.status || activeStatuses.includes(order.status)
           );
           setHasActiveOrders(hasActive);
@@ -69,7 +70,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
     const interval = setInterval(checkActiveOrders, 30000);
     return () => clearInterval(interval);
   }, [user?.customerId]);
-  
+
   useEffect(() => {
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -110,7 +111,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
   const handleInstallClick = async () => {
     if (!installPrompt) {
       if (isIOS) {
-        window.alert('To install on iOS, tap Share and choose “Add to Home Screen”.');
+        toastInfo('To install on iOS, tap Share and choose "Add to Home Screen".');
       }
       return;
     }
@@ -154,7 +155,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
           )}
           {user?.customerId && <NotificationBell customerId={user.customerId} />}
           <LanguageToggle />
-          
+
           {/* Track Order Button - Animated - Only show if there are active orders */}
           {hasActiveOrders && (
             <Button
@@ -163,6 +164,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
               onClick={() => setShowTracking(true)}
               className="relative h-10 w-10 sm:h-11 sm:w-11 hover:bg-blue-50 group"
               title={t('trackOrder')}
+              aria-label={t('trackOrder')}
             >
               <div className="absolute inset-0 bg-blue-500/10 rounded-full scale-0 group-hover:scale-100 transition-transform"></div>
               <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 relative z-10 group-hover:scale-110 transition-transform" />
@@ -170,7 +172,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
               <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
             </Button>
           )}
-          
+
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -178,6 +180,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
                 variant="ghost"
                 size="icon"
                 className="h-10 w-10 sm:h-11 sm:w-11 hover:bg-gray-100"
+                aria-label={t('profile')}
               >
                 <User className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
               </Button>
@@ -201,7 +204,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           {/* Mobile Cart Button */}
           <Button
             variant="ghost"

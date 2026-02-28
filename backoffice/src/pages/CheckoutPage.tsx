@@ -3,39 +3,16 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, ShoppingBag, Tag, DollarSign, Percent, CreditCard, Banknote, CheckCircle2, User, Phone, MapPin } from 'lucide-react';
-import { toast } from 'sonner';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  imageUrl?: string;
-}
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-  discount: number;
-  discountType: number;
-}
-
-interface Customer {
-  id: number;
-  name: string;
-  phone: string;
-  address?: string;
-}
-
-interface CheckoutState {
-  cart: CartItem[];
-  customer: Customer;
-}
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { toastError } from '../services/toast.service';
+import { posService, IPosCartItem as CartItem, ICheckoutCustomer as Customer, ICheckoutState } from '../modules/pos';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, language, dir } = useLanguage();
-  const state = location.state as CheckoutState;
+  const state = location.state as ICheckoutState;
 
   const [globalDiscount, setGlobalDiscount] = useState(0);
   const [globalDiscountType, setGlobalDiscountType] = useState(0); // 0 = amount, 1 = percentage
@@ -52,7 +29,7 @@ export default function CheckoutPage() {
   }
 
   const formatCurrency = (price: number) => {
-    return language === 'ar' 
+    return language === 'ar'
       ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م.`
       : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
   };
@@ -60,15 +37,15 @@ export default function CheckoutPage() {
   // Calculate items subtotal (with individual discounts)
   const itemsSubtotal = state.cart.reduce((sum, item) => {
     const itemSubtotal = item.product.price * item.quantity;
-    const itemDiscount = item.discountType === 1 
-      ? (itemSubtotal * item.discount) / 100 
+    const itemDiscount = item.discountType === 1
+      ? (itemSubtotal * item.discount) / 100
       : item.discount;
     return sum + (itemSubtotal - itemDiscount);
   }, 0);
 
   // Calculate global discount amount
-  const globalDiscountAmount = globalDiscountType === 1 
-    ? (itemsSubtotal * globalDiscount) / 100 
+  const globalDiscountAmount = globalDiscountType === 1
+    ? (itemsSubtotal * globalDiscount) / 100
     : globalDiscount;
 
   // Total after all discounts
@@ -82,16 +59,8 @@ export default function CheckoutPage() {
   const change = paid - total;
 
   const createOrderMutation = useMutation({
-    mutationFn: async (orderData: any) => {
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-      if (!response.ok) throw new Error('Failed to create order');
-      return response.json();
-    },
-    onSuccess: (data) => {
+    mutationFn: (orderData: any) => posService.createOrder(orderData),
+    onSuccess: (data: any) => {
       const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
       const orderId = data?.order?.id || data?.id;
       navigate('/checkout/success', {
@@ -108,7 +77,7 @@ export default function CheckoutPage() {
       });
     },
     onError: (error: any) => {
-      toast.error(error.message || t('error'));
+      toastError(error.message || t('error'));
     },
   });
 
@@ -118,12 +87,12 @@ export default function CheckoutPage() {
       const quantity = item.quantity;
       const unitPrice = item.product.price;
       const itemSubtotal = quantity * unitPrice;
-      const itemDiscountAmount = item.discountType === 1 
-        ? (itemSubtotal * item.discount) / 100 
+      const itemDiscountAmount = item.discountType === 1
+        ? (itemSubtotal * item.discount) / 100
         : item.discount;
       const tax = 0;
       const itemTotal = itemSubtotal - itemDiscountAmount;
-      
+
       return {
         productId: item.product.id,
         description: item.product.name || '',
@@ -221,8 +190,8 @@ export default function CheckoutPage() {
               <div className="space-y-3">
                 {state.cart.map((item) => {
                   const itemSubtotal = item.product.price * item.quantity;
-                  const itemDiscountAmount = item.discountType === 1 
-                    ? (itemSubtotal * item.discount) / 100 
+                  const itemDiscountAmount = item.discountType === 1
+                    ? (itemSubtotal * item.discount) / 100
                     : item.discount;
                   const itemTotal = itemSubtotal - itemDiscountAmount;
 
@@ -275,11 +244,10 @@ export default function CheckoutPage() {
                         setGlobalDiscountType(0);
                         setGlobalDiscount(0);
                       }}
-                      className={`flex-1 h-9 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${
-                        globalDiscountType === 0
-                          ? 'bg-orange-500 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                      }`}
+                      className={`flex-1 h-9 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${globalDiscountType === 0
+                        ? 'bg-orange-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                        }`}
                     >
                       <DollarSign className="w-4 h-4" />
                       Amount
@@ -289,11 +257,10 @@ export default function CheckoutPage() {
                         setGlobalDiscountType(1);
                         setGlobalDiscount(0);
                       }}
-                      className={`flex-1 h-9 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${
-                        globalDiscountType === 1
-                          ? 'bg-orange-500 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                      }`}
+                      className={`flex-1 h-9 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${globalDiscountType === 1
+                        ? 'bg-orange-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                        }`}
                     >
                       <Percent className="w-4 h-4" />
                       Percentage
@@ -301,7 +268,7 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       value={globalDiscount || ''}
                       onChange={(e) => {
@@ -310,7 +277,7 @@ export default function CheckoutPage() {
                         setGlobalDiscount(Math.min(value, max));
                       }}
                       placeholder={`${t('discount')} ${globalDiscountType === 1 ? '(%)' : `(${t('currency')})`}`}
-                      className="w-full h-10 px-4 text-sm border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                      fullWidth
                     />
                   </div>
                 </div>
@@ -346,13 +313,14 @@ export default function CheckoutPage() {
 
                 <div className="space-y-3">
                   <div className="relative">
-                    <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
+                    <Input
                       type="number"
                       value={paidAmount}
                       onChange={(e) => setPaidAmount(e.target.value)}
                       placeholder="Paid Amount"
-                      className="w-full h-12 pl-10 pr-4 text-lg border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      leadingIcon={Banknote}
+                      inputSize="lg"
+                      fullWidth
                     />
                   </div>
 
@@ -370,14 +338,16 @@ export default function CheckoutPage() {
               </div>
 
               {/* Confirm Button */}
-              <button
+              <Button
                 onClick={handleConfirmOrder}
                 disabled={createOrderMutation.isPending || paid < total}
-                className="w-full mt-6 h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                loading={createOrderMutation.isPending}
+                loadingText={t('loading')}
+                leadingIcon={CheckCircle2}
+                className="w-full mt-6 h-12 shadow-lg"
               >
-                <CheckCircle2 className="w-5 h-5" />
-                {createOrderMutation.isPending ? t('loading') : t('confirm') || 'Confirm Order'}
-              </button>
+                {t('confirm') || 'Confirm Order'}
+              </Button>
             </div>
           </div>
         </div>

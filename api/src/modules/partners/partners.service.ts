@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Partner } from './entities/partner.entity';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
@@ -20,7 +22,8 @@ export class PartnersService {
     private readonly portalRepository: Repository<Portal>,
     @InjectRepository(Invoice)
     private readonly invoiceRepository: Repository<Invoice>,
-  ) {}
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) { }
 
   async upsert(
     createPartnerDto: CreatePartnerDto,
@@ -128,11 +131,20 @@ export class PartnersService {
     return { partners, total };
   }
 
+  private async invalidatePartnerCache(id?: number) {
+    if (id) await this.cacheManager.del(`partner:${id}`);
+  }
+
   async findOne(id: number): Promise<Partner> {
+    const cacheKey = `partner:${id}`;
+    const cached = await this.cacheManager.get<Partner>(cacheKey);
+    if (cached) return cached;
+
     const partner = await this.partnerRepository.findOne({ where: { id } });
     if (!partner) {
       throw new NotFoundException(`Partner with ID ${id} not found`);
     }
+    await this.cacheManager.set(cacheKey, partner, 300_000);
     return partner;
   }
 
@@ -174,13 +186,16 @@ export class PartnersService {
     }
 
     Object.assign(partner, updatePartnerDto);
-    return this.partnerRepository.save(partner);
+    const saved = await this.partnerRepository.save(partner);
+    await this.invalidatePartnerCache(id);
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
     const partner = await this.findOne(id);
     partner.isEnabled = false;
     await this.partnerRepository.save(partner);
+    await this.invalidatePartnerCache(id);
   }
 
   async getCustomersDashboard() {

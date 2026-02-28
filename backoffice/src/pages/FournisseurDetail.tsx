@@ -5,8 +5,8 @@ import { partnersService } from '../modules/partners';
 import { AdminLayout } from '../components/AdminLayout';
 import { useLanguage } from '../context/LanguageContext';
 import { formatDH, formatFrenchNumber } from '../utils/formatNumber';
-import { 
-  Users, 
+import {
+  Users,
   ArrowLeft,
   Edit,
   FileText,
@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import Chart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
+import { Button } from '../components/ui/button';
+import { NativeSelect } from '../components/ui/native-select';
 
 interface ChartDataPoint {
   month: string;
@@ -80,7 +82,7 @@ export default function FournisseurDetail() {
     count: data.count,
     amount: data.amount
   }));
-  
+
   // Get available years (show last 5 years from current year)
   const currentYear = new Date().getFullYear();
   const availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -108,13 +110,12 @@ export default function FournisseurDetail() {
                 </div>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => navigate(`/fournisseurs/edit/${id}`)}
-              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2"
+              leadingIcon={Edit}
             >
-              <Edit className="w-4 h-4" />
               Modifier
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -195,10 +196,9 @@ export default function FournisseurDetail() {
                 <div className="flex items-center gap-4">
                   {/* Year Filter */}
                   <div className="relative">
-                    <select
+                    <NativeSelect
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="px-4 py-2.5 text-sm font-semibold border-2 border-slate-200 rounded-xl bg-white hover:border-amber-400 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 outline-none transition-all shadow-sm cursor-pointer appearance-none pr-10"
                     >
                       {availableYears.length > 0 ? (
                         availableYears.map(year => (
@@ -207,8 +207,7 @@ export default function FournisseurDetail() {
                       ) : (
                         <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
                       )}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </NativeSelect>
                   </div>
                 </div>
               </div>

@@ -2,12 +2,12 @@ export default {
   // App & Branding
   appName: 'Orderium',
   adminBackoffice: 'لوحة التحكم الإدارية',
-  
+
   // Navigation
   dashboard: 'لوحة التحكم',
   welcomeBack: 'مرحباً بعودتك',
   welcome: 'مرحباً',
-  
+
   // Common Actions
   create: 'إنشاء',
   update: 'تحديث',
@@ -19,7 +19,7 @@ export default {
   back: 'رجوع',
   confirm: 'تأكيد',
   add: 'إضافة',
-  
+
   // Common Fields
   name: 'الاسم',
   email: 'البريد الإلكتروني',
@@ -33,20 +33,20 @@ export default {
   description: 'الوصف',
   details: 'التفاصيل',
   customer: 'العميل',
-  
+
   // Status
   active: 'نشط',
   inactive: 'غير نشط',
   enabled: 'مفعل',
   disabled: 'معطل',
-  
+
   // Common Validation
   required: 'مطلوب',
   nameRequired: 'الاسم مطلوب',
-  
+
   // Search & Filter
   search: 'بحث',
-  
+
   // Pagination
   showing: 'عرض',
   to: 'إلى',
@@ -57,7 +57,7 @@ export default {
   previous: 'السابق',
   next: 'التالي',
   last: 'الأخيرة',
-  
+
   // Loading & States
   loading: 'جاري التحميل...',
   saving: 'جاري الحفظ',
@@ -71,22 +71,22 @@ export default {
   'common.saving': 'جاري الحفظ...',
   'common.close': 'إغلاق',
   'common.cancel': 'إلغاء',
-  
+
   // Selection
   selected: 'محدد',
   selectAll: 'تحديد الكل',
   deselectAll: 'إلغاء تحديد الكل',
-  
+
   // General
   items: 'عناصر',
   item: 'عنصر',
   all: 'الكل',
   total: 'المجموع',
-  
+
   // Currency
   currency: 'درهم',
   currencyCode: 'MAD',
-  
+
   // Date Filters
   today: 'اليوم',
   yesterday: 'أمس',
@@ -103,22 +103,22 @@ export default {
   end: 'النهاية',
   predefinedPeriod: 'فترة محددة مسبقاً',
   ok: 'موافق',
-  
+
   // Confirmation
   areYouSure: 'هل أنت متأكد؟',
   actionCannotBeUndone: 'لا يمكن التراجع عن هذا الإجراء',
-  
+
   // Dashboard
   quickAccess: 'وصول سريع',
   week: 'أسبوع',
   month: 'شهر',
   year: 'سنة',
   custom: 'مخصص',
-  
+
   // Language Toggle
   switchToFrench: 'Changer en français',
   switchToArabic: 'التبديل للعربية',
-  
+
   // Error Messages
   error: 'حدث خطأ',
   errorPrefix: 'خطأ',
@@ -127,7 +127,7 @@ export default {
   failedToDelete: 'فشل الحذف',
   useAuthError: 'يجب استخدام useAuth داخل AuthProvider',
   useLanguageError: 'يجب استخدام useLanguage داخل LanguageProvider',
-  
+
   // Menu Items
   sales: 'المبيعات',
   purchases: 'المشتريات',
@@ -143,7 +143,7 @@ export default {
   stockMovements: 'حركات المخزون',
   inventoryAdjustments: 'تسويات المخزون',
   warehouses: 'المستودعات',
-  
+
   // Document Statuses
   paid: 'مدفوعة',
   partial: 'جزئية',
@@ -164,7 +164,7 @@ export default {
   done: 'تم',
   allTypes: 'جميع الأنواع',
   allStatuses: 'جميع الحالات',
-  
+
   // Month Names (abbreviated)
   monthJan: 'يناير',
   monthFeb: 'فبراير',
@@ -178,7 +178,7 @@ export default {
   monthOct: 'أكتوبر',
   monthNov: 'نوفمبر',
   monthDec: 'ديسمبر',
-  
+
   // Full Month Names
   monthJanuary: 'يناير',
   monthFebruary: 'فبراير',
@@ -192,19 +192,19 @@ export default {
   monthOctober: 'أكتوبر',
   monthNovember: 'نوفمبر',
   monthDecember: 'ديسمبر',
-  
+
   // Status Labels
   upToDate: 'محدث',
   pendingPayments: 'مدفوعات معلقة',
   allPaymentsUpToDate: 'جميع المدفوعات محدثة',
   invoicesIssuedPerMonth: 'عدد الفواتير الصادرة شهرياً',
-  
+
   // Preview/Download
   previewPDF: 'معاينة PDF',
   downloadPDF: 'تحميل PDF',
   download: 'تحميل',
   generateLink: 'إنشاء رابط',
-  
+
   // Confirmations
   confirmCancelMovement: 'هل أنت متأكد من إلغاء هذه الحركة؟',
   confirmRejectQuote: 'هل تريد حقاً رفض هذا العرض؟',
@@ -213,12 +213,54 @@ export default {
   newPasswordOptional: 'كلمة مرور جديدة (اختياري)',
   minCharacters: 'حد أدنى 6 أحرف',
   informationSavedSuccess: 'تم حفظ المعلومات بنجاح',
+  errorSaving: 'خطأ أثناء الحفظ',
   errorGeneratingPDF: 'خطأ في إنشاء ملف PDF',
+  pdfDownloaded: 'تم التحميل بنجاح',
+  pdfDownloadedShort: 'تم التحميل',
   confirmDeletePayment: 'هل أنت متأكد من حذف هذا الدفع؟ هذا الإجراء لا رجعة فيه.',
+  errorDeletingPayment: 'خطأ أثناء حذف الدفع',
   previewReceipt: 'معاينة الإيصال',
   previewDeliveryNote: 'معاينة وصل التسليم',
+  iosInstallHint: 'للتثبيت على iOS، اضغط على مشاركة واختر "إضافة إلى الشاشة الرئيسية".',
+  deleteError: 'خطأ في الحذف',
+  exportSuccess: 'تم التصدير بنجاح',
+  exportError: 'خطأ أثناء التصدير',
+  templateDownloaded: 'تم تحميل النموذج بنجاح',
+  templateDownloadError: 'خطأ أثناء تحميل النموذج',
+  importInProgress: 'جاري الاستيراد...',
+  importSuccess: 'تم الاستيراد: {{created}} تم إنشاؤها، {{updated}} تم تحديثها',
+  importPartial: 'اكتمل الاستيراد مع أخطاء: {{created}} تم إنشاؤها، {{updated}} تم تحديثها، {{failed}} فشلت',
+  importError: 'خطأ أثناء الاستيراد',
+  confirmBulkDelete: 'هل أنت متأكد من حذف {{count}} عنصر(عناصر) محدد(ة)؟ لا يمكن التراجع عن هذا الإجراء.',
+  deleteProducts: 'حذف المنتجات',
+  unsupportedDocumentType: 'نوع المستند غير مدعوم',
+  confirmDeleteCategory: 'هل أنت متأكد من حذف "{{name}}"؟',
+  enterYourName: 'يرجى إدخال اسمك',
+  errorSigningQuote: 'خطأ أثناء توقيع العرض',
+  confirmRejectQuoteMessage: 'هل تريد حقاً رفض هذا العرض؟ سيتم تغيير حالته إلى مغلق.',
+  rejectLabel: 'رفض',
+  errorRejectingQuote: 'خطأ أثناء رفض العرض',
+  failedToGenerateCode: 'فشل في إنشاء رمز المنتج الفريد',
+  newCodeGenerated: 'تم إنشاء رمز منتج فريد جديد',
+  failedToGenerateCodeRetry: 'فشل في إنشاء الرمز الفريد. يرجى المحاولة مرة أخرى.',
+  productCreatedSuccess: 'تم إنشاء المنتج بنجاح',
+  failedToCreateProduct: 'فشل في إنشاء المنتج',
+  failedToUpdateProduct: 'فشل في تحديث المنتج',
+  failedToCorrectStock: 'فشل في تصحيح المخزون',
+  failedToTransferStock: 'فشل في نقل المخزون',
+  errorCreating: 'خطأ أثناء الإنشاء',
+  failedToCreateWarehouse: 'فشل في إنشاء المستودع',
+  failedToUpdateWarehouse: 'فشل في تحديث المستودع',
+  failedToDeleteWarehouse: 'فشل في حذف المستودع',
+  deleteWarehouseTitle: 'حذف المستودع',
+  confirmDeleteWarehouse: 'هل أنت متأكد من حذف هذا المستودع؟ لا يمكن التراجع عن هذا الإجراء.',
+  errorCreatingDocument: 'خطأ أثناء إنشاء المستند',
+  errorUpdatingDocument: 'خطأ أثناء تحديث المستند',
+  loadingQuote: 'جاري تحميل العرض...',
+  errorLoadingQuote: 'خطأ أثناء تحميل العرض',
+  quoteNotFound: 'العرض غير موجود',
   no: 'لا',
-  
+
   // Image Upload
   invalidFileType: 'نوع ملف غير صالح. المسموح: JPEG، PNG، WebP',
   fileSizeExceeds: 'حجم الملف يتجاوز الحد الأقصى',
@@ -229,7 +271,7 @@ export default {
   failedToRemoveImage: 'فشل في إزالة الصورة',
   productPreview: 'معاينة المנت',
   removeImage: 'إزالة الصورة',
-  
+
   // Dashboard
   dashboardOverview: 'نظرة عامة على نشاطك',
   revenueTrend: 'اتجاه الإيرادات',
@@ -273,7 +315,7 @@ export default {
   hoursAgo: 'ساعات',
   daysAgo: 'أيام',
   noRecentActivity: 'لا يوجد نشاط مؤخراً',
-  
+
   // Common Actions
   validate: 'تأكيد',
   devalidate: 'إلغاء التأكيد',
@@ -284,4 +326,14 @@ export default {
   remove: 'حذف',
   validateDocument: 'تأكيد المستند',
   devalidateDocument: 'إلغاء تأكيد المستند',
+
+  // Accessibility
+  refresh: 'تحديث',
+  moreOptions: 'خيارات إضافية',
+  settings: 'الإعدادات',
+
+  // General
+  noItems: 'لا توجد عناصر',
+  completed: 'مكتمل',
+  type: 'النوع',
 };

@@ -5,7 +5,7 @@ import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
 import { PartnerForm } from '../components/PartnerForm';
 import { Users, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
+import { toastUpdated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function CustomerEdit() {
@@ -26,11 +26,11 @@ export default function CustomerEdit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['partners'] });
       queryClient.invalidateQueries({ queryKey: ['partner', id] });
-      toast.success(t('customerUpdated'));
+      toastUpdated(t('customerUpdated'));
       navigate('/customers');
     },
     onError: (error: Error) => {
-      toast.error(`${t('failedToUpdate')}: ${error.message}`);
+      toastError(`${t('failedToUpdate')}: ${error.message}`);
     },
   });
 

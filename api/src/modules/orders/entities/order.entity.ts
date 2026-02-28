@@ -39,6 +39,8 @@ export enum DeliveryStatus {
 @Index(['customerId'])
 @Index(['supplierId'])
 @Index(['date'])
+@Index(['status'])
+@Index(['deliveryStatus'])
 export class Order extends BaseDocument {
   // Override documentNumber to use orderNumber for backwards compatibility
   get orderNumber(): string {

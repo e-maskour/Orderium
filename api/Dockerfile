@@ -1,104 +1,109 @@
 # ==================================
-# Production-Grade NestJS API Dockerfile
+# Production-Grade NestJS API Dockerfile (Optimized)
 # ==================================
 
-# ============ Stage 1: Dependencies ============
+# ==================================
+# Base image with Playwright installed ONCE
+# ==================================
+FROM node:20-bookworm-slim AS playwright-base
+
+WORKDIR /app
+
+# Install system dependencies required by Playwright
+RUN apt-get update && apt-get install -y \
+    wget \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Playwright browsers once (cached layer)
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npx playwright install chromium
+
+# ==================================
+# Dependencies Stage
+# ==================================
 FROM node:20-bookworm-slim AS dependencies
 
 WORKDIR /app
-
-# Copy package files for dependency installation
 COPY package*.json ./
 
-# Install production dependencies only
-# --omit=dev skips devDependencies, --prefer-offline speeds up builds
 RUN npm ci --omit=dev --prefer-offline
 
-# ============ Stage 2: Build ============
+# ==================================
+# Builder Stage
+# ==================================
 FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install all dependencies (including dev) for building
 RUN npm ci --prefer-offline
 
-# Copy source code
 COPY . .
-
-# Build the application
-# NestJS compiles TypeScript to JavaScript in dist/
 RUN npm run build
-
-# Remove devDependencies after build (reduces image size)
 RUN npm prune --production
 
-# ============ Stage 3: Development ============
-FROM node:20-bookworm-slim AS development
+# ==================================
+# Development Stage
+# ==================================
+FROM playwright-base AS development
 
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install all dependencies (including dev) for development
 RUN npm ci --prefer-offline
 
-# Copy source code
 COPY . .
 
-# Install Playwright browsers for PDF generation
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN npx playwright install --with-deps chromium
-
-# Expose API port and debugger port
 EXPOSE 3000 9229
-
-# Start development server with hot reload
 CMD ["npm", "run", "start:dev"]
 
-# ============ Stage 4: Production ============
-FROM node:20-bookworm-slim AS production
+# ==================================
+# Production Stage
+# ==================================
+FROM playwright-base AS production
 
-# Set NODE_ENV to production
 ENV NODE_ENV=production
 
-# Create non-root user for security
+# Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001
 
 WORKDIR /app
 
-# Copy production dependencies from dependencies stage
+# Copy node_modules (prod only)
 COPY --from=dependencies --chown=nestjs:nodejs /app/node_modules ./node_modules
 
-# Copy built application from builder stage
+# Copy built app
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 
-# Copy package.json for metadata
 COPY --chown=nestjs:nodejs package*.json ./
 
-# Install Playwright browsers for PDF generation
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN npx playwright install --with-deps chromium && \
-    mkdir -p /ms-playwright && \
+# Create uploads directory
+RUN mkdir -p uploads/images && \
+    chown -R nestjs:nodejs uploads && \
     chown -R nestjs:nodejs /ms-playwright
 
-# Create uploads directory with proper permissions
-RUN mkdir -p uploads/images && \
-    chown -R nestjs:nodejs uploads
-
-# Switch to non-root user
 USER nestjs
 
-# Expose API port
 EXPOSE 3000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Start the application
 CMD ["node", "dist/main.js"]

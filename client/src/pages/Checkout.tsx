@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, ArrowRight, Package, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toastError } from '@/services/toast.service';
 import { cn } from '@/lib/utils';
 import { partnersService, ordersService, Partner } from '@/modules';
 import { AddressInput } from '@/components/AddressInput';
@@ -21,25 +21,25 @@ const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
 // Helper to convert relative image paths to full URLs - supports multiple CDN providers
 const getImageUrl = (imageUrl?: string): string | undefined => {
   if (!imageUrl) return undefined;
-  
+
   // Already a full URL
   if (imageUrl.startsWith('http')) return imageUrl;
-  
+
   // Cloudinary (orderium/)
   if (imageUrl.startsWith('orderium/')) {
     return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
   }
-  
+
   // S3 URL
   if (imageUrl.startsWith('s3://')) {
     return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
   }
-  
+
   // Cloudflare (cf://)
   if (imageUrl.startsWith('cf://')) {
     return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
   }
-  
+
   // Relative path (LOCAL provider) - construct with API base URL
   return `${apiBaseUrl}/uploads/images/${imageUrl}`;
 };
@@ -64,7 +64,6 @@ const Checkout = () => {
   const { language, t, dir } = useLanguage();
   const { items, subtotal, clearCart } = useCart();
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
@@ -82,9 +81,9 @@ const Checkout = () => {
   const [errors, setErrors] = useState<FormErrors>({});
 
   // Check if form is valid
-  const isFormValid = 
-    formData.name.trim().length > 0 && 
-    formData.phone.trim().length > 0 && 
+  const isFormValid =
+    formData.name.trim().length > 0 &&
+    formData.phone.trim().length > 0 &&
     validateMoroccanPhone(formData.phone) &&
     formData.address.trim().length > 0;
 
@@ -93,7 +92,7 @@ const Checkout = () => {
   // Search customer by phone
   const searchCustomerByPhone = useCallback(async (phone: string) => {
     const cleanPhone = phone.replace(/[\s\-()]/g, '');
-    
+
     // Only search if we have at least 10 digits (full Moroccan phone)
     if (cleanPhone.length < 10) {
       setExistingCustomer(null);
@@ -103,11 +102,11 @@ const Checkout = () => {
     setIsSearchingCustomer(true);
     try {
       const result = await partnersService.searchByPhone(cleanPhone);
-      
+
       if (result && result.length > 0) {
         const customer = result[0];
         setExistingCustomer(customer);
-        
+
         // Auto-fill form with customer data
         setFormData(prev => ({
           ...prev,
@@ -127,7 +126,7 @@ const Checkout = () => {
       } else {
         // New customer - clear fields
         setExistingCustomer(null);
-        
+
         // Clear form fields for new customer
         setFormData(prev => ({
           ...prev,
@@ -137,7 +136,7 @@ const Checkout = () => {
           latitude: undefined,
           longitude: undefined,
         }));
-        
+
         // Clear map links
         setMapsLink(null);
         setWazeLink(null);
@@ -228,7 +227,7 @@ const Checkout = () => {
         const itemSubtotal = item.quantity * item.product.price;
         const itemDiscount = 0; // No item-level discount in current implementation
         const itemTotal = itemSubtotal - itemDiscount;
-        
+
         return {
           productId: item.product.id,
           description: item.product.name || '',
@@ -262,8 +261,8 @@ const Checkout = () => {
       });
 
       // 3. Navigate to success with order data (before clearing cart)
-      navigate('/success', { 
-        state: { 
+      navigate('/success', {
+        state: {
           orderNumber: orderResult.documentNumber,
           orderId: orderResult.order.id,
           total: subtotal,
@@ -271,19 +270,15 @@ const Checkout = () => {
           customerPhone: formData.phone,
           customerAddress: formData.address,
           items: items,
-        } 
+        }
       });
-      
+
       // 4. Clear cart after navigation
       clearCart();
-      
+
     } catch (error) {
       console.error('Order creation failed:', error);
-      toast({
-        title: t('error'),
-        description: t('orderCreationError'),
-        variant: 'destructive',
-      });
+      toastError(t('orderCreationError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -318,7 +313,7 @@ const Checkout = () => {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center gap-3 sm:gap-4">
-          <Button variant="ghost" size="icon" asChild className="h-9 w-9 sm:h-10 sm:w-10">
+          <Button variant="ghost" size="icon" asChild className="h-9 w-9 sm:h-10 sm:w-10" aria-label={t('goBack')}>
             <Link to="/">
               <BackIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
@@ -334,7 +329,7 @@ const Checkout = () => {
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card">
                 <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">{t('customerInfo')}</h2>
-                
+
                 <div className="space-y-4">
                   {/* Phone - Always visible */}
                   <div className="space-y-2">
@@ -449,7 +444,7 @@ const Checkout = () => {
           <div className="order-2 lg:order-2">
             <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card lg:sticky lg:top-24">
               <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">{t('orderSummary')}</h2>
-              
+
               <div className="space-y-2 sm:space-y-3 max-h-[250px] sm:max-h-[300px] overflow-y-auto">
                 {items.map((item) => {
                   const displayName = item.product.name;

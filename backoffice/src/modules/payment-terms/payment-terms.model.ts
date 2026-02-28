@@ -1,4 +1,4 @@
-import { PaymentTerm as IPaymentTerm, PaymentTermsConfig } from './payment-terms.interface';
+import { IPaymentTerm, IPaymentTermsConfig } from './payment-terms.interface';
 
 export class PaymentTerm implements IPaymentTerm {
   key: string;
@@ -25,10 +25,8 @@ export class PaymentTerm implements IPaymentTerm {
     return this.isDefault ? 'Default' : '';
   }
 
-  calculateDueDate(fromDate: Date = new Date()): Date {
-    const dueDate = new Date(fromDate);
-    dueDate.setDate(dueDate.getDate() + this.days);
-    return dueDate;
+  get isImmediate(): boolean {
+    return this.days === 0;
   }
 
   static fromApiResponse(data: any): PaymentTerm {
@@ -54,7 +52,7 @@ export class PaymentTermsConfiguration {
   default: string;
   terms: PaymentTerm[];
 
-  constructor(data: PaymentTermsConfig) {
+  constructor(data: IPaymentTermsConfig) {
     this.default = data.default;
     this.terms = data.terms.map(t => new PaymentTerm(t));
   }
@@ -65,6 +63,21 @@ export class PaymentTermsConfiguration {
 
   getTermByKey(key: string): PaymentTerm | undefined {
     return this.terms.find(t => t.key === key);
+  }
+
+  get count(): number {
+    return this.terms.length;
+  }
+
+  get sortedTerms(): PaymentTerm[] {
+    return [...this.terms].sort((a, b) => a.days - b.days);
+  }
+
+  toJSON(): IPaymentTermsConfig {
+    return {
+      default: this.default,
+      terms: this.terms.map(t => t.toJSON()),
+    };
   }
 
   static fromApiResponse(data: any): PaymentTermsConfiguration {

@@ -4,8 +4,8 @@ import {
   UpdateQuoteDTO
 } from './quotes.interface';
 import { QuoteWithDetails } from './quotes.model';
+import { apiClient, API_ROUTES } from '../../common';
 
-const API_URL = '/api';
 
 export class QuotesService {
   async getAll(filters?: QuoteFilters): Promise<{ quotes: QuoteWithDetails[]; count: number; totalCount: number }> {
@@ -16,214 +16,103 @@ export class QuotesService {
     if (filters?.dateFrom) body.dateFrom = filters.dateFrom;
     if (filters?.dateTo) body.dateTo = filters.dateTo;
     if (filters?.search) body.search = filters.search;
-    
-    const params = new URLSearchParams();
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString());
-    if (filters?.direction) params.append('direction', filters.direction);
-    
-    const queryString = params.toString();
-    const response = await fetch(`${API_URL}/quotes/list${queryString ? `?${queryString}` : ''}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) throw new Error('Failed to fetch quotes');
-    const data = await response.json();
-    const quotes = data.quotes || [];
+
+    const queryParams: Record<string, string | number | boolean | undefined> = {};
+    if (filters?.page) queryParams.page = filters.page;
+    if (filters?.pageSize) queryParams.pageSize = filters.pageSize;
+    if (filters?.direction) queryParams.direction = filters.direction;
+
+    const response = await apiClient.post<any[]>(API_ROUTES.QUOTES.LIST, body, { params: queryParams });
+    const quotes = response.data || [];
     return {
       quotes: quotes.map((quote: any) => QuoteWithDetails.fromApiResponse(quote)),
-      count: data.count || 0,
-      totalCount: data.totalCount || 0,
+      count: (response.metadata as any)?.total || 0,
+      totalCount: (response.metadata as any)?.total || 0,
     };
   }
 
   async getById(id: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch quote');
-    const data = await response.json();
-    return QuoteWithDetails.fromApiResponse(data.quote);
+    const response = await apiClient.get<any>(API_ROUTES.QUOTES.DETAIL(id));
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async create(data: CreateQuoteDTO): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.post<any>(API_ROUTES.QUOTES.CREATE, data);
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async update(id: number, data: UpdateQuoteDTO): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.UPDATE(id), data);
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async delete(id: number): Promise<void> {
-    const response = await fetch(`${API_URL}/quotes/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete quote');
-    }
+    await apiClient.delete(API_ROUTES.QUOTES.DELETE(id));
   }
 
   async validate(id: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}/validate`, {
-      method: 'PUT',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to validate quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.VALIDATE(id));
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async devalidate(id: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}/devalidate`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to devalidate quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.DEVALIDATE(id));
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async accept(id: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}/accept`, {
-      method: 'PUT',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to accept quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.ACCEPT(id));
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async reject(id: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}/reject`, {
-      method: 'PUT',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to reject quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.REJECT(id));
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async generateShareLink(id: number): Promise<{ shareToken: string; expiresAt: Date }> {
-    const response = await fetch(`${API_URL}/quotes/${id}/share`, {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to generate share link');
-    }
-    const result = await response.json();
+    const result = await apiClient.post<any>(API_ROUTES.QUOTES.SHARE(id));
     return {
-      shareToken: result.shareToken,
-      expiresAt: new Date(result.expiresAt),
+      shareToken: result.data.shareToken,
+      expiresAt: new Date(result.data.expiresAt),
     };
   }
 
   async getByShareToken(token: string): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/shared/${token}`);
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.get<any>(API_ROUTES.QUOTES.SHARED(token));
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async signQuote(token: string, signedBy: string, clientNotes?: string): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/shared/${token}/sign`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signedBy, clientNotes }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to sign quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.post<any>(API_ROUTES.QUOTES.SHARED_SIGN(token), { signedBy, clientNotes });
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async unsignQuote(id: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}/unsign`, {
-      method: 'PUT',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to unsign quote');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.UNSIGN(id));
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async convertToOrder(id: number, orderId: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}/convert-to-order`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to convert quote to order');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.CONVERT_TO_ORDER(id), { orderId });
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async convertToInvoice(id: number, invoiceId: number): Promise<QuoteWithDetails> {
-    const response = await fetch(`${API_URL}/quotes/${id}/convert-to-invoice`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invoiceId }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to convert quote to invoice');
-    }
-    const result = await response.json();
-    return QuoteWithDetails.fromApiResponse(result.quote);
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.CONVERT_TO_INVOICE(id), { invoiceId });
+    return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async getAnalytics(direction: 'vente' | 'achat', year: number): Promise<any> {
-    const response = await fetch(`${API_URL}/quotes/analytics/${direction}?year=${year}`);
-    if (!response.ok) throw new Error('Failed to fetch quote analytics');
-    const result = await response.json();
-    return result.data;
+    const response = await apiClient.get<any>(API_ROUTES.QUOTES.ANALYTICS(direction), { params: { year } });
+    return response.data;
   }
 
   async exportToXlsx(supplierId?: number): Promise<Blob> {
-    const params = new URLSearchParams();
-    if (supplierId !== undefined) params.append('supplierId', supplierId.toString());
-    const response = await fetch(`${API_URL}/quotes/export/xlsx${params.toString() ? '?' + params.toString() : ''}`);
-    if (!response.ok) throw new Error('Failed to export quotes');
-    return response.blob();
+    const raw = await apiClient.raw('GET', API_ROUTES.QUOTES.EXPORT_XLSX, {
+      params: supplierId !== undefined ? { supplierId } : undefined,
+    });
+    return raw.blob();
   }
 }
 

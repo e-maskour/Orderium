@@ -1,4 +1,4 @@
-export interface Sequence {
+export interface ISequence {
   id: string;
   name: string;
   entityType: SequenceEntityType;

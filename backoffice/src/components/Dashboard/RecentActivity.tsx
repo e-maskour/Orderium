@@ -1,7 +1,7 @@
 import { Clock, TrendingUp, Package, Users } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../lib/formatters';
-import type { RecentActivity as Activity } from '../../modules/statistics/statistics.interface';
+import type { IRecentActivity as Activity } from '../../modules/statistics/statistics.interface';
 
 interface RecentActivityProps {
   activities?: Activity[];

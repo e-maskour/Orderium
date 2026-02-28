@@ -1,7 +1,7 @@
 import {
-  Invoice as IInvoice,
-  InvoiceItem as IInvoiceItem,
-  InvoiceWithDetails as IInvoiceWithDetails
+  IInvoice,
+  IInvoiceItem,
+  IInvoiceWithDetails
 } from './invoices.interface';
 
 export class InvoiceItem implements IInvoiceItem {
@@ -67,6 +67,21 @@ export class InvoiceItem implements IInvoiceItem {
       tax: parseFloat(data.tax) || 0,
       total: parseFloat(data.total) || 0,
     });
+  }
+
+  toJSON(): IInvoiceItem {
+    return {
+      id: this.id,
+      invoiceId: this.invoiceId,
+      productId: this.productId,
+      description: this.description,
+      quantity: this.quantity,
+      unitPrice: this.unitPrice,
+      discount: this.discount,
+      discountType: this.discountType,
+      tax: this.tax,
+      total: this.total,
+    };
   }
 }
 
@@ -212,6 +227,19 @@ export class Invoice implements IInvoice {
     return 'Impayée';
   }
 
+  get paymentProgress(): number {
+    if (this.total === 0) return 100;
+    return Math.min(100, (this.paidAmount / this.total) * 100);
+  }
+
+  get formattedPaidAmount(): string {
+    return this.paidAmount.toFixed(2);
+  }
+
+  get formattedRemainingAmount(): string {
+    return this.remainingAmount.toFixed(2);
+  }
+
   // Static factory method
   static fromApiResponse(data: any): Invoice {
     return new Invoice({
@@ -242,6 +270,37 @@ export class Invoice implements IInvoice {
       dateCreated: data.dateCreated,
       dateUpdated: data.dateUpdated,
     });
+  }
+
+  toJSON(): IInvoice {
+    return {
+      id: this.id,
+      invoiceNumber: this.invoiceNumber,
+      direction: this.direction,
+      customerId: this.customerId,
+      customerName: this.customerName,
+      customerPhone: this.customerPhone,
+      customerAddress: this.customerAddress,
+      supplierId: this.supplierId,
+      supplierName: this.supplierName,
+      supplierPhone: this.supplierPhone,
+      supplierAddress: this.supplierAddress,
+      date: this.date,
+      dueDate: this.dueDate,
+      validationDate: this.validationDate,
+      subtotal: this.subtotal,
+      tax: this.tax,
+      discount: this.discount,
+      discountType: this.discountType,
+      total: this.total,
+      paidAmount: this.paidAmount,
+      remainingAmount: this.remainingAmount,
+      status: this.status,
+      isValidated: this.isValidated,
+      notes: this.notes,
+      dateCreated: this.dateCreated,
+      dateUpdated: this.dateUpdated,
+    };
   }
 }
 
@@ -283,5 +342,12 @@ export class InvoiceWithDetails implements IInvoiceWithDetails {
       invoice: Invoice.fromApiResponse(invoiceData),
       items: (invoiceData.items || []).map(InvoiceItem.fromApiResponse),
     });
+  }
+
+  toJSON(): IInvoiceWithDetails {
+    return {
+      invoice: this.invoice.toJSON(),
+      items: this.items.map((i) => i.toJSON()),
+    };
   }
 }

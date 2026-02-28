@@ -1,4 +1,4 @@
-export interface UnitOfMeasure {
+export interface IUnitOfMeasure {
   id?: number;
   name: string;
   code: string;
@@ -6,7 +6,7 @@ export interface UnitOfMeasure {
   ratio: number;
   roundingPrecision?: string;
   isBaseUnit: boolean;
-  baseUnit?: UnitOfMeasure | null;
+  baseUnit?: IUnitOfMeasure | null;
   baseUnitId?: number | null;
   isActive?: boolean;
   dateCreated?: string;

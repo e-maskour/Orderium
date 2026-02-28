@@ -1,5 +1,6 @@
 import { FileText, FileEdit, Truck } from 'lucide-react';
 import { DocumentType, DocumentDirection, DocumentFeatures, DocumentStatus } from './document.types';
+import type { TranslationKey } from '@/lib/i18n';
 
 export interface DocumentConfig {
   type: DocumentType;
@@ -47,7 +48,7 @@ const DOCUMENT_TRANSLATION_KEYS = {
   }
 };
 
-export function getDocumentConfigs(t: (key: string) => string): Record<string, DocumentConfig> {
+export function getDocumentConfigs(t: (key: TranslationKey) => string): Record<string, DocumentConfig> {
   return {
     facture_vente: {
       type: 'facture',
@@ -273,18 +274,18 @@ export const DOCUMENT_CONFIGS: Record<string, DocumentConfig> = {
 };
 
 export function getDocumentConfig(
-  type: DocumentType, 
+  type: DocumentType,
   direction: DocumentDirection = 'vente',
-  t?: (key: string) => string
+  t?: (key: TranslationKey) => string
 ): DocumentConfig {
   const key = `${type}_${direction}`;
-  
+
   // If translation function is provided, use translated configs
   if (t) {
     const configs = getDocumentConfigs(t);
     return configs[key] || configs.facture_vente;
   }
-  
+
   // Otherwise, use fallback configs
   return DOCUMENT_CONFIGS[key] || DOCUMENT_CONFIGS.facture_vente;
 }

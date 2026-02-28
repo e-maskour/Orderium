@@ -1,7 +1,7 @@
 export type OrderStatus = 'draft' | 'validated' | 'in_progress' | 'delivered' | 'cancelled';
 export type DeliveryStatus = 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
 
-export interface Order {
+export interface IOrder {
   id: number;
   orderNumber: string;
   direction: 'ACHAT' | 'VENTE';
@@ -32,10 +32,10 @@ export interface Order {
   deliveryPersonName?: string | null; // Business logic field, not in entity
   dateCreated: string;
   dateUpdated: string;
-  items?: OrderItem[]; // For compatibility with document services
+  items?: IOrderItem[]; // For compatibility with document services
 }
 
-export interface OrderItem {
+export interface IOrderItem {
   id: number;
   orderId: number;
   productId?: number | null;
@@ -48,9 +48,9 @@ export interface OrderItem {
   total: number;
 }
 
-export interface OrderWithDetails {
-  order: Order;
-  items: OrderItem[];
+export interface IOrderWithDetails {
+  order: IOrder;
+  items: IOrderItem[];
 }
 
 export interface OrderAssignment {
@@ -84,7 +84,7 @@ export interface CreateOrderDTO {
   discountType: number;
   total: number;
   notes?: string;
-  items: Omit<OrderItem, 'id' | 'orderId'>[];
+  items: Omit<IOrderItem, 'id' | 'orderId'>[];
 }
 
 export interface UpdateOrderDTO extends Partial<CreateOrderDTO> {}

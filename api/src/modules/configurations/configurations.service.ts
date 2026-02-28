@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Configuration } from './entities/configuration.entity';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
@@ -14,12 +16,19 @@ export class ConfigurationsService {
   constructor(
     @InjectRepository(Configuration)
     private readonly configRepository: Repository<Configuration>,
-  ) {}
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) { }
 
   async findAll(): Promise<Configuration[]> {
-    return this.configRepository.find({
+    const cacheKey = 'configurations:all';
+    const cached = await this.cacheManager.get<Configuration[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.configRepository.find({
       order: { entity: 'ASC' },
     });
+    await this.cacheManager.set(cacheKey, result, 300_000);
+    return result;
   }
 
   async findOne(id: number): Promise<Configuration> {
@@ -31,6 +40,10 @@ export class ConfigurationsService {
   }
 
   async findByEntity(entity: string): Promise<Configuration> {
+    const cacheKey = `configurations:entity:${entity}`;
+    const cached = await this.cacheManager.get<Configuration>(cacheKey);
+    if (cached) return cached;
+
     let config = await this.configRepository.findOne({ where: { entity } });
 
     // Create sequences entity if it doesn't exist
@@ -72,6 +85,7 @@ export class ConfigurationsService {
     if (!config) {
       throw new NotFoundException(`Configuration "${entity}" not found`);
     }
+    await this.cacheManager.set(cacheKey, config, 300_000);
     return config;
   }
 
@@ -88,7 +102,9 @@ export class ConfigurationsService {
     }
 
     const config = this.configRepository.create(createDto);
-    return this.configRepository.save(config);
+    const saved = await this.configRepository.save(config);
+    await this.invalidateCache(createDto.entity);
+    return saved;
   }
 
   async update(
@@ -111,11 +127,24 @@ export class ConfigurationsService {
     }
 
     Object.assign(config, updateDto);
-    return this.configRepository.save(config);
+    const saved = await this.configRepository.save(config);
+    await this.invalidateCache(config.entity);
+    if (updateDto.entity && updateDto.entity !== config.entity) {
+      await this.invalidateCache(updateDto.entity);
+    }
+    return saved;
   }
 
   async delete(id: number): Promise<void> {
     const config = await this.findOne(id);
     await this.configRepository.remove(config);
+    await this.invalidateCache(config.entity);
+  }
+
+  private async invalidateCache(entity?: string): Promise<void> {
+    await this.cacheManager.del('configurations:all');
+    if (entity) {
+      await this.cacheManager.del(`configurations:entity:${entity}`);
+    }
   }
 }

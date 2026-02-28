@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Logger,
   Inject,
   forwardRef,
 } from '@nestjs/common';
@@ -16,6 +17,8 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class DeliveryService {
+  private readonly logger = new Logger(DeliveryService.name);
+
   constructor(
     @InjectRepository(DeliveryPerson)
     private readonly deliveryPersonRepository: Repository<DeliveryPerson>,
@@ -25,7 +28,7 @@ export class DeliveryService {
     private readonly orderRepository: Repository<Order>,
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
-  ) {}
+  ) { }
 
   async getAllDeliveryPersons(): Promise<DeliveryPerson[]> {
     return this.deliveryPersonRepository.find({
@@ -228,7 +231,7 @@ export class DeliveryService {
           deliveryPersonId,
           deliveryPerson.name,
         ).catch((err) => {
-          console.error('Failed to send order assignment notification:', err);
+          this.logger.error('Failed to send order assignment notification', (err as Error)?.stack);
         });
       }
     }
@@ -376,7 +379,7 @@ export class DeliveryService {
         oldStatus,
         status,
       ).catch((err) => {
-        console.error('Failed to send delivery status notification:', err);
+        this.logger.error('Failed to send delivery status notification', (err as Error)?.stack);
       });
     }
   }

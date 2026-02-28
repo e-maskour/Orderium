@@ -11,8 +11,7 @@ import {
   getDeviceInfo,
   getPlatform,
 } from '../services/firebase';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
+import { apiClient, API_ROUTES } from '../common';
 
 export type NotificationPermissionStatus = NotificationPermission | 'unsupported' | 'loading';
 
@@ -38,26 +37,6 @@ const APP_TYPE = 'backoffice';
 const TOKEN_STORAGE_KEY = 'orderium_backoffice_fcm_token';
 const PROJECT_STORAGE_KEY = 'orderium_backoffice_fcm_project';
 const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '';
-
-async function httpRequest<T>(url: string, options?: RequestInit): Promise<T> {
-  const token = localStorage.getItem('adminToken');
-  
-  const res = await fetch(`${API_BASE_URL}${url}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-      ...options?.headers,
-    },
-    ...options,
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.text();
-    throw new Error(`HTTP error! status: ${res.status}, body: ${errorBody}`);
-  }
-
-  return res.json();
-}
 
 /**
  * Hook for managing push notifications in the Backoffice Portal
@@ -85,7 +64,7 @@ export function usePushNotifications(
       isInitializedRef.current = true;
 
       const supported = isNotificationSupported();
-      
+
       if (!supported) {
         setState({
           isSupported: false,
@@ -200,7 +179,7 @@ export function usePushNotifications(
 
     try {
       const permission = await requestNotificationPermission();
-      
+
       setState((prev) => ({
         ...prev,
         permission,
@@ -233,17 +212,17 @@ export function usePushNotifications(
       const deviceInfo = getDeviceInfo();
       const platform = getPlatform();
 
-      await httpRequest(`/api/notifications/device-token/${userId}`, {
-        method: 'POST',
-        body: JSON.stringify({
+      await apiClient.post(
+        API_ROUTES.NOTIFICATIONS.DEVICE_TOKEN_REGISTER(userId),
+        {
           token,
           platform,
           appType: APP_TYPE,
           deviceName: deviceInfo.deviceName,
           browserName: deviceInfo.browserName,
           osName: deviceInfo.osName,
-        }),
-      });
+        },
+      );
 
       return true;
     } catch (error) {
@@ -287,7 +266,7 @@ export function usePushNotifications(
       setState((prev) => ({ ...prev, token }));
 
       const success = await registerTokenToServer(userId, token);
-      
+
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -316,16 +295,13 @@ export function usePushNotifications(
   // Unregister token
   const unregisterToken = useCallback(async (): Promise<boolean> => {
     const token = state.token || localStorage.getItem(TOKEN_STORAGE_KEY);
-    
+
     if (!token) {
       return true;
     }
 
     try {
-      await httpRequest('/api/notifications/device-token', {
-        method: 'DELETE',
-        body: JSON.stringify({ token }),
-      });
+      await apiClient.delete(API_ROUTES.NOTIFICATIONS.DEVICE_TOKEN_UNREGISTER, { token });
 
       localStorage.removeItem(TOKEN_STORAGE_KEY);
       setState((prev) => ({ ...prev, token: null }));
@@ -349,9 +325,7 @@ export function usePushNotifications(
         localStorage.setItem(TOKEN_STORAGE_KEY, token);
         setState((prev) => ({ ...prev, token }));
 
-        await httpRequest(`/api/notifications/device-token/${token}/refresh`, {
-          method: 'PATCH',
-        });
+        await apiClient.patch(API_ROUTES.NOTIFICATIONS.DEVICE_TOKEN_REFRESH(token));
       }
       return token;
     } catch (error) {

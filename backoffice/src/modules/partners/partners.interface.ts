@@ -1,4 +1,4 @@
-export interface Partner {
+export interface IPartner {
   id: number;
   name: string;
   phoneNumber: string;
@@ -24,7 +24,7 @@ export interface Partner {
 }
 
 export interface PartnersResponse {
-  partners: Partner[];
+  partners: IPartner[];
   total: number;
 }
 

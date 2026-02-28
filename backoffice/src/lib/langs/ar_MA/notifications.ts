@@ -34,7 +34,7 @@ export default {
   today: 'اليوم',
   thisWeek: 'هذا الأسبوع',
   
-  // Notification Types
+  // INotification Types
   newOrders: 'طلبات جديدة',
   assigned: 'معينة',
   statusChanged: 'تم تغيير الحالة',
@@ -46,7 +46,7 @@ export default {
   medium: 'متوسط',
   low: 'منخفض',
   
-  // Notification Titles (Translation Keys)
+  // INotification Titles (Translation Keys)
   'notification.title.new_order': '🛒 طلب جديد',
   'notification.title.order_assigned': '👤 تم تعيين الطلب',
   'notification.title.order_status_changed': '📦 تحديث حالة الطلب',
@@ -59,7 +59,7 @@ export default {
   'notification.title.warning': '⚠️ تحذير',
   'notification.title.error': '🚨 خطأ',
   
-  // Notification Messages (Translation Keys with placeholders)
+  // INotification Messages (Translation Keys with placeholders)
   'notification.message.new_order': 'تم استلام الطلب رقم {{orderNumber}} من {{customerName}}',
   'notification.message.order_assigned': 'تم تعيين الطلب {{orderNumber}} لك',
   'notification.message.order_status_changed': 'تم تحديث حالة الطلب {{orderNumber}} إلى {{status}}',

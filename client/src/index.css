@@ -26,7 +26,7 @@
 
     /* Muted warm gray */
     --muted: 35 20% 90%;
-    --muted-foreground: 25 20% 45%;
+    --muted-foreground: 25 20% 42%;
 
     /* Gold accent */
     --accent: 42 85% 55%;
@@ -55,7 +55,7 @@
     --gradient-primary: linear-gradient(135deg, hsl(15 65% 50%), hsl(25 60% 55%));
     --gradient-gold: linear-gradient(135deg, hsl(42 85% 55%), hsl(38 75% 50%));
     --gradient-hero: linear-gradient(180deg, hsl(35 30% 97%) 0%, hsl(35 35% 92%) 100%);
-    
+
     /* Shadows */
     --shadow-soft: 0 4px 20px -4px hsl(25 40% 15% / 0.1);
     --shadow-medium: 0 8px 30px -8px hsl(25 40% 15% / 0.15);
@@ -139,7 +139,7 @@
   .gradient-primary {
     background: var(--gradient-primary);
   }
-  
+
   .gradient-gold {
     background: var(--gradient-gold);
   }
@@ -166,6 +166,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -213,8 +214,15 @@
   }
 
   @keyframes priceBounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.1);
+    }
   }
 
   /* Fade in animation */
@@ -228,6 +236,7 @@
       opacity: 0;
       transform: translateY(10px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -244,6 +253,7 @@
       opacity: 0;
       transform: translateX(100%);
     }
+
     to {
       opacity: 1;
       transform: translateX(0);
@@ -259,6 +269,7 @@
       opacity: 0;
       transform: translateX(-100%);
     }
+
     to {
       opacity: 1;
       transform: translateX(0);

@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  api:
+    name: API - Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: orderium_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      - name: Install dependencies
+        run: cd api && npm ci
+
+      - name: Lint
+        run: cd api && npm run lint
+
+      - name: Run tests
+        run: cd api && npm run test
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: orderium_test
+          DB_SYNCHRONIZE: "true"
+          JWT_SECRET: ci-test-secret
+          REDIS_URL: redis://localhost:6379
+
+      - name: Build
+        run: cd api && npm run build
+
+      - name: Security audit
+        run: cd api && npm audit --audit-level=high
+        continue-on-error: true
+
+  backoffice:
+    name: Backoffice - Lint & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backoffice/package-lock.json
+
+      - name: Install dependencies
+        run: cd backoffice && npm ci
+
+      - name: Type check
+        run: cd backoffice && npx tsc --noEmit
+        continue-on-error: true
+
+      - name: Build
+        run: cd backoffice && npm run build
+
+  client:
+    name: Client - Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: cd client && npm ci
+
+      - name: Build
+        run: cd client && npm run build
+
+  delivery-portal:
+    name: Delivery Portal - Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: delivery-portal/package-lock.json
+
+      - name: Install dependencies
+        run: cd delivery-portal && npm ci
+
+      - name: Build
+        run: cd delivery-portal && npm run build

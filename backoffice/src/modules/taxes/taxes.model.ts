@@ -1,4 +1,4 @@
-import { TaxRate as ITaxRate, TaxesConfig } from './taxes.interface';
+import { ITaxRate, ITaxesConfig } from './taxes.interface';
 
 export class TaxRate implements ITaxRate {
   name: string;
@@ -19,12 +19,8 @@ export class TaxRate implements ITaxRate {
     return this.isDefault ? 'Default' : '';
   }
 
-  calculateTax(amount: number): number {
-    return amount * (this.rate / 100);
-  }
-
-  calculateTotalWithTax(amount: number): number {
-    return amount + this.calculateTax(amount);
+  get isZeroRate(): boolean {
+    return this.rate === 0;
   }
 
   static fromApiResponse(data: any): TaxRate {
@@ -48,7 +44,7 @@ export class TaxesConfiguration {
   defaultRate: number;
   rates: TaxRate[];
 
-  constructor(data: TaxesConfig) {
+  constructor(data: ITaxesConfig) {
     this.defaultRate = data.defaultRate;
     this.rates = data.rates.map(r => new TaxRate(r));
   }
@@ -59,6 +55,17 @@ export class TaxesConfiguration {
 
   getTaxRateByName(name: string): TaxRate | undefined {
     return this.rates.find(r => r.name === name);
+  }
+
+  get count(): number {
+    return this.rates.length;
+  }
+
+  toJSON(): ITaxesConfig {
+    return {
+      defaultRate: this.defaultRate,
+      rates: this.rates.map(r => r.toJSON()),
+    };
   }
 
   static fromApiResponse(data: any): TaxesConfiguration {

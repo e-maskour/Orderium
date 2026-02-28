@@ -3,9 +3,11 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -26,7 +28,8 @@ export class ProductsService {
     private readonly unitOfMeasureRepository: Repository<UnitOfMeasure>,
     @InjectRepository(Warehouse)
     private readonly warehouseRepository: Repository<Warehouse>,
-  ) {}
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) { }
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const { categoryIds, ...productData } = createProductDto;
@@ -38,7 +41,8 @@ export class ProductsService {
       });
     }
 
-    return this.productRepository.save(product);
+    const saved = await this.productRepository.save(product);
+    return saved;
   }
 
   async findAll(
@@ -108,7 +112,15 @@ export class ProductsService {
     return { products, count, totalCount };
   }
 
+  private async invalidateProductCache(id?: number) {
+    if (id) await this.cacheManager.del(`product:${id}`);
+  }
+
   async findOne(id: number): Promise<Product> {
+    const cacheKey = `product:${id}`;
+    const cached = await this.cacheManager.get<Product>(cacheKey);
+    if (cached) return cached;
+
     const product = await this.productRepository.findOne({
       where: { id },
       relations: ['categories', 'saleUnitOfMeasure', 'purchaseUnitOfMeasure'],
@@ -116,6 +128,7 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
+    await this.cacheManager.set(cacheKey, product, 300_000);
     return product;
   }
 
@@ -138,6 +151,7 @@ export class ProductsService {
     }
 
     await this.productRepository.save(product);
+    await this.invalidateProductCache(id);
 
     // Reload product with categories to return fresh data
     return this.findOne(id);
@@ -176,6 +190,7 @@ export class ProductsService {
 
     product.isEnabled = false;
     await this.productRepository.save(product);
+    await this.invalidateProductCache(id);
   }
 
   async hardDelete(id: number): Promise<void> {
@@ -213,6 +228,7 @@ export class ProductsService {
     if (result.affected === 0) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
+    await this.invalidateProductCache(id);
   }
 
   /**
@@ -271,7 +287,7 @@ export class ProductsService {
     XLSX.utils.book_append_sheet(wb, ws, 'Produits');
 
     // Generate buffer
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
     return buffer;
   }
 
@@ -387,7 +403,7 @@ export class ProductsService {
               .split(',')
               .map((name: string) => name.trim())
               .filter((name: string) => name);
-            
+
             const productCategories = categories.filter((c) =>
               categoryNames.some(
                 (name: string) => c.name.toLowerCase() === name.toLowerCase(),
@@ -461,7 +477,7 @@ export class ProductsService {
 
     XLSX.utils.book_append_sheet(wb, ws, 'Produits');
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
     return buffer;
   }
 

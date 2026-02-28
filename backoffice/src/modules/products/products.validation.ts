@@ -119,10 +119,10 @@ export const validateProductForm = (formData: ProductFormData, isCreating: boole
     errors.purchaseUnit = 'Purchase unit of measure is required';
   }
 
-  // Warehouse validation (required for non-service products)
+  // IWarehouse validation (required for non-service products)
   if (!formData.isService) {
     if (!formData.warehouseId || formData.warehouseId.trim() === '') {
-      errors.warehouseId = 'Warehouse is required for products';
+      errors.warehouseId = 'IWarehouse is required for products';
     } else {
       const warehouseIdValue = parseInt(formData.warehouseId);
       if (isNaN(warehouseIdValue) || warehouseIdValue <= 0) {

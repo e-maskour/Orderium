@@ -1,7 +1,7 @@
 # ==================================
 # Production-Grade Docker Compose for Orderium Platform
 # ==================================
-# 
+#
 # This compose file orchestrates:
 # - PostgreSQL database
 # - NestJS API backend
@@ -24,12 +24,12 @@ services:
       dockerfile: Dockerfile
     container_name: orderium-api
     restart: unless-stopped
-    
+
     environment:
       # Server
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
-      
+
       # Database
       DB_TYPE: postgres
       DB_HOST: postgres
@@ -39,44 +39,49 @@ services:
       DB_NAME: ${DB_NAME:-orderium_db}
       DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
       DB_LOGGING: ${DB_LOGGING:-false}
-      
+
       # JWT
       JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      
+
       # CORS - Allow all frontends in Docker network
       CORS_ORIGIN: http://localhost:3001,http://localhost:3002,http://localhost:3003,http://backoffice,http://client,http://delivery-portal
-      
+
       # Defaults
       DEFAULT_CASH_REGISTER_ID: ${DEFAULT_CASH_REGISTER_ID:-1}
       DEFAULT_WAREHOUSE_ID: ${DEFAULT_WAREHOUSE_ID:-1}
       DEFAULT_DOCUMENT_TYPE_ID: ${DEFAULT_DOCUMENT_TYPE_ID:-2}
       DEFAULT_PAID_STATUS: ${DEFAULT_PAID_STATUS:-2}
-      
+
       # Storage
       STORAGE_PROVIDER: ${STORAGE_PROVIDER:-LOCAL}
-      
+
       # Firebase Admin SDK
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-    
+
+      # Redis
+      REDIS_URL: redis://redis:6379
+
     volumes:
       # Persist uploaded images
       - api_uploads:/app/uploads
-    
+
     ports:
       - "3000:3000"
-    
+
     networks:
       - orderium-network
-    
+
     depends_on:
       postgres:
         condition: service_healthy
-    
+      redis:
+        condition: service_healthy
+
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\"" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -102,19 +107,19 @@ services:
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     container_name: orderium-backoffice
     restart: unless-stopped
-    
+
     ports:
       - "3001:80"
-    
+
     networks:
       - orderium-network
-    
+
     depends_on:
       api:
         condition: service_healthy
-    
+
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -139,19 +144,19 @@ services:
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     container_name: orderium-client
     restart: unless-stopped
-    
+
     ports:
       - "3002:80"
-    
+
     networks:
       - orderium-network
-    
+
     depends_on:
       api:
         condition: service_healthy
-    
+
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -176,27 +181,47 @@ services:
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     container_name: orderium-delivery
     restart: unless-stopped
-    
+
     ports:
       - "3003:80"
-    
+
     networks:
       - orderium-network
-    
+
     depends_on:
       api:
         condition: service_healthy
-    
+
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
 
-# ==================================
-# Networks
-# ==================================
+  # ==================================
+  # Networks
+  # ==================================
+
+  # ==================================
+  # Redis Cache
+  # ==================================
+  redis:
+    image: redis:7-alpine
+    container_name: orderium-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - orderium-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 networks:
   orderium-network:
     driver: bridge
@@ -210,8 +235,13 @@ volumes:
   postgres_data:
     driver: local
     name: orderium_postgres_data
-  
+
   # API uploads persistence
   api_uploads:
     driver: local
     name: orderium_api_uploads
+
+  # Redis data persistence
+  redis_data:
+    driver: local
+    name: orderium_redis_data

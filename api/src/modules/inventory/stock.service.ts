@@ -35,7 +35,7 @@ export class StockService {
     @InjectRepository(UnitOfMeasure)
     private readonly uomRepository: Repository<UnitOfMeasure>,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   // ==================== STOCK QUANT OPERATIONS ====================
 
@@ -144,7 +144,7 @@ export class StockService {
   ): Promise<StockQuant> {
     // Ensure quantityChange is a number
     const numericChange = parseFloat(quantityChange.toString());
-    
+
     let stockQuant = await this.stockQuantRepository.findOne({
       where: { productId, warehouseId },
     });
@@ -288,7 +288,7 @@ export class StockService {
       if (stockQuant.availableQuantity < movement.quantity) {
         throw new BadRequestException(
           `Insufficient stock at ${movement.sourceWarehouse?.name}. ` +
-            `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
+          `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
         );
       }
     }
@@ -600,7 +600,7 @@ export class StockService {
       WHERE sq.quantity > 0
     `;
 
-    const result = await this.dataSource.query(query);
+    const result: { totalValue: number; productCount: number }[] = await this.dataSource.query(query);
     return result[0];
   }
 }

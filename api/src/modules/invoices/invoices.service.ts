@@ -2,14 +2,18 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Logger,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
 import { Invoice, InvoiceItem, InvoiceStatus } from './entities/invoice.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
+import { SequenceConfig } from '../../common/types/sequence-config.interface';
 
 interface CreateInvoiceItemDTO {
   id?: number;
@@ -45,6 +49,8 @@ interface CreateInvoiceDTO {
 
 @Injectable()
 export class InvoicesService {
+  private readonly logger = new Logger(InvoicesService.name);
+
   constructor(
     @InjectRepository(Invoice)
     private readonly invoiceRepository: Repository<Invoice>,
@@ -53,6 +59,7 @@ export class InvoicesService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly configurationsService: ConfigurationsService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) { }
 
   private async calculateInvoiceStatus(
@@ -87,18 +94,18 @@ export class InvoicesService {
 
   private async getTotalPaid(invoiceId: number): Promise<number> {
     // This will need to be injected from payments service or calculated via raw query
-    const result = await this.invoiceRepository.manager.query(
+    const result: { total: string }[] = await this.invoiceRepository.manager.query(
       `SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE "invoiceId" = $1`,
       [invoiceId],
     );
     return parseFloat(result[0]?.total || '0');
   }
 
-  private async getOrCreateSequence(entityType: string, documentDate?: string | Date): Promise<any> {
+  private async getOrCreateSequence(entityType: string, documentDate?: string | Date): Promise<SequenceConfig> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
 
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
       let sequence = sequences.find(
         (seq) => seq.entityType === entityType && seq.isActive,
       );
@@ -169,7 +176,7 @@ export class InvoicesService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
-  private async syncSequenceWithDatabase(sequence: any, documentDate?: string | Date): Promise<void> {
+  private async syncSequenceWithDatabase(sequence: SequenceConfig, documentDate?: string | Date): Promise<void> {
     try {
       // Build the current pattern for this sequence using document date (e.g., "FA 2026-02-")
       const pattern = this.buildSequencePattern(sequence, documentDate);
@@ -211,12 +218,12 @@ export class InvoicesService {
       const maxNumber = Math.max(...numbers);
       sequence.nextNumber = maxNumber + 1;
     } catch (error) {
-      console.error('Failed to sync sequence with database:', error);
+      this.logger.error('Failed to sync sequence with database', (error as Error)?.stack);
       // Keep existing nextNumber if sync fails
     }
   }
 
-  private buildSequencePattern(sequence: any, documentDate?: string | Date): string {
+  private buildSequencePattern(sequence: SequenceConfig, documentDate?: string | Date): string {
     // Use document date if provided, otherwise fallback to current date
     const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
@@ -263,7 +270,7 @@ export class InvoicesService {
     return pattern;
   }
 
-  private generateSequenceNumber(sequence: any, documentDate?: string | Date): string {
+  private generateSequenceNumber(sequence: SequenceConfig, documentDate?: string | Date): string {
     // Use document date if provided, otherwise fallback to current date
     const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
@@ -319,11 +326,11 @@ export class InvoicesService {
 
   private async updateSequenceNextNumber(
     entityType: string,
-    sequence: any,
+    sequence: SequenceConfig,
   ): Promise<void> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
       const sequenceIndex = sequences.findIndex(
         (seq) => seq.id === sequence.id,
       );
@@ -337,7 +344,7 @@ export class InvoicesService {
         });
       }
     } catch (error) {
-      console.error('Failed to update sequence next number:', error);
+      this.logger.error('Failed to update sequence next number', (error as Error)?.stack);
       // Continue execution even if sequence update fails
     }
   }
@@ -414,11 +421,23 @@ export class InvoicesService {
     };
   }
 
+  private async invalidateInvoiceCache(id?: number) {
+    if (id) await this.cacheManager.del(`invoice:${id}`);
+  }
+
   async findOne(id: number): Promise<Invoice | null> {
-    return this.invoiceRepository.findOne({
+    const cacheKey = `invoice:${id}`;
+    const cached = await this.cacheManager.get<Invoice>(cacheKey);
+    if (cached) return cached;
+
+    const invoice = await this.invoiceRepository.findOne({
       where: { id },
       relations: ['customer', 'supplier', 'items'],
     });
+    if (invoice) {
+      await this.cacheManager.set(cacheKey, invoice, 300_000);
+    }
+    return invoice;
   }
 
   async create(createInvoiceDto: CreateInvoiceDTO): Promise<Invoice> {
@@ -653,10 +672,10 @@ export class InvoicesService {
         );
         if (itemsToDelete.length > 0) {
           await this.invoiceItemRepository.remove(itemsToDelete);
-          console.log(`Deleted ${itemsToDelete.length} removed items for invoice ${id}`);
+          this.logger.debug(`Deleted ${itemsToDelete.length} removed items for invoice ${id}`);
         }
 
-        console.log(`Updated/created ${itemsToSave.length} items for invoice ${id}`);
+        this.logger.debug(`Updated/created ${itemsToSave.length} items for invoice ${id}`);
 
         // Prepare invoice update data (exclude items)
         const { items: _, ...invoiceUpdateData } = updateInvoiceDto;
@@ -692,9 +711,10 @@ export class InvoicesService {
         throw new NotFoundException('Invoice not found after update');
       }
 
+      await this.invalidateInvoiceCache(id);
       return result;
     } catch (error) {
-      console.error(`Error updating invoice ${id}:`, error);
+      this.logger.error(`Error updating invoice ${id}`, (error as Error)?.stack);
       throw error;
     }
   }
@@ -708,6 +728,7 @@ export class InvoicesService {
 
     await this.invoiceItemRepository.delete({ invoiceId: id });
     await this.invoiceRepository.delete(id);
+    await this.invalidateInvoiceCache(id);
   }
 
   async validate(id: number): Promise<Invoice> {
@@ -749,6 +770,7 @@ export class InvoicesService {
     if (!result) {
       throw new NotFoundException('Invoice not found after validation');
     }
+    await this.invalidateInvoiceCache(id);
     return result;
   }
 
@@ -771,7 +793,7 @@ export class InvoicesService {
 
       const sequence = await this.getOrCreateSequence(sequenceType, invoice.date);
       const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
       const sequenceIndex = sequences.findIndex((seq) => seq.id === sequence.id);
 
       if (sequenceIndex !== -1) {
@@ -801,7 +823,7 @@ export class InvoicesService {
         });
       }
     } catch (error) {
-      console.error('Error updating sequence during devalidation:', error);
+      this.logger.error('Error updating sequence during devalidation', (error as Error)?.stack);
       // Continue with devalidation even if sequence update fails
     }
 
@@ -845,6 +867,7 @@ export class InvoicesService {
     if (!result) {
       throw new NotFoundException('Invoice not found after devalidation');
     }
+    await this.invalidateInvoiceCache(id);
     return result;
   }
 
@@ -1002,7 +1025,7 @@ export class InvoicesService {
     const sheetName = supplierId !== undefined ? (supplierId ? 'Factures achat' : 'Factures vente') : 'Factures';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
     return buffer;
   }
 

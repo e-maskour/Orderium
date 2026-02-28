@@ -1,57 +1,30 @@
 import { CreateDeliveryPersonDTO, UpdateDeliveryPersonDTO } from './delivery.interface';
 import { DeliveryPerson } from './delivery.model';
-
-const API_URL = '/api';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class DeliveryPersonService {
   async getAll(): Promise<DeliveryPerson[]> {
-    const response = await fetch(`${API_URL}/delivery/persons`);
-    if (!response.ok) throw new Error('Failed to fetch delivery persons');
-    const data = await response.json();
-    const deliveryPersons = data.deliveryPersons || [];
-    return deliveryPersons.map((d: any) => DeliveryPerson.fromApiResponse(d));
+    const response = await apiClient.get<any[]>(API_ROUTES.DELIVERY.LIST_PERSONS);
+    return (response.data || []).map((d: any) => DeliveryPerson.fromApiResponse(d));
   }
 
   async getById(id: number): Promise<DeliveryPerson> {
-    const response = await fetch(`${API_URL}/delivery/persons/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch delivery person');
-    const data = await response.json();
-    return DeliveryPerson.fromApiResponse(data.deliveryPerson);
+    const response = await apiClient.get<any>(API_ROUTES.DELIVERY.PERSON_DETAIL(id));
+    return DeliveryPerson.fromApiResponse(response.data);
   }
 
   async create(data: CreateDeliveryPersonDTO): Promise<DeliveryPerson> {
-    const response = await fetch(`${API_URL}/delivery`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create delivery person');
-    }
-    const result = await response.json();
-    return DeliveryPerson.fromApiResponse(result.deliveryPerson);
+    const response = await apiClient.post<any>(API_ROUTES.DELIVERY.CREATE, data);
+    return DeliveryPerson.fromApiResponse(response.data);
   }
 
   async update(id: number, data: UpdateDeliveryPersonDTO): Promise<DeliveryPerson> {
-    const response = await fetch(`${API_URL}/delivery/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to update delivery person');
-    const result = await response.json();
-    return DeliveryPerson.fromApiResponse(result.deliveryPerson);
+    const response = await apiClient.put<any>(API_ROUTES.DELIVERY.UPDATE(id), data);
+    return DeliveryPerson.fromApiResponse(response.data);
   }
 
   async delete(id: number): Promise<void> {
-    const response = await fetch(`${API_URL}/delivery/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete delivery person');
-    }
+    await apiClient.delete(API_ROUTES.DELIVERY.DELETE(id));
   }
 }
 

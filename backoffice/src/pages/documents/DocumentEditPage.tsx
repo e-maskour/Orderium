@@ -4,17 +4,21 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { Save, X, CheckCircle, XCircle, ChevronDown, FileText, Truck, ArrowLeft, DollarSign, Clock, AlertCircle, Share2, PenTool, Ban, Receipt, History } from 'lucide-react';
 import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
-import { Partner, partnersService } from '../../modules/partners';
+import { Partner, IPartner, partnersService } from '../../modules/partners';
 import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
 import { ShareQuoteDialog } from '../../components/documents/ShareQuoteDialog';
 import { invoicesService } from '../../modules/invoices/invoices.service';
+import type { CreateInvoiceDTO } from '../../modules/invoices/invoices.interface';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { ordersService } from '../../modules/orders/orders.service';
 import PDFActionButtons from '../../components/PDFActionButtons';
 import { pdfService } from '../../services/pdf.service';
-import AlertDialog from '../../components/AlertDialog';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { toastSuccess, toastError, toastValidated, toastDevalidated, toastDelivered, toastCancelled, toastDocument, toastLinked, toastConfirm } from '../../services/toast.service';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Textarea } from '../../components/ui/textarea';
+import { FormField } from '../../components/ui/form-field';
 
 interface DocumentEditPageProps {
   documentType: DocumentType;
@@ -34,22 +38,8 @@ export default function DocumentEditPage({
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState<{ title: string; message: string; type: 'success' | 'error' | 'warning' | 'info' }>({
-    title: '',
-    message: '',
-    type: 'error'
-  });
-  const [showValidateConfirm, setShowValidateConfirm] = useState(false);
-  const [showDevalidateConfirm, setShowDevalidateConfirm] = useState(false);
-  const [showDeliverConfirm, setShowDeliverConfirm] = useState(false);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
-  const [showCreateInvoiceConfirm, setShowCreateInvoiceConfirm] = useState(false);
-  const [showCreateBonConfirm, setShowCreateBonConfirm] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [showSignConfirm, setShowSignConfirm] = useState(false);
-  const [showUnsignConfirm, setShowUnsignConfirm] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareTokenExpiry, setShareTokenExpiry] = useState<Date | null>(null);
@@ -61,7 +51,7 @@ export default function DocumentEditPage({
   const [dueDate, setDueDate] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
   const [validationDate, setValidationDate] = useState('');
-  const [partner, setPartner] = useState<Partner | null>(null);
+  const [partner, setPartner] = useState<IPartner | null>(null);
   const [items, setItems] = useState<DocumentItem[]>([]);
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<string>('draft');
@@ -428,12 +418,7 @@ export default function DocumentEditPage({
       setItems(mappedItems);
 
     } catch (error) {
-      setAlertMessage({
-        title: t('error'),
-        message: t('errorLoadingDocument'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(t('errorLoadingDocument'));
     } finally {
       setLoading(false);
     }
@@ -444,22 +429,12 @@ export default function DocumentEditPage({
 
     // Validation
     if (!partner) {
-      setAlertMessage({
-        title: t('error'),
-        message: `${t('selectPartner')} ${config.partnerLabel.toLowerCase()}`,
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(`${t('selectPartner')} ${config.partnerLabel.toLowerCase()}`);
       return;
     }
 
     if (items.length === 0) {
-      setAlertMessage({
-        title: t('error'),
-        message: t('pleaseAddAtLeastOneItem'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(t('pleaseAddAtLeastOneItem'));
       return;
     }
 
@@ -540,24 +515,14 @@ export default function DocumentEditPage({
         await ordersService.update(Number(id), documentData);
       }
 
-      setAlertMessage({
-        title: t('success'),
-        message: `${config.titleShort} ${t('successUpdated')}`,
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastSuccess(`${config.titleShort} ${t('successUpdated')}`);
 
       // Reload document to get fresh data
       await loadDocument();
 
     } catch (error: any) {
       console.error('Error updating document:', error);
-      setAlertMessage({
-        title: t('error'),
-        message: error.message || `${t('error')} lors de la mise à jour de la ${config.titleShort.toLowerCase()}`,
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(error.message || `${t('error')} lors de la mise à jour de la ${config.titleShort.toLowerCase()}`);
     } finally {
       setSaving(false);
     }
@@ -577,23 +542,11 @@ export default function DocumentEditPage({
       }
 
       setIsValidated(true);
-      setShowValidateConfirm(false);
-      setAlertMessage({
-        title: t('success'),
-        message: `${config.titleShort} ${t('successValidated')}`,
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastValidated(`${config.titleShort} ${t('successValidated')}`);
       await loadDocument();
     } catch (error) {
       console.error('Error validating document:', error);
-      setShowValidateConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: t('errorValidating'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(t('errorValidating'));
     }
   };
 
@@ -611,23 +564,11 @@ export default function DocumentEditPage({
       }
 
       setIsValidated(false);
-      setShowDevalidateConfirm(false);
-      setAlertMessage({
-        title: t('success'),
-        message: `${config.titleShort} ${t('successDevalidated')}`,
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastDevalidated(`${config.titleShort} ${t('successDevalidated')}`);
       await loadDocument();
     } catch (error) {
       console.error('Error devalidating document:', error);
-      setShowDevalidateConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: t('errorDevalidating'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(t('errorDevalidating'));
     }
   };
 
@@ -636,23 +577,11 @@ export default function DocumentEditPage({
 
     try {
       await ordersService.deliver(Number(id));
-      setShowDeliverConfirm(false);
-      setAlertMessage({
-        title: t('success'),
-        message: t('successDelivered'),
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastDelivered(t('successDelivered'));
       await loadDocument();
     } catch (error) {
       console.error('Error delivering order:', error);
-      setShowDeliverConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: t('errorDelivering'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(t('errorDelivering'));
     }
   };
 
@@ -661,29 +590,15 @@ export default function DocumentEditPage({
 
     try {
       await ordersService.cancel(Number(id));
-      setShowCancelConfirm(false);
-      setAlertMessage({
-        title: t('success'),
-        message: t('successCancelled'),
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastCancelled(t('successCancelled'));
       await loadDocument();
     } catch (error) {
       console.error('Error canceling order:', error);
-      setShowCancelConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: t('errorCancelling'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(t('errorCancelling'));
     }
   };
 
   const handleCreateInvoice = async () => {
-    setShowCreateInvoiceConfirm(false);
-
     if (!id || !partner) return;
 
     try {
@@ -714,7 +629,7 @@ export default function DocumentEditPage({
       const isVente = direction === 'vente';
 
       // Create invoice data
-      const invoiceData = {
+      const invoiceData: CreateInvoiceDTO = {
         direction: direction === 'achat' ? 'ACHAT' : 'VENTE',
         customerId: isVente ? partner.id : undefined,
         supplierId: isVente ? undefined : partner.id,
@@ -741,51 +656,35 @@ export default function DocumentEditPage({
 
       // Create the invoice
       const created = await invoicesService.create(invoiceData);
-      const createdInvoice = created as any;
+      const createdInvoiceId = created.invoice.id;
 
       // Mark document as converted to invoice based on type
       if (documentType === 'devis') {
-        await quotesService.convertToInvoice(Number(id), createdInvoice.invoice.id);
-        setAlertMessage({
-          title: t('success'),
-          message: t('successInvoiceCreatedQuoteUpdated'),
-          type: 'success'
-        });
+        await quotesService.convertToInvoice(Number(id), createdInvoiceId);
+        toastDocument(t('successInvoiceCreatedQuoteUpdated'));
       } else if (documentType === 'bon_livraison') {
         // Mark order as invoiced
-        await ordersService.markAsInvoiced(Number(id), createdInvoice.invoice.id);
-        setAlertMessage({
-          title: t('success'),
-          message: t('successInvoiceCreatedDeliveryUpdated'),
-          type: 'success'
-        });
+        await ordersService.markAsInvoiced(Number(id), createdInvoiceId);
+        toastDocument(t('successInvoiceCreatedDeliveryUpdated'));
       }
-
-      setShowAlert(true);
 
       // Reload document to get updated status
       await loadDocument();
 
       // Navigate to the invoice edit page after delay
       setTimeout(() => {
-        navigate(`/factures/${direction}/${createdInvoice.invoice.id}`);
+        navigate(`/factures/${direction}/${createdInvoiceId}`);
       }, 1500);
 
     } catch (error: any) {
       console.error('Error creating invoice:', error);
-      setAlertMessage({
-        title: t('error'),
-        message: error.message || t('errorCreatingInvoice'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(error.message || t('errorCreatingInvoice'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleCreateBon = async () => {
-    setShowCreateBonConfirm(false);
 
     if (!id || !partner) return;
 
@@ -818,14 +717,13 @@ export default function DocumentEditPage({
 
       // Create order data with all totals
       const orderData = {
-        direction: direction === 'achat' ? 'ACHAT' : 'VENTE',
         customerId: isVente ? partner.id : undefined,
         customerName: isVente ? partner.name : undefined,
-        customerPhone: isVente ? partner.phone : undefined,
+        customerPhone: isVente ? partner.phoneNumber : undefined,
         customerAddress: isVente ? partner.address : undefined,
         supplierId: isVente ? undefined : partner.id,
         supplierName: isVente ? undefined : partner.name,
-        supplierPhone: isVente ? undefined : partner.phone,
+        supplierPhone: isVente ? undefined : partner.phoneNumber,
         supplierAddress: isVente ? undefined : partner.address,
         date,
         dueDate: dueDate || undefined,
@@ -859,17 +757,11 @@ export default function DocumentEditPage({
 
       // Create the order
       const created = await ordersService.create(orderData);
-      const createdOrder = created as any;
 
       // Mark quote as converted to order
-      await quotesService.convertToOrder(Number(id), createdOrder.order.id);
+      await quotesService.convertToOrder(Number(id), created.id);
 
-      setAlertMessage({
-        title: t('success'),
-        message: t('successDeliveryCreatedQuoteUpdated'),
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastDocument(t('successDeliveryCreatedQuoteUpdated'));
 
       // Update local status
       setStatus('delivered');
@@ -877,19 +769,14 @@ export default function DocumentEditPage({
       // Navigate to the bon edit page after delay
       setTimeout(() => {
         const bonRoute = direction === 'vente'
-          ? `/bons-livraison/${createdOrder.order.id}`
-          : `/bon-achat/${createdOrder.order.id}`;
+          ? `/bons-livraison/${created.id}`
+          : `/bon-achat/${created.id}`;
         navigate(bonRoute);
       }, 1500);
 
     } catch (error: any) {
       console.error('Error creating bon:', error);
-      setAlertMessage({
-        title: t('error'),
-        message: error.message || t('errorCreatingDeliveryNote'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(error.message || t('errorCreatingDeliveryNote'));
     } finally {
       setSaving(false);
     }
@@ -902,20 +789,10 @@ export default function DocumentEditPage({
       const result = await quotesService.generateShareLink(Number(id));
       setShareToken(result.shareToken);
       setShareTokenExpiry(result.expiresAt);
-      setAlertMessage({
-        title: t('success'),
-        message: t('successLinkGenerated'),
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastSuccess(t('successLinkGenerated'));
     } catch (error: any) {
       console.error('Error generating share link:', error);
-      setAlertMessage({
-        title: t('error'),
-        message: error.message || t('errorGeneratingLink'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(error.message || t('errorGeneratingLink'));
     }
   };
 
@@ -924,23 +801,11 @@ export default function DocumentEditPage({
 
     try {
       await quotesService.accept(Number(id));
-      setShowSignConfirm(false);
-      setAlertMessage({
-        title: t('success'),
-        message: t('successQuoteSigned'),
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastSuccess(t('successQuoteSigned'));
       await loadDocument();
     } catch (error: any) {
       console.error('Error signing quote:', error);
-      setShowSignConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: error.message || t('errorSigning'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(error.message || t('errorSigning'));
     }
   };
 
@@ -949,23 +814,11 @@ export default function DocumentEditPage({
 
     try {
       await quotesService.unsignQuote(Number(id));
-      setShowUnsignConfirm(false);
-      setAlertMessage({
-        title: t('success'),
-        message: t('successQuoteRejected'),
-        type: 'success'
-      });
-      setShowAlert(true);
+      toastSuccess(t('successQuoteRejected'));
       await loadDocument();
     } catch (error: any) {
       console.error('Error unsigning quote:', error);
-      setShowUnsignConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: error.message || t('errorUnsigning'),
-        type: 'error'
-      });
-      setShowAlert(true);
+      toastError(error.message || t('errorUnsigning'));
     }
   };
 
@@ -1121,7 +974,7 @@ export default function DocumentEditPage({
                 onPartnerChange={(updatedPartner) => {
                   if ('id' in updatedPartner && 'name' in updatedPartner && 'phoneNumber' in updatedPartner) {
                     // Full partner object selected from dropdown
-                    setPartner(updatedPartner as Partner);
+                    setPartner(updatedPartner as IPartner);
                   } else {
                     // Partial update (typing in field)
                     setPartner(prev => prev ? { ...prev, ...updatedPartner } : null);
@@ -1138,48 +991,41 @@ export default function DocumentEditPage({
               </h3>
 
               <div className="space-y-2 sm:space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
-                    {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}
-                  </label>
-                  <input
+                <FormField label={documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}>
+                  <Input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
                     disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                    required
+                    inputSize="sm"
+                    fullWidth
                   />
-                </div>
+                </FormField>
 
                 {config.features.expirationDate && (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
-                      {t('expirationDate')}
-                    </label>
-                    <input
+                  <FormField label={t('expirationDate')}>
+                    <Input
                       type="date"
                       value={expirationDate}
                       onChange={(e) => setExpirationDate(e.target.value)}
-                      className="w-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
                       disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                      inputSize="sm"
+                      fullWidth
                     />
-                  </div>
+                  </FormField>
                 )}
 
                 {/* Due Date - Show for all document types */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1 sm:mb-1.5">
-                    {t('dueDate')}
-                  </label>
-                  <input
+                <FormField label={t('dueDate')}>
+                  <Input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-slate-100 disabled:text-slate-500"
                     disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                    inputSize="sm"
+                    fullWidth
                   />
-                </div>
+                </FormField>
               </div>
             </div>
           </div>
@@ -1200,17 +1046,16 @@ export default function DocumentEditPage({
 
           {/* Notes */}
           <div className="mt-2">
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              {t('notes')}
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              placeholder={t('additionalNotes')}
-              disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-            />
+            <FormField label={t('notes')}>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder={t('additionalNotes')}
+                disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                className="w-full"
+              />
+            </FormField>
           </div>
 
           {/* Signature Details and Totals section */}
@@ -1285,7 +1130,7 @@ export default function DocumentEditPage({
                 {config.features.hasValidation && (
                   isValidated ? (
                     <button
-                      onClick={() => setShowDevalidateConfirm(true)}
+                      onClick={() => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') })}
                       className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2 font-medium"
                     >
                       <XCircle className="w-4 h-4" />
@@ -1293,7 +1138,7 @@ export default function DocumentEditPage({
                     </button>
                   ) : (
                     <button
-                      onClick={() => setShowValidateConfirm(true)}
+                      onClick={() => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') })}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
                     >
                       <CheckCircle className="w-4 h-4" />
@@ -1306,14 +1151,14 @@ export default function DocumentEditPage({
                 {documentType === 'bon_livraison' && status === 'in_progress' && (
                   <>
                     <button
-                      onClick={() => setShowDeliverConfirm(true)}
+                      onClick={() => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') })}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
                     >
                       <Truck className="w-4 h-4" />
                       {t('markAsDelivered')}
                     </button>
                     <button
-                      onClick={() => setShowCancelConfirm(true)}
+                      onClick={() => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') })}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
                     >
                       <Ban className="w-4 h-4" />
@@ -1338,7 +1183,7 @@ export default function DocumentEditPage({
                         <button
                           onClick={() => {
                             setShowActionsMenu(false);
-                            setShowCreateInvoiceConfirm(true);
+                            toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                           }}
                           className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-lg"
                         >
@@ -1354,7 +1199,7 @@ export default function DocumentEditPage({
                 {documentType === 'devis' && isValidated && status !== 'closed' && (
                   <>
                     <button
-                      onClick={() => setShowSignConfirm(true)}
+                      onClick={() => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') })}
                       disabled={status === 'signed'}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1362,7 +1207,7 @@ export default function DocumentEditPage({
                       {t('signQuote')}
                     </button>
                     <button
-                      onClick={() => setShowUnsignConfirm(true)}
+                      onClick={() => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') })}
                       disabled={status !== 'signed'}
                       className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1402,7 +1247,7 @@ export default function DocumentEditPage({
                         <button
                           onClick={() => {
                             setShowActionsMenu(false);
-                            setShowCreateInvoiceConfirm(true);
+                            toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                           }}
                           className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3"
                         >
@@ -1414,7 +1259,7 @@ export default function DocumentEditPage({
                         <button
                           onClick={() => {
                             setShowActionsMenu(false);
-                            setShowCreateBonConfirm(true);
+                            toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') });
                           }}
                           className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-b-lg"
                         >
@@ -1435,95 +1280,22 @@ export default function DocumentEditPage({
                 )}
 
                 {/* Save button */}
-                <button
+                <Button
                   onClick={handleSave}
-                  className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2 font-medium shadow-sm"
                   disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
+                  loading={saving}
+                  loadingText={t('saving')}
+                  leadingIcon={Save}
                 >
-                  <Save className="w-4 h-4" />
-                  {saving ? t('saving') : t('save')}
-                </button>
+                  {t('save')}
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {config.features.hasValidation && (
-        <>
-          <ConfirmDialog
-            isOpen={showValidateConfirm}
-            onClose={() => setShowValidateConfirm(false)}
-            onConfirm={handleValidate}
-            title={t('validateDocumentTitle')}
-            message={t('confirmValidateDocument')}
-            type="warning"
-            confirmText={t('validateDocument')}
-            cancelText={t('cancel')}
-          />
 
-          <ConfirmDialog
-            isOpen={showDevalidateConfirm}
-            onClose={() => setShowDevalidateConfirm(false)}
-            onConfirm={handleDevalidate}
-            title={t('devalidateDocumentTitle')}
-            message={t('confirmDevalidateDocument')}
-            type="warning"
-            confirmText={t('devalidateDocument')}
-            cancelText={t('cancel')}
-          />
-        </>
-      )}
-
-      {(documentType === 'devis' || documentType === 'bon_livraison') && (
-        <ConfirmDialog
-          isOpen={showCreateInvoiceConfirm}
-          onClose={() => setShowCreateInvoiceConfirm(false)}
-          onConfirm={handleCreateInvoice}
-          title={t('createInvoiceTitle')}
-          message={`${t('createInvoiceMessage')} ${documentType === 'devis' ? t('thisQuote') : t('thisDeliveryNote')}${t('allDataWillBeCopied')}`}
-          type="info"
-          confirmText={t('create')}
-          cancelText={t('cancel')}
-        />
-      )}
-
-      {documentType === 'devis' && (
-        <>
-          <ConfirmDialog
-            isOpen={showCreateBonConfirm}
-            onClose={() => setShowCreateBonConfirm(false)}
-            onConfirm={handleCreateBon}
-            title={t('createDeliveryNoteTitle')}
-            message={t('confirmCreateDeliveryNote')}
-            type="info"
-            confirmText={t('create')}
-            cancelText={t('cancel')}
-          />
-
-          <ConfirmDialog
-            isOpen={showSignConfirm}
-            onClose={() => setShowSignConfirm(false)}
-            onConfirm={handleSignQuote}
-            title={t('signQuoteTitle')}
-            message={t('confirmSignQuote')}
-            type="info"
-            confirmText={t('signQuote')}
-            cancelText={t('cancel')}
-          />
-
-          <ConfirmDialog
-            isOpen={showUnsignConfirm}
-            onClose={() => setShowUnsignConfirm(false)}
-            onConfirm={handleUnsignQuote}
-            title={t('rejectQuoteTitle')}
-            message={t('confirmRejectQuote')}
-            type="warning"
-            confirmText={t('rejectButton')}
-            cancelText={t('no')}
-          />
-        </>
-      )}
 
       {documentType === 'devis' && (
         <ShareQuoteDialog
@@ -1536,39 +1308,7 @@ export default function DocumentEditPage({
         />
       )}
 
-      {documentType === 'bon_livraison' && (
-        <>
-          <ConfirmDialog
-            isOpen={showDeliverConfirm}
-            onClose={() => setShowDeliverConfirm(false)}
-            onConfirm={handleDeliver}
-            title={t('markAsDeliveredTitle')}
-            message={t('confirmMarkDelivered')}
-            type="info"
-            confirmText={t('deliverButton')}
-            cancelText={t('cancel')}
-          />
 
-          <ConfirmDialog
-            isOpen={showCancelConfirm}
-            onClose={() => setShowCancelConfirm(false)}
-            onConfirm={handleCancel}
-            title={t('cancelDeliveryTitle')}
-            message={t('confirmCancelDelivery')}
-            type="warning"
-            confirmText={t('cancelDeliveryButton')}
-            cancelText={t('no')}
-          />
-        </>
-      )}
-
-      <AlertDialog
-        isOpen={showAlert}
-        onClose={() => setShowAlert(false)}
-        title={alertMessage.title}
-        message={alertMessage.message}
-        type={alertMessage.type}
-      />
 
       {documentType === 'facture' && (
         <PaymentHistoryModal

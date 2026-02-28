@@ -3,7 +3,7 @@ import { Bell, Check, CheckCheck } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { toast } from 'sonner';
+import { toastSuccess } from '../services/toast.service';
 interface Notification {
   Id: number;
   Title: string;
@@ -25,7 +25,10 @@ export function NotificationBell() {
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', 'delivery', deliveryPerson?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/notifications?userType=delivery&deliveryPersonId=${deliveryPerson?.id}`);
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const response = await fetch(`/api/notifications?userType=delivery&userId=${deliveryPerson?.id}`, { headers });
       if (!response.ok) throw new Error('Failed to fetch notifications');
       return response.json();
     },
@@ -37,7 +40,10 @@ export function NotificationBell() {
   const { data: unreadData } = useQuery({
     queryKey: ['notifications', 'delivery', deliveryPerson?.id, 'unread-count'],
     queryFn: async () => {
-      const response = await fetch(`/api/notifications/unread-count?userType=delivery&deliveryPersonId=${deliveryPerson?.id}`);
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const response = await fetch(`/api/notifications/unread-count?userId=${deliveryPerson?.id}`, { headers });
       if (!response.ok) throw new Error('Failed to fetch unread count');
       return response.json();
     },
@@ -50,8 +56,10 @@ export function NotificationBell() {
   // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: number) => {
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`/api/notifications/${notificationId}/read`, {
         method: 'PATCH',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to mark as read');
       return response.json();
@@ -64,17 +72,17 @@ export function NotificationBell() {
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/notifications/mark-all-read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userType: 'delivery', deliveryPersonId: deliveryPerson?.id }),
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/notifications/mark-all-read?userId=${deliveryPerson?.id}`, {
+        method: 'PATCH',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to mark all as read');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toast.success(t('allNotificationsMarkedAsRead') || 'All notifications marked as read');
+      toastSuccess(t('allNotificationsMarkedAsRead') || 'All notifications marked as read');
     },
   });
 
@@ -120,14 +128,14 @@ export function NotificationBell() {
       'Delivery Assigned': 'notifications.orderAssigned',
       'New Order Assigned': 'notifications.orderAssigned',
     };
-    
+
     const titleKey = titleMap[notification.Title] || notification.Title;
     const title = t(titleKey as any) || notification.Title;
-    
+
     // Parse message - handle both old and new formats
     let orderNumber = notification.Message;
     let statusKey = '';
-    
+
     // Check if message contains '|' (new format: "orderNumber|statusKey")
     if (notification.Message.includes('|')) {
       const parts = notification.Message.split('|');
@@ -140,7 +148,7 @@ export function NotificationBell() {
         orderNumber = orderMatch[0];
       }
     }
-    
+
     let message = '';
     if (statusKey) {
       const status = t(statusKey as any) || statusKey;
@@ -152,7 +160,7 @@ export function NotificationBell() {
         ? `#${orderNumber} ${t('order')}`
         : `${t('order')} #${orderNumber}`;
     }
-    
+
     return { title, message };
   };
 
@@ -178,8 +186,8 @@ export function NotificationBell() {
 
       {isOpen && (
         <>
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute end-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg z-50 border">
@@ -208,9 +216,8 @@ export function NotificationBell() {
                       <div
                         key={notification.Id}
                         onClick={() => handleNotificationClick(notification)}
-                        className={`p-4 hover:bg-gray-50 cursor-pointer transition-all ${
-                          !notification.IsRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
-                        }`}
+                        className={`p-4 hover:bg-gray-50 cursor-pointer transition-all ${!notification.IsRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
+                          }`}
                       >
                         <div className="flex items-start gap-3">
                           {getNotificationIcon(notification.Type)}

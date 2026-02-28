@@ -1,4 +1,4 @@
-import { Partner as IPartner, CreatePartnerDTO, UpdatePartnerDTO } from './partners.interface';
+import { IPartner, CreatePartnerDTO, UpdatePartnerDTO } from './partners.interface';
 
 export class Partner implements IPartner {
   id: number;
@@ -81,23 +81,30 @@ export class Partner implements IPartner {
     return !!(this.ice || this.if || this.cnss || this.rc || this.patente || this.tvaNumber);
   }
 
-  // Methods
-  canPlaceOrder(): boolean {
-    return this.isEnabled && this.isCustomer;
+  get initials(): string {
+    return this.name
+      .split(' ')
+      .slice(0, 2)
+      .map(w => w[0]?.toUpperCase() ?? '')
+      .join('');
   }
 
-  canSupply(): boolean {
-    return this.isEnabled && this.isSupplier;
+  get shortAddress(): string {
+    if (!this.address) return '';
+    const parts = this.address.split(',');
+    return parts[parts.length - 1]?.trim() ?? this.address;
   }
 
-  hasValidEmail(): boolean {
-    if (!this.email) return false;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(this.email);
+  get hasDeliveryAddress(): boolean {
+    return !!this.deliveryAddress;
   }
 
-  hasValidPhone(): boolean {
-    return !!this.phoneNumber && this.phoneNumber.length > 0;
+  get preferredMapUrl(): string | null {
+    return this.googleMapsUrl ?? this.wazeUrl ?? null;
+  }
+
+  get isBothRoles(): boolean {
+    return this.isCustomer && this.isSupplier;
   }
 
   // Static factory method
@@ -178,6 +185,30 @@ export class Partner implements IPartner {
       isSupplier: this.isSupplier,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
+    };
+  }
+
+  toCreateDTO(): CreatePartnerDTO {
+    return {
+      name: this.name,
+      phoneNumber: this.phoneNumber,
+      email: this.email,
+      address: this.address,
+      ice: this.ice,
+      if: this.if,
+      cnss: this.cnss,
+      rc: this.rc,
+      patente: this.patente,
+      tvaNumber: this.tvaNumber,
+      deliveryAddress: this.deliveryAddress,
+      isCompany: this.isCompany,
+      latitude: this.latitude,
+      longitude: this.longitude,
+      googleMapsUrl: this.googleMapsUrl,
+      wazeUrl: this.wazeUrl,
+      isEnabled: this.isEnabled,
+      isCustomer: this.isCustomer,
+      isSupplier: this.isSupplier,
     };
   }
 }

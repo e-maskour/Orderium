@@ -10,10 +10,16 @@ import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { ImageUpload } from '../components/ImageUpload';
-import { Package, ArrowLeft, Save, Plus, ArrowRightLeft, Edit2, CheckSquare, RefreshCw, Image as ImageIcon } from 'lucide-react';
-import { toast } from 'sonner';
+import { Package, ArrowLeft, Save, Plus, ArrowRightLeft, Edit2, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { toastSuccess, toastUpdated, toastDeleted, toastError } from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 import { useLanguage } from '../context/LanguageContext';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { FormField } from '../components/ui/form-field';
+import { Textarea } from '../components/ui/textarea';
+import { NativeSelect } from '../components/ui/native-select';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -73,10 +79,10 @@ export default function ProductDetail() {
       const uniqueCode = await generateUniqueProductCode();
       setFormData(prev => ({ ...prev, code: uniqueCode }));
       clearFieldError('code');
-      toast.success(t('newUniqueCodeGenerated'));
+      toastSuccess(t('newUniqueCodeGenerated'));
     } catch (error) {
       console.error('Failed to generate unique code:', error);
-      toast.error(t('failedToGenerateUniqueCode'));
+      toastError(t('failedToGenerateUniqueCode'));
     } finally {
       setIsGeneratingCode(false);
     }
@@ -90,13 +96,13 @@ export default function ProductDetail() {
       await updateMutation.mutateAsync({
         imageUrl: imageUrlInput.trim(),
       });
-      
+
       setImageUrlInput('');
       setShowUrlInput(false);
-      toast.success(t('imageUrlSavedSuccessfully'));
+      toastUpdated(t('imageUrlSavedSuccessfully'));
       queryClient.invalidateQueries({ queryKey: ['product', id] });
     } catch (error) {
-      toast.error(t('failedToSaveImageUrl'));
+      toastError(t('failedToSaveImageUrl'));
     }
   };
 
@@ -206,10 +212,10 @@ export default function ProductDetail() {
       queryClient.invalidateQueries({ queryKey: ['product', id] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       setIsEditing(false);
-      toast.success(t('productUpdatedSuccessfully'));
+      toastUpdated(t('productUpdatedSuccessfully'));
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to update product');
+      toastError(error.message || t('failedToUpdateProduct'));
     },
   });
 
@@ -237,10 +243,10 @@ export default function ProductDetail() {
         unitPrice: '',
         notes: '',
       });
-      toast.success(t('stockCorrectedSuccessfully'));
+      toastUpdated(t('stockCorrectedSuccessfully'));
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to correct stock');
+      toastError(error.message || t('failedToCorrectStock'));
     },
   });
 
@@ -262,10 +268,10 @@ export default function ProductDetail() {
         quantity: '',
         notes: '',
       });
-      toast.success(t('stockTransferredSuccessfully'));
+      toastUpdated(t('stockTransferredSuccessfully'));
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to transfer stock');
+      toastError(error.message || t('failedToTransferStock'));
     },
   });
 
@@ -274,11 +280,11 @@ export default function ProductDetail() {
     if (product) {
       const productCategories = (product as any).categories || [];
       const categoryIdsFromProduct = productCategories.map((c: any) => c.id);
-      
+
       // Get UOM names from relations
       const saleUnitName = (product as any).saleUnitOfMeasure?.name || '';
       const purchaseUnitName = (product as any).purchaseUnitOfMeasure?.name || '';
-      
+
       setFormData({
         name: product.name,
         code: product.code || '',
@@ -296,10 +302,10 @@ export default function ProductDetail() {
         isEnabled: product.isEnabled,
         isPriceChangeAllowed: product.isPriceChangeAllowed,
       });
-      
+
       // Store category objects for display
       setSelectedCategories(productCategories);
-      
+
       // Set warehouse for autocomplete
       if (product.warehouseId) {
         // Check if product has warehouse object from API
@@ -324,7 +330,7 @@ export default function ProductDetail() {
     if (hasValidationErrors(errors)) {
       const firstError = getFirstError(errors);
       if (firstError) {
-        toast.error(firstError);
+        toastError(firstError);
       }
       return;
     }
@@ -350,7 +356,7 @@ export default function ProductDetail() {
       saleUnitId: saleUom?.id || null,
       purchaseUnitId: purchaseUom?.id || null,
     };
-    
+
     updateMutation.mutate(updateData);
   };
 
@@ -409,31 +415,28 @@ export default function ProductDetail() {
         <div className="flex border-b border-slate-200 px-4">
           <button
             onClick={() => setActiveTab('info')}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
-              activeTab === 'info'
-                ? 'text-amber-600 border-b-2 border-amber-600'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${activeTab === 'info'
+              ? 'text-amber-600 border-b-2 border-amber-600'
+              : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             Information
           </button>
           <button
             onClick={() => setActiveTab('pricing')}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
-              activeTab === 'pricing'
-                ? 'text-amber-600 border-b-2 border-amber-600'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${activeTab === 'pricing'
+              ? 'text-amber-600 border-b-2 border-amber-600'
+              : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             Tarification
           </button>
           <button
             onClick={() => setActiveTab('stock')}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
-              activeTab === 'stock'
-                ? 'text-amber-600 border-b-2 border-amber-600'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${activeTab === 'stock'
+              ? 'text-amber-600 border-b-2 border-amber-600'
+              : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             Stock
             <span className="ml-1.5 px-1.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
@@ -450,7 +453,7 @@ export default function ProductDetail() {
               {/* Basic Info Section */}
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('basicInformation')}</h3>
-                
+
                 {/* Image + Name/Code Layout */}
                 <div className="grid grid-cols-3 gap-6 mb-6">
                   {/* Product Image - Left Side (Interactive Upload Card) */}
@@ -461,11 +464,11 @@ export default function ProductDetail() {
                         currentImage={(product as any)?.imageUrl}
                         onImageUpload={(url, publicId) => {
                           queryClient.invalidateQueries({ queryKey: ['product', id] });
-                          toast.success(t('imageUpdatedSuccessfully'));
+                          toastUpdated(t('imageUpdatedSuccessfully'));
                         }}
                         onImageRemove={() => {
                           queryClient.invalidateQueries({ queryKey: ['product', id] });
-                          toast.success(t('imageRemovedSuccessfully'));
+                          toastDeleted(t('imageRemovedSuccessfully'));
                         }}
                         folder="products"
                         maxSizeMB={5}
@@ -478,40 +481,30 @@ export default function ProductDetail() {
                   <div className="col-span-2">
                     <div className="space-y-4">
                       {/* Product Name */}
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                          {t('productName')} <span className="text-red-500">*</span>
-                        </label>
-                        <input
+                      <FormField label={t('productName')} required>
+                        <Input
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                           placeholder={t('enterProductName')}
+                          fullWidth
                         />
-                      </div>
+                      </FormField>
                       {/* Product Code */}
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                          {t('productCodeEAN13')}
-                        </label>
+                      <FormField label={t('productCodeEAN13')} error={validationErrors.code}>
                         <div className="relative">
-                          <input
+                          <Input
                             type="text"
                             value={formData.code}
                             onChange={(e) => {
                               setFormData({ ...formData, code: e.target.value });
                               clearFieldError('code');
                             }}
-                            className={`w-full px-3 py-2 rounded-lg border ${
-                              validationErrors.code ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
-                            } focus:ring-2`}
+                            variant={validationErrors.code ? 'error' : 'default'}
                             placeholder={t('eanBarcodeePlaceholder')}
                             maxLength={13}
+                            fullWidth
                           />
-                          {validationErrors.code && (
-                            <p className="mt-1 text-sm text-red-600">{validationErrors.code}</p>
-                          )}
                           {!validationErrors.code && formData.code && (
                             <p className="mt-1 text-xs text-slate-500">{t('eanBarcodeHint')}</p>
                           )}
@@ -526,54 +519,44 @@ export default function ProductDetail() {
                             {isGeneratingCode ? t('generating') : t('generateCode')}
                           </button>
                         </div>
-                      </div>
+                      </FormField>
                     </div>
                   </div>
                 </div>
 
                 {/* Image URL Input - Full width below upload card and product fields */}
                 {showUrlInput && (
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('imageUrl')}
-                    </label>
+                  <FormField label={t('imageUrl')} hint={t('enterWebImageUrl')}>
                     <div className="flex gap-2">
-                      <input
+                      <Input
                         type="text"
                         value={imageUrlInput}
                         onChange={(e) => setImageUrlInput(e.target.value)}
                         placeholder={t('exampleImageUrl')}
-                        className="flex-1 px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-sm"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
                             handleSaveImageUrl();
                           }
                         }}
+                        fullWidth
                       />
-                      <button
+                      <Button
                         type="button"
                         onClick={handleSaveImageUrl}
                         disabled={!imageUrlInput.trim() || updateMutation.isPending}
-                        className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         {t('saveUrl')}
-                      </button>
+                      </Button>
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {t('enterWebImageUrl')}
-                    </p>
-                  </div>
+                  </FormField>
                 )}
 
-                {/* Warehouse and Categories */}
+                {/* IWarehouse and Categories */}
                 <div className="grid grid-cols-2 gap-6 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('warehouse')} <span className="text-red-500">*</span>
-                    </label>
+                  <FormField label={t('warehouse')} required>
                     <div className="relative" ref={warehouseSearchRef}>
-                      <input
+                      <Input
                         type="text"
                         value={warehouseSearchTerm}
                         onChange={(e) => {
@@ -581,8 +564,8 @@ export default function ProductDetail() {
                           setShowWarehouseSearch(true);
                         }}
                         onFocus={() => setShowWarehouseSearch(true)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                         placeholder={t('selectOrSearchWarehouse')}
+                        fullWidth
                       />
                       {showWarehouseSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -618,12 +601,9 @@ export default function ProductDetail() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('categories')}
-                    </label>
+                  <FormField label={t('categories')}>
                     <div className="relative" ref={categorySearchRef}>
                       {/* Input container with chips inside */}
                       <div className="w-full min-h-[42px] px-3 py-2 rounded-lg border border-slate-200 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 flex flex-wrap gap-2 items-center">
@@ -678,9 +658,9 @@ export default function ProductDetail() {
                                   key={category.id}
                                   onClick={() => {
                                     setSelectedCategories([...selectedCategories, category]);
-                                    setFormData({ 
-                                      ...formData, 
-                                      categoryIds: [...formData.categoryIds, category.id] 
+                                    setFormData({
+                                      ...formData,
+                                      categoryIds: [...formData.categoryIds, category.id]
                                     });
                                     setCategorySearchTerm('');
                                     setShowCategorySearch(false);
@@ -701,20 +681,19 @@ export default function ProductDetail() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </FormField>
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t('description')}
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                    placeholder={t('enterProductDescription')}
-                  />
+                  <FormField label={t('description')}>
+                    <Textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      rows={4}
+                      placeholder={t('enterProductDescription')}
+                      className="w-full"
+                    />
+                  </FormField>
                 </div>
               </div>
 
@@ -722,83 +701,43 @@ export default function ProductDetail() {
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('options')}</h3>
                 <div className="space-y-3">
-                  <label className="flex items-center gap-3">
-                    <div
-                      onClick={() => setFormData({ ...formData, isService: !formData.isService })}
-                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer ${
-                        formData.isService
-                          ? 'bg-amber-500 border-amber-500 text-white'
-                          : 'bg-white border-slate-300'
-                      }`}
-                    >
-                      {formData.isService && <CheckSquare className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-slate-700">{t('isService')}</span>
-                      <p className="text-xs text-slate-500">
-                        {t('serviceDescription')}
-                      </p>
-                    </div>
-                  </label>
+                  <Checkbox
+                    checked={formData.isService}
+                    onChange={() => setFormData({ ...formData, isService: !formData.isService })}
+                    label={t('isService')}
+                  />
+                  <p className="text-xs text-slate-500 ml-8">{t('serviceDescription')}</p>
 
-                  <label className="flex items-center gap-3">
-                    <div
-                      onClick={() => setFormData({ ...formData, isEnabled: !formData.isEnabled })}
-                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer ${
-                        formData.isEnabled
-                          ? 'bg-amber-500 border-amber-500 text-white'
-                          : 'bg-white border-slate-300'
-                      }`}
-                    >
-                      {formData.isEnabled && <CheckSquare className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-slate-700">{t('enabled')}</span>
-                      <p className="text-xs text-slate-500">
-                        {t('enabledDescription')}
-                      </p>
-                    </div>
-                  </label>
+                  <Checkbox
+                    checked={formData.isEnabled}
+                    onChange={() => setFormData({ ...formData, isEnabled: !formData.isEnabled })}
+                    label={t('enabled')}
+                  />
+                  <p className="text-xs text-slate-500 ml-8">{t('enabledDescription')}</p>
 
-                  <label className="flex items-center gap-3">
-                    <div
-                      onClick={() => setFormData({ ...formData, isPriceChangeAllowed: !formData.isPriceChangeAllowed })}
-                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer ${
-                        formData.isPriceChangeAllowed
-                          ? 'bg-amber-500 border-amber-500 text-white'
-                          : 'bg-white border-slate-300'
-                      }`}
-                    >
-                      {formData.isPriceChangeAllowed && <CheckSquare className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-slate-700">{t('allowPriceChange')}</span>
-                      <p className="text-xs text-slate-500">
-                        {t('allowPriceChangeDescription')}
-                      </p>
-                    </div>
-                  </label>
+                  <Checkbox
+                    checked={formData.isPriceChangeAllowed}
+                    onChange={() => setFormData({ ...formData, isPriceChangeAllowed: !formData.isPriceChangeAllowed })}
+                    label={t('allowPriceChange')}
+                  />
+                  <p className="text-xs text-slate-500 ml-8">{t('allowPriceChangeDescription')}</p>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate('/products')}
-                  className="px-6 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                >
+                <Button type="button" variant="outline" onClick={() => navigate('/products')}>
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={handleSave}
-                  disabled={updateMutation.isPending}
-                  className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all flex items-center gap-2 disabled:opacity-50"
+                  loading={updateMutation.isPending}
+                  loadingText={t('saving')}
+                  leadingIcon={Save}
                 >
-                  <Save className="w-4 h-4" />
-                  {updateMutation.isPending ? t('saving') : t('saveChanges')}
-                </button>
+                  {t('saveChanges')}
+                </Button>
               </div>
             </div>
           )}
@@ -809,24 +748,23 @@ export default function ProductDetail() {
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-slate-900">{t('stockManagement')}</h3>
                 <div className="flex gap-3">
-                  <button
+                  <Button
                     onClick={() => setShowStockCorrection(true)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                    leadingIcon={Plus}
                   >
-                    <Plus className="w-5 h-5" />
                     {t('correctStock')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => setShowStockTransfer(true)}
-                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
+                    className="bg-purple-500 hover:bg-purple-600"
+                    leadingIcon={ArrowRightLeft}
                   >
-                    <ArrowRightLeft className="w-5 h-5" />
                     {t('transferStock')}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
-              {/* Stock by Warehouse */}
+              {/* Stock by IWarehouse */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full">
                   <thead className="bg-slate-50">
@@ -850,7 +788,7 @@ export default function ProductDetail() {
                       stockQuants.map((sq) => (
                         <tr key={sq.id} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-sm text-slate-900">
-                            {sq.location?.name || t('unknown')}
+                            {sq.warehouse?.name || t('unknown')}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">
                             {parseFloat(sq.quantity.toString()).toFixed(2)}
@@ -900,38 +838,33 @@ export default function ProductDetail() {
           {activeTab === 'pricing' && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-slate-900">{t('pricing')}</h3>
-              
+
               {/* Sale Price Section */}
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                 <h4 className="font-medium text-slate-900 mb-3">{t('salePrice')}</h4>
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('price')} <span className="text-red-500">*</span>
-                    </label>
+                  <FormField label={t('price')} required>
                     <div className="relative">
-                      <input
+                      <Input
                         type="number"
                         step="0.01"
                         min="0"
                         value={formData.price}
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         disabled={!isEditing}
-                        className={`w-full py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-50 disabled:text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder={t('numericPlaceholder')}
+                        fullWidth
                       />
                       <span className={`absolute top-2.5 text-slate-500 text-sm ${language === 'ar' ? 'left-3' : 'right-3'}`}>
                         {language === 'ar' ? 'د.م' : 'DH'}
                       </span>
                     </div>
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Unité
-                    </label>
+                  <FormField label={t('unit')}>
                     <div className="relative" ref={saleUnitSearchRef}>
-                      <input
+                      <Input
                         type="text"
                         value={formData.saleUnit}
                         onChange={(e) => {
@@ -939,8 +872,8 @@ export default function ProductDetail() {
                           setShowSaleUnitSearch(true);
                         }}
                         onFocus={() => setShowSaleUnitSearch(true)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                         placeholder={t('unit')}
+                        fullWidth
                       />
                       {showSaleUnitSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -974,14 +907,11 @@ export default function ProductDetail() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('tax')}
-                    </label>
+                  <FormField label={t('tax')}>
                     <div className="relative" ref={saleTaxSearchRef}>
-                      <input
+                      <Input
                         type="text"
                         value={formData.saleTax}
                         onChange={(e) => {
@@ -989,8 +919,8 @@ export default function ProductDetail() {
                           setShowSaleTaxSearch(true);
                         }}
                         onFocus={() => setShowSaleTaxSearch(true)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                         placeholder={t('taxPlaceholder')}
+                        fullWidth
                       />
                       {showSaleTaxSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -1016,7 +946,7 @@ export default function ProductDetail() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </FormField>
                 </div>
                 {parseFloat(formData.saleTax) > 0 && formData.price && (
                   <p className="mt-2 text-sm text-slate-600">
@@ -1029,32 +959,27 @@ export default function ProductDetail() {
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                 <h4 className="font-medium text-slate-900 mb-3">{t('costPrice')}</h4>
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('price')} <span className="text-red-500">*</span>
-                    </label>
+                  <FormField label={t('price')} required>
                     <div className="relative">
-                      <input
+                      <Input
                         type="number"
                         step="0.01"
                         min="0"
                         value={formData.cost}
                         onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                        className={`w-full py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder={t('numericPlaceholder')}
+                        fullWidth
                       />
                       <span className={`absolute top-2.5 text-slate-500 text-sm ${language === 'ar' ? 'left-3' : 'right-3'}`}>
                         {language === 'ar' ? 'د.م' : 'DH'}
                       </span>
                     </div>
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('unitLabel')}
-                    </label>
+                  <FormField label={t('unitLabel')}>
                     <div className="relative" ref={purchaseUnitSearchRef}>
-                      <input
+                      <Input
                         type="text"
                         value={formData.purchaseUnit}
                         onChange={(e) => {
@@ -1062,8 +987,8 @@ export default function ProductDetail() {
                           setShowPurchaseUnitSearch(true);
                         }}
                         onFocus={() => setShowPurchaseUnitSearch(true)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                         placeholder={t('unit')}
+                        fullWidth
                       />
                       {showPurchaseUnitSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -1097,14 +1022,11 @@ export default function ProductDetail() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('tax')}
-                    </label>
+                  <FormField label={t('tax')}>
                     <div className="relative" ref={purchaseTaxSearchRef}>
-                      <input
+                      <Input
                         type="text"
                         value={formData.purchaseTax}
                         onChange={(e) => {
@@ -1112,8 +1034,8 @@ export default function ProductDetail() {
                           setShowPurchaseTaxSearch(true);
                         }}
                         onFocus={() => setShowPurchaseTaxSearch(true)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                         placeholder={t('taxPlaceholder')}
+                        fullWidth
                       />
                       {showPurchaseTaxSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -1139,32 +1061,30 @@ export default function ProductDetail() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </FormField>
                 </div>
               </div>
 
               {/* Additional Pricing Fields */}
               <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t('minPrice')}
-                  </label>
+                <FormField label={t('minPrice')}>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       step="0.01"
                       min="0"
                       value={formData.minPrice}
                       onChange={(e) => setFormData({ ...formData, minPrice: e.target.value })}
                       disabled={!isEditing}
-                      className={`w-full py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-50 disabled:text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
+                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder={t('numericPlaceholder')}
+                      fullWidth
                     />
                     <span className={`absolute top-2.5 text-slate-500 ${language === 'ar' ? 'left-3' : 'right-3'}`}>
                       {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
-                </div>
+                </FormField>
               </div>
 
               {/* Margin Preview */}
@@ -1183,9 +1103,9 @@ export default function ProductDetail() {
                       <p className="text-lg font-bold text-green-600">
                         {parseFloat(formData.cost) > 0
                           ? (((parseFloat(formData.price) - parseFloat(formData.cost)) /
-                              parseFloat(formData.cost)) *
-                              100
-                            ).toFixed(2)
+                            parseFloat(formData.cost)) *
+                            100
+                          ).toFixed(2)
                           : '0.00'}
                         %
                       </p>
@@ -1195,9 +1115,9 @@ export default function ProductDetail() {
                       <p className="text-lg font-bold text-blue-600">
                         {parseFloat(formData.price) > 0
                           ? (((parseFloat(formData.price) - parseFloat(formData.cost)) /
-                              parseFloat(formData.price)) *
-                              100
-                            ).toFixed(2)
+                            parseFloat(formData.price)) *
+                            100
+                          ).toFixed(2)
                           : '0.00'}
                         %
                       </p>
@@ -1208,22 +1128,18 @@ export default function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate('/products')}
-                  className="px-6 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                >
+                <Button type="button" variant="outline" onClick={() => navigate('/products')}>
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={handleSave}
-                  disabled={updateMutation.isPending}
-                  className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all flex items-center gap-2 disabled:opacity-50"
+                  loading={updateMutation.isPending}
+                  loadingText={t('saving')}
+                  leadingIcon={Save}
                 >
-                  <Save className="w-4 h-4" />
-                  {updateMutation.isPending ? t('saving') : t('saveChanges')}
-                </button>
+                  {t('saveChanges')}
+                </Button>
               </div>
             </div>
           )}
@@ -1259,24 +1175,20 @@ export default function ProductDetail() {
                   </button>
                 </div>
               )}
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Entrepôt <span className="text-red-500">*</span>
-                </label>
-                <select
+
+              <FormField label="Entrepôt" required>
+                <NativeSelect
                   value={stockCorrectionData.warehouseId}
                   onChange={(e) =>
                     setStockCorrectionData({ ...stockCorrectionData, warehouseId: e.target.value })
                   }
                   disabled={warehouses.length === 0}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-100 disabled:cursor-not-allowed"
                 >
                   <option value="">
-                    {warehousesLoading 
-                      ? t('loading') 
-                      : warehouses.length === 0 
-                        ? t('noWarehouseCreateOne') 
+                    {warehousesLoading
+                      ? t('loading')
+                      : warehouses.length === 0
+                        ? t('noWarehouseCreateOne')
                         : t('selectWarehouse')}
                   </option>
                   {warehouses.map((wh) => (
@@ -1284,18 +1196,10 @@ export default function ProductDetail() {
                       {wh.name}
                     </option>
                   ))}
-                </select>
-                {warehouses.length > 0 && (
-                  <p className="mt-1 text-xs text-slate-500">
-                    {warehouses.length} entrepôt(s) disponible(s)
-                  </p>
-                )}
-              </div>
+                </NativeSelect>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Ajouter/Supprimer <span className="text-red-500">*</span>
-                </label>
+              <FormField label="Ajouter/Supprimer" required>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2">
                     <input
@@ -1320,28 +1224,22 @@ export default function ProductDetail() {
                     <span className="text-sm">{t('remove')}</span>
                   </label>
                 </div>
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Nombre de pièces <span className="text-red-500">*</span>
-                </label>
-                <input
+              <FormField label="Nombre de pièces" required>
+                <Input
                   type="number"
                   min="0"
                   value={stockCorrectionData.quantity}
                   onChange={(e) =>
                     setStockCorrectionData({ ...stockCorrectionData, quantity: e.target.value })
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                  fullWidth
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Prix d'achat unitaire
-                </label>
-                <input
+              <FormField label="Prix d'achat unitaire">
+                <Input
                   type="number"
                   step="0.01"
                   min="0"
@@ -1349,24 +1247,21 @@ export default function ProductDetail() {
                   onChange={(e) =>
                     setStockCorrectionData({ ...stockCorrectionData, unitPrice: e.target.value })
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                  fullWidth
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Libellé du mouvement
-                </label>
-                <input
+              <FormField label="Libellé du mouvement">
+                <Input
                   type="text"
                   value={stockCorrectionData.notes}
                   onChange={(e) =>
                     setStockCorrectionData({ ...stockCorrectionData, notes: e.target.value })
                   }
                   placeholder={`Correction du stock pour le produit ${product.code || product.name}`}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                  fullWidth
                 />
-              </div>
+              </FormField>
 
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-xs text-slate-600">Code mouvement ou inventaire</p>
@@ -1377,175 +1272,170 @@ export default function ProductDetail() {
             </div>
 
             <div className="p-6 border-t border-slate-200 flex gap-3">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setShowStockCorrection(false)}
-                className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex-1"
               >
                 Annuler
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleStockCorrection}
                 disabled={
                   !stockCorrectionData.warehouseId ||
                   !stockCorrectionData.quantity ||
                   stockCorrectionMutation.isPending
                 }
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
+                loading={stockCorrectionMutation.isPending}
+                loadingText={t('validating')}
+                className="flex-1"
               >
-                {stockCorrectionMutation.isPending ? t('validating') : t('validate')}
-              </button>
+                {t('validate')}
+              </Button>
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* Stock Transfer Modal */}
-      {showStockTransfer && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-semibold text-slate-900">Transfert de stock</h2>
-              <p className="text-sm text-slate-600 mt-1">
-                Pour le produit {product.code || product.name}
-              </p>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {warehouses.length === 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-amber-800 mb-2">
-                    <strong>Aucun entrepôt disponible.</strong>
-                  </p>
-                  <p className="text-xs text-amber-700 mb-3">
-                    Vous devez créer au moins deux entrepôts pour transférer le stock.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => window.open('/warehouses', '_blank')}
-                    className="text-xs px-3 py-1.5 bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors"
-                  >
-                    Créer un entrepôt →
-                  </button>
-                </div>
-              )}
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Entrepôt source <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={stockTransferData.sourceWarehouseId}
-                  onChange={(e) =>
-                    setStockTransferData({ ...stockTransferData, sourceWarehouseId: e.target.value })
-                  }
-                  disabled={warehouses.length === 0}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-100 disabled:cursor-not-allowed"
-                >
-                  <option value="">
-                    {warehousesLoading 
-                      ? t('loading') 
-                      : warehouses.length === 0 
-                        ? t('noWarehouseCreateOne') 
-                        : t('selectSourceWarehouse')}
-                  </option>
-                  {warehouses.map((wh) => (
-                    <option key={wh.id} value={wh.id}>
-                      {wh.name}
-                    </option>
-                  ))}
-                </select>
+      {
+        showStockTransfer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-lg w-full">
+              <div className="p-6 border-b border-slate-200">
+                <h2 className="text-xl font-semibold text-slate-900">Transfert de stock</h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  Pour le produit {product.code || product.name}
+                </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Entrepôt destination <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={stockTransferData.destWarehouseId}
-                  onChange={(e) =>
-                    setStockTransferData({ ...stockTransferData, destWarehouseId: e.target.value })
-                  }
-                  disabled={warehouses.length === 0}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:bg-slate-100 disabled:cursor-not-allowed"
-                >
-                  <option value="">
-                    {warehousesLoading 
-                      ? t('loading') 
-                      : warehouses.length === 0 
-                        ? t('noWarehouseCreateOne') 
-                        : t('selectDestinationWarehouse')}
-                  </option>
-                  {warehouses
-                    .filter((wh) => wh.id.toString() !== stockTransferData.sourceWarehouseId)
-                    .map((wh) => (
+              <div className="p-6 space-y-4">
+                {warehouses.length === 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-amber-800 mb-2">
+                      <strong>Aucun entrepôt disponible.</strong>
+                    </p>
+                    <p className="text-xs text-amber-700 mb-3">
+                      Vous devez créer au moins deux entrepôts pour transférer le stock.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => window.open('/warehouses', '_blank')}
+                      className="text-xs px-3 py-1.5 bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors"
+                    >
+                      Créer un entrepôt →
+                    </button>
+                  </div>
+                )}
+
+                <FormField label="Entrepôt source" required>
+                  <NativeSelect
+                    value={stockTransferData.sourceWarehouseId}
+                    onChange={(e) =>
+                      setStockTransferData({ ...stockTransferData, sourceWarehouseId: e.target.value })
+                    }
+                    disabled={warehouses.length === 0}
+                  >
+                    <option value="">
+                      {warehousesLoading
+                        ? t('loading')
+                        : warehouses.length === 0
+                          ? t('noWarehouseCreateOne')
+                          : t('selectSourceWarehouse')}
+                    </option>
+                    {warehouses.map((wh) => (
                       <option key={wh.id} value={wh.id}>
                         {wh.name}
                       </option>
                     ))}
-                </select>
+                  </NativeSelect>
+                </FormField>
+
+                <FormField label="Entrepôt destination" required>
+                  <NativeSelect
+                    value={stockTransferData.destWarehouseId}
+                    onChange={(e) =>
+                      setStockTransferData({ ...stockTransferData, destWarehouseId: e.target.value })
+                    }
+                    disabled={warehouses.length === 0}
+                  >
+                    <option value="">
+                      {warehousesLoading
+                        ? t('loading')
+                        : warehouses.length === 0
+                          ? t('noWarehouseCreateOne')
+                          : t('selectDestinationWarehouse')}
+                    </option>
+                    {warehouses
+                      .filter((wh) => wh.id.toString() !== stockTransferData.sourceWarehouseId)
+                      .map((wh) => (
+                        <option key={wh.id} value={wh.id}>
+                          {wh.name}
+                        </option>
+                      ))}
+                  </NativeSelect>
+                </FormField>
+
+                <FormField label="Nombre de pièces" required>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={stockTransferData.quantity}
+                    onChange={(e) =>
+                      setStockTransferData({ ...stockTransferData, quantity: e.target.value })
+                    }
+                    fullWidth
+                  />
+                </FormField>
+
+                <FormField label="Libellé du mouvement">
+                  <Input
+                    type="text"
+                    value={stockTransferData.notes}
+                    onChange={(e) =>
+                      setStockTransferData({ ...stockTransferData, notes: e.target.value })
+                    }
+                    placeholder={`Transfert de stock du produit ${product.code || product.name} dans un autre entrepôt`}
+                    fullWidth
+                  />
+                </FormField>
+
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <p className="text-xs text-slate-600">Code mouvement ou inventaire</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Nombre de pièces <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={stockTransferData.quantity}
-                  onChange={(e) =>
-                    setStockTransferData({ ...stockTransferData, quantity: e.target.value })
+              <div className="p-6 border-t border-slate-200 flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowStockTransfer(false)}
+                  className="flex-1"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleStockTransfer}
+                  disabled={
+                    !stockTransferData.sourceWarehouseId ||
+                    !stockTransferData.destWarehouseId ||
+                    !stockTransferData.quantity ||
+                    stockTransferMutation.isPending
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                />
+                  loading={stockTransferMutation.isPending}
+                  loadingText={t('transferring')}
+                  className="flex-1"
+                >
+                  {t('transfer')}
+                </Button>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Libellé du mouvement
-                </label>
-                <input
-                  type="text"
-                  value={stockTransferData.notes}
-                  onChange={(e) =>
-                    setStockTransferData({ ...stockTransferData, notes: e.target.value })
-                  }
-                  placeholder={`Transfert de stock du produit ${product.code || product.name} dans un autre entrepôt`}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                />
-              </div>
-
-              <div className="bg-slate-50 rounded-lg p-3">
-                <p className="text-xs text-slate-600">Code mouvement ou inventaire</p>
-                <p className="text-sm font-mono text-slate-900">
-                  {new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-slate-200 flex gap-3">
-              <button
-                onClick={() => setShowStockTransfer(false)}
-                className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleStockTransfer}
-                disabled={
-                  !stockTransferData.sourceWarehouseId ||
-                  !stockTransferData.destWarehouseId ||
-                  !stockTransferData.quantity ||
-                  stockTransferMutation.isPending
-                }
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
-              >
-                {stockTransferMutation.isPending ? t('transferring') : t('transfer')}
-              </button>
             </div>
           </div>
-        </div>
-      )}
-    </AdminLayout>
+        )
+      }
+    </AdminLayout >
   );
 }

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Check } from 'lucide-react';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 
 // Keyframe animations for Apple-style entrance
 const backdropAnimation = `
@@ -67,12 +69,12 @@ interface PriceConfirmModalProps {
   t: (key: string) => string;
 }
 
-export const PriceConfirmModal = ({ 
-  product, 
-  isOpen, 
-  onClose, 
+export const PriceConfirmModal = ({
+  product,
+  isOpen,
+  onClose,
   onConfirm,
-  t 
+  t
 }: PriceConfirmModalProps) => {
   const [price, setPrice] = useState('');
   const [decimalMode, setDecimalMode] = useState(false);
@@ -155,16 +157,16 @@ export const PriceConfirmModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
         style={{
           animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
         }}
       />
-      
+
       {/* Modal */}
-      <div 
+      <div
         className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden"
         style={{
           animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
@@ -193,7 +195,7 @@ export const PriceConfirmModal = ({
         </div>
 
         {/* Content */}
-        <div 
+        <div
           className="p-3 sm:p-4 space-y-3 sm:space-y-4"
           style={{
             animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
@@ -204,13 +206,14 @@ export const PriceConfirmModal = ({
             <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
               {t('price')} ({t('currency')})
             </label>
-            <input
+            <Input
               ref={inputRef}
               type="text"
               inputMode="decimal"
               value={price}
               onChange={handleInputChange}
-              className="w-full h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              className="h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center"
+              fullWidth
             />
             <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
               <span>
@@ -230,11 +233,10 @@ export const PriceConfirmModal = ({
               <button
                 key={num}
                 onClick={() => handleNumberClick(num)}
-                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${
-                  num === 'C'
+                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${num === 'C'
                     ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
-                }`}
+                  }`}
               >
                 {num === 'C' ? (
                   <span className="text-xs sm:text-sm">{t('clear')}</span>
@@ -247,16 +249,16 @@ export const PriceConfirmModal = ({
 
           {/* Confirm Button */}
           {hasValidPrice && (
-            <button
+            <Button
               onClick={handleConfirm}
-              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90 text-white hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02]"
+              leadingIcon={Check}
               style={{
                 animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
               }}
             >
-              <Check className="w-4 h-4 sm:w-5 sm:h-5" />
               {t('confirm')}
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -20,11 +20,13 @@ import {
   DeleteImageDto,
   GetOptimizedImageDto,
 } from '../dto/image.dto';
+import { ApiRes } from '../../../common/api-response';
+import { IMG } from '../../../common/response-codes';
 
 @ApiTags('Images')
 @Controller('images')
 export class ImagesController {
-  constructor(private readonly imageService: ImageService) {}
+  constructor(private readonly imageService: ImageService) { }
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('image'))
@@ -39,7 +41,7 @@ export class ImagesController {
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
     @Query('folder') folder?: string,
-  ): Promise<{ success: boolean; data: ImageResponseDto }> {
+  ) {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
@@ -49,13 +51,7 @@ export class ImagesController {
       folder || 'general',
     );
 
-    return {
-      success: true,
-      data: {
-        ...result,
-        uploadedAt: new Date(),
-      },
-    };
+    return ApiRes(IMG.UPLOADED, { ...result, uploadedAt: new Date() });
   }
 
   @Delete('delete')
@@ -65,17 +61,14 @@ export class ImagesController {
   @ApiResponse({ status: 400, description: 'Invalid public ID' })
   async deleteImage(
     @Query('publicId') publicId?: string,
-  ): Promise<{ success: boolean; message: string }> {
+  ) {
     if (!publicId) {
       throw new BadRequestException('publicId query parameter is required');
     }
 
     await this.imageService.deleteImage(publicId);
 
-    return {
-      success: true,
-      message: 'Image deleted successfully',
-    };
+    return ApiRes(IMG.DELETED, null);
   }
 
   @Get('optimize')
@@ -102,7 +95,7 @@ export class ImagesController {
     @Query('width') width?: string,
     @Query('height') height?: string,
     @Query('crop') crop?: string,
-  ): { success: boolean; url: string } {
+  ) {
     if (!url) {
       throw new BadRequestException('url query parameter is required');
     }
@@ -113,10 +106,7 @@ export class ImagesController {
       crop: (crop as any) || undefined,
     });
 
-    return {
-      success: true,
-      url: optimizedUrl,
-    };
+    return ApiRes(IMG.OPTIMIZED, { url: optimizedUrl });
   }
 
   @Get('thumbnail')
@@ -135,7 +125,7 @@ export class ImagesController {
   getThumbnailUrl(
     @Query('url') url?: string,
     @Query('size') size?: string,
-  ): { success: boolean; url: string } {
+  ) {
     if (!url) {
       throw new BadRequestException('url query parameter is required');
     }
@@ -143,10 +133,7 @@ export class ImagesController {
     const thumbnailSize = size ? parseInt(size, 10) : 300;
     const thumbnailUrl = this.imageService.getThumbnailUrl(url, thumbnailSize);
 
-    return {
-      success: true,
-      url: thumbnailUrl,
-    };
+    return ApiRes(IMG.THUMBNAIL, { url: thumbnailUrl });
   }
 
   @Get('provider')
@@ -162,12 +149,9 @@ export class ImagesController {
       },
     },
   })
-  getProviderInfo(): { success: boolean; data: any } {
+  getProviderInfo() {
     const providerInfo = this.imageService.getProviderInfo();
 
-    return {
-      success: true,
-      data: providerInfo,
-    };
+    return ApiRes(IMG.PROVIDER_INFO, providerInfo);
   }
 }

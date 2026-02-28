@@ -1,57 +1,12 @@
-const API_URL = '/api';
+import { apiClient, API_ROUTES } from '../../common';
+import { StockMovement } from './inventory.model';
+import type {
+  CreateMovementDto,
+  InternalTransferDto,
+  ValidateMovementDto,
+} from './inventory.interface';
 
-export interface StockMovement {
-  id: number;
-  reference: string;
-  movementType: 'receipt' | 'delivery' | 'internal' | 'adjustment' | 'production_in' | 'production_out' | 'return_in' | 'return_out' | 'scrap';
-  productId: number;
-  productName?: string;
-  productCode?: string;
-  sourceWarehouseId: number | null;
-  sourceWarehouseName?: string;
-  destWarehouseId: number | null;
-  destWarehouseName?: string;
-  quantity: number;
-  unitOfMeasureId: number | null;
-  unitOfMeasureCode?: string;
-  status: 'draft' | 'waiting' | 'confirmed' | 'assigned' | 'done' | 'cancelled';
-  dateScheduled: string | null;
-  dateDone: string | null;
-  origin: string | null;
-  lotNumber: string | null;
-  serialNumber: string | null;
-  notes: string | null;
-  partnerName: string | null;
-  dateCreated: string;
-  dateUpdated: string;
-}
-
-export interface CreateMovementDto {
-  movementType: string;
-  productId: number;
-  sourceWarehouseId?: number;
-  destWarehouseId?: number;
-  quantity: number;
-  unitOfMeasureId?: number;
-  dateScheduled?: string;
-  origin?: string;
-  lotNumber?: string;
-  serialNumber?: string;
-  notes?: string;
-  partnerName?: string;
-}
-
-export interface InternalTransferDto {
-  productId: number;
-  sourceWarehouseId: number;
-  destWarehouseId: number;
-  quantity: number;
-  notes?: string;
-}
-
-export interface ValidateMovementDto {
-  movementId: number;
-}
+export type { CreateMovementDto, InternalTransferDto, ValidateMovementDto };
 
 export class StockMovementService {
   async getAll(filters?: {
@@ -71,65 +26,36 @@ export class StockMovementService {
     if (filters?.endDate) params.append('endDate', filters.endDate);
 
     const queryString = params.toString();
-    const response = await fetch(`${API_URL}/inventory/movements${queryString ? `?${queryString}` : ''}`);
-    if (!response.ok) throw new Error('Failed to fetch stock movements');
-    return await response.json();
+    const url = queryString
+      ? `${API_ROUTES.STOCK.MOVEMENTS}?${queryString}`
+      : API_ROUTES.STOCK.MOVEMENTS;
+    const result = await apiClient.get<any[]>(url);
+    return (result.data || []).map((m: any) => StockMovement.fromApiResponse(m));
   }
 
   async getById(id: number): Promise<StockMovement> {
-    const response = await fetch(`${API_URL}/inventory/movements/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch movement details');
-    return await response.json();
+    const result = await apiClient.get<any>(API_ROUTES.STOCK.MOVEMENT_DETAIL(id));
+    return StockMovement.fromApiResponse(result.data);
   }
 
   async create(data: CreateMovementDto): Promise<StockMovement> {
-    const response = await fetch(`${API_URL}/inventory/movements`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create movement');
-    }
-    return await response.json();
+    const result = await apiClient.post<any>(API_ROUTES.STOCK.MOVEMENTS, data);
+    return StockMovement.fromApiResponse(result.data);
   }
 
   async validate(data: ValidateMovementDto): Promise<StockMovement> {
-    const response = await fetch(`${API_URL}/inventory/movements/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to validate movement');
-    }
-    return await response.json();
+    const result = await apiClient.post<any>(API_ROUTES.STOCK.MOVEMENT_VALIDATE, data);
+    return StockMovement.fromApiResponse(result.data);
   }
 
-  async internalTransfer(data: InternalTransferDto): Promise<any> {
-    const response = await fetch(`${API_URL}/inventory/movements/transfer`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create transfer');
-    }
-    return await response.json();
+  async internalTransfer(data: InternalTransferDto): Promise<StockMovement> {
+    const result = await apiClient.post<any>(API_ROUTES.STOCK.MOVEMENT_TRANSFER, data);
+    return StockMovement.fromApiResponse(result.data);
   }
 
   async cancel(id: number): Promise<StockMovement> {
-    const response = await fetch(`${API_URL}/inventory/movements/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to cancel movement');
-    }
-    return await response.json();
+    const result = await apiClient.delete<any>(API_ROUTES.STOCK.MOVEMENT_DETAIL(id));
+    return StockMovement.fromApiResponse(result.data);
   }
 }
 

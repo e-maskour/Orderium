@@ -1,13 +1,13 @@
-export interface PaymentTerm {
+export interface IPaymentTerm {
   key: string;
   label: string;
   days: number;
   isDefault: boolean;
 }
 
-export interface PaymentTermsConfig {
+export interface IPaymentTermsConfig {
   default: string;
-  terms: PaymentTerm[];
+  terms: IPaymentTerm[];
 }
 
 export interface CreatePaymentTermDTO {

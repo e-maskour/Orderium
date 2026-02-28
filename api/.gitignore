@@ -64,3 +64,6 @@ out/
 # Production
 /build
 /dist
+
+# Firebase service account credentials — NEVER commit these
+*firebase-adminsdk*.json

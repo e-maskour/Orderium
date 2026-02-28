@@ -11,6 +11,7 @@ import {
   HttpStatus,
   BadRequestException,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { DataSource } from 'typeorm';
@@ -18,27 +19,33 @@ import { ConfigurationsService } from './configurations.service';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
 import { CompanyDto, UpdateCompanyDto } from './dto/company.dto';
+import { CreateSequenceDto, UpdateSequenceDto, SequencePreviewDto } from './dto/sequence.dto';
+import { ApiRes } from '../../common/api-response';
+import { CFG } from '../../common/response-codes';
+import { SequenceConfig } from '../../common/types/sequence-config.interface';
 
 @ApiTags('Configurations')
 @Controller('configurations')
 export class ConfigurationsController {
+  private readonly logger = new Logger(ConfigurationsController.name);
+
   constructor(
     private readonly configurationsService: ConfigurationsService,
     @Inject(DataSource) private dataSource: DataSource,
-  ) {}
+  ) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all configurations' })
   async findAll() {
     const configurations = await this.configurationsService.findAll();
-    return { success: true, configurations };
+    return ApiRes(CFG.LIST, configurations);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get configuration by ID' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const configuration = await this.configurationsService.findOne(id);
-    return { success: true, configuration };
+    return ApiRes(CFG.DETAIL, configuration);
   }
 
   @Get('entity/:entity')
@@ -47,8 +54,9 @@ export class ConfigurationsController {
     const configuration = await this.configurationsService.findByEntity(entity);
     // If it's sequences, enhance with real-time next numbers and format info
     if (entity === 'sequences' && configuration?.values?.sequences) {
+      const sequences = configuration.values.sequences as SequenceConfig[];
       const enhancedSequences = await Promise.all(
-        configuration.values.sequences.map(async (sequence) => {
+        sequences.map(async (sequence) => {
           try {
             const nextNumber = await this.calculateNextSequenceNumber(
               sequence.entityType,
@@ -65,9 +73,9 @@ export class ConfigurationsController {
               realTimeNextNumber: nextNumber,
             };
           } catch (error) {
-            console.error(
-              `Error calculating next number for ${sequence.entityType}:`,
-              error,
+            this.logger.error(
+              `Error calculating next number for ${sequence.entityType}`,
+              (error as Error)?.stack,
             );
             return {
               ...sequence,
@@ -82,16 +90,16 @@ export class ConfigurationsController {
         }),
       );
 
-      configuration.values.sequences = enhancedSequences;
+      configuration.values.sequences = enhancedSequences as unknown[];
     }
-    return { success: true, configuration };
+    return ApiRes(CFG.BY_ENTITY, configuration);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new configuration' })
   async create(@Body() createDto: CreateConfigurationDto) {
     const configuration = await this.configurationsService.create(createDto);
-    return { success: true, configuration };
+    return ApiRes(CFG.CREATED, configuration);
   }
 
   @Put(':id')
@@ -104,7 +112,7 @@ export class ConfigurationsController {
       id,
       updateDto,
     );
-    return { success: true, configuration };
+    return ApiRes(CFG.UPDATED, configuration);
   }
 
   @Delete(':id')
@@ -117,7 +125,7 @@ export class ConfigurationsController {
   // Sequences-specific endpoints
   @Post('entity/sequences')
   @ApiOperation({ summary: 'Create a new sequence' })
-  async createSequence(@Body() sequenceData: any) {
+  async createSequence(@Body() sequenceData: CreateSequenceDto) {
     const config = await this.configurationsService
       .findByEntity('sequences')
       .catch(() => null);
@@ -135,7 +143,7 @@ export class ConfigurationsController {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      const sequences = [...newConfig.values.sequences, newSequence];
+      const sequences = [...((newConfig.values.sequences as SequenceConfig[]) || []), newSequence];
       const updated = await this.configurationsService.update(newConfig.id, {
         values: { sequences },
       });
@@ -144,7 +152,7 @@ export class ConfigurationsController {
         format: this.buildFormatPattern(newSequence),
         nextDocumentNumber: this.generateSequenceWithNumber(newSequence, 1),
       };
-      return { success: true, sequence: enrichedSequence };
+      return ApiRes(CFG.SEQ_CREATED, enrichedSequence);
     }
 
     const newSequence = {
@@ -154,7 +162,7 @@ export class ConfigurationsController {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    const sequences = [...(config.values.sequences || []), newSequence];
+    const sequences = [...((config.values.sequences as SequenceConfig[]) || []), newSequence];
     const updated = await this.configurationsService.update(config.id, {
       values: { sequences },
     });
@@ -163,17 +171,17 @@ export class ConfigurationsController {
       format: this.buildFormatPattern(newSequence),
       nextDocumentNumber: this.generateSequenceWithNumber(newSequence, 1),
     };
-    return { success: true, sequence: enrichedSequence };
+    return ApiRes(CFG.SEQ_CREATED, enrichedSequence);
   }
 
   @Put('entity/sequences/:id')
   @ApiOperation({ summary: 'Update a sequence' })
   async updateSequence(
     @Param('id') sequenceId: string,
-    @Body() sequenceData: any,
+    @Body() sequenceData: UpdateSequenceDto,
   ) {
     const config = await this.configurationsService.findByEntity('sequences');
-    const sequences = config.values.sequences || [];
+    const sequences = (config.values.sequences as SequenceConfig[]) || [];
     const index = sequences.findIndex((seq) => seq.id === sequenceId);
 
     if (index === -1) {
@@ -186,7 +194,7 @@ export class ConfigurationsController {
     if (existingSequence.nextNumber > 1) {
       throw new BadRequestException(
         `Cannot update sequence. Invoices already exist using this sequence (next number: ${existingSequence.nextNumber}). ` +
-          `To modify this sequence, please create a new one instead.`,
+        `To modify this sequence, please create a new one instead.`,
       );
     }
 
@@ -207,14 +215,14 @@ export class ConfigurationsController {
         updatedSequence.nextNumber,
       ),
     };
-    return { success: true, sequence: enrichedSequence };
+    return ApiRes(CFG.SEQ_UPDATED, enrichedSequence);
   }
 
   @Delete('entity/sequences/:id')
   @ApiOperation({ summary: 'Delete a sequence' })
   async deleteSequence(@Param('id') sequenceId: string) {
     const config = await this.configurationsService.findByEntity('sequences');
-    const sequences = config.values.sequences || [];
+    const sequences = (config.values.sequences as SequenceConfig[]) || [];
     const sequenceToDelete = sequences.find((seq) => seq.id === sequenceId);
 
     if (!sequenceToDelete) {
@@ -229,18 +237,19 @@ export class ConfigurationsController {
 
   @Post('entity/sequences/preview')
   @ApiOperation({ summary: 'Generate sequence preview' })
-  async generateSequencePreview(@Body() sequenceData: any) {
-    const example = this.generateSequenceExample(sequenceData);
-    const nextSequence = this.generateNextSequence(sequenceData);
-    const format = this.buildFormatPattern(sequenceData);
-    return { success: true, preview: { example, nextSequence, format } };
+  async generateSequencePreview(@Body() sequenceData: SequencePreviewDto) {
+    const config = sequenceData as unknown as SequenceConfig;
+    const example = this.generateSequenceExample(config);
+    const nextSequence = this.generateNextSequence(config);
+    const format = this.buildFormatPattern(config);
+    return ApiRes(CFG.SEQ_PREVIEW, { example, nextSequence, format });
   }
 
   @Get('entity/sequences/next/:entityType')
   @ApiOperation({ summary: 'Get next sequence for entity type' })
   async getNextSequence(@Param('entityType') entityType: string) {
     const config = await this.configurationsService.findByEntity('sequences');
-    const sequences = config.values.sequences || [];
+    const sequences = (config.values.sequences as SequenceConfig[]) || [];
     const sequence = sequences.find(
       (seq) => seq.entityType === entityType && seq.isActive,
     );
@@ -259,17 +268,12 @@ export class ConfigurationsController {
     const nextSequence = this.generateSequenceWithNumber(sequence, nextNumber);
     const format = this.buildFormatPattern(sequence);
 
-    return {
-      success: true,
-      nextSequence,
-      nextNumber,
-      format,
-    };
+    return ApiRes(CFG.SEQ_NEXT, { nextSequence, nextNumber, format });
   }
 
   private async calculateNextSequenceNumber(
     entityType: string,
-    sequence: any,
+    sequence: SequenceConfig,
   ): Promise<number> {
     let tableName = '';
     let numberColumn = 'invoiceNumber';
@@ -330,16 +334,16 @@ export class ConfigurationsController {
 
       return extractedNumber + 1;
     } catch (error) {
-      console.error(
-        `Error calculating next sequence for ${entityType}:`,
-        error,
+      this.logger.error(
+        `Error calculating next sequence for ${entityType}`,
+        (error as Error)?.stack,
       );
       // Fallback to stored nextNumber
       return sequence.nextNumber;
     }
   }
 
-  private generateSequencePattern(sequence: any): string {
+  private generateSequencePattern(sequence: SequenceConfig): string {
     const now = new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -392,7 +396,7 @@ export class ConfigurationsController {
 
   private extractNumberFromSequence(
     sequenceValue: string,
-    sequence: any,
+    sequence: SequenceConfig,
   ): number {
     const pattern = this.generateSequencePattern(sequence);
     const suffix = sequence.suffix || '';
@@ -412,7 +416,7 @@ export class ConfigurationsController {
     return isNaN(number) ? 0 : number;
   }
 
-  private generateSequenceWithNumber(sequence: any, number: number): string {
+  private generateSequenceWithNumber(sequence: SequenceConfig, number: number): string {
     const now = new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -476,7 +480,7 @@ export class ConfigurationsController {
   @ApiOperation({ summary: 'Reset sequence number' })
   async resetSequence(@Param('id') sequenceId: string) {
     const config = await this.configurationsService.findByEntity('sequences');
-    const sequences = config.values.sequences || [];
+    const sequences = (config.values.sequences as SequenceConfig[]) || [];
     const index = sequences.findIndex((seq) => seq.id === sequenceId);
 
     if (index === -1) {
@@ -497,14 +501,14 @@ export class ConfigurationsController {
       format: this.buildFormatPattern(resetSequence),
       nextDocumentNumber: this.generateSequenceWithNumber(resetSequence, 1),
     };
-    return { success: true, sequence: enrichedSequence };
+    return ApiRes(CFG.SEQ_RESET, enrichedSequence);
   }
 
   private generateId(): string {
     return Math.random().toString(36).substr(2, 9);
   }
 
-  private buildFormatPattern(sequence: any): string {
+  private buildFormatPattern(sequence: SequenceConfig): string {
     let result = sequence.prefix || '';
     let dateComponents: string[] = [];
 
@@ -531,7 +535,7 @@ export class ConfigurationsController {
     return result;
   }
 
-  private generateSequenceExample(sequenceData: any): string {
+  private generateSequenceExample(sequenceData: SequenceConfig): string {
     const now = new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -591,7 +595,7 @@ export class ConfigurationsController {
     return result;
   }
 
-  private generateNextSequence(sequence: any): string {
+  private generateNextSequence(sequence: SequenceConfig): string {
     return this.generateSequenceExample(sequence);
   }
 
@@ -601,7 +605,7 @@ export class ConfigurationsController {
   async getCompanyInfo() {
     const configuration =
       await this.configurationsService.findByEntity('my_company');
-    return { success: true, company: configuration.values };
+    return ApiRes(CFG.COMPANY_DETAIL, configuration.values);
   }
 
   @Put('entity/my_company')
@@ -611,6 +615,6 @@ export class ConfigurationsController {
     const updated = await this.configurationsService.update(config.id, {
       values: companyDto,
     });
-    return { success: true, company: updated.values };
+    return ApiRes(CFG.COMPANY_UPDATED, updated.values);
   }
 }

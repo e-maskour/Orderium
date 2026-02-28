@@ -1,7 +1,7 @@
 import { FileDown, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { pdfService, DocumentType, PDFMode } from '../services/pdf.service';
-import { toast } from 'sonner';
+import { toastExported, toastError } from '../services/toast.service';
 import { PDFPreviewModal } from './PDFPreviewModal';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -43,13 +43,13 @@ export default function PDFActionButtons({
           mode,
         });
 
-        toast.success(
-          `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} téléchargé avec succès`
+        toastExported(
+          `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloaded')}`
         );
       }
     } catch (error: any) {
       console.error('PDF action failed:', error);
-      toast.error(error.message || 'Erreur lors de la génération du PDF');
+      toastError(error.message || t('errorGeneratingPDF'));
     }
   };
 
@@ -124,6 +124,7 @@ export function PDFIconButtons({
   showDownload = true,
   className = '',
 }: PDFActionButtonsProps) {
+  const { t } = useLanguage();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
 
@@ -142,13 +143,13 @@ export function PDFIconButtons({
           mode,
         });
 
-        toast.success(
-          `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} téléchargé`
+        toastExported(
+          `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloadedShort')}`
         );
       }
     } catch (error: any) {
       console.error('PDF action failed:', error);
-      toast.error(error.message || 'Erreur lors de la génération du PDF');
+      toastError(error.message || t('errorGeneratingPDF'));
     }
   };
 

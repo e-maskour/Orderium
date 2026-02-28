@@ -9,7 +9,7 @@ export class PortalService {
   constructor(
     @InjectRepository(Portal)
     private readonly portalRepository: Repository<Portal>,
-  ) {}
+  ) { }
 
   async findByEmail(email: string): Promise<Portal | null> {
     return this.portalRepository.findOne({ where: { email } });
@@ -60,5 +60,33 @@ export class PortalService {
       return this.portalRepository.save(portal);
     }
     return null;
+  }
+
+  async findById(id: number): Promise<Portal | null> {
+    return this.portalRepository.findOne({ where: { id } });
+  }
+
+  async exportUserData(userId: number): Promise<Record<string, unknown> | null> {
+    const user = await this.portalRepository.findOne({
+      where: { id: userId },
+      relations: ['customer', 'deliveryPerson'],
+    });
+    if (!user) return null;
+    return {
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      name: user.name,
+      email: user.email,
+      isCustomer: user.isCustomer,
+      isDelivery: user.isDelivery,
+      customerId: user.customerId,
+      deliveryId: user.deliveryId,
+      dateCreated: user.dateCreated,
+      dateUpdated: user.dateUpdated,
+    };
+  }
+
+  async deleteUserData(userId: number): Promise<void> {
+    await this.portalRepository.delete(userId);
   }
 }

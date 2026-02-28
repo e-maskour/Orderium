@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Partner } from '../../modules/partners/partners.interface';
+import { IPartner } from '../../modules/partners/partners.interface';
 import { partnersService } from '../../modules/partners/partners.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { Phone, MapPin, Truck, CreditCard } from 'lucide-react';
 import { Autocomplete } from '../ui/autocomplete';
+import { Input } from '../ui/input';
+import { FormField } from '../ui/form-field';
 
 interface DocumentPartnerBoxProps {
   direction: 'vente' | 'achat';
@@ -13,7 +15,7 @@ interface DocumentPartnerBoxProps {
   partnerAddress?: string;
   partnerIce?: string;
   deliveryAddress?: string;
-  onPartnerChange: (partner: Partial<Partner>) => void;
+  onPartnerChange: (partner: Partial<IPartner>) => void;
   readOnly?: boolean;
 }
 
@@ -30,15 +32,15 @@ export function DocumentPartnerBox({
 }: DocumentPartnerBoxProps) {
   const { t } = useLanguage();
   const partnerLabel = direction === 'vente' ? t('invoice.customer') : t('invoice.supplier');
-  
-  const [partners, setPartners] = useState<Partner[]>([]);
+
+  const [partners, setPartners] = useState<IPartner[]>([]);
 
   // Load partners
   useEffect(() => {
     const loadPartners = async () => {
       try {
         const response = await partnersService.getAll();
-        const filtered = response.partners.filter(p => 
+        const filtered = response.partners.filter(p =>
           direction === 'vente' ? p.isCustomer : p.isSupplier
         );
         setPartners(filtered);
@@ -47,7 +49,7 @@ export function DocumentPartnerBox({
         setPartners([]);
       }
     };
-    
+
     loadPartners();
   }, [direction]);
 
@@ -63,7 +65,7 @@ export function DocumentPartnerBox({
       <h3 className="text-base font-bold text-slate-800 mb-3">
         {t('invoice.customerInfo').replace('client', partnerLabel)}
       </h3>
-      
+
       <div className="space-y-3">
         <div>
           <label className="block text-xs font-medium text-slate-700 mb-1.5">
@@ -101,31 +103,31 @@ export function DocumentPartnerBox({
 
         {partnerIce && (
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
-              <CreditCard className="w-3.5 h-3.5 text-slate-500" />
-              {t('invoice.iceLabel')}
-            </label>
-            <input
-              type="text"
-              value={partnerIce}
-              readOnly
-              className="w-full px-3 py-1.5 text-sm border border-slate-200 bg-slate-50 rounded-lg text-slate-600"
-            />
+            <FormField label={<span className="flex items-center gap-1.5"><CreditCard className="w-3.5 h-3.5 text-slate-500" />{t('invoice.iceLabel')}</span>}>
+              <Input
+                type="text"
+                value={partnerIce}
+                readOnly
+                className="bg-slate-50 text-slate-600"
+                inputSize="sm"
+                fullWidth
+              />
+            </FormField>
           </div>
         )}
 
         {deliveryAddress && (
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
-              <Truck className="w-3.5 h-3.5 text-slate-500" />
-              {t('invoice.deliveryAddressLabel')}
-            </label>
-            <input
-              type="text"
-              value={deliveryAddress}
-              readOnly
-              className="w-full px-3 py-1.5 text-sm border border-slate-200 bg-slate-50 rounded-lg text-slate-600"
-            />
+            <FormField label={<span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-slate-500" />{t('invoice.deliveryAddressLabel')}</span>}>
+              <Input
+                type="text"
+                value={deliveryAddress}
+                readOnly
+                className="bg-slate-50 text-slate-600"
+                inputSize="sm"
+                fullWidth
+              />
+            </FormField>
           </div>
         )}
       </div>

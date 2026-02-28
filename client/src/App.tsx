@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster as SileoToaster } from 'sileo';
+import 'sileo/styles.css';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -38,7 +39,7 @@ const App = () => (
         <CartProvider>
           <TooltipProvider>
             <Toaster />
-            <Sonner />
+            <SileoToaster position="top-center" theme="system" />
             <BrowserRouter
               future={{
                 v7_startTransition: true,

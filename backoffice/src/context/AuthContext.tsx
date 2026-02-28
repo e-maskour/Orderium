@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { apiClient, API_ROUTES, setUnauthorizedHandler } from '../common';
 
 interface Admin {
   id: number;
@@ -61,30 +62,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
+  // Register the unauthorized handler so apiClient auto-logout triggers React state cleanup
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setAdmin(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('admin');
+      localStorage.removeItem('adminToken');
+    });
+  }, []);
+
   const login = async (credentials: { phoneNumber: string; password: string }) => {
     try {
-      const response = await fetch('/api/portal/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phoneNumber: credentials.phoneNumber,
-          password: credentials.password,
-        }),
-      });
+      const data = await apiClient.post<any>(
+        API_ROUTES.AUTH.LOGIN,
+        { phoneNumber: credentials.phoneNumber, password: credentials.password },
+        { skipAuth: true },
+      );
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
-
-      const data = await response.json();
-
-      // Check if login was successful
-      if (!data.success) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      const normalized = normalizeAdmin(data.user);
+      const normalized = normalizeAdmin(data.data?.user);
 
       // Verify it's an admin account
       if (!normalized?.isAdmin) {
@@ -94,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAdmin(normalized);
       setIsAuthenticated(true);
       localStorage.setItem('admin', JSON.stringify(normalized));
-      localStorage.setItem('adminToken', data.token);
+      localStorage.setItem('adminToken', data.data?.token);
     } catch (error) {
       throw error;
     }

@@ -5,6 +5,7 @@ import { NotificationBellPro } from './NotificationBellPro';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toastInfo } from '../services/toast.service';
 
 interface HeaderProps {
   isSidebarOpen?: boolean;
@@ -64,7 +65,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
   const handleInstallClick = async () => {
     if (!installPrompt) {
       if (isIOS) {
-        window.alert('To install on iOS, tap Share and choose “Add to Home Screen”.');
+        toastInfo(t('iosInstallHint'));
       }
       return;
     }
@@ -118,7 +119,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
             Install
           </button>
         )}
-        {/* Notification Bell */}
+        {/* INotification Bell */}
         <NotificationBellPro />
 
         {/* Language Toggle */}
@@ -127,7 +128,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
         {/* User Info & Logout */}
         <div className={`flex items-center gap-2 sm:gap-3 border-slate-200 ${language === 'ar' ? 'flex-row-reverse border-r pl-2 sm:pl-3 md:pl-4 pr-0 border-l-0' : 'border-l pl-2 sm:pl-3 md:pl-4'} ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
           <div className={`flex items-center gap-1 sm:gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)'}}>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)' }}>
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
               <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white relative z-10" />
             </div>

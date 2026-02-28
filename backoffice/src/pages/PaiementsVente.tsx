@@ -3,11 +3,11 @@ import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useState, useEffect } from 'react';
 import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard, FileText, Plus } from 'lucide-react';
+import { Input } from '../components/ui/input';
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import { invoicesService } from '../modules/invoices';
 import PaymentModal from '../components/PaymentModal';
-import ConfirmDialog from '../components/ConfirmDialog';
-import AlertDialog from '../components/AlertDialog';
+import { toastConfirm, toastError } from '../services/toast.service';
 
 export default function PaiementsVente() {
   const { t, language } = useLanguage();
@@ -17,14 +17,7 @@ export default function PaiementsVente() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
-  
-  // Confirmation dialogs
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deletePaymentId, setDeletePaymentId] = useState<number | null>(null);
-  
-  // Alert dialog
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState({ title: '', message: '', type: 'error' as const });
+
 
   useEffect(() => {
     loadPayments();
@@ -53,28 +46,19 @@ export default function PaiementsVente() {
   };
 
   const handleDelete = async (id: number) => {
-    setDeletePaymentId(id);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    if (deletePaymentId === null) return;
-    
-    try {
-      await paymentsService.delete(deletePaymentId);
-      await loadPayments();
-      setShowDeleteConfirm(false);
-      setDeletePaymentId(null);
-    } catch (error) {
-      console.error('Error deleting payment:', error);
-      setShowDeleteConfirm(false);
-      setAlertMessage({
-        title: t('error'),
-        message: t('errorDeletingPayment'),
-        type: 'error'
-      });
-      setShowAlert(true);
-    }
+    toastConfirm(
+      t('deletePayment'),
+      async () => {
+        try {
+          await paymentsService.delete(id);
+          await loadPayments();
+        } catch (error) {
+          console.error('Error deleting payment:', error);
+          toastError(t('error'), { description: t('errorDeletingPayment') });
+        }
+      },
+      { description: t('confirmDeletePayment'), confirmLabel: t('delete') }
+    );
   };
 
   const handleEdit = (payment: Payment) => {
@@ -101,7 +85,7 @@ export default function PaiementsVente() {
     // Only show sales payments (invoices with customerId)
     const invoice = invoices.find(inv => inv.invoice.id === payment.invoiceId);
     if (!invoice || !invoice.invoice.customerId) return false;
-    
+
     const invoiceNumber = getInvoiceNumber(payment.invoiceId);
     const customerName = getCustomerName(payment.invoiceId);
     const search = searchTerm.toLowerCase();
@@ -170,16 +154,16 @@ export default function PaiementsVente() {
 
         {/* Search Bar */}
         <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="text"
-              placeholder={t('searchBySalesInvoice')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          <Input
+            id="search-sales-payments"
+            type="text"
+            placeholder={t('searchBySalesInvoice')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leadingIcon={Search}
+            fullWidth
+            aria-label={t('searchBySalesInvoice')}
+          />
         </div>
 
         {/* Payments Table */}
@@ -294,27 +278,6 @@ export default function PaiementsVente() {
         />
       )}
 
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => {
-          setShowDeleteConfirm(false);
-          setDeletePaymentId(null);
-        }}
-        onConfirm={confirmDelete}
-        title={t('deletePayment')}
-        message={t('confirmDeletePayment')}
-        type="danger"
-        confirmText={t('delete')}
-        cancelText={t('cancel')}
-      />
-
-      <AlertDialog
-        isOpen={showAlert}
-        onClose={() => setShowAlert(false)}
-        title={alertMessage.title}
-        message={alertMessage.message}
-        type={alertMessage.type}
-      />
     </AdminLayout>
   );
 }

@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Pencil, Hash, Eye, RotateCcw, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Hash, Eye, RotateCcw, Search } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Checkbox } from '../../components/ui/checkbox';
+import { FormField } from '../../components/ui/form-field';
+import { NativeSelect } from '../../components/ui/native-select';
 import { Link } from 'react-router-dom';
-import { 
-  sequencesService, 
-  Sequence, 
-  CreateSequenceDTO, 
-  UpdateSequenceDTO, 
+import {
+  sequencesService,
+  Sequence,
+  CreateSequenceDTO,
+  UpdateSequenceDTO,
   SequenceEntityType
 } from '../../modules/sequences';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
+import { toastConfirm } from '../../services/toast.service';
 
 export default function Sequences() {
   const { t } = useLanguage();
@@ -33,9 +39,9 @@ export default function Sequences() {
     trimesterInPrefix: false,
   });
 
-  const { data: config, isLoading } = useQuery({
+  const { data: sequences = [], isLoading } = useQuery({
     queryKey: ['sequences', 'configuration'],
-    queryFn: () => sequencesService.getConfiguration(),
+    queryFn: () => sequencesService.getAll(),
   });
 
   const createMutation = useMutation({
@@ -68,8 +74,6 @@ export default function Sequences() {
       queryClient.invalidateQueries({ queryKey: ['sequences'] });
     },
   });
-
-  const sequences: Sequence[] = config?.configuration?.values?.sequences || [];
 
   const entityTypeOptions: { value: SequenceEntityType; label: string }[] = [
     { value: 'invoice_sale', label: t('invoiceSale') },
@@ -151,8 +155,9 @@ export default function Sequences() {
   };
 
   const handleReset = (sequence: Sequence) => {
-    if (!confirm(t('confirmResetSequence'))) return;
-    resetMutation.mutate(sequence.id);
+    toastConfirm(t('confirmResetSequence'), () => {
+      resetMutation.mutate(sequence.id);
+    });
   };
 
   if (isLoading) {
@@ -185,78 +190,77 @@ export default function Sequences() {
       <div className="bg-white rounded-lg border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <input
+            <Input
               type="text"
               placeholder={t('searchSequences')}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 w-64"
+              leadingIcon={Search}
+              className="w-64"
             />
           </div>
-          <button
-            onClick={openCreateModal}
-            className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
+          <Button onClick={openCreateModal} leadingIcon={Plus}>
             {t('addSequence')}
-          </button>
+          </Button>
         </div>
-        
-        <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('name')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('entityType')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('format')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('nextDocumentNumber')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {sequences.length === 0 ? (
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                  {t('noSequencesConfigured')}
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('name')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('entityType')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('format')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('nextDocumentNumber')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
               </tr>
-            ) : (
-              sequences.map((sequence) => (
-                <tr key={sequence.id} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 text-sm font-medium text-slate-800">{sequence.name}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    {entityTypeOptions.find(opt => opt.value === sequence.entityType)?.label || sequence.entityType}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600 font-mono">
-                    {sequence.format || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-green-600 font-mono">
-                    {sequence.nextDocumentNumber || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded ${sequence.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {sequence.isActive ? t('active') : t('inactive')}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => handleReset(sequence)}
-                      className="text-orange-600 hover:text-orange-800 mr-3"
-                      title={t('resetSequence')}
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => openEditModal(sequence)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title={t('edit')}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {sequences.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                    {t('noSequencesConfigured')}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                sequences.map((sequence) => (
+                  <tr key={sequence.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-800">{sequence.name}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {entityTypeOptions.find(opt => opt.value === sequence.entityType)?.label || sequence.entityType}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600 font-mono">
+                      {sequence.format || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-green-600 font-mono">
+                      {sequence.nextDocumentNumber || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs font-medium rounded ${sequence.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {sequence.isActive ? t('active') : t('inactive')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => handleReset(sequence)}
+                        className="text-orange-600 hover:text-orange-800 mr-3"
+                        title={t('resetSequence')}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(sequence)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title={t('edit')}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
@@ -273,196 +277,121 @@ export default function Sequences() {
               </p>
             </div>
           )}
-          
+
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('name')}
-              </label>
-              <input
+            <FormField label={t('name')} required>
+              <Input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder={t('sequenceNamePlaceholder')}
-                disabled={editingSequence && editingSequence.nextNumber > 1}
+                disabled={!!editingSequence && editingSequence.nextNumber > 1}
                 required
+                fullWidth
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('entityType')}
-              </label>
-              <select
+            <FormField label={t('entityType')} required>
+              <NativeSelect
                 value={formData.entityType}
                 onChange={(e) => setFormData({ ...formData, entityType: e.target.value as SequenceEntityType })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                disabled={editingSequence && editingSequence.nextNumber > 1}
+                disabled={!!editingSequence && editingSequence.nextNumber > 1}
                 required
+                fullWidth
               >
                 {entityTypeOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
-              </select>
-            </div>
+              </NativeSelect>
+            </FormField>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('prefix')}
-              </label>
-              <input
+            <FormField label={t('prefix')}>
+              <Input
                 type="text"
                 value={formData.prefix}
                 onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="INV-"
-                disabled={editingSequence && editingSequence.nextNumber > 1}
+                disabled={!!editingSequence && editingSequence.nextNumber > 1}
+                fullWidth
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('suffix')}
-              </label>
-              <input
+            <FormField label={t('suffix')}>
+              <Input
                 type="text"
                 value={formData.suffix}
                 onChange={(e) => setFormData({ ...formData, suffix: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                disabled={editingSequence && editingSequence.nextNumber > 1}
+                disabled={!!editingSequence && editingSequence.nextNumber > 1}
+                fullWidth
               />
-            </div>
+            </FormField>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('nextNumber')}
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={editingSequence ? 
-                    (editingSequence.realTimeNextNumber ?? editingSequence.nextNumber).toString() 
-                    : '1'
-                  }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
-                  readOnly
-                />
-              </div>
-              <p className="mt-1 text-xs text-slate-500">{t('nextNumberAutoManaged')}</p>
-            </div>
+            <FormField label={t('nextNumber')} hint={t('nextNumberAutoManaged')}>
+              <Input
+                type="text"
+                value={editingSequence ?
+                  (editingSequence.realTimeNextNumber ?? editingSequence.nextNumber).toString()
+                  : '1'
+                }
+                readOnly
+                fullWidth
+                className="bg-slate-50"
+              />
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('numberLength')}
-              </label>
-              <input
+            <FormField label={t('numberLength')} required>
+              <Input
                 type="number"
                 min="1"
                 max="10"
                 value={formData.numberLength}
                 onChange={(e) => setFormData({ ...formData, numberLength: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                disabled={editingSequence && editingSequence.nextNumber > 1}
+                disabled={!!editingSequence && editingSequence.nextNumber > 1}
                 required
+                fullWidth
               />
-            </div>
+            </FormField>
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div
-                onClick={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, yearInPrefix: !formData.yearInPrefix })}
-                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                  editingSequence && editingSequence.nextNumber > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                } ${
-                  formData.yearInPrefix
-                    ? 'bg-amber-500 border-amber-500 text-white'
-                    : 'bg-white border-slate-300'
-                }`}
-              >
-                {formData.yearInPrefix && <CheckSquare className="w-4 h-4" />}
-              </div>
-              <label htmlFor="yearInPrefix" className="text-sm text-slate-700">
-                {t('includeYearInPrefix')} (2025)
-              </label>
-            </div>
+            <Checkbox
+              checked={formData.yearInPrefix}
+              onChange={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, yearInPrefix: !formData.yearInPrefix })}
+              label={`${t('includeYearInPrefix')} (2025)`}
+              disabled={!!editingSequence && editingSequence.nextNumber > 1}
+            />
 
-            <div className="flex items-center gap-2">
-              <div
-                onClick={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, trimesterInPrefix: !formData.trimesterInPrefix })}
-                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                  editingSequence && editingSequence.nextNumber > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                } ${
-                  formData.trimesterInPrefix
-                    ? 'bg-amber-500 border-amber-500 text-white'
-                    : 'bg-white border-slate-300'
-                }`}
-              >
-                {formData.trimesterInPrefix && <CheckSquare className="w-4 h-4" />}
-              </div>
-              <label htmlFor="trimesterInPrefix" className="text-sm text-slate-700">
-                {t('includeTrimesterInPrefix')} (01, 04, 07, 10)
-              </label>
-            </div>
+            <Checkbox
+              checked={formData.trimesterInPrefix}
+              onChange={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, trimesterInPrefix: !formData.trimesterInPrefix })}
+              label={`${t('includeTrimesterInPrefix')} (01, 04, 07, 10)`}
+              disabled={!!editingSequence && editingSequence.nextNumber > 1}
+            />
 
-            <div className="flex items-center gap-2">
-              <div
-                onClick={() => !formData.trimesterInPrefix && !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, monthInPrefix: !formData.monthInPrefix })}
-                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                  formData.trimesterInPrefix || (editingSequence && editingSequence.nextNumber > 1) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                } ${
-                  formData.monthInPrefix
-                    ? 'bg-amber-500 border-amber-500 text-white'
-                    : 'bg-white border-slate-300'
-                }`}
-              >
-                {formData.monthInPrefix && <CheckSquare className="w-4 h-4" />}
-              </div>
-              <label htmlFor="monthInPrefix" className={`text-sm ${formData.trimesterInPrefix ? 'text-slate-400' : 'text-slate-700'}`}>
-                {t('includeMonthInPrefix')} (12) {formData.trimesterInPrefix && '(désactivé par trimestre)'}
-              </label>
-            </div>
+            <Checkbox
+              checked={formData.monthInPrefix}
+              onChange={() => !formData.trimesterInPrefix && !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, monthInPrefix: !formData.monthInPrefix })}
+              label={`${t('includeMonthInPrefix')} (12)${formData.trimesterInPrefix ? ' (désactivé par trimestre)' : ''}`}
+              disabled={formData.trimesterInPrefix || (!!editingSequence && editingSequence.nextNumber > 1)}
+            />
 
-            <div className="flex items-center gap-2">
-              <div
-                onClick={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, dayInPrefix: !formData.dayInPrefix })}
-                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                  editingSequence && editingSequence.nextNumber > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                } ${
-                  formData.dayInPrefix
-                    ? 'bg-amber-500 border-amber-500 text-white'
-                    : 'bg-white border-slate-300'
-                }`}
-              >
-                {formData.dayInPrefix && <CheckSquare className="w-4 h-4" />}
-              </div>
-              <label htmlFor="dayInPrefix" className="text-sm text-slate-700">
-                {t('includeDayInPrefix')} (01)
-              </label>
-            </div>
+            <Checkbox
+              checked={formData.dayInPrefix}
+              onChange={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, dayInPrefix: !formData.dayInPrefix })}
+              label={`${t('includeDayInPrefix')} (01)`}
+              disabled={!!editingSequence && editingSequence.nextNumber > 1}
+            />
 
-            <div className="flex items-center gap-2">
-              <div
-                onClick={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, isActive: !formData.isActive })}
-                className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                  editingSequence && editingSequence.nextNumber > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                } ${
-                  formData.isActive
-                    ? 'bg-amber-500 border-amber-500 text-white'
-                    : 'bg-white border-slate-300'
-                }`}
-              >
-                {formData.isActive && <CheckSquare className="w-4 h-4" />}
-              </div>
-              <label htmlFor="isActive" className="text-sm text-slate-700">
-                {t('isActive')}
-              </label>
-            </div>
+            <Checkbox
+              checked={formData.isActive}
+              onChange={() => !(editingSequence && editingSequence.nextNumber > 1) && setFormData({ ...formData, isActive: !formData.isActive })}
+              label={t('isActive')}
+              disabled={!!editingSequence && editingSequence.nextNumber > 1}
+            />
           </div>
 
           {/* Preview */}
@@ -478,7 +407,7 @@ export default function Sequences() {
               </div>
               {editingSequence && (
                 <div className="mt-2 text-xs text-amber-700">
-                  💾 {t('actualNextNumber')}: 
+                  💾 {t('actualNextNumber')}:
                   <span className="font-medium ml-1">
                     {editingSequence.realTimeNextNumber ?? editingSequence.nextNumber}
                   </span>
@@ -488,20 +417,17 @@ export default function Sequences() {
           )}
 
           <div className="flex justify-end gap-2 pt-4">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
-            >
+            <Button type="button" variant="outline" onClick={closeModal}>
               {t('cancel')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending || (editingSequence && editingSequence.nextNumber > 1)}
-              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              loading={createMutation.isPending || updateMutation.isPending}
+              loadingText={t('saving')}
+              disabled={!!editingSequence && editingSequence.nextNumber > 1}
             >
-              {createMutation.isPending || updateMutation.isPending ? t('saving') : t('save')}
-            </button>
+              {t('save')}
+            </Button>
           </div>
         </form>
       </Modal>

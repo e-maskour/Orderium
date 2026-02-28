@@ -2,39 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { CheckCircle, Home, Download, Printer, Eye, FileText, Receipt as ReceiptIcon } from 'lucide-react';
-import { toast } from 'sonner';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  description?: string;
-}
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-  discount: number;
-  discountType: number;
-}
-
-interface Customer {
-  id: number;
-  name: string;
-  phone: string;
-  address?: string;
-}
-
-interface SuccessState {
-  orderNumber: string;
-  orderId: number;
-  customer: Customer;
-  items: CartItem[];
-  total: number;
-  paidAmount: number;
-  change: number;
-  orderDate: Date;
-}
+import { Button } from '../components/ui/button';
+import { toastError } from '../services/toast.service';
+import { IPosCartItem as CartItem, ICheckoutCustomer as Customer, IOrderSuccessState as SuccessState } from '../modules/pos';
 
 export default function OrderSuccessPage() {
   const navigate = useNavigate();
@@ -61,7 +31,7 @@ export default function OrderSuccessPage() {
           }
         })
         .catch(() => {
-          toast.error(t('error'));
+          toastError(t('error'));
         });
     }
   }, [state, navigate, t]);
@@ -71,14 +41,14 @@ export default function OrderSuccessPage() {
   }
 
   const formatCurrency = (price: number) => {
-    return language === 'ar' 
+    return language === 'ar'
       ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م.`
       : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
   };
 
   const ensureOrderId = () => {
     if (!resolvedOrderId) {
-      toast.error(t('error'));
+      toastError(t('error'));
       return false;
     }
     return true;
@@ -117,202 +87,208 @@ export default function OrderSuccessPage() {
 
   return (
     <>
-    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-blue-50">
-      <div className="h-screen flex flex-col">
-        {/* Success Header */}
-        <div className="bg-white/80 backdrop-blur border-b border-gray-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
-            <div className="flex items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-500 rounded-2xl shadow-lg">
-                  <CheckCircle className="w-8 h-8 text-white" />
+      <div className="min-h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-blue-50">
+        <div className="h-screen flex flex-col">
+          {/* Success Header */}
+          <div className="bg-white/80 backdrop-blur border-b border-gray-200">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-500 rounded-2xl shadow-lg">
+                    <CheckCircle className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('orderCreatedSuccessfully')}</h1>
+                    <p className="text-sm text-gray-500">
+                      {t('orderNumber')}: <span className="font-semibold text-emerald-700">{state.orderNumber}</span>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {state.customer.name} • {state.customer.phone}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{t('orderCreatedSuccessfully')}</h1>
-                  <p className="text-sm text-gray-500">
-                    {t('orderNumber')}: <span className="font-semibold text-emerald-700">{state.orderNumber}</span>
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {state.customer.name} • {state.customer.phone}
-                  </p>
-                </div>
+                <Button
+                  onClick={() => navigate('/pos')}
+                  className="hidden sm:inline-flex shadow-lg"
+                  leadingIcon={Home}
+                >
+                  Back to POS
+                </Button>
               </div>
-              <button
-                onClick={() => navigate('/pos')}
-                className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl shadow-lg transition-all"
-              >
-                <Home className="w-4 h-4" />
-                Back to POS
-              </button>
             </div>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="flex-1">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 space-y-5">
-            {/* Order Summary - Top */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+          {/* Content */}
+          <div className="flex-1">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+              {/* Order Summary - Top */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <h2 className="text-sm font-semibold text-gray-900">Order Summary</h2>
                 </div>
-                <h2 className="text-sm font-semibold text-gray-900">Order Summary</h2>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
-                  <p className="text-xs text-gray-500 mb-1">{t('total')}</p>
-                  <p className="text-lg font-bold text-gray-900">{formatCurrency(state.total)}</p>
-                </div>
-                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <p className="text-xs text-emerald-700 mb-1">Paid</p>
-                  <p className="text-lg font-bold text-emerald-700">{formatCurrency(state.paidAmount)}</p>
-                </div>
-                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                  <p className="text-xs text-blue-700 mb-1">{t('change')}</p>
-                  <p className="text-lg font-bold text-blue-700">{formatCurrency(state.change)}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Documents Cards - Below */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Receipt Card */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div className="p-4 pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <ReceiptIcon className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-semibold text-gray-900">{t('receipt')}</h2>
-                      <p className="text-xs text-gray-500">{t('thermalReceipt80mm')}</p>
-                    </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1">{t('total')}</p>
+                    <p className="text-lg font-bold text-gray-900">{formatCurrency(state.total)}</p>
+                  </div>
+                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <p className="text-xs text-emerald-700 mb-1">Paid</p>
+                    <p className="text-lg font-bold text-emerald-700">{formatCurrency(state.paidAmount)}</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <p className="text-xs text-blue-700 mb-1">{t('change')}</p>
+                    <p className="text-lg font-bold text-blue-700">{formatCurrency(state.change)}</p>
                   </div>
                 </div>
-                <div className="p-4 pt-2 space-y-3">
-                  <button
-                    onClick={() => handlePreview('receipt')}
-                    className="w-full h-16 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    {t('preview')}
-                  </button>
-                  <button
-                    onClick={() => handlePreview('receipt')}
-                    disabled={isGenerating}
-                    className="w-full h-16 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    <Printer className="w-4 h-4" />
-                    {t('print')}
-                  </button>
-                  <button
-                    onClick={() => handleDownload('receipt')}
-                    disabled={isGenerating}
-                    className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    <Download className="w-4 h-4" />
-                    {isGenerating ? t('generating') : 'Download'}
-                  </button>
-                </div>
               </div>
 
-              {/* Delivery Note Card */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div className="p-4 pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-semibold text-gray-900">{t('deliveryNote')}</h2>
-                      <p className="text-xs text-gray-500">{t('deliveryNoteA5')}</p>
+              {/* Documents Cards - Below */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Receipt Card */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                  <div className="p-4 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <ReceiptIcon className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-semibold text-gray-900">{t('receipt')}</h2>
+                        <p className="text-xs text-gray-500">{t('thermalReceipt80mm')}</p>
+                      </div>
                     </div>
                   </div>
+                  <div className="p-4 pt-2 space-y-3">
+                    <Button
+                      onClick={() => handlePreview('receipt')}
+                      variant="ghost"
+                      className="w-full h-16 bg-blue-50 hover:bg-blue-100 text-blue-700"
+                      leadingIcon={Eye}
+                    >
+                      {t('preview')}
+                    </Button>
+                    <Button
+                      onClick={() => handlePreview('receipt')}
+                      disabled={isGenerating}
+                      className="w-full h-16 bg-blue-500 hover:bg-blue-600 text-white"
+                      leadingIcon={Printer}
+                    >
+                      {t('print')}
+                    </Button>
+                    <Button
+                      onClick={() => handleDownload('receipt')}
+                      disabled={isGenerating}
+                      loading={isGenerating}
+                      loadingText={t('generating')}
+                      className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white"
+                      leadingIcon={Download}
+                    >
+                      Download
+                    </Button>
+                  </div>
                 </div>
-                <div className="p-4 pt-2 space-y-3">
-                  <button
-                    onClick={() => handlePreview('delivery-note')}
-                    className="w-full h-16 bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    {t('preview')}
-                  </button>
-                  <button
-                    onClick={() => handlePreview('delivery-note')}
-                    disabled={isGenerating}
-                    className="w-full h-16 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    <Printer className="w-4 h-4" />
-                    {t('print')}
-                  </button>
-                  <button
-                    onClick={() => handleDownload('delivery-note')}
-                    disabled={isGenerating}
-                    className="w-full h-16 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    <Download className="w-4 h-4" />
-                    {isGenerating ? t('generating') : 'Download'}
-                  </button>
+
+                {/* Delivery Note Card */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                  <div className="p-4 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-semibold text-gray-900">{t('deliveryNote')}</h2>
+                        <p className="text-xs text-gray-500">{t('deliveryNoteA5')}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 pt-2 space-y-3">
+                    <Button
+                      onClick={() => handlePreview('delivery-note')}
+                      variant="ghost"
+                      className="w-full h-16 bg-amber-50 hover:bg-amber-100 text-amber-700"
+                      leadingIcon={Eye}
+                    >
+                      {t('preview')}
+                    </Button>
+                    <Button
+                      onClick={() => handlePreview('delivery-note')}
+                      disabled={isGenerating}
+                      className="w-full h-16 bg-amber-500 hover:bg-amber-600 text-white"
+                      leadingIcon={Printer}
+                    >
+                      {t('print')}
+                    </Button>
+                    <Button
+                      onClick={() => handleDownload('delivery-note')}
+                      disabled={isGenerating}
+                      loading={isGenerating}
+                      loadingText={t('generating')}
+                      className="w-full h-16 bg-amber-600 hover:bg-amber-700 text-white"
+                      leadingIcon={Download}
+                    >
+                      Download
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Back to POS Button */}
+                <Button
+                  onClick={() => navigate('/pos')}
+                  className="lg:col-span-2 hidden sm:inline-flex items-center justify-center h-12 shadow-lg sm:flex"
+                  leadingIcon={Home}
+                >
+                  Back to POS
+                </Button>
               </div>
 
-              {/* Back to POS Button */}
-              <button
+              {/* Mobile Back to POS */}
+              <Button
                 onClick={() => navigate('/pos')}
-                className="lg:col-span-2 hidden sm:inline-flex items-center justify-center gap-2 h-12 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl shadow-lg transition-all sm:flex"
+                className="sm:hidden w-full h-12 shadow-lg"
+                leadingIcon={Home}
               >
-                <Home className="w-4 h-4" />
                 Back to POS
-              </button>
+              </Button>
             </div>
-
-            {/* Mobile Back to POS */}
-            <button
-              onClick={() => navigate('/pos')}
-              className="sm:hidden w-full h-12 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
-            >
-              <Home className="w-4 h-4" />
-              Back to POS
-            </button>
           </div>
         </div>
       </div>
-    </div>
 
-    {/* Preview Drawer */}
-    {previewType && (
-      <div className="fixed inset-0 z-50">
-        <div
-          className="absolute inset-0 bg-black/40"
-          onClick={closePreview}
-        />
-        <div className="absolute inset-y-0 right-0 w-full max-w-[480px] bg-white shadow-2xl flex flex-col">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                {previewType === 'receipt' ? t('receipt') : t('deliveryNote')}
-              </h3>
-              <p className="text-xs text-gray-500">{t('preview')}</p>
+      {/* Preview Drawer */}
+      {previewType && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={closePreview}
+          />
+          <div className="absolute inset-y-0 right-0 w-full max-w-[480px] bg-white shadow-2xl flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {previewType === 'receipt' ? t('receipt') : t('deliveryNote')}
+                </h3>
+                <p className="text-xs text-gray-500">{t('preview')}</p>
+              </div>
+              <button
+                onClick={closePreview}
+                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                aria-label="Close preview"
+              >
+                ✕
+              </button>
             </div>
-            <button
-              onClick={closePreview}
-              className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-              aria-label="Close preview"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="flex-1 bg-gray-50">
-            <iframe
-              title="PDF Preview"
-              src={previewUrl}
-              className="w-full h-full border-0"
-            />
+            <div className="flex-1 bg-gray-50">
+              <iframe
+                title="PDF Preview"
+                src={previewUrl}
+                className="w-full h-full border-0"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </>
   );
 }

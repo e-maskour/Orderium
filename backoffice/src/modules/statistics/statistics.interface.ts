@@ -1,4 +1,4 @@
-export interface Statistics {
+export interface IStatistics {
   TotalRevenue?: number;
   TotalOrders?: number;
   TotalCustomers?: number;
@@ -11,7 +11,7 @@ export interface Statistics {
   [key: string]: any;
 }
 
-export interface DailyStats {
+export interface IDailyStats {
   date: string;
   orders: number;
   revenue: number;
@@ -20,20 +20,20 @@ export interface DailyStats {
   cancelled: number;
 }
 
-export interface TopProduct {
+export interface ITopProduct {
   productId: number;
   productName: string;
   sales: number;
   revenue: number;
 }
 
-export interface ComprehensiveStatistics {
-  overview: Statistics;
-  dailyStats: DailyStats[];
-  topProducts: TopProduct[];
+export interface IComprehensiveStatistics {
+  overview: IStatistics;
+  dailyStats: IDailyStats[];
+  topProducts: ITopProduct[];
 }
 
-export interface RecentActivity {
+export interface IRecentActivity {
   type: 'order' | 'customer' | 'product' | 'revenue';
   title: string;
   description: string;

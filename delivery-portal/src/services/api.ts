@@ -2,6 +2,11 @@ import { Order } from '../types';
 
 const API_URL = '/api/delivery';
 
+const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem('authToken');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 interface LoginResponse {
   success: boolean;
   deliveryPerson: {
@@ -54,13 +59,13 @@ export const deliveryService = {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.pageSize) params.append('pageSize', filters.pageSize.toString());
-    
+
     const queryString = params.toString();
     const url = `${API_URL}/person/${deliveryPersonId}/orders${queryString ? '?' + queryString : ''}`;
-    
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({
         orderNumber: filters.orderNumber,
         customerName: filters.customerName,
@@ -76,7 +81,7 @@ export const deliveryService = {
   async updateOrderStatus(orderId: number, status: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled', deliveryPersonId: number): Promise<void> {
     const response = await fetch(`${API_URL}/person/${deliveryPersonId}/order/${orderId}/status`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ status: status }),
     });
     if (!response.ok) throw new Error('Failed to update order status');

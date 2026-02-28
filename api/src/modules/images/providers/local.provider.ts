@@ -8,6 +8,7 @@ import {
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import sharp from 'sharp';
 
 @Injectable()
 export class LocalProvider implements IImageStorageProvider {
@@ -63,23 +64,29 @@ export class LocalProvider implements IImageStorageProvider {
 
       // Generate UUID for unique identifier (without filename)
       const uuid = uuidv4();
-      const fileExtension = path.extname(file.originalname);
-      const fileName = `${uuid}${fileExtension}`;
+      // Always save as .webp for optimized output
+      const fileName = `${uuid}.webp`;
       const filePath = path.join(folderPath, fileName);
 
-      // Write file to disk
-      await fs.writeFile(filePath, file.buffer);
+      // Optimize image: resize to max 800x800, convert to WebP
+      const optimized = await sharp(file.buffer)
+        .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 85 })
+        .toBuffer();
+
+      // Write optimized file to disk
+      await fs.writeFile(filePath, optimized);
 
       // Return only relative path with UUID (no full URL)
       const relativePath = path.join(folder, fileName).replace(/\\/g, '/');
 
-      this.logger.log(`✅ Saved locally: ${relativePath}`);
+      this.logger.log(`✅ Saved locally (optimized): ${relativePath} (${file.size} → ${optimized.length} bytes)`);
 
       return {
         url: relativePath, // Return relative path, NOT full URL
         publicId: relativePath,
-        size: file.size,
-        format: fileExtension.substring(1),
+        size: optimized.length,
+        format: 'webp',
       };
     } catch (error) {
       this.logger.error('❌ Local upload failed:', error);

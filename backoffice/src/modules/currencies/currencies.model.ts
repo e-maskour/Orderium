@@ -1,4 +1,4 @@
-import { Currency as ICurrency, CurrenciesConfig } from './currencies.interface';
+import { ICurrency, ICurrenciesConfig } from './currencies.interface';
 
 export class Currency implements ICurrency {
   code: string;
@@ -15,6 +15,10 @@ export class Currency implements ICurrency {
 
   get displayName(): string {
     return `${this.name} (${this.code})`;
+  }
+
+  get shortDisplay(): string {
+    return `${this.symbol} ${this.code}`;
   }
 
   get statusBadge(): string {
@@ -48,7 +52,7 @@ export class CurrenciesConfiguration {
   default: string;
   currencies: Currency[];
 
-  constructor(data: CurrenciesConfig) {
+  constructor(data: ICurrenciesConfig) {
     this.default = data.default;
     this.currencies = data.currencies.map(c => new Currency(c));
   }
@@ -61,10 +65,25 @@ export class CurrenciesConfiguration {
     return this.currencies.find(c => c.code === code);
   }
 
+  get count(): number {
+    return this.currencies.length;
+  }
+
+  get currencyCodes(): string[] {
+    return this.currencies.map(c => c.code);
+  }
+
   static fromApiResponse(data: any): CurrenciesConfiguration {
     return new CurrenciesConfiguration({
       default: data.default || '',
       currencies: (data.currencies || []).map((c: any) => Currency.fromApiResponse(c)),
     });
+  }
+
+  toJSON(): ICurrenciesConfig {
+    return {
+      default: this.default,
+      currencies: this.currencies.map(c => c.toJSON()),
+    };
   }
 }

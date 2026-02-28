@@ -8,9 +8,15 @@ import { categoriesService } from '../modules/categories';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { ImageUpload } from '../components/ImageUpload';
-import { Package, Save, ArrowLeft, CheckSquare, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
+import { Package, Save, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { FormField } from '../components/ui/form-field';
+import { Textarea } from '../components/ui/textarea';
+import { toastCreated, toastSuccess, toastError } from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -110,6 +116,9 @@ export default function ProductCreate() {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
+
+  useUnsavedChanges(formDirty);
 
   // Generate unique code on mount
   useEffect(() => {
@@ -120,7 +129,7 @@ export default function ProductCreate() {
         setFormData(prev => ({ ...prev, code: uniqueCode }));
       } catch (error) {
         console.error('Failed to generate unique code:', error);
-        toast.error('Failed to generate unique product code');
+        toastError(t('failedToGenerateCode'));
       } finally {
         setIsGeneratingCode(false);
       }
@@ -135,10 +144,10 @@ export default function ProductCreate() {
       const uniqueCode = await generateUniqueProductCode();
       setFormData(prev => ({ ...prev, code: uniqueCode }));
       clearFieldError('code');
-      toast.success('New unique product code generated');
+      toastSuccess(t('newCodeGenerated'));
     } catch (error) {
       console.error('Failed to generate unique code:', error);
-      toast.error('Failed to generate unique code. Please try again.');
+      toastError(t('failedToGenerateCodeRetry'));
     } finally {
       setIsGeneratingCode(false);
     }
@@ -173,27 +182,27 @@ export default function ProductCreate() {
     mutationFn: (data: any) => productsService.createProduct(data),
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      
+
       // If image was uploaded, associate it with the product
       if (imageData && result.product?.id) {
         try {
-          // The image is already linked via the upload, but we can verify
-          await fetch(`/api/products/${result.product.id}/image`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageUrl: imageData.url, imagePublicId: imageData.publicId }),
-          });
+          await productsService.updateProductImage(
+            result.product.id,
+            imageData.url,
+            imageData.publicId,
+          );
         } catch (error) {
           console.warn('Could not verify image association:', error);
         }
       }
-      
-      toast.success('Product created successfully');
+
+      toastCreated(t('productCreatedSuccess'));
+      setFormDirty(false);
       // The result is { product: Product }
       navigate(`/products/${result.product.id}`);
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to create product');
+      toastError(error.message || t('failedToCreateProduct'));
     },
   });
 
@@ -207,7 +216,7 @@ export default function ProductCreate() {
     if (hasValidationErrors(errors)) {
       const firstError = getFirstError(errors);
       if (firstError) {
-        toast.error(firstError);
+        toastError(firstError);
       }
       return;
     }
@@ -242,64 +251,46 @@ export default function ProductCreate() {
         title={t('createNewProduct')}
         subtitle={t('addNewProductToInventory')}
         actions={
-          <button
-            onClick={() => navigate('/products')}
-            className="px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
+          <Button variant="outline" onClick={() => navigate('/products')} leadingIcon={ArrowLeft}>
             {t('backToProducts')}
-          </button>
+          </Button>
         }
       />
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} onChange={() => setFormDirty(true)}>
         <div className="bg-white rounded-lg border border-slate-200 p-6 space-y-6">
           {/* Basic Info Section */}
           <div>
             <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('basicInformation')}</h3>
             <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  {t('productName')} <span className="text-red-500">*</span>
-                </label>
-                <input
+              <FormField label={t('productName')} error={validationErrors.name} required>
+                <Input
                   type="text"
                   value={formData.name}
                   onChange={(e) => {
                     setFormData({ ...formData, name: e.target.value });
                     clearFieldError('name');
                   }}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    validationErrors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
-                  } focus:ring-2`}
+                  variant={validationErrors.name ? 'error' : 'default'}
                   placeholder={t('enterProductName')}
+                  fullWidth
                 />
-                {validationErrors.name && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
-                )}
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  {t('productCodeEAN13')}
-                </label>
+              <FormField label={t('productCodeEAN13')} error={validationErrors.code}>
                 <div className="relative">
-                  <input
+                  <Input
                     type="text"
                     value={formData.code}
                     onChange={(e) => {
                       setFormData({ ...formData, code: e.target.value });
                       clearFieldError('code');
                     }}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      validationErrors.code ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
-                    } focus:ring-2`}
+                    variant={validationErrors.code ? 'error' : 'default'}
                     placeholder={t('autoGeneratedBarcode')}
                     maxLength={13}
+                    fullWidth
                   />
-                  {validationErrors.code && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.code}</p>
-                  )}
                   {!validationErrors.code && formData.code && (
                     <p className="mt-1 text-xs text-slate-500">{t('eanBarcodeHint')}</p>
                   )}
@@ -314,16 +305,13 @@ export default function ProductCreate() {
                     {isGeneratingCode ? t('generating') : t('generateCode')}
                   </button>
                 </div>
-              </div>
+              </FormField>
             </div>
 
             <div className="grid grid-cols-2 gap-6 mt-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  {t('warehouse')} <span className="text-red-500">*</span>
-                </label>
+              <FormField label={t('warehouse')} error={validationErrors.warehouseId} required>
                 <div className="relative" ref={warehouseSearchRef}>
-                  <input
+                  <Input
                     type="text"
                     value={warehouseSearchTerm}
                     onChange={(e) => {
@@ -332,14 +320,10 @@ export default function ProductCreate() {
                       clearFieldError('warehouseId');
                     }}
                     onFocus={() => setShowWarehouseSearch(true)}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      validationErrors.warehouseId ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
-                    } focus:ring-2`}
+                    variant={validationErrors.warehouseId ? 'error' : 'default'}
                     placeholder={t('selectOrSearchWarehouse')}
+                    fullWidth
                   />
-                  {validationErrors.warehouseId && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.warehouseId}</p>
-                  )}
                   {showWarehouseSearch && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {warehouses.filter((w: any) =>
@@ -373,12 +357,9 @@ export default function ProductCreate() {
                     </div>
                   )}
                 </div>
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  {t('categories')}
-                </label>
+              <FormField label={t('categories')}>
                 <div className="relative" ref={categorySearchRef}>
                   {/* Selected categories chips */}
                   {formData.categoryIds.length > 0 && (
@@ -409,7 +390,7 @@ export default function ProductCreate() {
                       })}
                     </div>
                   )}
-                  <input
+                  <Input
                     type="text"
                     value={categorySearchTerm}
                     onChange={(e) => {
@@ -417,8 +398,8 @@ export default function ProductCreate() {
                       setShowCategorySearch(true);
                     }}
                     onFocus={() => setShowCategorySearch(true)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                     placeholder={t('typeToSearchCategories')}
+                    fullWidth
                   />
                   {showCategorySearch && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -435,9 +416,9 @@ export default function ProductCreate() {
                             <div
                               key={category.id}
                               onClick={() => {
-                                setFormData({ 
-                                  ...formData, 
-                                  categoryIds: [...formData.categoryIds, category.id] 
+                                setFormData({
+                                  ...formData,
+                                  categoryIds: [...formData.categoryIds, category.id]
                                 });
                                 setCategorySearchTerm('');
                                 setShowCategorySearch(false);
@@ -458,37 +439,31 @@ export default function ProductCreate() {
                     </div>
                   )}
                 </div>
-              </div>
+              </FormField>
             </div>
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                {t('description')}
-              </label>
-              <textarea
+            <FormField label={t('description')}>
+              <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                 placeholder={t('enterProductDescription')}
+                className="w-full"
               />
-            </div>
+            </FormField>
           </div>
 
           {/* Pricing Section */}
           <div>
             <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('pricing')}</h3>
-            
+
             {/* Sale Price Section */}
             <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-200">
               <h4 className="font-medium text-slate-900 mb-3">{t('salePrice')}</h4>
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t('price')} <span className="text-red-500">*</span>
-                  </label>
+                <FormField label={t('price')} error={validationErrors.price} required>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       step="0.01"
                       min="0"
@@ -497,26 +472,20 @@ export default function ProductCreate() {
                         setFormData({ ...formData, price: e.target.value });
                         clearFieldError('price');
                       }}
-                      className={`w-full py-2 rounded-lg border ${
-                        validationErrors.price ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
-                      } focus:ring-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
-                    placeholder={t('numericPlaceholder')}
+                      variant={validationErrors.price ? 'error' : 'default'}
+                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder={t('numericPlaceholder')}
+                      fullWidth
                     />
                     <span className={`absolute top-2.5 text-slate-500 text-sm ${language === 'ar' ? 'left-3' : 'right-3'}`}>
                       {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
-                  {validationErrors.price && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.price}</p>
-                  )}
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Unité
-                  </label>
+                <FormField label={t('unit')}>
                   <div className="relative" ref={saleUnitSearchRef}>
-                    <input
+                    <Input
                       type="text"
                       value={formData.saleUnit}
                       onChange={(e) => {
@@ -524,8 +493,8 @@ export default function ProductCreate() {
                         setShowSaleUnitSearch(true);
                       }}
                       onFocus={() => setShowSaleUnitSearch(true)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                       placeholder={t('unit')}
+                      fullWidth
                     />
                     {showSaleUnitSearch && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -559,14 +528,11 @@ export default function ProductCreate() {
                       </div>
                     )}
                   </div>
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t('tax')}
-                  </label>
+                <FormField label={t('tax')}>
                   <div className="relative" ref={saleTaxSearchRef}>
-                    <input
+                    <Input
                       type="text"
                       value={formData.saleTax}
                       onChange={(e) => {
@@ -574,8 +540,8 @@ export default function ProductCreate() {
                         setShowSaleTaxSearch(true);
                       }}
                       onFocus={() => setShowSaleTaxSearch(true)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                       placeholder={t('taxPlaceholder')}
+                      fullWidth
                     />
                     {showSaleTaxSearch && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -601,7 +567,7 @@ export default function ProductCreate() {
                       </div>
                     )}
                   </div>
-                </div>
+                </FormField>
               </div>
               {parseFloat(formData.saleTax) > 0 && formData.price && (
                 <p className="mt-2 text-slate-600">
@@ -614,12 +580,9 @@ export default function ProductCreate() {
             <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-200">
               <h4 className="font-medium text-slate-900 mb-3">{t('costPrice')}</h4>
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Prix
-                  </label>
+                <FormField label={t('costPrice')} error={validationErrors.cost}>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       step="0.01"
                       min="0"
@@ -628,26 +591,20 @@ export default function ProductCreate() {
                         setFormData({ ...formData, cost: e.target.value });
                         clearFieldError('cost');
                       }}
-                      className={`w-full py-2 rounded-lg border ${
-                        validationErrors.cost ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'
-                      } focus:ring-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
-                    placeholder={t('numericPlaceholder')}
+                      variant={validationErrors.cost ? 'error' : 'default'}
+                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder={t('numericPlaceholder')}
+                      fullWidth
                     />
                     <span className={`absolute top-2.5 text-slate-500 text-sm ${language === 'ar' ? 'left-3' : 'right-3'}`}>
                       {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
-                  {validationErrors.cost && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.cost}</p>
-                  )}
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t('unit')}
-                  </label>
+                <FormField label={t('unit')}>
                   <div className="relative" ref={purchaseUnitSearchRef}>
-                    <input
+                    <Input
                       type="text"
                       value={formData.purchaseUnit}
                       onChange={(e) => {
@@ -655,8 +612,8 @@ export default function ProductCreate() {
                         setShowPurchaseUnitSearch(true);
                       }}
                       onFocus={() => setShowPurchaseUnitSearch(true)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                       placeholder={t('unit')}
+                      fullWidth
                     />
                     {showPurchaseUnitSearch && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -690,14 +647,11 @@ export default function ProductCreate() {
                       </div>
                     )}
                   </div>
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t('tax')}
-                  </label>
+                <FormField label={t('tax')}>
                   <div className="relative" ref={purchaseTaxSearchRef}>
-                    <input
+                    <Input
                       type="text"
                       value={formData.purchaseTax}
                       onChange={(e) => {
@@ -705,8 +659,8 @@ export default function ProductCreate() {
                         setShowPurchaseTaxSearch(true);
                       }}
                       onFocus={() => setShowPurchaseTaxSearch(true)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                       placeholder={t('taxPlaceholder')}
+                      fullWidth
                     />
                     {showPurchaseTaxSearch && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -732,31 +686,29 @@ export default function ProductCreate() {
                       </div>
                     )}
                   </div>
-                </div>
+                </FormField>
               </div>
             </div>
 
             {/* Additional Pricing Fields */}
             <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  {t('minPrice')}
-                </label>
+              <FormField label={t('minPrice')}>
                 <div className="relative">
-                  <input
+                  <Input
                     type="number"
                     step="0.01"
                     min="0"
                     value={formData.minPrice}
                     onChange={(e) => setFormData({ ...formData, minPrice: e.target.value })}
-                    className={`w-full py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${language === 'ar' ? 'pl-12 pr-3' : 'pl-3 pr-12'}`}
+                    className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     placeholder={t('numericPlaceholder')}
+                    fullWidth
                   />
                   <span className={`absolute top-2.5 text-slate-500 ${language === 'ar' ? 'left-3' : 'right-3'}`}>
                     {language === 'ar' ? 'د.م' : 'DH'}
                   </span>
                 </div>
-              </div>
+              </FormField>
             </div>
 
             {/* Margin Preview */}
@@ -775,9 +727,9 @@ export default function ProductCreate() {
                     <p className="text-lg font-bold text-green-600">
                       {parseFloat(formData.cost) > 0
                         ? (((parseFloat(formData.price) - parseFloat(formData.cost)) /
-                            parseFloat(formData.cost)) *
-                            100
-                          ).toFixed(2)
+                          parseFloat(formData.cost)) *
+                          100
+                        ).toFixed(2)
                         : '0.00'}
                       %
                     </p>
@@ -787,9 +739,9 @@ export default function ProductCreate() {
                     <p className="text-lg font-bold text-blue-600">
                       {parseFloat(formData.price) > 0
                         ? (((parseFloat(formData.price) - parseFloat(formData.cost)) /
-                            parseFloat(formData.price)) *
-                            100
-                          ).toFixed(2)
+                          parseFloat(formData.price)) *
+                          100
+                        ).toFixed(2)
                         : '0.00'}
                       %
                     </p>
@@ -803,83 +755,43 @@ export default function ProductCreate() {
           <div>
             <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('options')}</h3>
             <div className="space-y-3">
-              <label className="flex items-center gap-3">
-                <div
-                  onClick={() => setFormData({ ...formData, isService: !formData.isService })}
-                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                    formData.isService
-                      ? 'bg-amber-500 border-amber-500 text-white'
-                      : 'bg-white border-slate-300'
-                  }`}
-                >
-                  {formData.isService && <CheckSquare className="w-4 h-4" />}
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-slate-700">{t('isService')}</span>
-                  <p className="text-xs text-slate-500">
-                    {t('serviceDescription')}
-                  </p>
-                </div>
-              </label>
+              <Checkbox
+                checked={formData.isService}
+                onChange={() => setFormData({ ...formData, isService: !formData.isService })}
+                label={t('isService')}
+              />
+              <p className="text-xs text-slate-500 ml-8">{t('serviceDescription')}</p>
 
-              <label className="flex items-center gap-3">
-                <div
-                  onClick={() => setFormData({ ...formData, isEnabled: !formData.isEnabled })}
-                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                    formData.isEnabled
-                      ? 'bg-amber-500 border-amber-500 text-white'
-                      : 'bg-white border-slate-300'
-                  }`}
-                >
-                  {formData.isEnabled && <CheckSquare className="w-4 h-4" />}
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-slate-700">{t('enabled')}</span>
-                  <p className="text-xs text-slate-500">
-                    {t('enabledDescription')}
-                  </p>
-                </div>
-              </label>
+              <Checkbox
+                checked={formData.isEnabled}
+                onChange={() => setFormData({ ...formData, isEnabled: !formData.isEnabled })}
+                label={t('enabled')}
+              />
+              <p className="text-xs text-slate-500 ml-8">{t('enabledDescription')}</p>
 
-              <label className="flex items-center gap-3">
-                <div
-                  onClick={() => setFormData({ ...formData, isPriceChangeAllowed: !formData.isPriceChangeAllowed })}
-                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                    formData.isPriceChangeAllowed
-                      ? 'bg-amber-500 border-amber-500 text-white'
-                      : 'bg-white border-slate-300'
-                  }`}
-                >
-                  {formData.isPriceChangeAllowed && <CheckSquare className="w-4 h-4" />}
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-slate-700">{t('allowPriceChange')}</span>
-                  <p className="text-xs text-slate-500">
-                    {t('allowPriceChangeDescription')}
-                  </p>
-                </div>
-              </label>
+              <Checkbox
+                checked={formData.isPriceChangeAllowed}
+                onChange={() => setFormData({ ...formData, isPriceChangeAllowed: !formData.isPriceChangeAllowed })}
+                label={t('allowPriceChange')}
+              />
+              <p className="text-xs text-slate-500 ml-8">{t('allowPriceChangeDescription')}</p>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => navigate('/products')}
-            className="px-6 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-          >
+          <Button type="button" variant="outline" onClick={() => navigate('/products')}>
             {t('cancel')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={createMutation.isPending}
-            className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all flex items-center gap-2 disabled:opacity-50"
+            loading={createMutation.isPending}
+            loadingText={t('creating')}
+            leadingIcon={Save}
           >
-            <Save className="w-4 h-4" />
-            {createMutation.isPending ? t('creating') : t('createProduct')}
-          </button>
+            {t('createProduct')}
+          </Button>
         </div>
       </form>
     </AdminLayout>

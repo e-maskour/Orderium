@@ -3,48 +3,14 @@ import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Search, ShoppingBag, Trash2, User, MapPin, Package, ArrowLeft, Tag } from 'lucide-react';
-import { toast } from 'sonner';
+import { toastError } from '../services/toast.service';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import { ProductQuantityModal } from '../components/ProductQuantityModal';
 import { PriceConfirmModal } from '../components/PriceConfirmModal';
 import { CustomerSelectionModal } from '../components/CustomerSelectionModal';
 import { DiscountModal } from '../components/DiscountModal';
-
-interface Product {
-  id: number;
-  name: string;
-  description?: string;
-  price: number;
-  cost?: number;
-  categoryId?: number;
-  imageUrl?: string;
-  isEnabled?: boolean;
-  isService?: boolean;
-  stock?: number;
-  code?: string;
-  isPriceChangeAllowed?: boolean;
-  saleUnitOfMeasure?: {
-    id: number;
-    name: string;
-    code: string;
-    category: string;
-  };
-}
-
-interface Customer {
-  id: number;
-  name: string;
-  phoneNumber: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-  discount: number;
-  discountType: number; // 0 = fixed amount, 1 = percentage
-}
+import { posService, IPosProduct as Product, IPosCustomer as Customer, IPosCartItem as CartItem } from '../modules/pos';
 
 export default function POS() {
   const { t, language, dir } = useLanguage();
@@ -80,7 +46,7 @@ export default function POS() {
   const [isResizing, setIsResizing] = useState(false);
 
   const formatCurrency = (price: number) => {
-    return language === 'ar' 
+    return language === 'ar'
       ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م.`
       : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
   };
@@ -88,45 +54,15 @@ export default function POS() {
   // Fetch products
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
-    queryFn: async () => {
-      const response = await fetch('/api/products');
-      if (!response.ok) throw new Error('Failed to fetch products');
-      const data = await response.json();
-      
-      // Transform products with proper type conversion
-      if (data.products) {
-        data.products = data.products.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          code: p.code,
-          description: p.description,
-          price: parseFloat(p.price) || 0,
-          cost: p.cost != null ? parseFloat(p.cost) : undefined,
-          stock: p.stock != null ? parseInt(p.stock) : undefined,
-          isService: p.isService,
-          isEnabled: p.isEnabled,
-          isPriceChangeAllowed: p.isPriceChangeAllowed,
-          categoryId: p.categoryId,
-          imageUrl: p.imageUrl,
-          saleUnitOfMeasure: p.saleUnitOfMeasure,
-        }));
-      }
-      
-      return data;
-    },
+    queryFn: () => posService.getProducts(),
   });
 
-  const products: Product[] = productsData?.products || [];
+  const products: Product[] = productsData || [];
 
   // Fetch all partners to find "Client Comptoir"
   const { data: partnersData } = useQuery({
     queryKey: ['partners-all'],
-    queryFn: async () => {
-      const response = await fetch('/api/partners?type=customer');
-      if (!response.ok) throw new Error('Failed to fetch partners');
-      const data = await response.json();
-      return data.partners || [];
-    },
+    queryFn: () => posService.getCustomers(),
   });
 
   // Set "Client Comptoir" as default customer on initial load
@@ -143,14 +79,14 @@ export default function POS() {
   const filteredProducts = products.filter((p: Product) =>
     p.isEnabled !== false &&
     p.isService !== true &&
-    (searchQuery === '' || 
-     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     p.description?.toLowerCase().includes(searchQuery.toLowerCase()))
+    (searchQuery === '' ||
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const openQuantityModal = (product: Product) => {
     setSelectedProduct(product);
-    
+
     // If price change is allowed, show price confirmation modal first
     if (product.isPriceChangeAllowed) {
       setIsPriceModalOpen(true);
@@ -169,11 +105,11 @@ export default function POS() {
 
   const handleAddToCart = (quantity: number) => {
     if (!selectedProduct) return;
-    
+
     // Use confirmed price if available, otherwise use product's original price
     const finalPrice = confirmedPrice !== null ? confirmedPrice : selectedProduct.price;
     const productWithPrice = { ...selectedProduct, price: finalPrice };
-    
+
     const existing = cart.find(item => item.product.id === selectedProduct.id);
     if (existing) {
       setCart(cart.map(item =>
@@ -184,7 +120,7 @@ export default function POS() {
     } else {
       setCart([...cart, { product: productWithPrice, quantity, discount: 0, discountType: 0 }]);
     }
-    
+
     // Reset confirmed price
     setConfirmedPrice(null);
   };
@@ -204,37 +140,29 @@ export default function POS() {
 
   const handleApplyDiscount = (discount: number, discountType: number) => {
     if (!selectedCartItem) return;
-    
+
     setCart(cart.map(item =>
       item.product.id === selectedCartItem.product.id
         ? { ...item, discount, discountType }
         : item
     ));
-    
+
     setSelectedCartItem(null);
     setIsDiscountModalOpen(false);
   };
 
   const total = cart.reduce((sum, item) => {
     const itemSubtotal = item.product.price * item.quantity;
-    const itemDiscount = item.discountType === 1 
-      ? (itemSubtotal * item.discount) / 100 
+    const itemDiscount = item.discountType === 1
+      ? (itemSubtotal * item.discount) / 100
       : item.discount;
     return sum + (itemSubtotal - itemDiscount);
   }, 0);
   const cartTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const createOrderMutation = useMutation({
-    mutationFn: async (orderData: any) => {
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-      if (!response.ok) throw new Error('Failed to create order');
-      return response.json();
-    },
-    onSuccess: (data) => {
+    mutationFn: (orderData: any) => posService.createOrder(orderData),
+    onSuccess: (data: any) => {
       const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
       const orderId = data?.order?.id || data?.id;
       navigate('/checkout/success', {
@@ -256,18 +184,18 @@ export default function POS() {
       });
     },
     onError: (error: any) => {
-      toast.error(error.message || t('error'));
+      toastError(error.message || t('error'));
     },
   });
 
   const handleCheckout = () => {
     if (!selectedCustomer) {
-      toast.error(t('selectCustomer'));
+      toastError(t('selectCustomer'));
       return;
     }
-    
+
     if (cart.length === 0) {
-      toast.error(t('cartEmpty'));
+      toastError(t('cartEmpty'));
       return;
     }
 
@@ -287,12 +215,12 @@ export default function POS() {
 
   const handleConfirmCash = () => {
     if (!selectedCustomer) {
-      toast.error(t('selectCustomer'));
+      toastError(t('selectCustomer'));
       return;
     }
-    
+
     if (cart.length === 0) {
-      toast.error(t('cartEmpty'));
+      toastError(t('cartEmpty'));
       return;
     }
 
@@ -300,12 +228,12 @@ export default function POS() {
       const quantity = item.quantity;
       const unitPrice = item.product.price;
       const itemSubtotal = quantity * unitPrice;
-      const itemDiscountAmount = item.discountType === 1 
-        ? (itemSubtotal * item.discount) / 100 
+      const itemDiscountAmount = item.discountType === 1
+        ? (itemSubtotal * item.discount) / 100
         : item.discount;
       const tax = 0;
       const itemTotal = itemSubtotal - itemDiscountAmount;
-      
+
       return {
         productId: item.product.id,
         description: item.product.name || '',
@@ -355,10 +283,10 @@ export default function POS() {
 
   const resize = (e: MouseEvent) => {
     if (!isResizing) return;
-    
+
     e.preventDefault();
-    const newWidth = dir === 'rtl' 
-      ? window.innerWidth - e.clientX 
+    const newWidth = dir === 'rtl'
+      ? window.innerWidth - e.clientX
       : e.clientX;
     // Min 280px, Max 600px or 50% of window width
     const minWidth = 280;
@@ -370,10 +298,10 @@ export default function POS() {
     if (isResizing) {
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
-      
+
       window.addEventListener('mousemove', resize);
       window.addEventListener('mouseup', stopResizing);
-      
+
       return () => {
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
@@ -482,7 +410,7 @@ export default function POS() {
       {/* Main Layout - matching client 2-column layout */}
       <div className="flex h-[calc(100vh-64px)] overflow-hidden">
         {/* Desktop Cart Panel - Left Side */}
-        <aside 
+        <aside
           className={`hidden lg:flex lg:flex-col bg-white ${dir === 'rtl' ? 'border-s' : 'border-e'} border-gray-200 h-full overflow-hidden relative`}
           style={{ width: `${sidebarWidth}px` }}
         >
@@ -572,8 +500,8 @@ export default function POS() {
                           <span className="font-bold text-gray-900 text-xs">
                             {(() => {
                               const itemSubtotal = item.product.price * item.quantity;
-                              const itemDiscountAmount = item.discountType === 1 
-                                ? (itemSubtotal * item.discount) / 100 
+                              const itemDiscountAmount = item.discountType === 1
+                                ? (itemSubtotal * item.discount) / 100
                                 : item.discount;
                               const itemTotal = itemSubtotal - itemDiscountAmount;
                               return formatCurrency(itemTotal);
@@ -588,19 +516,18 @@ export default function POS() {
                               e.stopPropagation();
                               openDiscountModal(item);
                             }}
-                            className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors ${
-                              item.discount > 0
-                                ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                            }`}
+                            className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors ${item.discount > 0
+                              ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                              }`}
                           >
                             <Tag className="h-2.5 w-2.5" />
-                            {item.discount > 0 
+                            {item.discount > 0
                               ? `${item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount)}`
                               : t('discount')
                             }
                           </button>
-                          
+
                           {item.discount > 0 && (
                             <span className="text-[9px] text-gray-400 line-through">
                               {formatCurrency(item.product.price * item.quantity)}
@@ -624,20 +551,23 @@ export default function POS() {
                   </span>
                 </div>
 
-                <button
+                <Button
                   onClick={handleConfirmCash}
                   disabled={!selectedCustomer || cart.length === 0 || createOrderMutation.isPending}
-                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  variant="success"
+                  loading={createOrderMutation.isPending}
+                  loadingText={t('loading')}
+                  className="w-full h-11"
                 >
-                  {createOrderMutation.isPending ? t('loading') : 'Confirm / Cash'}
-                </button>
-                <button
+                  Confirm / Cash
+                </Button>
+                <Button
                   onClick={handleCheckout}
                   disabled={!selectedCustomer || cart.length === 0}
-                  className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full h-11"
                 >
-                  {'Payment'}
-                </button>
+                  Payment
+                </Button>
               </div>
             )}
           </div>
@@ -647,11 +577,11 @@ export default function POS() {
             <div
               onMouseDown={startResizing}
               className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-0 bottom-0 w-2 hover:w-3 cursor-col-resize transition-all z-50 group`}
-              style={{ 
+              style={{
                 background: isResizing ? 'rgba(37, 99, 235, 0.2)' : 'transparent',
               }}
             >
-              <div 
+              <div
                 className={`absolute inset-y-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-px bg-gray-300 group-hover:bg-primary group-hover:w-0.5 transition-all`}
               />
             </div>
@@ -664,13 +594,13 @@ export default function POS() {
           <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
             <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
               <div className="relative">
-                <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} />
-                <input
+                <Input
                   type="text"
                   placeholder={t('searchProducts')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full ${dir === 'rtl' ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent`}
+                  leadingIcon={Search}
+                  fullWidth
                 />
               </div>
             </div>
@@ -679,85 +609,84 @@ export default function POS() {
           {/* Products Grid - Scrollable */}
           <div className="flex-1 overflow-y-auto">
             <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-            {productsLoading ? (
-              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
-                    <div className="aspect-[4/3] bg-gray-200" />
-                    <div className="p-1.5 sm:p-2 space-y-2">
-                      <div className="h-3 bg-gray-200 rounded w-3/4" />
-                      <div className="h-3 bg-gray-200 rounded w-1/2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
-                  <Package className="w-12 h-12 text-gray-300" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {t('noProductsFound')}
-                </h3>
-                <p className="text-gray-500 max-w-md">
-                  {searchQuery ? t('noResultsMessage') : t('noProductsInCategory')}
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
-                {filteredProducts.map((product: Product, index: number) => {
-                  const cartItem = cart.find(item => item.product.id === product.id);
-                  const quantity = cartItem?.quantity || 0;
-
-                  return (
-                    <div
-                      key={product.id}
-                      style={{ animationDelay: `${index * 20}ms` }}
-                      onClick={() => openQuantityModal(product)}
-                      className={`group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer active:scale-[0.98] animate-fade-in ${
-                        quantity > 0 ? 'ring-2 ring-primary bg-primary/5' : ''
-                      }`}
-                    >
-                      {/* Image */}
-                      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                        {product.imageUrl ? (
-                          <img
-                            src={getImageUrl(product.imageUrl)}
-                            alt={product.name}
-                            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                            <Package className="w-8 h-8 text-gray-300" />
-                          </div>
-                        )}
-
-                        {/* Quantity badge when in cart */}
-                        {quantity > 0 && (
-                          <div className={`absolute top-1 ${dir === 'rtl' ? 'left-1' : 'right-1'} min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md`}>
-                            {quantity}
-                          </div>
-                        )}
+              {productsLoading ? (
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
+                      <div className="aspect-[4/3] bg-gray-200" />
+                      <div className="p-1.5 sm:p-2 space-y-2">
+                        <div className="h-3 bg-gray-200 rounded w-3/4" />
+                        <div className="h-3 bg-gray-200 rounded w-1/2" />
                       </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
+                    <Package className="w-12 h-12 text-gray-300" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    {t('noProductsFound')}
+                  </h3>
+                  <p className="text-gray-500 max-w-md">
+                    {searchQuery ? t('noResultsMessage') : t('noProductsInCategory')}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
+                  {filteredProducts.map((product: Product, index: number) => {
+                    const cartItem = cart.find(item => item.product.id === product.id);
+                    const quantity = cartItem?.quantity || 0;
 
-                      {/* Content */}
-                      <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
-                        <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
-                          {product.name}
-                        </h3>
+                    return (
+                      <div
+                        key={product.id}
+                        style={{ animationDelay: `${index * 20}ms` }}
+                        onClick={() => openQuantityModal(product)}
+                        className={`group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer active:scale-[0.98] animate-fade-in ${quantity > 0 ? 'ring-2 ring-primary bg-primary/5' : ''
+                          }`}
+                      >
+                        {/* Image */}
+                        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                          {product.imageUrl ? (
+                            <img
+                              src={getImageUrl(product.imageUrl)}
+                              alt={product.name}
+                              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                              <Package className="w-8 h-8 text-gray-300" />
+                            </div>
+                          )}
 
-                        <div className="mt-auto">
-                          <span className="text-[11px] sm:text-xs font-bold text-primary">
-                            {formatCurrency(product.price)}
-                          </span>
+                          {/* Quantity badge when in cart */}
+                          {quantity > 0 && (
+                            <div className={`absolute top-1 ${dir === 'rtl' ? 'left-1' : 'right-1'} min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md`}>
+                              {quantity}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
+                          <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
+                            {product.name}
+                          </h3>
+
+                          <div className="mt-auto">
+                            <span className="text-[11px] sm:text-xs font-bold text-primary">
+                              {formatCurrency(product.price)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </main>

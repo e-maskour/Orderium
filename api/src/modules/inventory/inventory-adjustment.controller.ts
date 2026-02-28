@@ -18,19 +18,20 @@ import {
   ValidateAdjustmentDto,
 } from './dto/inventory-adjustment.dto';
 import { AdjustmentStatus } from './entities/inventory-adjustment.entity';
+import { ApiRes } from '../../common/api-response';
+import { ADJ } from '../../common/response-codes';
 
 @ApiTags('Inventory - Adjustments')
 @Controller('inventory/adjustments')
 export class InventoryAdjustmentController {
-  constructor(
-    private readonly adjustmentService: InventoryAdjustmentService,
-  ) {}
+  constructor(private readonly adjustmentService: InventoryAdjustmentService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new inventory adjustment' })
   @ApiResponse({ status: 201, description: 'Adjustment created successfully' })
-  create(@Body() createDto: CreateInventoryAdjustmentDto) {
-    return this.adjustmentService.create(createDto);
+  async create(@Body() createDto: CreateInventoryAdjustmentDto) {
+    const adjustment = await this.adjustmentService.create(createDto);
+    return ApiRes(ADJ.CREATED, adjustment);
   }
 
   @Get()
@@ -40,7 +41,7 @@ export class InventoryAdjustmentController {
   @ApiQuery({ name: 'status', required: false, enum: AdjustmentStatus })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
-  findAll(
+  async findAll(
     @Query('warehouseId') warehouseId?: string,
     @Query('status') status?: AdjustmentStatus,
     @Query('startDate') startDate?: string,
@@ -52,69 +53,100 @@ export class InventoryAdjustmentController {
     if (startDate) filters.startDate = new Date(startDate);
     if (endDate) filters.endDate = new Date(endDate);
 
-    return this.adjustmentService.findAll(filters);
+    const adjustments = await this.adjustmentService.findAll(filters);
+    return ApiRes(ADJ.LIST, adjustments);
   }
 
   @Get('generate-list/:warehouseId')
   @ApiOperation({ summary: 'Generate counting list for a warehouse' })
-  @ApiResponse({ status: 200, description: 'Counting list with theoretical quantities' })
+  @ApiResponse({
+    status: 200,
+    description: 'Counting list with theoretical quantities',
+  })
   @ApiResponse({ status: 404, description: 'Warehouse not found' })
-  generateCountingList(@Param('warehouseId') warehouseId: string) {
-    return this.adjustmentService.generateCountingList(+warehouseId);
+  async generateCountingList(@Param('warehouseId') warehouseId: string) {
+    const list = await this.adjustmentService.generateCountingList(+warehouseId);
+    return ApiRes(ADJ.COUNTING_LIST, list);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get adjustment by ID' })
   @ApiResponse({ status: 200, description: 'Adjustment details' })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
-  findOne(@Param('id') id: string) {
-    return this.adjustmentService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const adjustment = await this.adjustmentService.findOne(+id);
+    return ApiRes(ADJ.DETAIL, adjustment);
   }
 
   @Post(':id/start')
   @ApiOperation({ summary: 'Start counting (set status to IN_PROGRESS)' })
   @ApiResponse({ status: 200, description: 'Counting started successfully' })
-  @ApiResponse({ status: 400, description: 'Can only start counting for draft adjustments' })
+  @ApiResponse({
+    status: 400,
+    description: 'Can only start counting for draft adjustments',
+  })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
-  startCounting(@Param('id') id: string) {
-    return this.adjustmentService.startCounting(+id);
+  async startCounting(@Param('id') id: string) {
+    const adjustment = await this.adjustmentService.startCounting(+id);
+    return ApiRes(ADJ.STARTED, adjustment);
   }
 
   @Post('validate')
   @ApiOperation({ summary: 'Validate adjustment and create stock movements' })
-  @ApiResponse({ status: 200, description: 'Adjustment validated successfully' })
-  @ApiResponse({ status: 400, description: 'Cannot validate or already validated' })
+  @ApiResponse({
+    status: 200,
+    description: 'Adjustment validated successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot validate or already validated',
+  })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
-  validate(@Body() validateDto: ValidateAdjustmentDto) {
-    return this.adjustmentService.validate(validateDto);
+  async validate(@Body() validateDto: ValidateAdjustmentDto) {
+    const adjustment = await this.adjustmentService.validate(validateDto);
+    return ApiRes(ADJ.VALIDATED, adjustment);
   }
 
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel adjustment' })
-  @ApiResponse({ status: 200, description: 'Adjustment cancelled successfully' })
-  @ApiResponse({ status: 400, description: 'Cannot cancel validated adjustment' })
+  @ApiResponse({
+    status: 200,
+    description: 'Adjustment cancelled successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot cancel validated adjustment',
+  })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
-  cancel(@Param('id') id: string) {
-    return this.adjustmentService.cancel(+id);
+  async cancel(@Param('id') id: string) {
+    const adjustment = await this.adjustmentService.cancel(+id);
+    return ApiRes(ADJ.CANCELLED, adjustment);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update adjustment (only if not validated)' })
   @ApiResponse({ status: 200, description: 'Adjustment updated successfully' })
-  @ApiResponse({ status: 400, description: 'Cannot update validated adjustment' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot update validated adjustment',
+  })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateDto: UpdateInventoryAdjustmentDto,
   ) {
-    return this.adjustmentService.update(+id, updateDto);
+    const adjustment = await this.adjustmentService.update(+id, updateDto);
+    return ApiRes(ADJ.UPDATED, adjustment);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete adjustment (only draft)' })
   @ApiResponse({ status: 204, description: 'Adjustment deleted successfully' })
-  @ApiResponse({ status: 400, description: 'Can only delete draft adjustments' })
+  @ApiResponse({
+    status: 400,
+    description: 'Can only delete draft adjustments',
+  })
   @ApiResponse({ status: 404, description: 'Adjustment not found' })
   remove(@Param('id') id: string) {
     return this.adjustmentService.remove(+id);

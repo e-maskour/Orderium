@@ -1,163 +1,118 @@
 import { ProductsResponse, GetProductsParams, CreateProductDTO, UpdateProductDTO } from './products.interface';
 import { Product } from './products.model';
-
-const API_URL = '/api';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class ProductsService {
   async getProducts(params: GetProductsParams = {}): Promise<ProductsResponse> {
-    const { 
-      search = '', 
+    const {
+      search = '',
       code = '',
       stockFilter,
       categoryIds = [],
       isService,
-      page = 1, 
-      limit = 50 
+      page = 1,
+      limit = 50
     } = params;
-    
-    // Build query params for pagination
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', page.toString());
-    queryParams.append('perPage', limit.toString());
-    
-    // Build request body for filters
-    const filterBody: any = {};
+
+    const filterBody: Record<string, unknown> = {};
     if (search) filterBody.search = search;
     if (code) filterBody.code = code;
     if (stockFilter) filterBody.stockFilter = stockFilter;
     if (categoryIds.length > 0) filterBody.categoryIds = categoryIds;
     if (isService !== undefined) filterBody.isService = isService;
-    
-    const queryString = queryParams.toString();
-    const response = await fetch(`${API_URL}/products/filter${queryString ? `?${queryString}` : ''}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(filterBody),
+
+    const response = await apiClient.post<Product[]>(API_ROUTES.PRODUCTS.FILTER, filterBody, {
+      params: { page, perPage: limit },
     });
-    if (!response.ok) throw new Error('Failed to fetch products');
-    const data = await response.json();
-    
-    // Transform products using model
-    if (data.products) {
-      data.products = data.products.map((p: any) => Product.fromApiResponse(p));
-    }
-    
-    // Transform page-based pagination
-    const totalPages = Math.ceil((data.totalCount || 0) / limit);
-    const hasNext = page < totalPages;
-    const hasPrev = page > 1;
-    
+
+    const products = (response.data || []).map((p: any) => Product.fromApiResponse(p));
+    const total = (response.metadata as any)?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
     return {
-      products: data.products || [],
+      products,
       pagination: {
         page,
         limit,
-        total: data.totalCount || 0,
+        total,
         totalPages,
-        hasNext,
-        hasPrev,
+        hasNext: (response.metadata as any)?.hasNext || false,
+        hasPrev: (response.metadata as any)?.hasPrev || false,
       },
     };
   }
 
   async getProduct(id: number): Promise<Product> {
-    const response = await fetch(`${API_URL}/products/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch product');
-    const data = await response.json();
-    
-    // Transform product using model
-    return Product.fromApiResponse(data.product || data);
+    const response = await apiClient.get<Product>(API_ROUTES.PRODUCTS.DETAIL(id));
+    return Product.fromApiResponse(response.data);
   }
 
   async createProduct(data: CreateProductDTO): Promise<{ product: Product }> {
-    const response = await fetch(`${API_URL}/products/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create product');
-    }
-    const result = await response.json();
-    
-    // Transform response using model
-    if (result.product) {
-      result.product = Product.fromApiResponse(result.product);
-    }
-    
-    return result;
+    const response = await apiClient.post<Product>(API_ROUTES.PRODUCTS.CREATE, data);
+    return { product: Product.fromApiResponse(response.data) };
   }
 
   async updateProduct(id: number, data: UpdateProductDTO): Promise<{ product: Product }> {
-    const response = await fetch(`${API_URL}/products/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update product');
-    }
-    const result = await response.json();
-    
-    // Transform response using model
-    if (result.product) {
-      result.product = Product.fromApiResponse(result.product);
-    }
-    
-    return result;
+    const response = await apiClient.patch<Product>(API_ROUTES.PRODUCTS.UPDATE(id), data);
+    return { product: Product.fromApiResponse(response.data) };
   }
 
   async deleteProduct(id: number): Promise<void> {
-    const response = await fetch(`${API_URL}/products/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete product');
-    }
+    await apiClient.delete(API_ROUTES.PRODUCTS.DELETE(id));
   }
 
   async checkCodeExists(code: string): Promise<boolean> {
     try {
-      const response = await fetch(`${API_URL}/products?search=${encodeURIComponent(code)}&limit=1`);
-      if (!response.ok) return false;
-      const data = await response.json();
-      // Check if any product has exactly this code
-      return data.products?.some((p: any) => p.code === code) || false;
+      const response = await apiClient.get<Product[]>(API_ROUTES.PRODUCTS.LIST, {
+        params: { search: code, limit: 1 },
+      });
+      return (response.data || []).some((p: any) => p.code === code);
     } catch {
       return false;
     }
   }
 
   async exportToXlsx(): Promise<Blob> {
-    const response = await fetch(`${API_URL}/products/export/xlsx`);
-    if (!response.ok) throw new Error('Failed to export products');
+    const response = await apiClient.raw('GET', API_ROUTES.PRODUCTS.EXPORT_XLSX);
     return response.blob();
   }
 
   async downloadTemplate(): Promise<Blob> {
-    const response = await fetch(`${API_URL}/products/import/template`);
-    if (!response.ok) throw new Error('Failed to download template');
+    const response = await apiClient.raw('GET', API_ROUTES.PRODUCTS.IMPORT_TEMPLATE);
     return response.blob();
   }
 
   async importFromXlsx(file: File): Promise<{ success: boolean; imported: number; updated: number; failed: number; errors: any[] }> {
     const formData = new FormData();
     formData.append('file', file);
+    const response = await apiClient.upload<{ imported: number; updated: number; failed: number; errors: any[] }>(
+      API_ROUTES.PRODUCTS.IMPORT_XLSX,
+      formData,
+    );
+    return { success: true, ...response.data };
+  }
 
-    const response = await fetch(`${API_URL}/products/import/xlsx`, {
-      method: 'POST',
-      body: formData,
-    });
+  async uploadImage(productId: number, file: File): Promise<{ product: Product; imageUrl: string; publicId: string }> {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await apiClient.upload<any>(API_ROUTES.PRODUCTS.IMAGE_UPLOAD(productId), formData);
+    return {
+      product: Product.fromApiResponse(response.data.product),
+      imageUrl: response.data.imageUrl,
+      publicId: response.data.publicId,
+    };
+  }
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to import products');
-    }
+  async deleteImage(productId: number): Promise<void> {
+    await apiClient.delete(API_ROUTES.PRODUCTS.IMAGE_DELETE(productId));
+  }
 
-    return response.json();
+  async updateProductImage(productId: number, imageUrl: string, imagePublicId?: string): Promise<Product> {
+    const response = await apiClient.patch<any>(
+      API_ROUTES.PRODUCTS.UPDATE(productId),
+      { imageUrl, imagePublicId },
+    );
+    return Product.fromApiResponse(response.data);
   }
 }
 

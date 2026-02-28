@@ -1,4 +1,4 @@
-export interface CompanyInfo {
+export interface ICompany {
   // Basic Company Information
   companyName: string;
   address?: string;
@@ -23,4 +23,4 @@ export interface CompanyInfo {
   fiscalYearStartMonth?: number;
 }
 
-export interface UpdateCompanyDTO extends Partial<CompanyInfo> {}
+export interface UpdateCompanyDTO extends Partial<ICompany> {}

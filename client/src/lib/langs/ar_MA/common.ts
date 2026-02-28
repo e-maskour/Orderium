@@ -2,14 +2,14 @@ export default {
   // App & Branding
   appName: 'Orderium',
   tagline: 'نقطة البيع',
-  
+
   // Navigation
   home: 'الرئيسية',
   menu: 'القائمة',
   cart: 'السلة',
   orders: 'الطلبات',
   profile: 'الملف الشخصي',
-  
+
   // Common Actions
   add: 'أضف',
   remove: 'حذف',
@@ -26,7 +26,7 @@ export default {
   create: 'إنشاء',
   apply: 'تطبيق',
   reset: 'إعادة تعيين',
-  
+
   // Common Fields
   name: 'الاسم الكامل',
   namePlaceholder: 'أدخل اسمك',
@@ -48,7 +48,7 @@ export default {
   date: 'التاريخ',
   coordinates: 'الإحداثيات',
   customer: 'العميل',
-  
+
   // General
   all: 'الكل',
   total: 'المجموع الإجمالي',
@@ -59,11 +59,11 @@ export default {
   piece: 'قطعة',
   pieces: 'قطع',
   perUnit: '/ وحدة',
-  
+
   // Currency
   currency: 'درهم',
   currencyCode: 'MAD',
-  
+
   // Loading & States
   loading: 'جاري التحميل...',
   processing: 'جاري المعالجة...',
@@ -72,11 +72,11 @@ export default {
   generating: 'جاري الإنشاء...',
   searching: 'بحث...',
   verifying: 'جاري التحقق...',
-  
+
   // Search & Filter
   search: 'ابحث',
   searchPlaceholder: 'ابحث عن منتج، رمز أو باركود...',
-  
+
   // Pagination
   previous: 'السابق',
   next: 'التالي',
@@ -89,12 +89,12 @@ export default {
   perPage: 'لكل صفحة',
   gridView: 'عرض شبكي',
   listView: 'عرض قائمة',
-  
+
   // Error Messages
   error: 'حدث خطأ',
   warning: 'تحذير',
   notSupported: 'غير مدعوم',
-  
+
   // Validation
   required: 'مطلوب',
   nameRequired: 'الاسم مطلوب',
@@ -102,11 +102,11 @@ export default {
   phoneInvalid: 'رقم الهاتف غير صالح',
   emailInvalid: 'البريد الإلكتروني غير صالح',
   addressRequired: 'العنوان مطلوب',
-  
+
   // Language Toggle
   switchToFrench: 'Changer en français',
   switchToArabic: 'التبديل للعربية',
-  
+
   // Date & Time
   period: 'الفترة',
   selectDates: 'اختر التواريخ',
@@ -129,9 +129,12 @@ export default {
   minutesAgo: 'منذ {minutes} دقيقة',
   hoursAgo: 'منذ {hours} ساعة',
   daysAgo: 'منذ {days} يوم',
-  
+
   // Page Not Found
   pageNotFound: 'الصفحة غير موجودة',
   oopsPageNotFound: 'عذراً! الصفحة غير موجودة',
   returnToHome: 'العودة للصفحة الرئيسية',
+
+  // Accessibility
+  goBack: 'رجوع',
 };

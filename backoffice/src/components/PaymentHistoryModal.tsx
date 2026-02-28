@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Trash2, Edit2, Calendar, CreditCard, FileText, Hash, Plus, AlertCircle } from 'lucide-react';
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import PaymentModal from './PaymentModal';
-import ConfirmDialog from './ConfirmDialog';
-import AlertDialog from './AlertDialog';
+import { toastConfirm, toastError } from '../services/toast.service';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface PaymentHistoryModalProps {
@@ -33,12 +32,6 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [totalPaid, setTotalPaid] = useState(0);
-  
-  // Confirmation and alert dialogs
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deletePaymentId, setDeletePaymentId] = useState<number | null>(null);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState({ title: '', message: '', type: 'error' as const });
 
   useEffect(() => {
     if (isOpen) {
@@ -51,7 +44,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
     try {
       const data = await paymentsService.getByInvoice(invoiceId);
       setPayments(data);
-      
+
       const total = data.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
       setTotalPaid(total);
     } catch (error) {
@@ -62,29 +55,16 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   };
 
   const handleDelete = async (id: number) => {
-    setDeletePaymentId(id);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    if (deletePaymentId === null) return;
-    
-    try {
-      await paymentsService.delete(deletePaymentId);
-      await fetchPayments();
-      onPaymentUpdate();
-      setShowDeleteConfirm(false);
-      setDeletePaymentId(null);
-    } catch (error) {
-      console.error('Error deleting payment:', error);
-      setShowDeleteConfirm(false);
-      setAlertMessage({
-        title: 'Erreur',
-        message: 'Erreur lors de la suppression du paiement',
-        type: 'error'
-      });
-      setShowAlert(true);
-    }
+    toastConfirm(t('deleteTitle'), async () => {
+      try {
+        await paymentsService.delete(id);
+        await fetchPayments();
+        onPaymentUpdate();
+      } catch (error) {
+        console.error('Error deleting payment:', error);
+        toastError(t('error'), { description: t('errorDeletingPayment') });
+      }
+    }, { description: t('confirmDeletePayment'), confirmLabel: t('delete') });
   };
 
   const handleEdit = (payment: Payment) => {
@@ -277,28 +257,6 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
           payment={selectedPayment}
         />
       )}
-
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => {
-          setShowDeleteConfirm(false);
-          setDeletePaymentId(null);
-        }}
-        onConfirm={confirmDelete}
-        title={t('deleteTitle')}
-        message={t('confirmDeletePayment')}
-        type="danger"
-        confirmText={t('delete')}
-        cancelText={t('cancel')}
-      />
-
-      <AlertDialog
-        isOpen={showAlert}
-        onClose={() => setShowAlert(false)}
-        title={alertMessage.title}
-        message={alertMessage.message}
-        type={alertMessage.type}
-      />
     </>
   );
 };

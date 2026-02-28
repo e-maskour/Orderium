@@ -20,9 +20,9 @@ export function PushNotificationProvider() {
       console.log('Requesting notification permission...');
       requestPermission().then((granted) => {
         if (granted) {
-          console.log('✅ Notification permission granted');
+          console.log('✅ INotification permission granted');
         } else {
-          console.log('❌ Notification permission denied');
+          console.log('❌ INotification permission denied');
         }
       });
     }
@@ -36,7 +36,7 @@ export function PushNotificationProvider() {
 
   useEffect(() => {
     if (token) {
-      console.log('✅ Push notifications enabled for admin:', admin?.FullName || admin?.phoneNumber);
+      console.log('✅ Push notifications enabled for admin:', admin?.fullName || admin?.phoneNumber);
     }
   }, [token, admin]);
 

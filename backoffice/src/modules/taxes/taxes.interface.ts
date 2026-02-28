@@ -1,12 +1,12 @@
-export interface TaxRate {
+export interface ITaxRate {
   name: string;
   rate: number;
   isDefault: boolean;
 }
 
-export interface TaxesConfig {
+export interface ITaxesConfig {
   defaultRate: number;
-  rates: TaxRate[];
+  rates: ITaxRate[];
 }
 
 export interface CreateTaxRateDTO {

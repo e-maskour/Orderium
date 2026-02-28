@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { fromBuffer } from 'file-type';
 import {
   IImageStorageProvider,
   ImageUploadResult,
@@ -74,7 +75,7 @@ export class ImageService {
   /**
    * Validate uploaded file
    */
-  validateFile(file: Express.Multer.File): void {
+  async validateFile(file: Express.Multer.File): Promise<void> {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
@@ -82,6 +83,14 @@ export class ImageService {
     if (!this.ALLOWED_TYPES.includes(file.mimetype)) {
       throw new BadRequestException(
         `Invalid file type. Allowed types: ${this.ALLOWED_TYPES.join(', ')}`,
+      );
+    }
+
+    // Validate actual file content via magic bytes (not just client-provided MIME header)
+    const detected = await fromBuffer(file.buffer);
+    if (!detected || !this.ALLOWED_TYPES.includes(detected.mime)) {
+      throw new BadRequestException(
+        'File content does not match an allowed image type',
       );
     }
 
@@ -99,7 +108,7 @@ export class ImageService {
     file: Express.Multer.File,
     folder?: string,
   ): Promise<ImageUploadResult> {
-    this.validateFile(file);
+    await this.validateFile(file);
 
     try {
       const result = await this.provider.upload(file, folder);

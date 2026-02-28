@@ -10,6 +10,8 @@ import {
   OllamaChatMessage,
   MessageStatus,
   AppContext,
+  ToolCall,
+  ToolResult,
   MAX_MESSAGE_HISTORY,
 } from '../types/aiAssistant';
 import { ollamaService } from '../services/ollama.service';
@@ -41,7 +43,7 @@ export function useAIAssistant() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState('');
-  
+
   const location = useLocation();
   const sessionId = useRef(crypto.randomUUID());
   const messageIdCounter = useRef(0);
@@ -55,7 +57,7 @@ export function useAIAssistant() {
         const parsed = JSON.parse(stored);
         const loadedMessages = parsed.slice(-MAX_MESSAGE_HISTORY);
         setMessages(loadedMessages);
-        
+
         // Sync messageIdCounter with loaded messages
         const maxId = loadedMessages.reduce((max: number, msg: AssistantMessage) => {
           const match = msg.id.match(/^msg-(\d+)$/);

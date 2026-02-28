@@ -2,12 +2,14 @@ import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, CheckSquare } from 'lucide-react';
+import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, Check } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { toast } from 'sonner';
+import { toastDeleted, toastError } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { formatDH, formatFrenchNumber } from '../utils/formatNumber';
 
@@ -40,21 +42,21 @@ export default function Customers() {
     mutationFn: (id: number) => partnersService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['partners'] });
-      toast.success(t('customerDeleted'));
+      toastDeleted(t('customerDeleted'));
       setShowDeleteConfirm(false);
       setDeletingPartnerId(null);
       setSelectedCustomers([]);
     },
     onError: (error: Error) => {
-      const message = error.message.includes('Cannot delete customer that has') 
-        ? error.message 
+      const message = error.message.includes('Cannot delete customer that has')
+        ? error.message
         : `${t('failedToDelete')}: ${error.message}`;
-      toast.error(message);
+      toastError(message);
     },
   });
 
   const toggleSelectCustomer = (id: number) => {
-    setSelectedCustomers(prev => 
+    setSelectedCustomers(prev =>
       prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id]
     );
   };
@@ -160,13 +162,9 @@ export default function Customers() {
           title={t('customers')}
           subtitle={t('manageCustomers')}
           actions={
-            <button
-              onClick={() => navigate('/customers/create')}
-              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
+            <Button onClick={() => navigate('/customers/create')} leadingIcon={Plus}>
               {t('addCustomer')}
-            </button>
+            </Button>
           }
         />
 
@@ -179,11 +177,10 @@ export default function Customers() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                    activeTab === tab.key
-                      ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${activeTab === tab.key
+                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
+                    : 'text-slate-600 hover:bg-slate-50'
+                    }`}
                 >
                   <Icon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                   <span className="hidden sm:inline">{tab.label}</span>
@@ -278,7 +275,7 @@ export default function Customers() {
                             { from: 'from-emerald-500', to: 'to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-700' },
                           ];
                           const color = barColors[index];
-                          
+
                           return (
                             <div key={index} className="group">
                               <div className="flex items-center justify-between mb-2">
@@ -364,21 +361,19 @@ export default function Customers() {
                   <div className="flex items-center gap-1 sm:gap-2 bg-slate-100 rounded-lg p-1 flex-shrink-0">
                     <button
                       onClick={() => setViewMode('card')}
-                      className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                        viewMode === 'card'
-                          ? 'bg-white text-slate-900 shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                      className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${viewMode === 'card'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                        }`}
                     >
                       <Grid3x3 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                        viewMode === 'list'
-                          ? 'bg-white text-slate-900 shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                      className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${viewMode === 'list'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                        }`}
                     >
                       <ListIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                     </button>
@@ -386,18 +381,20 @@ export default function Customers() {
 
                   {/* Search */}
                   <div className="relative flex-1 sm:flex-none">
-                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 sm:w-5 h-4 sm:h-5" />
-                    <input
+                    <Input
+                      id="search-customers"
                       type="text"
                       placeholder={t('searchCustomers')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full sm:w-96 ps-9 sm:ps-10 pe-9 sm:pe-10 py-2 sm:py-2.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
+                      leadingIcon={Search}
+                      className="w-full sm:w-96"
+                      aria-label={t('searchCustomers')}
                     />
                     {searchTerm && (
                       <button
                         onClick={() => setSearchTerm('')}
-                        className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                        className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 z-10"
                       >
                         <X className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                       </button>
@@ -407,151 +404,145 @@ export default function Customers() {
 
                 {/* Customers List */}
                 <div className="border-t border-slate-200 pt-4">
-                {filteredCustomers.length === 0 ? (
-                  <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
-                    <Users className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-800 font-semibold text-lg">{t('noCustomersFound')}</p>
-                  </div>
-                ) : (
-                  <>
-                    {viewMode === 'card' ? (
-                      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {filteredCustomers.map((customer: Partner) => {
-                          const isSelected = selectedCustomers.includes(customer.id);
+                  {filteredCustomers.length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
+                      <Users className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                      <p className="text-slate-800 font-semibold text-lg">{t('noCustomersFound')}</p>
+                    </div>
+                  ) : (
+                    <>
+                      {viewMode === 'card' ? (
+                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                          {filteredCustomers.map((customer: Partner) => {
+                            const isSelected = selectedCustomers.includes(customer.id);
 
-                          return (
+                            return (
+                              <div
+                                key={customer.id}
+                                onClick={() => toggleSelectCustomer(customer.id)}
+                                className={`group relative bg-white rounded-lg overflow-hidden transition-all ${isSelected
+                                  ? 'ring-2 ring-amber-500 shadow-md cursor-pointer'
+                                  : 'shadow-sm hover:shadow-md cursor-pointer border border-slate-200'
+                                  }`}
+                              >
+                                {/* Selection Checkbox */}
+                                <div className="absolute top-2 left-2 z-10">
+                                  <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
+                                    ? 'bg-amber-500 border-amber-500 text-white'
+                                    : 'bg-white border-slate-300'
+                                    }`}>
+                                    {isSelected && <Check className="w-4 h-4" />}
+                                  </div>
+                                </div>
+
+                                {/* Status Badge */}
+                                <div className="absolute top-2 right-2 z-10">
+                                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${customer.isEnabled
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-slate-100 text-slate-600'
+                                    }`}>
+                                    {customer.isEnabled ? t('active') : t('inactive')}
+                                  </span>
+                                </div>
+
+                                {/* Card Content */}
+                                <div className="p-3 space-y-2">
+                                  {/* Header */}
+                                  <div className="flex items-start justify-between gap-2 mt-8">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                      <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Users className="w-5 h-5 text-amber-600" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={customer.name}>
+                                          {customer.name}
+                                        </h3>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Contact Info */}
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                                      <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                                      <span className="truncate">{customer.phoneNumber || '-'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                                      <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                                      <span className="truncate">{customer.email || '-'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {filteredCustomers.map((customer: Partner) => (
                             <div
                               key={customer.id}
                               onClick={() => toggleSelectCustomer(customer.id)}
-                              className={`group relative bg-white rounded-lg overflow-hidden transition-all ${
-                                isSelected
-                                  ? 'ring-2 ring-amber-500 shadow-md cursor-pointer'
-                                  : 'shadow-sm hover:shadow-md cursor-pointer border border-slate-200'
-                              }`}
-                            >
-                              {/* Selection Checkbox */}
-                              <div className="absolute top-2 left-2 z-10">
-                                <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                                  isSelected 
-                                    ? 'bg-amber-500 border-amber-500 text-white' 
-                                    : 'bg-white border-slate-300'
-                                }`}>
-                                  {isSelected && <CheckSquare className="w-4 h-4" />}
-                                </div>
-                              </div>
-
-                              {/* Status Badge */}
-                              <div className="absolute top-2 right-2 z-10">
-                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${
-                                  customer.isEnabled
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-slate-100 text-slate-600'
-                                }`}>
-                                  {customer.isEnabled ? t('active') : t('inactive')}
-                                </span>
-                              </div>
-
-                              {/* Card Content */}
-                              <div className="p-3 space-y-2">
-                                {/* Header */}
-                                <div className="flex items-start justify-between gap-2 mt-8">
-                                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                                    <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                      <Users className="w-5 h-5 text-amber-600" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={customer.name}>
-                                        {customer.name}
-                                      </h3>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Contact Info */}
-                                <div className="space-y-1.5">
-                                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                                    <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                    <span className="truncate">{customer.phoneNumber || '-'}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                                    <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                    <span className="truncate">{customer.email || '-'}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {filteredCustomers.map((customer: Partner) => (
-                          <div
-                            key={customer.id}
-                            onClick={() => toggleSelectCustomer(customer.id)}
-                            className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${
-                              selectedCustomers.includes(customer.id)
+                              className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${selectedCustomers.includes(customer.id)
                                 ? 'border-amber-500 ring-2 ring-amber-500/20'
                                 : 'border-slate-200/60 hover:border-slate-300/60'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {/* Checkbox */}
-                              <div className="w-12 flex items-center justify-center">
-                                <div
-                                  className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
-                                    selectedCustomers.includes(customer.id)
+                                }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {/* Checkbox */}
+                                <div className="w-12 flex items-center justify-center">
+                                  <div
+                                    className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${selectedCustomers.includes(customer.id)
                                       ? 'bg-amber-500 border-amber-500 text-white'
                                       : 'bg-white border-slate-300 hover:border-amber-400'
-                                  }`}
-                                >
-                                  {selectedCustomers.includes(customer.id) && (
-                                    <CheckSquare className="w-3.5 h-3.5" />
-                                  )}
+                                      }`}
+                                  >
+                                    {selectedCustomers.includes(customer.id) && (
+                                      <Check className="w-3.5 h-3.5" />
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
 
-                              {/* Icon */}
-                              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Users className="w-5 h-5 text-white" />
-                              </div>
+                                {/* Icon */}
+                                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Users className="w-5 h-5 text-white" />
+                                </div>
 
-                              {/* Name */}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('name')}</p>
-                                <p className="text-sm font-semibold text-slate-800 truncate">{customer.name}</p>
-                              </div>
+                                {/* Name */}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('name')}</p>
+                                  <p className="text-sm font-semibold text-slate-800 truncate">{customer.name}</p>
+                                </div>
 
-                              {/* Phone */}
-                              <div className="w-32">
-                                <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('phone')}</p>
-                                <p className="text-sm text-slate-600">{customer.phoneNumber || '-'}</p>
-                              </div>
+                                {/* Phone */}
+                                <div className="w-32">
+                                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('phone')}</p>
+                                  <p className="text-sm text-slate-600">{customer.phoneNumber || '-'}</p>
+                                </div>
 
-                              {/* Email */}
-                              <div className="w-48">
-                                <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('email')}</p>
-                                <p className="text-sm text-slate-600 truncate">{customer.email || '-'}</p>
-                              </div>
+                                {/* Email */}
+                                <div className="w-48">
+                                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('email')}</p>
+                                  <p className="text-sm text-slate-600 truncate">{customer.email || '-'}</p>
+                                </div>
 
-                              {/* Status */}
-                              <div className="w-24 flex flex-col items-center">
-                                <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
-                                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                  customer.isEnabled
+                                {/* Status */}
+                                <div className="w-24 flex flex-col items-center">
+                                  <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
+                                  <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${customer.isEnabled
                                     ? 'bg-green-100 text-green-800'
                                     : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {customer.isEnabled ? t('active') : t('inactive')}
-                                </span>
+                                    }`}>
+                                    {customer.isEnabled ? t('active') : t('inactive')}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -578,19 +569,20 @@ export default function Customers() {
             <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('confirmDelete')}</h3>
             <p className="text-slate-600 mb-6">{t('deletePartnerConfirmation')}</p>
             <div className="flex items-center justify-end gap-3">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
               >
                 {t('cancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
                 onClick={confirmDelete}
-                disabled={deleteMutation.isPending}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                loading={deleteMutation.isPending}
+                loadingText={t('deleting')}
               >
-                {deleteMutation.isPending ? t('deleting') : t('delete')}
-              </button>
+                {t('delete')}
+              </Button>
             </div>
           </div>
         </div>

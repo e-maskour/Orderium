@@ -1,7 +1,7 @@
 import {
-  Quote as IQuote,
-  QuoteItem as IQuoteItem,
-  QuoteWithDetails as IQuoteWithDetails
+  IQuote,
+  IQuoteItem,
+  IQuoteWithDetails
 } from './quotes.interface';
 
 export class QuoteItem implements IQuoteItem {
@@ -65,6 +65,21 @@ export class QuoteItem implements IQuoteItem {
       tax: parseFloat(data.tax) || 0,
       total: parseFloat(data.total) || 0,
     });
+  }
+
+  toJSON(): IQuoteItem {
+    return {
+      id: this.id,
+      quoteId: this.quoteId,
+      productId: this.productId,
+      description: this.description,
+      quantity: this.quantity,
+      unitPrice: this.unitPrice,
+      discount: this.discount,
+      discountType: this.discountType,
+      tax: this.tax,
+      total: this.total,
+    };
   }
 }
 
@@ -169,6 +184,23 @@ export class Quote implements IQuote {
     return this.status === 'invoiced';
   }
 
+  get isDelivered(): boolean {
+    return this.status === 'delivered';
+  }
+
+  get isExpired(): boolean {
+    if (!this.expirationDate || this.isClosed || this.isInvoiced) return false;
+    return new Date(this.expirationDate) < new Date();
+  }
+
+  get canBeShared(): boolean {
+    return !!this.shareToken;
+  }
+
+  get isConverted(): boolean {
+    return !!(this.convertedToInvoiceId || this.convertedToOrderId);
+  }
+
   get displaySubtotal(): string {
     return this.subtotal.toFixed(2);
   }
@@ -245,6 +277,43 @@ export class Quote implements IQuote {
       dateUpdated: data.dateUpdated,
     });
   }
+
+  toJSON(): IQuote {
+    return {
+      id: this.id,
+      quoteNumber: this.quoteNumber,
+      direction: this.direction,
+      customerId: this.customerId,
+      customerName: this.customerName,
+      customerPhone: this.customerPhone,
+      customerAddress: this.customerAddress,
+      supplierId: this.supplierId,
+      supplierName: this.supplierName,
+      supplierPhone: this.supplierPhone,
+      supplierAddress: this.supplierAddress,
+      date: this.date,
+      expirationDate: this.expirationDate,
+      dueDate: this.dueDate,
+      validationDate: this.validationDate,
+      subtotal: this.subtotal,
+      tax: this.tax,
+      discount: this.discount,
+      discountType: this.discountType,
+      total: this.total,
+      status: this.status,
+      isValidated: this.isValidated,
+      notes: this.notes,
+      clientNotes: this.clientNotes,
+      signedBy: this.signedBy,
+      signedDate: this.signedDate,
+      shareToken: this.shareToken,
+      shareTokenExpiry: this.shareTokenExpiry,
+      convertedToInvoiceId: this.convertedToInvoiceId,
+      convertedToOrderId: this.convertedToOrderId,
+      dateCreated: this.dateCreated,
+      dateUpdated: this.dateUpdated,
+    };
+  }
 }
 
 export class QuoteWithDetails implements IQuoteWithDetails {
@@ -274,5 +343,12 @@ export class QuoteWithDetails implements IQuoteWithDetails {
       quote: Quote.fromApiResponse(quoteData),
       items: (quoteData.items || []).map(QuoteItem.fromApiResponse),
     });
+  }
+
+  toJSON(): IQuoteWithDetails {
+    return {
+      quote: this.quote.toJSON(),
+      items: this.items.map((i) => i.toJSON()),
+    };
   }
 }

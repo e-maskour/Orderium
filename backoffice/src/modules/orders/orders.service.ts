@@ -1,19 +1,10 @@
-import { Order } from './orders.model';
-
-const API_URL = '/api';
+import { Order, OrderWithDetails } from './orders.model';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class OrdersService {
-  async create(orderData: any): Promise<any> {
-    const response = await fetch(`${API_URL}/orders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create order');
-    }
-    return await response.json();
+  async create(orderData: any): Promise<Order> {
+    const response = await apiClient.post<any>(API_ROUTES.ORDERS.CREATE, orderData);
+    return Order.fromApiResponse(response.data);
   }
 
   async getAll(
@@ -28,28 +19,18 @@ export class OrdersService {
     perPage: number = 50,
     direction?: 'ACHAT' | 'VENTE',
   ): Promise<any> {
-    // Parse search string for filters
     const filters: any = {};
-    
     if (search) {
-      const searchParts = search.split(' ');
-      searchParts.forEach(part => {
-        if (part.startsWith('customerId:')) {
-          filters.customerId = parseInt(part.split(':')[1]);
-        } else if (part.startsWith('deliveryPersonId:')) {
-          filters.deliveryPersonId = parseInt(part.split(':')[1]);
-        }
+      search.split(' ').forEach(part => {
+        if (part.startsWith('customerId:')) filters.customerId = parseInt(part.split(':')[1]);
+        else if (part.startsWith('deliveryPersonId:')) filters.deliveryPersonId = parseInt(part.split(':')[1]);
       });
     }
-    
-    // Build query params
-    const params = new URLSearchParams();
-    if (fromPortal !== undefined) params.append('fromPortal', fromPortal.toString());
-    if (page) params.append('page', page.toString());
-    if (perPage) params.append('perPage', perPage.toString());
-    if (direction) params.append('direction', direction);
-    
-    // Build POST body with filters
+
+    const queryParams: Record<string, string | number | boolean | undefined> = { page, perPage };
+    if (fromPortal !== undefined) queryParams.fromPortal = fromPortal;
+    if (direction) queryParams.direction = direction;
+
     const body: any = {};
     if (startDate) body.startDate = startDate.toISOString();
     if (endDate) body.endDate = endDate.toISOString();
@@ -58,178 +39,85 @@ export class OrdersService {
     if (filters.customerId) body.customerId = filters.customerId;
     if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
     if (fromClient !== undefined) body.fromClient = fromClient;
-    
-    const queryString = params.toString();
-    const response = await fetch(`${API_URL}/orders/filter${queryString ? `?${queryString}` : ''}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    
-    if (!response.ok) throw new Error('Failed to fetch orders');
-    const data = await response.json();
-    
-    // API now returns { orders, count, totalCount, statusCounts }
-    if (data.orders && Array.isArray(data.orders)) {
+
+    const response = await apiClient.post<any[]>(API_ROUTES.ORDERS.FILTER, body, { params: queryParams });
+
+    const orders = response.data || [];
+    if (Array.isArray(orders)) {
       return {
-        ...data,
-        orders: data.orders.map((o: any) => Order.fromApiResponse(o))
+        orders: orders.map((o: any) => Order.fromApiResponse(o)),
+        count: (response.metadata as any)?.total || orders.length,
+        totalCount: (response.metadata as any)?.total || orders.length,
+        statusCounts: (response.metadata as any)?.statusCounts || {}
       };
     }
-    
-    // Fallback for old API response format
-    const orders = Array.isArray(data) ? data : [];
-    return {
-      orders: orders.map((o: any) => Order.fromApiResponse(o)),
-      count: orders.length,
-      totalCount: orders.length,
-      statusCounts: {}
-    };
+    return { orders: [], count: 0, totalCount: 0, statusCounts: {} };
   }
 
-  async getById(orderId: number): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/${orderId}`);
-    if (!response.ok) throw new Error('Failed to fetch order details');
-    const data = await response.json();
-    // Return the raw API data since DocumentEditPage needs the full structure
-    return data;
+  async getById(orderId: number): Promise<OrderWithDetails> {
+    const response = await apiClient.get<any>(API_ROUTES.ORDERS.DETAIL(orderId));
+    return OrderWithDetails.fromApiResponse(response.data);
   }
 
-  async update(orderId: number, orderData: any): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/${orderId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update order');
-    }
-    return await response.json();
+  async update(orderId: number, orderData: any): Promise<Order> {
+    const response = await apiClient.put<any>(API_ROUTES.ORDERS.UPDATE(orderId), orderData);
+    return Order.fromApiResponse(response.data);
   }
 
   async assignToDelivery(orderId: number, deliveryPersonId: number): Promise<void> {
-    const response = await fetch(`${API_URL}/delivery/assign`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ OrderId: orderId, DeliveryPersonId: deliveryPersonId }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to assign order');
-    }
+    await apiClient.post(API_ROUTES.DELIVERY.ASSIGN, { OrderId: orderId, DeliveryPersonId: deliveryPersonId });
   }
 
   async unassignOrder(orderId: number): Promise<void> {
-    const response = await fetch(`${API_URL}/delivery/unassign/${orderId}`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to unassign order');
+    await apiClient.post(API_ROUTES.DELIVERY.UNASSIGN(orderId));
   }
 
-  async validate(orderId: number): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/${orderId}/validate`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to validate order');
-    }
-    return await response.json();
+  async validate(orderId: number): Promise<Order> {
+    const response = await apiClient.put<any>(API_ROUTES.ORDERS.VALIDATE(orderId));
+    return Order.fromApiResponse(response.data);
   }
 
-  async devalidate(orderId: number): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/${orderId}/devalidate`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to devalidate order');
-    }
-    return await response.json();
+  async devalidate(orderId: number): Promise<Order> {
+    const response = await apiClient.put<any>(API_ROUTES.ORDERS.DEVALIDATE(orderId));
+    return Order.fromApiResponse(response.data);
   }
 
-  async deliver(orderId: number): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/${orderId}/deliver`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to mark order as delivered');
-    }
-    return await response.json();
+  async deliver(orderId: number): Promise<Order> {
+    const response = await apiClient.put<any>(API_ROUTES.ORDERS.DELIVER(orderId));
+    return Order.fromApiResponse(response.data);
   }
 
-  async cancel(orderId: number): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/${orderId}/cancel`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to cancel order');
-    }
-    return await response.json();
+  async cancel(orderId: number): Promise<Order> {
+    const response = await apiClient.put<any>(API_ROUTES.ORDERS.CANCEL(orderId));
+    return Order.fromApiResponse(response.data);
   }
 
-  async markAsInvoiced(orderId: number, invoiceId: number): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/${orderId}/mark-invoiced`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invoiceId }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to mark order as invoiced');
-    }
-    return await response.json();
+  async markAsInvoiced(orderId: number, invoiceId: number): Promise<Order> {
+    const response = await apiClient.put<any>(API_ROUTES.ORDERS.MARK_INVOICED(orderId), { invoiceId });
+    return Order.fromApiResponse(response.data);
   }
 
   async delete(orderId: number): Promise<void> {
-    const response = await fetch(`${API_URL}/orders/${orderId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      let errorMessage = 'Failed to delete order';
-      try {
-        const error = await response.json();
-        errorMessage = error.message || errorMessage;
-      } catch (e) {
-        // If response is not JSON, use status text
-        errorMessage = response.statusText || errorMessage;
-      }
-      throw new Error(errorMessage);
-    }
+    await apiClient.delete(API_ROUTES.ORDERS.DELETE(orderId));
   }
 
   async getOrderNumbers(search?: string): Promise<any[]> {
-    const params = new URLSearchParams();
-    if (search) params.append('search', search);
-    params.append('limit', '50');
-
-    const response = await fetch(`${API_URL}/orders/search/order-numbers?${params.toString()}`);
-    if (!response.ok) throw new Error('Failed to fetch order numbers');
-    
-    const data = await response.json();
-    return data.data || [];
+    const response = await apiClient.get<any[]>(API_ROUTES.ORDERS.SEARCH_ORDER_NUMBERS, {
+      params: { ...(search ? { search } : {}), limit: 50 },
+    });
+    return response.data || [];
   }
 
   async getAnalytics(direction: 'vente' | 'achat', year: number): Promise<any> {
-    const response = await fetch(`${API_URL}/orders/analytics/${direction}?year=${year}`);
-    if (!response.ok) throw new Error('Failed to fetch order analytics');
-    const result = await response.json();
-    return result.data;
+    const response = await apiClient.get<any>(API_ROUTES.ORDERS.ANALYTICS(direction), { params: { year } });
+    return response.data;
   }
 
   async exportToXlsx(supplierId?: number): Promise<Blob> {
-    const params = new URLSearchParams();
-    if (supplierId !== undefined) params.append('supplierId', supplierId.toString());
-    const response = await fetch(`${API_URL}/orders/export/xlsx${params.toString() ? '?' + params.toString() : ''}`);
-    if (!response.ok) throw new Error('Failed to export orders');
-    return response.blob();
+    const raw = await apiClient.raw('GET', API_ROUTES.ORDERS.EXPORT_XLSX, {
+      params: supplierId !== undefined ? { supplierId } : undefined,
+    });
+    return raw.blob();
   }
 }
 

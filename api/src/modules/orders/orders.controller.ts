@@ -18,11 +18,13 @@ import type { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrdersDto } from './dto/filter-orders.dto';
+import { ApiRes } from '../../common/api-response';
+import { ORD } from '../../common/response-codes';
 
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new order' })
@@ -30,11 +32,7 @@ export class OrdersController {
   @ApiResponse({ status: 400, description: 'Invalid order data' })
   async create(@Body() createOrderDto: CreateOrderDto) {
     const order = await this.ordersService.createOrder(createOrderDto);
-    return {
-      success: true,
-      order,
-      documentNumber: order.orderNumber,
-    };
+    return ApiRes(ORD.CREATED, order);
   }
 
   @Post('filter')
@@ -64,10 +62,10 @@ export class OrdersController {
     const endDateObj = filterDto.endDate
       ? new Date(filterDto.endDate)
       : undefined;
-    const pageNum = page ? parseInt(page, 10) : 1;
-    // Allowed page sizes with fallback to 50
-    const allowedPageSizes = [10, 50, 100, 500, 1000];
-    const pageSizeNum = perPage ? parseInt(perPage, 10) : 50;
+    const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    // Allowed page sizes capped at 100 for standard queries
+    const allowedPageSizes = [10, 50, 100];
+    const pageSizeNum = Math.max(1, parseInt(perPage ?? '50', 10) || 50);
     const pageSize = allowedPageSizes.includes(pageSizeNum) ? pageSizeNum : 50;
 
     const result = await this.ordersService.filterOrders(
@@ -85,13 +83,15 @@ export class OrdersController {
       directionValue,
     );
 
-    return {
-      success: true,
-      orders: result.orders,
-      count: result.count,
-      totalCount: result.totalCount,
+    const offset = (pageNum - 1) * pageSize;
+    return ApiRes(ORD.FILTERED, result.orders, {
+      limit: pageSize,
+      offset,
+      total: result.totalCount,
+      hasNext: offset + pageSize < result.totalCount,
+      hasPrev: offset > 0,
       statusCounts: result.statusCounts,
-    };
+    });
   }
 
   @Get()
@@ -112,7 +112,7 @@ export class OrdersController {
     @Query('endDate') endDate?: string,
     @Query('direction') direction?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 50;
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
     const fromPortalBool =
       fromPortal !== undefined ? fromPortal === 'true' : undefined;
     const fromClientBool =
@@ -135,12 +135,14 @@ export class OrdersController {
       endDateObj,
       directionValue,
     );
-    return {
-      success: true,
-      orders: result.orders,
-      count: result.count,
+    return ApiRes(ORD.LIST, result.orders, {
+      limit: limitNum,
+      offset: 0,
+      total: result.count,
+      hasNext: false,
+      hasPrev: false,
       statusCounts: result.statusCounts,
-    };
+    });
   }
 
   @Get('search/order-numbers')
@@ -161,13 +163,10 @@ export class OrdersController {
       limitNum,
     );
 
-    return {
-      success: true,
-      data: orderNumbers.map((num: string) => ({
-        value: num,
-        label: num,
-      })),
-    };
+    return ApiRes(ORD.SEARCH_NUMBERS, orderNumbers.map((num: string) => ({
+      value: num,
+      label: num,
+    })));
   }
 
   @Get('number/:orderNumber')
@@ -196,10 +195,7 @@ export class OrdersController {
       throw new NotFoundException('Order not found');
     }
 
-    return {
-      success: true,
-      order,
-    };
+    return ApiRes(ORD.BY_NUMBER, order);
   }
 
   @Get('customer/:customerId')
@@ -223,9 +219,9 @@ export class OrdersController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    const pageNum = page ? parseInt(page, 10) : 1;
-    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : 10;
-    
+    const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize ?? '10', 10) || 10));
+
     const result = await this.ordersService.getCustomerOrders(
       customerId,
       pageNum,
@@ -236,10 +232,14 @@ export class OrdersController {
       endDate ? new Date(endDate) : undefined,
     );
 
-    return {
-      success: true,
-      ...result,
-    };
+    const offset = (pageNum - 1) * pageSizeNum;
+    return ApiRes(ORD.CUSTOMER_ORDERS, result.orders, {
+      limit: pageSizeNum,
+      offset,
+      total: result.total,
+      hasNext: pageNum < result.totalPages,
+      hasPrev: pageNum > 1,
+    });
   }
 
   @Get('analytics/:direction')
@@ -254,10 +254,7 @@ export class OrdersController {
   ) {
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
     const analytics = await this.ordersService.getAnalytics(direction, yearNum);
-    return {
-      success: true,
-      data: analytics,
-    };
+    return ApiRes(ORD.ANALYTICS, analytics);
   }
 
   @Get(':id')
@@ -266,10 +263,7 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.getOrderById(id);
-    return {
-      success: true,
-      order,
-    };
+    return ApiRes(ORD.DETAIL, order);
   }
 
   @Put(':id')
@@ -282,10 +276,7 @@ export class OrdersController {
     @Body() updateOrderDto: Partial<CreateOrderDto>,
   ) {
     const order = await this.ordersService.updateOrder(id, updateOrderDto);
-    return {
-      success: true,
-      order,
-    };
+    return ApiRes(ORD.UPDATED, order);
   }
 
   @Delete(':id')
@@ -294,10 +285,7 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.ordersService.remove(id);
-    return {
-      success: true,
-      message: 'Order deleted successfully',
-    };
+    return ApiRes(ORD.DELETED, null);
   }
 
   @Put(':id/validate')
@@ -308,10 +296,7 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found' })
   async validate(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.validate(id);
-    return {
-      success: true,
-      order,
-    };
+    return ApiRes(ORD.VALIDATED, order);
   }
 
   @Put(':id/devalidate')
@@ -320,10 +305,7 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found' })
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.devalidate(id);
-    return {
-      success: true,
-      order,
-    };
+    return ApiRes(ORD.DEVALIDATED, order);
   }
 
   @Put(':id/deliver')
@@ -335,10 +317,7 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found' })
   async deliver(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.deliver(id);
-    return {
-      success: true,
-      order,
-    };
+    return ApiRes(ORD.DELIVERED, order);
   }
 
   @Put(':id/cancel')
@@ -347,10 +326,7 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found' })
   async cancel(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.cancel(id);
-    return {
-      success: true,
-      order,
-    };
+    return ApiRes(ORD.CANCELLED, order);
   }
 
   @Put(':id/mark-invoiced')
@@ -365,10 +341,7 @@ export class OrdersController {
     @Body() body: { invoiceId: number },
   ) {
     const order = await this.ordersService.markAsInvoiced(id, body.invoiceId);
-    return {
-      success: true,
-      order,
-    };
+    return ApiRes(ORD.MARKED_INVOICED, order);
   }
 
   @Get('export/xlsx')
@@ -380,11 +353,11 @@ export class OrdersController {
   ) {
     const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
     const buffer = await this.ordersService.exportToXlsx(supplierIdNum);
-    
-    const filename = supplierIdNum !== undefined 
+
+    const filename = supplierIdNum !== undefined
       ? (supplierIdNum ? 'bons-achat.xlsx' : 'bons-livraison.xlsx')
       : 'bons.xlsx';
-      
+
     if (res) {
       res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
       res.send(buffer);

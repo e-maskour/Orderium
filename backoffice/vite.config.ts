@@ -43,7 +43,6 @@ export default defineConfig({
             '@radix-ui/react-scroll-area',
             '@radix-ui/react-slot',
             'lucide-react',
-            'sonner',
             'cmdk',
           ],
         },

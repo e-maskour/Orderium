@@ -1,4 +1,4 @@
-import { Product as IProduct, CreateProductDTO, UpdateProductDTO } from './products.interface';
+import { IProduct, CreateProductDTO, UpdateProductDTO } from './products.interface';
 
 export class Product implements IProduct {
   id: number;
@@ -115,21 +115,21 @@ export class Product implements IProduct {
     return this.isService ? 'Service' : 'Product';
   }
 
-  // Methods
-  canBeSold(): boolean {
-    return this.isEnabled && (this.isService || this.hasStock);
+  get priceWithTax(): number {
+    return this.price * (1 + (this.saleTax ?? 0) / 100);
   }
 
-  isProfitable(): boolean {
-    return this.margin > 0;
+  get hasImage(): boolean {
+    return !!this.imageUrl;
   }
 
-  calculateTotal(quantity: number): number {
-    return this.price * quantity;
+  get hasCategories(): boolean {
+    return Array.isArray(this.categories) && this.categories.length > 0;
   }
 
-  applyDiscount(discountPercentage: number): number {
-    return this.price * (1 - discountPercentage / 100);
+  get categoryNames(): string[] {
+    if (!Array.isArray(this.categories)) return [];
+    return this.categories.map((c: any) => c.name ?? c);
   }
 
   // Static factory method
@@ -177,6 +177,27 @@ export class Product implements IProduct {
       isPriceChangeAllowed: this.isPriceChangeAllowed,
       minPrice: this.minPrice,
       imageUrl: this.imageUrl,
+    };
+  }
+
+  toCreateDTO(): CreateProductDTO {
+    return {
+      name: this.name,
+      code: this.code,
+      description: this.description,
+      price: this.price,
+      cost: this.cost,
+      stock: this.stock,
+      isService: this.isService,
+      isEnabled: this.isEnabled,
+      isPriceChangeAllowed: this.isPriceChangeAllowed,
+      minPrice: this.minPrice,
+      imageUrl: this.imageUrl,
+      saleTax: this.saleTax,
+      purchaseTax: this.purchaseTax,
+      warehouseId: this.warehouseId,
+      saleUnit: this.saleUnit,
+      purchaseUnit: this.purchaseUnit,
     };
   }
 

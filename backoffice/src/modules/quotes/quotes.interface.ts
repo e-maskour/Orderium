@@ -1,6 +1,6 @@
 export type QuoteStatus = 'draft' | 'open' | 'signed' | 'closed' | 'delivered' | 'invoiced';
 
-export interface Quote {
+export interface IQuote {
   id: number;
   quoteNumber: string;
   direction: 'ACHAT' | 'VENTE';
@@ -35,7 +35,7 @@ export interface Quote {
   dateUpdated: string;
 }
 
-export interface QuoteItem {
+export interface IQuoteItem {
   id: number;
   quoteId: number;
   productId?: number | null;
@@ -48,9 +48,9 @@ export interface QuoteItem {
   total: number;
 }
 
-export interface QuoteWithDetails {
-  quote: Quote;
-  items: QuoteItem[];
+export interface IQuoteWithDetails {
+  quote: IQuote;
+  items: IQuoteItem[];
 }
 
 export interface QuoteFilters {
@@ -83,7 +83,7 @@ export interface CreateQuoteDTO {
   discountType: number;
   total: number;
   notes?: string;
-  items: Omit<QuoteItem, 'id' | 'quoteId'>[];
+  items: Omit<IQuoteItem, 'id' | 'quoteId'>[];
 }
 
 export interface UpdateQuoteDTO extends Partial<CreateQuoteDTO> {}

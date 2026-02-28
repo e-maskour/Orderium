@@ -40,9 +40,11 @@ const PROJECT_STORAGE_KEY = 'orderium_delivery_fcm_project';
 const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '';
 
 async function httpRequest<T>(url: string, options?: RequestInit): Promise<T> {
+  const token = localStorage.getItem('authToken');
   const res = await fetch(`${API_URL}${url}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
     ...options,
@@ -82,7 +84,7 @@ export function usePushNotifications(
       isInitializedRef.current = true;
 
       const supported = isNotificationSupported();
-      
+
       if (!supported) {
         setState({
           isSupported: false,
@@ -163,7 +165,7 @@ export function usePushNotifications(
 
     try {
       const permission = await requestNotificationPermission();
-      
+
       setState((prev) => ({
         ...prev,
         permission,
@@ -251,7 +253,7 @@ export function usePushNotifications(
       setState((prev) => ({ ...prev, token }));
 
       const success = await registerTokenToServer(userId, token);
-      
+
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -280,7 +282,7 @@ export function usePushNotifications(
   // Unregister token
   const unregisterToken = useCallback(async (): Promise<boolean> => {
     const token = state.token || localStorage.getItem(TOKEN_STORAGE_KEY);
-    
+
     if (!token) {
       return true;
     }

@@ -1,6 +1,6 @@
 export type AdjustmentStatus = 'draft' | 'in_progress' | 'done' | 'cancelled';
 
-export interface InventoryAdjustment {
+export interface IInventoryAdjustment {
   id: number;
   reference: string;
   name: string;
@@ -15,10 +15,10 @@ export interface InventoryAdjustment {
     id: number;
     name: string;
   };
-  lines?: AdjustmentLine[];
+  lines?: IAdjustmentLine[];
 }
 
-export interface AdjustmentLine {
+export interface IAdjustmentLine {
   id: number;
   adjustmentId: number;
   productId: number;
@@ -38,7 +38,7 @@ export interface AdjustmentLine {
 }
 
 export interface InventoryAdjustmentsResponse {
-  adjustments: InventoryAdjustment[];
+  adjustments: IInventoryAdjustment[];
 }
 
 export interface AdjustmentLineDTO {

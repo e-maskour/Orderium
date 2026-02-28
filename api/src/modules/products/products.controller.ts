@@ -15,9 +15,16 @@ import {
   BadRequestException,
   Res,
   Header,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { ProductsService } from './products.service';
 import { ImageService } from '../images/services/image.service';
@@ -26,14 +33,17 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { ProductImageResponseDto } from '../images/dto/product-image.dto';
+import { ApiRes } from '../../common/api-response';
+import { PRD } from '../../common/response-codes';
 
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
+  private readonly logger = new Logger(ProductsController.name);
   constructor(
     private readonly productsService: ProductsService,
     private readonly imageService: ImageService,
-  ) {}
+  ) { }
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new product' })
@@ -44,10 +54,7 @@ export class ProductsController {
   })
   async create(@Body() createProductDto: CreateProductDto) {
     const product = await this.productsService.create(createProductDto);
-    return {
-      success: true,
-      product,
-    };
+    return ApiRes(PRD.CREATED, product);
   }
 
   @Post('filter')
@@ -65,8 +72,8 @@ export class ProductsController {
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
   ) {
-    const pageNum = page ? parseInt(page, 10) : 1;
-    const perPageNum = perPage ? parseInt(perPage, 10) : 50;
+    const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const perPageNum = Math.min(100, Math.max(1, parseInt(perPage ?? '50', 10) || 50));
 
     const { products, count, totalCount } = await this.productsService.findAll(
       pageNum,
@@ -78,12 +85,14 @@ export class ProductsController {
       filterDto.isService,
     );
 
-    return {
-      success: true,
-      products,
-      count,
-      totalCount,
-    };
+    const offset = (pageNum - 1) * perPageNum;
+    return ApiRes(PRD.FILTERED, products, {
+      limit: perPageNum,
+      offset,
+      total: totalCount,
+      hasNext: offset + perPageNum < totalCount,
+      hasPrev: offset > 0,
+    });
   }
 
   @Get()
@@ -92,7 +101,11 @@ export class ProductsController {
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'code', required: false, type: String })
-  @ApiQuery({ name: 'stockFilter', required: false, enum: ['negative', 'zero', 'positive'] })
+  @ApiQuery({
+    name: 'stockFilter',
+    required: false,
+    enum: ['negative', 'zero', 'positive'],
+  })
   @ApiQuery({ name: 'categoryIds', required: false, type: [Number] })
   @ApiQuery({ name: 'isService', required: false, type: Boolean })
   @ApiResponse({
@@ -109,10 +122,13 @@ export class ProductsController {
     @Query('categoryIds') categoryIds?: string,
     @Query('isService') isService?: string,
   ) {
-    const limitNum = limit ? parseInt(limit, 10) : 50;
-    const offsetNum = offset ? parseInt(offset, 10) : 0;
-    const categoryIdsArray = categoryIds ? categoryIds.split(',').map(id => parseInt(id, 10)) : undefined;
-    const isServiceBool = isService === 'true' ? true : isService === 'false' ? false : undefined;
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    const offsetNum = Math.max(0, parseInt(offset ?? '0', 10) || 0);
+    const categoryIdsArray = categoryIds
+      ? categoryIds.split(',').map((id) => parseInt(id, 10))
+      : undefined;
+    const isServiceBool =
+      isService === 'true' ? true : isService === 'false' ? false : undefined;
 
     const { products, totalCount } = await this.productsService.findAll(
       limitNum,
@@ -124,13 +140,13 @@ export class ProductsController {
       isServiceBool,
     );
 
-    return {
-      success: true,
-      products,
-      total: totalCount,
+    return ApiRes(PRD.LIST, products, {
       limit: limitNum,
       offset: offsetNum,
-    };
+      total: totalCount,
+      hasNext: offsetNum + limitNum < totalCount,
+      hasPrev: offsetNum > 0,
+    });
   }
 
   @Get(':id')
@@ -143,10 +159,7 @@ export class ProductsController {
   @ApiResponse({ status: 404, description: 'Product not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const product = await this.productsService.findOne(id);
-    return {
-      success: true,
-      product,
-    };
+    return ApiRes(PRD.DETAIL, product);
   }
 
   @Patch(':id')
@@ -162,10 +175,7 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
   ) {
     const product = await this.productsService.update(id, updateProductDto);
-    return {
-      success: true,
-      product,
-    };
+    return ApiRes(PRD.UPDATED, product);
   }
 
   @Delete(':id')
@@ -175,10 +185,7 @@ export class ProductsController {
   @ApiResponse({ status: 404, description: 'Product not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.productsService.remove(id);
-    return {
-      success: true,
-      message: 'Product deleted successfully',
-    };
+    return ApiRes(PRD.DELETED, null);
   }
 
   @Post(':id/image')
@@ -204,18 +211,14 @@ export class ProductsController {
     }
 
     // Upload image
-    const imageResult = await this.imageService.uploadImage(
-      file,
-      `products`,
-    );
+    const imageResult = await this.imageService.uploadImage(file, `products`);
 
     // Update product with new image URL
     const product = await this.productsService.update(productId, {
       imageUrl: imageResult.url,
     });
 
-    return {
-      success: true,
+    return ApiRes(PRD.IMAGE_UPLOADED, {
       product,
       image: {
         url: imageResult.url,
@@ -227,13 +230,16 @@ export class ProductsController {
         thumbnailUrl: this.imageService.getThumbnailUrl(imageResult.url, 300),
         uploadedAt: new Date(),
       },
-    };
+    });
   }
 
   @Delete(':id/image')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete product image' })
-  @ApiResponse({ status: 200, description: 'Product image deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product image deleted successfully',
+  })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @ApiResponse({ status: 400, description: 'No image to delete' })
   async deleteProductImage(
@@ -263,7 +269,7 @@ export class ProductsController {
       await this.imageService.deleteImage(imagePublicId);
     } catch (error) {
       // If deletion from CDN fails, we can still clear the product's imageUrl
-      console.error('Failed to delete from CDN:', error);
+      this.logger.error('Failed to delete from CDN', (error as Error)?.stack);
     }
 
     // Update product to remove image URL and public ID
@@ -272,11 +278,7 @@ export class ProductsController {
       imagePublicId: null,
     });
 
-    return {
-      success: true,
-      product: updatedProduct,
-      message: 'Product image deleted successfully',
-    };
+    return ApiRes(PRD.IMAGE_DELETED, updatedProduct);
   }
 
   @Get(':id/image/optimize')
@@ -303,11 +305,7 @@ export class ProductsController {
     const product = await this.productsService.findOne(productId);
 
     if (!product.imageUrl) {
-      return {
-        success: false,
-        message: 'Product has no image',
-        url: null,
-      };
+      return ApiRes(PRD.IMAGE_OPTIMIZED, { url: null, originalUrl: null });
     }
 
     // Get optimized URL
@@ -316,15 +314,14 @@ export class ProductsController {
       height: height ? parseInt(height, 10) : undefined,
     });
 
-    return {
-      success: true,
-      url: optimizedUrl,
-      originalUrl: product.imageUrl,
-    };
+    return ApiRes(PRD.IMAGE_OPTIMIZED, { url: optimizedUrl, originalUrl: product.imageUrl });
   }
 
   @Get('export/xlsx')
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
   @Header('Content-Disposition', 'attachment; filename=produits.xlsx')
   @ApiOperation({ summary: 'Export all products to XLSX file' })
   @ApiResponse({
@@ -351,14 +348,14 @@ export class ProductsController {
     }
 
     const result = await this.productsService.importFromXlsx(file);
-    return {
-      message: `Import terminé: ${result.imported} créés, ${result.updated} mis à jour, ${result.failed} échoués`,
-      ...result,
-    };
+    return ApiRes(PRD.IMPORTED, result);
   }
 
   @Get('import/template')
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
   @Header('Content-Disposition', 'attachment; filename=template-produits.xlsx')
   @ApiOperation({ summary: 'Download XLSX import template for products' })
   @ApiResponse({

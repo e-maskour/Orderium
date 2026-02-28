@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../lib/i18n';
 import { Phone, MapPin, Package, Truck, CheckCircle, Loader2 } from 'lucide-react';
+import { toastError } from '../services/toast.service';
 import { SiGooglemaps, SiWaze } from 'react-icons/si';
 import type { Order } from '../types';
 
@@ -27,7 +28,7 @@ export default function OrderCard({ order }: OrderCardProps) {
     },
     onError: () => {
       setIsUpdating(false);
-      alert(t('updateFailed'));
+      toastError(t('updateFailed'));
     },
   });
 

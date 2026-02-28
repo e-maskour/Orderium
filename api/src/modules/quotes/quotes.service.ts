@@ -2,14 +2,18 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Logger,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
 import { Quote, QuoteItem, QuoteStatus } from './entities/quote.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
+import { SequenceConfig } from '../../common/types/sequence-config.interface';
 
 interface CreateQuoteItemDTO {
   productId?: number;
@@ -45,6 +49,8 @@ interface CreateQuoteDTO {
 
 @Injectable()
 export class QuotesService {
+  private readonly logger = new Logger(QuotesService.name);
+
   constructor(
     @InjectRepository(Quote)
     private readonly quoteRepository: Repository<Quote>,
@@ -53,15 +59,16 @@ export class QuotesService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly configurationsService: ConfigurationsService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) { }
 
   private async getOrCreateSequence(
     entityType: string,
     documentDate?: string | Date,
-  ): Promise<any> {
+  ): Promise<SequenceConfig> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
 
       let sequence = sequences.find(
         (seq) => seq.entityType === entityType && seq.isActive,
@@ -133,7 +140,7 @@ export class QuotesService {
   }
 
   private async syncSequenceWithDatabase(
-    sequence: any,
+    sequence: SequenceConfig,
     documentDate?: string | Date,
   ): Promise<void> {
     try {
@@ -177,13 +184,13 @@ export class QuotesService {
       const maxNumber = Math.max(...numbers);
       sequence.nextNumber = maxNumber + 1;
     } catch (error) {
-      console.error('Failed to sync sequence with database:', error);
+      this.logger.error('Failed to sync sequence with database', (error as Error)?.stack);
       // Keep existing nextNumber if sync fails
     }
   }
 
   private buildSequencePattern(
-    sequence: any,
+    sequence: SequenceConfig,
     documentDate?: string | Date,
   ): string {
     // Use document date if provided, otherwise fallback to current date
@@ -232,7 +239,7 @@ export class QuotesService {
     return pattern;
   }
 
-  private buildFormatPattern(sequence: any): string {
+  private buildFormatPattern(sequence: SequenceConfig): string {
     let result = sequence.prefix || '';
     let dateComponents: string[] = [];
 
@@ -267,7 +274,7 @@ export class QuotesService {
     return result;
   }
 
-  private enrichSequenceForResponse(sequence: any): any {
+  private enrichSequenceForResponse(sequence: SequenceConfig): SequenceConfig & { format: string; nextDocumentNumber: string } {
     return {
       ...sequence,
       format: this.buildFormatPattern(sequence),
@@ -276,7 +283,7 @@ export class QuotesService {
   }
 
   private generateSequenceNumber(
-    sequence: any,
+    sequence: SequenceConfig,
     documentDate?: string | Date,
   ): string {
     // Use document date if provided, otherwise fallback to current date
@@ -333,11 +340,11 @@ export class QuotesService {
 
   private async updateSequenceNextNumber(
     entityType: string,
-    sequence: any,
+    sequence: SequenceConfig,
   ): Promise<void> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
       const sequenceIndex = sequences.findIndex(
         (seq) => seq.id === sequence.id,
       );
@@ -351,7 +358,7 @@ export class QuotesService {
         });
       }
     } catch (error) {
-      console.error('Failed to update sequence next number:', error);
+      this.logger.error('Failed to update sequence next number', (error as Error)?.stack);
     }
   }
 
@@ -427,11 +434,23 @@ export class QuotesService {
     };
   }
 
+  private async invalidateQuoteCache(id?: number) {
+    if (id) await this.cacheManager.del(`quote:${id}`);
+  }
+
   async findOne(id: number): Promise<Quote | null> {
-    return this.quoteRepository.findOne({
+    const cacheKey = `quote:${id}`;
+    const cached = await this.cacheManager.get<Quote>(cacheKey);
+    if (cached) return cached;
+
+    const quote = await this.quoteRepository.findOne({
       where: { id },
       relations: ['customer', 'items'],
     });
+    if (quote) {
+      await this.cacheManager.set(cacheKey, quote, 300_000);
+    }
+    return quote;
   }
 
   async create(createQuoteDto: CreateQuoteDTO): Promise<Quote> {
@@ -679,9 +698,10 @@ export class QuotesService {
         throw new NotFoundException('Quote not found after update');
       }
 
+      await this.invalidateQuoteCache(id);
       return result;
     } catch (error) {
-      console.error(`Error updating quote ${id}:`, error);
+      this.logger.error(`Error updating quote ${id}`, (error as Error)?.stack);
       throw error;
     }
   }
@@ -700,6 +720,7 @@ export class QuotesService {
 
     await this.quoteItemRepository.delete({ quoteId: id });
     await this.quoteRepository.delete(id);
+    await this.invalidateQuoteCache(id);
   }
 
   async validate(id: number): Promise<Quote> {
@@ -741,6 +762,7 @@ export class QuotesService {
     if (!result) {
       throw new Error('Quote not found after validation');
     }
+    await this.invalidateQuoteCache(id);
     return result;
   }
 
@@ -767,7 +789,7 @@ export class QuotesService {
 
       const sequence = await this.getOrCreateSequence(sequenceType, quote.date);
       const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
       const sequenceIndex = sequences.findIndex(
         (seq) => seq.id === sequence.id,
       );
@@ -804,7 +826,7 @@ export class QuotesService {
         });
       }
     } catch (error) {
-      console.error('Error updating sequence during devalidation:', error);
+      this.logger.error('Error updating sequence during devalidation', (error as Error)?.stack);
       // Continue with devalidation even if sequence update fails
     }
 
@@ -848,6 +870,7 @@ export class QuotesService {
     if (!result) {
       throw new Error('Quote not found after devalidation');
     }
+    await this.invalidateQuoteCache(id);
     return result;
   }
 
@@ -1253,7 +1276,7 @@ export class QuotesService {
         : 'Devis et Demandes';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
     return buffer;
   }
 

@@ -1,7 +1,6 @@
 import * as React from "react"
-import { Check, ChevronsUpDown, X } from "lucide-react"
+import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react"
 import { cn } from "../../lib/utils"
-import { Button } from "./button"
 import {
   Command,
   CommandEmpty,
@@ -29,6 +28,8 @@ interface AutocompleteProps {
   className?: string
   disabled?: boolean
   allowCustomValue?: boolean
+  loading?: boolean
+  error?: boolean
 }
 
 export function Autocomplete({
@@ -40,6 +41,8 @@ export function Autocomplete({
   className,
   disabled = false,
   allowCustomValue = true,
+  loading = false,
+  error = false,
 }: AutocompleteProps) {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value || "")
@@ -47,13 +50,11 @@ export function Autocomplete({
 
   React.useEffect(() => {
     if (value !== undefined) {
-      // Find the option with this value and display its label
       const selectedOption = options.find((opt) => opt.value === value)
       setInputValue(selectedOption?.label || value)
     }
   }, [value, options])
 
-  // Filter options based on input value
   const filteredOptions = React.useMemo(() => {
     if (!inputValue) return options
     return options.filter((option) =>
@@ -115,13 +116,21 @@ export function Autocomplete({
             onClick={handleInputClick}
             placeholder={placeholder}
             disabled={disabled}
+            aria-invalid={error || undefined}
             className={cn(
-              "w-full px-3 py-2.5 pe-10 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all bg-white disabled:cursor-not-allowed disabled:opacity-50",
+              "w-full px-3 py-2 pe-10 text-sm border rounded-lg outline-none transition-all duration-200 bg-white",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              error
+                ? "border-destructive/50 bg-destructive/5 hover:border-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20"
+                : "border-slate-200 hover:border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary",
               className
             )}
           />
           <div className="absolute end-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            {inputValue && !disabled && (
+            {loading && (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+            {inputValue && !disabled && !loading && (
               <button
                 type="button"
                 onClick={handleClear}
@@ -130,12 +139,14 @@ export function Autocomplete({
                 <X className="h-4 w-4" />
               </button>
             )}
-            <ChevronsUpDown className="h-4 w-4 text-slate-400 pointer-events-none" />
+            {!loading && (
+              <ChevronsUpDown className="h-4 w-4 text-slate-400 pointer-events-none" />
+            )}
           </div>
         </div>
       </PopoverAnchor>
-      <PopoverContent 
-        className="p-0 bg-white" 
+      <PopoverContent
+        className="p-0 bg-white"
         align="start"
         style={{ width: 'var(--radix-popover-trigger-width)' }}
         onOpenAutoFocus={(e) => e.preventDefault()}
@@ -150,7 +161,7 @@ export function Autocomplete({
                   <div
                     key={option.value}
                     onClick={() => handleItemSelect(option.value)}
-                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100 active:bg-slate-200 bg-white"
+                    className="relative flex cursor-pointer select-none items-center rounded-md px-2 py-1.5 text-sm outline-none hover:bg-slate-100 active:bg-slate-200 bg-white transition-colors"
                   >
                     <Check
                       className={cn(

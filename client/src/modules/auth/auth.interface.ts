@@ -10,7 +10,6 @@ export interface RegisterRequest {
   customerId?: number;
   isCustomer?: boolean;
   isDelivery?: boolean;
-  isAdmin?: boolean;
 }
 
 export interface PortalUser {

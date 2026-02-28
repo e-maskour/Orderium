@@ -17,7 +17,7 @@ export class Configuration {
   entity: string;
 
   @Column({ type: 'jsonb' })
-  values: any;
+  values: Record<string, unknown>;
 
   @CreateDateColumn()
   dateCreated: Date;

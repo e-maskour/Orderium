@@ -3,24 +3,29 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
   Inject,
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
 import { Order, OrderItem, OrderStatus, DeliveryStatus } from './entities/order.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
+import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { OrderNotificationService } from '../notifications/order-notification.service';
 
 // Removed composite response interface; service now returns `Order` directly.
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
@@ -32,6 +37,7 @@ export class OrdersService {
     private readonly configurationsService: ConfigurationsService,
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) { }
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<any> {
@@ -310,7 +316,7 @@ export class OrdersService {
       });
       if (fullOrder) {
         this.orderNotificationService.notifyNewOrderFromClient(fullOrder).catch((err) => {
-          console.error('Failed to send new order notification:', err);
+          this.logger.error('Failed to send new order notification', (err as Error)?.stack);
         });
       }
     }
@@ -734,7 +740,15 @@ export class OrdersService {
     };
   }
 
-  async getOrderById(id: number): Promise<any> {
+  private async invalidateOrderCache(id?: number) {
+    if (id) await this.cacheManager.del(`order:${id}`);
+  }
+
+  async getOrderById(id: number): Promise<Record<string, unknown>> {
+    const cacheKey = `order:${id}`;
+    const cached = await this.cacheManager.get<Record<string, unknown>>(cacheKey);
+    if (cached) return cached;
+
     const order = await this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
@@ -798,7 +812,7 @@ export class OrdersService {
       throw new NotFoundException(`Order with ID ${id} not found`);
     }
 
-    return {
+    const result = {
       id: order.id,
       orderNumber: order.documentNumber,
       receiptNumber: order.receiptNumber,
@@ -848,9 +862,12 @@ export class OrdersService {
           tax: item.tax,
         })) || [],
     };
+
+    await this.cacheManager.set(cacheKey, result, 300_000);
+    return result;
   }
 
-  async getOrderByNumber(orderNumber: string): Promise<any | null> {
+  async getOrderByNumber(orderNumber: string): Promise<Record<string, unknown> | null> {
     const order = await this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
@@ -1087,10 +1104,10 @@ export class OrdersService {
     };
   }
 
-  private async getOrCreateSequence(entityType: string, documentDate?: string | Date): Promise<any> {
+  private async getOrCreateSequence(entityType: string, documentDate?: string | Date): Promise<SequenceConfig> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
 
       let sequence = sequences.find(
         (seq) => seq.entityType === entityType && seq.isActive,
@@ -1169,7 +1186,7 @@ export class OrdersService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
-  private async syncSequenceWithDatabase(sequence: any, documentDate?: string | Date): Promise<void> {
+  private async syncSequenceWithDatabase(sequence: SequenceConfig, documentDate?: string | Date): Promise<void> {
     try {
       // Build the current pattern for this sequence using document date (e.g., "BL 2026-02-")
       const pattern = this.buildSequencePattern(sequence, documentDate);
@@ -1211,12 +1228,12 @@ export class OrdersService {
       const maxNumber = Math.max(...numbers);
       sequence.nextNumber = maxNumber + 1;
     } catch (error) {
-      console.error('Failed to sync sequence with database:', error);
+      this.logger.error('Failed to sync sequence with database', (error as Error)?.stack);
       // Keep existing nextNumber if sync fails
     }
   }
 
-  private buildSequencePattern(sequence: any, documentDate?: string | Date): string {
+  private buildSequencePattern(sequence: SequenceConfig, documentDate?: string | Date): string {
     // Use document date if provided, otherwise fallback to current date
     const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
@@ -1263,7 +1280,7 @@ export class OrdersService {
     return pattern;
   }
 
-  private generateSequenceNumber(sequence: any, documentDate?: string | Date): string {
+  private generateSequenceNumber(sequence: SequenceConfig, documentDate?: string | Date): string {
     // Use document date if provided, otherwise fallback to current date
     const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
@@ -1318,11 +1335,11 @@ export class OrdersService {
 
   private async updateSequenceNextNumber(
     entityType: string,
-    sequence: any,
+    sequence: SequenceConfig,
   ): Promise<void> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
       const sequenceIndex = sequences.findIndex(
         (seq) => seq.id === sequence.id,
       );
@@ -1336,7 +1353,7 @@ export class OrdersService {
         });
       }
     } catch (error) {
-      console.error('Failed to update sequence next number:', error);
+      this.logger.error('Failed to update sequence next number', (error as Error)?.stack);
     }
   }
 
@@ -1381,6 +1398,7 @@ export class OrdersService {
       });
     }
 
+    await this.invalidateOrderCache(id);
     return await this.getOrderById(id);
   }
 
@@ -1405,7 +1423,7 @@ export class OrdersService {
 
       const sequence = await this.getOrCreateSequence(sequenceType, order.date);
       const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = config?.values?.sequences || [];
+      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
       const sequenceIndex = sequences.findIndex((seq) => seq.id === sequence.id);
 
       if (sequenceIndex !== -1) {
@@ -1435,7 +1453,7 @@ export class OrdersService {
         });
       }
     } catch (error) {
-      console.error('Error updating sequence during devalidation:', error);
+      this.logger.error('Error updating sequence during devalidation', (error as Error)?.stack);
       // Continue with devalidation even if sequence update fails
     }
 
@@ -1475,6 +1493,7 @@ export class OrdersService {
       status: OrderStatus.DRAFT,
     });
 
+    await this.invalidateOrderCache(id);
     return await this.getOrderById(id);
   }
 
@@ -1620,6 +1639,7 @@ export class OrdersService {
         await manager.insert(OrderItem, itemsToInsert);
       }
 
+      await this.invalidateOrderCache(id);
       return await this.getOrderById(id);
     });
   }
@@ -1649,6 +1669,7 @@ export class OrdersService {
       status: OrderStatus.DELIVERED,
     });
 
+    await this.invalidateOrderCache(id);
     return await this.getOrderById(id);
   }
 
@@ -1672,6 +1693,7 @@ export class OrdersService {
       isValidated: false, // Reset validation when cancelled
     });
 
+    await this.invalidateOrderCache(id);
     return await this.getOrderById(id);
   }
 
@@ -1690,6 +1712,7 @@ export class OrdersService {
     order.isValidated = true; // Must be validated when invoiced
     await this.orderRepository.save(order);
 
+    await this.invalidateOrderCache(orderId);
     return await this.getOrderById(orderId);
   }
 
@@ -1705,6 +1728,7 @@ export class OrdersService {
 
     // Delete the order
     await this.orderRepository.delete(id);
+    await this.invalidateOrderCache(id);
   }
 
   async getOrderNumbers(search?: string, limit: number = 50): Promise<string[]> {
@@ -1720,7 +1744,7 @@ export class OrdersService {
       });
     }
 
-    const results = await queryBuilder.getRawMany();
+    const results = await queryBuilder.getRawMany<{ documentNumber: string }>();
     return results.map((r) => r.documentNumber);
   }
 
@@ -1880,7 +1904,7 @@ export class OrdersService {
     const sheetName = supplierId !== undefined ? (supplierId ? 'Bons d\'achat' : 'Bons de livraison') : 'Bons';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
     return buffer;
   }
 

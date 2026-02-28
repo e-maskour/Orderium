@@ -11,30 +11,34 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-      target: development  # Use development stage with all dependencies
+      target: development # Use development stage with all dependencies
     container_name: orderium-api-dev
-    command: npm run start:dev  # Hot reload in development
+    command: npm run start:dev # Hot reload in development
     env_file:
       - ./api/.env
     environment:
       NODE_ENV: development
-      DB_HOST: host.docker.internal  # Override to connect to host's PostgreSQL
-      DB_SYNCHRONIZE: "true"  # Auto-sync schema in development
+      DB_HOST: host.docker.internal # Override to connect to host's PostgreSQL
+      DB_SYNCHRONIZE: "true" # Auto-sync schema in development
       DB_LOGGING: "true"
       CORS_ORIGIN: http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:5173
+      REDIS_URL: redis://redis:6379
     volumes:
       # Mount source code for hot reload
       - ./api/src:/app/src:ro
       - ./api/package.json:/app/package.json:ro
-      - ./api/uploads:/app/uploads  # Mount host uploads directory for images
+      - ./api/uploads:/app/uploads # Mount host uploads directory for images
     ports:
       - "3000:3000"
     networks:
       - orderium-network
     extra_hosts:
-      - "host.docker.internal:host-gateway"  # Enable host access on Linux
+      - "host.docker.internal:host-gateway" # Enable host access on Linux
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\"" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -55,7 +59,7 @@ services:
       - ./backoffice/src:/app/src:ro
       - ./backoffice/public:/app/public:ro
     ports:
-      - "3001:3001" 
+      - "3001:3001"
     networks:
       - orderium-network
 
@@ -93,9 +97,26 @@ services:
       - ./delivery-portal/src:/app/src:ro
       - ./delivery-portal/public:/app/public:ro
     ports:
-      - "3003:3003"  # Uses custom port in package.json
+      - "3003:3003" # Uses custom port in package.json
     networks:
       - orderium-network
+
+  # ==================================
+  # Redis Cache
+  # ==================================
+  redis:
+    image: redis:7-alpine
+    container_name: orderium-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    networks:
+      - orderium-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 networks:
   orderium-network:

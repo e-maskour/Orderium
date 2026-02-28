@@ -1,49 +1,11 @@
-const API_URL = '/api';
+import { apiClient, API_ROUTES } from '../../common';
+import { InventoryAdjustment } from './inventory.model';
+import type {
+  CreateAdjustmentDto,
+  ValidateAdjustmentDto,
+} from './inventory.interface';
 
-export interface AdjustmentLine {
-  id?: number;
-  productId: number;
-  productName?: string;
-  productCode?: string;
-  theoreticalQuantity: number;
-  countedQuantity: number;
-  difference: number;
-  lotNumber?: string;
-  serialNumber?: string;
-  notes?: string;
-}
-
-export interface InventoryAdjustment {
-  id: number;
-  reference: string;
-  name: string;
-  warehouseId: number;
-  warehouseName?: string;
-  status: 'draft' | 'in_progress' | 'done' | 'cancelled';
-  adjustmentDate: string | null;
-  userId: number | null;
-  notes: string;
-  lines: AdjustmentLine[];
-  dateCreated: string;
-  dateUpdated: string;
-}
-
-export interface CreateAdjustmentDto {
-  name: string;
-  warehouseId: number;
-  notes?: string;
-}
-
-export interface ValidateAdjustmentDto {
-  adjustmentId: number;
-  lines: Array<{
-    productId: number;
-    countedQuantity: number;
-    lotNumber?: string;
-    serialNumber?: string;
-    notes?: string;
-  }>;
-}
+export type { CreateAdjustmentDto, ValidateAdjustmentDto };
 
 export class InventoryAdjustmentService {
   async getAll(filters?: {
@@ -59,79 +21,45 @@ export class InventoryAdjustmentService {
     if (filters?.endDate) params.append('endDate', filters.endDate);
 
     const queryString = params.toString();
-    const response = await fetch(`${API_URL}/inventory/adjustments${queryString ? `?${queryString}` : ''}`);
-    if (!response.ok) throw new Error('Failed to fetch inventory adjustments');
-    return await response.json();
+    const url = queryString
+      ? `${API_ROUTES.INVENTORY_ADJUSTMENTS.LIST}?${queryString}`
+      : API_ROUTES.INVENTORY_ADJUSTMENTS.LIST;
+    const result = await apiClient.get<any[]>(url);
+    return (result.data || []).map((a: any) => InventoryAdjustment.fromApiResponse(a));
   }
 
   async getById(id: number): Promise<InventoryAdjustment> {
-    const response = await fetch(`${API_URL}/inventory/adjustments/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch adjustment details');
-    return await response.json();
+    const result = await apiClient.get<any>(API_ROUTES.INVENTORY_ADJUSTMENTS.DETAIL(id));
+    return InventoryAdjustment.fromApiResponse(result.data);
   }
 
   async create(data: CreateAdjustmentDto): Promise<InventoryAdjustment> {
-    const response = await fetch(`${API_URL}/inventory/adjustments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create adjustment');
-    }
-    return await response.json();
+    const result = await apiClient.post<any>(API_ROUTES.INVENTORY_ADJUSTMENTS.CREATE, data);
+    return InventoryAdjustment.fromApiResponse(result.data);
   }
 
   async generateCountingList(warehouseId: number): Promise<any> {
-    const response = await fetch(`${API_URL}/inventory/adjustments/generate-list/${warehouseId}`);
-    if (!response.ok) throw new Error('Failed to generate counting list');
-    return await response.json();
+    const result = await apiClient.get<any>(API_ROUTES.INVENTORY_ADJUSTMENTS.GENERATE_LIST(warehouseId));
+    return result.data;
   }
 
   async startCounting(id: number): Promise<InventoryAdjustment> {
-    const response = await fetch(`${API_URL}/inventory/adjustments/${id}/start`, {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to start counting');
-    }
-    return await response.json();
+    const result = await apiClient.post<any>(API_ROUTES.INVENTORY_ADJUSTMENTS.START(id));
+    return InventoryAdjustment.fromApiResponse(result.data);
   }
 
   async validate(data: ValidateAdjustmentDto): Promise<InventoryAdjustment> {
-    const response = await fetch(`${API_URL}/inventory/adjustments/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to validate adjustment');
-    }
-    return await response.json();
+    const result = await apiClient.post<any>(API_ROUTES.INVENTORY_ADJUSTMENTS.VALIDATE, data);
+    return InventoryAdjustment.fromApiResponse(result.data);
   }
 
   async cancel(id: number): Promise<InventoryAdjustment> {
-    const response = await fetch(`${API_URL}/inventory/adjustments/${id}/cancel`, {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to cancel adjustment');
-    }
-    return await response.json();
+    const result = await apiClient.post<any>(API_ROUTES.INVENTORY_ADJUSTMENTS.CANCEL(id));
+    return InventoryAdjustment.fromApiResponse(result.data);
   }
 
   async delete(id: number): Promise<void> {
-    const response = await fetch(`${API_URL}/inventory/adjustments/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete adjustment');
-    }
+    await apiClient.delete(API_ROUTES.INVENTORY_ADJUSTMENTS.DELETE(id));
   }
 }
 

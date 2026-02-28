@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Loader, CheckCircle, AlertCircle, Image as ImageIcon, Link } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { productsService } from '../modules/products';
+import { imagesService } from '../modules/images';
 
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, imagePublicId?: string) => void;
@@ -44,29 +46,29 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
   const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
   const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
-  
+
   // Helper function to convert relative path to full URL
   const getFullImageUrl = (imagePath?: string): string | null => {
     if (!imagePath) return null;
-    
+
     if (imagePath.startsWith('http')) {
       return imagePath; // Already a full URL
     }
-    
+
     if (imagePath.startsWith('orderium/')) {
       // Cloudinary URL
       return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imagePath}`;
     }
-    
+
     if (imagePath.startsWith('s3://')) {
       // S3 URL
       return `${s3BaseUrl}/${imagePath.replace('s3://', '')}`;
     }
-    
+
     // Relative path (LOCAL provider) - construct with API base URL
     return `${apiBaseUrl}/uploads/images/${imagePath}`;
   };
-  
+
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({ state: 'idle' });
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,31 +125,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     reader.readAsDataURL(file);
 
     try {
-      const formData = new FormData();
-      formData.append('image', file);
+      let imageData: { url: string; publicId: string; size?: number; format?: string };
 
-      // Upload to product endpoint if productId exists, otherwise to general images endpoint
-      const endpoint = productId
-        ? `/api/products/${productId}/image`
-        : `/api/images/upload?folder=${folder}`;
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          // Don't set Content-Type, browser will set it with boundary for multipart
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || t('uploadFailed'));
+      if (productId) {
+        const result = await productsService.uploadImage(productId, file);
+        imageData = { url: result.imageUrl ?? '', publicId: result.publicId };
+      } else {
+        const result = await imagesService.upload(file, folder);
+        imageData = { url: result.url, publicId: result.publicId, size: result.size, format: result.format };
       }
 
-      const result = await response.json();
-
-      // Handle different response structures
-      const imageData = productId ? result.image : result.data;
       const relativePath = imageData.url;
       const imagePublicId = imageData.publicId;
 
@@ -166,7 +153,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         imageData: {
           url: fullImageUrl,
           publicId: imagePublicId,
-          size: imageData.size,
+          size: imageData.size ?? 0,
           format: imageData.format || 'image',
         },
       });
@@ -203,24 +190,18 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const handleRemoveImage = async () => {
     if (!productId) return;
-    
+
     // Check if there's anything to remove (either uploaded or existing)
     if (!localPreview && !currentImage) return;
 
     try {
-      const response = await fetch(`/api/products/${productId}/image`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error(t('failedToRemoveImage'));
-      }
+      await productsService.deleteImage(productId);
 
       // Clear all image states
       setLocalPreview(null);
       setUploadStatus({ state: 'idle' });
       setImageLoadError(false);
-      
+
       if (onImageRemove) {
         onImageRemove();
       }
@@ -243,17 +224,15 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         onDragLeave={displayImage || uploadMode === 'url' ? undefined : handleDrag}
         onDragOver={displayImage || uploadMode === 'url' ? undefined : handleDrag}
         onDrop={displayImage || uploadMode === 'url' ? undefined : handleDrop}
-        className={`relative border-2 rounded-lg transition-all ${
-          displayImage
-            ? 'border-solid border-slate-300 bg-white overflow-hidden h-64'
-            : `border-dashed p-6 ${
-                disabled || isLoading
-                  ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200'
-                  : dragActive
-                    ? 'border-amber-500 bg-amber-50'
-                    : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50 cursor-pointer'
-              }`
-        }`}
+        className={`relative border-2 rounded-lg transition-all ${displayImage
+          ? 'border-solid border-slate-300 bg-white overflow-hidden h-64'
+          : `border-dashed p-6 ${disabled || isLoading
+            ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200'
+            : dragActive
+              ? 'border-amber-500 bg-amber-50'
+              : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50 cursor-pointer'
+          }`
+          }`}
         onClick={() => {
           if (displayImage) return; // Don't open file picker when showing image
           if (uploadMode === 'url') return; // Don't open file picker in URL mode
@@ -318,7 +297,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
             {/* Click to change image hint - only on hover */}
             {!imageLoadError && (
-              <div 
+              <div
                 onClick={() => fileInputRef.current?.click()}
                 className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer pointer-events-none hover:pointer-events-auto z-20"
               >
@@ -343,11 +322,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                       e.stopPropagation();
                       handleModeChange('file');
                     }}
-                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                      uploadMode === 'file'
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${uploadMode === 'file'
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     <Upload className="w-3 h-3 inline mr-1" />
                     Upload File
@@ -357,11 +335,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                       e.stopPropagation();
                       handleModeChange('url');
                     }}
-                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                      uploadMode === 'url'
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${uploadMode === 'url'
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     <Link className="w-3 h-3 inline mr-1" />
                     Paste URL

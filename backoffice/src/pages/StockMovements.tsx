@@ -3,8 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { ArrowLeftRight, Search, Plus, Eye, CheckCircle2, XCircle, Package, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
-import { stockMovementService, StockMovement } from '../modules/inventory/stock-movements.service';
-import { toast } from 'sonner';
+import { Input } from '../components/ui/input';
+import { NativeSelect } from '../components/ui/native-select';
+import { stockMovementService } from '../modules/inventory/stock-movements.service';
+import { StockMovement } from '../modules/inventory/inventory.model';
+import { toastValidated, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function StockMovements() {
@@ -13,7 +16,7 @@ export default function StockMovements() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedMovement, setSelectedMovement] = useState<StockMovement | null>(null);
-  
+
   const queryClient = useQueryClient();
 
   const { data: movements = [], isLoading } = useQuery({
@@ -28,10 +31,10 @@ export default function StockMovements() {
     mutationFn: (movementId: number) => stockMovementService.validate({ movementId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
-      toast.success(t('movementValidated'));
+      toastValidated(t('movementValidated'));
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
+      toastError(`${t('error')}: ${error.message}`);
     },
   });
 
@@ -39,10 +42,10 @@ export default function StockMovements() {
     mutationFn: (id: number) => stockMovementService.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
-      toast.success(t('movementCancelled'));
+      toastCancelled(t('movementCancelled'));
     },
     onError: (error: Error) => {
-      toast.error(`Erreur: ${error.message}`);
+      toastError(`${t('error')}: ${error.message}`);
     },
   });
 
@@ -106,23 +109,22 @@ export default function StockMovements() {
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder={t('searchByReferenceOrProduct')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              />
-            </div>
+            <Input
+              id="search-stock-movements"
+              type="text"
+              placeholder={t('searchByReferenceOrProduct')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leadingIcon={Search}
+              fullWidth
+              aria-label={t('searchByReferenceOrProduct')}
+            />
           </div>
 
           {/* Type Filter */}
-          <select
+          <NativeSelect
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           >
             <option value="all">{t('allTypes')}</option>
             <option value="receipt">{t('movementTypes.receipt')}</option>
@@ -134,13 +136,12 @@ export default function StockMovements() {
             <option value="return_in">Retour client</option>
             <option value="return_out">Retour fournisseur</option>
             <option value="scrap">Mise au rebut</option>
-          </select>
+          </NativeSelect>
 
           {/* Status Filter */}
-          <select
+          <NativeSelect
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           >
             <option value="all">{t('allStatuses')}</option>
             <option value="draft">{t('draft')}</option>
@@ -149,7 +150,7 @@ export default function StockMovements() {
             <option value="assigned">{t('assigned')}</option>
             <option value="done">{t('done')}</option>
             <option value="cancelled">{t('cancelled')}</option>
-          </select>
+          </NativeSelect>
         </div>
       </div>
 
@@ -235,11 +236,11 @@ export default function StockMovements() {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className="text-sm text-slate-600">
-                        {movement.dateDone 
+                        {movement.dateDone
                           ? new Date(movement.dateDone).toLocaleDateString('fr-FR')
                           : movement.dateScheduled
-                          ? new Date(movement.dateScheduled).toLocaleDateString('fr-FR')
-                          : '-'}
+                            ? new Date(movement.dateScheduled).toLocaleDateString('fr-FR')
+                            : '-'}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center">
@@ -266,9 +267,9 @@ export default function StockMovements() {
                         {movement.status !== 'done' && movement.status !== 'cancelled' && (
                           <button
                             onClick={() => {
-                              if (confirm(t('confirmCancelMovement'))) {
+                              toastConfirm(t('confirmCancelMovement'), () => {
                                 cancelMutation.mutate(movement.id);
-                              }
+                              });
                             }}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title={t('cancel')}

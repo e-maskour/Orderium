@@ -4,6 +4,7 @@
 
 import { ToolDefinition } from '../../types/aiAssistant';
 import endpoints from '../apiEndpoints.json';
+import { apiClient } from '../../common';
 
 /**
  * Get data from any endpoint with optional filtering
@@ -94,7 +95,7 @@ export const getDataTool: ToolDefinition = {
 
         case 'partners':
           if (action === 'dashboard') {
-            endpoint = filters.supplierId 
+            endpoint = filters.supplierId
               ? '/partners/dashboard/suppliers'
               : '/partners/dashboard/customers';
           } else {
@@ -167,29 +168,11 @@ export const getDataTool: ToolDefinition = {
       const queryString = queryParams.toString();
       const fullUrl = `/api${endpoint}${queryString ? `?${queryString}` : ''}`;
 
-      // Execute API call
-      const response = await fetch(fullUrl, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tool-Execution': 'true',
-        },
-        body: body ? JSON.stringify(body) : undefined,
-      });
-
-      if (!response.ok) {
-        return {
-          tool_call_id: '',
-          content: JSON.stringify({ 
-            error: `Failed to fetch ${module} data: ${response.statusText}`,
-            endpoint: fullUrl,
-            status: response.status,
-          }),
-          success: false,
-        };
-      }
-
-      const data = await response.json();
+      // Execute API call with auth and the custom tool-execution marker
+      const toolConfig = { headers: { 'X-Tool-Execution': 'true' } };
+      const data = method === 'GET'
+        ? await apiClient.get<any>(fullUrl, toolConfig)
+        : await apiClient.post<any>(fullUrl, body, toolConfig);
 
       return {
         tool_call_id: '',
@@ -199,7 +182,7 @@ export const getDataTool: ToolDefinition = {
     } catch (error) {
       return {
         tool_call_id: '',
-        content: JSON.stringify({ 
+        content: JSON.stringify({
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
         success: false,
@@ -278,7 +261,7 @@ export const aggregateDataTool: ToolDefinition = {
       }
 
       const responseData = JSON.parse(dataResponse.content);
-      const items = responseData.orders || responseData.invoices || responseData.products || responseData.partners || [];
+      const items = responseData.data || [];
 
       // Perform aggregation based on operation
       let result: any = {};

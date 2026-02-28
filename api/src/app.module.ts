@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { CacheModule } from '@nestjs/cache-manager';
+import { APP_GUARD } from '@nestjs/core';
+import KeyvRedis from '@keyv/redis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -25,6 +29,9 @@ import { ConfigurationsModule } from './modules/configurations/configurations.mo
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { PDFModule } from './modules/pdf/pdf.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -32,6 +39,26 @@ import { PDFModule } from './modules/pdf/pdf.module';
       isGlobal: true,
       load: [envConfig, databaseConfig, jwtConfig, defaultsConfig],
       envFilePath: ['.env.local', '.env'],
+    }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 60000,
+        limit: 60, // 60 requests per minute per IP
+      },
+    ]),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const redisUrl = configService.get<string>('REDIS_URL');
+        return {
+          ttl: 300_000,
+          max: 100,
+          ...(redisUrl ? { stores: [new KeyvRedis(redisUrl)] } : {}),
+        };
+      },
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -53,8 +80,14 @@ import { PDFModule } from './modules/pdf/pdf.module';
     InventoryModule,
     CategoriesModule,
     PDFModule,
+    AuthModule,
+    HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
 })
-export class AppModule {}
+export class AppModule { }

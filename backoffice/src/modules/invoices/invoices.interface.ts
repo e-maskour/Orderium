@@ -1,4 +1,4 @@
-export interface Invoice {
+export interface IInvoice {
   id: number;
   invoiceNumber: string;
   direction: 'ACHAT' | 'VENTE';
@@ -27,7 +27,7 @@ export interface Invoice {
   dateUpdated: string;
 }
 
-export interface InvoiceItem {
+export interface IInvoiceItem {
   id: number;
   invoiceId: number;
   productId?: number | null;
@@ -40,9 +40,9 @@ export interface InvoiceItem {
   total: number;
 }
 
-export interface InvoiceWithDetails {
-  invoice: Invoice;
-  items: InvoiceItem[];
+export interface IInvoiceWithDetails {
+  invoice: IInvoice;
+  items: IInvoiceItem[];
 }
 
 export interface InvoiceFilters {

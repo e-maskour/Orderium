@@ -1,3 +1,5 @@
+import { CreatePaymentDTO, UpdatePaymentDTO, PAYMENT_TYPE_LABELS } from './payments.interface';
+
 export class Payment {
   id: number;
   invoiceId: number;
@@ -25,7 +27,76 @@ export class Payment {
     this.updatedAt = data.updatedAt;
   }
 
+  get displayAmount(): string {
+    return this.amount.toFixed(2);
+  }
+
+  get displayPaymentType(): string {
+    return PAYMENT_TYPE_LABELS[this.paymentType] ?? this.paymentType;
+  }
+
+  get displayDate(): string {
+    return new Date(this.paymentDate).toLocaleDateString();
+  }
+
+  get isForCustomer(): boolean {
+    return !!this.customerId;
+  }
+
+  get isForSupplier(): boolean {
+    return !!this.supplierId;
+  }
+
+  get hasReference(): boolean {
+    return !!this.referenceNumber;
+  }
+
+  get hasNotes(): boolean {
+    return !!this.notes;
+  }
+
   static fromApiResponse(data: any): Payment {
     return new Payment(data);
+  }
+
+  toUpdateDTO(): UpdatePaymentDTO {
+    return {
+      customerId: this.customerId,
+      supplierId: this.supplierId,
+      amount: this.amount,
+      paymentDate: this.paymentDate,
+      paymentType: this.paymentType,
+      notes: this.notes,
+      referenceNumber: this.referenceNumber,
+    };
+  }
+
+  toCreateDTO(): CreatePaymentDTO {
+    return {
+      invoiceId: this.invoiceId,
+      customerId: this.customerId,
+      supplierId: this.supplierId,
+      amount: this.amount,
+      paymentDate: this.paymentDate,
+      paymentType: this.paymentType,
+      notes: this.notes,
+      referenceNumber: this.referenceNumber,
+    };
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      invoiceId: this.invoiceId,
+      customerId: this.customerId,
+      supplierId: this.supplierId,
+      amount: this.amount,
+      paymentDate: this.paymentDate,
+      paymentType: this.paymentType,
+      notes: this.notes,
+      referenceNumber: this.referenceNumber,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
   }
 }

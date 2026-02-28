@@ -27,6 +27,7 @@ export enum QuoteStatus {
 @Index(['supplierId'])
 @Index(['date'])
 @Index(['expirationDate'])
+@Index(['status'])
 export class Quote extends BaseDocument {
   // Override documentNumber to use quoteNumber for backwards compatibility
   get quoteNumber(): string {

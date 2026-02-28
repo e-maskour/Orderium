@@ -4,7 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
+import { Toaster as SileoToaster } from 'sileo';
+import 'sileo/styles.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import Login from './pages/Login';
 import Orders from './pages/Orders';
@@ -12,8 +13,12 @@ import Orders from './pages/Orders';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
+      staleTime: 30_000,
       refetchInterval: 30000, // Refresh every 30 seconds
+      refetchIntervalInBackground: false, // Pause polling when tab is hidden
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff up to 30s
     },
   },
 });
@@ -25,7 +30,7 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
-            <Sonner />
+            <SileoToaster position="top-center" theme="system" />
             <BrowserRouter
               future={{
                 v7_startTransition: true,

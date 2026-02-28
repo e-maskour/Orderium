@@ -1,70 +1,44 @@
-import { Category, CreateCategoryDTO, UpdateCategoryDTO } from './categories.interface';
-
-const API_URL = '/api';
+import type { CreateCategoryDTO, UpdateCategoryDTO } from './categories.interface';
+import { Category } from './categories.model';
+import { apiClient, API_ROUTES } from '../../common';
 
 export class CategoriesService {
   async getAll(type?: string): Promise<Category[]> {
-    const url = type ? `${API_URL}/categories?type=${type}` : `${API_URL}/categories`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch categories');
-    return response.json();
+    const response = await apiClient.get<any[]>(API_ROUTES.CATEGORIES.LIST, {
+      params: type ? { type } : undefined,
+    });
+    return (response.data || []).map((c: any) => Category.fromApiResponse(c));
   }
 
   async getHierarchy(type?: string): Promise<Category[]> {
-    const url = type 
-      ? `${API_URL}/categories/hierarchy?type=${type}` 
-      : `${API_URL}/categories/hierarchy`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch category hierarchy');
-    return response.json();
+    const response = await apiClient.get<any[]>(API_ROUTES.CATEGORIES.HIERARCHY, {
+      params: type ? { type } : undefined,
+    });
+    return (response.data || []).map((c: any) => Category.fromApiResponse(c));
   }
 
   async getByType(type: string): Promise<Category[]> {
-    const response = await fetch(`${API_URL}/categories/type/${type}`);
-    if (!response.ok) throw new Error('Failed to fetch categories by type');
-    return response.json();
+    const response = await apiClient.get<any[]>(API_ROUTES.CATEGORIES.BY_TYPE(type));
+    return (response.data || []).map((c: any) => Category.fromApiResponse(c));
   }
 
   async getById(id: number): Promise<Category> {
-    const response = await fetch(`${API_URL}/categories/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch category');
-    return response.json();
+    const response = await apiClient.get<any>(API_ROUTES.CATEGORIES.DETAIL(id));
+    return Category.fromApiResponse(response.data);
   }
 
   async create(data: CreateCategoryDTO): Promise<Category> {
-    const response = await fetch(`${API_URL}/categories`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create category');
-    }
-    return response.json();
+    const response = await apiClient.post<any>(API_ROUTES.CATEGORIES.CREATE, data);
+    return Category.fromApiResponse(response.data);
   }
 
   async update(id: number, data: UpdateCategoryDTO): Promise<Category> {
-    const response = await fetch(`${API_URL}/categories/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update category');
-    }
-    return response.json();
+    const response = await apiClient.put<any>(API_ROUTES.CATEGORIES.UPDATE(id), data);
+    return Category.fromApiResponse(response.data);
   }
 
   async delete(id: number): Promise<void> {
-    const response = await fetch(`${API_URL}/categories/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete category');
-    }
+    await apiClient.delete(API_ROUTES.CATEGORIES.DELETE(id));
   }
 }
 

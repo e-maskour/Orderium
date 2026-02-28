@@ -41,7 +41,7 @@ export interface DocumentItem {
   total: number;
 }
 
-export interface BaseDocument {
+export interface IBaseDocument {
   id?: number;
   documentNumber?: string;
   documentType?: DocumentType;
@@ -84,7 +84,7 @@ export interface BaseDocument {
   dateUpdated?: string;
 }
 
-export interface DocumentWithItems extends BaseDocument {
+export interface IDocumentWithItems extends IBaseDocument {
   items: DocumentItem[];
 }
 

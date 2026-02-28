@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { X, Share2, Copy, Check, Mail, ExternalLink } from 'lucide-react';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ShareQuoteDialogProps {
   isOpen: boolean;
@@ -18,13 +21,14 @@ export function ShareQuoteDialog({
   expiresAt,
   onGenerateLink
 }: ShareQuoteDialogProps) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   if (!isOpen) return null;
 
-  const shareUrl = shareToken 
-    ? `${window.location.origin}/preview/quote/${shareToken}` 
+  const shareUrl = shareToken
+    ? `${window.location.origin}/preview/quote/${shareToken}`
     : '';
 
   const handleCopyLink = async () => {
@@ -86,13 +90,13 @@ export function ShareQuoteDialog({
               <p className="text-sm text-slate-600 mb-4">
                 {t('generateSecureLink')}
               </p>
-              <button
+              <Button
                 onClick={handleGenerateLink}
-                disabled={generating}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                loading={generating}
+                loadingText={t('generating')}
               >
-                {generating ? t('generating') : t('generateLink')}
-              </button>
+                {t('generateLink')}
+              </Button>
             </div>
           ) : (
             <>
@@ -102,11 +106,12 @@ export function ShareQuoteDialog({
                   Lien de partage
                 </label>
                 <div className="flex items-center gap-2">
-                  <input
+                  <Input
                     type="text"
                     value={shareUrl}
                     readOnly
-                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-slate-50 text-slate-700"
+                    className="flex-1 bg-slate-50"
+                    inputSize="sm"
                   />
                   <button
                     onClick={handleCopyLink}
@@ -139,20 +144,21 @@ export function ShareQuoteDialog({
 
               {/* Action Buttons */}
               <div className="flex gap-2">
-                <button
+                <Button
                   onClick={handleOpenPreview}
-                  className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                  variant="outline"
+                  leadingIcon={ExternalLink}
+                  className="flex-1"
                 >
-                  <ExternalLink className="w-4 h-4" />
                   Aperçu
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleEmailShare}
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                  leadingIcon={Mail}
+                  className="flex-1"
                 >
-                  <Mail className="w-4 h-4" />
                   Email
-                </button>
+                </Button>
               </div>
             </>
           )}

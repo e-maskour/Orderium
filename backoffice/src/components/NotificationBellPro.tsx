@@ -1,5 +1,5 @@
 /**
- * Professional Notification Bell Component
+ * Professional INotification Bell Component
  * Inspired by SAP Fiori, Odoo, and Microsoft Dynamics 365
  */
 
@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { toast } from 'sonner';
+import { toastSuccess, toastArchived } from '../services/toast.service';
 import {
   Popover,
   PopoverContent,
@@ -36,7 +36,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   notificationsService,
-  type Notification,
+  type INotification,
   NotificationType,
   NotificationPriority,
 } from '../modules/notifications';
@@ -87,7 +87,7 @@ export function NotificationBellPro() {
     mutationFn: () => notificationsService.markAllAsRead({ isRead: false }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toast.success(t('allNotificationsMarkedAsRead'));
+      toastSuccess(t('allNotificationsMarkedAsRead'));
     },
   });
 
@@ -96,7 +96,7 @@ export function NotificationBellPro() {
     mutationFn: (id: number) => notificationsService.archive(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toast.success(t('notificationArchived'));
+      toastArchived(t('notificationArchived'));
     },
   });
 
@@ -161,12 +161,12 @@ export function NotificationBellPro() {
     );
   };
 
-  const getNotificationTitle = (notification: Notification) => {
+  const getNotificationTitle = (notification: INotification) => {
     const key = `notification.title.${notification.type.toLowerCase()}`;
     return t(key as any);
   };
 
-  const getNotificationMessage = (notification: Notification) => {
+  const getNotificationMessage = (notification: INotification) => {
     const key = `notification.message.${notification.type.toLowerCase()}`;
     let message = t(key as any);
 
@@ -217,7 +217,7 @@ export function NotificationBellPro() {
     return date.toLocaleDateString();
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: INotification) => {
     if (!notification.isRead) {
       markAsReadMutation.mutate(notification.id);
     }
@@ -230,7 +230,7 @@ export function NotificationBellPro() {
   };
 
   const hasUrgentNotifications = notifications.some(
-    (n: Notification) => !n.isRead && n.priority === NotificationPriority.URGENT
+    (n: INotification) => !n.isRead && n.priority === NotificationPriority.URGENT
   );
 
   return (
@@ -239,6 +239,7 @@ export function NotificationBellPro() {
         <Button
           variant="ghost"
           size="icon"
+          aria-label={t('notifications')}
           className={cn(
             'relative hover:bg-accent transition-all duration-200',
             hasUrgentNotifications && 'animate-pulse'
@@ -309,6 +310,7 @@ export function NotificationBellPro() {
                 setIsOpen(false);
               }}
               className="h-7 w-7"
+              aria-label={t('settings')}
             >
               <Settings className="h-3.5 w-3.5" />
             </Button>
@@ -353,7 +355,7 @@ export function NotificationBellPro() {
                 </div>
               ) : (
                 <div className="divide-y">
-                  {notifications.map((notification: Notification) => (
+                  {notifications.map((notification: INotification) => (
                     <div
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}
@@ -431,6 +433,7 @@ export function NotificationBellPro() {
                                   }}
                                   className="h-7 w-7"
                                   title={t('markAsRead')}
+                                  aria-label={t('markAsRead')}
                                 >
                                   <Check className="h-3.5 w-3.5" />
                                 </Button>
@@ -444,6 +447,7 @@ export function NotificationBellPro() {
                                 }}
                                 className="h-7 w-7"
                                 title={t('archive')}
+                                aria-label={t('archive')}
                               >
                                 <Archive className="h-3.5 w-3.5" />
                               </Button>

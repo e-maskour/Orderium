@@ -7,14 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { ShoppingCart, Loader2, UserPlus, LogIn } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toastSuccess, toastError } from '@/services/toast.service';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 export default function Login() {
   const { login, register, isAuthenticated } = useAuth();
   const { t, dir } = useLanguage();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingPhone, setIsCheckingPhone] = useState(false);
@@ -41,17 +40,17 @@ export default function Login() {
   const normalizePhoneNumber = (phone: string): string => {
     // Remove all spaces and special characters except +
     let cleaned = phone.replace(/[\s\-()]/g, '');
-    
+
     // Handle +2126XXXXXXXX format
     if (cleaned.startsWith('+2126')) {
       return '0' + cleaned.slice(4); // Convert +2126XXXXXXXX to 06XXXXXXXX
     }
-    
+
     // Handle 2126XXXXXXXX format (without +)
     if (cleaned.startsWith('2126')) {
       return '0' + cleaned.slice(3); // Convert 2126XXXXXXXX to 06XXXXXXXX
     }
-    
+
     // Already in 06XXXXXXXX format or other format
     return cleaned;
   };
@@ -67,7 +66,7 @@ export default function Login() {
   useEffect(() => {
     const checkPhone = async () => {
       const normalizedPhone = normalizePhoneNumber(formData.phone);
-      
+
       if (isValidMoroccanPhone(formData.phone)) {
         setIsCheckingPhone(true);
         try {
@@ -119,25 +118,22 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
       const normalizedPhone = normalizePhoneNumber(formData.phone);
-      
+
       if (phoneExists) {
         // Login existing user
         await login({
           phoneNumber: normalizedPhone,
           password: formData.password,
         });
-        
-        toast({
-          title: t('loginSuccess'),
-          description: t('welcome'),
-        });
+
+        toastSuccess(t('loginSuccess'));
       } else {
         // Register new user
         await register({
@@ -146,19 +142,12 @@ export default function Login() {
           customerId: customerId,
           isCustomer: true,
         });
-        
-        toast({
-          title: t('accountCreatedSuccess'),
-          description: t('welcome'),
-        });
+
+        toastSuccess(t('accountCreatedSuccess'));
       }
     } catch (error: any) {
       console.error('Authentication failed:', error);
-      toast({
-        title: phoneExists ? t('loginFailed') : t('registrationFailed'),
-        description: phoneExists ? t('incorrectPassword') : t('errorOccurred'),
-        variant: 'destructive',
-      });
+      toastError(phoneExists ? t('loginFailed') : t('registrationFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -176,10 +165,10 @@ export default function Login() {
             {/* Animated route path background */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-full h-1 bg-gradient-to-r from-transparent via-slate-300 to-transparent rounded-full opacity-40"></div>
-              <div className="absolute w-2 h-2 bg-slate-400 rounded-full animate-ping" style={{left: '20%'}}></div>
-              <div className="absolute w-2 h-2 bg-slate-500 rounded-full animate-pulse" style={{right: '20%'}}></div>
+              <div className="absolute w-2 h-2 bg-slate-400 rounded-full animate-ping" style={{ left: '20%' }}></div>
+              <div className="absolute w-2 h-2 bg-slate-500 rounded-full animate-pulse" style={{ right: '20%' }}></div>
             </div>
-            
+
             {/* Main Orderium O Logo */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 shadow-2xl flex items-center justify-center relative overflow-hidden">
@@ -189,7 +178,7 @@ export default function Login() {
                 <span className="text-5xl font-bold text-white relative z-10">O</span>
               </div>
             </div>
-            
+
             {/* Shopping Cart Icon Badge */}
             <div className="absolute bottom-0 right-0 w-12 h-12 bg-white rounded-xl shadow-lg border-2 border-slate-100 flex items-center justify-center">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
@@ -197,22 +186,22 @@ export default function Login() {
               </div>
             </div>
           </div>
-          
+
           <CardTitle className="text-2xl font-bold">
             {isCheckingPhone
               ? t('verifying')
               : isNewAccount
-              ? t('createNewAccount')
-              : isExistingAccount
-              ? t('login')
-              : t('appAccess')}
+                ? t('createNewAccount')
+                : isExistingAccount
+                  ? t('login')
+                  : t('appAccess')}
           </CardTitle>
           <CardDescription>
             {isNewAccount
               ? t('createPasswordForNewAccount')
               : isExistingAccount
-              ? t('enterPasswordToContinue')
-              : t('enterPhoneToStart')}
+                ? t('enterPasswordToContinue')
+                : t('enterPhoneToStart')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -236,7 +225,7 @@ export default function Login() {
               {errors.phone && (
                 <p className="text-sm text-red-500">{errors.phone}</p>
               )}
-              
+
               {/* Show customer name if phone exists */}
               {isExistingAccount && customerName && (
                 <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">

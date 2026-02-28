@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
+import { toastSuccess, toastError, toastWarning } from '@/services/toast.service';
 import { Loader2, MapPin } from 'lucide-react';
 import { SiGooglemaps, SiWaze } from 'react-icons/si';
 import { cn } from '@/lib/utils';
@@ -29,7 +29,6 @@ export function AddressInput({
   wazeUrl,
 }: AddressInputProps) {
   const { language, dir, t } = useLanguage();
-  const { toast } = useToast();
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [mapsLink, setMapsLink] = useState<string | null>(googleMapsUrl || null);
   const [wazeLink, setWazeLink] = useState<string | null>(wazeUrl || null);
@@ -37,11 +36,7 @@ export function AddressInput({
 
   const handleDetectLocation = async () => {
     if (!navigator.geolocation) {
-      toast({
-        title: t('error'),
-        description: t('geolocationNotSupported'),
-        variant: 'destructive',
-      });
+      toastError(t('geolocationNotSupported'));
       return;
     }
 
@@ -119,19 +114,13 @@ export function AddressInput({
 
           onChange(formattedAddress, latitude, longitude);
 
-          toast({
-            title: t('locationDetected'),
-            description: t('locationSuccess'),
-          });
+          toastSuccess(t('locationDetected'));
         } catch (error) {
           // Still save coordinates even if geocoding fails
           const fallbackAddress = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
           onChange(fallbackAddress, latitude, longitude);
 
-          toast({
-            title: t('warning'),
-            description: t('coordinatesSaved'),
-          });
+          toastWarning(t('coordinatesSaved'));
         } finally {
           setIsDetectingLocation(false);
         }
@@ -155,11 +144,7 @@ export function AddressInput({
             errorMessage = t('locationError');
         }
 
-        toast({
-          title: t('error'),
-          description: errorMessage,
-          variant: 'destructive',
-        });
+        toastError(errorMessage);
       },
       options
     );

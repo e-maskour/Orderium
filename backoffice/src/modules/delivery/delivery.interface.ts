@@ -1,4 +1,4 @@
-export interface DeliveryPerson {
+export interface IDeliveryPerson {
   id: number;
   name: string;
   phoneNumber: string;

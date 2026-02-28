@@ -4,23 +4,24 @@ import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
-import type { Product } from '../modules/products/products.interface';
-import { Plus, Eye, Trash2, Search, Package, Grid3x3, List, CheckSquare, X, Filter, ChevronDown, ChevronLeft, ChevronRight, Download, Upload, FileSpreadsheet } from 'lucide-react';
+import type { IProduct } from '../modules/products/products.interface';
+import { Plus, Eye, Trash2, Search, Package, Grid3x3, List, X, Filter, ChevronDown, ChevronLeft, ChevronRight, Download, Upload, FileSpreadsheet, CheckSquare } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
-import ConfirmDialog from '../components/ConfirmDialog';
-import AlertDialog from '../components/AlertDialog';
-import { toast } from 'sonner';
+import { toastExported, toastImported, toastError, toastWarning, toastInfo, toastConfirm } from '../services/toast.service';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { NativeSelect } from '../components/ui/native-select';
 
 export default function Products() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   // Get API base URL from environment or use window origin
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-  
+
   // Helper to convert relative image paths to full URLs
   const getImageUrl = (imageUrl?: string): string | undefined => {
     if (!imageUrl) return undefined;
@@ -56,15 +57,6 @@ export default function Products() {
     isService: undefined as boolean | undefined,
   });
 
-  // Confirmation dialog
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteAction, setDeleteAction] = useState<'single' | 'bulk'>('single');
-  const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
-
-  // Alert dialog
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState({ title: '', message: '' });
-
   // Fetch categories for filter
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -76,14 +68,14 @@ export default function Products() {
   // Fetch products with applied filters
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', appliedFilters, currentPage, pageSize],
-    queryFn: () => productsService.getProducts({ 
+    queryFn: () => productsService.getProducts({
       search: appliedFilters.name,
       code: appliedFilters.code,
       stockFilter: appliedFilters.stockFilter,
       categoryIds: appliedFilters.categoryIds,
       isService: appliedFilters.isService,
-      page: currentPage, 
-      limit: pageSize 
+      page: currentPage,
+      limit: pageSize
     }),
   });
 
@@ -108,11 +100,7 @@ export default function Products() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (error: Error) => {
-      setAlertMessage({
-        title: 'Erreur de suppression',
-        message: error.message,
-      });
-      setShowAlert(true);
+      toastError(t('deleteError'), { description: error.message });
     },
   });
 
@@ -126,7 +114,7 @@ export default function Products() {
     if (selectedProducts.length === productsList.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(productsList.map((p: Product) => p.id));
+      setSelectedProducts(productsList.map((p: IProduct) => p.id));
     }
   };
 
@@ -135,36 +123,26 @@ export default function Products() {
   };
 
   const handleBulkDelete = () => {
-    setDeleteAction('bulk');
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    if (deleteAction === 'bulk') {
-      let hasErrors = false;
-      for (const id of selectedProducts) {
-        try {
-          await productsService.deleteProduct(id);
-        } catch (error: any) {
-          hasErrors = true;
-          setAlertMessage({
-            title: 'Erreur de suppression',
-            message: error.message,
-          });
-          setShowAlert(true);
-          break;
+    toastConfirm(
+      t('deleteProducts'),
+      async () => {
+        let hasErrors = false;
+        for (const id of selectedProducts) {
+          try {
+            await productsService.deleteProduct(id);
+          } catch (error: any) {
+            hasErrors = true;
+            toastError(t('deleteError'), { description: error.message });
+            break;
+          }
         }
-      }
-
-      if (!hasErrors) {
-        queryClient.invalidateQueries({ queryKey: ['products'] });
-        clearSelection();
-      }
-    } else if (deleteProductId !== null) {
-      deleteMutation.mutate(deleteProductId);
-    }
-    setShowDeleteConfirm(false);
-    setDeleteProductId(null);
+        if (!hasErrors) {
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+          clearSelection();
+        }
+      },
+      { description: t('confirmBulkDelete').replace('{{count}}', String(selectedProducts.length)), confirmLabel: t('delete') },
+    );
   };
 
   const handleViewProduct = (id: number) => {
@@ -227,9 +205,9 @@ export default function Products() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Produits exportés avec succès');
+      toastExported(t('exportSuccess'));
     } catch (error) {
-      toast.error('Erreur lors de l\'exportation');
+      toastError(t('exportError'));
       console.error(error);
     }
   };
@@ -246,9 +224,9 @@ export default function Products() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Modèle téléchargé avec succès');
+      toastExported(t('templateDownloaded'));
     } catch (error) {
-      toast.error('Erreur lors du téléchargement du modèle');
+      toastError(t('templateDownloadError'));
       console.error(error);
     }
   };
@@ -264,24 +242,24 @@ export default function Products() {
       if (!file) return;
 
       try {
-        toast.info('Import en cours...');
+        toastInfo(t('importInProgress'));
         const result = await productsService.importFromXlsx(file);
-        
+
         if (result.success) {
-          toast.success(
-            `Import réussi: ${result.imported} créés, ${result.updated} mis à jour`
+          toastImported(
+            t('importSuccess').replace('{{created}}', String(result.imported)).replace('{{updated}}', String(result.updated))
           );
           queryClient.invalidateQueries({ queryKey: ['products'] });
         } else {
-          toast.warning(
-            `Import terminé avec des erreurs: ${result.imported} créés, ${result.updated} mis à jour, ${result.failed} échoués`
+          toastWarning(
+            t('importPartial').replace('{{created}}', String(result.imported)).replace('{{updated}}', String(result.updated)).replace('{{failed}}', String(result.failed))
           );
           if (result.errors.length > 0) {
             console.error('Import errors:', result.errors);
           }
         }
       } catch (error: any) {
-        toast.error(`Erreur lors de l'import: ${error.message}`);
+        toastError(`${t('importError')}: ${error.message}`);
         console.error(error);
       }
     };
@@ -302,21 +280,19 @@ export default function Products() {
           <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('card')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'card'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'card'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               <Grid3x3 className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'list'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               <List className="w-4 h-4" />
             </button>
@@ -361,13 +337,12 @@ export default function Products() {
             </button>
 
             {/* Add Product Button */}
-            <button
+            <Button
               onClick={() => navigate('/products/create')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all whitespace-nowrap"
+              leadingIcon={Plus}
             >
-              <Plus className="w-5 h-5" />
               {t('addProduct')}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -379,26 +354,26 @@ export default function Products() {
                 {t('showing')} <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
                 <span className="font-semibold">{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
               </div>
-              
+
               {/* Page Size Selector */}
               <div className="flex items-center gap-2">
                 <label className="text-xs font-medium text-slate-600">{t('perPage')}</label>
-                <select
+                <NativeSelect
                   value={pageSize}
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  selectSize="sm"
                 >
                   <option value={10}>10</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                   <option value={500}>500</option>
                   <option value={1000}>1000</option>
-                </select>
+                </NativeSelect>
               </div>
-              
+
               {/* Navigation */}
               <div className="flex items-center gap-2">
                 <button
@@ -409,9 +384,9 @@ export default function Products() {
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <div className="flex items-center gap-1">
-                  <input
+                  <Input
                     type="number"
-                    min="1"
+                    min={1}
                     max={totalPages}
                     value={currentPage}
                     onChange={(e) => {
@@ -425,7 +400,9 @@ export default function Products() {
                         e.currentTarget.blur();
                       }
                     }}
-                    className="w-12 px-2 py-1 text-sm font-medium text-slate-700 text-center border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    inputSize="sm"
+                    className="w-12 text-center"
+                    aria-label="Page number"
                   />
                   <span className="text-sm text-slate-500">/</span>
                   <span className="text-sm font-medium text-slate-700">{totalPages}</span>
@@ -445,25 +422,33 @@ export default function Products() {
         {/* Products View */}
         <div className="flex flex-col">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="inline-block w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="mt-2 text-slate-500">{t('loading')}...</p>
-              </div>
+            <div className="space-y-3 animate-pulse">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-xl p-4 border border-slate-200">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 bg-slate-200 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-40 bg-slate-200 rounded" />
+                      <div className="h-3 w-24 bg-slate-200 rounded" />
+                    </div>
+                    <div className="h-6 w-16 bg-slate-200 rounded-full" />
+                    <div className="h-4 w-20 bg-slate-200 rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : viewMode === 'list' ? (
             <div className="space-y-2">
               {/* Product Rows */}
               {productsList && productsList.length > 0 ? (
-                productsList.map((product: Product) => (
+                productsList.map((product: IProduct) => (
                   <div
                     key={product.id}
                     onClick={() => handleViewProduct(product.id)}
-                    className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${
-                      selectedProducts.includes(product.id)
-                        ? 'border-amber-500 ring-2 ring-amber-500/20'
-                        : 'border-slate-200/60 hover:border-slate-300/60'
-                    }`}
+                    className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${selectedProducts.includes(product.id)
+                      ? 'border-amber-500 ring-2 ring-amber-500/20'
+                      : 'border-slate-200/60 hover:border-slate-300/60'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       {/* Checkbox */}
@@ -473,11 +458,10 @@ export default function Products() {
                             e.stopPropagation();
                             toggleSelectProduct(product.id);
                           }}
-                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${
-                            selectedProducts.includes(product.id)
-                              ? 'bg-amber-500 border-amber-500 text-white'
-                              : 'bg-white border-slate-300'
-                          }`}
+                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${selectedProducts.includes(product.id)
+                            ? 'bg-amber-500 border-amber-500 text-white'
+                            : 'bg-white border-slate-300'
+                            }`}
                         >
                           {selectedProducts.includes(product.id) && <CheckSquare className="w-4 h-4" />}
                         </div>
@@ -571,25 +555,25 @@ export default function Products() {
                   </div>
                   <h3 className="mt-6 text-xl font-bold text-slate-800">{t('noProductsFound')}</h3>
                   <p className="mt-2 text-sm text-slate-500 max-w-sm text-center">
-                    {activeFiltersCount > 0 
+                    {activeFiltersCount > 0
                       ? "Aucun produit ne correspond à vos critères de recherche. Essayez de modifier les filtres."
                       : "Commencez par ajouter votre premier produit pour le voir apparaître ici."}
                   </p>
                   {activeFiltersCount > 0 ? (
-                    <button
+                    <Button
                       onClick={handleClearFilters}
-                      className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30"
+                      className="mt-6"
                     >
                       Réinitialiser les filtres
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       onClick={() => navigate('/products/create')}
-                      className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30 flex items-center gap-2"
+                      className="mt-6"
+                      leadingIcon={Plus}
                     >
-                      <Plus className="w-4 h-4" />
                       Ajouter un produit
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -598,15 +582,14 @@ export default function Products() {
             <div>
               <div className="grid gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
                 {productsList && productsList.length > 0 ? (
-                  productsList.map((product: Product) => (
+                  productsList.map((product: IProduct) => (
                     <div
                       key={product.id}
                       onClick={() => handleViewProduct(product.id)}
-                      className={`relative bg-white rounded-lg sm:rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${
-                        selectedProducts.includes(product.id)
-                          ? 'border-amber-500 ring-2 ring-amber-500/20'
-                          : 'border-slate-200/60 hover:border-slate-300/60'
-                      }`}
+                      className={`relative bg-white rounded-lg sm:rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${selectedProducts.includes(product.id)
+                        ? 'border-amber-500 ring-2 ring-amber-500/20'
+                        : 'border-slate-200/60 hover:border-slate-300/60'
+                        }`}
                     >
                       {/* Selection Checkbox */}
                       <div className="absolute top-1.5 left-1.5 z-10">
@@ -615,11 +598,10 @@ export default function Products() {
                             e.stopPropagation();
                             toggleSelectProduct(product.id);
                           }}
-                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                            selectedProducts.includes(product.id)
-                              ? 'bg-amber-500 border-amber-500 text-white'
-                              : 'bg-white border-slate-300'
-                          }`}
+                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${selectedProducts.includes(product.id)
+                            ? 'bg-amber-500 border-amber-500 text-white'
+                            : 'bg-white border-slate-300'
+                            }`}
                         >
                           {selectedProducts.includes(product.id) && <CheckSquare className="w-4 h-4" />}
                         </div>
@@ -691,7 +673,7 @@ export default function Products() {
                           <div className="flex items-center justify-between text-[10px]">
                             <span className="text-slate-500">{t('stock')}:</span>
                             <span className="font-semibold text-slate-700">
-                              {product.stock !== null && product.stock !== undefined 
+                              {product.stock !== null && product.stock !== undefined
                                 ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
                                 : '-'}
                             </span>
@@ -724,25 +706,25 @@ export default function Products() {
                     </div>
                     <h3 className="mt-6 text-xl font-bold text-slate-800">{t('noProductsFound')}</h3>
                     <p className="mt-2 text-sm text-slate-500 max-w-sm text-center">
-                      {activeFiltersCount > 0 
+                      {activeFiltersCount > 0
                         ? "Aucun produit ne correspond à vos critères de recherche. Essayez de modifier les filtres."
                         : "Commencez par ajouter votre premier produit pour le voir apparaître ici."}
                     </p>
                     {activeFiltersCount > 0 ? (
-                      <button
+                      <Button
                         onClick={handleClearFilters}
-                        className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30"
+                        className="mt-6"
                       >
                         Réinitialiser les filtres
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         onClick={() => navigate('/products/create')}
-                        className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30 flex items-center gap-2"
+                        className="mt-6"
+                        leadingIcon={Plus}
                       >
-                        <Plus className="w-4 h-4" />
                         Ajouter un produit
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )}
@@ -762,14 +744,14 @@ export default function Products() {
         actions={[
           ...(selectedProducts.length === 1
             ? [
-                {
-                  id: 'view',
-                  label: t('details'),
-                  icon: <Eye className="w-3.5 h-3.5" />,
-                  onClick: () => handleViewProduct(selectedProducts[0]),
-                  variant: 'secondary' as const,
-                },
-              ]
+              {
+                id: 'view',
+                label: t('details'),
+                icon: <Eye className="w-3.5 h-3.5" />,
+                onClick: () => handleViewProduct(selectedProducts[0]),
+                variant: 'secondary' as const,
+              },
+            ]
             : []),
           {
             id: 'delete',
@@ -781,31 +763,7 @@ export default function Products() {
         ]}
       />
 
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => {
-          setShowDeleteConfirm(false);
-          setDeleteProductId(null);
-        }}
-        onConfirm={confirmDelete}
-        title={deleteAction === 'bulk' ? 'Supprimer les produits' : 'Supprimer le produit'}
-        message={
-          deleteAction === 'bulk'
-            ? `Êtes-vous sûr de vouloir supprimer ${selectedProducts.length} produit(s) sélectionné(s) ? Cette action est irréversible.`
-            : 'Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.'
-        }
-        type="danger"
-        confirmText={t('delete')}
-        cancelText={t('cancel')}
-      />
 
-      <AlertDialog
-        isOpen={showAlert}
-        onClose={() => setShowAlert(false)}
-        title={alertMessage.title}
-        message={alertMessage.message}
-        type="warning"
-      />
 
       {/* Filters Overlay Panel */}
       {filtersExpanded && (
@@ -815,7 +773,7 @@ export default function Products() {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
             onClick={() => setFiltersExpanded(false)}
           />
-          
+
           {/* Slide-in Panel */}
           <div className="fixed inset-y-0 end-0 w-full sm:w-[520px] md:w-[560px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
             {/* Panel Header */}
@@ -844,19 +802,19 @@ export default function Products() {
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
                   {t('search')}
                 </label>
-                
+
                 <div className="grid grid-cols-1 gap-4">
                   {/* Name Filter */}
                   <div>
                     <label className="text-xs font-semibold text-slate-600 mb-2 block">
                       {t('name')}
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={nameFilter}
                       onChange={(e) => setNameFilter(e.target.value)}
                       placeholder={t('search')}
-                      className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
+                      fullWidth
                     />
                   </div>
 
@@ -865,12 +823,12 @@ export default function Products() {
                     <label className="text-xs font-semibold text-slate-600 mb-2 block">
                       {t('code')}
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={codeFilter}
                       onChange={(e) => setCodeFilter(e.target.value)}
                       placeholder={t('search')}
-                      className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all"
+                      fullWidth
                     />
                   </div>
                 </div>
@@ -881,16 +839,15 @@ export default function Products() {
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
                   {t('stock')}
                 </label>
-                <select
+                <NativeSelect
                   value={stockFilter}
                   onChange={(e) => setStockFilter(e.target.value as 'all' | 'negative' | 'zero' | 'positive')}
-                  className="w-full px-3 py-2.5 text-sm border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all bg-white"
                 >
                   <option value="all">{t('all')}</option>
                   <option value="negative">Negative Stock</option>
                   <option value="zero">Zero Stock</option>
                   <option value="positive">Positive Stock</option>
-                </select>
+                </NativeSelect>
               </div>
 
               {/* Category Filter */}
@@ -904,11 +861,10 @@ export default function Products() {
                       <button
                         key={category.id}
                         onClick={() => toggleCategory(category.id)}
-                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                          selectedCategories.includes(category.id)
-                            ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                            : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                        }`}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${selectedCategories.includes(category.id)
+                          ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
+                          }`}
                       >
                         <span>{category.name}</span>
                       </button>
@@ -933,11 +889,10 @@ export default function Products() {
                     <button
                       key={String(filter.key)}
                       onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        isServiceFilter === filter.key
-                          ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                      }`}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${isServiceFilter === filter.key
+                        ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
+                        }`}
                     >
                       <span>{filter.label}</span>
                     </button>
@@ -948,18 +903,19 @@ export default function Products() {
 
             {/* Panel Footer */}
             <div className="border-t border-slate-200 p-4 bg-slate-50 flex gap-3">
-              <button
+              <Button
+                variant="outline"
                 onClick={handleClearFilters}
-                className="flex-1 px-4 py-2.5 bg-white text-slate-700 rounded-lg font-medium text-sm hover:bg-slate-100 border border-slate-300 transition-colors"
+                className="flex-1"
               >
                 {t('reset')}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleApplyFilters}
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
+                className="flex-1"
               >
                 {t('apply')}
-              </button>
+              </Button>
             </div>
           </div>
         </>

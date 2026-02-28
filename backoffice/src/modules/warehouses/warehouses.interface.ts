@@ -1,4 +1,4 @@
-export interface Warehouse {
+export interface IWarehouse {
   id: number;
   code: string;
   name: string;
@@ -10,7 +10,7 @@ export interface Warehouse {
 }
 
 export interface WarehousesResponse {
-  warehouses: Warehouse[];
+  warehouses: IWarehouse[];
 }
 
 export interface CreateWarehouseDTO {

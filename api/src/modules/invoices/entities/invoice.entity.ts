@@ -24,6 +24,7 @@ export enum InvoiceStatus {
 @Index(['customerId'])
 @Index(['supplierId'])
 @Index(['date'])
+@Index(['status'])
 export class Invoice extends BaseDocument {
   // Override documentNumber to use invoiceNumber for backwards compatibility
   get invoiceNumber(): string {

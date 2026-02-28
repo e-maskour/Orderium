@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 
@@ -9,7 +10,8 @@ export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
-  ) {}
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) { }
 
   async findAll(type?: string): Promise<Category[]> {
     const query = this.categoryRepository
@@ -25,7 +27,15 @@ export class CategoriesService {
     return query.getMany();
   }
 
+  private async invalidateCategoryCache(id?: number) {
+    if (id) await this.cacheManager.del(`category:${id}`);
+  }
+
   async findOne(id: number): Promise<Category> {
+    const cacheKey = `category:${id}`;
+    const cached = await this.cacheManager.get<Category>(cacheKey);
+    if (cached) return cached;
+
     const category = await this.categoryRepository.findOne({
       where: { id },
       relations: ['parent', 'children', 'products'],
@@ -35,6 +45,7 @@ export class CategoriesService {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
+    await this.cacheManager.set(cacheKey, category, 300_000);
     return category;
   }
 
@@ -85,7 +96,9 @@ export class CategoriesService {
     }
 
     Object.assign(category, updateCategoryDto);
-    return this.categoryRepository.save(category);
+    const saved = await this.categoryRepository.save(category);
+    await this.invalidateCategoryCache(id);
+    return saved;
   }
 
   async delete(id: number): Promise<void> {
@@ -99,6 +112,7 @@ export class CategoriesService {
     }
 
     await this.categoryRepository.remove(category);
+    await this.invalidateCategoryCache(id);
   }
 
   async getRootCategories(type?: string): Promise<Category[]> {
