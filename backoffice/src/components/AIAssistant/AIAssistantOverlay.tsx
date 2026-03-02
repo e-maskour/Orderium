@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Button } from 'primereact/button';
 import { X, MessageSquare, Maximize2, Minimize2 } from 'lucide-react';
 import { MessageThread } from './MessageThread';
 import { InputArea } from './InputArea';
@@ -94,14 +95,30 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.2)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 40,
+        }}
         onClick={onClose}
       />
 
       {/* Panel */}
       <div
-        className="fixed bottom-4 right-4 bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col overflow-hidden"
         style={{
+          position: 'fixed',
+          bottom: '1rem',
+          right: '1rem',
+          backgroundColor: '#ffffff',
+          borderRadius: '0.5rem',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+          border: '1px solid #e5e7eb',
+          zIndex: 50,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
           width: `${size.width}px`,
           height: `${size.height}px`,
           maxHeight: 'calc(100vh - 2rem)',
@@ -109,53 +126,76 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({
       >
         {/* Resize Handle */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500/50"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: '4px',
+            cursor: 'ew-resize',
+          }}
           onMouseDown={handleResizeStart}
         />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-blue-600" />
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0.75rem 1rem',
+            borderBottom: '1px solid #e5e7eb',
+            backgroundColor: '#f9fafb',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <MessageSquare style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
+            <h2 style={{ fontWeight: 600, color: '#111827', margin: 0 }}>
               AI Assistant
             </h2>
             {isStreaming && (
-              <span className="text-xs text-gray-500 dark:text-gray-400 animate-pulse">
+              <span className="animate-pulse" style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                 Thinking...
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {/* Expand/Collapse */}
-            <button
+            <Button
+              text
+              rounded
               onClick={toggleExpanded}
-              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-              title={panelState === 'expanded' ? 'Minimize' : 'Expand'}
-            >
-              {panelState === 'expanded' ? (
-                <Minimize2 className="w-4 h-4" />
-              ) : (
-                <Maximize2 className="w-4 h-4" />
-              )}
-            </button>
+              tooltip={panelState === 'expanded' ? 'Minimize' : 'Expand'}
+              icon={panelState === 'expanded'
+                ? <Minimize2 style={{ width: '1rem', height: '1rem' }} />
+                : <Maximize2 style={{ width: '1rem', height: '1rem' }} />
+              }
+              style={{ width: '2rem', height: '2rem', padding: 0 }}
+            />
 
             {/* Close */}
-            <button
+            <Button
+              text
+              rounded
               onClick={onClose}
-              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-              title="Close (ESC)"
-            >
-              <X className="w-4 h-4" />
-            </button>
+              tooltip="Close (ESC)"
+              icon={<X style={{ width: '1rem', height: '1rem' }} />}
+              style={{ width: '2rem', height: '2rem', padding: 0 }}
+            />
           </div>
         </div>
 
         {/* Error Banner */}
         {error && (
-          <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-            <p className="text-sm text-red-600 dark:text-red-400">
+          <div
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#fef2f2',
+              borderBottom: '1px solid #fecaca',
+            }}
+          >
+            <p style={{ fontSize: '0.875rem', color: '#dc2626', margin: 0 }}>
               {error.message || 'An error occurred'}
             </p>
           </div>

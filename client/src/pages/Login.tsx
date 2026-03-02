@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { authService } from '@/modules/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { ShoppingCart, Loader2, UserPlus, LogIn } from 'lucide-react';
+import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { Card } from 'primereact/card';
+import { Message } from 'primereact/message';
+import { ShoppingCart } from 'lucide-react';
 import { toastSuccess, toastError } from '@/services/toast.service';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 
 export default function Login() {
   const { login, register, isAuthenticated } = useAuth();
@@ -29,44 +28,27 @@ export default function Login() {
     password: '',
   });
 
-  // Redirect to home if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
-  // Normalize Moroccan phone number to 06XXXXXXXX format
   const normalizePhoneNumber = (phone: string): string => {
-    // Remove all spaces and special characters except +
     let cleaned = phone.replace(/[\s\-()]/g, '');
-
-    // Handle +2126XXXXXXXX format
-    if (cleaned.startsWith('+2126')) {
-      return '0' + cleaned.slice(4); // Convert +2126XXXXXXXX to 06XXXXXXXX
-    }
-
-    // Handle 2126XXXXXXXX format (without +)
-    if (cleaned.startsWith('2126')) {
-      return '0' + cleaned.slice(3); // Convert 2126XXXXXXXX to 06XXXXXXXX
-    }
-
-    // Already in 06XXXXXXXX format or other format
+    if (cleaned.startsWith('+2126')) return '0' + cleaned.slice(4);
+    if (cleaned.startsWith('2126')) return '0' + cleaned.slice(3);
     return cleaned;
   };
 
-  // Validate Moroccan phone format
   const isValidMoroccanPhone = (phone: string): boolean => {
     const normalized = normalizePhoneNumber(phone);
-    // Must be 06XXXXXXXX or 07XXXXXXXX (10 digits starting with 06 or 07)
     return /^0[67]\d{8}$/.test(normalized);
   };
 
-  // Check if phone exists when user finishes typing
   useEffect(() => {
     const checkPhone = async () => {
       const normalizedPhone = normalizePhoneNumber(formData.phone);
-
       if (isValidMoroccanPhone(formData.phone)) {
         setIsCheckingPhone(true);
         try {
@@ -87,7 +69,6 @@ export default function Login() {
         setCustomerId(undefined);
       }
     };
-
     const timer = setTimeout(checkPhone, 500);
     return () => clearTimeout(timer);
   }, [formData.phone]);
@@ -118,31 +99,15 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
-
     setIsLoading(true);
-
     try {
       const normalizedPhone = normalizePhoneNumber(formData.phone);
-
       if (phoneExists) {
-        // Login existing user
-        await login({
-          phoneNumber: normalizedPhone,
-          password: formData.password,
-        });
-
+        await login({ phoneNumber: normalizedPhone, password: formData.password });
         toastSuccess(t('loginSuccess'));
       } else {
-        // Register new user
-        await register({
-          phoneNumber: normalizedPhone,
-          password: formData.password,
-          customerId: customerId,
-          isCustomer: true,
-        });
-
+        await register({ phoneNumber: normalizedPhone, password: formData.password, customerId, isCustomer: true });
         toastSuccess(t('accountCreatedSuccess'));
       }
     } catch (error: any) {
@@ -156,153 +121,91 @@ export default function Login() {
   const isNewAccount = phoneExists === false;
   const isExistingAccount = phoneExists === true;
 
+  const cardTitle = (
+    <div className="text-center">
+      {/* Logo */}
+      <div className="mx-auto mb-3" style={{ width: '6rem', height: '6rem', position: 'relative' }}>
+        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0 }}>
+          <div className="flex align-items-center justify-content-center shadow-4" style={{ width: '5rem', height: '5rem', borderRadius: '1rem', background: 'linear-gradient(135deg, #1e293b, #0f172a)' }}>
+            <span className="text-white font-bold" style={{ fontSize: '2.5rem' }}>O</span>
+          </div>
+        </div>
+        <div className="flex align-items-center justify-content-center shadow-2 border-2 surface-border" style={{ position: 'absolute', bottom: 0, right: 0, width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem', background: 'white' }}>
+          <div className="flex align-items-center justify-content-center" style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: 'linear-gradient(135deg, #1e293b, #0f172a)' }}>
+            <ShoppingCart style={{ width: '1rem', height: '1rem', color: 'white' }} />
+          </div>
+        </div>
+      </div>
+      <div className="text-2xl font-bold text-color">
+        {isCheckingPhone ? t('verifying') : isNewAccount ? t('createNewAccount') : isExistingAccount ? t('login') : t('appAccess')}
+      </div>
+    </div>
+  );
+
+  const cardSubTitle = (
+    <div className="text-center text-color-secondary">
+      {isNewAccount ? t('createPasswordForNewAccount') : isExistingAccount ? t('enterPasswordToContinue') : t('enterPhoneToStart')}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-4" dir={dir}>
-      <Card className="w-full max-w-[95vw] sm:max-w-md shadow-xl">
-        <CardHeader className="space-y-3 text-center">
-          {/* Professional Shopping Logo */}
-          <div className="mx-auto relative w-32 h-32">
-            {/* Animated route path background */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-full h-1 bg-gradient-to-r from-transparent via-slate-300 to-transparent rounded-full opacity-40"></div>
-              <div className="absolute w-2 h-2 bg-slate-400 rounded-full animate-ping" style={{ left: '20%' }}></div>
-              <div className="absolute w-2 h-2 bg-slate-500 rounded-full animate-pulse" style={{ right: '20%' }}></div>
-            </div>
-
-            {/* Main Orderium O Logo */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 shadow-2xl flex items-center justify-center relative overflow-hidden">
-                {/* Subtle shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
-                {/* Large O */}
-                <span className="text-5xl font-bold text-white relative z-10">O</span>
+    <div className="flex align-items-center justify-content-center p-3" dir={dir} style={{ minHeight: '100vh', background: 'linear-gradient(135deg, var(--surface-50), var(--surface-100))' }}>
+      <Card title={cardTitle} subTitle={cardSubTitle} className="shadow-4 w-full" style={{ maxWidth: '28rem' }}>
+        <form onSubmit={handleSubmit} className="flex flex-column gap-3">
+          <div className="flex flex-column gap-2">
+            <label htmlFor="phone" className="font-medium text-color">{t('phoneNumber')}</label>
+            <InputText
+              id="phone"
+              type="tel"
+              placeholder={t('phonePlaceholder')}
+              value={formData.phone}
+              onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); setErrors({ ...errors, phone: '' }); }}
+              className={errors.phone ? 'p-invalid' : ''}
+              disabled={isLoading}
+            />
+            {errors.phone && <Message severity="error" text={errors.phone} />}
+            {isExistingAccount && customerName && (
+              <div className="p-3 surface-100 border-round border-1 surface-border">
+                <p className="text-xs text-color-secondary mb-1">{t('name')}</p>
+                <p className="text-sm font-medium text-color">{customerName}</p>
               </div>
-            </div>
-
-            {/* Shopping Cart Icon Badge */}
-            <div className="absolute bottom-0 right-0 w-12 h-12 bg-white rounded-xl shadow-lg border-2 border-slate-100 flex items-center justify-center">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-                <ShoppingCart className="w-5 h-5 text-white" />
-              </div>
-            </div>
+            )}
           </div>
 
-          <CardTitle className="text-2xl font-bold">
-            {isCheckingPhone
-              ? t('verifying')
-              : isNewAccount
-                ? t('createNewAccount')
-                : isExistingAccount
-                  ? t('login')
-                  : t('appAccess')}
-          </CardTitle>
-          <CardDescription>
-            {isNewAccount
-              ? t('createPasswordForNewAccount')
-              : isExistingAccount
-                ? t('enterPasswordToContinue')
-                : t('enterPhoneToStart')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">
-                {t('phoneNumber')}
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder={t('phonePlaceholder')}
-                value={formData.phone}
-                onChange={(e) => {
-                  setFormData({ ...formData, phone: e.target.value });
-                  setErrors({ ...errors, phone: '' });
-                }}
-                className={cn('h-11 sm:h-10 text-base sm:text-sm', errors.phone && 'border-red-500')}
+          {(isNewAccount || isExistingAccount) && (
+            <div className="flex flex-column gap-2">
+              <label htmlFor="password" className="font-medium text-color">{isNewAccount ? t('createPassword') : t('password')}</label>
+              <InputText
+                id="password"
+                type="password"
+                placeholder="••••••"
+                value={formData.password}
+                onChange={(e) => { setFormData({ ...formData, password: e.target.value }); setErrors({ ...errors, password: '' }); }}
+                className={errors.password ? 'p-invalid' : ''}
                 disabled={isLoading}
               />
-              {errors.phone && (
-                <p className="text-sm text-red-500">{errors.phone}</p>
-              )}
-
-              {/* Show customer name if phone exists */}
-              {isExistingAccount && customerName && (
-                <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <p className="text-xs text-slate-500 mb-1">
-                    {t('name')}
-                  </p>
-                  <p className="text-sm font-medium text-slate-700">
-                    {customerName}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {(isNewAccount || isExistingAccount) && (
-              <div className="space-y-2">
-                <Label htmlFor="password">
-                  {isNewAccount ? t('createPassword') : t('password')}
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••"
-                  value={formData.password}
-                  onChange={(e) => {
-                    setFormData({ ...formData, password: e.target.value });
-                    setErrors({ ...errors, password: '' });
-                  }}
-                  className={cn('h-11 sm:h-10 text-base sm:text-sm', errors.password && 'border-red-500')}
-                  disabled={isLoading}
-                />
-                {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password}</p>
-                )}
-                {isNewAccount && (
-                  <p className="text-xs text-slate-500">
-                    {t('passwordMinLengthHint')}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {(isNewAccount || isExistingAccount) && (
-              <Button
-                type="submit"
-                className="w-full h-11 sm:h-10 text-base sm:text-sm"
-                disabled={isLoading || isCheckingPhone}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('processing')}
-                  </>
-                ) : isNewAccount ? (
-                  <>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    {t('createAccount')}
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    {t('signIn')}
-                  </>
-                )}
-              </Button>
-            )}
-          </form>
-
-          {!isNewAccount && !isExistingAccount && formData.phone.length > 0 && !isValidMoroccanPhone(formData.phone) && (
-            <div className="mt-4 text-center text-sm text-slate-500">
-              {t('enterValidMoroccanPhone')}
+              {errors.password && <Message severity="error" text={errors.password} />}
+              {isNewAccount && <p className="text-xs text-color-secondary">{t('passwordMinLengthHint')}</p>}
             </div>
           )}
 
-          <div className="mt-6 text-center text-sm text-slate-600">
-            {t('yourInfoIsSecure')}
-          </div>
-        </CardContent>
+          {(isNewAccount || isExistingAccount) && (
+            <Button
+              type="submit"
+              label={isLoading ? t('processing') : isNewAccount ? t('createAccount') : t('signIn')}
+              icon={isLoading ? 'pi pi-spin pi-spinner' : isNewAccount ? 'pi pi-user-plus' : 'pi pi-sign-in'}
+              className="w-full"
+              disabled={isLoading || isCheckingPhone}
+              loading={isLoading}
+            />
+          )}
+        </form>
+
+        {!isNewAccount && !isExistingAccount && formData.phone.length > 0 && !isValidMoroccanPhone(formData.phone) && (
+          <div className="mt-3 text-center text-sm text-color-secondary">{t('enterValidMoroccanPhone')}</div>
+        )}
+
+        <div className="mt-4 text-center text-sm text-color-secondary">{t('yourInfoIsSecure')}</div>
       </Card>
     </div>
   );

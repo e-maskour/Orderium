@@ -13,24 +13,30 @@ export function DocumentTotalsSection({
 }: DocumentTotalsSectionProps) {
   const { t, language } = useLanguage();
   const { totalHT, totalTVA, totalTTC, taxByRate } = useDocumentCalculation(items);
-  
+
   return (
-    <div className="max-w-md ml-auto">
-      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 shadow-sm border border-slate-200">
-        <div className="space-y-3">
+    <div style={{ maxWidth: '28rem', marginLeft: 'auto' }}>
+      <div style={{
+        background: 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)',
+        borderRadius: '0.75rem',
+        padding: '1.5rem',
+        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
+        border: '1px solid #e2e8f0',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {/* Subtotal HT */}
-          <div className="flex justify-between items-center pb-3 border-b border-slate-200">
-            <span className="text-sm font-medium text-slate-600">{t('subtotalHT')}</span>
-            <span className="text-base font-semibold text-slate-900">{totalHT.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: '1px solid #e2e8f0' }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#475569' }}>{t('subtotalHT')}</span>
+            <span style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a' }}>{totalHT.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
           </div>
 
           {/* Tax breakdown by rate */}
           {displayMode === 'detailed' && Object.entries(taxByRate).length > 0 && (
-            <div className="space-y-2 py-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.5rem 0' }}>
               {Object.entries(taxByRate).map(([rate, amount]) => (
-                <div key={rate} className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">TVA {rate}%</span>
-                  <span className="text-sm font-medium text-slate-700">{amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
+                <div key={rate} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#475569' }}>TVA {rate}%</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
                 </div>
               ))}
             </div>
@@ -38,18 +44,23 @@ export function DocumentTotalsSection({
 
           {/* Total TVA */}
           {Object.keys(taxByRate).length > 0 && (
-            <div className="flex justify-between items-center py-2 border-t border-slate-200">
-              <span className="text-sm font-semibold text-slate-700">{t('totalTVA')}</span>
-            <span className="text-base font-semibold text-slate-800">{totalTVA.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderTop: '1px solid #e2e8f0' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('totalTVA')}</span>
+              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#1e293b' }}>{totalTVA.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
             </div>
           )}
 
           {/* Total TTC - Prominent */}
-          <div className="mt-4 pt-4 border-t-2 border-slate-300">
-            <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg p-4 shadow-md">
-              <div className="flex justify-between items-center">
-                <span className="text-white font-bold text-base">{t('totalTTC')}</span>
-                <span className="text-white font-bold text-2xl">{totalTTC.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid #cbd5e1' }}>
+            <div style={{
+              background: 'linear-gradient(to right, #f59e0b, #d97706)',
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1rem' }}>{t('totalTTC')}</span>
+                <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.5rem' }}>{totalTTC.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
               </div>
             </div>
           </div>

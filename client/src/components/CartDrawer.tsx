@@ -1,9 +1,9 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart, CartItem } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { ShoppingBag, Trash2, ArrowRight, ArrowLeft, Package, Minus } from 'lucide-react';
+import { Button } from 'primereact/button';
+import { Sidebar } from 'primereact/sidebar';
+import { ShoppingBag, Trash2, ArrowRight, ArrowLeft, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { ProductQuantityModal } from './ProductQuantityModal';
@@ -12,7 +12,7 @@ import { Product } from '@/types/database';
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  isPanelMode?: boolean; // true for desktop panel, false for mobile drawer
+  isPanelMode?: boolean;
 }
 
 // Get API base URL from environment or use window origin
@@ -23,26 +23,16 @@ const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
 // Helper to convert relative image paths to full URLs - supports multiple CDN providers
 const getImageUrl = (imageUrl?: string): string | undefined => {
   if (!imageUrl) return undefined;
-
-  // Already a full URL
   if (imageUrl.startsWith('http')) return imageUrl;
-
-  // Cloudinary (orderium/)
   if (imageUrl.startsWith('orderium/')) {
     return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
   }
-
-  // S3 URL
   if (imageUrl.startsWith('s3://')) {
     return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
   }
-
-  // Cloudflare (cf://)
   if (imageUrl.startsWith('cf://')) {
     return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
   }
-
-  // Relative path (LOCAL provider) - construct with API base URL
   return `${apiBaseUrl}/uploads/images/${imageUrl}`;
 };
 
@@ -55,53 +45,59 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
   return (
     <div
       onClick={() => onItemClick(item)}
-      className="flex gap-2 sm:gap-2.5 py-2 sm:py-2.5 border-b border-gray-200 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors rounded-md px-2 -mx-2"
+      className="flex gap-2 py-2 cursor-pointer border-bottom-1 surface-border"
+      style={{ borderRadius: '6px', padding: '0.5rem' }}
       dir={dir}
     >
       {/* Image */}
-      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
+      <div
+        className="flex-shrink-0 border-round overflow-hidden flex align-items-center justify-content-center"
+        style={{ width: '3rem', height: '3rem', background: '#f3f4f6' }}
+      >
         {item.product.imageUrl ? (
           <img
             src={getImageUrl(item.product.imageUrl)}
             alt={displayName}
-            className="w-full h-full object-contain"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Package className="w-4 h-4 text-gray-300" />
-          </div>
+          <Package style={{ width: '1rem', height: '1rem', color: '#d1d5db' }} />
         )}
       </div>
 
       {/* Details */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between mb-1">
-          <h4 className="font-medium text-gray-900 line-clamp-1 leading-tight text-sm sm:text-base">
+      <div className="flex-1" style={{ minWidth: 0 }}>
+        <div className="flex align-items-start justify-content-between mb-1">
+          <h4 className="font-medium line-clamp-1" style={{ color: '#111827', fontSize: '0.875rem', lineHeight: '1.25' }}>
             {displayName}
           </h4>
           <Button
-            variant="ghost"
-            size="icon"
+            text
+            rounded
+            severity="danger"
+            icon={<Trash2 style={{ width: '0.75rem', height: '0.75rem' }} />}
             onClick={(e) => {
               e.stopPropagation();
               removeItem(item.product.id);
             }}
-            className="h-5 w-5 -mt-0.5 -me-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0"
             aria-label={t('removeFromCart')}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+            className="flex-shrink-0"
+            style={{ width: '1.5rem', height: '1.5rem', padding: 0 }}
+          />
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
+        <div className="flex align-items-center justify-content-between">
+          <p className="flex align-items-center gap-1" style={{ fontSize: '0.75rem', color: '#6b7280' }}>
             {formatCurrency(item.product.price, language)} ×
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-primary text-white rounded-full text-[9px] sm:text-[10px] font-bold">
+            <span
+              className="inline-flex align-items-center justify-content-center border-circle font-bold text-white"
+              style={{ minWidth: '18px', height: '18px', padding: '0 4px', fontSize: '9px', background: 'var(--primary-color)' }}
+            >
               {item.quantity}
             </span>
           </p>
 
-          <span className="font-bold text-gray-900 text-sm sm:text-base">
+          <span className="font-bold" style={{ color: '#111827', fontSize: '0.875rem' }}>
             {formatCurrency(item.product.price * item.quantity, language)}
           </span>
         </div>
@@ -127,6 +123,94 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
 
   const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
+  const cartContent = (
+    <div className="flex flex-column h-full" dir={dir}>
+      {/* Header (only for panel mode — Sidebar has its own header) */}
+      {isPanelMode && (
+        <div className="p-3 border-bottom-1 surface-border">
+          <div className="flex align-items-center justify-content-between mb-1">
+            <h2 className="text-lg font-bold flex align-items-center gap-2" style={{ color: '#111827' }}>
+              <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-color)' }} />
+              {t('yourCart')}
+            </h2>
+            {items.length > 0 && (
+              <Button
+                text
+                rounded
+                severity="danger"
+                icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
+                onClick={clearCart}
+                style={{ width: '2rem', height: '2rem', padding: 0 }}
+              />
+            )}
+          </div>
+          {itemCount > 0 && (
+            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              {uniqueProductCount} {uniqueProductCount === 1 ? t('cartProduct') : t('cartProducts')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Cart items */}
+      <div className="flex-1 overflow-y-auto px-3" dir={dir}>
+        {items.length === 0 ? (
+          <div className="flex flex-column align-items-center justify-content-center h-full py-6 text-center">
+            <div
+              className="border-circle flex align-items-center justify-content-center mb-3"
+              style={{ width: '5rem', height: '5rem', background: '#f3f4f6' }}
+            >
+              <ShoppingBag style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} />
+            </div>
+            <h3 className="font-semibold mb-2" style={{ color: '#111827', fontSize: '1rem' }}>
+              {t('emptyCart')}
+            </h3>
+            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              {t('emptyCartMessage')}
+            </p>
+            {!isPanelMode && (
+              <Button
+                label={t('continueShopping')}
+                outlined
+                onClick={onClose}
+                className="mt-4"
+                style={{ height: '2.75rem', padding: '0 1.5rem' }}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="py-2">
+            {items.map((item) => (
+              <CartItemRow key={item.product.id} item={item} onItemClick={handleItemClick} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Summary Footer */}
+      {items.length > 0 && (
+        <div className="border-top-1 surface-border p-3" style={{ background: '#f9fafb' }} dir={dir}>
+          <div className="flex align-items-center justify-content-between mb-2">
+            <span className="font-semibold" style={{ color: '#111827' }}>{t('totalAmount')}</span>
+            <span className="font-bold" style={{ fontSize: '1.25rem', color: 'var(--primary-color)' }}>
+              {formatCurrency(subtotal, language)}
+            </span>
+          </div>
+
+          <Link to="/checkout" onClick={isPanelMode ? undefined : onClose} style={{ textDecoration: 'none' }}>
+            <Button
+              label={t('checkout')}
+              icon={<ArrowIcon style={{ width: '1.25rem', height: '1.25rem' }} />}
+              iconPos="right"
+              className="w-full font-semibold"
+              style={{ height: '2.75rem' }}
+            />
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+
   // Panel Mode (Desktop - always visible)
   if (isPanelMode) {
     return (
@@ -137,85 +221,12 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
           onClose={() => setIsModalOpen(false)}
           initialQuantity={initialQuantity}
         />
-
-        <div className="h-full flex flex-col" dir={dir}>
-          {/* Header */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-primary" />
-                {t('yourCart')}
-              </h2>
-              {items.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearCart}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 px-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-            {itemCount > 0 && (
-              <p className="text-sm text-gray-500">
-                {uniqueProductCount} {uniqueProductCount === 1 ? t('cartProduct') : t('cartProducts')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')}
-              </p>
-            )}
-          </div>
-
-          {/* Cart items */}
-          <div className="flex-1 overflow-y-auto px-4" dir={dir}>
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full py-12 text-center">
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                  <ShoppingBag className="w-10 h-10 text-gray-300" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">
-                  {t('emptyCart')}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {t('emptyCartMessage')}
-                </p>
-              </div>
-            ) : (
-              <div className="py-3">
-                {items.map((item) => (
-                  <CartItemRow key={item.product.id} item={item} onItemClick={handleItemClick} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Summary Footer */}
-          {items.length > 0 && (
-            <div className="border-t border-gray-200 p-4 bg-gray-50 space-y-3" dir={dir}>
-              {/* Total Amount */}
-              <div className="flex items-center justify-between">
-                <span className="text-base font-semibold text-gray-900">{t('totalAmount')}</span>
-                <span className="text-xl font-bold text-primary">
-                  {formatCurrency(subtotal, language)}
-                </span>
-              </div>
-
-              {/* Checkout Button */}
-              <Button
-                className="w-full h-11 sm:h-12 text-sm sm:text-base bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
-                asChild
-              >
-                <Link to="/checkout" className="flex items-center justify-center gap-2">
-                  {t('checkout')}
-                  <ArrowIcon className="w-5 h-5" />
-                </Link>
-              </Button>
-            </div>
-          )}
-        </div>
+        {cartContent}
       </>
     );
   }
 
-  // Drawer Mode (Mobile)
+  // Drawer Mode (Mobile) — PrimeReact Sidebar
   return (
     <>
       <ProductQuantityModal
@@ -225,90 +236,39 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
         initialQuantity={initialQuantity}
       />
 
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent
-          side={dir === 'rtl' ? 'left' : 'right'}
-          className="w-full sm:max-w-md flex flex-col p-0"
-        >
-          <SheetHeader className="p-4 border-b border-gray-200">
-            <SheetTitle className="flex items-center justify-between" dir={dir}>
-              <span className="flex items-center gap-2 text-lg font-bold text-gray-900">
-                <ShoppingBag className="w-5 h-5 text-primary" />
-                {t('yourCart')}
-                {itemCount > 0 && (
-                  <span className="text-sm font-normal text-gray-500">
-                    ({uniqueProductCount} {uniqueProductCount === 1 ? t('cartProduct') : t('cartProducts')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')})
-                  </span>
-                )}
-              </span>
-              {items.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearCart}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 px-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+      <Sidebar
+        visible={isOpen}
+        onHide={onClose}
+        position={dir === 'rtl' ? 'left' : 'right'}
+        modal
+        header={
+          <div className="flex align-items-center justify-content-between w-full" dir={dir}>
+            <span className="flex align-items-center gap-2 font-bold text-lg" style={{ color: '#111827' }}>
+              <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-color)' }} />
+              {t('yourCart')}
+              {itemCount > 0 && (
+                <span className="font-normal" style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                  ({uniqueProductCount} {uniqueProductCount === 1 ? t('cartProduct') : t('cartProducts')} - {itemCount} {itemCount === 1 ? t('piece') : t('pieces')})
+                </span>
               )}
-            </SheetTitle>
-            <SheetDescription className="sr-only">
-              {t('cartProducts')}
-            </SheetDescription>
-          </SheetHeader>
-
-          {/* Cart items */}
-          <div className="flex-1 overflow-y-auto px-4" dir={dir}>
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full py-12 text-center">
-                <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                  <ShoppingBag className="w-12 h-12 text-gray-300" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {t('emptyCart')}
-                </h3>
-                <p className="text-gray-500 mb-6">
-                  {t('emptyCartMessage')}
-                </p>
-                <Button variant="outline" onClick={onClose} className="h-11 px-6">
-                  {t('continueShopping')}
-                </Button>
-              </div>
-            ) : (
-              <div className="py-3">
-                {items.map((item) => (
-                  <CartItemRow key={item.product.id} item={item} onItemClick={handleItemClick} />
-                ))}
-              </div>
+            </span>
+            {items.length > 0 && (
+              <Button
+                text
+                rounded
+                severity="danger"
+                icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
+                onClick={clearCart}
+                style={{ width: '2rem', height: '2rem', padding: 0 }}
+              />
             )}
           </div>
-
-          {/* Summary Footer */}
-          {items.length > 0 && (
-            <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-50 space-y-2.5 sm:space-y-3" dir={dir}>
-              {/* Total Amount */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm sm:text-base font-semibold text-gray-900">{t('totalAmount')}</span>
-                <span className="text-lg sm:text-xl font-bold text-primary">
-                  {formatCurrency(subtotal, language)}
-                </span>
-              </div>
-
-              {/* Checkout Button */}
-              <Button
-                className="w-full h-11 sm:h-12 text-sm sm:text-base bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
-                asChild
-                onClick={onClose}
-              >
-                <Link to="/checkout" className="flex items-center justify-center gap-2">
-                  {t('checkout')}
-                  <ArrowIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                </Link>
-              </Button>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+        }
+        style={{ width: '100%', maxWidth: '28rem' }}
+        contentStyle={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%' }}
+      >
+        {cartContent}
+      </Sidebar>
     </>
   );
 };

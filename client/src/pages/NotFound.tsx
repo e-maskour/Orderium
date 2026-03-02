@@ -11,13 +11,14 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted px-4">
-      <div className="text-center max-w-md">
-        <h1 className="mb-4 text-6xl sm:text-7xl md:text-8xl font-bold text-primary">404</h1>
-        <p className="mb-6 text-lg sm:text-xl md:text-2xl text-muted-foreground">{t('oopsPageNotFound')}</p>
-        <a 
-          href="/" 
-          className="inline-block px-6 py-3 text-base sm:text-lg font-semibold text-primary underline hover:text-primary/90 transition-colors"
+    <div className="flex align-items-center justify-content-center px-3" style={{ minHeight: '100vh', background: 'var(--surface-ground)' }}>
+      <div className="text-center" style={{ maxWidth: '28rem' }}>
+        <h1 className="mb-3 font-bold text-primary" style={{ fontSize: 'clamp(3.5rem, 10vw, 6rem)' }}>404</h1>
+        <p className="mb-4 text-color-secondary" style={{ fontSize: 'clamp(1.125rem, 3vw, 1.5rem)' }}>{t('oopsPageNotFound')}</p>
+        <a
+          href="/"
+          className="text-primary font-semibold underline"
+          style={{ fontSize: 'clamp(1rem, 2.5vw, 1.125rem)' }}
         >
           {t('returnToHome')}
         </a>

@@ -9,11 +9,10 @@ import { partnersService } from '../../modules';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
 import { DocumentType, DocumentDirection, DocumentConfig } from '../../modules/documents/types';
 import { useLanguage } from '@/context/LanguageContext';
-import { DateRangePicker } from '../../components/ui/date-range-picker';
-import { Autocomplete } from '../../components/ui/autocomplete';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
-import { FormField } from '../../components/ui/form-field';
+import { Calendar } from 'primereact/calendar';
+import { Dropdown } from 'primereact/dropdown';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
 import { useQuery } from '@tanstack/react-query';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { invoicesService } from '../../modules/invoices/invoices.service';
@@ -204,31 +203,26 @@ export default function DocumentListPage({
   ];
 
   // Color mapping for KPI cards
-  const colorClasses = {
+  const colorStyles = {
     blue: {
-      border: 'hover:border-blue-300',
-      bg: 'bg-blue-100',
-      text: 'text-blue-600'
+      bg: { backgroundColor: '#dbeafe' },
+      text: { color: '#2563eb' },
     },
     emerald: {
-      border: 'hover:border-emerald-300',
-      bg: 'bg-emerald-100',
-      text: 'text-emerald-600'
+      bg: { backgroundColor: '#d1fae5' },
+      text: { color: '#059669' },
     },
     amber: {
-      border: 'hover:border-amber-300',
-      bg: 'bg-amber-100',
-      text: 'text-amber-600'
+      bg: { backgroundColor: '#fef3c7' },
+      text: { color: '#d97706' },
     },
     purple: {
-      border: 'hover:border-purple-300',
-      bg: 'bg-purple-100',
-      text: 'text-purple-600'
+      bg: { backgroundColor: '#f3e8ff' },
+      text: { color: '#9333ea' },
     },
     red: {
-      border: 'hover:border-red-300',
-      bg: 'bg-red-100',
-      text: 'text-red-600'
+      bg: { backgroundColor: '#fee2e2' },
+      text: { color: '#dc2626' },
     }
   };
 
@@ -315,108 +309,108 @@ export default function DocumentListPage({
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto w-full">
+      <div style={{ maxWidth: '80rem', margin: '0 auto', width: '100%' }}>
         <PageHeader
           icon={Icon}
           title={config.title}
           subtitle={`${t('manageYour')} ${config.title.toLowerCase()}`}
           actions={
-            <div className="flex items-center gap-2">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Button
                 onClick={handleExport}
-                variant="outline"
-                size="sm"
-                leadingIcon={Download}
-              >
-                <span className="hidden sm:inline">Exporter</span>
-              </Button>
+                icon={<Download style={{ width: 16, height: 16 }} />}
+                label="Exporter"
+                severity="secondary"
+                outlined
+                size="small"
+              />
               <Button
                 onClick={() => navigate(createRoute)}
-                size="sm"
-                leadingIcon={Plus}
-              >
-                <span className="hidden sm:inline">{t('nouveau')}</span>
-                <span className="sm:hidden">+</span>
-              </Button>
+                icon={<Plus style={{ width: 16, height: 16 }} />}
+                label={t('nouveau')}
+                size="small"
+              />
             </div>
           }
         />
 
         {/* Tabs Navigation */}
-        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 mb-4 sm:mb-6">
-          <div className="flex items-center gap-1 sm:gap-2 p-2 border-b border-slate-200 overflow-x-auto scrollbar-hide">
+        <div style={{ backgroundColor: '#fff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', borderBottom: '1px solid #e2e8f0', overflowX: 'auto' }}>
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${activeTab === tab.key
-                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                    : 'text-slate-600 hover:bg-slate-50'
-                    }`}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500,
+                    whiteSpace: 'nowrap', flexShrink: 0, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                    ...(activeTab === tab.key
+                      ? { backgroundColor: '#f59e0b', color: '#fff', boxShadow: '0 4px 6px rgba(245,158,11,0.25)' }
+                      : { backgroundColor: 'transparent', color: '#475569' })
+                  }}
                 >
-                  <TabIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden text-xs">{tab.label.split(' ')[0]}</span>
+                  <TabIcon style={{ width: 16, height: 16 }} />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
           </div>
 
           {/* Tab Content */}
-          <div className="p-2 sm:p-3 pt-2">
+          <div style={{ padding: '0.75rem', paddingTop: '0.5rem' }}>
             {activeTab === 'dashboard' && (
-              <div className="space-y-3 sm:space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
                   {/* KPI 1 */}
-                  <div className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 ${colorClasses[kpi1.color as keyof typeof colorClasses].border} transition-colors`}>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className={`w-10 sm:w-12 h-10 sm:h-12 ${colorClasses[kpi1.color as keyof typeof colorClasses].bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                        <kpi1.icon className={`w-5 sm:w-6 h-5 sm:h-6 ${colorClasses[kpi1.color as keyof typeof colorClasses].text}`} />
+                  <div style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0', transition: 'border-color 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '3rem', height: '3rem', ...colorStyles[kpi1.color as keyof typeof colorStyles].bg, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <kpi1.icon style={{ width: '1.5rem', height: '1.5rem', ...colorStyles[kpi1.color as keyof typeof colorStyles].text }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600">{kpi1.label}</p>
-                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900">{kpi1.count}</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>{kpi1.label}</p>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{kpi1.count}</h3>
                       </div>
                     </div>
                   </div>
 
                   {/* KPI 2 */}
-                  <div className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 ${colorClasses[kpi2.color as keyof typeof colorClasses].border} transition-colors`}>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className={`w-10 sm:w-12 h-10 sm:h-12 ${colorClasses[kpi2.color as keyof typeof colorClasses].bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                        <kpi2.icon className={`w-5 sm:w-6 h-5 sm:h-6 ${colorClasses[kpi2.color as keyof typeof colorClasses].text}`} />
+                  <div style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0', transition: 'border-color 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '3rem', height: '3rem', ...colorStyles[kpi2.color as keyof typeof colorStyles].bg, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <kpi2.icon style={{ width: '1.5rem', height: '1.5rem', ...colorStyles[kpi2.color as keyof typeof colorStyles].text }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600">{kpi2.label}</p>
-                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900">{kpi2.count}</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>{kpi2.label}</p>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{kpi2.count}</h3>
                       </div>
                     </div>
                   </div>
 
                   {/* KPI 3 */}
-                  <div className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 ${colorClasses[kpi3.color as keyof typeof colorClasses].border} transition-colors`}>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className={`w-10 sm:w-12 h-10 sm:h-12 ${colorClasses[kpi3.color as keyof typeof colorClasses].bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                        <kpi3.icon className={`w-5 sm:w-6 h-5 sm:h-6 ${colorClasses[kpi3.color as keyof typeof colorClasses].text}`} />
+                  <div style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0', transition: 'border-color 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '3rem', height: '3rem', ...colorStyles[kpi3.color as keyof typeof colorStyles].bg, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <kpi3.icon style={{ width: '1.5rem', height: '1.5rem', ...colorStyles[kpi3.color as keyof typeof colorStyles].text }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600">{kpi3.label}</p>
-                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900">{kpi3.count}</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>{kpi3.label}</p>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{kpi3.count}</h3>
                       </div>
                     </div>
                   </div>
 
                   {/* KPI 4 */}
-                  <div className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 ${colorClasses[kpi4.color as keyof typeof colorClasses].border} transition-colors`}>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className={`w-10 sm:w-12 h-10 sm:h-12 ${colorClasses[kpi4.color as keyof typeof colorClasses].bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                        <kpi4.icon className={`w-5 sm:w-6 h-5 sm:h-6 ${colorClasses[kpi4.color as keyof typeof colorClasses].text}`} />
+                  <div style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0', transition: 'border-color 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '3rem', height: '3rem', ...colorStyles[kpi4.color as keyof typeof colorStyles].bg, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <kpi4.icon style={{ width: '1.5rem', height: '1.5rem', ...colorStyles[kpi4.color as keyof typeof colorStyles].text }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600">{kpi4.label}</p>
-                        <h3 className="text-lg sm:text-xl font-bold text-slate-900">{kpi4.count}</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>{kpi4.label}</p>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{kpi4.count}</h3>
                       </div>
                     </div>
                   </div>
@@ -431,61 +425,61 @@ export default function DocumentListPage({
                 />
 
                 {/* Dashboard Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1.5rem' }}>
                   {/* Recent Documents */}
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 border border-slate-200">
-                    <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-3 sm:mb-4">
+                  <div style={{ backgroundColor: '#fff', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                    <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>
                       {t('lastThree')} {config.titleShort.toLowerCase()}
                     </h3>
-                    <div className="space-y-2">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {transformedFactures.slice(0, 3).map((facture) => (
-                        <div key={facture.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-blue-500" />
+                        <div key={facture.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <FileText style={{ width: 16, height: 16, color: '#3b82f6' }} />
                             <button
                               onClick={() => handleEdit(facture.id)}
-                              className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                              style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }}
                             >
                               {facture.number}
                             </button>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-slate-500 w-32 truncate">{facture.partnerName}</span>
-                            <span className="text-xs text-slate-500 w-24">{new Date(facture.date).toLocaleDateString('fr-FR')}</span>
-                            <span className="text-sm font-bold text-emerald-600 w-24 text-right">{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{facture.partnerName}</span>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', width: '6rem' }}>{new Date(facture.date).toLocaleDateString('fr-FR')}</span>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#059669', width: '6rem', textAlign: 'right' }}>{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                         </div>
                       ))}
                       {transformedFactures.length === 0 && (
-                        <p className="text-sm text-slate-400 text-center py-4">{t('noRecentDocument')} {config.titleShort.toLowerCase()} {t('recentSuffix')}</p>
+                        <p style={{ fontSize: '0.875rem', color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>{t('noRecentDocument')} {config.titleShort.toLowerCase()} {t('recentSuffix')}</p>
                       )}
                     </div>
                   </div>
 
                   {/* Draft Documents */}
-                  <div className="bg-white rounded-xl p-6 border border-slate-200">
-                    <div className="mb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-base font-bold text-slate-800">{t('drafts')}</h3>
-                        <span className="bg-slate-200 text-slate-700 text-xs font-semibold px-2 py-0.5 rounded-full">{draftInvoices}</span>
+                  <div style={{ backgroundColor: '#fff', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>{t('drafts')}</h3>
+                        <span style={{ backgroundColor: '#e2e8f0', color: '#334155', fontSize: '0.75rem', fontWeight: 600, padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>{draftInvoices}</span>
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {draftInvoices === 0 ? (
-                        <p className="text-sm text-slate-400 text-center py-8">{t('noDrafts')}</p>
+                        <p style={{ fontSize: '0.875rem', color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>{t('noDrafts')}</p>
                       ) : (
                         transformedFactures.filter(f => f.status === 'draft').slice(0, 3).map((facture) => (
-                          <div key={facture.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-                            <div className="flex items-center gap-2">
-                              <FileText className="w-4 h-4 text-slate-500" />
+                          <div key={facture.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <FileText style={{ width: 16, height: 16, color: '#64748b' }} />
                               <button
                                 onClick={() => handleEdit(facture.id)}
-                                className="text-sm font-medium text-slate-600 hover:text-slate-800 hover:underline transition-colors"
+                                style={{ fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}
                               >
                                 {facture.number}
                               </button>
                             </div>
-                            <span className="text-sm font-bold text-slate-600">{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#475569' }}>{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                         ))
                       )}
@@ -496,59 +490,61 @@ export default function DocumentListPage({
             )}
 
             {activeTab === 'list' && (
-              <div className="space-y-1">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {/* Filters Overlay Panel */}
                 {filtersExpanded && (
                   <>
                     {/* Backdrop */}
                     <div
-                      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+                      style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 40, transition: 'opacity 0.2s' }}
                       onClick={() => setFiltersExpanded(false)}
                     />
 
                     {/* Slide-in Panel */}
-                    <div className="fixed inset-y-0 end-0 w-full sm:w-[520px] md:w-[560px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+                    <div style={{ position: 'fixed', top: 0, bottom: 0, right: 0, width: '560px', backgroundColor: '#fff', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
                       {/* Panel Header */}
-                      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-amber-500 to-amber-600">
-                        <div className="flex items-center gap-3">
-                          <Filter className="w-5 h-5 text-white" />
-                          <h2 className="text-lg font-bold text-white">{t('filters')}</h2>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <Filter style={{ width: 20, height: 20, color: '#fff' }} />
+                          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#fff' }}>{t('filters')}</h2>
                         </div>
                         <button
                           onClick={() => setFiltersExpanded(false)}
-                          className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                          style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer', transition: 'background 0.2s' }}
                         >
-                          <X className="w-5 h-5 text-white" />
+                          <X style={{ width: 20, height: 20, color: '#fff' }} />
                         </button>
                       </div>
 
                       {/* Panel Content - Scrollable */}
-                      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
                         {/* Document Number Search */}
-                        <FormField label={documentType === 'devis' ? t('quoteNumber') : documentType === 'bon_livraison' ? t('deliveryNumber') : t('invoiceNumber')}>
-                          <div className="relative">
-                            <Input
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.5rem' }}>{documentType === 'devis' ? t('quoteNumber') : documentType === 'bon_livraison' ? t('deliveryNumber') : t('invoiceNumber')}</label>
+                          <div style={{ position: 'relative' }}>
+                            <InputText
                               type="text"
                               placeholder={documentType === 'devis' ? 'DEV-001' : documentType === 'bon_livraison' ? 'BL-001' : 'FAC-001'}
                               value={documentNumberSearch}
                               onChange={(e) => setDocumentNumberSearch(e.target.value)}
-                              fullWidth
+                              style={{ width: '100%' }}
                             />
                             {documentNumberSearch && (
                               <button
                                 onClick={() => setDocumentNumberSearch('')}
-                                className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 z-10"
+                                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}
                               >
-                                <X className="w-4 h-4" />
+                                <X style={{ width: 16, height: 16 }} />
                               </button>
                             )}
                           </div>
-                        </FormField>
+                        </div>
 
                         {/* Partner Autocomplete */}
-                        <FormField label={config.partnerLabel}>
-                          <Autocomplete
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.5rem' }}>{config.partnerLabel}</label>
+                          <Dropdown
                             options={(partnersData?.partners || [])
                               .filter((p: any) => direction === 'vente' ? p.isCustomer : p.isSupplier)
                               .map((partner: any) => ({
@@ -556,33 +552,41 @@ export default function DocumentListPage({
                                 label: `${partner.name}${partner.phoneNumber ? ` (${partner.phoneNumber})` : ''}`
                               }))}
                             value={partnerIdSearch}
-                            onValueChange={setPartnerIdSearch}
+                            onChange={(e) => setPartnerIdSearch(e.value)}
                             placeholder={`${t('selectPartner')} ${config.partnerLabel.toLowerCase()}`}
-                            emptyMessage={`${t('noPartnerFound').replace('{partner}', config.partnerLabel.toLowerCase())}`}
-                            allowCustomValue={false}
+                            filter
+                            showClear
+                            optionLabel="label"
+                            optionValue="value"
+                            emptyFilterMessage={`${t('noPartnerFound').replace('{partner}', config.partnerLabel.toLowerCase())}`}
+                            style={{ width: '100%' }}
                           />
-                        </FormField>
+                        </div>
 
                         {/* Date Range */}
                         <div>
-                          <div className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-amber-600" />
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Clock style={{ width: 16, height: 16, color: '#d97706' }} />
                             {documentType === 'devis' ? t('quoteDate') : documentType === 'bon_livraison' ? t('deliveryDate') : t('invoiceDate')}
                           </div>
-                          <DateRangePicker
-                            dateRange={dateRange}
-                            onDateRangeChange={setDateRange}
+                          <Calendar
+                            value={dateRange.start ? [dateRange.start, dateRange.end as Date] : null}
+                            onChange={(e) => { const v = e.value as Date[]; setDateRange({ start: v?.[0], end: v?.[1] }); }}
+                            selectionMode="range"
+                            dateFormat="dd/mm/yy"
+                            showIcon
                             placeholder={t('selectDate')}
+                            style={{ width: '100%' }}
                           />
                         </div>
 
                         {/* Status Filter */}
                         <div>
-                          <div className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-amber-600" />
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <CheckCircle style={{ width: 16, height: 16, color: '#d97706' }} />
                             {t('status')}
                           </div>
-                          <div className="flex flex-wrap gap-2">
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                             {(documentType === 'devis' ? [
                               { key: 'all', label: t('all'), icon: '📋' },
                               { key: 'draft', label: t('draft'), icon: '📝' },
@@ -609,10 +613,13 @@ export default function DocumentListPage({
                               <button
                                 key={filter.key}
                                 onClick={() => setStatusFilter(filter.key)}
-                                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${statusFilter === filter.key
-                                  ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                                  }`}
+                                style={{
+                                  padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600,
+                                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer',
+                                  ...(statusFilter === filter.key
+                                    ? { backgroundColor: '#f59e0b', color: '#fff', boxShadow: '0 10px 15px rgba(245,158,11,0.3)', border: 'none' }
+                                    : { backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' })
+                                }}
                               >
                                 <span>{filter.icon}</span>
                                 <span>{filter.label}</span>
@@ -624,20 +631,19 @@ export default function DocumentListPage({
                       </div>
 
                       {/* Panel Footer */}
-                      <div className="border-t border-slate-200 p-4 bg-slate-50 flex gap-3">
+                      <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
                         <Button
-                          variant="outline"
-                          className="flex-1"
+                          label={t('reset')}
+                          severity="secondary"
+                          outlined
                           onClick={handleResetFilters}
-                        >
-                          {t('reset')}
-                        </Button>
+                          style={{ flex: 1 }}
+                        />
                         <Button
-                          className="flex-1"
+                          label={t('apply')}
                           onClick={handleApplyFilters}
-                        >
-                          {t('apply')}
-                        </Button>
+                          style={{ flex: 1 }}
+                        />
                       </div>
                     </div>
                   </>

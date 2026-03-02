@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@orderium/ui': path.resolve(__dirname, '../shared/ui/src'),
     },
   },
   server: {
@@ -38,12 +39,7 @@ export default defineConfig({
             '@tanstack/react-query',
           ],
           'ui': [
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-scroll-area',
-            '@radix-ui/react-slot',
             'lucide-react',
-            'cmdk',
           ],
         },
       },

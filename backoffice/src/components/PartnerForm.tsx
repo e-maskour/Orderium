@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { Building2, User, Phone, Mail, Hash, FileText, Save } from 'lucide-react';
 import { IPartner, CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { useLanguage } from '../context/LanguageContext';
-import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
-import { FormField } from './ui/form-field';
-import { Button } from './ui/button';
-import { Toggle } from './ui/toggle';
-import { SegmentedControl } from './ui/segmented-control';
+import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Button } from 'primereact/button';
+import { InputSwitch } from 'primereact/inputswitch';
+import { SelectButton } from 'primereact/selectbutton';
 
 interface PartnerFormProps {
   partner?: IPartner | null;
@@ -94,7 +93,6 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
     e.preventDefault();
 
     if (validateForm()) {
-      // Prepare data based on company type
       const submitData: CreatePartnerDTO = {
         name: formData.name,
         phoneNumber: formData.phoneNumber,
@@ -105,7 +103,6 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
         isSupplier: formData.isSupplier,
       };
 
-      // Only include company-specific fields if it's a company
       if (formData.isCompany) {
         submitData.isCompany = true;
         submitData.deliveryAddress = formData.deliveryAddress;
@@ -123,223 +120,235 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
 
   const handleChange = (field: keyof CreatePartnerDTO, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
-  return (
-    <div className="w-full">
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Partner Type & Status Card */}
-        <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-lg p-4 border border-slate-200/60 shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Partner Type Section */}
-            <FormField label={t('partnerType')} className="flex-1">
-              <SegmentedControl
-                value={formData.isCompany ? 'company' : 'individual'}
-                onValueChange={(val) => handleChange('isCompany', val === 'company')}
-                options={[
-                  { value: 'individual', label: t('individual'), icon: <User className="w-3.5 h-3.5" /> },
-                  { value: 'company', label: t('company'), icon: <Building2 className="w-3.5 h-3.5" /> },
-                ]}
-              />
-            </FormField>
+  const partnerTypeOptions = [
+    { value: 'individual', label: t('individual'), icon: <User style={{ width: 14, height: 14 }} /> },
+    { value: 'company', label: t('company'), icon: <Building2 style={{ width: 14, height: 14 }} /> },
+  ];
 
-            {/* Divider */}
-            <div className="hidden lg:block w-px h-12 bg-slate-300"></div>
+  const partnerTypeTemplate = (option: any) => (
+    <span className="flex align-items-center gap-1">
+      {option.icon}
+      <span>{option.label}</span>
+    </span>
+  );
+
+  return (
+    <div style={{ width: '100%' }}>
+      <form onSubmit={handleSubmit} className="flex flex-column gap-4">
+        {/* Partner Type & Status Card */}
+        <div style={{ background: '#f8fafc', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+          <div className="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
+            {/* Partner Type Section */}
+            <div className="flex flex-column gap-2 flex-1">
+              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('partnerType')}</label>
+              <SelectButton
+                value={formData.isCompany ? 'company' : 'individual'}
+                onChange={(e) => handleChange('isCompany', e.value === 'company')}
+                options={partnerTypeOptions}
+                optionLabel="label"
+                optionValue="value"
+                itemTemplate={partnerTypeTemplate}
+              />
+            </div>
 
             {/* Status Toggle Section */}
-            <FormField label={t('status')} className="flex-1">
-              <Toggle
-                checked={formData.isEnabled ?? true}
-                onCheckedChange={(val) => handleChange('isEnabled', val)}
-                label={formData.isEnabled ? t('active') : t('inactive')}
-              />
-            </FormField>
+            <div className="flex flex-column gap-2 flex-1">
+              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('status')}</label>
+              <div className="flex align-items-center gap-2">
+                <InputSwitch
+                  checked={formData.isEnabled ?? true}
+                  onChange={(e) => handleChange('isEnabled', e.value)}
+                />
+                <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                  {formData.isEnabled ? t('active') : t('inactive')}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Basic Information Card */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-2.5 border-b border-slate-200">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <div className="p-1.5 bg-blue-500 rounded-md">
-                <User className="w-3.5 h-3.5 text-white" />
+        <div style={{ background: '#fff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ background: '#f8fafc', padding: '0.625rem 1rem', borderBottom: '1px solid #e2e8f0' }}>
+            <h3 className="flex align-items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              <div style={{ padding: '0.375rem', background: '#3b82f6', borderRadius: '0.375rem' }}>
+                <User style={{ width: 14, height: 14, color: '#fff' }} />
               </div>
               <span>{t('basicInformation')}</span>
             </h3>
           </div>
 
-          <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div style={{ padding: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: '1rem' }}>
               {/* Name Field */}
-              <FormField label={t('name')} htmlFor="partner-name" required error={errors.name}>
-                <Input
+              <div className="flex flex-column gap-2">
+                <label htmlFor="partner-name" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
+                  {t('name')} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <InputText
                   id="partner-name"
-                  type="text"
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  error={!!errors.name}
+                  className={errors.name ? 'p-invalid' : ''}
                   placeholder={t('enterName')}
                 />
-              </FormField>
+                {errors.name && <small style={{ color: '#ef4444' }}>{errors.name}</small>}
+              </div>
 
               {/* Phone Field */}
-              <FormField label={t('phone')} htmlFor="partner-phone" required error={errors.phoneNumber}>
-                <Input
-                  id="partner-phone"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => handleChange('phoneNumber', e.target.value)}
-                  error={!!errors.phoneNumber}
-                  leadingIcon={<Phone className="w-4 h-4" />}
-                  placeholder="+212 6XX XXX XXX"
-                />
-              </FormField>
+              <div className="flex flex-column gap-2">
+                <label htmlFor="partner-phone" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
+                  {t('phone')} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <span className="p-input-icon-left">
+                  <i><Phone style={{ width: 16, height: 16 }} /></i>
+                  <InputText
+                    id="partner-phone"
+                    value={formData.phoneNumber}
+                    onChange={(e) => handleChange('phoneNumber', e.target.value)}
+                    className={errors.phoneNumber ? 'p-invalid' : ''}
+                    placeholder="+212 6XX XXX XXX"
+                  />
+                </span>
+                {errors.phoneNumber && <small style={{ color: '#ef4444' }}>{errors.phoneNumber}</small>}
+              </div>
 
               {/* Email Field */}
-              <FormField label={t('email')} htmlFor="partner-email" error={errors.email}>
-                <Input
-                  id="partner-email"
-                  type="email"
-                  value={formData.email || ''}
-                  onChange={(e) => handleChange('email', e.target.value || null)}
-                  error={!!errors.email}
-                  leadingIcon={<Mail className="w-4 h-4" />}
-                  placeholder="email@example.com"
-                />
-              </FormField>
+              <div className="flex flex-column gap-2">
+                <label htmlFor="partner-email" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
+                  {t('email')}
+                </label>
+                <span className="p-input-icon-left">
+                  <i><Mail style={{ width: 16, height: 16 }} /></i>
+                  <InputText
+                    id="partner-email"
+                    type="email"
+                    value={formData.email || ''}
+                    onChange={(e) => handleChange('email', e.target.value || null)}
+                    className={errors.email ? 'p-invalid' : ''}
+                    placeholder="email@example.com"
+                  />
+                </span>
+                {errors.email && <small style={{ color: '#ef4444' }}>{errors.email}</small>}
+              </div>
 
               {/* Address Field */}
-              <FormField label={t('address')} htmlFor="partner-address" className="md:col-span-2">
-                <Textarea
+              <div className="flex flex-column gap-2" style={{ gridColumn: '1 / -1' }}>
+                <label htmlFor="partner-address" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
+                  {t('address')}
+                </label>
+                <InputTextarea
                   id="partner-address"
                   value={formData.address || ''}
                   onChange={(e) => handleChange('address', e.target.value || null)}
                   rows={2}
                   placeholder={t('enterAddress')}
                 />
-              </FormField>
+              </div>
 
               {/* Delivery Address Field */}
-              <FormField label={t('deliveryAddress')} htmlFor="partner-delivery-address" className="md:col-span-2">
-                <Textarea
+              <div className="flex flex-column gap-2" style={{ gridColumn: '1 / -1' }}>
+                <label htmlFor="partner-delivery-address" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
+                  {t('deliveryAddress')}
+                </label>
+                <InputTextarea
                   id="partner-delivery-address"
                   value={formData.deliveryAddress || ''}
                   onChange={(e) => handleChange('deliveryAddress', e.target.value || null)}
                   rows={2}
                   placeholder={t('enterDeliveryAddress')}
                 />
-              </FormField>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Business Identifiers Card - Only for Companies */}
         {formData.isCompany && (
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 px-4 py-2.5 border-b border-amber-200">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <div className="p-1.5 bg-amber-500 rounded-md">
-                  <FileText className="w-3.5 h-3.5 text-white" />
+          <div style={{ background: '#fff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div style={{ background: '#fffbeb', padding: '0.625rem 1rem', borderBottom: '1px solid #fcd34d' }}>
+              <h3 className="flex align-items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                <div style={{ padding: '0.375rem', background: '#f59e0b', borderRadius: '0.375rem' }}>
+                  <FileText style={{ width: 14, height: 14, color: '#fff' }} />
                 </div>
                 <span>{t('businessIdentifiers')}</span>
               </h3>
             </div>
 
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div style={{ padding: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(14rem, 1fr))', gap: '1rem' }}>
                 {/* TVA Number */}
-                <FormField label={t('tvaNumber')} htmlFor="partner-tva">
-                  <Input
-                    id="partner-tva"
-                    type="text"
-                    value={formData.tvaNumber || ''}
-                    onChange={(e) => handleChange('tvaNumber', e.target.value || null)}
-                    leadingIcon={<Hash className="w-4 h-4" />}
-                    placeholder={t('enterTvaNumber')}
-                  />
-                </FormField>
+                <div className="flex flex-column gap-2">
+                  <label htmlFor="partner-tva" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('tvaNumber')}</label>
+                  <span className="p-input-icon-left">
+                    <i><Hash style={{ width: 16, height: 16 }} /></i>
+                    <InputText id="partner-tva" value={formData.tvaNumber || ''} onChange={(e) => handleChange('tvaNumber', e.target.value || null)} placeholder={t('enterTvaNumber')} />
+                  </span>
+                </div>
 
                 {/* ICE */}
-                <FormField label={t('ice')} htmlFor="partner-ice">
-                  <Input
-                    id="partner-ice"
-                    type="text"
-                    value={formData.ice || ''}
-                    onChange={(e) => handleChange('ice', e.target.value || null)}
-                    leadingIcon={<Hash className="w-4 h-4" />}
-                    placeholder={t('enterICE')}
-                  />
-                </FormField>
+                <div className="flex flex-column gap-2">
+                  <label htmlFor="partner-ice" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('ice')}</label>
+                  <span className="p-input-icon-left">
+                    <i><Hash style={{ width: 16, height: 16 }} /></i>
+                    <InputText id="partner-ice" value={formData.ice || ''} onChange={(e) => handleChange('ice', e.target.value || null)} placeholder={t('enterICE')} />
+                  </span>
+                </div>
 
                 {/* IF */}
-                <FormField label={t('if')} htmlFor="partner-if">
-                  <Input
-                    id="partner-if"
-                    type="text"
-                    value={formData.if || ''}
-                    onChange={(e) => handleChange('if', e.target.value || null)}
-                    leadingIcon={<Hash className="w-4 h-4" />}
-                    placeholder={t('enterIF')}
-                  />
-                </FormField>
+                <div className="flex flex-column gap-2">
+                  <label htmlFor="partner-if" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('if')}</label>
+                  <span className="p-input-icon-left">
+                    <i><Hash style={{ width: 16, height: 16 }} /></i>
+                    <InputText id="partner-if" value={formData.if || ''} onChange={(e) => handleChange('if', e.target.value || null)} placeholder={t('enterIF')} />
+                  </span>
+                </div>
 
                 {/* CNSS */}
-                <FormField label={t('cnss')} htmlFor="partner-cnss">
-                  <Input
-                    id="partner-cnss"
-                    type="text"
-                    value={formData.cnss || ''}
-                    onChange={(e) => handleChange('cnss', e.target.value || null)}
-                    leadingIcon={<Hash className="w-4 h-4" />}
-                    placeholder={t('enterCNSS')}
-                  />
-                </FormField>
+                <div className="flex flex-column gap-2">
+                  <label htmlFor="partner-cnss" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('cnss')}</label>
+                  <span className="p-input-icon-left">
+                    <i><Hash style={{ width: 16, height: 16 }} /></i>
+                    <InputText id="partner-cnss" value={formData.cnss || ''} onChange={(e) => handleChange('cnss', e.target.value || null)} placeholder={t('enterCNSS')} />
+                  </span>
+                </div>
 
                 {/* RC */}
-                <FormField label={t('rc')} htmlFor="partner-rc">
-                  <Input
-                    id="partner-rc"
-                    type="text"
-                    value={formData.rc || ''}
-                    onChange={(e) => handleChange('rc', e.target.value || null)}
-                    leadingIcon={<Hash className="w-4 h-4" />}
-                    placeholder={t('enterRC')}
-                  />
-                </FormField>
+                <div className="flex flex-column gap-2">
+                  <label htmlFor="partner-rc" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('rc')}</label>
+                  <span className="p-input-icon-left">
+                    <i><Hash style={{ width: 16, height: 16 }} /></i>
+                    <InputText id="partner-rc" value={formData.rc || ''} onChange={(e) => handleChange('rc', e.target.value || null)} placeholder={t('enterRC')} />
+                  </span>
+                </div>
 
                 {/* Patente */}
-                <FormField label={t('patente')} htmlFor="partner-patente">
-                  <Input
-                    id="partner-patente"
-                    type="text"
-                    value={formData.patente || ''}
-                    onChange={(e) => handleChange('patente', e.target.value || null)}
-                    leadingIcon={<Hash className="w-4 h-4" />}
-                    placeholder={t('enterPatente')}
-                  />
-                </FormField>
+                <div className="flex flex-column gap-2">
+                  <label htmlFor="partner-patente" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('patente')}</label>
+                  <span className="p-input-icon-left">
+                    <i><Hash style={{ width: 16, height: 16 }} /></i>
+                    <InputText id="partner-patente" value={formData.patente || ''} onChange={(e) => handleChange('patente', e.target.value || null)} placeholder={t('enterPatente')} />
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t('cancel')}
-          </Button>
+        <div className="flex align-items-center justify-content-end gap-3" style={{ paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+          <Button type="button" label={t('cancel')} outlined onClick={onCancel} />
           <Button
             type="submit"
+            label={isEdit ? t('updatePartner') : t('createPartner')}
+            icon={<Save style={{ width: 16, height: 16 }} />}
             loading={isSubmitting}
-            loadingText={t('saving')}
-            leadingIcon={<Save className="w-4 h-4" />}
-          >
-            {isEdit ? t('updatePartner') : t('createPartner')}
-          </Button>
+          />
         </div>
       </form>
     </div>

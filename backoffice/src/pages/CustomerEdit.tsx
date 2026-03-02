@@ -50,9 +50,9 @@ export default function CustomerEdit() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+        <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
+            <div className="animate-spin" style={{ borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #f59e0b' }}></div>
           </div>
         </div>
       </AdminLayout>
@@ -62,9 +62,9 @@ export default function CustomerEdit() {
   if (!partner) {
     return (
       <AdminLayout>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-8">
-            <p className="text-slate-500">{t('customerNotFound')}</p>
+        <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+            <p style={{ color: '#64748b' }}>{t('customerNotFound')}</p>
           </div>
         </div>
       </AdminLayout>
@@ -73,31 +73,31 @@ export default function CustomerEdit() {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
         {/* Compact Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <button
                 onClick={() => navigate('/customers')}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                style={{ padding: '0.5rem', borderRadius: '0.5rem' }}
               >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
+                <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
               </button>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-amber-600" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-slate-900">{t('editCustomer')}</h1>
-                  <p className="text-sm text-slate-500">{`${t('edit')} ${partner.name}`}</p>
+                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{t('editCustomer')}</h1>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{`${t('edit')} ${partner.name}`}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
           <PartnerForm
             partner={partner}
             type="customer"

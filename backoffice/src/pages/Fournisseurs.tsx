@@ -3,8 +3,8 @@ import { PageHeader } from '../components/PageHeader';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, Check } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
@@ -32,7 +32,6 @@ export default function Fournisseurs() {
 
   const suppliers = data?.partners?.filter((p: Partner) => p.isSupplier) || [];
 
-  // Fetch dashboard stats from API
   const { data: dashboardData } = useQuery({
     queryKey: ['suppliers-dashboard'],
     queryFn: () => partnersService.getSuppliersDashboard(),
@@ -70,7 +69,6 @@ export default function Fournisseurs() {
     setSelectedSuppliers([]);
   };
 
-  // Filter suppliers by search term
   const filteredSuppliers = suppliers.filter((supplier: Partner) =>
     supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     supplier.phoneNumber?.includes(searchTerm) ||
@@ -103,32 +101,20 @@ export default function Fournisseurs() {
         {
           id: 'view',
           label: t('view'),
-          icon: <Eye className="w-4 h-4" />,
-          onClick: () => {
-            if (supplier) {
-              handleViewSupplier(supplier);
-            }
-          },
+          icon: <Eye style={{ width: '1rem', height: '1rem' }} />,
+          onClick: () => { if (supplier) handleViewSupplier(supplier); },
         },
         {
           id: 'edit',
           label: t('edit'),
-          icon: <Edit2 className="w-4 h-4" />,
-          onClick: () => {
-            if (supplier) {
-              handleEditSupplier(supplier);
-            }
-          },
+          icon: <Edit2 style={{ width: '1rem', height: '1rem' }} />,
+          onClick: () => { if (supplier) handleEditSupplier(supplier); },
         },
         {
           id: 'delete',
           label: t('delete'),
-          icon: <Trash2 className="w-4 h-4" />,
-          onClick: () => {
-            if (supplier) {
-              handleDeletePartner(supplier);
-            }
-          },
+          icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
+          onClick: () => { if (supplier) handleDeletePartner(supplier); },
           variant: 'danger' as const,
         },
       ];
@@ -141,7 +127,6 @@ export default function Fournisseurs() {
     { key: 'list', label: t('supplierList'), icon: List },
   ];
 
-  // Get dashboard statistics from API
   const totalSuppliers = dashboardData?.kpis?.totalSuppliers || 0;
   const suppliersWithInvoices = dashboardData?.kpis?.suppliersWithInvoices || 0;
   const totalExpenses = dashboardData?.kpis?.totalExpenses || 0;
@@ -153,152 +138,143 @@ export default function Fournisseurs() {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
         <PageHeader
           icon={Users}
           title={t('suppliers')}
           subtitle={t('manageSuppliers')}
           actions={
-            <Button onClick={() => navigate('/fournisseurs/create')} leadingIcon={Plus}>
-              Ajouter fournisseur
-            </Button>
+            <Button onClick={() => navigate('/fournisseurs/create')} icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label="Ajouter fournisseur" />
           }
         />
 
         {/* Tabs Navigation */}
-        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 mb-4 sm:mb-6">
-          <div className="flex items-center gap-1 sm:gap-2 p-2 border-b border-slate-200 overflow-x-auto scrollbar-hide">
+        <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', borderBottom: '1px solid #e2e8f0', overflowX: 'auto' }} className="scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${activeTab === tab.key
-                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                    : 'text-slate-600 hover:bg-slate-50'
-                    }`}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
+                    borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500,
+                    whiteSpace: 'nowrap', flexShrink: 0, border: 'none', cursor: 'pointer',
+                    ...(activeTab === tab.key
+                      ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)' }
+                      : { backgroundColor: 'transparent', color: '#475569' }),
+                  }}
                 >
-                  <Icon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <Icon style={{ width: '1rem', height: '1rem' }} />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Tab Content */}
-          <div className="p-3 pt-2">
+          <div style={{ padding: '0.75rem', paddingTop: '0.5rem' }}>
             {activeTab === 'dashboard' && (
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-blue-300 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Users className="w-6 h-6 text-blue-600" />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
+                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#dbeafe', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Users style={{ width: '1.5rem', height: '1.5rem', color: '#2563eb' }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600">Fournisseurs</p>
-                        <h3 className="text-2xl font-bold text-slate-900">{totalSuppliers}</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Fournisseurs</p>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{totalSuppliers}</h3>
                       </div>
                     </div>
                   </div>
-
-                  <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-emerald-300 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                        <TrendingUp className="w-6 h-6 text-emerald-600" />
+                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#d1fae5', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <TrendingUp style={{ width: '1.5rem', height: '1.5rem', color: '#059669' }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600">Avec Factures</p>
-                        <h3 className="text-2xl font-bold text-slate-900">{suppliersWithInvoices}</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Avec Factures</p>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{suppliersWithInvoices}</h3>
                       </div>
                     </div>
                   </div>
-
-                  <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-purple-300 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <TrendingUp className="w-6 h-6 text-purple-600" />
+                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#f3e8ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <TrendingUp style={{ width: '1.5rem', height: '1.5rem', color: '#9333ea' }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600">Dépenses</p>
-                        <h3 className="text-xl font-bold text-slate-900">{formatDH(totalExpenses, 0)}</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Dépenses</p>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{formatDH(totalExpenses, 0)}</h3>
                       </div>
                     </div>
                   </div>
-
-                  <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-amber-300 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                        <CheckCircle className="w-6 h-6 text-amber-600" />
+                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CheckCircle style={{ width: '1.5rem', height: '1.5rem', color: '#d97706' }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600">Total Factures</p>
-                        <h3 className="text-2xl font-bold text-slate-900">{totalInvoices}</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Total Factures</p>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{totalInvoices}</h3>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Dashboard Grid - 2 Sections */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Dynamic Bar Chart - Top 5 Suppliers by Expenses */}
-                  <div className="bg-white rounded-xl p-6 border border-slate-200">
-                    <div className="flex items-center justify-between mb-6">
+                {/* Dashboard Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+                  {/* Top 5 Suppliers */}
+                  <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                       <div>
-                        <h3 className="text-base font-bold text-slate-800">Top 5 fournisseurs par dépenses</h3>
-                        <p className="text-xs text-slate-500 mt-1">Classement par volume d'achats</p>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>Top 5 fournisseurs par dépenses</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>Classement par volume d'achats</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-purple-600">{formatFrenchNumber(totalPayments, 0)}</p>
-                        <p className="text-xs text-slate-500">DH Total</p>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#9333ea' }}>{formatFrenchNumber(totalPayments, 0)}</p>
+                        <p style={{ fontSize: '0.75rem', color: '#64748b' }}>DH Total</p>
                       </div>
                     </div>
                     {topSuppliers.length === 0 ? (
-                      <div className="text-center py-16">
-                        <TrendingUp className="w-16 h-16 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-600 text-sm">Aucune donnée de dépenses disponible</p>
+                      <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                        <TrendingUp style={{ width: '4rem', height: '4rem', color: '#cbd5e1', margin: '0 auto 0.75rem' }} />
+                        <p style={{ color: '#475569', fontSize: '0.875rem' }}>Aucune donnée de dépenses disponible</p>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {topSuppliers.slice(0, 5).map((supplier: any, index: number) => {
                           const percentage = ((supplier.total / totalPayments) * 100);
-                          const barColors = [
-                            { from: 'from-blue-500', to: 'to-blue-600', bg: 'bg-blue-50', text: 'text-blue-700' },
-                            { from: 'from-purple-500', to: 'to-purple-600', bg: 'bg-purple-50', text: 'text-purple-700' },
-                            { from: 'from-pink-500', to: 'to-pink-600', bg: 'bg-pink-50', text: 'text-pink-700' },
-                            { from: 'from-amber-500', to: 'to-amber-600', bg: 'bg-amber-50', text: 'text-amber-700' },
-                            { from: 'from-emerald-500', to: 'to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+                          const bgColors = ['#eff6ff', '#f5f3ff', '#fdf2f8', '#fffbeb', '#ecfdf5'];
+                          const textColors = ['#1d4ed8', '#6d28d9', '#be185d', '#b45309', '#047857'];
+                          const barGradients = [
+                            'linear-gradient(to right, #3b82f6, #2563eb)',
+                            'linear-gradient(to right, #8b5cf6, #7c3aed)',
+                            'linear-gradient(to right, #ec4899, #db2777)',
+                            'linear-gradient(to right, #f59e0b, #d97706)',
+                            'linear-gradient(to right, #10b981, #059669)',
                           ];
-                          const color = barColors[index];
-
                           return (
-                            <div key={index} className="group">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2 flex-1">
-                                  <div className={`flex items-center justify-center w-6 h-6 rounded-full ${color.bg} ${color.text} text-xs font-bold`}>
+                            <div key={index}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.5rem', height: '1.5rem', borderRadius: '9999px', backgroundColor: bgColors[index], color: textColors[index], fontSize: '0.75rem', fontWeight: 700 }}>
                                     {index + 1}
                                   </div>
-                                  <button
-                                    onClick={() => navigate(`/fournisseurs/${supplier.id}`)}
-                                    className="text-sm font-semibold text-slate-800 hover:text-amber-600 transition-colors truncate max-w-[200px]"
-                                    title={supplier.name}
-                                  >
+                                  <button onClick={() => navigate(`/fournisseurs/${supplier.id}`)} style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', background: 'none', border: 'none', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }} title={supplier.name}>
                                     {supplier.name}
                                   </button>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-xs text-slate-500">{percentage.toFixed(1).replace('.', ',')}%</span>
-                                  <span className="text-sm font-bold text-slate-900 min-w-[80px] text-right">{formatDH(supplier.total, 0)}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{percentage.toFixed(1).replace('.', ',')}%</span>
+                                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', minWidth: '80px', textAlign: 'right' }}>{formatDH(supplier.total, 0)}</span>
                                 </div>
                               </div>
-                              <div className="relative h-8 bg-slate-100 rounded-lg overflow-hidden">
-                                <div
-                                  className={`absolute inset-y-0 left-0 bg-gradient-to-r ${color.from} ${color.to} rounded-lg transition-all duration-1000 ease-out group-hover:opacity-90 flex items-center justify-end pr-3`}
-                                  style={{ width: `${Math.max(percentage, 5)}%` }}
-                                >
-                                  <span className="text-xs font-bold text-white">
+                              <div style={{ position: 'relative', height: '2rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, background: barGradients[index], borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '0.75rem', width: `${Math.max(percentage, 5)}%` }}>
+                                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'white' }}>
                                     {percentage < 13 ? supplier.invoicesCount : `${supplier.invoicesCount} facture${supplier.invoicesCount > 1 ? 's' : ''}`}
                                   </span>
                                 </div>
@@ -311,35 +287,32 @@ export default function Fournisseurs() {
                   </div>
 
                   {/* Last 5 Updated Suppliers */}
-                  <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200">
-                    <div className="mb-4">
-                      <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2">Dernières mises à jour fournisseurs</h3>
-                      <div className="hidden sm:flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Fournisseur</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-slate-500 w-32">Téléphone</span>
-                          <span className="text-xs text-slate-500 w-24 text-right">Factures</span>
+                  <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>Dernières mises à jour fournisseurs</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Fournisseur</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>Téléphone</span>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', width: '6rem', textAlign: 'right' }}>Factures</span>
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {lastUpdatedSuppliers.length === 0 ? (
-                        <p className="text-sm text-slate-400 text-center py-4">Aucune mise à jour récente</p>
+                        <p style={{ fontSize: '0.875rem', color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>Aucune mise à jour récente</p>
                       ) : (
                         lastUpdatedSuppliers.map((supplier: any) => (
-                          <div key={supplier.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 last:border-0 gap-2 sm:gap-0">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                              <button
-                                onClick={() => navigate(`/fournisseurs/${supplier.id}`)}
-                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors truncate"
-                              >
+                          <div key={supplier.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flex: 1 }}>
+                              <Users style={{ width: '1rem', height: '1rem', color: '#a855f7', flexShrink: 0 }} />
+                              <button onClick={() => navigate(`/fournisseurs/${supplier.id}`)} style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {supplier.name}
                               </button>
                             </div>
-                            <div className="flex items-center justify-between sm:justify-end gap-3 pl-6 sm:pl-0">
-                              <span className="text-xs text-slate-500 sm:w-32 truncate">{supplier.phoneNumber || '-'}</span>
-                              <span className="text-sm font-bold text-purple-600 sm:w-24 text-right">{supplier.invoicesCount}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.phoneNumber || '-'}</span>
+                              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#9333ea', width: '6rem', textAlign: 'right' }}>{supplier.invoicesCount}</span>
                             </div>
                           </div>
                         ))
@@ -351,122 +324,70 @@ export default function Fournisseurs() {
             )}
 
             {activeTab === 'list' && (
-              <div className="space-y-1">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {/* Toolbar */}
-                <div className="flex items-center justify-between mb-3">
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-                    <button
-                      onClick={() => setViewMode('card')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'card'
-                        ? 'bg-white text-slate-900 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                    >
-                      <Grid3x3 className="w-4 h-4" />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
+                    <button onClick={() => setViewMode('card')} style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer', ...(viewMode === 'card' ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' } : { backgroundColor: 'transparent', color: '#475569' }) }}>
+                      <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
                     </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list'
-                        ? 'bg-white text-slate-900 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                    >
-                      <ListIcon className="w-4 h-4" />
+                    <button onClick={() => setViewMode('list')} style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer', ...(viewMode === 'list' ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' } : { backgroundColor: 'transparent', color: '#475569' }) }}>
+                      <ListIcon style={{ width: '1rem', height: '1rem' }} />
                     </button>
                   </div>
-
-                  {/* Search */}
-                  <div className="relative">
-                    <Input
-                      id="search-suppliers"
-                      type="text"
-                      placeholder={t('searchSuppliersPlaceholder')}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      leadingIcon={Search}
-                      className="w-96"
-                      aria-label={t('searchSuppliersPlaceholder')}
-                    />
+                  <div style={{ position: 'relative' }}>
+                    <InputText id="search-suppliers" type="text" placeholder={t('searchSuppliersPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '24rem' }} aria-label={t('searchSuppliersPlaceholder')} />
                     {searchTerm && (
-                      <button
-                        onClick={() => setSearchTerm('')}
-                        className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 z-10"
-                      >
-                        <X className="w-4 h-4" />
+                      <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}>
+                        <X style={{ width: '1rem', height: '1rem' }} />
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Suppliers List */}
-                <div className="border-t border-slate-200 pt-4">
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
                   {filteredSuppliers.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
-                      <Users className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-800 font-semibold text-lg">Aucun fournisseur trouvé</p>
+                    <div style={{ textAlign: 'center', padding: '4rem 0', backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                      <Users style={{ width: '5rem', height: '5rem', color: '#cbd5e1', margin: '0 auto 1rem' }} />
+                      <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>Aucun fournisseur trouvé</p>
                     </div>
                   ) : (
                     <>
                       {viewMode === 'card' ? (
-                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
                           {filteredSuppliers.map((supplier: Partner) => {
                             const isSelected = selectedSuppliers.includes(supplier.id);
-
                             return (
-                              <div
-                                key={supplier.id}
-                                onClick={() => toggleSelectSupplier(supplier.id)}
-                                className={`group relative bg-white rounded-lg overflow-hidden transition-all ${isSelected
-                                  ? 'ring-2 ring-amber-500 shadow-md cursor-pointer'
-                                  : 'shadow-sm hover:shadow-md cursor-pointer border border-slate-200'
-                                  }`}
-                              >
-                                {/* Selection Checkbox */}
-                                <div className="absolute top-2 left-2 z-10">
-                                  <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
-                                    ? 'bg-amber-500 border-amber-500 text-white'
-                                    : 'bg-white border-slate-300'
-                                    }`}>
-                                    {isSelected && <Check className="w-4 h-4" />}
+                              <div key={supplier.id} onClick={() => toggleSelectSupplier(supplier.id)} style={{ position: 'relative', backgroundColor: 'white', borderRadius: '0.5rem', overflow: 'hidden', cursor: 'pointer', ...(isSelected ? { outline: '2px solid #f59e0b', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' } : { boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }) }}>
+                                <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', zIndex: 10 }}>
+                                  <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(isSelected ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' } : { backgroundColor: 'white', borderColor: '#cbd5e1' }) }}>
+                                    {isSelected && <Check style={{ width: '1rem', height: '1rem' }} />}
                                   </div>
                                 </div>
-
-                                {/* Status Badge */}
-                                <div className="absolute top-2 right-2 z-10">
-                                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${supplier.isEnabled
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-slate-100 text-slate-600'
-                                    }`}>
+                                <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10 }}>
+                                  <span style={{ padding: '0.125rem 0.5rem', borderRadius: '0.375rem', fontSize: '10px', fontWeight: 500, ...(supplier.isEnabled ? { backgroundColor: '#dcfce7', color: '#15803d' } : { backgroundColor: '#f1f5f9', color: '#475569' }) }}>
                                     {supplier.isEnabled ? t('active') : t('inactive')}
                                   </span>
                                 </div>
-
-                                {/* Card Content */}
-                                <div className="p-3 space-y-2">
-                                  {/* Header */}
-                                  <div className="flex items-start justify-between gap-2 mt-8">
-                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                      <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Users className="w-5 h-5 text-amber-600" />
+                                <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginTop: '2rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+                                      <div style={{ width: '2.25rem', height: '2.25rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
                                       </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={supplier.name}>
-                                          {supplier.name}
-                                        </h3>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={supplier.name}>{supplier.name}</h3>
                                       </div>
                                     </div>
                                   </div>
-
-                                  {/* Contact Info */}
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                                      <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                      <span className="truncate">{supplier.phoneNumber || '-'}</span>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
+                                      <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} />
+                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.phoneNumber || '-'}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                                      <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                      <span className="truncate">{supplier.email || '-'}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
+                                      <Mail style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} />
+                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.email || '-'}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -475,61 +396,33 @@ export default function Fournisseurs() {
                           })}
                         </div>
                       ) : (
-                        <div className="space-y-2">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           {filteredSuppliers.map((supplier: Partner) => (
-                            <div
-                              key={supplier.id}
-                              onClick={() => toggleSelectSupplier(supplier.id)}
-                              className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${selectedSuppliers.includes(supplier.id)
-                                ? 'border-amber-500 ring-2 ring-amber-500/20'
-                                : 'border-slate-200/60 hover:border-slate-300/60'
-                                }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                {/* Checkbox */}
-                                <div className="w-12 flex items-center justify-center">
-                                  <div
-                                    className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${selectedSuppliers.includes(supplier.id)
-                                      ? 'bg-amber-500 border-amber-500 text-white'
-                                      : 'bg-white border-slate-300 hover:border-amber-400'
-                                      }`}
-                                  >
-                                    {selectedSuppliers.includes(supplier.id) && (
-                                      <Check className="w-3.5 h-3.5" />
-                                    )}
+                            <div key={supplier.id} onClick={() => toggleSelectSupplier(supplier.id)} style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', padding: '0.75rem 1rem', cursor: 'pointer', ...(selectedSuppliers.includes(supplier.id) ? { border: '1px solid #f59e0b', outline: '2px solid rgba(245,158,11,0.2)' } : { border: '1px solid #e2e8f0' }) }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{ width: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <div style={{ width: '1.25rem', height: '1.25rem', borderRadius: '0.25rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', ...(selectedSuppliers.includes(supplier.id) ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' } : { backgroundColor: 'white', borderColor: '#cbd5e1' }) }}>
+                                    {selectedSuppliers.includes(supplier.id) && <Check style={{ width: '0.875rem', height: '0.875rem' }} />}
                                   </div>
                                 </div>
-
-                                {/* Icon */}
-                                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                  <Users className="w-5 h-5 text-white" />
+                                <div style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Users style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
                                 </div>
-
-                                {/* Name */}
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('name')}</p>
-                                  <p className="text-sm font-semibold text-slate-800 truncate">{supplier.name}</p>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('name')}</p>
+                                  <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.name}</p>
                                 </div>
-
-                                {/* Phone */}
-                                <div className="w-32">
-                                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('phone')}</p>
-                                  <p className="text-sm text-slate-600">{supplier.phoneNumber || '-'}</p>
+                                <div style={{ width: '8rem' }}>
+                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('phone')}</p>
+                                  <p style={{ fontSize: '0.875rem', color: '#475569' }}>{supplier.phoneNumber || '-'}</p>
                                 </div>
-
-                                {/* Email */}
-                                <div className="w-48">
-                                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('email')}</p>
-                                  <p className="text-sm text-slate-600 truncate">{supplier.email || '-'}</p>
+                                <div style={{ width: '12rem' }}>
+                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('email')}</p>
+                                  <p style={{ fontSize: '0.875rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.email || '-'}</p>
                                 </div>
-
-                                {/* Status */}
-                                <div className="w-24 flex flex-col items-center">
-                                  <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
-                                  <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${supplier.isEnabled
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                    }`}>
+                                <div style={{ width: '6rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('status')}</p>
+                                  <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(supplier.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
                                     {supplier.isEnabled ? t('active') : t('inactive')}
                                   </span>
                                 </div>
@@ -547,7 +440,6 @@ export default function Fournisseurs() {
         </div>
       </div>
 
-      {/* Floating Action Bar */}
       {selectedSuppliers.length > 0 && activeTab === 'list' && (
         <FloatingActionBar
           selectedCount={selectedSuppliers.length}
@@ -559,27 +451,14 @@ export default function Fournisseurs() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('confirmDelete')}</h3>
-            <p className="text-slate-600 mb-6">Êtes-vous sûr de vouloir supprimer ce fournisseur ?</p>
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                {t('cancel')}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmDelete}
-                loading={deleteMutation.isPending}
-                loadingText={t('deleting')}
-              >
-                {t('delete')}
-              </Button>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', maxWidth: '28rem', width: '100%', padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '0.5rem' }}>{t('confirmDelete')}</h3>
+            <p style={{ color: '#475569', marginBottom: '1.5rem' }}>Êtes-vous sûr de vouloir supprimer ce fournisseur ?</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <Button outlined onClick={() => setShowDeleteConfirm(false)} label={t('cancel')} />
+              <Button severity="danger" onClick={confirmDelete} loading={deleteMutation.isPending} label={t('delete')} />
             </div>
           </div>
         </div>

@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { IProduct } from '../modules/products/products.interface';
 import { productsService } from '../modules/products/products.service';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
+import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 interface InvoiceItemRow {
   id: string;
@@ -37,13 +40,11 @@ export function ProductCatalogueModal({
 
   const isVente = type === 'vente';
 
-  // Get quantity for a product from current items
   const getProductQuantity = (productId: number): number => {
     const item = currentItems.find(item => item.productId === productId);
     return item ? item.quantity : 0;
   };
 
-  // Calculate item total
   const calculateItemTotal = (item: InvoiceItemRow): number => {
     const subtotal = item.quantity * item.unitPrice;
     const discountAmount = item.discountType === 1
@@ -54,19 +55,16 @@ export function ProductCatalogueModal({
     return afterDiscount + taxAmount;
   };
 
-  // Update or add product to items
   const updateProductQuantity = (product: IProduct, newQuantity: number) => {
     let updatedItems = [...currentItems];
     const existingItemIndex = updatedItems.findIndex(item => item.productId === product.id);
 
     if (newQuantity <= 0) {
-      // Remove item if quantity is 0 or less
       if (existingItemIndex !== -1) {
         updatedItems.splice(existingItemIndex, 1);
       }
     } else {
       if (existingItemIndex !== -1) {
-        // Update existing item
         const updated = {
           ...updatedItems[existingItemIndex],
           quantity: newQuantity
@@ -74,7 +72,6 @@ export function ProductCatalogueModal({
         updated.total = calculateItemTotal(updated);
         updatedItems[existingItemIndex] = updated;
       } else {
-        // Add new item
         const newItem: InvoiceItemRow = {
           id: String(updatedItems.length + 1),
           productId: product.id,
@@ -94,10 +91,8 @@ export function ProductCatalogueModal({
     onItemsChange(updatedItems);
   };
 
-  // Load all products for catalogue
   const loadAllProducts = async () => {
-    if (allProducts.length > 0) return; // Already loaded
-
+    if (allProducts.length > 0) return;
     try {
       setCatalogueLoading(true);
       const response = await productsService.getProducts({ limit: 1000 });
@@ -110,137 +105,132 @@ export function ProductCatalogueModal({
     }
   };
 
-  // Load products when modal opens
   useEffect(() => {
     if (isOpen) {
       loadAllProducts();
     }
   }, [isOpen]);
 
-  // Filter products based on search
   const filteredProducts = allProducts.filter(product =>
     product.name.toLowerCase().includes(catalogueSearch.toLowerCase()) ||
     product.code?.toLowerCase().includes(catalogueSearch.toLowerCase()) ||
     product.description?.toLowerCase().includes(catalogueSearch.toLowerCase())
   );
 
-  // Handle modal close
   const handleClose = () => {
-    setCatalogueSearch(''); // Reset search when closing
+    setCatalogueSearch('');
     onClose();
   };
 
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] m-4">
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">Catalogue des produits</h3>
-            <div className="text-sm text-slate-600">
-              {currentItems.filter(item => item.productId).length} produit(s) sélectionné(s)
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button onClick={handleClose}>
-              Terminé
-            </Button>
-            <button
-              onClick={handleClose}
-              className="text-slate-500 hover:text-slate-700"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="p-4 border-b border-slate-200">
-          <Input
-            type="text"
-            placeholder="Rechercher un produit..."
-            value={catalogueSearch}
-            onChange={(e) => setCatalogueSearch(e.target.value)}
-            fullWidth
-          />
-        </div>
-
-        <div className="overflow-y-auto max-h-96 p-4">
-          {catalogueLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-slate-600">Chargement des produits...</div>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-slate-600">Aucun produit trouvé</div>
-            </div>
-          ) : (
-            <div className="grid gap-2">
-              {filteredProducts.map((product) => {
-                const currentQuantity = getProductQuantity(product.id);
-                const isSelected = currentQuantity > 0;
-
-                return (
-                  <div
-                    key={product.id}
-                    onClick={() => {
-                      if (!isSelected) {
-                        updateProductQuantity(product, 1);
-                      }
-                    }}
-                    className={`flex items-center justify-between p-3 border rounded-lg ${isSelected
-                        ? 'border-amber-300 bg-amber-50'
-                        : 'border-slate-200 hover:bg-slate-50 cursor-pointer'
-                      }`}
-                  >
-                    <div className="flex-1">
-                      <div className={`font-medium ${isSelected ? 'text-amber-800' : 'text-slate-900'
-                        }`}>
-                        {product.name}
-                      </div>
-                      {product.code && (
-                        <div className="text-sm text-slate-500">Code: {product.code}</div>
-                      )}
-                      {product.description && (
-                        <div className="text-sm text-slate-600">{product.description}</div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="font-semibold text-slate-900">
-                          {(isVente ? product.price : (product.cost || product.price)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
-                        </div>
-                        {product.stock !== undefined && (
-                          <div className="text-sm text-slate-500">Stock: {product.stock}</div>
-                        )}
-                      </div>
-
-                      {isSelected && (
-                        <Input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={currentQuantity}
-                          onChange={(e) => {
-                            const newQuantity = Math.max(0, parseInt(e.target.value) || 0);
-                            updateProductQuantity(product, newQuantity);
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-16"
-                          inputSize="sm"
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+  const headerContent = (
+    <div className="flex align-items-center justify-content-between" style={{ width: '100%' }}>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: '1.125rem', color: '#0f172a' }}>Catalogue des produits</div>
+        <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+          {currentItems.filter(item => item.productId).length} produit(s) sélectionné(s)
         </div>
       </div>
+      <Button label="Terminé" onClick={handleClose} size="small" />
     </div>
+  );
+
+  return (
+    <Dialog
+      visible={isOpen}
+      onHide={handleClose}
+      header={headerContent}
+      modal
+      dismissableMask
+      style={{ width: '95vw', maxWidth: '56rem' }}
+      contentStyle={{ padding: 0 }}
+    >
+      <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0' }}>
+        <InputText
+          placeholder="Rechercher un produit..."
+          value={catalogueSearch}
+          onChange={(e) => setCatalogueSearch(e.target.value)}
+          style={{ width: '100%' }}
+        />
+      </div>
+
+      <div style={{ overflowY: 'auto', maxHeight: '24rem', padding: '1rem' }}>
+        {catalogueLoading ? (
+          <div className="flex align-items-center justify-content-center" style={{ padding: '2rem 0' }}>
+            <ProgressSpinner style={{ width: '2rem', height: '2rem' }} />
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="flex align-items-center justify-content-center" style={{ padding: '2rem 0', color: '#475569' }}>
+            Aucun produit trouvé
+          </div>
+        ) : (
+          <div className="flex flex-column gap-2">
+            {filteredProducts.map((product) => {
+              const currentQuantity = getProductQuantity(product.id);
+              const isSelected = currentQuantity > 0;
+
+              return (
+                <div
+                  key={product.id}
+                  onClick={() => {
+                    if (!isSelected) {
+                      updateProductQuantity(product, 1);
+                    }
+                  }}
+                  className="flex align-items-center justify-content-between"
+                  style={{
+                    padding: '0.75rem',
+                    border: `1px solid ${isSelected ? '#fcd34d' : '#e2e8f0'}`,
+                    borderRadius: '0.5rem',
+                    background: isSelected ? '#fffbeb' : 'transparent',
+                    cursor: isSelected ? 'default' : 'pointer',
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 500, color: isSelected ? '#92400e' : '#0f172a' }}>
+                      {product.name}
+                    </div>
+                    {product.code && (
+                      <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Code: {product.code}</div>
+                    )}
+                    {product.description && (
+                      <div style={{ fontSize: '0.875rem', color: '#475569' }}>{product.description}</div>
+                    )}
+                  </div>
+
+                  <div className="flex align-items-center gap-3">
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                        {(isVente ? product.price : (product.cost || product.price)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
+                      </div>
+                      {product.stock !== undefined && (
+                        <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Stock: {product.stock}</div>
+                      )}
+                    </div>
+
+                    {isSelected && (
+                      <InputNumber
+                        value={currentQuantity}
+                        onValueChange={(e) => {
+                          const newQuantity = Math.max(0, e.value || 0);
+                          updateProductQuantity(product, newQuantity);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        min={0}
+                        showButtons
+                        buttonLayout="horizontal"
+                        incrementButtonIcon="pi pi-plus"
+                        decrementButtonIcon="pi pi-minus"
+                        style={{ width: '6rem' }}
+                        inputStyle={{ textAlign: 'center', width: '2.5rem' }}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </Dialog>
   );
 }

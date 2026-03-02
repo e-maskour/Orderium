@@ -23,11 +23,18 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@orderium/ui": [
+        "../shared/ui/src"
+      ],
+      "@orderium/ui/*": [
+        "../shared/ui/src/*"
       ]
     }
   },
   "include": [
-    "src"
+    "src",
+    "../shared/ui/src"
   ],
   "references": [
     {

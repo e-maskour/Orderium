@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { partnersService } from '@/modules';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { Card } from 'primereact/card';
 import { toastSuccess, toastError } from '@/services/toast.service';
-import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AddressInput } from '@/components/AddressInput';
 
@@ -26,51 +24,27 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    // Always load customer data on mount
-    if (user?.phoneNumber) {
-      loadCustomerData();
-    }
+    if (user?.phoneNumber) loadCustomerData();
   }, [user?.phoneNumber]);
 
   const loadCustomerData = async () => {
     if (!user?.phoneNumber) return;
-
     try {
       const partner = await partnersService.getByPhone(user.phoneNumber);
       if (partner) {
-        setFormData({
-          name: partner.name || '',
-          address: partner.address || '',
-          latitude: partner.latitude,
-          longitude: partner.longitude,
-        });
-
-        // Set map links if available
+        setFormData({ name: partner.name || '', address: partner.address || '', latitude: partner.latitude, longitude: partner.longitude });
         if (partner.googleMapsUrl) setMapsLink(partner.googleMapsUrl);
-        else if (partner.latitude && partner.longitude) {
-          setMapsLink(`https://www.google.com/maps?q=${partner.latitude},${partner.longitude}`);
-        }
-
+        else if (partner.latitude && partner.longitude) setMapsLink(`https://www.google.com/maps?q=${partner.latitude},${partner.longitude}`);
         if (partner.wazeUrl) setWazeLink(partner.wazeUrl);
-        else if (partner.latitude && partner.longitude) {
-          setWazeLink(`https://waze.com/ul?ll=${partner.latitude},${partner.longitude}&navigate=yes`);
-        }
+        else if (partner.latitude && partner.longitude) setWazeLink(`https://waze.com/ul?ll=${partner.latitude},${partner.longitude}&navigate=yes`);
       }
     } catch (error: any) {
-      // 404 is expected for new users who haven't filled their profile yet
-      if (!error.message?.includes('404')) {
-        console.error('Failed to load partner data:', error);
-      }
+      if (!error.message?.includes('404')) console.error('Failed to load partner data:', error);
     }
   };
 
   const handleAddressChange = (address: string, latitude?: number, longitude?: number) => {
-    setFormData(prev => ({
-      ...prev,
-      address,
-      latitude,
-      longitude,
-    }));
+    setFormData(prev => ({ ...prev, address, latitude, longitude }));
   };
 
   const handleMapsLinksChange = (googleMaps: string | null, waze: string | null) => {
@@ -80,39 +54,14 @@ export default function Profile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formData.name.trim()) {
-      toastError(t('nameRequired'));
-      return;
-    }
-
+    if (!formData.name.trim()) { toastError(t('nameRequired')); return; }
     if (!user?.phoneNumber) return;
-
     setIsLoading(true);
-
     try {
-      const mapsLinkToSave = formData.latitude && formData.longitude
-        ? `https://www.google.com/maps?q=${formData.latitude},${formData.longitude}`
-        : undefined;
-
-      const wazeLinkToSave = formData.latitude && formData.longitude
-        ? `https://waze.com/ul?ll=${formData.latitude},${formData.longitude}&navigate=yes`
-        : undefined;
-
-      await partnersService.upsert({
-        phoneNumber: user.phoneNumber,
-        name: formData.name,
-        address: formData.address,
-        latitude: formData.latitude || undefined,
-        longitude: formData.longitude || undefined,
-        googleMapsUrl: mapsLinkToSave,
-        wazeUrl: wazeLinkToSave,
-        portalPhoneNumber: user.phoneNumber, // Link to portal account
-      });
-
-      // Refresh user data to get updated customerId
+      const mapsLinkToSave = formData.latitude && formData.longitude ? `https://www.google.com/maps?q=${formData.latitude},${formData.longitude}` : undefined;
+      const wazeLinkToSave = formData.latitude && formData.longitude ? `https://waze.com/ul?ll=${formData.latitude},${formData.longitude}&navigate=yes` : undefined;
+      await partnersService.upsert({ phoneNumber: user.phoneNumber, name: formData.name, address: formData.address, latitude: formData.latitude || undefined, longitude: formData.longitude || undefined, googleMapsUrl: mapsLinkToSave, wazeUrl: wazeLinkToSave, portalPhoneNumber: user.phoneNumber });
       await refreshUser();
-
       toastSuccess(t('profileUpdated'));
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -123,104 +72,65 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50" dir={dir}>
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-2xl">
-        <div className="mb-6">
+    <div style={{ minHeight: '100vh', background: 'var(--surface-ground)' }} dir={dir}>
+      <div className="mx-auto px-3 py-4" style={{ maxWidth: '42rem' }}>
+        <div className="mb-4">
           <Button
-            variant="ghost"
+            icon="pi pi-arrow-left"
+            label={t('back')}
+            text
+            severity="secondary"
             onClick={() => navigate('/')}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t('back')}
-          </Button>
+          />
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              {t('profile')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Phone (readonly) */}
-              <div className="space-y-2">
-                <Label htmlFor="phone">
-                  {t('phoneNumber')}
-                </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={user?.phoneNumber || ''}
-                  disabled
-                  className="bg-gray-100 h-11 sm:h-10 text-base sm:text-sm"
-                />
-                <p className="text-xs text-gray-500">
-                  {t('phoneCannotBeChanged')}
-                </p>
-              </div>
+        <Card title={<span className="text-2xl font-bold">{t('profile')}</span>}>
+          <form onSubmit={handleSubmit} className="flex flex-column gap-4">
+            {/* Phone (readonly) */}
+            <div className="flex flex-column gap-2">
+              <label htmlFor="phone" className="font-medium">{t('phoneNumber')}</label>
+              <InputText id="phone" type="tel" value={user?.phoneNumber || ''} disabled className="surface-100" />
+              <small className="text-color-secondary">{t('phoneCannotBeChanged')}</small>
+            </div>
 
-              {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name">
-                  {t('name')}
-                </Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={t('enterYourName')}
-                  className="h-11 sm:h-10 text-base sm:text-sm"
-                  required
-                />
-              </div>
+            {/* Name */}
+            <div className="flex flex-column gap-2">
+              <label htmlFor="name" className="font-medium">{t('name')}</label>
+              <InputText id="name" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder={t('enterYourName')} required />
+            </div>
 
-              {/* Address */}
-              <div className="space-y-2">
-                <Label htmlFor="address">
-                  {t('address')}
-                </Label>
-                <AddressInput
-                  value={formData.address}
-                  onChange={handleAddressChange}
-                  onMapsLinksChange={handleMapsLinksChange}
-                  googleMapsUrl={mapsLink}
-                  wazeUrl={wazeLink}
-                />
-              </div>
+            {/* Address */}
+            <div className="flex flex-column gap-2">
+              <label htmlFor="address" className="font-medium">{t('address')}</label>
+              <AddressInput
+                value={formData.address}
+                onChange={handleAddressChange}
+                onMapsLinksChange={handleMapsLinksChange}
+                googleMapsUrl={mapsLink}
+                wazeUrl={wazeLink}
+              />
+            </div>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full h-11 sm:h-10 text-base sm:text-sm"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('saving')}
-                  </>
-                ) : (
-                  t('saveChanges')
-                )}
-              </Button>
+            {/* Submit */}
+            <Button
+              type="submit"
+              label={isLoading ? t('saving') : t('saveChanges')}
+              icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
+              className="w-full"
+              disabled={isLoading}
+              loading={isLoading}
+            />
 
-              {/* Logout Button */}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-11 sm:h-10 text-base sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => {
-                  logout();
-                  navigate('/login');
-                }}
-              >
-                {t('logout')}
-              </Button>
-            </form>
-          </CardContent>
+            {/* Logout */}
+            <Button
+              type="button"
+              label={t('logout')}
+              outlined
+              severity="danger"
+              className="w-full"
+              onClick={() => { logout(); navigate('/login'); }}
+            />
+          </form>
         </Card>
       </div>
     </div>

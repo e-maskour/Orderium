@@ -1,55 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Check } from 'lucide-react';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-
-// Keyframe animations for Apple-style entrance
-const backdropAnimation = `
-  @keyframes backdropFadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-`;
-
-const modalAnimation = `
-  @keyframes modalSlideUp {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-`;
-
-const contentAnimation = `
-  @keyframes contentFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(5px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-// Inject keyframes
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = backdropAnimation + modalAnimation + contentAnimation;
-  if (!document.head.querySelector('[data-price-modal-animations]')) {
-    styleSheet.setAttribute('data-price-modal-animations', 'true');
-    document.head.appendChild(styleSheet);
-  }
-}
+import { Check } from 'lucide-react';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 
 interface Product {
   id: number;
@@ -90,7 +43,6 @@ export const PriceConfirmModal = ({
     }
   }, [isOpen, product]);
 
-  // Keep focus on input
   useEffect(() => {
     if (isOpen) {
       const interval = setInterval(() => {
@@ -102,7 +54,7 @@ export const PriceConfirmModal = ({
     }
   }, [isOpen]);
 
-  if (!product || !isOpen) return null;
+  if (!product) return null;
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
@@ -115,20 +67,17 @@ export const PriceConfirmModal = ({
       }
     } else {
       const newValue = price === '' || price === '0' ? num : price + num;
-      // Limit to 2 decimal places
       if (newValue.includes('.')) {
         const parts = newValue.split('.');
         if (parts[1] && parts[1].length > 2) return;
       }
       setPrice(newValue);
     }
-    // Restore focus after button click
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow numbers and one decimal point
     if (/^\d*\.?\d{0,2}$/.test(value) || value === '') {
       setPrice(value);
       setDecimalMode(value.includes('.'));
@@ -154,114 +103,87 @@ export const PriceConfirmModal = ({
   const hasValidPrice = price !== '' && parseFloat(price) > 0;
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'C'];
 
+  const headerContent = (
+    <div>
+      <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827' }}>{t('confirmPrice')}</div>
+      <div style={{ fontSize: '0.875rem', color: '#4b5563', marginTop: '0.25rem' }}>{product.name}</div>
+      {product.code && (
+        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
+          {t('code')}: {product.code}
+        </div>
+      )}
+    </div>
+  );
+
+  const footerContent = hasValidPrice ? (
+    <Button
+      label={t('confirm')}
+      icon={<Check style={{ width: 16, height: 16, marginRight: 6 }} />}
+      onClick={handleConfirm}
+      style={{ width: '100%' }}
+    />
+  ) : null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-        style={{
-          animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
-        }}
-      />
-
-      {/* Modal */}
-      <div
-        className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden"
-        style={{
-          animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
-        }}
-      >
-        {/* Header */}
-        <div className="relative bg-gradient-to-br from-primary/10 to-primary/5 p-3 sm:p-4 border-b border-gray-200">
-          <button
-            onClick={handleClose}
-            className="absolute top-3 sm:top-4 right-3 sm:right-4 w-8 h-8 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center shadow-sm transition-all hover:scale-110"
-          >
-            <X className="w-4 h-4 text-gray-700" />
-          </button>
-
-          <div className="space-y-1.5 sm:space-y-2 pr-10 sm:pr-12">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
-              {t('confirmPrice')}
-            </h2>
-            <p className="text-sm text-gray-600">{product.name}</p>
-            {product.code && (
-              <p className="text-xs text-gray-500">
-                {t('code')}: {product.code}
-              </p>
+    <Dialog
+      visible={isOpen}
+      onHide={handleClose}
+      header={headerContent}
+      footer={footerContent}
+      modal
+      dismissableMask
+      style={{ width: '95vw', maxWidth: '32rem' }}
+      contentStyle={{ padding: '1rem' }}
+    >
+      <div className="flex flex-column gap-3">
+        {/* Price Input */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+            {t('price')} ({t('currency')})
+          </label>
+          <InputText
+            ref={inputRef}
+            type="text"
+            inputMode="decimal"
+            value={price}
+            onChange={handleInputChange}
+            style={{ height: '3.5rem', fontSize: '1.75rem', fontWeight: 700, textAlign: 'center', width: '100%' }}
+          />
+          <div className="flex align-items-center justify-content-center gap-3" style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            <span>
+              {t('originalPrice')}: {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+            </span>
+            {product.cost != null && (
+              <span style={{ color: '#d97706', fontWeight: 500 }}>
+                {t('cost')}: {product.cost.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+              </span>
             )}
           </div>
         </div>
 
-        {/* Content */}
-        <div
-          className="p-3 sm:p-4 space-y-3 sm:space-y-4"
-          style={{
-            animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
-          }}
-        >
-          {/* Price Input */}
-          <div className="space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
-              {t('price')} ({t('currency')})
-            </label>
-            <Input
-              ref={inputRef}
-              type="text"
-              inputMode="decimal"
-              value={price}
-              onChange={handleInputChange}
-              className="h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center"
-              fullWidth
-            />
-            <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
-              <span>
-                {t('originalPrice')}: {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-              </span>
-              {product.cost != null && (
-                <span className="text-amber-600 font-medium">
-                  {t('cost')}: {product.cost.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Numeric Keypad */}
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-            {numbers.map((num) => (
-              <button
-                key={num}
-                onClick={() => handleNumberClick(num)}
-                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${num === 'C'
-                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
-                  }`}
-              >
-                {num === 'C' ? (
-                  <span className="text-xs sm:text-sm">{t('clear')}</span>
-                ) : (
-                  num
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Confirm Button */}
-          {hasValidPrice && (
-            <Button
-              onClick={handleConfirm}
-              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02]"
-              leadingIcon={Check}
+        {/* Numeric Keypad */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+          {numbers.map((num) => (
+            <button
+              key={num}
+              onClick={() => handleNumberClick(num)}
               style={{
-                animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
+                height: '3rem',
+                fontSize: '1.125rem',
+                fontWeight: 600,
+                borderRadius: '0.5rem',
+                border: num === 'C' ? 'none' : '1px solid #d1d5db',
+                background: num === 'C' ? '#ef4444' : '#f3f4f6',
+                color: num === 'C' ? '#fff' : '#111827',
+                cursor: 'pointer',
+                transition: 'background 0.15s',
               }}
             >
-              {t('confirm')}
-            </Button>
-          )}
+              {num === 'C' ? t('clear') : num}
+            </button>
+          ))}
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 };

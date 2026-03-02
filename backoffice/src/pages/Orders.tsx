@@ -7,12 +7,10 @@ import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, Grid3x
 import { toastSuccess, toastDeleted, toastCancelled, toastError, toastWarning, toastConfirm } from '../services/toast.service';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { DateRangePicker } from '../components/ui/date-range-picker';
-import { Autocomplete } from '../components/ui/autocomplete';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { NativeSelect } from '../components/ui/native-select';
-import { FormField } from '../components/ui/form-field';
+import { Calendar } from 'primereact/calendar';
+import { Dropdown } from 'primereact/dropdown';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { PDFPreviewModal } from '../components/PDFPreviewModal';
@@ -35,7 +33,6 @@ export default function Orders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
-  // Applied filters state - only these trigger API requests
   const [appliedFilters, setAppliedFilters] = useState<{
     search: string;
     orderNumber: string;
@@ -52,97 +49,51 @@ export default function Orders() {
     dateRange: { start: undefined, end: undefined },
   });
 
-  // Search filter states - individual fields
   const [orderNumberSearch, setOrderNumberSearch] = useState('');
   const [orderNumbers, setOrderNumbers] = useState<any[]>([]);
   const [orderNumbersLoading, setOrderNumbersLoading] = useState(false);
   const [customerIdSearch, setCustomerIdSearch] = useState('');
   const [customerPhoneSearch, setCustomerPhoneSearch] = useState('');
   const [deliveryPersonIdSearch, setDeliveryPersonIdSearch] = useState('');
-
-  // Date filter states
   const [dateFilterType, setDateFilterType] = useState<'today' | 'yesterday' | 'week' | 'month' | 'year' | 'custom'>('custom');
   const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({ start: undefined, end: undefined });
-
-  // Ref for status filter scroll
   const statusScrollRef = useRef<HTMLDivElement>(null);
 
-  // Scroll functions for mobile status filter
-  const scrollStatusLeft = () => {
-    if (statusScrollRef.current) {
-      statusScrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
-    }
-  };
+  const scrollStatusLeft = () => { statusScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' }); };
+  const scrollStatusRight = () => { statusScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' }); };
 
-  const scrollStatusRight = () => {
-    if (statusScrollRef.current) {
-      statusScrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
-    }
-  };
-
-  // Get date range based on applied filter type
   const getDateRange = useMemo(() => {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
     switch (appliedFilters.dateFilterType) {
-      case 'today':
-        return { start: startOfDay, end: endOfDay };
-
-      case 'yesterday':
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const startYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-        const endYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999);
-        return { start: startYesterday, end: endYesterday };
-
-      case 'week':
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        startOfWeek.setHours(0, 0, 0, 0);
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        endOfWeek.setHours(23, 59, 59, 999);
-        return { start: startOfWeek, end: endOfWeek };
-
-      case 'month':
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-        return { start: startOfMonth, end: endOfMonth };
-
-      case 'year':
-        const startOfYear = new Date(now.getFullYear(), 0, 1);
-        const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-        return { start: startOfYear, end: endOfYear };
-
+      case 'today': return { start: startOfDay, end: endOfDay };
+      case 'yesterday': {
+        const y = new Date(now); y.setDate(y.getDate() - 1);
+        return { start: new Date(y.getFullYear(), y.getMonth(), y.getDate()), end: new Date(y.getFullYear(), y.getMonth(), y.getDate(), 23, 59, 59, 999) };
+      }
+      case 'week': {
+        const s = new Date(now); s.setDate(now.getDate() - now.getDay()); s.setHours(0,0,0,0);
+        const e = new Date(s); e.setDate(s.getDate() + 6); e.setHours(23,59,59,999);
+        return { start: s, end: e };
+      }
+      case 'month': return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999) };
+      case 'year': return { start: new Date(now.getFullYear(), 0, 1), end: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999) };
       case 'custom':
-        if (appliedFilters.dateRange.start && appliedFilters.dateRange.end) {
-          return { start: appliedFilters.dateRange.start, end: appliedFilters.dateRange.end };
-        } else if (appliedFilters.dateRange.start) {
-          const endCustom = new Date(appliedFilters.dateRange.start);
-          endCustom.setHours(23, 59, 59, 999);
-          return { start: appliedFilters.dateRange.start, end: endCustom };
-        }
+        if (appliedFilters.dateRange.start && appliedFilters.dateRange.end) return { start: appliedFilters.dateRange.start, end: appliedFilters.dateRange.end };
+        if (appliedFilters.dateRange.start) { const e2 = new Date(appliedFilters.dateRange.start); e2.setHours(23,59,59,999); return { start: appliedFilters.dateRange.start, end: e2 }; }
         return { start: undefined, end: undefined };
-
-      default:
-        return { start: undefined, end: undefined };
+      default: return { start: undefined, end: undefined };
     }
   }, [appliedFilters.dateFilterType, appliedFilters.dateRange]);
 
   const { data: ordersData = { orders: [], count: 0, totalCount: 0, statusCounts: {} }, isLoading: ordersLoading } = useQuery({
     queryKey: ['orders', JSON.stringify(appliedFilters), currentPage, pageSize],
     queryFn: () => ordersService.getAll(
-      appliedFilters.search,
-      getDateRange.start,
-      getDateRange.end,
-      true,
+      appliedFilters.search, getDateRange.start, getDateRange.end, true,
       appliedFilters.deliveryStatus !== 'all' ? appliedFilters.deliveryStatus : undefined,
       appliedFilters.fromClient === 'client' ? true : appliedFilters.fromClient === 'locale' ? false : undefined,
-      appliedFilters.orderNumber,
-      currentPage,
-      pageSize,
+      appliedFilters.orderNumber, currentPage, pageSize,
     ),
   });
 
@@ -150,16 +101,8 @@ export default function Orders() {
   const deliveryStatusCounts = ordersData.statusCounts || {};
   const totalCount = ordersData.totalCount || 0;
 
-  const { data: deliveryPersons = [] } = useQuery({
-    queryKey: ['deliveryPersons'],
-    queryFn: deliveryPersonService.getAll,
-  });
-
-  const { data: partnersData } = useQuery({
-    queryKey: ['partners'],
-    queryFn: partnersService.getAll,
-  });
-
+  const { data: deliveryPersons = [] } = useQuery({ queryKey: ['deliveryPersons'], queryFn: deliveryPersonService.getAll });
+  const { data: partnersData } = useQuery({ queryKey: ['partners'], queryFn: partnersService.getAll });
   const partners = partnersData?.partners || [];
 
   const { data: orderDetails, isLoading: orderDetailsLoading } = useQuery({
@@ -169,85 +112,37 @@ export default function Orders() {
   });
 
   const assignMutation = useMutation({
-    mutationFn: ({ orderId, deliveryPersonId }: { orderId: number; deliveryPersonId: number }) =>
-      ordersService.assignToDelivery(orderId, deliveryPersonId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toastSuccess(t('orderAssigned'));
-    },
-    onError: (error: Error) => {
-      toastError(`${t('failedToAssign')}: ${error.message}`);
-    },
+    mutationFn: ({ orderId, deliveryPersonId }: { orderId: number; deliveryPersonId: number }) => ordersService.assignToDelivery(orderId, deliveryPersonId),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess(t('orderAssigned')); },
+    onError: (error: Error) => { toastError(`${t('failedToAssign')}: ${error.message}`); },
   });
 
   const unassignMutation = useMutation({
     mutationFn: (orderId: number) => ordersService.unassignOrder(orderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toastSuccess(t('orderUnassigned'));
-    },
-    onError: (error: Error) => {
-      toastError(`${t('failedToUnassign')}: ${error.message}`);
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess(t('orderUnassigned')); },
+    onError: (error: Error) => { toastError(`${t('failedToUnassign')}: ${error.message}`); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (orderIds: number[]) => {
-      console.log('Deleting orders:', orderIds);
-      return Promise.all(orderIds.map(async id => {
-        try {
-          await ordersService.delete(id);
-          console.log('Deleted order:', id);
-        } catch (error) {
-          console.error('Failed to delete order:', id, error);
-          throw error;
-        }
-      }));
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toastDeleted(t('ordersDeleted'));
-      clearSelection();
-    },
-    onError: (error: Error) => {
-      console.error('Delete mutation error:', error);
-      toastError(`${t('failedToDelete')}: ${error.message}`);
-    },
+    mutationFn: async (orderIds: number[]) => Promise.all(orderIds.map(async id => { await ordersService.delete(id); })),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastDeleted(t('ordersDeleted')); clearSelection(); },
+    onError: (error: Error) => { toastError(`${t('failedToDelete')}: ${error.message}`); },
   });
 
   const cancelDeliveryMutation = useMutation({
-    mutationFn: async (orderIds: number[]) => {
-      return Promise.all(orderIds.map(async id => {
-        return ordersService.update(id, { deliveryStatus: 'canceled' });
-      }));
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toastCancelled(t('deliveryCanceled'));
-      clearSelection();
-    },
-    onError: (error: Error) => {
-      toastError(`${t('failedToCancelDelivery')}: ${error.message}`);
-    },
+    mutationFn: async (orderIds: number[]) => Promise.all(orderIds.map(async id => ordersService.update(id, { deliveryStatus: 'canceled' }))),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastCancelled(t('deliveryCanceled')); clearSelection(); },
+    onError: (error: Error) => { toastError(`${t('failedToCancelDelivery')}: ${error.message}`); },
   });
 
   const handleOrderNumberSearch = async (searchValue: string) => {
     setOrderNumberSearch(searchValue);
-    if (!searchValue) {
-      setOrderNumbers([]);
-      return;
-    }
-
+    if (!searchValue) { setOrderNumbers([]); return; }
     try {
       setOrderNumbersLoading(true);
       const results = await ordersService.getOrderNumbers(searchValue);
       setOrderNumbers(results);
-    } catch (error) {
-      console.error('Failed to fetch order numbers:', error);
-      setOrderNumbers([]);
-    } finally {
-      setOrderNumbersLoading(false);
-    }
+    } catch { setOrderNumbers([]); } finally { setOrderNumbersLoading(false); }
   };
 
   const handleAssign = (orderId: number, deliveryPersonId: string) => {
@@ -256,93 +151,33 @@ export default function Orders() {
   };
 
   const handlePreview = (documentType: 'receipt' | 'delivery-note') => {
-    if (selectedOrders.length !== 1) {
-      toastError(t('selectOneOrder'));
-      return;
-    }
-
+    if (selectedOrders.length !== 1) { toastError(t('selectOneOrder')); return; }
     const orderId = selectedOrders[0];
     const order = orders.find((o: any) => o.id === orderId);
     const label = pdfService.getDocumentLabel(documentType);
     const url = pdfService.getPDFUrl(documentType, orderId, 'preview');
-
-    setPdfUrl(url);
-    setPdfTitle(`${label} ${order?.orderNumber || ''}`.trim());
-    setShowPDFPreview(true);
+    setPdfUrl(url); setPdfTitle(`${label} ${order?.orderNumber || ''}`.trim()); setShowPDFPreview(true);
   };
 
   const getSourceBadge = (order: any) => {
     if (order?.fromClient) {
-      return {
-        label: t('client'),
-        icon: <ShoppingCart className="w-3 h-3" />,
-        className: 'bg-blue-50 text-blue-700 border border-blue-200',
-      };
+      return { label: t('client'), icon: <ShoppingCart style={{ width: '0.75rem', height: '0.75rem' }} />, bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' };
     }
-    return {
-      label: t('local'),
-      icon: <Package className="w-3 h-3" />,
-      className: 'bg-slate-100 text-slate-700 border border-slate-200',
-    };
+    return { label: t('local'), icon: <Package style={{ width: '0.75rem', height: '0.75rem' }} />, bg: '#f1f5f9', color: '#334155', border: '#e2e8f0' };
   };
 
   const getDeliveryStatusBadge = (deliveryStatus: string | null | undefined) => {
-    switch (deliveryStatus) {
-      case 'pending':
-        return {
-          label: t('pending'),
-          icon: <Clock className="w-3.5 h-3.5" />,
-          className: 'bg-slate-50 text-slate-700 border border-slate-200',
-        };
-      case 'assigned':
-        return {
-          label: t('assigned'),
-          icon: <User className="w-3.5 h-3.5" />,
-          className: 'bg-purple-50 text-purple-700 border border-purple-200',
-        };
-      case 'confirmed':
-        return {
-          label: t('confirmed'),
-          icon: <CheckCircle className="w-3.5 h-3.5" />,
-          className: 'bg-blue-50 text-blue-700 border border-blue-200',
-        };
-      case 'picked_up':
-        return {
-          label: t('pickedUp'),
-          icon: <Package className="w-3.5 h-3.5" />,
-          className: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
-        };
-      case 'to_delivery':
-        return {
-          label: t('toDelivery'),
-          icon: <AlertCircle className="w-3.5 h-3.5" />,
-          className: 'bg-amber-50 text-amber-700 border border-amber-200',
-        };
-      case 'in_delivery':
-        return {
-          label: t('inDelivery'),
-          icon: <Navigation className="w-3.5 h-3.5" />,
-          className: 'bg-cyan-50 text-cyan-700 border border-cyan-200',
-        };
-      case 'delivered':
-        return {
-          label: t('delivered'),
-          icon: <CheckCircle className="w-3.5 h-3.5" />,
-          className: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-        };
-      case 'canceled':
-        return {
-          label: t('canceled'),
-          icon: <XCircle className="w-3.5 h-3.5" />,
-          className: 'bg-red-50 text-red-700 border border-red-200',
-        };
-      default:
-        return {
-          label: t('pending'),
-          icon: <Clock className="w-3.5 h-3.5" />,
-          className: 'bg-slate-50 text-slate-700 border border-slate-200',
-        };
-    }
+    const map: Record<string, { label: string; icon: JSX.Element; bg: string; color: string; border: string }> = {
+      pending: { label: t('pending'), icon: <Clock style={{ width: '0.875rem', height: '0.875rem' }} />, bg: '#f8fafc', color: '#334155', border: '#e2e8f0' },
+      assigned: { label: t('assigned'), icon: <User style={{ width: '0.875rem', height: '0.875rem' }} />, bg: '#faf5ff', color: '#7e22ce', border: '#e9d5ff' },
+      confirmed: { label: t('confirmed'), icon: <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />, bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+      picked_up: { label: t('pickedUp'), icon: <Package style={{ width: '0.875rem', height: '0.875rem' }} />, bg: '#eef2ff', color: '#4338ca', border: '#c7d2fe' },
+      to_delivery: { label: t('toDelivery'), icon: <AlertCircle style={{ width: '0.875rem', height: '0.875rem' }} />, bg: '#fffbeb', color: '#b45309', border: '#fde68a' },
+      in_delivery: { label: t('inDelivery'), icon: <Navigation style={{ width: '0.875rem', height: '0.875rem' }} />, bg: '#ecfeff', color: '#0e7490', border: '#a5f3fc' },
+      delivered: { label: t('delivered'), icon: <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />, bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+      canceled: { label: t('canceled'), icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />, bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+    };
+    return map[deliveryStatus || ''] || map.pending;
   };
 
   const formatOrderDate = (dateString: string) => {
@@ -351,50 +186,59 @@ export default function Orders() {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const time = `${hours}:${minutes}`;
-
     if (language?.startsWith('fr')) {
-      const monthLabels = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${date.getDate()} ${monthLabels[date.getMonth()]} ${date.getFullYear()} ${time}`;
+      const m = ['Jan','Fev','Mar','Avr','Mai','Juin','Juil','Aou','Sep','Oct','Nov','Dec'];
+      return `${date.getDate()} ${m[date.getMonth()]} ${date.getFullYear()} ${time}`;
     }
-
-    const formattedDate = new Intl.DateTimeFormat('ar-MA', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(date);
-
-    return formattedDate;
+    return new Intl.DateTimeFormat('ar-MA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
   };
 
-
-
-  // Selection handlers
-  const toggleSelectOrder = (orderId: number) => {
-    setSelectedOrders(prev =>
-      prev.includes(orderId)
-        ? prev.filter(id => id !== orderId)
-        : [...prev, orderId]
-    );
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedOrders.length === orders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(orders.map((o: any) => o.id));
-    }
-  };
-
+  const toggleSelectOrder = (orderId: number) => { setSelectedOrders(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]); };
+  const toggleSelectAll = () => { selectedOrders.length === orders.length ? setSelectedOrders([]) : setSelectedOrders(orders.map((o: any) => o.id)); };
   const clearSelection = () => setSelectedOrders([]);
+
+  const pageSizeOptions = [
+    { label: '10', value: 10 },
+    { label: '50', value: 50 },
+    { label: '100', value: 100 },
+    { label: '500', value: 500 },
+    { label: '1000', value: 1000 },
+  ];
+
+  const orderNumberOptions = orderNumbers.map((on: any) => ({ label: typeof on === 'string' ? on : on.label || String(on.value), value: typeof on === 'string' ? on : String(on.value) }));
+  const customerOptions = partners.map((partner: any) => ({ label: `${partner.name}${partner.phone ? ` (${partner.phone})` : ''}`, value: String(partner.id) }));
+  const deliveryPersonOptions = deliveryPersons.filter((p: any) => p.isActive).map((person: any) => ({ label: person.name, value: String(person.id) }));
+
+  const resetFilters = () => {
+    setOrderNumberSearch(''); setCustomerIdSearch(''); setCustomerPhoneSearch(''); setDeliveryPersonIdSearch('');
+    setSearchInput(''); setFromClientFilter('all'); setDateFilterType('custom'); setDateRange({ start: undefined, end: undefined });
+    setCurrentPage(1); setPageSize(50);
+    setAppliedFilters({ search: '', orderNumber: '', deliveryStatus: 'all', fromClient: 'all', dateFilterType: 'custom', dateRange: { start: undefined, end: undefined } });
+  };
+
+  const applyFilters = () => {
+    const searchParts: string[] = [];
+    if (orderNumberSearch) searchParts.push(`order:${orderNumberSearch}`);
+    if (customerIdSearch) searchParts.push(`customerId:${customerIdSearch}`);
+    if (customerPhoneSearch) searchParts.push(`phone:${customerPhoneSearch}`);
+    if (deliveryPersonIdSearch) searchParts.push(`deliveryPersonId:${deliveryPersonIdSearch}`);
+    setCurrentPage(1); setPageSize(50);
+    setAppliedFilters({
+      search: searchParts.join(' '), orderNumber: orderNumberSearch,
+      deliveryStatus: appliedFilters.deliveryStatus, fromClient: fromClientFilter,
+      dateFilterType: 'custom', dateRange: { start: dateRange.start, end: dateRange.end },
+    });
+    setFiltersExpanded(false);
+  };
+
+  // Calendar date range state
+  const calendarDates = dateRange.start && dateRange.end ? [dateRange.start, dateRange.end] : dateRange.start ? [dateRange.start] : null;
 
   return (
     <AdminLayout>
-      <div className="min-h-[calc(100vh-64px)] flex flex-col max-w-7xl mx-auto w-full">
+      <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', maxWidth: '80rem', margin: '0 auto', width: '100%' }}>
         {/* Header */}
-        <div className="mb-4 sm:mb-6 flex-shrink-0">
+        <div style={{ marginBottom: '1.5rem', flexShrink: 0 }}>
           <PageHeader
             icon={ShoppingCart}
             title={t('orders')}
@@ -402,45 +246,47 @@ export default function Orders() {
             actions={
               <>
                 {/* View Mode Toggle */}
-                <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
                   <button
                     onClick={() => setViewMode('card')}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'card'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                    style={{
+                      padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer',
+                      backgroundColor: viewMode === 'card' ? '#ffffff' : 'transparent',
+                      color: viewMode === 'card' ? '#0f172a' : '#475569',
+                      boxShadow: viewMode === 'card' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                    }}
                   >
-                    <Grid3x3 className="w-4 h-4" />
+                    <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                    style={{
+                      padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer',
+                      backgroundColor: viewMode === 'list' ? '#ffffff' : 'transparent',
+                      color: viewMode === 'list' ? '#0f172a' : '#475569',
+                      boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                    }}
                   >
-                    <List className="w-4 h-4" />
+                    <List style={{ width: '1rem', height: '1rem' }} />
                   </button>
                 </div>
 
-                {/* Filters Toggle Button */}
+                {/* Filters Toggle */}
                 <button
                   onClick={() => setFiltersExpanded(!filtersExpanded)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${filtersExpanded
-                    ? 'bg-amber-500 text-white shadow-md'
-                    : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
-                    }`}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem', border: 'none', cursor: 'pointer',
+                    backgroundColor: filtersExpanded ? '#f59e0b' : '#ffffff',
+                    color: filtersExpanded ? '#ffffff' : '#334155',
+                    boxShadow: filtersExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
+                    ...(filtersExpanded ? {} : { border: '1px solid #cbd5e1' }),
+                  }}
                 >
-                  <Filter className="w-4 h-4" />
+                  <Filter style={{ width: '1rem', height: '1rem' }} />
                   <span>{t('filters')}</span>
-                  {filtersExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                  {/* Active Filter Count Badge */}
+                  {filtersExpanded ? <ChevronUp style={{ width: '1rem', height: '1rem' }} /> : <ChevronDown style={{ width: '1rem', height: '1rem' }} />}
                   {(appliedFilters.search || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && !filtersExpanded && (
-                    <span className="ml-1 px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">
+                    <span style={{ marginLeft: '0.25rem', padding: '0.125rem 0.5rem', backgroundColor: '#f59e0b', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px' }}>
                       {[appliedFilters.search, appliedFilters.fromClient !== 'all', Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end)].filter(Boolean).length}
                     </span>
                   )}
@@ -453,129 +299,133 @@ export default function Orders() {
         {/* Filters Overlay Panel */}
         {filtersExpanded && (
           <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
-              onClick={() => setFiltersExpanded(false)}
-            />
-
-            {/* Slide-in Panel */}
-            <div className="fixed inset-y-0 end-0 w-full sm:w-[520px] md:w-[560px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 40 }} onClick={() => setFiltersExpanded(false)} />
+            <div style={{ position: 'fixed', top: 0, bottom: 0, right: 0, width: '35rem', maxWidth: '100%', backgroundColor: '#ffffff', boxShadow: '-10px 0 30px rgba(0,0,0,0.1)', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
               {/* Panel Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-amber-500 to-amber-600">
-                <div className="flex items-center gap-3">
-                  <Filter className="w-5 h-5 text-white" />
-                  <h2 className="text-lg font-bold text-white">{t('filters')}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <Filter style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>{t('filters')}</h2>
                 </div>
-                <button
-                  onClick={() => setFiltersExpanded(false)}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-white" />
+                <button onClick={() => setFiltersExpanded(false)} style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}>
+                  <X style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
                 </button>
               </div>
 
-              {/* Panel Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-                {/* Search Filters Section */}
-                <div className="pb-6 border-b border-slate-200">
-                  <div className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                    <Search className="w-4 h-4 text-amber-600" />
+              {/* Panel Content */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {/* Search */}
+                <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Search style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
                     {t('search')}
                   </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* Order Number Search - Autocomplete */}
-                    <FormField label={t('orderNumber')}>
-                      <Autocomplete
-                        options={orderNumbers}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {/* Order Number */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('orderNumber')}</label>
+                      <Dropdown
                         value={orderNumberSearch}
-                        onValueChange={handleOrderNumberSearch}
+                        onChange={(e) => { setOrderNumberSearch(e.value); handleOrderNumberSearch(e.value || ''); }}
+                        options={orderNumberOptions}
+                        optionLabel="label"
+                        optionValue="value"
+                        filter
+                        showClear
                         placeholder="E.g., ORD-1001"
                         emptyMessage={t('noOrdersFound')}
-                        allowCustomValue={true}
+                        style={{ width: '100%' }}
+                        editable
                       />
-                    </FormField>
-
-                    {/* Customer Name Search - Autocomplete */}
-                    <FormField label={t('customerName')}>
-                      <Autocomplete
-                        options={partners.map((partner: any) => ({
-                          value: String(partner.id),
-                          label: `${partner.name}${partner.phone ? ` (${partner.phone})` : ''}`
-                        }))}
+                    </div>
+                    {/* Customer Name */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('customerName')}</label>
+                      <Dropdown
                         value={customerIdSearch}
-                        onValueChange={setCustomerIdSearch}
+                        onChange={(e) => setCustomerIdSearch(e.value)}
+                        options={customerOptions}
+                        optionLabel="label"
+                        optionValue="value"
+                        filter
+                        showClear
                         placeholder={t('typeCustomerName')}
                         emptyMessage={t('noCustomersFound')}
-                        allowCustomValue={false}
+                        style={{ width: '100%' }}
                       />
-                    </FormField>
-
-                    {/* Customer Phone Search */}
-                    <FormField label={t('phoneNumber')}>
-                      <div className="relative">
-                        <Input
+                    </div>
+                    {/* Customer Phone */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('phoneNumber')}</label>
+                      <div style={{ position: 'relative' }}>
+                        <InputText
                           type="tel"
                           placeholder="E.g., 0612345678..."
                           value={customerPhoneSearch}
                           onChange={(e) => setCustomerPhoneSearch(e.target.value)}
-                          fullWidth
+                          style={{ width: '100%' }}
                         />
                         {customerPhoneSearch && (
                           <button
                             onClick={() => setCustomerPhoneSearch('')}
-                            className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 z-10"
+                            style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', border: 'none', background: 'none', cursor: 'pointer', zIndex: 10 }}
                           >
-                            <X className="w-4 h-4" />
+                            <X style={{ width: '1rem', height: '1rem' }} />
                           </button>
                         )}
                       </div>
-                    </FormField>
-
-                    {/* Delivery Person Search - Autocomplete */}
-                    <FormField label={t('deliveryPerson')}>
-                      <Autocomplete
-                        options={deliveryPersons.filter((p: any) => p.isActive).map((person: any) => ({
-                          value: String(person.id),
-                          label: person.name
-                        }))}
+                    </div>
+                    {/* Delivery Person */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('deliveryPerson')}</label>
+                      <Dropdown
                         value={deliveryPersonIdSearch}
-                        onValueChange={setDeliveryPersonIdSearch}
+                        onChange={(e) => setDeliveryPersonIdSearch(e.value)}
+                        options={deliveryPersonOptions}
+                        optionLabel="label"
+                        optionValue="value"
+                        filter
+                        showClear
                         placeholder={t('selectDeliveryPerson')}
                         emptyMessage={t('noDeliveryPersons')}
-                        allowCustomValue={false}
+                        style={{ width: '100%' }}
                       />
-                    </FormField>
+                    </div>
                   </div>
                 </div>
 
                 {/* Date Range */}
                 <div>
-                  <div className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-amber-600" />
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Clock style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
                     {t('dateRange')}
                   </div>
-                  <DateRangePicker
-                    dateRange={dateRange}
-                    onDateRangeChange={(range) => {
-                      setDateRange(range);
-                      if (range.start || range.end) {
-                        setDateFilterType('custom');
+                  <Calendar
+                    value={calendarDates as any}
+                    onChange={(e) => {
+                      const val = e.value as Date[] | null;
+                      if (val && val.length >= 1) {
+                        setDateRange({ start: val[0], end: val[1] || undefined });
+                        if (val[0]) setDateFilterType('custom');
+                      } else {
+                        setDateRange({ start: undefined, end: undefined });
                       }
                     }}
+                    selectionMode="range"
                     placeholder={t('selectDate')}
+                    dateFormat="dd/mm/yy"
+                    showIcon
+                    style={{ width: '100%' }}
                   />
                 </div>
 
                 {/* Source Filter */}
                 <div>
-                  <div className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-                    <ShoppingCart className="w-4 h-4 text-amber-600" />
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
                     {t('orderSource')}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     {[
                       { key: 'all', label: t('all') },
                       { key: 'locale', label: t('local') },
@@ -584,114 +434,47 @@ export default function Orders() {
                       <button
                         key={filter.key}
                         onClick={() => setFromClientFilter(filter.key as any)}
-                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${fromClientFilter === filter.key
-                          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                          }`}
+                        style={{
+                          padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                          backgroundColor: fromClientFilter === filter.key ? '#3b82f6' : '#f8fafc',
+                          color: fromClientFilter === filter.key ? '#ffffff' : '#334155',
+                          border: fromClientFilter === filter.key ? 'none' : '2px solid #e2e8f0',
+                        }}
                       >
-                        <span>{filter.label}</span>
+                        {filter.label}
                       </button>
                     ))}
                   </div>
                 </div>
-
               </div>
 
               {/* Panel Footer */}
-              <div className="border-t border-slate-200 p-4 bg-slate-50 flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    // Reset temporary filters
-                    setOrderNumberSearch('');
-                    setCustomerIdSearch('');
-                    setCustomerPhoneSearch('');
-                    setDeliveryPersonIdSearch('');
-                    setSearchInput('');
-                    setFromClientFilter('all');
-                    setDateFilterType('custom');
-                    setDateRange({ start: undefined, end: undefined });
-                    setCurrentPage(1);
-                    setPageSize(50);
-                    setAppliedFilters({
-                      search: '',
-                      orderNumber: '',
-                      deliveryStatus: 'all',
-                      fromClient: 'all',
-                      dateFilterType: 'custom',
-                      dateRange: { start: undefined, end: undefined },
-                    });
-                  }}
-                >
-                  {t('reset')}
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={() => {
-                    // Combine all search fields into a search string
-                    const searchParts = [];
-                    if (orderNumberSearch) searchParts.push(`order:${orderNumberSearch}`);
-                    if (customerIdSearch) searchParts.push(`customerId:${customerIdSearch}`);
-                    if (customerPhoneSearch) searchParts.push(`phone:${customerPhoneSearch}`);
-                    if (deliveryPersonIdSearch) searchParts.push(`deliveryPersonId:${deliveryPersonIdSearch}`);
-                    const combinedSearch = searchParts.join(' ');
-
-                    let finalDateRange = { start: dateRange.start, end: dateRange.end };
-
-                    setCurrentPage(1);
-                    setPageSize(50);
-                    setAppliedFilters({
-                      search: combinedSearch,
-                      orderNumber: orderNumberSearch,
-                      deliveryStatus: appliedFilters.deliveryStatus, // Keep delivery status as is
-                      fromClient: fromClientFilter,
-                      dateFilterType: 'custom',
-                      dateRange: finalDateRange,
-                    });
-                    setFiltersExpanded(false);
-                  }}
-                >
-                  {t('apply')}
-                </Button>
+              <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
+                <Button label={t('reset')} outlined onClick={resetFilters} style={{ flex: 1 }} />
+                <Button label={t('apply')} onClick={applyFilters} style={{ flex: 1 }} />
               </div>
             </div>
           </>
         )}
 
-        {/* Delivery Status Filter Bar - Always Visible */}
-        <div className="mb-3 flex-shrink-0">
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-2.5 sm:p-3">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-amber-600" />
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">{t('deliveryStatus')}</h3>
+        {/* Delivery Status Filter Bar */}
+        <div style={{ marginBottom: '0.75rem', flexShrink: 0 }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Truck style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{t('deliveryStatus')}</h3>
               </div>
-
-              {/* Left/Right scroll buttons - Mobile only */}
-              <div className="flex items-center gap-1 lg:hidden">
-                <button
-                  onClick={scrollStatusLeft}
-                  className="bg-slate-100 hover:bg-slate-200 rounded-full p-1.5 transition-colors"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft className="w-4 h-4 text-slate-600" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <button onClick={scrollStatusLeft} style={{ backgroundColor: '#f1f5f9', borderRadius: '9999px', padding: '0.375rem', border: 'none', cursor: 'pointer' }}>
+                  <ChevronLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />
                 </button>
-                <button
-                  onClick={scrollStatusRight}
-                  className="bg-slate-100 hover:bg-slate-200 rounded-full p-1.5 transition-colors"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight className="w-4 h-4 text-slate-600" />
+                <button onClick={scrollStatusRight} style={{ backgroundColor: '#f1f5f9', borderRadius: '9999px', padding: '0.375rem', border: 'none', cursor: 'pointer' }}>
+                  <ChevronRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />
                 </button>
               </div>
             </div>
-
-            {/* Status buttons container */}
-            <div
-              ref={statusScrollRef}
-              className="flex gap-2 overflow-x-auto scrollbar-hide lg:flex-wrap scroll-smooth"
-            >
+            <div ref={statusScrollRef} style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', scrollBehavior: 'smooth' }}>
               {[
                 { key: 'all', label: t('all'), icon: '📦' },
                 { key: 'pending', label: t('pending'), icon: '⏳' },
@@ -707,24 +490,22 @@ export default function Orders() {
                   key={filter.key}
                   onClick={() => {
                     setDeliveryStatusFilter(filter.key as any);
-                    setAppliedFilters(prev => ({
-                      ...prev,
-                      deliveryStatus: filter.key as any,
-                      dateFilterType: 'custom',
-                      dateRange: { start: prev.dateRange.start, end: prev.dateRange.end },
-                    }));
+                    setAppliedFilters(prev => ({ ...prev, deliveryStatus: filter.key as any, dateFilterType: 'custom', dateRange: { start: prev.dateRange.start, end: prev.dateRange.end } }));
                   }}
-                  className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 ${deliveryStatusFilter === filter.key
-                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                    }`}
+                  style={{
+                    padding: '0.375rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0, border: 'none', cursor: 'pointer',
+                    backgroundColor: deliveryStatusFilter === filter.key ? '#f59e0b' : '#f8fafc',
+                    color: deliveryStatusFilter === filter.key ? '#ffffff' : '#334155',
+                    ...(deliveryStatusFilter !== filter.key ? { border: '2px solid #e2e8f0' } : {}),
+                  }}
                 >
-                  <span className="text-sm">{filter.icon}</span>
-                  <span className="whitespace-nowrap">{filter.label}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${deliveryStatusFilter === filter.key
-                    ? 'bg-white/25 text-white'
-                    : 'bg-slate-200 text-slate-600'
-                    }`}>
+                  <span style={{ fontSize: '0.875rem' }}>{filter.icon}</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>{filter.label}</span>
+                  <span style={{
+                    padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontSize: '0.625rem', fontWeight: 700,
+                    backgroundColor: deliveryStatusFilter === filter.key ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
+                    color: deliveryStatusFilter === filter.key ? '#ffffff' : '#475569',
+                  }}>
                     {deliveryStatusCounts[filter.key as keyof typeof deliveryStatusCounts]}
                   </span>
                 </button>
@@ -733,338 +514,268 @@ export default function Orders() {
           </div>
         </div>
 
-        {/* Pagination Info Bar - Top */}
+        {/* Pagination Info */}
         {orders.length > 0 && (
-          <div className="bg-slate-50 py-2 px-1">
-            <div className="flex items-center justify-between gap-4">
-              <div className="text-sm text-slate-600">
-                {t('showing')} <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
-                <span className="font-semibold">{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
+          <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem 0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+                {t('showing')} <span style={{ fontWeight: 600 }}>{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
+                <span style={{ fontWeight: 600 }}>{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span style={{ fontWeight: 600 }}>{totalCount}</span> {t('results')}
               </div>
-
-              {/* Page Size Selector */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-600">{t('perPage')}</span>
-                <NativeSelect
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569' }}>{t('perPage')}</span>
+                <Dropdown
                   value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  selectSize="sm"
-                >
-                  <option value={10}>10</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value={500}>500</option>
-                  <option value={1000}>1000</option>
-                </NativeSelect>
+                  onChange={(e) => { setPageSize(e.value); setCurrentPage(1); }}
+                  options={pageSizeOptions}
+                  optionLabel="label"
+                  optionValue="value"
+                  style={{ width: '5rem' }}
+                />
               </div>
-
-              {/* Navigation */}
-              <div className="flex items-center gap-2">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.375rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1, background: 'none' }}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
                 </button>
-                <div className="flex items-center gap-1">
-                  <Input
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <InputText
                     type="number"
                     min={1}
                     max={Math.ceil(totalCount / pageSize)}
-                    value={currentPage}
+                    value={String(currentPage)}
                     onChange={(e) => {
                       const page = parseInt(e.target.value, 10);
                       const maxPage = Math.ceil(totalCount / pageSize);
-                      if (!isNaN(page) && page >= 1 && page <= maxPage) {
-                        setCurrentPage(page);
-                      }
+                      if (!isNaN(page) && page >= 1 && page <= maxPage) setCurrentPage(page);
                     }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    inputSize="sm"
-                    className="w-12 text-center"
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                    style={{ width: '3rem', textAlign: 'center' }}
                     aria-label="Page number"
                   />
-                  <span className="text-sm text-slate-500">/</span>
-                  <span className="text-sm font-medium text-slate-700">{Math.ceil(totalCount / pageSize)}</span>
+                  <span style={{ fontSize: '0.875rem', color: '#64748b' }}>/</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{Math.ceil(totalCount / pageSize)}</span>
                 </div>
                 <button
                   onClick={() => setCurrentPage(Math.min(Math.ceil(totalCount / pageSize), currentPage + 1))}
                   disabled={currentPage === Math.ceil(totalCount / pageSize)}
-                  className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.375rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: currentPage === Math.ceil(totalCount / pageSize) ? 'not-allowed' : 'pointer', opacity: currentPage === Math.ceil(totalCount / pageSize) ? 0.5 : 1, background: 'none' }}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight style={{ width: '1rem', height: '1rem' }} />
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Orders Content - Scrollable */}
+        {/* Orders Content */}
         {ordersLoading ? (
-          <div className="space-y-3 px-4 py-4 animate-pulse">
+          <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl p-4 border border-slate-200">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 bg-slate-200 rounded-lg" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 w-32 bg-slate-200 rounded" />
-                    <div className="h-3 w-48 bg-slate-200 rounded" />
+              <div key={i} style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ height: '2.5rem', width: '2.5rem', backgroundColor: '#e2e8f0', borderRadius: '0.5rem' }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ height: '1rem', width: '8rem', backgroundColor: '#e2e8f0', borderRadius: '0.25rem' }} />
+                    <div style={{ height: '0.75rem', width: '12rem', backgroundColor: '#e2e8f0', borderRadius: '0.25rem' }} />
                   </div>
-                  <div className="h-6 w-20 bg-slate-200 rounded-full" />
+                  <div style={{ height: '1.5rem', width: '5rem', backgroundColor: '#e2e8f0', borderRadius: '9999px' }} />
                 </div>
               </div>
             ))}
           </div>
         ) : orders.length === 0 ? (
-          <div className="flex items-center justify-center flex-1 p-16">
-            <div className="flex flex-col items-center justify-center">
-              <div className="relative">
-                <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full"></div>
-                <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-100">
-                  <Package className="w-16 h-16 text-amber-500 mx-auto" strokeWidth={1.5} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '4rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'relative' }}>
+                <div style={{ backgroundColor: '#fffbeb', borderRadius: '1rem', padding: '2rem', border: '2px solid #fef3c7' }}>
+                  <Package style={{ width: '4rem', height: '4rem', color: '#f59e0b', margin: '0 auto', display: 'block' }} strokeWidth={1.5} />
                 </div>
               </div>
-              <h3 className="mt-6 text-xl font-bold text-slate-800">{t('noOrdersFound')}</h3>
-              <p className="mt-2 text-sm text-slate-500 max-w-sm text-center">
-                {(appliedFilters.search ||
-                  appliedFilters.orderNumber ||
-                  appliedFilters.deliveryStatus !== 'all' ||
-                  appliedFilters.fromClient !== 'all' ||
-                  appliedFilters.dateRange.start ||
-                  appliedFilters.dateRange.end)
+              <h3 style={{ marginTop: '1.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('noOrdersFound')}</h3>
+              <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#64748b', maxWidth: '24rem', textAlign: 'center' }}>
+                {(appliedFilters.search || appliedFilters.orderNumber || appliedFilters.deliveryStatus !== 'all' || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end)
                   ? "Aucune commande ne correspond à vos critères de recherche. Essayez de modifier les filtres."
                   : "Aucune commande pour le moment. Les nouvelles commandes apparaîtront ici."}
               </p>
-              {(appliedFilters.search ||
-                appliedFilters.orderNumber ||
-                appliedFilters.deliveryStatus !== 'all' ||
-                appliedFilters.fromClient !== 'all' ||
-                appliedFilters.dateRange.start ||
-                appliedFilters.dateRange.end) && (
-                  <Button
-                    onClick={() => {
-                      setOrderNumberSearch('');
-                      setCustomerIdSearch('');
-                      setCustomerPhoneSearch('');
-                      setDeliveryPersonIdSearch('');
-                      setSearchInput('');
-                      setFromClientFilter('all');
-                      setDateFilterType('custom');
-                      setDateRange({ start: undefined, end: undefined });
-                      setDeliveryStatusFilter('all');
-                      setCurrentPage(1);
-                      setAppliedFilters({
-                        search: '',
-                        orderNumber: '',
-                        deliveryStatus: 'all',
-                        fromClient: 'all',
-                        dateFilterType: 'custom',
-                        dateRange: { start: undefined, end: undefined },
-                      });
-                    }}
-                    className="mt-6"
-                  >
-                    Réinitialiser les filtres
-                  </Button>
-                )}
+              {(appliedFilters.search || appliedFilters.orderNumber || appliedFilters.deliveryStatus !== 'all' || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && (
+                <Button label="Réinitialiser les filtres" onClick={() => { resetFilters(); setDeliveryStatusFilter('all'); }} style={{ marginTop: '1.5rem' }} />
+              )}
             </div>
           </div>
         ) : viewMode === 'list' ? (
-          <>
-            <div className="flex-1">
-              <div className="space-y-1 sm:space-y-2">
-                {orders.map((order: any) => (
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {orders.map((order: any) => {
+                const dsb = getDeliveryStatusBadge(order.deliveryStatus);
+                const sb = getSourceBadge(order);
+                return (
                   <div
                     key={order.id}
                     onClick={() => toggleSelectOrder(order.id)}
-                    className={`relative bg-white rounded-lg sm:rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${selectedOrders.includes(order.id)
-                      ? 'border-amber-500 ring-2 ring-amber-500/20'
-                      : 'border-slate-200/60 hover:border-slate-300/60'
-                      }`}
+                    style={{
+                      position: 'relative', backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'hidden', cursor: 'pointer',
+                      border: selectedOrders.includes(order.id) ? '2px solid #f59e0b' : '1px solid #e2e8f0',
+                    }}
                   >
-                    <div className="px-3 sm:px-5 py-2.5 sm:py-4">
-                      <div className="flex items-center gap-2 sm:gap-4 min-w-min overflow-x-auto">
-                        {/* Selection Checkbox */}
-                        <div className="flex-shrink-0">
-                          <div
-                            className={`w-5 sm:w-6 h-5 sm:h-6 rounded-md border-2 flex items-center justify-center transition-all ${selectedOrders.includes(order.id)
-                              ? 'bg-amber-500 border-amber-500 text-white'
-                              : 'bg-white border-slate-300'
-                              }`}
-                          >
-                            {selectedOrders.includes(order.id) && (
-                              <Check className="w-4 h-4" />
-                            )}
+                    <div style={{ padding: '0.625rem 1.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 'min-content', overflowX: 'auto' }}>
+                        {/* Checkbox */}
+                        <div style={{ flexShrink: 0 }}>
+                          <div style={{
+                            width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            backgroundColor: selectedOrders.includes(order.id) ? '#f59e0b' : '#ffffff',
+                            borderColor: selectedOrders.includes(order.id) ? '#f59e0b' : '#cbd5e1',
+                            color: selectedOrders.includes(order.id) ? '#ffffff' : 'transparent',
+                          }}>
+                            {selectedOrders.includes(order.id) && <Check style={{ width: '1rem', height: '1rem' }} />}
                           </div>
                         </div>
-
-                        {/* Order Number & Status */}
-                        <div className="flex-shrink-0 min-w-fit">
-                          <span className="text-xs sm:text-sm font-semibold text-slate-500">#{order.orderNumber}</span>
-                          <p className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">
-                            {formatOrderDate(order.dateCreated)}
-                          </p>
+                        {/* Order Number */}
+                        <div style={{ flexShrink: 0, minWidth: 'fit-content' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>#{order.orderNumber}</span>
+                          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.125rem', whiteSpace: 'nowrap', margin: 0 }}>{formatOrderDate(order.dateCreated)}</p>
                         </div>
-
-                        {/* Delivery Status */}
-                        <div className="flex-shrink-0 flex items-center gap-2">
-                          <span className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getDeliveryStatusBadge(order.deliveryStatus).className}`}>
-                            {getDeliveryStatusBadge(order.deliveryStatus).icon}
-                            <span className="hidden sm:inline">{getDeliveryStatusBadge(order.deliveryStatus).label}</span>
+                        {/* Status badges */}
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', backgroundColor: dsb.bg, color: dsb.color, border: `1px solid ${dsb.border}` }}>
+                            {dsb.icon}
+                            <span>{dsb.label}</span>
                           </span>
-                          <span className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-semibold border whitespace-nowrap inline-flex items-center gap-1 ${getSourceBadge(order).className}`}>
-                            {getSourceBadge(order).icon}
-                            {getSourceBadge(order).label}
+                          <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}` }}>
+                            {sb.icon}
+                            {sb.label}
                           </span>
                         </div>
-
-                        {/* Customer Info - Hide on mobile, show on md+ */}
-                        <div className="hidden md:flex w-40 min-w-fit items-center gap-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md shadow-amber-500/30">
-                            <Package className="w-3 h-3 text-white" />
+                        {/* Customer */}
+                        <div style={{ display: 'flex', width: '10rem', minWidth: 'fit-content', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #fbbf24, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Package style={{ width: '0.75rem', height: '0.75rem', color: '#ffffff' }} />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-slate-800 truncate">{order.customerName}</p>
-                            <a href={`tel:${order.customerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-0.5 transition-colors">
-                              <Phone className="w-2.5 h-2.5" />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{order.customerName}</p>
+                            <a href={`tel:${order.customerPhone}`} style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.125rem', textDecoration: 'none' }}>
+                              <Phone style={{ width: '0.625rem', height: '0.625rem' }} />
                               {order.customerPhone}
                             </a>
                           </div>
                         </div>
-
-                        {/* Address - Hide on mobile, show on lg+ */}
+                        {/* Address */}
                         {order.customerAddress && (
-                          <div className="hidden lg:flex flex-1 min-w-fit items-center gap-1.5" title={order.customerAddress}>
-                            <div className="w-5 h-5 bg-amber-100 rounded-md flex items-center justify-center flex-shrink-0">
-                              <MapPin className="w-2.5 h-2.5 text-amber-600" />
+                          <div style={{ display: 'flex', flex: 1, minWidth: 'fit-content', alignItems: 'center', gap: '0.375rem' }} title={order.customerAddress}>
+                            <div style={{ width: '1.25rem', height: '1.25rem', backgroundColor: '#fef3c7', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <MapPin style={{ width: '0.625rem', height: '0.625rem', color: '#d97706' }} />
                             </div>
-                            <p className="text-xs text-slate-600 truncate">{order.customerAddress}</p>
+                            <p style={{ fontSize: '0.75rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{order.customerAddress}</p>
                           </div>
                         )}
-
                         {/* Total */}
-                        <div className="flex-shrink-0 text-right min-w-fit">
-                          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block hidden sm:block">{t('total')}</span>
-                          <span className="text-sm sm:text-base font-bold text-amber-600 block mt-0.5">
-                            {order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-xs">{t('currency')}</span>
+                        <div style={{ flexShrink: 0, textAlign: 'right', minWidth: 'fit-content' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>{t('total')}</span>
+                          <span style={{ fontSize: '1rem', fontWeight: 700, color: '#d97706', display: 'block', marginTop: '0.125rem' }}>
+                            {order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          </>
+          </div>
         ) : (
-          <>
-            <div className="flex-1">
-              <div className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {orders.map((order: any) => (
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+              {orders.map((order: any) => {
+                const dsb = getDeliveryStatusBadge(order.deliveryStatus);
+                const sb = getSourceBadge(order);
+                return (
                   <div
                     key={order.id}
                     onClick={() => toggleSelectOrder(order.id)}
-                    className={`group relative bg-white rounded-xl border shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col h-64 overflow-hidden ${selectedOrders.includes(order.id)
-                      ? 'border-amber-500 ring-2 ring-amber-500/30 shadow-md'
-                      : 'border-slate-200 hover:border-slate-300'
-                      }`}
+                    style={{
+                      position: 'relative', backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', height: '16rem', overflow: 'hidden', cursor: 'pointer',
+                      border: selectedOrders.includes(order.id) ? '2px solid #f59e0b' : '1px solid #e2e8f0',
+                    }}
                   >
-                    {/* Fixed Header */}
-                    <div className="px-4 py-3 bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-slate-200">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-xs font-bold text-slate-900">#{order.orderNumber}</span>
-                            <span className="text-xs text-slate-500">{formatOrderDate(order.dateCreated)}</span>
+                    {/* Card Header */}
+                    <div style={{ padding: '0.75rem 1rem', background: 'linear-gradient(to right, #f8fafc, #ffffff, #f8fafc)', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f172a' }}>#{order.orderNumber}</span>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatOrderDate(order.dateCreated)}</span>
                           </div>
                         </div>
-                        <div
-                          className="flex-shrink-0 -mr-2 -mt-1"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div
-                            className={`w-5 sm:w-6 h-5 sm:h-6 rounded-md border-2 flex items-center justify-center transition-all ${selectedOrders.includes(order.id)
-                              ? 'bg-amber-500 border-amber-500 text-white'
-                              : 'bg-white border-slate-300'
-                              }`}
-                          >
-                            {selectedOrders.includes(order.id) && (
-                              <Check className="w-4 h-4" />
-                            )}
+                        <div style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                          <div style={{
+                            width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            backgroundColor: selectedOrders.includes(order.id) ? '#f59e0b' : '#ffffff',
+                            borderColor: selectedOrders.includes(order.id) ? '#f59e0b' : '#cbd5e1',
+                            color: selectedOrders.includes(order.id) ? '#ffffff' : 'transparent',
+                          }}>
+                            {selectedOrders.includes(order.id) && <Check style={{ width: '1rem', height: '1rem' }} />}
                           </div>
                         </div>
                       </div>
-
-                      {/* Delivery Status & Source Badges Row */}
-                      <div className="flex items-center justify-between gap-2 mt-2.5 w-full">
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm ${getDeliveryStatusBadge(order.deliveryStatus).className}`}>
-                          {getDeliveryStatusBadge(order.deliveryStatus).icon}
-                          <span>{getDeliveryStatusBadge(order.deliveryStatus).label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginTop: '0.625rem', width: '100%' }}>
+                        <span style={{ padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', backgroundColor: dsb.bg, color: dsb.color, border: `1px solid ${dsb.border}` }}>
+                          {dsb.icon}
+                          <span>{dsb.label}</span>
                         </span>
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border inline-flex items-center gap-1.5 ${getSourceBadge(order).className}`}>
-                          {getSourceBadge(order).icon}
-                          <span>{getSourceBadge(order).label}</span>
+                        <span style={{ padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.375rem', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}` }}>
+                          {sb.icon}
+                          <span>{sb.label}</span>
                         </span>
                       </div>
                     </div>
 
-                    {/* Compact Content */}
-                    <div className="px-4 py-3 space-y-2.5 flex-1 overflow-y-auto">
-                      {/* Customer Section */}
-                      <div className="flex items-start gap-3">
-                        <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0 border border-amber-200">
-                          <Package className="w-3.5 h-3.5 text-amber-600" />
+                    {/* Card Content */}
+                    <div style={{ padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.625rem', flex: 1, overflowY: 'auto' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                        <div style={{ width: '1.75rem', height: '1.75rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid #fde68a' }}>
+                          <Package style={{ width: '0.875rem', height: '0.875rem', color: '#d97706' }} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">{order.customerName}</p>
-                          <a href={`tel:${order.customerPhone}`} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 mt-0.5 transition-colors">
-                            <Phone className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{order.customerPhone}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{order.customerName}</p>
+                          <a href={`tel:${order.customerPhone}`} style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.125rem', textDecoration: 'none' }}>
+                            <Phone style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0 }} />
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{order.customerPhone}</span>
                           </a>
                         </div>
                       </div>
-
-                      {/* Address Section */}
                       {order.customerAddress && (
-                        <div className="flex items-start gap-2.5 bg-blue-50 rounded-lg p-2.5 border border-blue-100">
-                          <div className="w-4 h-4 bg-blue-100 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <MapPin className="w-2.5 h-2.5 text-blue-600" />
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem', padding: '0.625rem', border: '1px solid #dbeafe' }}>
+                          <div style={{ width: '1rem', height: '1rem', backgroundColor: '#dbeafe', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.125rem' }}>
+                            <MapPin style={{ width: '0.625rem', height: '0.625rem', color: '#2563eb' }} />
                           </div>
-                          <p className="text-xs text-slate-700 leading-tight flex-1 line-clamp-2">{order.customerAddress}</p>
+                          <p style={{ fontSize: '0.75rem', color: '#334155', lineHeight: 1.3, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>{order.customerAddress}</p>
                         </div>
                       )}
                     </div>
 
-                    {/* Fixed Footer */}
-                    <div className="border-t border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 px-4 py-3 flex items-center justify-between flex-shrink-0">
-                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">{t('total')}</span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-bold text-amber-600">{order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        <span className="text-xs font-semibold text-slate-500">{t('currency')}</span>
+                    {/* Card Footer */}
+                    <div style={{ borderTop: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('total')}</span>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#d97706' }}>{order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>{t('currency')}</span>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          </>
+          </div>
         )}
       </div>
 
       {/* Order Details Modal */}
       {selectedOrderId && orderDetails && (
-        <OrderDetailsModal
-          order={orderDetails.order || orderDetails}
-          onClose={() => setSelectedOrderId(null)}
-        />
+        <OrderDetailsModal order={orderDetails.order || orderDetails} onClose={() => setSelectedOrderId(null)} />
       )}
 
       {/* Floating Action Bar */}
@@ -1075,97 +786,40 @@ export default function Orders() {
         isAllSelected={selectedOrders.length === orders.length}
         totalCount={orders.length}
         actions={[
-          {
-            id: 'details',
-            label: t('details'),
-            icon: <Info className="w-3.5 h-3.5" />,
-            onClick: () => setSelectedOrderId(selectedOrders[0]),
-            hidden: selectedOrders.length !== 1,
-          },
-          {
-            id: 'preview-receipt',
-            label: t('previewReceipt'),
-            icon: <Receipt className="w-3.5 h-3.5" />,
-            onClick: () => handlePreview('receipt'),
-            hidden: selectedOrders.length !== 1,
-          },
-          {
-            id: 'preview-delivery-note',
-            label: t('previewDeliveryNote'),
-            icon: <Truck className="w-3.5 h-3.5" />,
-            onClick: () => handlePreview('delivery-note'),
-            hidden: selectedOrders.length !== 1,
-          },
-          {
-            id: 'cancel-delivery',
-            label: t('cancelDelivery'),
-            icon: <XCircle className="w-3.5 h-3.5" />,
-            onClick: () => cancelDeliveryMutation.mutate(selectedOrders),
-            variant: 'danger' as const,
-            hidden: !selectedOrders.every(orderId => {
-              const order = orders.find((o: any) => o.id === orderId);
-              return order && ['pending', 'assigned', 'confirmed'].includes(order.deliveryStatus);
-            }),
-          },
-          {
-            id: 'delete',
-            label: t('delete'),
-            icon: <Trash2 className="w-3.5 h-3.5" />,
-            onClick: () => toastConfirm(t('deleteOrders'), () => deleteMutation.mutate(selectedOrders), { description: t('confirmDeleteOrders'), confirmLabel: t('delete') }),
-            variant: 'danger' as const,
-          },
+          { id: 'details', label: t('details'), icon: <Info style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => setSelectedOrderId(selectedOrders[0]), hidden: selectedOrders.length !== 1 },
+          { id: 'preview-receipt', label: t('previewReceipt'), icon: <Receipt style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('receipt'), hidden: selectedOrders.length !== 1 },
+          { id: 'preview-delivery-note', label: t('previewDeliveryNote'), icon: <Truck style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('delivery-note'), hidden: selectedOrders.length !== 1 },
+          { id: 'cancel-delivery', label: t('cancelDelivery'), icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => cancelDeliveryMutation.mutate(selectedOrders), variant: 'danger' as const, hidden: !selectedOrders.every(orderId => { const order = orders.find((o: any) => o.id === orderId); return order && ['pending', 'assigned', 'confirmed'].includes(order.deliveryStatus); }) },
+          { id: 'delete', label: t('delete'), icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => toastConfirm(t('deleteOrders'), () => deleteMutation.mutate(selectedOrders), { description: t('confirmDeleteOrders'), confirmLabel: t('delete') }), variant: 'danger' as const },
         ]}
       >
-        {/* Assign to Delivery - Custom Dropdown */}
-        <div className="relative group">
-          <User className="w-3.5 h-3.5 text-amber-600 absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
-          <NativeSelect
+        {/* Assign to Delivery */}
+        <div style={{ position: 'relative' }}>
+          <User style={{ width: '0.875rem', height: '0.875rem', color: '#d97706', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 10 }} />
+          <Dropdown
             onChange={(e) => {
-              if (e.target.value) {
-                const deliveryPersonId = e.target.value;
+              if (e.value) {
                 let assignedCount = 0;
                 let skippedCount = 0;
-
                 selectedOrders.forEach(orderId => {
                   const order = orders.find((o: any) => o.id === orderId);
-                  if (order && order.deliveryStatus === 'pending') {
-                    handleAssign(orderId, deliveryPersonId);
-                    assignedCount++;
-                  } else {
-                    skippedCount++;
-                  }
+                  if (order && order.deliveryStatus === 'pending') { handleAssign(orderId, e.value); assignedCount++; } else { skippedCount++; }
                 });
-
-                if (assignedCount > 0) {
-                  toastSuccess(`${assignedCount} ${t('ordersAssigned')}`);
-                }
-                if (skippedCount > 0) {
-                  toastWarning(`${skippedCount} ${t('ordersSkippedNotPending')}`);
-                }
-
+                if (assignedCount > 0) toastSuccess(`${assignedCount} ${t('ordersAssigned')}`);
+                if (skippedCount > 0) toastWarning(`${skippedCount} ${t('ordersSkippedNotPending')}`);
                 clearSelection();
-                e.target.value = '';
               }
             }}
-            selectSize="sm"
-            className="max-w-[120px] pl-8 sm:pl-9 truncate"
-          >
-            <option value="">
-              {t('assignToDelivery')}
-            </option>
-            {deliveryPersons.filter((p: any) => p.isActive).map((person: any) => (
-              <option key={person.id} value={person.id}>{person.name}</option>
-            ))}
-          </NativeSelect>
+            options={deliveryPersons.filter((p: any) => p.isActive).map((person: any) => ({ label: person.name, value: String(person.id) }))}
+            optionLabel="label"
+            optionValue="value"
+            placeholder={t('assignToDelivery')}
+            style={{ maxWidth: '10rem', paddingLeft: '2rem' }}
+          />
         </div>
       </FloatingActionBar>
 
-      <PDFPreviewModal
-        isOpen={showPDFPreview}
-        onClose={() => setShowPDFPreview(false)}
-        pdfUrl={pdfUrl}
-        title={pdfTitle}
-      />
+      <PDFPreviewModal isOpen={showPDFPreview} onClose={() => setShowPDFPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
     </AdminLayout>
   );
 }

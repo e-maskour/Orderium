@@ -9,8 +9,8 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">{t('loading')}</div>
+      <div className="flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+        <span style={{ color: '#64748b' }}>{t('loading')}</span>
       </div>
     );
   }

@@ -4,9 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { Shield } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { FormField } from '../components/ui/form-field';
-import { Button } from '../components/ui/button';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
 
 export default function Login() {
   const [credentials, setCredentials] = useState({ phoneNumber: '', password: '' });
@@ -32,50 +31,51 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
-      <div className="bg-card p-8 rounded-xl shadow-xl w-full max-w-md border border-border">
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)', padding: '1rem' }}>
+      <div style={{ background: '#ffffff', padding: '2rem', borderRadius: '0.75rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', width: '100%', maxWidth: '28rem', border: '1px solid #e2e8f0' }}>
         {/* Professional Admin Logo */}
-        <div className="text-center mb-6">
-          <div className="mx-auto relative w-32 h-32 mb-4">
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <div style={{ margin: '0 auto', position: 'relative', width: '8rem', height: '8rem', marginBottom: '1rem' }}>
             {/* Animated security pattern background */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-full h-1 bg-gradient-to-r from-transparent via-[#235ae4]/30 to-transparent rounded-full opacity-40"></div>
-              <div className="absolute w-2 h-2 rounded-full animate-ping" style={{ left: '20%', backgroundColor: '#235ae4' }}></div>
-              <div className="absolute w-2 h-2 rounded-full animate-pulse" style={{ right: '20%', backgroundColor: '#235ae4' }}></div>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '100%', height: '0.25rem', background: 'linear-gradient(to right, transparent, rgba(35,90,228,0.3), transparent)', borderRadius: '9999px', opacity: 0.4 }}></div>
+              <div className="animate-ping" style={{ position: 'absolute', left: '20%', width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: '#235ae4' }}></div>
+              <div className="animate-pulse" style={{ position: 'absolute', right: '20%', width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: '#235ae4' }}></div>
             </div>
 
             {/* Main Orderium O Logo */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 rounded-2xl shadow-2xl flex items-center justify-center relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)' }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '6rem', height: '6rem', borderRadius: '1rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)' }}>
                 {/* Subtle shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top right, transparent, rgba(255,255,255,0.1), transparent)' }}></div>
                 {/* Large O */}
-                <span className="text-5xl font-bold text-white relative z-10">O</span>
+                <span style={{ fontSize: '3rem', fontWeight: 700, color: '#ffffff', position: 'relative', zIndex: 10 }}>O</span>
               </div>
             </div>
 
             {/* Shield Icon Badge for Admin */}
-            <div className="absolute bottom-0 right-0 w-12 h-12 bg-white rounded-xl shadow-lg flex items-center justify-center" style={{ borderWidth: '2px', borderColor: '#e0ebff' }}>
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)' }}>
-                <Shield className="w-5 h-5 text-white" />
+            <div style={{ position: 'absolute', bottom: 0, right: 0, width: '3rem', height: '3rem', background: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #e0ebff' }}>
+              <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)' }}>
+                <Shield style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
               </div>
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">{t('appName')}</h1>
-          <p className="text-base text-muted-foreground">{t('adminBackoffice')}</p>
-          <p className="text-sm text-muted-foreground mt-2">{t('welcomeBack')}</p>
-          <div className="mt-3 flex justify-center">
+          <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111827', marginBottom: '0.25rem' }}>{t('appName')}</h1>
+          <p style={{ fontSize: '1rem', color: '#6b7280' }}>{t('adminBackoffice')}</p>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>{t('welcomeBack')}</p>
+          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'center' }}>
             <LanguageToggle />
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label={t('phoneNumber')} htmlFor="login-phone">
-            <Input
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label htmlFor="login-phone" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>{t('phoneNumber')}</label>
+            <InputText
               id="login-phone"
               type="tel"
-              value={credentials.phoneNumber}
+              value={String(credentials.phoneNumber)}
               onChange={(e) => {
                 setCredentials({ ...credentials, phoneNumber: e.target.value });
                 setError('');
@@ -83,14 +83,16 @@ export default function Login() {
               placeholder="0600000000"
               required
               disabled={isLoading}
+              style={{ width: '100%' }}
             />
-          </FormField>
+          </div>
 
-          <FormField label={t('password')} htmlFor="login-password">
-            <Input
+          <div>
+            <label htmlFor="login-password" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>{t('password')}</label>
+            <InputText
               id="login-password"
               type="password"
-              value={credentials.password}
+              value={String(credentials.password)}
               onChange={(e) => {
                 setCredentials({ ...credentials, password: e.target.value });
                 setError('');
@@ -98,24 +100,22 @@ export default function Login() {
               placeholder={t('enterYourPassword')}
               required
               disabled={isLoading}
+              style={{ width: '100%' }}
             />
-          </FormField>
+          </div>
 
           {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-sm text-destructive">{error}</p>
+            <div style={{ padding: '0.75rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '0.5rem' }}>
+              <p style={{ fontSize: '0.875rem', color: '#ef4444' }}>{error}</p>
             </div>
           )}
 
           <Button
             type="submit"
             loading={isLoading}
-            loadingText={t('loggingIn')}
-            className="w-full"
-            style={{ background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)' }}
-          >
-            {t('login')}
-          </Button>
+            label={isLoading ? t('loggingIn') : t('login')}
+            style={{ width: '100%', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)' }}
+          />
         </form>
       </div>
     </div>

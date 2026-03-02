@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, BookOpen } from 'lucide-react';
+import { Button } from 'primereact/button';
+import { Dropdown as PrDropdown } from 'primereact/dropdown';
+import { InputText } from 'primereact/inputtext';
 import { DocumentItem } from '../../modules/documents/types';
 import { calculateItemTotal } from '../../modules/documents/hooks';
 import { IProduct } from '../../modules/products/products.interface';
 import { productsService } from '../../modules/products/products.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductCatalogueModal } from '../ProductCatalogueModal';
-import { Autocomplete } from '../ui/autocomplete';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import { NativeSelect } from '../ui/native-select';
-import { FormField } from '../ui/form-field';
 
 interface DocumentItemsTableProps {
   items: DocumentItem[];
@@ -133,107 +131,106 @@ export function DocumentItemsTable({
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-4 md:p-6 overflow-visible">
-        <div className="mb-3 sm:mb-4 md:mb-6">
-          <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-800">{t('invoice.articlesTitle')}</h3>
+      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1rem', overflow: 'visible' }}>
+        <div style={{ marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('invoice.articlesTitle')}</h3>
         </div>
 
         {/* Desktop Table View - Hidden on mobile and tablet */}
-        <div className="hidden lg:block overflow-x-auto" style={{ overflowY: 'visible' }}>
-          <table className="w-full" style={{ overflow: 'visible' }}>
+        <div className="hidden lg:block" style={{ overflowX: 'auto', overflowY: 'visible' }}>
+          <table style={{ width: '100%', overflow: 'visible' }}>
             <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-[35%] min-w-[240px]">
+              <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '35%', minWidth: '240px' }}>
                   {t('invoice.descriptionHeader')}
                 </th>
-                <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-24">
+                <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '6rem' }}>
                   {t('invoice.quantityHeader')}
                 </th>
                 {showPriceColumn && (
-                  <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-56">
+                  <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '14rem' }}>
                     {t('invoice.unitPriceHeader')}
                   </th>
                 )}
                 {showDiscountColumn && (
-                  <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-16">
+                  <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '4rem' }}>
                     {t('invoice.discountHeader')}
                   </th>
                 )}
                 {showTaxColumn && (
-                  <th className="text-left py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-32">
+                  <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '8rem' }}>
                     {t('invoice.tax')}
                   </th>
                 )}
                 {showTotalColumn && (
-                  <th className="text-center py-2 px-3 text-xs sm:text-sm font-semibold text-slate-700 w-32">
+                  <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '8rem' }}>
                     {t('invoice.totalHeader')}
                   </th>
                 )}
-                <th className="w-10"></th>
+                <th style={{ width: '2.5rem' }}></th>
               </tr>
             </thead>
             <tbody style={{ overflow: 'visible' }}>
               {items.map((item) => (
-                <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50" style={{ overflow: 'visible' }}>
-                  <td className="py-3 px-3 w-[35%] min-w-[240px]" style={{ overflow: 'visible' }}>
-                    <Autocomplete
+                <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', overflow: 'visible' }}>
+                  <td style={{ padding: '0.75rem', width: '35%', minWidth: '240px', overflow: 'visible' }}>
+                    <PrDropdown
+                      value={item.productId ? String(item.productId) : null}
                       options={products.map(product => ({
                         value: String(product.id),
                         label: product.name
                       }))}
-                      value={item.productId ? String(item.productId) : ''}
-                      onValueChange={(value) => handleSelectProduct(item.id, value)}
+                      onChange={(e) => handleSelectProduct(item.id, e.value)}
+                      optionLabel="label"
+                      optionValue="value"
                       placeholder={t('invoice.itemDescriptionPlaceholder')}
-                      emptyMessage={t('invoice.noProductsFound')}
+                      emptyFilterMessage={t('invoice.noProductsFound')}
                       disabled={readOnly}
-                      allowCustomValue={false}
-                      className="text-sm"
+                      filter
+                      showClear
+                      style={{ width: '100%', fontSize: '0.875rem' }}
                     />
                   </td>
-                  <td className="py-3 px-3">
-                    <Input
+                  <td style={{ padding: '0.75rem' }}>
+                    <InputText
                       type="number"
                       min={0.1}
                       step={0.1}
-                      value={item.quantity}
+                      value={String(item.quantity)}
                       onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                      inputSize="sm"
-                      className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       disabled={readOnly}
-                      fullWidth
+                      style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem' }}
                     />
                   </td>
                   {showPriceColumn && (
-                    <td className="py-3 px-3">
-                      <Input
+                    <td style={{ padding: '0.75rem' }}>
+                      <InputText
                         type="number"
                         min={0}
                         step={0.1}
-                        value={item.unitPrice}
+                        value={String(item.unitPrice)}
                         onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        inputSize="sm"
-                        className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         disabled={readOnly}
-                        fullWidth
+                        style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem' }}
                       />
                     </td>
                   )}
                   {showDiscountColumn && (
-                    <td className="py-3 px-3">
-                      <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-500">
+                    <td style={{ padding: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '0.5rem', overflow: 'hidden' }}>
                         <input
                           type="number"
                           min="0"
                           step="0.1"
                           value={item.discount}
                           onChange={(e) => handleItemChange(item.id, 'discount', parseFloat(e.target.value) || 0)}
-                          className="w-14 flex-none px-2 py-2 text-sm text-center focus:outline-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                          style={{ width: '3.5rem', flex: 'none', padding: '0.5rem', fontSize: '0.875rem', textAlign: 'center', border: 'none', outline: 'none', opacity: readOnly ? 0.5 : 1 }}
                           disabled={readOnly}
                         />
                         <button
                           type="button"
                           onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
-                          className="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium min-w-[40px] transition-colors disabled:bg-slate-200 disabled:text-slate-400"
+                          style={{ padding: '0.5rem', backgroundColor: '#f1f5f9', color: '#334155', fontSize: '0.75rem', fontWeight: 500, minWidth: '40px', border: 'none', cursor: readOnly ? 'default' : 'pointer' }}
                           disabled={readOnly}
                         >
                           {item.discountType === 0 ? 'DH' : '%'}
@@ -242,34 +239,37 @@ export function DocumentItemsTable({
                     </td>
                   )}
                   {showTaxColumn && (
-                    <td className="py-3 px-3">
-                      <NativeSelect
+                    <td style={{ padding: '0.75rem' }}>
+                      <PrDropdown
                         value={item.tax}
-                        onChange={(e) => handleItemChange(item.id, 'tax', parseFloat(e.target.value))}
-                        selectSize="sm"
+                        options={[
+                          { label: '0%', value: 0 },
+                          { label: '10%', value: 10 },
+                          { label: '20%', value: 20 },
+                        ]}
+                        onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
+                        optionLabel="label"
+                        optionValue="value"
                         disabled={readOnly}
-                      >
-                        <option value={0}>0%</option>
-                        <option value={10}>10%</option>
-                        <option value={20}>20%</option>
-                      </NativeSelect>
+                        style={{ width: '100%', fontSize: '0.875rem' }}
+                      />
                     </td>
                   )}
                   {showTotalColumn && (
-                    <td className="py-3 px-3">
-                      <div className="text-center font-semibold text-slate-800 text-sm">
+                    <td style={{ padding: '0.75rem' }}>
+                      <div style={{ textAlign: 'center', fontWeight: 600, color: '#1e293b', fontSize: '0.875rem' }}>
                         {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                       </div>
                     </td>
                   )}
-                  <td className="py-3 px-3">
+                  <td style={{ padding: '0.75rem' }}>
                     {!readOnly && items.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(item.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        style={{ padding: '0.5rem', color: '#dc2626', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 style={{ width: '1rem', height: '1rem' }} />
                       </button>
                     )}
                   </td>
@@ -280,142 +280,162 @@ export function DocumentItemsTable({
         </div>
 
         {/* Mobile & Tablet Card View - Shown on mobile and tablet */}
-        <div className="lg:hidden space-y-3 sm:space-y-4">
+        <div className="lg:hidden" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {items.map((item, index) => (
-            <div key={item.id} className="border border-slate-200 rounded-lg p-3 sm:p-4 bg-gradient-to-br from-slate-50 to-white">
+            <div key={item.id} style={{ border: '1px solid #e2e8f0', borderRadius: '0.5rem', padding: '0.75rem', background: 'linear-gradient(to bottom right, #f8fafc, #ffffff)' }}>
               {/* Item Number */}
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm sm:text-base font-semibold text-slate-800">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
                   Item {index + 1}
                 </h4>
                 {!readOnly && items.length > 1 && (
                   <button
                     type="button"
                     onClick={() => handleRemoveItem(item.id)}
-                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    style={{ padding: '0.375rem', color: '#dc2626', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}
                   >
-                    <Trash2 className="w-4 sm:w-5 h-4 sm:h-5" />
+                    <Trash2 style={{ width: '1rem', height: '1rem' }} />
                   </button>
                 )}
               </div>
 
               {/* Description Field */}
-              <div className="mb-3 sm:mb-4">
-                <FormField label={<>{t('invoice.descriptionHeader')} <span className="text-red-500">*</span></>}>
-                  <Autocomplete
+              <div style={{ marginBottom: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                    {t('invoice.descriptionHeader')} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <PrDropdown
+                    value={item.productId ? String(item.productId) : null}
                     options={products.map(product => ({
                       value: String(product.id),
                       label: product.name
                     }))}
-                    value={item.productId ? String(item.productId) : ''}
-                    onValueChange={(value) => handleSelectProduct(item.id, value)}
+                    onChange={(e) => handleSelectProduct(item.id, e.value)}
+                    optionLabel="label"
+                    optionValue="value"
                     placeholder={t('invoice.itemDescriptionPlaceholder')}
-                    emptyMessage={t('invoice.noProductsFound')}
+                    emptyFilterMessage={t('invoice.noProductsFound')}
                     disabled={readOnly}
-                    allowCustomValue={false}
+                    filter
+                    showClear
+                    style={{ width: '100%' }}
                   />
-                </FormField>
+                </div>
               </div>
 
               {/* Quantity & Unit Price - Side by side on mobile */}
-              <div className={`grid gap-2 sm:gap-3 mb-3 sm:mb-4 ${showPriceColumn ? 'grid-cols-3' : 'grid-cols-1'}`}>
+              <div style={{ display: 'grid', gridTemplateColumns: showPriceColumn ? '1fr 2fr' : '1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
                 <div>
-                  <FormField label={t('invoice.quantityHeader')}>
-                    <Input
-                      type="number"
-                      min={0.1}
-                      step={0.1}
-                      value={item.quantity}
-                      onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                      className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      disabled={readOnly}
-                      fullWidth
-                    />
-                  </FormField>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                    {t('invoice.quantityHeader')}
+                  </label>
+                  <InputText
+                    type="number"
+                    min={0.1}
+                    step={0.1}
+                    value={String(item.quantity)}
+                    onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                    disabled={readOnly}
+                    style={{ width: '100%', textAlign: 'center' }}
+                  />
                 </div>
                 {showPriceColumn && (
-                  <div className="col-span-2">
-                    <FormField label={t('invoice.unitPriceHeader')}>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        value={item.unitPrice}
-                        onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        disabled={readOnly}
-                        fullWidth
-                      />
-                    </FormField>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                      {t('invoice.unitPriceHeader')}
+                    </label>
+                    <InputText
+                      type="number"
+                      min={0}
+                      step={0.1}
+                      value={String(item.unitPrice)}
+                      onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                      disabled={readOnly}
+                      style={{ width: '100%', textAlign: 'center' }}
+                    />
                   </div>
                 )}
               </div>
 
               {/* Discount & Tax - Side by side on mobile */}
-              <div className="space-y-3 sm:space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {showDiscountColumn && (
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    <div className="col-span-1">
-                      <FormField label={t('invoice.discountHeader')}>
-                        <div className="flex items-center gap-1.5 border border-slate-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-500">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.1"
-                            value={item.discount}
-                            onChange={(e) => handleItemChange(item.id, 'discount', parseFloat(e.target.value) || 0)}
-                            className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 text-sm sm:text-base text-center focus:outline-none border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-slate-100 disabled:text-slate-500"
-                            disabled={readOnly}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
-                            className="px-2 py-2.5 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-medium min-w-[44px] transition-colors disabled:bg-slate-200 disabled:text-slate-400"
-                            disabled={readOnly}
-                          >
-                            {item.discountType === 0 ? 'DH' : '%'}
-                          </button>
-                        </div>
-                      </FormField>
+                  <div style={{ display: 'grid', gridTemplateColumns: showTaxColumn ? '1fr 1fr' : '1fr', gap: '0.5rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                        {t('invoice.discountHeader')}
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={item.discount}
+                          onChange={(e) => handleItemChange(item.id, 'discount', parseFloat(e.target.value) || 0)}
+                          style={{ flex: 1, padding: '0.625rem', fontSize: '0.875rem', textAlign: 'center', border: 'none', outline: 'none', opacity: readOnly ? 0.5 : 1 }}
+                          disabled={readOnly}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
+                          style={{ padding: '0.625rem 0.5rem', backgroundColor: '#f1f5f9', color: '#334155', fontSize: '0.75rem', fontWeight: 500, minWidth: '44px', border: 'none', cursor: readOnly ? 'default' : 'pointer' }}
+                          disabled={readOnly}
+                        >
+                          {item.discountType === 0 ? 'DH' : '%'}
+                        </button>
+                      </div>
                     </div>
                     {showTaxColumn && (
-                      <div className="col-span-1">
-                        <FormField label={t('invoice.tax')}>
-                          <NativeSelect
-                            value={item.tax}
-                            onChange={(e) => handleItemChange(item.id, 'tax', parseFloat(e.target.value))}
-                            disabled={readOnly}
-                          >
-                            <option value={0}>0%</option>
-                            <option value={10}>10%</option>
-                            <option value={20}>20%</option>
-                          </NativeSelect>
-                        </FormField>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                          {t('invoice.tax')}
+                        </label>
+                        <PrDropdown
+                          value={item.tax}
+                          options={[
+                            { label: '0%', value: 0 },
+                            { label: '10%', value: 10 },
+                            { label: '20%', value: 20 },
+                          ]}
+                          onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
+                          optionLabel="label"
+                          optionValue="value"
+                          disabled={readOnly}
+                          style={{ width: '100%' }}
+                        />
                       </div>
                     )}
                   </div>
                 )}
                 {showDiscountColumn === false && showTaxColumn && (
-                  <FormField label={t('invoice.tax')}>
-                    <NativeSelect
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                      {t('invoice.tax')}
+                    </label>
+                    <PrDropdown
                       value={item.tax}
-                      onChange={(e) => handleItemChange(item.id, 'tax', parseFloat(e.target.value))}
+                      options={[
+                        { label: '0%', value: 0 },
+                        { label: '10%', value: 10 },
+                        { label: '20%', value: 20 },
+                      ]}
+                      onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
+                      optionLabel="label"
+                      optionValue="value"
                       disabled={readOnly}
-                    >
-                      <option value={0}>0%</option>
-                      <option value={10}>10%</option>
-                      <option value={20}>20%</option>
-                    </NativeSelect>
-                  </FormField>
+                      style={{ width: '100%' }}
+                    />
+                  </div>
                 )}
               </div>
 
               {/* Total - Highlighted */}
               {showTotalColumn && (
-                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50 -mx-3 sm:-mx-4 px-3 sm:px-4 py-2.5 sm:py-3 rounded-b-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm font-semibold text-slate-700">{t('invoice.totalHeader')}:</span>
-                    <span className="text-base sm:text-lg md:text-xl font-bold text-amber-700">
+                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', background: 'linear-gradient(to right, #fffbeb, #fff7ed)', margin: '0.75rem -0.75rem 0', padding: '0.625rem 0.75rem', borderRadius: '0 0 0.5rem 0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('invoice.totalHeader')}:</span>
+                    <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#b45309' }}>
                       {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
@@ -426,22 +446,20 @@ export function DocumentItemsTable({
         </div>
 
         {!readOnly && (
-          <div className="mt-4 sm:mt-6 flex flex-wrap justify-start gap-2 sm:gap-3">
+          <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', gap: '0.5rem' }}>
             <Button
               type="button"
               onClick={handleAddItem}
-              leadingIcon={Plus}
-            >
-              <span className="hidden sm:inline">{t('invoice.addLine')}</span>
-            </Button>
+              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+              label={t('invoice.addLine')}
+            />
             <Button
               type="button"
               onClick={() => setShowCatalogueModal(true)}
-              variant="secondary"
-              leadingIcon={BookOpen}
-            >
-              <span className="hidden sm:inline">{t('invoice.productCatalogue')}</span>
-            </Button>
+              outlined
+              icon={<BookOpen style={{ width: '1rem', height: '1rem' }} />}
+              label={t('invoice.productCatalogue')}
+            />
           </div>
         )}
       </div>

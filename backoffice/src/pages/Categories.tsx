@@ -7,12 +7,11 @@ import { FolderTree, Plus, Pencil, Trash2, ChevronRight, ChevronDown } from 'luc
 import { categoriesService, Category, CreateCategoryDTO, UpdateCategoryDTO } from '../modules/categories';
 import { toastCreated, toastUpdated, toastDeleted, toastError, toastConfirm } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
-import { Input } from '../components/ui/input';
-import { NativeSelect } from '../components/ui/native-select';
-import { Textarea } from '../components/ui/textarea';
-import { Checkbox } from '../components/ui/checkbox';
-import { FormField } from '../components/ui/form-field';
-import { Button } from '../components/ui/button';
+import { InputText } from 'primereact/inputtext';
+import { Dropdown } from 'primereact/dropdown';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Checkbox } from 'primereact/checkbox';
+import { Button } from 'primereact/button';
 
 export default function Categories() {
   const { t } = useLanguage();
@@ -147,57 +146,56 @@ export default function Categories() {
     return (
       <div key={category.id}>
         <div
-          className="flex items-center gap-2 p-3 hover:bg-slate-50 rounded-lg group"
-          style={{ paddingLeft: `${level * 24 + 12}px` }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '0.5rem', paddingLeft: `${level * 24 + 12}px`, borderBottom: '1px solid #f1f5f9' }}
         >
           {hasChildren ? (
             <button
               onClick={() => toggleExpand(category.id)}
-              className="p-1 hover:bg-slate-200 rounded"
+              style={{ padding: '0.25rem', borderRadius: '0.25rem', background: 'none', border: 'none', cursor: 'pointer' }}
             >
               {isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-slate-600" />
+                <ChevronDown style={{ width: '1rem', height: '1rem', color: '#475569' }} />
               ) : (
-                <ChevronRight className="w-4 h-4 text-slate-600" />
+                <ChevronRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />
               )}
             </button>
           ) : (
-            <div className="w-6" />
+            <div style={{ width: '1.5rem' }} />
           )}
 
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h4 className="font-medium text-slate-900">{category.name}</h4>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h4 style={{ fontWeight: 500, color: '#0f172a', margin: 0 }}>{category.name}</h4>
               {!category.isActive && (
-                <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded">
+                <span style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '0.25rem' }}>
                   Inactive
                 </span>
               )}
             </div>
             {category.description && (
-              <p className="text-sm text-slate-500 mt-1">{category.description}</p>
+              <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{category.description}</p>
             )}
           </div>
 
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-2 transition-opacity">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button
               onClick={() => openCreateModal(category.id)}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              style={{ padding: '0.5rem', color: '#2563eb', borderRadius: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
               title={t('addSubcategory')}
             >
-              <Plus className="w-4 h-4" />
+              <Plus style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               onClick={() => openEditModal(category)}
-              className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+              style={{ padding: '0.5rem', color: '#d97706', borderRadius: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
             >
-              <Pencil className="w-4 h-4" />
+              <Pencil style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               onClick={() => handleDelete(category.id, category.name)}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              style={{ padding: '0.5rem', color: '#dc2626', borderRadius: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 style={{ width: '1rem', height: '1rem' }} />
             </button>
           </div>
         </div>
@@ -220,24 +218,23 @@ export default function Categories() {
         actions={
           <Button
             onClick={() => openCreateModal()}
-            variant="warning"
-            leadingIcon={<Plus className="w-4 h-4" />}
-          >
-            {t('addCategory')}
-          </Button>
+            severity="warning"
+            icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+            label={t('addCategory')}
+          />
         }
       />
 
       {/* Categories List */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">{t('loading')}</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>{t('loading')}</div>
         ) : categories.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
             {t('noCategoriesFound')}. {t('createFirstCategory')}.
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div>
             {categories.map(category => renderCategory(category))}
           </div>
         )}
@@ -249,68 +246,72 @@ export default function Categories() {
         onClose={closeModal}
         title={editingCategory ? t('editCategory') : t('createCategory')}
       >
-        <div className="space-y-4">
-          <FormField label={t('categoryName')} htmlFor="cat-name" required>
-            <Input
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label htmlFor="cat-name" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('categoryName')} <span style={{ color: '#ef4444' }}>*</span></label>
+            <InputText
               id="cat-name"
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder={t('enterCategoryName')}
+              style={{ width: '100%' }}
             />
-          </FormField>
+          </div>
 
-          <FormField label={t('parentCategory')} htmlFor="cat-parent">
-            <NativeSelect
+          <div>
+            <label htmlFor="cat-parent" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('parentCategory')}</label>
+            <Dropdown
               id="cat-parent"
               value={formData.parentId || ''}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  parentId: e.target.value ? parseInt(e.target.value) : undefined,
+                  parentId: e.value ? Number(e.value) : undefined,
                 })
               }
-            >
-              <option value="">No Parent (Root Category)</option>
-              {allCategories
-                .filter(cat => !editingCategory || cat.id !== editingCategory.id)
-                .map(cat => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-            </NativeSelect>
-          </FormField>
+              options={[
+                { label: 'No Parent (Root Category)', value: '' },
+                ...allCategories
+                  .filter(cat => !editingCategory || cat.id !== editingCategory.id)
+                  .map(cat => ({ label: cat.name, value: cat.id }))
+              ]}
+              optionLabel="label"
+              optionValue="value"
+              style={{ width: '100%' }}
+            />
+          </div>
 
-          <FormField label="Description" htmlFor="cat-desc">
-            <Textarea
+          <div>
+            <label htmlFor="cat-desc" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Description</label>
+            <InputTextarea
               id="cat-desc"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
               placeholder="Optional description"
+              style={{ width: '100%' }}
             />
-          </FormField>
+          </div>
 
-          <Checkbox
-            id="isActive"
-            checked={formData.isActive}
-            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            label="Active"
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Checkbox
+              inputId="isActive"
+              checked={formData.isActive ?? false}
+              onChange={(e) => setFormData({ ...formData, isActive: e.checked ?? false })}
+            />
+            <label htmlFor="isActive" style={{ fontSize: '0.875rem', color: '#334155' }}>Active</label>
+          </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={closeModal}>
-            {t('cancel')}
-          </Button>
+        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <Button label={t('cancel')} onClick={closeModal} outlined />
           <Button
-            variant="warning"
+            severity="warning"
             onClick={handleSubmit}
             loading={createMutation.isPending || updateMutation.isPending}
-          >
-            {editingCategory ? t('update') : t('create')}
-          </Button>
+            label={editingCategory ? t('update') : t('create')}
+          />
         </div>
       </Modal>
     </AdminLayout>

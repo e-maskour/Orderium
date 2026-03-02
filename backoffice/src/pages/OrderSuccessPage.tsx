@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { CheckCircle, Home, Download, Printer, Eye, FileText, Receipt as ReceiptIcon } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
 import { IPosCartItem as CartItem, ICheckoutCustomer as Customer, IOrderSuccessState as SuccessState } from '../modules/pos';
 
@@ -87,170 +87,151 @@ export default function OrderSuccessPage() {
 
   return (
     <>
-      <div className="min-h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-blue-50">
-        <div className="h-screen flex flex-col">
+      <div style={{ minHeight: '100vh', overflow: 'hidden', background: 'linear-gradient(to bottom right, #ecfdf5, #ffffff, #eff6ff)' }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
           {/* Success Header */}
-          <div className="bg-white/80 backdrop-blur border-b border-gray-200">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
-              <div className="flex items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-500 rounded-2xl shadow-lg">
-                    <CheckCircle className="w-8 h-8 text-white" />
+          <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #e5e7eb' }}>
+            <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '1.25rem 1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '3.5rem', height: '3.5rem', background: '#10b981', borderRadius: '1rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+                    <CheckCircle style={{ width: '2rem', height: '2rem', color: '#ffffff' }} />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('orderCreatedSuccessfully')}</h1>
-                    <p className="text-sm text-gray-500">
-                      {t('orderNumber')}: <span className="font-semibold text-emerald-700">{state.orderNumber}</span>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>{t('orderCreatedSuccessfully')}</h1>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                      {t('orderNumber')}: <span style={{ fontWeight: 600, color: '#047857' }}>{state.orderNumber}</span>
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                       {state.customer.name} • {state.customer.phone}
                     </p>
                   </div>
                 </div>
                 <Button
                   onClick={() => navigate('/pos')}
-                  className="hidden sm:inline-flex shadow-lg"
-                  leadingIcon={Home}
-                >
-                  Back to POS
-                </Button>
+                  label="Back to POS"
+                  icon={<Home style={{ width: '1rem', height: '1rem' }} />}
+                  style={{ boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                />
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+          <div style={{ flex: 1 }}>
+            <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {/* Order Summary - Top */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+              <div style={{ background: '#ffffff', borderRadius: '1rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', padding: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <div style={{ width: '2rem', height: '2rem', background: '#ecfdf5', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CheckCircle style={{ width: '1rem', height: '1rem', color: '#059669' }} />
                   </div>
-                  <h2 className="text-sm font-semibold text-gray-900">Order Summary</h2>
+                  <h2 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>Order Summary</h2>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-500 mb-1">{t('total')}</p>
-                    <p className="text-lg font-bold text-gray-900">{formatCurrency(state.total)}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                  <div style={{ padding: '0.75rem', background: '#f9fafb', borderRadius: '0.75rem', border: '1px solid #f3f4f6' }}>
+                    <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>{t('total')}</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>{formatCurrency(state.total)}</p>
                   </div>
-                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                    <p className="text-xs text-emerald-700 mb-1">Paid</p>
-                    <p className="text-lg font-bold text-emerald-700">{formatCurrency(state.paidAmount)}</p>
+                  <div style={{ padding: '0.75rem', background: '#ecfdf5', borderRadius: '0.75rem', border: '1px solid #d1fae5' }}>
+                    <p style={{ fontSize: '0.75rem', color: '#047857', marginBottom: '0.25rem' }}>Paid</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#047857' }}>{formatCurrency(state.paidAmount)}</p>
                   </div>
-                  <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="text-xs text-blue-700 mb-1">{t('change')}</p>
-                    <p className="text-lg font-bold text-blue-700">{formatCurrency(state.change)}</p>
+                  <div style={{ padding: '0.75rem', background: '#eff6ff', borderRadius: '0.75rem', border: '1px solid #dbeafe' }}>
+                    <p style={{ fontSize: '0.75rem', color: '#1d4ed8', marginBottom: '0.25rem' }}>{t('change')}</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1d4ed8' }}>{formatCurrency(state.change)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Documents Cards - Below */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
                 {/* Receipt Card */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                  <div className="p-4 pb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <ReceiptIcon className="w-4 h-4 text-blue-600" />
+                <div style={{ background: '#ffffff', borderRadius: '1rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+                  <div style={{ padding: '1rem', paddingBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: '2rem', height: '2rem', background: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ReceiptIcon style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />
                       </div>
                       <div>
-                        <h2 className="text-sm font-semibold text-gray-900">{t('receipt')}</h2>
-                        <p className="text-xs text-gray-500">{t('thermalReceipt80mm')}</p>
+                        <h2 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>{t('receipt')}</h2>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('thermalReceipt80mm')}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 pt-2 space-y-3">
+                  <div style={{ padding: '1rem', paddingTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     <Button
                       onClick={() => handlePreview('receipt')}
-                      variant="ghost"
-                      className="w-full h-16 bg-blue-50 hover:bg-blue-100 text-blue-700"
-                      leadingIcon={Eye}
-                    >
-                      {t('preview')}
-                    </Button>
+                      text
+                      label={t('preview')}
+                      icon={<Eye style={{ width: '1rem', height: '1rem' }} />}
+                      style={{ width: '100%', height: '4rem', background: '#eff6ff', color: '#1d4ed8' }}
+                    />
                     <Button
                       onClick={() => handlePreview('receipt')}
                       disabled={isGenerating}
-                      className="w-full h-16 bg-blue-500 hover:bg-blue-600 text-white"
-                      leadingIcon={Printer}
-                    >
-                      {t('print')}
-                    </Button>
+                      label={t('print')}
+                      icon={<Printer style={{ width: '1rem', height: '1rem' }} />}
+                      style={{ width: '100%', height: '4rem', background: '#3b82f6', color: '#ffffff' }}
+                    />
                     <Button
                       onClick={() => handleDownload('receipt')}
                       disabled={isGenerating}
                       loading={isGenerating}
-                      loadingText={t('generating')}
-                      className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white"
-                      leadingIcon={Download}
-                    >
-                      Download
-                    </Button>
+                      label={isGenerating ? t('generating') : 'Download'}
+                      icon={<Download style={{ width: '1rem', height: '1rem' }} />}
+                      style={{ width: '100%', height: '4rem', background: '#2563eb', color: '#ffffff' }}
+                    />
                   </div>
                 </div>
 
                 {/* Delivery Note Card */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                  <div className="p-4 pb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
-                        <FileText className="w-4 h-4 text-amber-600" />
+                <div style={{ background: '#ffffff', borderRadius: '1rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+                  <div style={{ padding: '1rem', paddingBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: '2rem', height: '2rem', background: '#fffbeb', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
                       </div>
                       <div>
-                        <h2 className="text-sm font-semibold text-gray-900">{t('deliveryNote')}</h2>
-                        <p className="text-xs text-gray-500">{t('deliveryNoteA5')}</p>
+                        <h2 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>{t('deliveryNote')}</h2>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('deliveryNoteA5')}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 pt-2 space-y-3">
+                  <div style={{ padding: '1rem', paddingTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     <Button
                       onClick={() => handlePreview('delivery-note')}
-                      variant="ghost"
-                      className="w-full h-16 bg-amber-50 hover:bg-amber-100 text-amber-700"
-                      leadingIcon={Eye}
-                    >
-                      {t('preview')}
-                    </Button>
+                      text
+                      label={t('preview')}
+                      icon={<Eye style={{ width: '1rem', height: '1rem' }} />}
+                      style={{ width: '100%', height: '4rem', background: '#fffbeb', color: '#b45309' }}
+                    />
                     <Button
                       onClick={() => handlePreview('delivery-note')}
                       disabled={isGenerating}
-                      className="w-full h-16 bg-amber-500 hover:bg-amber-600 text-white"
-                      leadingIcon={Printer}
-                    >
-                      {t('print')}
-                    </Button>
+                      label={t('print')}
+                      icon={<Printer style={{ width: '1rem', height: '1rem' }} />}
+                      style={{ width: '100%', height: '4rem', background: '#f59e0b', color: '#ffffff' }}
+                    />
                     <Button
                       onClick={() => handleDownload('delivery-note')}
                       disabled={isGenerating}
                       loading={isGenerating}
-                      loadingText={t('generating')}
-                      className="w-full h-16 bg-amber-600 hover:bg-amber-700 text-white"
-                      leadingIcon={Download}
-                    >
-                      Download
-                    </Button>
+                      label={isGenerating ? t('generating') : 'Download'}
+                      icon={<Download style={{ width: '1rem', height: '1rem' }} />}
+                      style={{ width: '100%', height: '4rem', background: '#d97706', color: '#ffffff' }}
+                    />
                   </div>
                 </div>
 
                 {/* Back to POS Button */}
                 <Button
                   onClick={() => navigate('/pos')}
-                  className="lg:col-span-2 hidden sm:inline-flex items-center justify-center h-12 shadow-lg sm:flex"
-                  leadingIcon={Home}
-                >
-                  Back to POS
-                </Button>
+                  label="Back to POS"
+                  icon={<Home style={{ width: '1rem', height: '1rem' }} />}
+                  style={{ gridColumn: 'span 2', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '3rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                />
               </div>
-
-              {/* Mobile Back to POS */}
-              <Button
-                onClick={() => navigate('/pos')}
-                className="sm:hidden w-full h-12 shadow-lg"
-                leadingIcon={Home}
-              >
-                Back to POS
-              </Button>
             </div>
           </div>
         </div>
@@ -258,32 +239,32 @@ export default function OrderSuccessPage() {
 
       {/* Preview Drawer */}
       {previewType && (
-        <div className="fixed inset-0 z-50">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
           <div
-            className="absolute inset-0 bg-black/40"
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }}
             onClick={closePreview}
           />
-          <div className="absolute inset-y-0 right-0 w-full max-w-[480px] bg-white shadow-2xl flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '100%', maxWidth: '480px', background: '#ffffff', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827' }}>
                   {previewType === 'receipt' ? t('receipt') : t('deliveryNote')}
                 </h3>
-                <p className="text-xs text-gray-500">{t('preview')}</p>
+                <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('preview')}</p>
               </div>
               <button
                 onClick={closePreview}
-                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+                style={{ width: '2rem', height: '2rem', background: '#f3f4f6', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
                 aria-label="Close preview"
               >
                 ✕
               </button>
             </div>
-            <div className="flex-1 bg-gray-50">
+            <div style={{ flex: 1, background: '#f9fafb' }}>
               <iframe
                 title="PDF Preview"
                 src={previewUrl}
-                className="w-full h-full border-0"
+                style={{ width: '100%', height: '100%', border: 'none' }}
               />
             </div>
           </div>

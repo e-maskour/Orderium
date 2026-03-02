@@ -2,10 +2,9 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, X, ArrowLeft } from 'lucide-react';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
-import { Textarea } from '../../components/ui/textarea';
-import { FormField } from '../../components/ui/form-field';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
 import { Partner, IPartner } from '../../modules/partners';
 import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
@@ -219,28 +218,28 @@ export default function DocumentCreatePage({
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
+      <div style={{ maxWidth: '80rem', margin: '0 auto', paddingBottom: '6rem' }}>
         {/* Simplified Header with Back Button */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-start sm:items-center gap-2 sm:gap-3">
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
               onClick={() => navigate(listRoute)}
-              className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0"
+              style={{ padding: '0.5rem', borderRadius: '0.5rem', flexShrink: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
             >
-              <ArrowLeft className="w-4 sm:w-5 h-4 sm:h-5 text-slate-600" />
+              <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
             </button>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {t('new')} {config.titleShort}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500">{t('createNew')} {config.titleShort.toLowerCase()}</p>
+              <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('createNew')} {config.titleShort.toLowerCase()}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg sm:rounded-lg shadow-sm border border-slate-200 p-3 sm:p-6">
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
           {/* Two column layout: Partner on left, Document info on right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             {/* Partner section - Left */}
             <div>
               <DocumentPartnerBox
@@ -264,53 +263,53 @@ export default function DocumentCreatePage({
             </div>
 
             {/* Document information - Right */}
-            <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4">
-              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 sm:mb-3">
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>
                 {t('documentInformation')}
               </h3>
 
-              <div className="space-y-2 sm:space-y-3">
-                <FormField
-                  label={<>{documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')} <span className="text-red-500">*</span></>}
-                >
-                  <Input
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                    {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <InputText
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    inputSize="sm"
-                    fullWidth
+                    style={{ width: '100%' }}
                     required
                   />
-                </FormField>
+                </div>
 
                 {config.features.expirationDate && (
-                  <FormField label={t('expirationDate')}>
-                    <Input
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('expirationDate')}</label>
+                    <InputText
                       type="date"
                       value={expirationDate}
                       onChange={(e) => setExpirationDate(e.target.value)}
-                      inputSize="sm"
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
-                  </FormField>
+                  </div>
                 )}
 
                 {/* Due Date - Show for all document types */}
-                <FormField label={t('dueDate')}>
-                  <Input
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('dueDate')}</label>
+                  <InputText
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    inputSize="sm"
-                    fullWidth
+                    style={{ width: '100%' }}
                   />
-                </FormField>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Items table */}
-          <div className="mt-2">
+          <div style={{ marginTop: '0.5rem' }}>
             <DocumentItemsTable
               items={items}
               direction={direction}
@@ -323,44 +322,43 @@ export default function DocumentCreatePage({
           </div>
 
           {/* Notes */}
-          <div className="mt-2">
-            <FormField label={t('notes')}>
-              <Textarea
+          <div style={{ marginTop: '0.5rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('notes')}</label>
+              <InputTextarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder={t('additionalNotes')}
+                style={{ width: '100%' }}
               />
-            </FormField>
+            </div>
           </div>
 
           {/* Totals section */}
-          <div className="mt-8 border-t pt-6">
+          <div style={{ marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
             <DocumentTotalsSection items={items} />
           </div>
         </div>
 
         {/* Sticky Bottom Action Bar */}
-        <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 shadow-lg z-40">
-          <div className="max-w-7xl mx-auto px-6 py-3">
-            <div className="flex items-center justify-end gap-3">
+        <div style={{ position: 'fixed', bottom: 0, left: '16rem', right: 0, backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', zIndex: 40 }}>
+          <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.75rem' }}>
               <Button
-                variant="secondary"
+                label={t('cancel')}
                 onClick={() => navigate(listRoute)}
                 disabled={saving}
-                leadingIcon={X}
-              >
-                {t('cancel')}
-              </Button>
+                icon={<X style={{ width: '1rem', height: '1rem' }} />}
+                outlined
+              />
               <Button
+                label={t('draft')}
                 onClick={() => handleSave(true)}
                 disabled={saving}
                 loading={saving}
-                loadingText={t('saving')}
-                leadingIcon={Save}
-              >
-                {t('draft')}
-              </Button>
+                icon={<Save style={{ width: '1rem', height: '1rem' }} />}
+              />
             </div>
           </div>
         </div>

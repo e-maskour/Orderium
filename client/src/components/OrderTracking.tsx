@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { ordersService } from '@/modules/orders';
-import { Package, Truck, CheckCircle, Clock, MapPin, Loader2 } from 'lucide-react';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import { Package, Truck, CheckCircle, Clock, MapPin } from 'lucide-react';
 
 interface OrderTrackingProps {
   orderNumber: string;
@@ -23,7 +24,6 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch order status from API
   useEffect(() => {
     const fetchOrderStatus = async () => {
       if (!orderNumber || !customerId) {
@@ -36,13 +36,10 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
 
       try {
         const order = await ordersService.getByOrderNumber(orderNumber, customerId);
-        
-        // Map order status to tracking status
-        // Since delivery tracking isn't fully implemented yet, we'll use simple status
+
         let status: 'pending' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled' = 'pending';
-        
+
         if (order.status) {
-          // Map the status from the order
           if (order.status === 'delivered') status = 'delivered';
           else if (order.status === 'canceled') status = 'canceled';
           else if (order.status === 'in_transit' || order.status === 'in_delivery') status = 'in_delivery';
@@ -52,7 +49,6 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
         setOrderStatus({
           status,
           createdAt: new Date(order.dateCreated),
-          // Delivery tracking timestamps are not yet implemented
           confirmedAt: undefined,
           pickedUpAt: undefined,
           deliveredAt: undefined,
@@ -60,7 +56,6 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
         });
       } catch (err: any) {
         console.error('Failed to fetch order:', err);
-        // Check if it's a 404 error (order not found)
         if (err?.message?.includes('404')) {
           setError(t('orderNotFound'));
         } else {
@@ -76,22 +71,22 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="flex align-items-center justify-content-center py-6">
+        <ProgressSpinner style={{ width: '2rem', height: '2rem' }} />
       </div>
     );
   }
 
   if (error || !orderStatus) {
     return (
-      <div className="text-center py-8 sm:py-12">
-        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-          <Package className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
+      <div className="text-center py-5">
+        <div className="flex align-items-center justify-content-center mx-auto mb-3 border-circle surface-200" style={{ width: '3.5rem', height: '3.5rem' }}>
+          <Package style={{ width: '1.75rem', height: '1.75rem', color: 'var(--text-color-secondary)' }} />
         </div>
-        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+        <h3 className="text-lg font-semibold text-color mb-2">
           {error || t('noData')}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-color-secondary">
           {t('checkNumberAndRetry')}
         </p>
       </div>
@@ -99,56 +94,23 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
   }
 
   const statuses = [
-    {
-      key: 'pending',
-      label: t('statusPending'),
-      description: t('orderReceived'),
-      icon: Clock,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-100',
-      borderColor: 'border-blue-500',
-    },
-    {
-      key: 'to_delivery',
-      label: t('readyToDeliver'),
-      description: t('deliveryAssigned'),
-      icon: Package,
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-100',
-      borderColor: 'border-orange-500',
-    },
-    {
-      key: 'in_delivery',
-      label: t('statusInDelivery'),
-      description: t('onTheWay'),
-      icon: Truck,
-      color: 'text-yellow-500',
-      bgColor: 'bg-yellow-100',
-      borderColor: 'border-yellow-500',
-    },
-    {
-      key: 'delivered',
-      label: t('statusDelivered'),
-      description: t('deliveredSuccessfully'),
-      icon: CheckCircle,
-      color: 'text-green-500',
-      bgColor: 'bg-green-100',
-      borderColor: 'border-green-500',
-    },
+    { key: 'pending', label: t('statusPending'), description: t('orderReceived'), icon: Clock, iconColor: '#3b82f6', bgColor: '#dbeafe', borderColor: '#3b82f6' },
+    { key: 'to_delivery', label: t('readyToDeliver'), description: t('deliveryAssigned'), icon: Package, iconColor: '#f97316', bgColor: '#ffedd5', borderColor: '#f97316' },
+    { key: 'in_delivery', label: t('statusInDelivery'), description: t('onTheWay'), icon: Truck, iconColor: '#eab308', bgColor: '#fef9c3', borderColor: '#eab308' },
+    { key: 'delivered', label: t('statusDelivered'), description: t('deliveredSuccessfully'), icon: CheckCircle, iconColor: '#22c55e', bgColor: '#dcfce7', borderColor: '#22c55e' },
   ];
 
-  // Handle canceled status
   if (orderStatus.status === 'canceled') {
     return (
       <div className="w-full">
-        <div className="bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-4 sm:p-6 text-center">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-            <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+        <div className="text-center p-4 border-round-xl border-1" style={{ background: '#fef2f2', borderColor: '#fecaca' }}>
+          <div className="flex align-items-center justify-content-center mx-auto mb-3 border-circle" style={{ width: '3.5rem', height: '3.5rem', background: '#fee2e2' }}>
+            <CheckCircle style={{ width: '1.75rem', height: '1.75rem', color: '#dc2626' }} />
           </div>
-          <h3 className="text-base sm:text-lg font-semibold text-red-900 mb-2">
+          <h3 className="text-lg font-semibold mb-2" style={{ color: '#7f1d1d' }}>
             {t('orderCanceled')}
           </h3>
-          <p className="text-sm text-red-700">
+          <p className="text-sm" style={{ color: '#b91c1c' }}>
             {t('orderWasCanceled')}
           </p>
         </div>
@@ -171,7 +133,6 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
 
   return (
     <div className="w-full" dir={dir}>
-      {/* Timeline */}
       <div className="relative">
         {statuses.map((status, index) => {
           const isCompleted = index <= currentStatusIndex;
@@ -179,68 +140,74 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
           const StatusIcon = status.icon;
 
           return (
-            <div key={status.key} className="relative pb-6 sm:pb-8 last:pb-0">
+            <div key={status.key} className="relative" style={{ paddingBottom: index < statuses.length - 1 ? '2rem' : 0 }}>
               {/* Connecting line */}
               {index < statuses.length - 1 && (
                 <div
-                  className={`absolute left-5 sm:left-6 rtl:left-auto rtl:right-5 sm:rtl:right-6 top-10 sm:top-12 h-full w-0.5 -ml-px rtl:ml-0 rtl:-mr-px transition-all duration-500 ${
-                    isCompleted ? 'bg-gradient-to-b from-primary to-primary/30' : 'bg-gray-200'
-                  }`}
                   style={{
+                    position: 'absolute',
+                    [dir === 'rtl' ? 'right' : 'left']: '1.25rem',
+                    top: '3rem',
                     height: 'calc(100% - 0.5rem)',
+                    width: '2px',
+                    background: isCompleted ? 'linear-gradient(to bottom, var(--primary-color), rgba(var(--primary-color-rgb, 16,185,129), 0.3))' : '#e5e7eb',
+                    transition: 'all 0.5s',
                   }}
                 />
               )}
 
-              {/* Status item */}
-              <div className="relative flex items-start gap-3 sm:gap-4">
+              <div className="relative flex align-items-start gap-3">
                 {/* Icon */}
                 <div
-                  className={`relative z-10 flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
-                    isCompleted
-                      ? `${status.bgColor} ${status.borderColor} shadow-lg sm:scale-110`
-                      : 'bg-white border-gray-300'
-                  } ${isCurrent ? 'animate-pulse ring-2 sm:ring-4 ring-primary/20' : ''}`}
+                  className="relative flex-shrink-0 flex align-items-center justify-content-center border-circle"
+                  style={{
+                    width: '2.5rem',
+                    height: '2.5rem',
+                    zIndex: 1,
+                    border: `2px solid ${isCompleted ? status.borderColor : '#d1d5db'}`,
+                    background: isCompleted ? status.bgColor : '#ffffff',
+                    boxShadow: isCompleted ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
+                    ...(isCurrent ? { boxShadow: `0 0 0 4px rgba(var(--primary-color-rgb, 16,185,129), 0.2)` } : {}),
+                  }}
                 >
                   <StatusIcon
-                    className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors duration-500 ${
-                      isCompleted ? status.color : 'text-gray-400'
-                    }`}
+                    style={{
+                      width: '1.25rem',
+                      height: '1.25rem',
+                      color: isCompleted ? status.iconColor : '#9ca3af',
+                      transition: 'color 0.5s',
+                    }}
                   />
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
-                  <div className="flex items-start sm:items-center justify-between gap-2">
+                <div className="flex-1" style={{ minWidth: 0, paddingTop: '0.125rem' }}>
+                  <div className="flex align-items-start justify-content-between gap-2">
                     <h3
-                      className={`text-sm sm:text-base font-semibold transition-colors duration-500 ${
-                        isCompleted ? 'text-foreground' : 'text-muted-foreground'
-                      }`}
+                      className="text-sm font-semibold"
+                      style={{ color: isCompleted ? 'var(--text-color)' : 'var(--text-color-secondary)', transition: 'color 0.5s' }}
                     >
                       {status.label}
                     </h3>
                     {isCompleted && (
-                      <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+                      <span className="white-space-nowrap flex-shrink-0 text-color-secondary" style={{ fontSize: '0.625rem' }}>
                         {formatDate(
                           status.key === 'pending'
                             ? orderStatus.createdAt
                             : status.key === 'to_delivery'
-                            ? orderStatus.confirmedAt || orderStatus.createdAt
-                            : status.key === 'in_delivery'
-                            ? orderStatus.pickedUpAt || orderStatus.confirmedAt || orderStatus.createdAt
-                            : status.key === 'delivered'
-                            ? orderStatus.deliveredAt || orderStatus.pickedUpAt || orderStatus.createdAt
-                            : status.key === 'canceled'
-                            ? orderStatus.canceledAt || orderStatus.createdAt
-                            : orderStatus.createdAt
+                              ? orderStatus.confirmedAt || orderStatus.createdAt
+                              : status.key === 'in_delivery'
+                                ? orderStatus.pickedUpAt || orderStatus.confirmedAt || orderStatus.createdAt
+                                : status.key === 'delivered'
+                                  ? orderStatus.deliveredAt || orderStatus.pickedUpAt || orderStatus.createdAt
+                                  : orderStatus.createdAt
                         )}
                       </span>
                     )}
                   </div>
                   <p
-                    className={`text-xs sm:text-sm mt-0.5 sm:mt-1 transition-colors duration-500 ${
-                      isCompleted ? 'text-muted-foreground' : 'text-muted-foreground/60'
-                    }`}
+                    className="text-xs mt-1"
+                    style={{ color: isCompleted ? 'var(--text-color-secondary)' : 'rgba(var(--text-color-secondary-rgb, 108,117,125), 0.6)', transition: 'color 0.5s' }}
                   >
                     {status.description}
                   </p>
@@ -253,14 +220,14 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
 
       {/* Current Status Badge */}
       {currentStatusIndex >= 0 && (
-        <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg sm:rounded-xl border border-primary/20">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+        <div className="mt-4 p-3 border-round-xl border-1" style={{ background: 'linear-gradient(to right, rgba(var(--primary-color-rgb, 16,185,129), 0.1), rgba(var(--primary-color-rgb, 16,185,129), 0.05))', borderColor: 'rgba(var(--primary-color-rgb, 16,185,129), 0.2)' }}>
+          <div className="flex align-items-center gap-2">
+            <MapPin style={{ width: '1.125rem', height: '1.125rem', color: 'var(--primary-color)', flexShrink: 0 }} />
             <div className="flex-1">
-              <p className="text-xs sm:text-sm font-medium text-foreground">
+              <p className="text-sm font-medium text-color">
                 {t('currentStatus')}
               </p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-color-secondary mt-1">
                 {statuses[currentStatusIndex].description}
               </p>
             </div>

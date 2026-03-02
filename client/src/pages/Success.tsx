@@ -2,9 +2,10 @@ import { useLocation, Link, Navigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CheckCircle2, Home, FileText, Receipt as ReceiptIcon, MapPin, Package, Sparkles, User, Phone } from 'lucide-react';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { Divider } from 'primereact/divider';
+import { CheckCircle2, Home, FileText, Receipt as ReceiptIcon, MapPin, Package, User, Phone } from 'lucide-react';
 import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { CartItem } from '@/context/CartContext';
@@ -27,189 +28,156 @@ const Success = () => {
   const state = location.state as SuccessState | null;
   const [showPreview, setShowPreview] = useState(false);
   const [showTracking, setShowTracking] = useState(false);
-  const [documentType, setDocumentType] = useState<'receipt' | 'invoice'>('receipt');
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
 
-  // Redirect if accessed directly without order data
   if (!state?.orderNumber || !state?.items || !state?.orderId) {
     return <Navigate to="/" replace />;
   }
 
-  // Get orderId from state
   const orderId = state.orderId;
 
   const handlePreview = async (type: 'receipt' | 'invoice') => {
-    const endpoint = type === 'receipt' 
+    const endpoint = type === 'receipt'
       ? `/api/pdf/receipt/${orderId}?mode=preview`
       : `/api/pdf/delivery-note/${orderId}?mode=preview`;
-    
-    const title = type === 'receipt'
-      ? t('receipt')
-      : t('deliveryNote');
-    
-    setDocumentType(type);
+    const title = type === 'receipt' ? t('receipt') : t('deliveryNote');
     setPdfUrl(endpoint);
     setPdfTitle(`${title} ${state.orderNumber}`);
     setShowPreview(true);
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-3" dir={dir}>
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+  const trackingHeader = (
+    <div className="flex align-items-center gap-2">
+      <div className="flex align-items-center justify-content-center border-circle" style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}>
+        <MapPin style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
       </div>
+      <span className="font-bold text-xl">{t('trackOrder')}</span>
+    </div>
+  );
 
-      <div className="max-w-4xl w-full relative z-10">
-        {/* Success animation */}
-        <div className="relative mb-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 flex items-center justify-center mx-auto shadow-2xl animate-scale-in">
-            <CheckCircle2 className="w-10 h-10 text-white drop-shadow-lg" />
+  return (
+    <div className="flex align-items-center justify-content-center p-3" dir={dir} style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #ecfdf5, #f0fdfa, #ecfeff)' }}>
+      <div className="w-full" style={{ maxWidth: '56rem' }}>
+        {/* Success icon */}
+        <div className="text-center mb-3" style={{ position: 'relative' }}>
+          <div className="flex align-items-center justify-content-center mx-auto border-circle shadow-4" style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #34d399, #14b8a6, #06b6d4)' }}>
+            <CheckCircle2 style={{ width: '2.5rem', height: '2.5rem', color: 'white' }} />
           </div>
-          <div className="absolute inset-0 w-16 h-16 rounded-full bg-emerald-400/30 mx-auto animate-ping" />
-          <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-yellow-400 animate-pulse" />
         </div>
 
-        {/* Main Content Card */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden animate-slide-up" style={{ animationDelay: '200ms' }}>
-          {/* Header Section */}
-          <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 p-3 text-center">
-            <h1 className="text-xl font-bold text-white mb-1 drop-shadow-lg">
-              {t('orderSuccess')}
-            </h1>
-            <p className="text-emerald-50 text-sm font-medium">
-              {t('thankYou')}, {state.customerName}! 🎉
-            </p>
+        {/* Main Card */}
+        <div className="surface-card border-round-2xl shadow-4 overflow-hidden">
+          {/* Header */}
+          <div className="text-center p-3" style={{ background: 'linear-gradient(to right, #10b981, #14b8a6, #06b6d4)' }}>
+            <h1 className="text-xl font-bold text-white mb-1">{t('orderSuccess')}</h1>
+            <p className="text-sm font-medium" style={{ color: '#ecfdf5' }}>{t('thankYou')}, {state.customerName}! 🎉</p>
           </div>
 
-          {/* Order Details Section */}
-          <div className="p-4 space-y-3">
-            {/* Order Summary Card */}
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-3 border-2 border-emerald-200 dark:border-emerald-700 shadow-lg">
-              <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-300 dark:border-gray-600">
-                <div className="flex items-center gap-2">
-                  <ReceiptIcon className="w-4 h-4 text-emerald-600" />
-                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">{t('orderNumber')}</span>
+          {/* Content */}
+          <div className="p-4 flex flex-column gap-3">
+            {/* Order Summary */}
+            <div className="surface-100 border-round-xl p-3 border-2" style={{ borderColor: '#a7f3d0' }}>
+              <div className="flex align-items-center justify-content-between mb-2 pb-2 border-bottom-1 surface-border">
+                <div className="flex align-items-center gap-2">
+                  <ReceiptIcon style={{ width: '1rem', height: '1rem', color: '#059669' }} />
+                  <span className="text-xs font-semibold text-color-secondary">{t('orderNumber')}</span>
                 </div>
-                <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
-                  {state.orderNumber}
-                </span>
+                <span className="font-bold text-sm" style={{ fontFamily: 'monospace', color: '#059669', background: '#d1fae5', padding: '0.125rem 0.5rem', borderRadius: '0.25rem' }}>{state.orderNumber}</span>
               </div>
-              
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-lg">
-                  <User className="w-4 h-4 text-teal-600" />
-                  <div>
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">{t('customer')}</p>
-                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{state.customerName}</p>
+
+              <div className="grid">
+                <div className="col-6">
+                  <div className="surface-card p-2 border-round-lg flex align-items-center gap-2">
+                    <User style={{ width: '1rem', height: '1rem', color: '#0d9488' }} />
+                    <div>
+                      <p className="text-color-secondary" style={{ fontSize: '0.625rem' }}>{t('customer')}</p>
+                      <p className="text-xs font-semibold text-color overflow-hidden white-space-nowrap" style={{ textOverflow: 'ellipsis' }}>{state.customerName}</p>
+                    </div>
                   </div>
                 </div>
-                
                 {state.customerPhone && (
-                  <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-lg">
-                    <Phone className="w-4 h-4 text-cyan-600" />
-                    <div>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{t('phone') || 'Phone'}</p>
-                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{state.customerPhone}</p>
+                  <div className="col-6">
+                    <div className="surface-card p-2 border-round-lg flex align-items-center gap-2">
+                      <Phone style={{ width: '1rem', height: '1rem', color: '#0891b2' }} />
+                      <div>
+                        <p className="text-color-secondary" style={{ fontSize: '0.625rem' }}>{t('phone') || 'Phone'}</p>
+                        <p className="text-xs font-semibold text-color">{state.customerPhone}</p>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="pt-2 border-t border-gray-300 dark:border-gray-600 flex items-center justify-between">
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{t('total')}</span>
-                <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  {formatCurrency(state.total, language)}
-                </span>
+              <Divider />
+              <div className="flex align-items-center justify-content-between">
+                <span className="text-sm font-bold text-color-secondary">{t('total')}</span>
+                <span className="text-xl font-bold text-primary">{formatCurrency(state.total, language)}</span>
               </div>
             </div>
 
-            {/* Order Tracking - Premium Design */}
+            {/* Track Order */}
             <Button
+              label={t('trackYourOrder')}
+              icon="pi pi-map-marker"
               onClick={() => setShowTracking(true)}
-              size="sm"
-              className="w-full h-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold shadow-lg hover:shadow-xl transition-all group"
-            >
-              <Package className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-              <span className="text-sm">{t('trackYourOrder')}</span>
-            </Button>
+              className="w-full"
+              style={{ background: 'linear-gradient(to right, #2563eb, #4f46e5, #7c3aed)', border: 'none' }}
+            />
 
-            {/* Document Preview Buttons */}
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <button
+            {/* Document buttons */}
+            <div className="grid">
+              <div className="col-6">
+                <Button
                   onClick={() => handlePreview('receipt')}
-                  className="relative p-3 rounded-xl border-2 transition-all duration-300 bg-gradient-to-br from-emerald-500 to-teal-500 border-emerald-400 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                  className="w-full"
+                  style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6)', border: 'none' }}
                 >
-                  <ReceiptIcon className="w-6 h-6 mx-auto mb-1 text-white" />
-                  <span className="block text-xs font-bold text-white">
-                    {t('receipt')}
-                  </span>
-                </button>
-
-                <button
+                  <div className="flex flex-column align-items-center gap-1 w-full py-1">
+                    <ReceiptIcon style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+                    <span className="text-xs font-bold text-white">{t('receipt')}</span>
+                  </div>
+                </Button>
+              </div>
+              <div className="col-6">
+                <Button
                   onClick={() => handlePreview('invoice')}
-                  className="relative p-3 rounded-xl border-2 transition-all duration-300 bg-gradient-to-br from-teal-500 to-cyan-500 border-teal-400 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                  className="w-full"
+                  style={{ background: 'linear-gradient(135deg, #14b8a6, #06b6d4)', border: 'none' }}
                 >
-                  <FileText className="w-6 h-6 mx-auto mb-1 text-white" />
-                  <span className="block text-xs font-bold text-white">
-                    {t('deliveryNote')}
-                  </span>
-                </button>
+                  <div className="flex flex-column align-items-center gap-1 w-full py-1">
+                    <FileText style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+                    <span className="text-xs font-bold text-white">{t('deliveryNote')}</span>
+                  </div>
+                </Button>
               </div>
             </div>
 
-            {/* Action Button */}
-            <div className="mt-2">
-              <Link to="/" className="block">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-10 border-2 border-gray-300 dark:border-gray-600 hover:shadow-xl font-semibold transition-all"
-                >
-                  <Home className="w-3.5 h-3.5 mr-1" />
-                  <span className="text-xs">{t('backToHome')}</span>
-                </Button>
-              </Link>
-            </div>
+            {/* Back to Home */}
+            <Link to="/" style={{ textDecoration: 'none' }}>
+              <Button
+                label={t('backToHome')}
+                icon={<Home style={{ width: '0.875rem', height: '0.875rem', marginInlineEnd: '0.5rem' }} />}
+                outlined
+                severity="secondary"
+                className="w-full"
+              />
+            </Link>
           </div>
         </div>
 
-        {/* Document Preview Modal */}
-        <PDFPreviewModal
-          isOpen={showPreview}
-          onClose={() => setShowPreview(false)}
-          pdfUrl={pdfUrl}
-          title={pdfTitle}
-        />
+        {/* PDF Preview */}
+        <PDFPreviewModal isOpen={showPreview} onClose={() => setShowPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
 
-        {/* Order Tracking Modal */}
-        <Dialog open={showTracking} onOpenChange={setShowTracking}>
-          <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-white dark:bg-gray-800">
-            <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl font-bold flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-white" />
-                </div>
-                {t('trackOrder')}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="mt-4 sm:mt-6">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-4 mb-6 border-2 border-blue-200 dark:border-blue-700">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{t('orderNumber')}</p>
-                  <p className="font-mono font-bold text-lg text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-lg shadow-sm">
-                    {state.orderNumber}
-                  </p>
-                </div>
-              </div>
-              {user?.customerId && (
-                <OrderTracking orderNumber={state.orderNumber} customerId={user.customerId} />
-              )}
+        {/* Tracking Dialog */}
+        <Dialog visible={showTracking} onHide={() => setShowTracking(false)} header={trackingHeader} modal className="w-full" style={{ maxWidth: '42rem' }} dir={dir}>
+          <div className="surface-100 border-round-xl p-3 mb-4 border-2" style={{ borderColor: '#bfdbfe' }}>
+            <div className="flex align-items-center justify-content-between">
+              <p className="text-sm font-semibold text-color-secondary">{t('orderNumber')}</p>
+              <p className="font-bold text-lg text-primary surface-card px-3 py-1 border-round shadow-1" style={{ fontFamily: 'monospace' }}>{state.orderNumber}</p>
             </div>
-          </DialogContent>
+          </div>
+          {user?.customerId && <OrderTracking orderNumber={state.orderNumber} customerId={user.customerId} />}
         </Dialog>
       </div>
     </div>

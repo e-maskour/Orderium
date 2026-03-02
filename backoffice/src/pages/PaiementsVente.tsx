@@ -3,7 +3,7 @@ import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useState, useEffect } from 'react';
 import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard, FileText, Plus } from 'lucide-react';
-import { Input } from '../components/ui/input';
+import { InputText } from 'primereact/inputtext';
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import { invoicesService } from '../modules/invoices';
 import PaymentModal from '../components/PaymentModal';
@@ -100,7 +100,7 @@ export default function PaiementsVente() {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
         <PageHeader
           icon={Wallet}
           title={t('salesPayments')}
@@ -108,36 +108,36 @@ export default function PaiementsVente() {
         />
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <div className="flex items-center justify-between">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p className="text-sm text-slate-600 mb-1">{t('totalPayments')}</p>
-                <p className="text-2xl font-bold text-slate-900">{filteredPayments.length}</p>
+                <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('totalPayments')}</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{filteredPayments.length}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                <CreditCard className="w-6 h-6 text-blue-600" />
+              <div style={{ width: '3rem', height: '3rem', background: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CreditCard style={{ width: '1.5rem', height: '1.5rem', color: '#2563eb' }} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <div className="flex items-center justify-between">
+          <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p className="text-sm text-slate-600 mb-1">{t('totalAmount')}</p>
-                <p className="text-2xl font-bold text-emerald-600">{totalAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</p>
+                <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('totalAmount')}</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669' }}>{totalAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</p>
               </div>
-              <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center">
-                <Wallet className="w-6 h-6 text-emerald-600" />
+              <div style={{ width: '3rem', height: '3rem', background: '#ecfdf5', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Wallet style={{ width: '1.5rem', height: '1.5rem', color: '#059669' }} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <div className="flex items-center justify-between">
+          <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p className="text-sm text-slate-600 mb-1">{t('thisMonth')}</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('thisMonth')}</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
                   {filteredPayments.filter(p => {
                     const date = new Date(p.paymentDate);
                     const now = new Date();
@@ -145,102 +145,104 @@ export default function PaiementsVente() {
                   }).length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-amber-600" />
+              <div style={{ width: '3rem', height: '3rem', background: '#fffbeb', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Calendar style={{ width: '1.5rem', height: '1.5rem', color: '#d97706' }} />
               </div>
             </div>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="mb-6">
-          <Input
-            id="search-sales-payments"
-            type="text"
-            placeholder={t('searchBySalesInvoice')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            leadingIcon={Search}
-            fullWidth
-            aria-label={t('searchBySalesInvoice')}
-          />
+        <div style={{ marginBottom: '1.5rem' }}>
+          <span style={{ position: 'relative', display: 'block', width: '100%' }}>
+            <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+            <InputText
+              id="search-sales-payments"
+              type="text"
+              placeholder={t('searchBySalesInvoice')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label={t('searchBySalesInvoice')}
+              style={{ width: '100%', paddingLeft: '2.5rem' }}
+            />
+          </span>
         </div>
 
         {/* Payments Table */}
-        <div className="bg-white rounded-lg border border-slate-200">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%' }}>
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {t('invoice.date')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {t('invoice')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {t('client')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {t('paymentMethod')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {t('reference')}
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {t('amount')}
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {t('invoice.actions')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <td colSpan={7} style={{ paddingTop: '3rem', paddingBottom: '3rem', textAlign: 'center' }}>
+                      <div className="animate-spin" style={{ display: 'inline-block', borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #2563eb' }}></div>
                     </td>
                   </tr>
                 ) : filteredPayments.length > 0 ? (
                   filteredPayments.map((payment) => (
-                    <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-slate-900">
+                    <tr key={payment.id} style={{ borderTop: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}>
+                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', color: '#0f172a' }}>
                         {new Date(payment.paymentDate).toLocaleDateString('fr-FR')}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900">
+                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', fontWeight: 500, color: '#0f172a' }}>
                         {getInvoiceNumber(payment.invoiceId)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">
+                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', color: '#475569' }}>
                         {getCustomerName(payment.invoiceId)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4 text-slate-400" />
+                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', color: '#475569' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <CreditCard style={{ width: '1rem', height: '1rem', color: '#94a3b8' }} />
                           {PAYMENT_TYPE_LABELS[payment.paymentType]}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">
+                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', color: '#475569' }}>
                         {payment.referenceNumber || '-'}
                       </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-right text-emerald-600">
+                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', fontWeight: 600, textAlign: 'right', color: '#059669' }}>
                         {payment.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
+                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                           <button
                             onClick={() => handleEdit(payment)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            style={{ padding: '0.5rem', color: '#2563eb', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
                             title={t('modify')}
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 style={{ width: '1rem', height: '1rem' }} />
                           </button>
                           <button
                             onClick={() => handleDelete(payment.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            style={{ padding: '0.5rem', color: '#dc2626', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
                             title={t('delete')}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 style={{ width: '1rem', height: '1rem' }} />
                           </button>
                         </div>
                       </td>
@@ -248,9 +250,9 @@ export default function PaiementsVente() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center">
-                      <Wallet className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-500">Aucun paiement trouvé</p>
+                    <td colSpan={7} style={{ paddingTop: '3rem', paddingBottom: '3rem', textAlign: 'center' }}>
+                      <Wallet style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto', marginBottom: '0.75rem' }} />
+                      <p style={{ color: '#64748b' }}>Aucun paiement trouvé</p>
                     </td>
                   </tr>
                 )}

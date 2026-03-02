@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { ClipboardCheck, Plus, Search, Filter, Eye, Play, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { NativeSelect } from '../components/ui/native-select';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Dropdown } from 'primereact/dropdown';
 import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjustments.service';
 import { InventoryAdjustment } from '../modules/inventory/inventory.model';
 import { toastSuccess, toastValidated, toastDeleted, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
@@ -81,14 +81,14 @@ export default function InventoryAdjustments() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { label: t('draft'), color: 'bg-slate-100 text-slate-700' },
-      in_progress: { label: t('inProgress'), color: 'bg-blue-100 text-blue-700' },
-      done: { label: t('validated'), color: 'bg-emerald-100 text-emerald-700' },
-      cancelled: { label: t('cancelled'), color: 'bg-red-100 text-red-700' },
+      draft: { label: t('draft'), style: { background: '#f1f5f9', color: '#334155' } },
+      in_progress: { label: t('inProgress'), style: { background: '#dbeafe', color: '#1d4ed8' } },
+      done: { label: t('validated'), style: { background: '#d1fae5', color: '#047857' } },
+      cancelled: { label: t('cancelled'), style: { background: '#fee2e2', color: '#b91c1c' } },
     };
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     return (
-      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${config.color}`}>
+      <span style={{ display: 'inline-block', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...config.style }}>
         {config.label}
       </span>
     );
@@ -103,149 +103,129 @@ export default function InventoryAdjustments() {
       />
 
       {/* Filters and Actions Bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', padding: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
           {/* Search */}
-          <div className="flex-1">
-            <Input
-              id="search-adjustments"
-              type="text"
-              placeholder={t('searchByReference')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              leadingIcon={Search}
-              fullWidth
-              aria-label={t('searchByReference')}
-            />
+          <div style={{ flex: 1 }}>
+            <span style={{ position: 'relative', display: 'block', width: '100%' }}>
+              <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+              <InputText id="search-adjustments" type="text" placeholder={t('searchByReference')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label={t('searchByReference')} style={{ width: '100%', paddingLeft: '2.5rem' }} />
+            </span>
           </div>
 
           {/* Status Filter */}
-          <NativeSelect
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">Tous les statuts</option>
-            <option value="draft">Brouillon</option>
-            <option value="in_progress">En cours</option>
-            <option value="done">Validé</option>
-            <option value="cancelled">Annulé</option>
-          </NativeSelect>
+          <Dropdown value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={[{ label: 'Tous les statuts', value: 'all' }, { label: 'Brouillon', value: 'draft' }, { label: 'En cours', value: 'in_progress' }, { label: 'Validé', value: 'done' }, { label: 'Annulé', value: 'cancelled' }]} optionLabel="label" optionValue="value" style={{ minWidth: '12rem' }} />
 
           {/* Create Button */}
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            leadingIcon={Plus}
-          >
-            {t('newAdjustment')}
-          </Button>
+          <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('newAdjustment')} onClick={() => setShowCreateModal(true)} />
         </div>
       </div>
 
       {/* Adjustments List */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         {isLoading ? (
-          <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
-            <p className="text-slate-600 mt-4">Chargement...</p>
+          <div style={{ padding: '3rem', textAlign: 'center' }}>
+            <div className="animate-spin" style={{ borderRadius: '9999px', width: '3rem', height: '3rem', borderBottom: '2px solid #f59e0b', margin: '0 auto' }}></div>
+            <p style={{ color: '#475569', marginTop: '1rem' }}>Chargement...</p>
           </div>
         ) : filteredAdjustments.length === 0 ? (
-          <div className="p-12 text-center">
-            <ClipboardCheck className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-600 mb-2">{t('noAdjustmentsFound')}</p>
-            <p className="text-sm text-slate-500">{t('createFirstAdjustment')}</p>
+          <div style={{ padding: '3rem', textAlign: 'center' }}>
+            <ClipboardCheck style={{ width: '4rem', height: '4rem', color: '#cbd5e1', margin: '0 auto', marginBottom: '1rem' }} />
+            <p style={{ color: '#475569', marginBottom: '0.5rem' }}>{t('noAdjustmentsFound')}</p>
+            <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('createFirstAdjustment')}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%' }}>
+              <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                 <tr>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <th style={{ textAlign: 'left', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Référence
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <th style={{ textAlign: 'left', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Nom
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <th style={{ textAlign: 'left', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Entrepôt
                   </th>
-                  <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <th style={{ textAlign: 'center', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Date
                   </th>
-                  <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <th style={{ textAlign: 'center', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Statut
                   </th>
-                  <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <th style={{ textAlign: 'center', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Lignes
                   </th>
-                  <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <th style={{ textAlign: 'right', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody>
                 {filteredAdjustments.map((adjustment) => (
-                  <tr key={adjustment.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-mono text-sm font-semibold text-slate-800">
+                  <tr key={adjustment.id} style={{ borderTop: '1px solid #f1f5f9', transition: 'background-color 0.15s' }}>
+                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
                         {adjustment.reference}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="text-sm text-slate-700">{adjustment.name}</span>
+                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                      <span style={{ fontSize: '0.875rem', color: '#334155' }}>{adjustment.name}</span>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="text-sm text-slate-600">{adjustment.warehouseName || `Entrepôt ${adjustment.warehouseId}`}</span>
+                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>{adjustment.warehouseName || `Entrepôt ${adjustment.warehouseId}`}</span>
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="text-sm text-slate-600">
+                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'center' }}>
+                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>
                         {adjustment.adjustmentDate
                           ? new Date(adjustment.adjustmentDate).toLocaleDateString('fr-FR')
                           : '-'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'center' }}>
                       {getStatusBadge(adjustment.status)}
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="inline-flex items-center justify-center bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-lg text-sm">
+                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'center' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#334155', fontWeight: 700, paddingLeft: '0.625rem', paddingRight: '0.625rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
                         {adjustment.lines?.length || 0}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-end gap-2">
+                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
                         {adjustment.status === 'draft' && (
                           <button
                             onClick={() => startCountingMutation.mutate(adjustment.id)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            style={{ padding: '0.375rem', color: '#2563eb', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
                             title={t('start')}
                           >
-                            <Play className="w-4 h-4" />
+                            <Play style={{ width: '1rem', height: '1rem' }} />
                           </button>
                         )}
                         {adjustment.status === 'in_progress' && (
                           <button
                             onClick={() => setSelectedAdjustment(adjustment)}
-                            className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            style={{ padding: '0.375rem', color: '#059669', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
                             title={t('validate')}
                           >
-                            <CheckCircle2 className="w-4 h-4" />
+                            <CheckCircle2 style={{ width: '1rem', height: '1rem' }} />
                           </button>
                         )}
                         <button
                           onClick={() => setSelectedAdjustment(adjustment)}
-                          className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                          style={{ padding: '0.375rem', color: '#475569', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
                           title={t('details')}
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye style={{ width: '1rem', height: '1rem' }} />
                         </button>
                         {adjustment.status === 'draft' && (
                           <>
                             <button
                               onClick={() => cancelMutation.mutate(adjustment.id)}
-                              className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                              style={{ padding: '0.375rem', color: '#ea580c', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
                               title={t('cancel')}
                             >
-                              <XCircle className="w-4 h-4" />
+                              <XCircle style={{ width: '1rem', height: '1rem' }} />
                             </button>
                             <button
                               onClick={() => {
@@ -253,10 +233,10 @@ export default function InventoryAdjustments() {
                                   deleteMutation.mutate(adjustment.id);
                                 });
                               }}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              style={{ padding: '0.375rem', color: '#dc2626', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
                               title={t('delete')}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 style={{ width: '1rem', height: '1rem' }} />
                             </button>
                           </>
                         )}

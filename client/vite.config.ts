@@ -6,7 +6,7 @@ import path from "path";
 export default defineConfig(({ mode }) => {
   // Load environment variables from .env files
   const apiBaseUrl = process.env.VITE_API_BASE_URL || 'http://localhost:3000';
-  
+
   return {
     server: {
       host: '0.0.0.0',
@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+        "@orderium/ui": path.resolve(__dirname, "../shared/ui/src"),
       },
     },
   };

@@ -10,45 +10,39 @@ import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { toastExported, toastImported, toastError, toastWarning, toastInfo, toastConfirm } from '../services/toast.service';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { NativeSelect } from '../components/ui/native-select';
+import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { Dropdown } from 'primereact/dropdown';
 
 export default function Products() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Get API base URL from environment or use window origin
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
 
-  // Helper to convert relative image paths to full URLs
   const getImageUrl = (imageUrl?: string): string | undefined => {
     if (!imageUrl) return undefined;
-    if (imageUrl.startsWith('http')) return imageUrl; // Already full URL
+    if (imageUrl.startsWith('http')) return imageUrl;
     if (imageUrl.startsWith('orderium/')) {
-      // Cloudinary
       return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
     }
-    // Relative path - add API base URL
     return `${apiBaseUrl}/uploads/images/${imageUrl}`;
   };
 
-  const [searchTerm, setSearchTerm] = useState(''); // Keep for potential future use
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
-  // Filter states
   const [nameFilter, setNameFilter] = useState('');
   const [codeFilter, setCodeFilter] = useState('');
   const [stockFilter, setStockFilter] = useState<'all' | 'negative' | 'zero' | 'positive'>('all');
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [isServiceFilter, setIsServiceFilter] = useState<boolean | undefined>(undefined);
 
-  // Applied filters - only these trigger API requests
   const [appliedFilters, setAppliedFilters] = useState({
     name: '',
     code: '',
@@ -57,7 +51,6 @@ export default function Products() {
     isService: undefined as boolean | undefined,
   });
 
-  // Fetch categories for filter
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesService.getAll(),
@@ -65,7 +58,6 @@ export default function Products() {
 
   const categoriesList = (categories as any)?.categories || categories || [];
 
-  // Fetch products with applied filters
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', appliedFilters, currentPage, pageSize],
     queryFn: () => productsService.getProducts({
@@ -90,10 +82,7 @@ export default function Products() {
   };
   const totalCount = pagination.total;
   const totalPages = pagination.totalPages;
-  const hasNextPage = pagination.hasNext;
-  const hasPrevPage = pagination.hasPrev;
 
-  // Delete product mutation
   const deleteMutation = useMutation({
     mutationFn: (id: number) => productsService.deleteProduct(id),
     onSuccess: () => {
@@ -193,7 +182,6 @@ export default function Products() {
     appliedFilters.isService !== undefined,
   ].filter(Boolean).length;
 
-  // Export to XLSX
   const handleExport = async () => {
     try {
       const blob = await productsService.exportToXlsx();
@@ -212,7 +200,6 @@ export default function Products() {
     }
   };
 
-  // Download template
   const handleDownloadTemplate = async () => {
     try {
       const blob = await productsService.downloadTemplate();
@@ -230,8 +217,6 @@ export default function Products() {
       console.error(error);
     }
   };
-
-  // Import from XLSX
 
   const handleImport = () => {
     const input = document.createElement('input');
@@ -266,48 +251,69 @@ export default function Products() {
     input.click();
   };
 
+  const pageSizeOptions = [
+    { label: '10', value: 10 },
+    { label: '50', value: 50 },
+    { label: '100', value: 100 },
+    { label: '500', value: 500 },
+    { label: '1000', value: 1000 },
+  ];
+
+  const stockFilterOptions = [
+    { label: t('all'), value: 'all' },
+    { label: 'Negative Stock', value: 'negative' },
+    { label: 'Zero Stock', value: 'zero' },
+    { label: 'Positive Stock', value: 'positive' },
+  ];
+
   return (
     <AdminLayout>
-      <div className="flex flex-col max-w-7xl mx-auto">
+      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '80rem', margin: '0 auto' }}>
         {/* Page Header */}
         <div>
           <PageHeader icon={Package} title={t('products')} subtitle={t('manageProducts')} />
         </div>
 
-        {/* Toolbar: Search, View Toggle, Add Button */}
-        <div className="mb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        {/* Toolbar */}
+        <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
           {/* View Mode Toggle */}
-          <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
             <button
               onClick={() => setViewMode('card')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'card'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-                }`}
+              style={{
+                paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem',
+                borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer',
+                ...(viewMode === 'card'
+                  ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
+                  : { backgroundColor: 'transparent', color: '#475569' }),
+              }}
             >
-              <Grid3x3 className="w-4 h-4" />
+              <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-                }`}
+              style={{
+                paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem',
+                borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer',
+                ...(viewMode === 'list'
+                  ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
+                  : { backgroundColor: 'transparent', color: '#475569' }),
+              }}
             >
-              <List className="w-4 h-4" />
+              <List style={{ width: '1rem', height: '1rem' }} />
             </button>
           </div>
 
-          <div className="flex items-center gap-3 flex-1 sm:flex-none w-full sm:w-auto justify-end">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, justifyContent: 'flex-end' }}>
             {/* Filters Button */}
             <button
               onClick={() => setFiltersExpanded(true)}
-              className="relative flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
             >
-              <Filter className="w-5 h-5" />
+              <Filter style={{ width: '1.25rem', height: '1.25rem' }} />
               {t('filters')}
               {activeFiltersCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span style={{ position: 'absolute', top: '-0.25rem', right: '-0.25rem', backgroundColor: '#f59e0b', color: 'white', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {activeFiltersCount}
                 </span>
               )}
@@ -316,79 +322,74 @@ export default function Products() {
             {/* Import/Export Buttons */}
             <button
               onClick={handleDownloadTemplate}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
               title="Télécharger le modèle"
             >
-              <FileSpreadsheet className="w-4 h-4" />
+              <FileSpreadsheet style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               onClick={handleImport}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
               title="Importer"
             >
-              <Upload className="w-4 h-4" />
+              <Upload style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
               title="Exporter"
             >
-              <Download className="w-4 h-4" />
+              <Download style={{ width: '1rem', height: '1rem' }} />
             </button>
 
             {/* Add Product Button */}
             <Button
               onClick={() => navigate('/products/create')}
-              leadingIcon={Plus}
-            >
-              {t('addProduct')}
-            </Button>
+              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+              label={t('addProduct')}
+            />
           </div>
         </div>
 
         {/* Pagination Info Bar - Top */}
         {productsList && productsList.length > 0 && (
-          <div className="bg-slate-50 py-2 px-1">
-            <div className="flex items-center justify-between gap-4">
-              <div className="text-sm text-slate-600">
-                {t('showing')} <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
-                <span className="font-semibold">{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
+          <div style={{ backgroundColor: '#f8fafc', paddingTop: '0.5rem', paddingBottom: '0.5rem', paddingLeft: '0.25rem', paddingRight: '0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+                {t('showing')} <span style={{ fontWeight: 600 }}>{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
+                <span style={{ fontWeight: 600 }}>{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span style={{ fontWeight: 600 }}>{totalCount}</span> {t('results')}
               </div>
 
               {/* Page Size Selector */}
-              <div className="flex items-center gap-2">
-                <label className="text-xs font-medium text-slate-600">{t('perPage')}</label>
-                <NativeSelect
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569' }}>{t('perPage')}</label>
+                <Dropdown
                   value={pageSize}
                   onChange={(e) => {
-                    setPageSize(Number(e.target.value));
+                    setPageSize(Number(e.value));
                     setCurrentPage(1);
                   }}
-                  selectSize="sm"
-                >
-                  <option value={10}>10</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value={500}>500</option>
-                  <option value={1000}>1000</option>
-                </NativeSelect>
+                  options={pageSizeOptions}
+                  optionLabel="label"
+                  optionValue="value"
+                />
               </div>
 
               {/* Navigation */}
-              <div className="flex items-center gap-2">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1, backgroundColor: 'white' }}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
                 </button>
-                <div className="flex items-center gap-1">
-                  <Input
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <InputText
                     type="number"
                     min={1}
                     max={totalPages}
-                    value={currentPage}
+                    value={String(currentPage)}
                     onChange={(e) => {
                       const page = parseInt(e.target.value, 10);
                       if (!isNaN(page) && page >= 1 && page <= totalPages) {
@@ -400,19 +401,18 @@ export default function Products() {
                         e.currentTarget.blur();
                       }
                     }}
-                    inputSize="sm"
-                    className="w-12 text-center"
+                    style={{ width: '3rem', textAlign: 'center' }}
                     aria-label="Page number"
                   />
-                  <span className="text-sm text-slate-500">/</span>
-                  <span className="text-sm font-medium text-slate-700">{totalPages}</span>
+                  <span style={{ fontSize: '0.875rem', color: '#64748b' }}>/</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{totalPages}</span>
                 </div>
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1, backgroundColor: 'white' }}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight style={{ width: '1rem', height: '1rem' }} />
                 </button>
               </div>
             </div>
@@ -420,249 +420,204 @@ export default function Products() {
         )}
 
         {/* Products View */}
-        <div className="flex flex-col">
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {isLoading ? (
-            <div className="space-y-3 animate-pulse">
+            <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-xl p-4 border border-slate-200">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-slate-200 rounded-lg" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-40 bg-slate-200 rounded" />
-                      <div className="h-3 w-24 bg-slate-200 rounded" />
+                <div key={i} style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ height: '3rem', width: '3rem', backgroundColor: '#e2e8f0', borderRadius: '0.5rem' }} />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ height: '1rem', width: '10rem', backgroundColor: '#e2e8f0', borderRadius: '0.25rem' }} />
+                      <div style={{ height: '0.75rem', width: '6rem', backgroundColor: '#e2e8f0', borderRadius: '0.25rem' }} />
                     </div>
-                    <div className="h-6 w-16 bg-slate-200 rounded-full" />
-                    <div className="h-4 w-20 bg-slate-200 rounded" />
+                    <div style={{ height: '1.5rem', width: '4rem', backgroundColor: '#e2e8f0', borderRadius: '9999px' }} />
+                    <div style={{ height: '1rem', width: '5rem', backgroundColor: '#e2e8f0', borderRadius: '0.25rem' }} />
                   </div>
                 </div>
               ))}
             </div>
           ) : viewMode === 'list' ? (
-            <div className="space-y-2">
-              {/* Product Rows */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {productsList && productsList.length > 0 ? (
                 productsList.map((product: IProduct) => (
                   <div
                     key={product.id}
                     onClick={() => handleViewProduct(product.id)}
-                    className={`bg-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer ${selectedProducts.includes(product.id)
-                      ? 'border-amber-500 ring-2 ring-amber-500/20'
-                      : 'border-slate-200/60 hover:border-slate-300/60'
-                      }`}
+                    style={{
+                      backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem', cursor: 'pointer',
+                      ...(selectedProducts.includes(product.id)
+                        ? { border: '1px solid #f59e0b', outline: '2px solid rgba(245,158,11,0.2)' }
+                        : { border: '1px solid rgba(226,232,240,0.6)' }),
+                    }}
                   >
-                    <div className="flex items-center gap-3">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       {/* Checkbox */}
-                      <div className="w-12 flex items-center justify-center">
+                      <div style={{ width: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleSelectProduct(product.id);
                           }}
-                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${selectedProducts.includes(product.id)
-                            ? 'bg-amber-500 border-amber-500 text-white'
-                            : 'bg-white border-slate-300'
-                            }`}
+                          style={{
+                            width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', borderWidth: '2px', borderStyle: 'solid',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                            ...(selectedProducts.includes(product.id)
+                              ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' }
+                              : { backgroundColor: 'white', borderColor: '#cbd5e1' }),
+                          }}
                         >
-                          {selectedProducts.includes(product.id) && <CheckSquare className="w-4 h-4" />}
+                          {selectedProducts.includes(product.id) && <CheckSquare style={{ width: '1rem', height: '1rem' }} />}
                         </div>
                       </div>
 
                       {/* Image */}
-                      <div className="w-10">
+                      <div style={{ width: '2.5rem' }}>
                         {product.imageUrl ? (
                           <img
                             src={getImageUrl(product.imageUrl)}
                             alt={product.name}
-                            className="w-10 h-10 object-contain rounded-lg shadow-sm"
+                            style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
                           />
                         ) : (
-                          <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">
-                            <Package className="w-5 h-5 text-slate-400" />
+                          <div style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(to bottom right, #f1f5f9, #e2e8f0)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Package style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8' }} />
                           </div>
                         )}
                       </div>
 
                       {/* Name */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('name')}</p>
-                        <p className="text-sm font-semibold text-slate-800 truncate">{product.name}</p>
-                        {product.code && <p className="text-xs text-slate-400 mt-0.5">{product.code}</p>}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('name')}</p>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</p>
+                        {product.code && <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.125rem' }}>{product.code}</p>}
                       </div>
 
                       {/* Price */}
-                      <div className="w-28">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('price')}</p>
-                        <span className="text-sm font-semibold text-amber-600">
+                      <div style={{ width: '7rem' }}>
+                        <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('price')}</p>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#d97706' }}>
                           {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                         </span>
                       </div>
 
                       {/* Cost */}
-                      <div className="w-28">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('cost')}</p>
-                        <span className="text-sm text-slate-600">
+                      <div style={{ width: '7rem' }}>
+                        <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('cost')}</p>
+                        <span style={{ fontSize: '0.875rem', color: '#475569' }}>
                           {(product.cost || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                         </span>
                       </div>
 
                       {/* Stock */}
-                      <div className="w-24 text-center">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t('stock')}</p>
-                        <span className="text-sm text-slate-700 font-medium">
+                      <div style={{ width: '6rem', textAlign: 'center' }}>
+                        <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('stock')}</p>
+                        <span style={{ fontSize: '0.875rem', color: '#334155', fontWeight: 500 }}>
                           {product.stock !== null && product.stock !== undefined
                             ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
                             : '-'}
                         </span>
                       </div>
-
-                      {/* Status */}
-                      {/* <div className="w-24 flex flex-col items-center">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{t('status')}</p>
-                        <span
-                          className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            product.isEnabled
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {product.isEnabled ? t('active') : t('inactive')}
-                        </span>
-                      </div> */}
-
-                      {/* Actions */}
-                      {/* <div className="w-16 flex justify-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewProduct(product.id);
-                          }}
-                          className="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
-                          title={t('view')}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </div> */}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 px-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full"></div>
-                    <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-100">
-                      <Package className="w-16 h-16 text-amber-500 mx-auto" strokeWidth={1.5} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '5rem', paddingBottom: '5rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative', background: 'linear-gradient(to bottom right, #fffbeb, #fff7ed)', borderRadius: '1rem', padding: '2rem', border: '2px solid #fef3c7' }}>
+                      <Package style={{ width: '4rem', height: '4rem', color: '#f59e0b', margin: '0 auto' }} strokeWidth={1.5} />
                     </div>
                   </div>
-                  <h3 className="mt-6 text-xl font-bold text-slate-800">{t('noProductsFound')}</h3>
-                  <p className="mt-2 text-sm text-slate-500 max-w-sm text-center">
+                  <h3 style={{ marginTop: '1.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('noProductsFound')}</h3>
+                  <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#64748b', maxWidth: '24rem', textAlign: 'center' }}>
                     {activeFiltersCount > 0
                       ? "Aucun produit ne correspond à vos critères de recherche. Essayez de modifier les filtres."
                       : "Commencez par ajouter votre premier produit pour le voir apparaître ici."}
                   </p>
                   {activeFiltersCount > 0 ? (
-                    <Button
-                      onClick={handleClearFilters}
-                      className="mt-6"
-                    >
-                      Réinitialiser les filtres
-                    </Button>
+                    <Button onClick={handleClearFilters} label="Réinitialiser les filtres" style={{ marginTop: '1.5rem' }} />
                   ) : (
-                    <Button
-                      onClick={() => navigate('/products/create')}
-                      className="mt-6"
-                      leadingIcon={Plus}
-                    >
-                      Ajouter un produit
-                    </Button>
+                    <Button onClick={() => navigate('/products/create')} icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label="Ajouter un produit" style={{ marginTop: '1.5rem' }} />
                   )}
                 </div>
               )}
             </div>
           ) : (
             <div>
-              <div className="grid gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+              <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(8, 1fr)' }}>
                 {productsList && productsList.length > 0 ? (
                   productsList.map((product: IProduct) => (
                     <div
                       key={product.id}
                       onClick={() => handleViewProduct(product.id)}
-                      className={`relative bg-white rounded-lg sm:rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer ${selectedProducts.includes(product.id)
-                        ? 'border-amber-500 ring-2 ring-amber-500/20'
-                        : 'border-slate-200/60 hover:border-slate-300/60'
-                        }`}
+                      style={{
+                        position: 'relative', backgroundColor: 'white', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        overflow: 'hidden', cursor: 'pointer',
+                        ...(selectedProducts.includes(product.id)
+                          ? { border: '1px solid #f59e0b', outline: '2px solid rgba(245,158,11,0.2)' }
+                          : { border: '1px solid rgba(226,232,240,0.6)' }),
+                      }}
                     >
                       {/* Selection Checkbox */}
-                      <div className="absolute top-1.5 left-1.5 z-10">
+                      <div style={{ position: 'absolute', top: '0.375rem', left: '0.375rem', zIndex: 10 }}>
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleSelectProduct(product.id);
                           }}
-                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${selectedProducts.includes(product.id)
-                            ? 'bg-amber-500 border-amber-500 text-white'
-                            : 'bg-white border-slate-300'
-                            }`}
+                          style={{
+                            width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', borderWidth: '2px', borderStyle: 'solid',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                            ...(selectedProducts.includes(product.id)
+                              ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' }
+                              : { backgroundColor: 'white', borderColor: '#cbd5e1' }),
+                          }}
                         >
-                          {selectedProducts.includes(product.id) && <CheckSquare className="w-4 h-4" />}
+                          {selectedProducts.includes(product.id) && <CheckSquare style={{ width: '1rem', height: '1rem' }} />}
                         </div>
                       </div>
 
                       {/* Product Image */}
-                      <div className="relative h-32 overflow-hidden rounded-t-xl">
+                      <div style={{ position: 'relative', height: '8rem', overflow: 'hidden', borderTopLeftRadius: '0.75rem', borderTopRightRadius: '0.75rem' }}>
                         {product.imageUrl ? (
                           <img
                             src={getImageUrl(product.imageUrl)}
                             alt={product.name}
-                            className="w-full h-full object-contain opacity-90 drop-shadow-lg hover:scale-105 hover:opacity-100 transition-all duration-300"
+                            style={{ width: '100%', height: '100%', objectFit: 'contain', opacity: 0.9 }}
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-                            <Package className="w-16 h-16 text-slate-300" />
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)' }}>
+                            <Package style={{ width: '4rem', height: '4rem', color: '#cbd5e1' }} />
                           </div>
                         )}
-                        {/* Status Badge */}
-                        {/* <div className="absolute top-1.5 right-1.5">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[9px] font-semibold shadow-md ${
-                              product.isEnabled ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                            }`}
-                          >
-                            {product.isEnabled ? t('active') : t('inactive')}
-                          </span>
-                        </div> */}
                       </div>
 
                       {/* Product Info */}
-                      <div className="p-2 space-y-1">
-                        <div className="pb-1">
-                          <h3 className="text-[10px] font-bold text-slate-800 truncate leading-tight pb-1" title={product.name}>
+                      <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <div style={{ paddingBottom: '0.25rem' }}>
+                          <h3 style={{ fontSize: '10px', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, paddingBottom: '0.25rem' }} title={product.name}>
                             {product.name}
                           </h3>
                           {product.code && (
-                            <p className="text-[9px] text-slate-400 mt-0.5 px-0.5">
+                            <p style={{ fontSize: '9px', color: '#94a3b8', marginTop: '0.125rem', paddingLeft: '0.125rem' }}>
                               {t('code')}: {product.code}
                             </p>
                           )}
                         </div>
 
-                        {/* {product.description && (
-                          <p className="text-[10px] text-slate-500 line-clamp-2 min-h-[2rem]" title={product.description}>
-                            {product.description}
-                          </p>
-                        )} */}
-
                         {/* Price & Cost */}
-                        <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-                          <div className="flex-1">
-                            <p className="text-[8px] text-slate-500 uppercase tracking-wide">{t('price')}</p>
-                            <p className="text-xs font-bold text-amber-600">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.25rem', borderTop: '1px solid #f1f5f9' }}>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: '8px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('price')}</p>
+                            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#d97706' }}>
                               {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
-                              <span className="text-[8px]">{t('currency')}</span>
+                              <span style={{ fontSize: '8px' }}>{t('currency')}</span>
                             </p>
                           </div>
-                          <div className="text-right flex-1">
-                            <p className="text-[8px] text-slate-500 uppercase tracking-wide">{t('cost')}</p>
-                            <p className="text-[9px] text-slate-600">
+                          <div style={{ textAlign: 'right', flex: 1 }}>
+                            <p style={{ fontSize: '8px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('cost')}</p>
+                            <p style={{ fontSize: '9px', color: '#475569' }}>
                               {(product.cost || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
                             </p>
                           </div>
@@ -670,61 +625,35 @@ export default function Products() {
 
                         {/* Stock */}
                         {!product.isService && (
-                          <div className="flex items-center justify-between text-[10px]">
-                            <span className="text-slate-500">{t('stock')}:</span>
-                            <span className="font-semibold text-slate-700">
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px' }}>
+                            <span style={{ color: '#64748b' }}>{t('stock')}:</span>
+                            <span style={{ fontWeight: 600, color: '#334155' }}>
                               {product.stock !== null && product.stock !== undefined
                                 ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
                                 : '-'}
                             </span>
                           </div>
                         )}
-
-                        {/* Actions */}
-                        {/* <div className="flex items-center gap-0.5 pt-1 border-t border-slate-100">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewProduct(product.id);
-                            }}
-                            className="flex-1 px-1.5 py-0.5 text-[9px] text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors flex items-center justify-center gap-0.5"
-                          >
-                            <Eye className="w-2.5 h-2.5" />
-                            {t('view')}
-                          </button>
-                        </div> */}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-full flex flex-col items-center justify-center py-20 px-4">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full"></div>
-                      <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-100">
-                        <Package className="w-16 h-16 text-amber-500 mx-auto" strokeWidth={1.5} />
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '5rem', paddingBottom: '5rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ position: 'relative', background: 'linear-gradient(to bottom right, #fffbeb, #fff7ed)', borderRadius: '1rem', padding: '2rem', border: '2px solid #fef3c7' }}>
+                        <Package style={{ width: '4rem', height: '4rem', color: '#f59e0b', margin: '0 auto' }} strokeWidth={1.5} />
                       </div>
                     </div>
-                    <h3 className="mt-6 text-xl font-bold text-slate-800">{t('noProductsFound')}</h3>
-                    <p className="mt-2 text-sm text-slate-500 max-w-sm text-center">
+                    <h3 style={{ marginTop: '1.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('noProductsFound')}</h3>
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#64748b', maxWidth: '24rem', textAlign: 'center' }}>
                       {activeFiltersCount > 0
                         ? "Aucun produit ne correspond à vos critères de recherche. Essayez de modifier les filtres."
                         : "Commencez par ajouter votre premier produit pour le voir apparaître ici."}
                     </p>
                     {activeFiltersCount > 0 ? (
-                      <Button
-                        onClick={handleClearFilters}
-                        className="mt-6"
-                      >
-                        Réinitialiser les filtres
-                      </Button>
+                      <Button onClick={handleClearFilters} label="Réinitialiser les filtres" style={{ marginTop: '1.5rem' }} />
                     ) : (
-                      <Button
-                        onClick={() => navigate('/products/create')}
-                        className="mt-6"
-                        leadingIcon={Plus}
-                      >
-                        Ajouter un produit
-                      </Button>
+                      <Button onClick={() => navigate('/products/create')} icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label="Ajouter un produit" style={{ marginTop: '1.5rem' }} />
                     )}
                   </div>
                 )}
@@ -747,7 +676,7 @@ export default function Products() {
               {
                 id: 'view',
                 label: t('details'),
-                icon: <Eye className="w-3.5 h-3.5" />,
+                icon: <Eye style={{ width: '0.875rem', height: '0.875rem' }} />,
                 onClick: () => handleViewProduct(selectedProducts[0]),
                 variant: 'secondary' as const,
               },
@@ -756,131 +685,128 @@ export default function Products() {
           {
             id: 'delete',
             label: t('delete'),
-            icon: <Trash2 className="w-3.5 h-3.5" />,
+            icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
             onClick: handleBulkDelete,
             variant: 'danger' as const,
           },
         ]}
       />
 
-
-
       {/* Filters Overlay Panel */}
       {filtersExpanded && (
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 40 }}
             onClick={() => setFiltersExpanded(false)}
           />
 
           {/* Slide-in Panel */}
-          <div className="fixed inset-y-0 end-0 w-full sm:w-[520px] md:w-[560px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+          <div style={{ position: 'fixed', top: 0, bottom: 0, right: 0, width: '560px', backgroundColor: 'white', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
             {/* Panel Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-amber-500 to-amber-600">
-              <div className="flex items-center gap-3">
-                <Filter className="w-5 h-5 text-white" />
-                <h2 className="text-lg font-bold text-white">{t('filters')}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Filter style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>{t('filters')}</h2>
                 {activeFiltersCount > 0 && (
-                  <span className="bg-white text-amber-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  <span style={{ backgroundColor: 'white', color: '#d97706', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {activeFiltersCount}
                   </span>
                 )}
               </div>
               <button
                 onClick={() => setFiltersExpanded(false)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', backgroundColor: 'transparent' }}
               >
-                <X className="w-5 h-5 text-white" />
+                <X style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
               </button>
             </div>
 
             {/* Panel Content */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               {/* Search Filters Section */}
-              <div className="pb-6 border-b border-slate-200">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
+              <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
                   {t('search')}
                 </label>
 
-                <div className="grid grid-cols-1 gap-4">
-                  {/* Name Filter */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 mb-2 block">
+                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
                       {t('name')}
                     </label>
-                    <Input
+                    <InputText
                       type="text"
                       value={nameFilter}
                       onChange={(e) => setNameFilter(e.target.value)}
                       placeholder={t('search')}
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
                   </div>
 
-                  {/* Code Filter */}
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 mb-2 block">
+                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
                       {t('code')}
                     </label>
-                    <Input
+                    <InputText
                       type="text"
                       value={codeFilter}
                       onChange={(e) => setCodeFilter(e.target.value)}
                       placeholder={t('search')}
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Stock Filter */}
-              <div className="pb-6 border-b border-slate-200">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
+              <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
                   {t('stock')}
                 </label>
-                <NativeSelect
+                <Dropdown
                   value={stockFilter}
-                  onChange={(e) => setStockFilter(e.target.value as 'all' | 'negative' | 'zero' | 'positive')}
-                >
-                  <option value="all">{t('all')}</option>
-                  <option value="negative">Negative Stock</option>
-                  <option value="zero">Zero Stock</option>
-                  <option value="positive">Positive Stock</option>
-                </NativeSelect>
+                  onChange={(e) => setStockFilter(e.value as 'all' | 'negative' | 'zero' | 'positive')}
+                  options={stockFilterOptions}
+                  optionLabel="label"
+                  optionValue="value"
+                />
               </div>
 
               {/* Category Filter */}
-              <div className="pb-6 border-b border-slate-200">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
+              <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
                   {t('categories')}
                 </label>
-                <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '16rem', overflowY: 'auto' }}>
                   {categoriesList.length > 0 ? (
                     categoriesList.map((category: any) => (
                       <button
                         key={category.id}
                         onClick={() => toggleCategory(category.id)}
-                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${selectedCategories.includes(category.id)
-                          ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                          }`}
+                        style={{
+                          paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
+                          borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                          ...(selectedCategories.includes(category.id)
+                            ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
+                            : { backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }),
+                        }}
                       >
                         <span>{category.name}</span>
                       </button>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500">No categories available</p>
+                    <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No categories available</p>
                   )}
                 </div>
               </div>
 
               {/* Is Service Filter */}
               <div>
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4 block">
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
                   Type
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                   {[
                     { key: undefined, label: t('all') },
                     { key: true, label: 'Service' },
@@ -889,10 +815,13 @@ export default function Products() {
                     <button
                       key={String(filter.key)}
                       onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${isServiceFilter === filter.key
-                        ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-300'
-                        }`}
+                      style={{
+                        paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
+                        borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                        ...(isServiceFilter === filter.key
+                          ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
+                          : { backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }),
+                      }}
                     >
                       <span>{filter.label}</span>
                     </button>
@@ -902,20 +831,18 @@ export default function Products() {
             </div>
 
             {/* Panel Footer */}
-            <div className="border-t border-slate-200 p-4 bg-slate-50 flex gap-3">
+            <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
               <Button
-                variant="outline"
+                outlined
                 onClick={handleClearFilters}
-                className="flex-1"
-              >
-                {t('reset')}
-              </Button>
+                label={t('reset')}
+                style={{ flex: 1 }}
+              />
               <Button
                 onClick={handleApplyFilters}
-                className="flex-1"
-              >
-                {t('apply')}
-              </Button>
+                label={t('apply')}
+                style={{ flex: 1 }}
+              />
             </div>
           </div>
         </>

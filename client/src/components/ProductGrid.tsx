@@ -2,8 +2,8 @@ import { Product, ProductFilters } from '@/types/database';
 import { ProductCard } from './ProductCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { Package, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useMemo } from 'react';
-import { Button } from './ui/button';
+import { Button } from 'primereact/button';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 interface ProductGridProps {
   products: Product[];
@@ -17,12 +17,12 @@ interface ProductGridProps {
   onViewModeChange?: (mode: 'grid' | 'list') => void;
 }
 
-export const ProductGrid = ({ 
-  products, 
-  filters, 
-  isLoading, 
-  currentPage, 
-  totalPages, 
+export const ProductGrid = ({
+  products,
+  filters,
+  isLoading,
+  currentPage,
+  totalPages,
   totalCount,
   onPageChange,
   viewMode = 'grid',
@@ -46,14 +46,16 @@ export const ProductGrid = ({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3" dir={dir}>
+      <div className="grid" dir={dir} style={{ gap: '0.5rem' }}>
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
-            <div className="aspect-square bg-gray-200" />
-            <div className="p-2 space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-3/4" />
-              <div className="h-4 bg-gray-200 rounded w-1/2" />
-              <div className="h-8 bg-gray-200 rounded" />
+          <div key={i} className="col-6 sm:col-4 md:col-3 lg:col-2">
+            <div className="surface-card border-round-lg overflow-hidden shadow-1 animate-pulse">
+              <div style={{ aspectRatio: '1', background: '#e5e7eb' }} />
+              <div className="p-2 flex flex-column gap-2">
+                <div style={{ height: '0.75rem', background: '#e5e7eb', borderRadius: '0.25rem', width: '75%' }} />
+                <div style={{ height: '1rem', background: '#e5e7eb', borderRadius: '0.25rem', width: '50%' }} />
+                <div style={{ height: '2rem', background: '#e5e7eb', borderRadius: '0.25rem' }} />
+              </div>
             </div>
           </div>
         ))}
@@ -63,18 +65,18 @@ export const ProductGrid = ({
 
   if (!isLoading && products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center" dir={dir}>
-        <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
+      <div className="flex flex-column align-items-center justify-content-center py-6 text-center" dir={dir}>
+        <div className="flex align-items-center justify-content-center border-circle mb-4" style={{ width: '6rem', height: '6rem', background: '#f3f4f6' }}>
           {filters.search ? (
-            <Search className="w-12 h-12 text-gray-300" />
+            <Search style={{ width: '3rem', height: '3rem', color: '#d1d5db' }} />
           ) : (
-            <Package className="w-12 h-12 text-gray-300" />
+            <Package style={{ width: '3rem', height: '3rem', color: '#d1d5db' }} />
           )}
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <h3 className="text-xl font-semibold text-color mb-2">
           {filters.search ? t('noResults') : t('noProductsInCategory')}
         </h3>
-        <p className="text-gray-500 max-w-md">
+        <p className="text-color-secondary" style={{ maxWidth: '28rem' }}>
           {filters.search ? t('noResultsMessage') : t('tryDifferentCategory')}
         </p>
       </div>
@@ -82,27 +84,26 @@ export const ProductGrid = ({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6" dir={dir}>
+    <div className="flex flex-column gap-4" dir={dir}>
       {/* Product Grid/List */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid" style={{ gap: '0.5rem' }}>
           {products.map((product, index) => (
             <div
               key={`${product.id}-${index}`}
+              className="col-6 sm:col-4 md:col-3 lg:col-2"
               style={{ animationDelay: `${index * 20}ms` }}
-              className="animate-fade-in"
             >
               <ProductCard product={product} />
             </div>
           ))}
         </div>
       ) : (
-        <div className="space-y-2 sm:space-y-3">
+        <div className="flex flex-column gap-2">
           {products.map((product, index) => (
             <div
               key={`${product.id}-${index}`}
               style={{ animationDelay: `${index * 20}ms` }}
-              className="animate-fade-in"
             >
               <ProductCard product={product} viewMode="list" />
             </div>
@@ -110,27 +111,26 @@ export const ProductGrid = ({
         </div>
       )}
 
-      {/* Pagination Controls - Show info even with 1 page */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 border-t border-gray-200 pt-4 sm:pt-6 pb-2">
+      {/* Pagination Controls */}
+      <div className="flex flex-column sm:flex-row align-items-center justify-content-center gap-2 pt-4 border-top-1 surface-border pb-2">
         {totalPages > 1 && (
           <>
-            {/* Previous Button */}
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
               type="button"
-              className="flex items-center gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-5 rounded-lg text-sm sm:text-base font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all min-w-[80px] sm:min-w-0 justify-center"
+              className="flex align-items-center gap-2 px-3 border-round-lg font-medium surface-card border-2 surface-border text-color cursor-pointer"
+              style={{ height: '2.5rem', opacity: currentPage === 1 ? 0.4 : 1, transition: 'all 0.2s' }}
             >
               {dir === 'rtl' ? (
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ChevronRight style={{ width: '1rem', height: '1rem' }} />
               ) : (
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
               )}
-              <span className="hidden xs:inline">{t('previous')}</span>
+              <span className="hidden sm:inline text-sm">{t('previous')}</span>
             </button>
 
-            {/* Page Numbers */}
-            <div className="flex items-center gap-2">
+            <div className="flex align-items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum;
                 if (totalPages <= 5) {
@@ -142,7 +142,7 @@ export const ProductGrid = ({
                 } else {
                   pageNum = currentPage - 2 + i;
                 }
-                
+
                 return (
                   <button
                     key={pageNum}
@@ -151,11 +151,16 @@ export const ProductGrid = ({
                       onPageChange(pageNum);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base font-semibold transition-all ${
-                      currentPage === pageNum
-                        ? 'bg-primary text-white shadow-md'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:border-primary hover:bg-gray-50'
-                    }`}
+                    className="flex align-items-center justify-content-center border-round-lg font-semibold text-sm cursor-pointer"
+                    style={{
+                      width: '2.25rem',
+                      height: '2.25rem',
+                      background: currentPage === pageNum ? 'var(--primary-color)' : 'var(--surface-card)',
+                      color: currentPage === pageNum ? 'white' : 'var(--text-color)',
+                      border: currentPage === pageNum ? 'none' : '1px solid var(--surface-border)',
+                      boxShadow: currentPage === pageNum ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
+                      transition: 'all 0.2s',
+                    }}
                   >
                     {pageNum}
                   </button>
@@ -163,27 +168,27 @@ export const ProductGrid = ({
               })}
             </div>
 
-            {/* Next Button */}
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
               type="button"
-              className="flex items-center gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-5 rounded-lg text-sm sm:text-base font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all min-w-[80px] sm:min-w-0 justify-center"
+              className="flex align-items-center gap-2 px-3 border-round-lg font-medium surface-card border-2 surface-border text-color cursor-pointer"
+              style={{ height: '2.5rem', opacity: currentPage === totalPages ? 0.4 : 1, transition: 'all 0.2s' }}
             >
-              <span className="hidden xs:inline">{t('next')}</span>
+              <span className="hidden sm:inline text-sm">{t('next')}</span>
               {dir === 'rtl' ? (
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
               ) : (
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ChevronRight style={{ width: '1rem', height: '1rem' }} />
               )}
             </button>
           </>
         )}
-        
+
         {/* Product count info */}
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-color-secondary">
           {totalCount > 0 && (
-            language === 'ar' 
+            language === 'ar'
               ? `${totalCount} منتج`
               : `${totalCount} produits`
           )}

@@ -1,7 +1,8 @@
-import { Toaster } from "@/components/ui/toaster";
+import { PrimeReactProvider } from 'primereact/api';
+import { orderiumPrimeConfig } from '@orderium/ui/theme';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import { Toaster as SileoToaster } from 'sileo';
 import 'sileo/styles.css';
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/context/LanguageContext";
@@ -23,8 +24,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
+      <div className="flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+        <ProgressSpinner />
       </div>
     );
   }
@@ -33,12 +34,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <AuthProvider>
-        <CartProvider>
-          <TooltipProvider>
-            <Toaster />
+  <PrimeReactProvider value={orderiumPrimeConfig}>
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
             <SileoToaster position="top-center" theme="system" />
             <BrowserRouter
               future={{
@@ -91,11 +91,11 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
-          </TooltipProvider>
-        </CartProvider>
-      </AuthProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
+  </PrimeReactProvider>
 );
 
 export default App;

@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Loader2, LogIn, Truck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Truck } from 'lucide-react';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Card } from 'primereact/card';
+import { Message } from 'primereact/message';
 import { LanguageToggle } from '@/components/LanguageToggle';
 
 export default function Login() {
@@ -33,106 +33,85 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
-      <div className="absolute top-4 right-4">
+    <div className="flex align-items-center justify-content-center min-h-screen" style={{ background: 'linear-gradient(135deg, var(--orderium-bg) 0%, var(--orderium-secondary) 100%)' }}>
+      <div className="absolute" style={{ top: '1rem', right: '1rem' }}>
         <LanguageToggle />
       </div>
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-4 text-center">
-          {/* Professional Delivery Logo */}
-          <div className="mx-auto relative w-32 h-32">
-            {/* Animated route path background */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-full h-1 bg-gradient-to-r from-transparent via-orange-300 to-transparent rounded-full opacity-40"></div>
-              <div className="absolute w-2 h-2 bg-orange-400 rounded-full animate-ping" style={{left: '20%'}}></div>
-              <div className="absolute w-2 h-2 bg-orange-500 rounded-full animate-pulse" style={{right: '20%'}}></div>
-            </div>
-            
-            {/* Main Orderium O Logo */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-2xl flex items-center justify-center relative overflow-hidden">
-                {/* Subtle shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
-                {/* Large O */}
-                <span className="text-5xl font-bold text-white relative z-10">O</span>
+
+      <div className="w-full px-3" style={{ maxWidth: '28rem' }}>
+        <Card className="shadow-4">
+          <div className="text-center mb-5">
+            {/* Logo */}
+            <div className="flex justify-content-center mb-4">
+              <div className="relative">
+                <div className="flex align-items-center justify-content-center border-circle"
+                  style={{ width: '6rem', height: '6rem', background: 'linear-gradient(135deg, var(--orderium-primary), var(--orderium-primary-dark))', boxShadow: '0 8px 32px rgba(192,97,43,0.3)' }}>
+                  <span className="text-5xl font-bold text-white">O</span>
+                </div>
+                <div className="absolute flex align-items-center justify-content-center border-circle bg-white shadow-3"
+                  style={{ width: '2.5rem', height: '2.5rem', bottom: '-4px', right: '-4px' }}>
+                  <div className="flex align-items-center justify-content-center border-circle"
+                    style={{ width: '2rem', height: '2rem', background: 'linear-gradient(135deg, var(--orderium-primary), var(--orderium-primary-dark))' }}>
+                    <Truck size={14} color="white" />
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Delivery Truck Icon Badge */}
-            <div className="absolute bottom-0 right-0 w-12 h-12 bg-white rounded-xl shadow-lg border-2 border-orange-100 flex items-center justify-center">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                <Truck className="w-5 h-5 text-white" />
-              </div>
-            </div>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--orderium-text)' }}>{t('appName')}</h1>
+            <p className="text-base" style={{ color: 'var(--orderium-text-secondary)' }}>{t('tagline')}</p>
+            <p className="text-sm mt-2" style={{ color: 'var(--orderium-text-muted)' }}>{t('welcomeBack')}</p>
           </div>
-          
-          <div>
-            <CardTitle className="text-3xl font-bold text-gray-900">{t('appName')}</CardTitle>
-            <CardDescription className="text-base mt-1">{t('tagline')}</CardDescription>
-          </div>
-          <CardDescription>{t('welcomeBack')}</CardDescription>
-        </CardHeader>
-        <CardContent>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">{t('phoneNumber')}</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder={t('enterPhoneNumber')}
-                value={credentials.phoneNumber}
-                onChange={(e) => {
-                  setCredentials({ ...credentials, phoneNumber: e.target.value });
-                  setError('');
-                }}
-                className={error ? 'border-destructive' : ''}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('password')}</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder={t('enterPassword')}
-                value={credentials.password}
-                onChange={(e) => {
-                  setCredentials({ ...credentials, password: e.target.value });
-                  setError('');
-                }}
-                className={error ? 'border-destructive' : ''}
-                disabled={isLoading}
-              />
-            </div>
-
-            {error && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm text-destructive">{error}</p>
+          <form onSubmit={handleSubmit}>
+            <div className="flex flex-column gap-4">
+              <div className="flex flex-column gap-2">
+                <label htmlFor="phone" className="font-semibold text-sm" style={{ color: 'var(--orderium-text-secondary)' }}>{t('phoneNumber')}</label>
+                <InputText
+                  id="phone"
+                  type="tel"
+                  placeholder={t('enterPhoneNumber')}
+                  value={credentials.phoneNumber}
+                  onChange={(e) => {
+                    setCredentials({ ...credentials, phoneNumber: e.target.value });
+                    setError('');
+                  }}
+                  className={error ? 'p-invalid w-full' : 'w-full'}
+                  disabled={isLoading}
+                />
               </div>
-            )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('loading')}
-                </>
-              ) : (
-                <>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  {t('login')}
-                </>
+              <div className="flex flex-column gap-2">
+                <label htmlFor="password" className="font-semibold text-sm" style={{ color: 'var(--orderium-text-secondary)' }}>{t('password')}</label>
+                <InputText
+                  id="password"
+                  type="password"
+                  placeholder={t('enterPassword')}
+                  value={credentials.password}
+                  onChange={(e) => {
+                    setCredentials({ ...credentials, password: e.target.value });
+                    setError('');
+                  }}
+                  className={error ? 'p-invalid w-full' : 'w-full'}
+                  disabled={isLoading}
+                />
+              </div>
+
+              {error && (
+                <Message severity="error" text={error} className="w-full" />
               )}
-            </Button>
+
+              <Button
+                type="submit"
+                label={isLoading ? t('loading') : t('login')}
+                icon={isLoading ? 'pi pi-spinner pi-spin' : 'pi pi-sign-in'}
+                className="w-full"
+                disabled={isLoading}
+                loading={isLoading}
+              />
+            </div>
           </form>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

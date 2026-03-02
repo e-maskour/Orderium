@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, Edit, Trash2, Download, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, CheckCircle, Eye, Columns, FileText } from 'lucide-react';
+import { Dropdown } from 'primereact/dropdown';
+import { InputText } from 'primereact/inputtext';
 import { FloatingActionBar } from '../FloatingActionBar';
 import { DocumentType } from '../../modules/documents/types';
 import { pdfService } from '../../services/pdf.service';
 import { PDFPreviewModal } from '../PDFPreviewModal';
 import { useLanguage } from '../../context/LanguageContext';
-import { Input } from '../ui/input';
-import { NativeSelect } from '../ui/native-select';
 
 interface Document {
   id: number;
@@ -160,44 +160,36 @@ export function DocumentTable({
   const totalPages = Math.ceil(totalCount / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyle = (status: string): React.CSSProperties => {
     switch (status) {
-      // Invoice statuses
       case 'paid':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return { backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' };
       case 'partial':
       case 'pending':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
+        return { backgroundColor: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' };
       case 'overdue':
-        return 'bg-red-50 text-red-700 border-red-200';
+        return { backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' };
       case 'unpaid':
-        return 'bg-orange-50 text-orange-700 border-orange-200';
-
-      // Quote statuses
+        return { backgroundColor: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' };
       case 'open':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
+        return { backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' };
       case 'signed':
-        return 'bg-green-50 text-green-700 border-green-200';
+        return { backgroundColor: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' };
       case 'closed':
-        return 'bg-red-50 text-red-700 border-red-200';
+        return { backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' };
       case 'invoiced':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
-
-      // Bon de livraison statuses
+        return { backgroundColor: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff' };
       case 'validated':
-        return 'bg-sky-50 text-sky-700 border-sky-200';
+        return { backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' };
       case 'in_progress':
-        return 'bg-cyan-50 text-cyan-700 border-cyan-200';
+        return { backgroundColor: '#ecfeff', color: '#0e7490', border: '1px solid #a5f3fc' };
       case 'delivered':
-        return 'bg-teal-50 text-teal-700 border-teal-200';
+        return { backgroundColor: '#f0fdfa', color: '#0f766e', border: '1px solid #99f6e4' };
       case 'cancelled':
-        return 'bg-rose-50 text-rose-700 border-rose-200';
-
-      // Common
+        return { backgroundColor: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3' };
       case 'draft':
-        return 'bg-slate-50 text-slate-700 border-slate-200';
       default:
-        return 'bg-slate-50 text-slate-700 border-slate-200';
+        return { backgroundColor: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0' };
     }
   };
 
@@ -252,53 +244,52 @@ export function DocumentTable({
     (showPaymentColumns && visibleColumns.remainingAmount ? 1 : 0);
 
   return (
-    <div className="space-y-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
       {/* Column Toggle and Filter Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-3">
-        <div className="relative" ref={columnsMenuRef}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative' }} ref={columnsMenuRef}>
           <button
             onClick={() => setShowColumnsMenu(!showColumnsMenu)}
-            className="flex items-center justify-center gap-2 px-3 py-2 text-xs border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors font-medium text-slate-700 w-full sm:w-auto"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', fontSize: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', background: '#ffffff', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
           >
-            <Columns className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t('columns')}</span>
-            <span className="sm:hidden">{t('showColumns')}</span>
-            <ChevronDown className="w-3 h-3" />
+            <Columns style={{ width: '0.875rem', height: '0.875rem' }} />
+            {t('columns')}
+            <ChevronDown style={{ width: '0.75rem', height: '0.75rem' }} />
           </button>
           {showColumnsMenu && (
-            <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50 py-2">
-              <div className="px-3 py-2 border-b border-slate-100">
-                <p className="text-xs font-semibold text-slate-700">{t('showHideColumns')}</p>
+            <div style={{ position: 'absolute', left: 0, top: '100%', marginTop: '0.25rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid #e2e8f0', zIndex: 50, padding: '0.5rem 0' }}>
+              <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid #f1f5f9' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#334155' }}>{t('showHideColumns')}</p>
               </div>
-              <div className="py-1">
-                <label className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer">
+              <div style={{ padding: '0.25rem 0' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={visibleColumns.tax}
                     onChange={(e) => setVisibleColumns(prev => ({ ...prev, tax: e.target.checked }))}
-                    className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
+                    style={{ width: '1rem', height: '1rem', accentColor: '#f59e0b' }}
                   />
-                  <span className="text-xs text-slate-700">{t('taxAmount')}</span>
+                  <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('taxAmount')}</span>
                 </label>
                 {showPaymentColumns && (
                   <>
-                    <label className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
                         checked={visibleColumns.paidAmount}
                         onChange={(e) => setVisibleColumns(prev => ({ ...prev, paidAmount: e.target.checked }))}
-                        className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
+                        style={{ width: '1rem', height: '1rem', accentColor: '#f59e0b' }}
                       />
-                      <span className="text-xs text-slate-700">{t('alreadyPaid')}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('alreadyPaid')}</span>
                     </label>
-                    <label className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
                         checked={visibleColumns.remainingAmount}
                         onChange={(e) => setVisibleColumns(prev => ({ ...prev, remainingAmount: e.target.checked }))}
-                        className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
+                        style={{ width: '1rem', height: '1rem', accentColor: '#f59e0b' }}
                       />
-                      <span className="text-xs text-slate-700">{t('remainingToPay')}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('remainingToPay')}</span>
                     </label>
                   </>
                 )}
@@ -311,64 +302,69 @@ export function DocumentTable({
         {onFiltersToggle && (
           <button
             onClick={onFiltersToggle}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${filtersExpanded
-                ? 'bg-amber-500 text-white shadow-md'
-                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
-              }`}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer', border: filtersExpanded ? 'none' : '1px solid #cbd5e1',
+              backgroundColor: filtersExpanded ? '#f59e0b' : '#ffffff',
+              color: filtersExpanded ? '#ffffff' : '#334155',
+              boxShadow: filtersExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none'
+            }}
           >
-            <Filter className="w-4 h-4" />
+            <Filter style={{ width: '1rem', height: '1rem' }} />
             <span>{t('filters')}</span>
             {filtersExpanded ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp style={{ width: '1rem', height: '1rem' }} />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown style={{ width: '1rem', height: '1rem' }} />
             )}
           </button>
         )}
       </div>
 
       {/* Separator Line */}
-      <div className="border-t border-slate-200"></div>
+      <div style={{ borderTop: '1px solid #e2e8f0' }}></div>
 
       {/* Pagination Info Bar - Top */}
       {totalCount > 0 && (
-        <div className="bg-slate-50 py-2 px-4 rounded-lg">
-          <div className="flex items-center justify-between gap-4">
-            <div className="text-sm text-slate-600">
-              {t('showing')} <span className="font-semibold">{startIndex + 1}</span> {t('to')}{' '}
-              <span className="font-semibold">{Math.min(startIndex + pageSize, totalCount)}</span> {t('of')} <span className="font-semibold">{totalCount}</span> {t('results')}
+        <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem 1rem', borderRadius: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+              {t('showing')} <span style={{ fontWeight: 600 }}>{startIndex + 1}</span> {t('to')}{' '}
+              <span style={{ fontWeight: 600 }}>{Math.min(startIndex + pageSize, totalCount)}</span> {t('of')} <span style={{ fontWeight: 600 }}>{totalCount}</span> {t('results')}
             </div>
 
             {/* Page Size Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-slate-600">{t('perPage')}</span>
-              <NativeSelect
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569' }}>{t('perPage')}</span>
+              <Dropdown
                 value={pageSize}
-                onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                selectSize="sm"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </NativeSelect>
+                options={[
+                  { label: '10', value: 10 },
+                  { label: '25', value: 25 },
+                  { label: '50', value: 50 },
+                  { label: '100', value: 100 },
+                ]}
+                onChange={(e) => onPageSizeChange(e.value)}
+                optionLabel="label"
+                optionValue="value"
+                style={{ fontSize: '0.75rem' }}
+              />
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center gap-2">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button
                 onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.375rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', background: '#ffffff', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
               </button>
-              <div className="flex items-center gap-1">
-                <Input
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <InputText
                   type="number"
                   min={1}
                   max={totalPages}
-                  value={currentPage}
+                  value={String(currentPage)}
                   onChange={(e) => {
                     const page = parseInt(e.target.value, 10);
                     if (!isNaN(page) && page >= 1 && page <= totalPages) {
@@ -380,19 +376,18 @@ export function DocumentTable({
                       e.currentTarget.blur();
                     }
                   }}
-                  inputSize="sm"
-                  className="w-12 text-center"
+                  style={{ width: '3rem', textAlign: 'center', fontSize: '0.875rem' }}
                   aria-label="Page number"
                 />
-                <span className="text-sm text-slate-500">/</span>
-                <span className="text-sm font-medium text-slate-700">{totalPages}</span>
+                <span style={{ fontSize: '0.875rem', color: '#64748b' }}>/</span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{totalPages}</span>
               </div>
               <button
                 onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="inline-flex items-center justify-center px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.375rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', background: '#ffffff', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight style={{ width: '1rem', height: '1rem' }} />
               </button>
             </div>
           </div>
@@ -418,7 +413,7 @@ export function DocumentTable({
             {
               id: 'view',
               label: t('view'),
-              icon: <Eye className="w-4 h-4" />,
+              icon: <Eye style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
                 if (selectedDocuments.length === 1) {
                   onEdit?.(selectedDocuments[0]);
@@ -430,7 +425,7 @@ export function DocumentTable({
             {
               id: 'validate',
               label: t('validate'),
-              icon: <CheckCircle className="w-4 h-4" />,
+              icon: <CheckCircle style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
                 selectedDocuments.forEach(id => {
                   const doc = documents.find(d => d.id === id);
@@ -446,7 +441,7 @@ export function DocumentTable({
             {
               id: 'devalidate',
               label: t('devalidate'),
-              icon: <Edit className="w-4 h-4" />,
+              icon: <Edit style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
                 selectedDocuments.forEach(id => {
                   const doc = documents.find(d => d.id === id);
@@ -461,7 +456,7 @@ export function DocumentTable({
             {
               id: 'payments',
               label: t('payments'),
-              icon: <CreditCard className="w-4 h-4" />,
+              icon: <CreditCard style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
                 if (selectedDocuments.length === 1) {
                   onViewPayments?.(selectedDocuments[0]);
@@ -475,7 +470,7 @@ export function DocumentTable({
             {
               id: 'pdf-preview',
               label: 'Aperçu',
-              icon: <FileText className="w-4 h-4" />,
+              icon: <FileText style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
                 if (selectedDocuments.length === 1) {
                   const doc = selectedDocumentsData[0];
@@ -496,7 +491,7 @@ export function DocumentTable({
             {
               id: 'delete',
               label: t('delete'),
-              icon: <Trash2 className="w-4 h-4" />,
+              icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
                 selectedDocuments.forEach(id => onDelete?.(id));
                 clearSelection();
@@ -508,210 +503,216 @@ export function DocumentTable({
       />
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden relative">
+      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden', position: 'relative' }}>
         <div
           ref={tableScrollRef}
-          className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"
           style={{
+            overflowX: 'auto',
             scrollBehavior: 'smooth',
             WebkitOverflowScrolling: 'touch'
           }}
         >
           {/* Scroll indicator shadow */}
           {showScrollIndicator && (
-            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-200/50 to-transparent pointer-events-none z-10" />
+            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '2rem', background: 'linear-gradient(to left, rgba(226,232,240,0.5), transparent)', pointerEvents: 'none', zIndex: 10 }} />
           )}
-          <table className="w-full min-w-[800px]">
-            <thead className="bg-slate-50 border-b border-slate-200">
+          <table style={{ width: '100%', minWidth: '800px' }}>
+            <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <tr>
-                <th className="py-2 pl-3 pr-2 sticky left-0 z-20 bg-slate-50 whitespace-nowrap w-10">
+                <th style={{ padding: '0.5rem 0.5rem 0.5rem 0.75rem', position: 'sticky', left: 0, zIndex: 20, backgroundColor: '#f8fafc', whiteSpace: 'nowrap', width: '2.5rem' }}>
                   <div
                     onClick={handleSelectAll}
-                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${selectedDocuments.length === documents.length && documents.length > 0
-                        ? 'bg-amber-500 border-amber-500 text-white'
-                        : 'bg-white border-slate-300 hover:border-slate-400'
-                      }`}
+                    style={{
+                      width: '1.25rem', height: '1.25rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                      backgroundColor: selectedDocuments.length === documents.length && documents.length > 0 ? '#f59e0b' : '#ffffff',
+                      borderColor: selectedDocuments.length === documents.length && documents.length > 0 ? '#f59e0b' : '#cbd5e1',
+                      color: selectedDocuments.length === documents.length && documents.length > 0 ? '#ffffff' : 'transparent'
+                    }}
                   >
                     {selectedDocuments.length === documents.length && documents.length > 0 && (
-                      <CheckCircle className="w-3.5 h-3.5" />
+                      <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
                     )}
                   </div>
                 </th>
-                <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider sticky left-10 z-20 bg-slate-50 shadow-[2px_0_4px_rgba(0,0,0,0.05)] whitespace-nowrap`}>
+                <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', position: 'sticky', left: '2.5rem', zIndex: 20, backgroundColor: '#f8fafc', boxShadow: '2px 0 4px rgba(0,0,0,0.05)', whiteSpace: 'nowrap' }}>
                   {t('number')}
                 </th>
-                <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                   {partnerLabel}
                 </th>
-                <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                   {documentType === 'facture' ? t('invoiceDate') : documentType === 'devis' ? t('quoteDate') : t('deliveryDate')}
                 </th>
                 {documentType === 'facture' && (
-                  <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                  <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                     {t('dueDate')}
                   </th>
                 )}
                 {showValidationColumn && (
-                  <th className={`${language === 'ar' ? 'text-right' : 'text-left'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                  <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                     {t('validationDate')}
                   </th>
                 )}
-                <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                   {t('amountHT')}
                 </th>
                 {visibleColumns.tax && (
-                  <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                  <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                     {t('taxAmount')}
                   </th>
                 )}
-                <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                   {t('amountTTC')}
                 </th>
                 {showPaymentColumns && visibleColumns.paidAmount && (
-                  <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                  <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                     {t('alreadyPaid')}
                   </th>
                 )}
                 {showPaymentColumns && visibleColumns.remainingAmount && (
-                  <th className={`${language === 'ar' ? 'text-left' : 'text-right'} py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap`}>
+                  <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                     {t('remainingToPay')}
                   </th>
                 )}
-                <th className="text-center py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                   {t('status')}
                 </th>
               </tr>
             </thead>
-            <tbody className="">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={columnCount} className="py-8 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-500"></div>
-                      <p className="text-xs text-slate-500">{t('loading')}</p>
+                  <td colSpan={columnCount} style={{ padding: '2rem 0', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="animate-spin" style={{ borderRadius: '50%', width: '1.5rem', height: '1.5rem', borderBottom: '2px solid #f59e0b', borderTop: '2px solid transparent', borderLeft: '2px solid transparent', borderRight: '2px solid transparent' }}></div>
+                      <p style={{ fontSize: '0.75rem', color: '#64748b' }}>{t('loading')}</p>
                     </div>
                   </td>
                 </tr>
               ) : documents.length > 0 ? (
-                documents.map((doc) => (
-                  <tr
-                    key={doc.id}
-                    className={`transition-all duration-200 cursor-pointer border-l-4 border-b border-slate-200 group ${selectedDocuments.includes(doc.id)
-                        ? 'bg-amber-50 border-l-amber-500 shadow-md !bg-amber-50'
-                        : 'hover:bg-slate-50 border-l-transparent'
-                      }`}
-                    style={selectedDocuments.includes(doc.id) ? { backgroundColor: 'rgb(255 251 235)' } : {}}
-                    onClick={() => handleSelectDocument(doc.id)}
-                  >
-                    <td className={`py-2 pl-3 pr-2 sticky left-0 z-10 whitespace-nowrap w-10 ${selectedDocuments.includes(doc.id) ? 'bg-amber-50' : 'bg-white group-hover:bg-slate-50'
-                      }`}>
-                      <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectDocument(doc.id);
-                        }}
-                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${selectedDocuments.includes(doc.id)
-                            ? 'bg-amber-500 border-amber-500 text-white'
-                            : 'bg-white border-slate-300 hover:border-slate-400'
-                          }`}
-                      >
-                        {selectedDocuments.includes(doc.id) && (
-                          <CheckCircle className="w-3.5 h-3.5" />
-                        )}
-                      </div>
-                    </td>
-                    <td className={`py-2 px-3 sticky left-10 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.05)] whitespace-nowrap ${selectedDocuments.includes(doc.id) ? 'bg-amber-50' : 'bg-white group-hover:bg-slate-50'
-                      }`}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit?.(doc.id);
-                        }}
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                      >
-                        {doc.number}
-                      </button>
-                    </td>
-                    <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                      <span className="text-xs font-medium text-slate-800">{doc.partnerName}</span>
-                    </td>
-                    <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                      <span className="text-xs text-slate-600">
-                        {new Date(doc.date).toLocaleDateString('fr-FR', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    </td>
-                    {documentType === 'facture' && (
-                      <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <span className="text-xs text-slate-600">
-                          {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', {
+                documents.map((doc) => {
+                  const isSelected = selectedDocuments.includes(doc.id);
+                  return (
+                    <tr
+                      key={doc.id}
+                      style={{
+                        cursor: 'pointer',
+                        borderLeft: `4px solid ${isSelected ? '#f59e0b' : 'transparent'}`,
+                        borderBottom: '1px solid #e2e8f0',
+                        backgroundColor: isSelected ? '#fffbeb' : undefined
+                      }}
+                      onClick={() => handleSelectDocument(doc.id)}
+                    >
+                      <td style={{ padding: '0.5rem 0.5rem 0.5rem 0.75rem', position: 'sticky', left: 0, zIndex: 10, whiteSpace: 'nowrap', width: '2.5rem', backgroundColor: isSelected ? '#fffbeb' : '#ffffff' }}>
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectDocument(doc.id);
+                          }}
+                          style={{
+                            width: '1.25rem', height: '1.25rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                            backgroundColor: isSelected ? '#f59e0b' : '#ffffff',
+                            borderColor: isSelected ? '#f59e0b' : '#cbd5e1',
+                            color: isSelected ? '#ffffff' : 'transparent'
+                          }}
+                        >
+                          {isSelected && (
+                            <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem', position: 'sticky', left: '2.5rem', zIndex: 10, boxShadow: '2px 0 4px rgba(0,0,0,0.05)', whiteSpace: 'nowrap', backgroundColor: isSelected ? '#fffbeb' : '#ffffff' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit?.(doc.id);
+                          }}
+                          style={{ fontSize: '0.75rem', fontWeight: 600, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none', padding: 0 }}
+                        >
+                          {doc.number}
+                        </button>
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap', textAlign: language === 'ar' ? 'right' : 'left' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#1e293b' }}>{doc.partnerName}</span>
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap', textAlign: language === 'ar' ? 'right' : 'left' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#475569' }}>
+                          {new Date(doc.date).toLocaleDateString('fr-FR', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric'
-                          }) : '-'}
+                          })}
                         </span>
                       </td>
-                    )}
-                    {showValidationColumn && (
-                      <td className={`py-2 px-3 whitespace-nowrap ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <span className="text-xs text-slate-600">
-                          {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          }) : '-'}
+                      {documentType === 'facture' && (
+                        <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap', textAlign: language === 'ar' ? 'right' : 'left' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#475569' }}>
+                            {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            }) : '-'}
+                          </span>
+                        </td>
+                      )}
+                      {showValidationColumn && (
+                        <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap', textAlign: language === 'ar' ? 'right' : 'left' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#475569' }}>
+                            {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            }) : '-'}
+                          </span>
+                        </td>
+                      )}
+                      <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>
+                          {doc.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                         </span>
                       </td>
-                    )}
-                    <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                      <span className="text-xs font-medium text-slate-700">
-                        {doc.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                      </span>
-                    </td>
-                    {visibleColumns.tax && (
-                      <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                        <span className="text-xs font-medium text-slate-700">
-                          {doc.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                      {visibleColumns.tax && (
+                        <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>
+                            {doc.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                          </span>
+                        </td>
+                      )}
+                      <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f172a' }}>
+                          {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                         </span>
                       </td>
-                    )}
-                    <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                      <span className="text-xs font-bold text-slate-900">
-                        {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                      </span>
-                    </td>
-                    {showPaymentColumns && visibleColumns.paidAmount && (
-                      <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                        <span className="text-xs font-medium text-green-700">
-                          {doc.paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                        </span>
+                      {showPaymentColumns && visibleColumns.paidAmount && (
+                        <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#15803d' }}>
+                            {doc.paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                          </span>
+                        </td>
+                      )}
+                      {showPaymentColumns && visibleColumns.remainingAmount && (
+                        <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 500, color: doc.remainingAmount > 0 ? '#b91c1c' : '#64748b' }}>
+                            {doc.remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                          </span>
+                        </td>
+                      )}
+                      <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                          <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, ...getStatusStyle(doc.status) }}>
+                            {getStatusLabel(doc.status)}
+                          </span>
+                        </div>
                       </td>
-                    )}
-                    {showPaymentColumns && visibleColumns.remainingAmount && (
-                      <td className={`py-2 px-3 ${language === 'ar' ? 'text-left' : 'text-right'} whitespace-nowrap`}>
-                        <span className={`text-xs font-medium ${doc.remainingAmount > 0 ? 'text-red-700' : 'text-slate-500'}`}>
-                          {doc.remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                        </span>
-                      </td>
-                    )}
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      <div className="flex justify-center">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(doc.status)}`}>
-                          {getStatusLabel(doc.status)}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={columnCount} className="py-8 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Filter className="w-10 h-10 text-slate-300" />
-                      <p className="text-xs text-slate-500">{t('noDocumentFound')}</p>
+                  <td colSpan={columnCount} style={{ padding: '2rem 0', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                      <Filter style={{ width: '2.5rem', height: '2.5rem', color: '#cbd5e1' }} />
+                      <p style={{ fontSize: '0.75rem', color: '#64748b' }}>{t('noDocumentFound')}</p>
                     </div>
                   </td>
                 </tr>

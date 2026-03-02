@@ -1,4 +1,5 @@
 import { useLanguage } from '../context/LanguageContext';
+import { Button } from 'primereact/button';
 import { Languages } from 'lucide-react';
 
 export const LanguageToggle = () => {
@@ -9,13 +10,16 @@ export const LanguageToggle = () => {
   };
 
   return (
-    <button
+    <Button
+      text
+      rounded
       onClick={toggleLanguage}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors text-sm font-medium text-foreground"
-      title={language === 'ar' ? t('switchToFrench') : t('switchToArabic')}
+      tooltip={language === 'ar' ? t('switchToFrench') : t('switchToArabic')}
+      tooltipOptions={{ position: 'bottom' }}
+      className="p-button-sm"
     >
-      <Languages className="w-4 h-4" />
+      <Languages style={{ width: '1rem', height: '1rem', marginInlineEnd: '0.5rem' }} />
       <span>{language === 'ar' ? 'FR' : 'AR'}</span>
-    </button>
+    </Button>
   );
 };

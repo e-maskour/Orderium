@@ -1,62 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Tag, Percent, DollarSign } from 'lucide-react';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-
-// Keyframe animations for Apple-style entrance
-const backdropAnimation = `
-  @keyframes backdropFadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-`;
-
-const modalAnimation = `
-  @keyframes modalSlideUp {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-`;
-
-const contentAnimation = `
-  @keyframes contentFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(5px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-// Inject keyframes
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = backdropAnimation + modalAnimation + contentAnimation;
-  if (!document.head.querySelector('[data-modal-animations]')) {
-    styleSheet.setAttribute('data-modal-animations', 'true');
-    document.head.appendChild(styleSheet);
-  }
-}
+import { Tag, Percent, DollarSign } from 'lucide-react';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 
 interface DiscountModalProps {
   productName: string;
   quantity: number;
   unitPrice: number;
   currentDiscount: number;
-  currentDiscountType: number; // 0 = fixed amount, 1 = percentage
+  currentDiscountType: number;
   isOpen: boolean;
   onClose: () => void;
   onApply: (discount: number, discountType: number) => void;
@@ -75,21 +28,19 @@ export const DiscountModal = ({
   t
 }: DiscountModalProps) => {
   const [discount, setDiscount] = useState('');
-  const [discountType, setDiscountType] = useState<number>(0); // 0 = amount, 1 = percentage
+  const [discountType, setDiscountType] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setDiscount(currentDiscount > 0 ? currentDiscount.toString() : '');
       setDiscountType(currentDiscountType);
-
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
   }, [isOpen, currentDiscount, currentDiscountType]);
 
-  // Keep focus on input
   useEffect(() => {
     if (isOpen) {
       const interval = setInterval(() => {
@@ -101,53 +52,40 @@ export const DiscountModal = ({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const subtotal = unitPrice * quantity;
   const discountValue = parseFloat(discount) || 0;
   const discountAmount = discountType === 1
     ? (subtotal * discountValue) / 100
     : discountValue;
   const total = subtotal - discountAmount;
-
   const maxDiscount = discountType === 1 ? 100 : subtotal;
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
       setDiscount('');
     } else if (num === '.') {
-      // Only add decimal point if there isn't one already
       if (!discount.includes('.')) {
         const newValue = discount === '' ? '0.' : discount + '.';
         setDiscount(newValue);
       }
     } else {
       const newValue = discount === '' ? num : discount + num;
-      // Check if adding this number would exceed 2 decimal places
       if (newValue.includes('.')) {
         const [, decimal] = newValue.split('.');
-        if (decimal && decimal.length > 2) {
-          return; // Don't add if it would exceed 2 decimal places
-        }
+        if (decimal && decimal.length > 2) return;
       }
-      // Check max value
       const numValue = parseFloat(newValue);
-      if (numValue > maxDiscount) {
-        return;
-      }
+      if (numValue > maxDiscount) return;
       setDiscount(newValue);
     }
-    // Restore focus after button click
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9.]/g, '');
-    // Only allow one decimal point
     const parts = value.split('.');
     let sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : value;
 
-    // Limit decimal places to 2
     if (sanitizedValue.includes('.')) {
       const [integer, decimal] = sanitizedValue.split('.');
       if (decimal && decimal.length > 2) {
@@ -155,18 +93,15 @@ export const DiscountModal = ({
       }
     }
 
-    // Check max value
     const numValue = parseFloat(sanitizedValue);
-    if (numValue > maxDiscount) {
-      return;
-    }
+    if (numValue > maxDiscount) return;
 
     setDiscount(sanitizedValue);
   };
 
   const handleApply = () => {
-    const discountValue = parseFloat(discount) || 0;
-    onApply(discountValue, discountType);
+    const dv = parseFloat(discount) || 0;
+    onApply(dv, discountType);
     setDiscount('');
     onClose();
   };
@@ -178,178 +113,157 @@ export const DiscountModal = ({
 
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-        style={{
-          animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
-        }}
-      />
-
-      {/* Modal */}
-      <div
-        className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden"
-        style={{
-          animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
-        }}
-      >
-        {/* Header */}
-        <div className="relative bg-gradient-to-br from-orange-500/10 to-orange-500/5 p-3 sm:p-4 border-b border-gray-200">
-          <button
-            onClick={handleClose}
-            className="absolute top-3 sm:top-4 right-3 sm:right-4 w-8 h-8 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center shadow-sm transition-all hover:scale-110"
-          >
-            <X className="w-4 h-4 text-gray-700" />
-          </button>
-
-          <div className="space-y-1.5 sm:space-y-2 pr-10 sm:pr-12">
-            <div className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-orange-600" />
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
-                {t('applyDiscount') || 'Apply Discount'}
-              </h2>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-600">
-              {productName}
-            </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl font-bold text-gray-900">
-                {subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-              </span>
-              <span className="text-xs sm:text-sm text-gray-500">
-                ({quantity} × {unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div
-          className="p-3 sm:p-4 space-y-3 sm:space-y-4"
-          style={{
-            animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
-          }}
-        >
-          {/* Discount Type Selector */}
-          <div className="space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
-              {t('discountType') || 'Discount Type'}
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => {
-                  setDiscountType(0);
-                  setDiscount('');
-                  setTimeout(() => inputRef.current?.focus(), 0);
-                }}
-                className={`h-10 sm:h-11 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${discountType === 0
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                  }`}
-              >
-                <DollarSign className="w-4 h-4" />
-                {t('amount') || 'Amount'}
-              </button>
-              <button
-                onClick={() => {
-                  setDiscountType(1);
-                  setDiscount('');
-                  setTimeout(() => inputRef.current?.focus(), 0);
-                }}
-                className={`h-10 sm:h-11 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${discountType === 1
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                  }`}
-              >
-                <Percent className="w-4 h-4" />
-                {t('percentage') || 'Percentage'}
-              </button>
-            </div>
-          </div>
-
-          {/* Discount Input */}
-          <div className="space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
-              {t('discount')} {discountType === 1 ? '(%)' : `(${t('currency')})`}
-            </label>
-            <Input
-              ref={inputRef}
-              type="text"
-              inputMode="decimal"
-              value={discount}
-              onChange={handleInputChange}
-              className="h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center"
-              fullWidth
-            />
-          </div>
-
-          {/* Numeric Keypad */}
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-            {numbers.map((num) => (
-              <button
-                key={num}
-                onClick={() => handleNumberClick(num)}
-                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${num === 'C'
-                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
-                    : num === '.'
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
-                  }`}
-              >
-                {num === 'C' ? (
-                  <span className="text-xs sm:text-sm">{t('clear')}</span>
-                ) : (
-                  num
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Discount Summary */}
-          {discountValue > 0 && (
-            <div
-              className="space-y-2 p-3 bg-gradient-to-r from-orange-500/5 to-orange-500/10 rounded-xl border border-orange-500/20"
-              style={{
-                animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
-              }}
-            >
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">{t('subtotal')}</span>
-                <span className="font-semibold text-gray-900">
-                  {subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">{t('discount')}</span>
-                <span className="font-semibold text-orange-600">
-                  -{discountAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                </span>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t border-orange-500/20">
-                <span className="font-semibold text-gray-700">{t('total')}</span>
-                <span className="text-xl font-bold text-orange-600">
-                  {total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Apply Button */}
-          <Button
-            onClick={handleApply}
-            className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02]"
-            leadingIcon={Tag}
-            style={{
-              animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
-            }}
-          >
-            {t('apply') || 'Apply'}
-          </Button>
-        </div>
+  const headerContent = (
+    <div>
+      <div className="flex align-items-center gap-2">
+        <Tag style={{ width: 20, height: 20, color: '#ea580c' }} />
+        <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827' }}>{t('applyDiscount') || 'Apply Discount'}</span>
+      </div>
+      <div style={{ fontSize: '0.875rem', color: '#4b5563', marginTop: '0.25rem' }}>{productName}</div>
+      <div className="flex align-items-baseline gap-2" style={{ marginTop: '0.25rem' }}>
+        <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827' }}>
+          {subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+        </span>
+        <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+          ({quantity} × {unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+        </span>
       </div>
     </div>
+  );
+
+  const footerContent = (
+    <Button
+      label={t('apply') || 'Apply'}
+      icon={<Tag style={{ width: 16, height: 16, marginRight: 6 }} />}
+      onClick={handleApply}
+      style={{ width: '100%' }}
+    />
+  );
+
+  return (
+    <Dialog
+      visible={isOpen}
+      onHide={handleClose}
+      header={headerContent}
+      footer={footerContent}
+      modal
+      dismissableMask
+      style={{ width: '95vw', maxWidth: '32rem' }}
+      contentStyle={{ padding: '1rem' }}
+    >
+      <div className="flex flex-column gap-3">
+        {/* Discount Type Selector */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+            {t('discountType') || 'Discount Type'}
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <button
+              onClick={() => {
+                setDiscountType(0);
+                setDiscount('');
+                setTimeout(() => inputRef.current?.focus(), 0);
+              }}
+              className="flex align-items-center justify-content-center gap-2"
+              style={{
+                height: '2.75rem',
+                borderRadius: '0.5rem',
+                fontWeight: 600,
+                border: discountType === 0 ? 'none' : '1px solid #d1d5db',
+                background: discountType === 0 ? '#f97316' : '#f3f4f6',
+                color: discountType === 0 ? '#fff' : '#374151',
+                cursor: 'pointer',
+                boxShadow: discountType === 0 ? '0 4px 6px -1px rgba(249,115,22,0.3)' : 'none',
+              }}
+            >
+              <DollarSign style={{ width: 16, height: 16 }} />
+              {t('amount') || 'Amount'}
+            </button>
+            <button
+              onClick={() => {
+                setDiscountType(1);
+                setDiscount('');
+                setTimeout(() => inputRef.current?.focus(), 0);
+              }}
+              className="flex align-items-center justify-content-center gap-2"
+              style={{
+                height: '2.75rem',
+                borderRadius: '0.5rem',
+                fontWeight: 600,
+                border: discountType === 1 ? 'none' : '1px solid #d1d5db',
+                background: discountType === 1 ? '#f97316' : '#f3f4f6',
+                color: discountType === 1 ? '#fff' : '#374151',
+                cursor: 'pointer',
+                boxShadow: discountType === 1 ? '0 4px 6px -1px rgba(249,115,22,0.3)' : 'none',
+              }}
+            >
+              <Percent style={{ width: 16, height: 16 }} />
+              {t('percentage') || 'Percentage'}
+            </button>
+          </div>
+        </div>
+
+        {/* Discount Input */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+            {t('discount')} {discountType === 1 ? '(%)' : `(${t('currency')})`}
+          </label>
+          <InputText
+            ref={inputRef}
+            type="text"
+            inputMode="decimal"
+            value={discount}
+            onChange={handleInputChange}
+            style={{ height: '3.5rem', fontSize: '1.75rem', fontWeight: 700, textAlign: 'center', width: '100%' }}
+          />
+        </div>
+
+        {/* Numeric Keypad */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+          {numbers.map((num) => (
+            <button
+              key={num}
+              onClick={() => handleNumberClick(num)}
+              style={{
+                height: '3rem',
+                fontSize: '1.125rem',
+                fontWeight: 600,
+                borderRadius: '0.5rem',
+                border: num === 'C' || num === '.' ? 'none' : '1px solid #d1d5db',
+                background: num === 'C' ? '#ef4444' : num === '.' ? '#3b82f6' : '#f3f4f6',
+                color: num === 'C' || num === '.' ? '#fff' : '#111827',
+                cursor: 'pointer',
+              }}
+            >
+              {num === 'C' ? t('clear') : num}
+            </button>
+          ))}
+        </div>
+
+        {/* Discount Summary */}
+        {discountValue > 0 && (
+          <div className="flex flex-column gap-2" style={{ padding: '0.75rem', background: '#fff7ed', borderRadius: '0.75rem', border: '1px solid #fed7aa' }}>
+            <div className="flex align-items-center justify-content-between" style={{ fontSize: '0.875rem' }}>
+              <span style={{ color: '#4b5563' }}>{t('subtotal')}</span>
+              <span style={{ fontWeight: 600, color: '#111827' }}>
+                {subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+              </span>
+            </div>
+            <div className="flex align-items-center justify-content-between" style={{ fontSize: '0.875rem' }}>
+              <span style={{ color: '#4b5563' }}>{t('discount')}</span>
+              <span style={{ fontWeight: 600, color: '#ea580c' }}>
+                -{discountAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+              </span>
+            </div>
+            <div className="flex align-items-center justify-content-between" style={{ paddingTop: '0.5rem', borderTop: '1px solid #fed7aa' }}>
+              <span style={{ fontWeight: 600, color: '#374151' }}>{t('total')}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ea580c' }}>
+                {total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </Dialog>
   );
 };

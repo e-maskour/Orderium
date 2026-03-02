@@ -3,6 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { LanguageToggle } from './LanguageToggle';
 import { NotificationBellPro } from './NotificationBellPro';
 import { useNavigate } from 'react-router-dom';
+import { Button } from 'primereact/button';
 import { LogOut, User, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toastInfo } from '../services/toast.service';
@@ -88,66 +89,78 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
   };
 
   return (
-    <header className={`h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-10 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+    <header
+      className="flex align-items-center justify-content-between"
+      style={{
+        height: '4rem',
+        background: '#fff',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '0 1rem',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        direction: language === 'ar' ? 'rtl' : 'ltr',
+      }}
+    >
       {/* Mobile Menu Button */}
-      <button
+      <Button
+        text
+        rounded
         onClick={onMenuToggle}
-        className="lg:hidden flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 transition-colors"
-        title="Toggle menu"
-      >
-        {isSidebarOpen ? (
-          <X className="w-5 h-5 text-slate-600" />
-        ) : (
-          <Menu className="w-5 h-5 text-slate-600" />
-        )}
-      </button>
+        className="lg:hidden"
+        icon={isSidebarOpen ? <X style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} /> : <Menu style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />}
+        aria-label="Toggle menu"
+      />
 
-      {/* Left Section - Page Title or Breadcrumb */}
-      <div className={`flex items-center gap-2 sm:gap-3 flex-1 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-        <h1 className="text-base sm:text-lg font-semibold text-slate-800 truncate">
+      {/* Title */}
+      <div className="flex align-items-center gap-2 flex-1">
+        <h1 className="font-semibold" style={{ fontSize: '1.125rem', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {t('adminBackoffice')}
         </h1>
       </div>
 
-      {/* Right Section - Actions */}
-      <div className={`flex items-center gap-2 sm:gap-4 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+      {/* Right Section */}
+      <div className="flex align-items-center gap-2 sm:gap-3">
         {canInstall && (
-          <button
+          <Button
+            label="Install"
+            size="small"
             onClick={handleInstallClick}
-            className="text-xs sm:text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 px-2.5 sm:px-3 py-1.5 rounded-md"
-          >
-            Install
-          </button>
+            style={{ background: '#d97706', borderColor: '#d97706' }}
+          />
         )}
-        {/* INotification Bell */}
         <NotificationBellPro />
-
-        {/* Language Toggle */}
         <LanguageToggle />
 
         {/* User Info & Logout */}
-        <div className={`flex items-center gap-2 sm:gap-3 border-slate-200 ${language === 'ar' ? 'flex-row-reverse border-r pl-2 sm:pl-3 md:pl-4 pr-0 border-l-0' : 'border-l pl-2 sm:pl-3 md:pl-4'} ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-          <div className={`flex items-center gap-1 sm:gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)' }}>
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
-              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white relative z-10" />
+        <div className="flex align-items-center gap-2" style={{ borderInlineStart: '1px solid #e2e8f0', paddingInlineStart: '0.75rem' }}>
+          <div className="flex align-items-center gap-2">
+            <div
+              className="flex align-items-center justify-content-center border-round-lg flex-shrink-0"
+              style={{ width: '2rem', height: '2rem', background: 'linear-gradient(135deg, #235ae4, #1a47b8)' }}
+            >
+              <User style={{ width: '1rem', height: '1rem', color: '#fff' }} />
             </div>
             <div className="hidden sm:block">
-              <p className="text-xs sm:text-sm font-medium text-slate-700 truncate">
+              <p className="font-medium" style={{ fontSize: '0.875rem', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {admin?.phoneNumber || 'Admin'}
               </p>
-              <p className="text-xs text-slate-500 hidden md:block">{t('adminBackoffice')}</p>
+              <p className="hidden md:block" style={{ fontSize: '0.75rem', color: '#64748b' }}>{t('adminBackoffice')}</p>
             </div>
           </div>
 
-          <button
+          <Button
+            text
+            severity="danger"
+            size="small"
             onClick={handleLogout}
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-            title={t('logout')}
+            tooltip={t('logout')}
+            tooltipOptions={{ position: 'bottom' }}
+            className="flex-shrink-0"
           >
-            <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden md:inline">{t('logout')}</span>
-          </button>
+            <LogOut style={{ width: '1rem', height: '1rem' }} />
+            <span className="hidden md:inline ml-1">{t('logout')}</span>
+          </Button>
         </div>
       </div>
     </header>

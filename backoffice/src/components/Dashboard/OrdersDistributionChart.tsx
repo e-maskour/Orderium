@@ -94,10 +94,10 @@ export const OrdersDistributionChart: React.FC<OrdersDistributionChartProps> = (
   const series = [data.pending, data.inDelivery, data.delivered, data.cancelled];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-slate-800">{t('ordersDistribution')}</h3>
-        <p className="text-sm text-slate-500 mt-1">{t('byStatus')}</p>
+    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid rgba(226,232,240,0.6)', padding: '1.25rem' }}>
+      <div style={{ marginBottom: '1rem' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{t('ordersDistribution')}</h3>
+        <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{t('byStatus')}</p>
       </div>
       <ReactApexChart options={chartOptions} series={series} type="donut" height={280} />
     </div>

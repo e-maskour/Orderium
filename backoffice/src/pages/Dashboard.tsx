@@ -108,7 +108,7 @@ export default function Dashboard() {
 
   return (
     <AdminLayout>
-      <div className="max-w-[1600px] mx-auto">
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         <PageHeader
           icon={LayoutDashboard}
           title={t('dashboard')}
@@ -116,49 +116,49 @@ export default function Dashboard() {
         />
 
         {isLoading ? (
-          <div className="space-y-4 animate-pulse">
+          <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* KPI Cards Skeleton */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
-                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                <div key={i} style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', padding: '1.25rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <div style={{ height: '1rem', width: '6rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem' }} />
+                    <div style={{ height: '2.5rem', width: '2.5rem', backgroundColor: '#e5e7eb', borderRadius: '0.5rem' }} />
                   </div>
-                  <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-                  <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div style={{ height: '2rem', width: '8rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem', marginBottom: '0.5rem' }} />
+                  <div style={{ height: '0.75rem', width: '5rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem' }} />
                 </div>
               ))}
             </div>
             {/* Secondary KPI Skeleton */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
-                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                <div key={i} style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', padding: '1.25rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <div style={{ height: '1rem', width: '5rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem' }} />
+                    <div style={{ height: '2.5rem', width: '2.5rem', backgroundColor: '#e5e7eb', borderRadius: '0.5rem' }} />
                   </div>
-                  <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-                  <div className="h-3 w-28 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div style={{ height: '2rem', width: '4rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem', marginBottom: '0.5rem' }} />
+                  <div style={{ height: '0.75rem', width: '7rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem' }} />
                 </div>
               ))}
             </div>
             {/* Charts Skeleton */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
-                <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-                <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+              <div style={{ gridColumn: 'span 2', backgroundColor: '#ffffff', borderRadius: '0.75rem', padding: '1.25rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <div style={{ height: '1.25rem', width: '8rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem', marginBottom: '1rem' }} />
+                <div style={{ height: '16rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem' }} />
               </div>
-              <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
-                <div className="h-5 w-28 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-                <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto w-48" />
+              <div style={{ gridColumn: 'span 1', backgroundColor: '#ffffff', borderRadius: '0.75rem', padding: '1.25rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <div style={{ height: '1.25rem', width: '7rem', backgroundColor: '#e5e7eb', borderRadius: '0.25rem', marginBottom: '1rem' }} />
+                <div style={{ height: '16rem', backgroundColor: '#e5e7eb', borderRadius: '9999px', margin: '0 auto', width: '12rem' }} />
               </div>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Top KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
               <StatsCard
                 title={t('totalRevenue')}
                 value={formatCurrency(totalRevenue, language)}
@@ -190,7 +190,7 @@ export default function Dashboard() {
             </div>
 
             {/* Secondary KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
               <StatsCard
                 title={t('pending')}
                 value={pendingOrders}
@@ -222,11 +222,11 @@ export default function Dashboard() {
             </div>
 
             {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+              <div style={{ gridColumn: 'span 2' }}>
                 <RevenueChart data={revenueData} />
               </div>
-              <div className="lg:col-span-1">
+              <div style={{ gridColumn: 'span 1' }}>
                 <OrdersDistributionChart
                   data={{
                     pending: pendingOrders,
@@ -239,23 +239,23 @@ export default function Dashboard() {
             </div>
 
             {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+              <div style={{ gridColumn: 'span 2' }}>
                 <SalesPerformanceChart data={salesComparisonData} />
               </div>
-              <div className="lg:col-span-1">
+              <div style={{ gridColumn: 'span 1' }}>
                 <PerformanceMetrics metrics={performanceMetricsData} />
               </div>
             </div>
 
             {/* Charts Row 3 - Orders Timeline & Top Products */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
               <OrdersTimelineChart data={ordersTimelineData} />
               <TopProductsWidget products={formattedTopProducts} />
             </div>
 
             {/* Recent Activity - Full Width */}
-            <div className="grid grid-cols-1">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
               <RecentActivity activities={recentActivities} />
             </div>
           </div>

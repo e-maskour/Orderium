@@ -120,7 +120,7 @@ export class PortalController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Get('user/:phoneNumber')
   @ApiOperation({ summary: 'Get portal user by phone number (authenticated)' })
   async getUserByPhone(

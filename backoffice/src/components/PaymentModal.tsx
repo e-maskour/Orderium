@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, CreditCard, FileText, Hash } from 'lucide-react';
+import { Calendar, CreditCard, FileText, Hash } from 'lucide-react';
 import { Payment, CreatePaymentDTO, UpdatePaymentDTO, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import { useLanguage } from '../context/LanguageContext';
-import { Input } from './ui/input';
-import { NativeSelect } from './ui/native-select';
-import { Textarea } from './ui/textarea';
-import { FormField } from './ui/form-field';
-import { Button } from './ui/button';
+import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Dropdown } from 'primereact/dropdown';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { Message } from 'primereact/message';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -87,12 +89,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     try {
       const amount = parseFloat(formData.amount);
 
-      // Validate amount
       if (isNaN(amount) || amount <= 0) {
         throw new Error(t('invoice.amountMustBeGreaterThanZero'));
       }
 
-      // Check if total would exceed invoice total (only for new payments)
       if (!payment) {
         const newTotal = totalPaid + amount;
         if (newTotal > invoiceTotal) {
@@ -128,148 +128,135 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   const remainingAmount = invoiceTotal - totalPaid;
+  const currency = language === 'ar' ? 'د.م' : 'DH';
+
+  const paymentTypeOptions = Object.entries(PAYMENT_TYPE_LABELS).map(([value, label]) => ({
+    label: label as string,
+    value,
+  }));
+
+  const footerContent = (
+    <div className="flex justify-content-end gap-2">
+      <Button label={t('cancel')} outlined onClick={onClose} />
+      <Button
+        label={payment ? t('edit') : t('add')}
+        loading={loading}
+        onClick={handleSubmit}
+      />
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-slate-800">
-            {payment ? t('invoice.editPayment') : t('invoice.addPayment')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
+    <Dialog
+      visible={isOpen}
+      onHide={onClose}
+      header={payment ? t('invoice.editPayment') : t('invoice.addPayment')}
+      footer={footerContent}
+      modal
+      style={{ width: '95vw', maxWidth: '42rem' }}
+      contentStyle={{ overflowY: 'auto' }}
+    >
+      <form onSubmit={handleSubmit} className="flex flex-column gap-4">
+        {error && <Message severity="error" text={error} style={{ width: '100%' }} />}
+
+        {/* Payment Summary */}
+        <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem' }} className="flex flex-column gap-2">
+          <div className="flex justify-content-between" style={{ fontSize: '0.875rem' }}>
+            <span style={{ color: '#475569' }}>{t('invoice.totalInvoice')}:</span>
+            <span style={{ fontWeight: 600, color: '#0f172a' }}>{invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</span>
+          </div>
+          <div className="flex justify-content-between" style={{ fontSize: '0.875rem' }}>
+            <span style={{ color: '#475569' }}>{t('invoice.totalPaid')}:</span>
+            <span style={{ fontWeight: 600, color: '#059669' }}>{totalPaid.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</span>
+          </div>
+          <div className="flex justify-content-between" style={{ fontSize: '0.875rem', paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0' }}>
+            <span style={{ color: '#475569', fontWeight: 500 }}>{t('invoice.remaining')}:</span>
+            <span style={{ fontWeight: 600, color: '#d97706' }}>{remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</span>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
+        {/* Amount */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t('invoice.paymentAmount')} *</label>
+          {remainingAmount > 0 && !payment && (
+            <Button
+              type="button"
+              label={`${t('invoice.payRemainingAmount')} (${remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency})`}
+              text
+              size="small"
+              onClick={() => setFormData({ ...formData, amount: remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}
+              style={{ alignSelf: 'flex-start', color: '#b45309', background: '#fef3c7' }}
+            />
           )}
-
-          {/* Payment Summary */}
-          <div className="bg-slate-50 p-4 rounded-lg space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600">{t('invoice.totalInvoice')}:</span>
-              <span className="font-semibold text-slate-900">{invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600">{t('invoice.totalPaid')}:</span>
-              <span className="font-semibold text-emerald-600">{totalPaid.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-            </div>
-            <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
-              <span className="text-slate-600 font-medium">{t('invoice.remaining')}:</span>
-              <span className="font-semibold text-amber-600">{remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-            </div>
-          </div>
-
-          {/* Amount */}
-          <FormField label={`${t('invoice.paymentAmount')} *`} htmlFor="payment-amount">
-            <div className="flex items-center justify-between mb-1">
-              {remainingAmount > 0 && !payment && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, amount: remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}
-                  className="text-xs bg-amber-100 text-amber-700 hover:bg-amber-200"
-                >
-                  {t('invoice.payRemainingAmount')} ({remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'})
-                </Button>
-              )}
-            </div>
-            <Input
-              id="payment-amount"
+          <span className="p-input-icon-left" style={{ width: '100%' }}>
+            <CreditCard style={{ width: 16, height: 16, position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b', zIndex: 1 }} />
+            <InputText
               type="number"
               step="0.01"
               required
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              leadingIcon={<CreditCard className="h-5 w-5" />}
-              trailingIcon={<span className="text-slate-500 text-sm">{language === 'ar' ? 'د.م' : 'DH'}</span>}
               placeholder="0.00"
+              style={{ width: '100%', paddingLeft: '2.5rem' }}
             />
-          </FormField>
+          </span>
+        </div>
 
-          {/* Payment Date */}
-          <FormField label={`${t('invoice.paymentDate')} *`} htmlFor="payment-date">
-            <Input
-              id="payment-date"
+        {/* Payment Date */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t('invoice.paymentDate')} *</label>
+          <span className="p-input-icon-left" style={{ width: '100%' }}>
+            <Calendar style={{ width: 16, height: 16, position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b', zIndex: 1 }} />
+            <InputText
               type="date"
               required
               value={formData.paymentDate}
               onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
-              leadingIcon={<Calendar className="h-5 w-5" />}
+              style={{ width: '100%', paddingLeft: '2.5rem' }}
             />
-          </FormField>
+          </span>
+        </div>
 
-          {/* Payment Type */}
-          <FormField label={`${t('invoice.paymentMethod')} *`} htmlFor="payment-type">
-            <NativeSelect
-              id="payment-type"
-              required
-              value={formData.paymentType}
-              onChange={(e) => setFormData({ ...formData, paymentType: e.target.value as any })}
-            >
-              {Object.entries(PAYMENT_TYPE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-          </FormField>
+        {/* Payment Type */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t('invoice.paymentMethod')} *</label>
+          <Dropdown
+            value={formData.paymentType}
+            options={paymentTypeOptions}
+            onChange={(e) => setFormData({ ...formData, paymentType: e.value })}
+            style={{ width: '100%' }}
+          />
+        </div>
 
-          {/* Reference Number */}
-          <FormField
-            label={t('invoice.referenceNumber')}
-            htmlFor="payment-ref"
-            hint={t('referenceNumberHint')}
-          >
-            <Input
-              id="payment-ref"
-              type="text"
+        {/* Reference Number */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t('invoice.referenceNumber')}</label>
+          <small style={{ color: '#64748b' }}>{t('referenceNumberHint')}</small>
+          <span className="p-input-icon-left" style={{ width: '100%' }}>
+            <Hash style={{ width: 16, height: 16, position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b', zIndex: 1 }} />
+            <InputText
               value={formData.referenceNumber}
               onChange={(e) => setFormData({ ...formData, referenceNumber: e.target.value })}
-              leadingIcon={<Hash className="h-5 w-5" />}
               placeholder={t('referenceNumberPlaceholder')}
+              style={{ width: '100%', paddingLeft: '2.5rem' }}
             />
-          </FormField>
+          </span>
+        </div>
 
-          {/* Notes */}
-          <FormField label={t('invoice.additionalNotes')} htmlFor="payment-notes">
-            <Textarea
-              id="payment-notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              leadingIcon={<FileText className="h-5 w-5" />}
-              placeholder={t('invoice.notesPlaceholder2')}
-            />
-          </FormField>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              {t('cancel')}
-            </Button>
-            <Button
-              type="submit"
-              loading={loading}
-              loadingText={t('saving')}
-            >
-              {payment ? t('edit') : t('add')}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Notes */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t('invoice.additionalNotes')}</label>
+          <InputTextarea
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            rows={3}
+            placeholder={t('invoice.notesPlaceholder2')}
+            style={{ width: '100%' }}
+          />
+        </div>
+      </form>
+    </Dialog>
   );
 };
 

@@ -3,9 +3,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { warehousesService, CreateWarehouseDTO, UpdateWarehouseDTO } from '../modules/warehouses';
 import { Plus, Edit, Trash2, Search, Building2, MapPin } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { FormField } from '../components/ui/form-field';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { toastCreated, toastUpdated, toastDeleted, toastError, toastConfirm } from '../services/toast.service';
@@ -133,88 +133,85 @@ export default function Warehouses() {
         title={t('warehouses')}
         subtitle={t('manageWarehousesSubtitle')}
         actions={
-          <Button onClick={() => handleOpenModal()} leadingIcon={Plus}>
-            {t('addWarehouse')}
-          </Button>
+          <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('addWarehouse')} onClick={() => handleOpenModal()} />
         }
       />
 
       {/* Search */}
-      <div className="mb-6">
-        <Input
-          id="search-warehouses"
-          type="text"
-          placeholder={t('searchWarehouses')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          leadingIcon={Search}
-          fullWidth
-        />
+      <div style={{ marginBottom: '1.5rem' }}>
+        <span style={{ position: 'relative', display: 'block', width: '100%' }}>
+          <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+          <InputText
+            id="search-warehouses"
+            type="text"
+            placeholder={t('searchWarehouses')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: '100%', paddingLeft: '2.5rem' }}
+          />
+        </span>
       </div>
 
       {/* Warehouses Grid */}
       {isLoading ? (
-        <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+        <div style={{ textAlign: 'center', paddingTop: '3rem', paddingBottom: '3rem' }}>
+          <div style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '4px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
         </div>
       ) : filteredWarehouses.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-          <Building2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">No warehouses found</p>
+        <div style={{ textAlign: 'center', paddingTop: '3rem', paddingBottom: '3rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+          <Building2 style={{ width: '4rem', height: '4rem', color: '#cbd5e1', margin: '0 auto', marginBottom: '1rem' }} />
+          <p style={{ color: '#64748b' }}>No warehouses found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.5rem' }}>
           {filteredWarehouses.map((warehouse) => (
             <div
               key={warehouse.id}
-              className="bg-white rounded-lg border border-slate-200 hover:shadow-lg transition-shadow p-6"
+              style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem', transition: 'box-shadow 0.15s' }}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-white" />
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '3rem', height: '3rem', background: 'linear-gradient(to bottom right, #f59e0b, #f97316)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Building2 style={{ width: '1.5rem', height: '1.5rem', color: '#ffffff' }} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900">{warehouse.name}</h3>
-                    <p className="text-sm text-slate-500">{warehouse.code}</p>
+                    <h3 style={{ fontWeight: 600, color: '#0f172a' }}>{warehouse.name}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{warehouse.code}</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
                     onClick={() => handleOpenModal(warehouse)}
-                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    style={{ padding: '0.5rem', color: '#475569', borderRadius: '0.5rem', transition: 'background-color 0.15s' }}
                   >
-                    <Edit className="w-4 h-4" />
+                    <Edit style={{ width: '1rem', height: '1rem' }} />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(warehouse.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    style={{ padding: '0.5rem', color: '#dc2626', borderRadius: '0.5rem', transition: 'background-color 0.15s' }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 style={{ width: '1rem', height: '1rem' }} />
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {warehouse.address && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <MapPin className="w-4 h-4 flex-shrink-0" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569' }}>
+                    <MapPin style={{ width: '1rem', height: '1rem', flexShrink: 0 }} />
                     <span>{warehouse.address}</span>
                   </div>
                 )}
                 {warehouse.city && (
-                  <div className="text-sm text-slate-600">
+                  <div style={{ fontSize: '0.875rem', color: '#475569' }}>
                     {warehouse.city}
                   </div>
                 )}
               </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-100">
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${warehouse.isActive
-                  ? 'bg-green-50 text-green-700'
-                  : 'bg-slate-100 text-slate-600'
-                  }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${warehouse.isActive ? 'bg-green-500' : 'bg-slate-400'}`}></span>
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: warehouse.isActive ? '#f0fdf4' : '#f1f5f9', color: warehouse.isActive ? '#15803d' : '#475569' }}>
+                  <span style={{ width: '0.375rem', height: '0.375rem', borderRadius: '9999px', background: warehouse.isActive ? '#22c55e' : '#94a3b8' }}></span>
                   {warehouse.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
@@ -223,79 +220,78 @@ export default function Warehouses() {
         </div>
       )}
 
-      {/* Create/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-semibold text-slate-900">
-                {editingWarehouse ? t('editWarehouse') : t('addWarehouse')}
-              </h2>
+      {/* Create/Edit Dialog */}
+      <Dialog
+        visible={isModalOpen}
+        onHide={handleCloseModal}
+        header={editingWarehouse ? t('editWarehouse') : t('addWarehouse')}
+        modal
+        dismissableMask
+        style={{ width: '42rem', maxHeight: '90vh' }}
+      >
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Code <span style={{ color: '#ef4444' }}>*</span></label>
+              <InputText
+                type="text"
+                required
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                placeholder={t('warehouseCode')}
+                style={{ width: '100%' }}
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField label="Code" required>
-                  <Input
-                    type="text"
-                    required
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder={t('warehouseCode')}
-                    fullWidth
-                  />
-                </FormField>
-
-                <FormField label="Name" required>
-                  <Input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder={t('warehouseNamePlaceholder')}
-                    fullWidth
-                  />
-                </FormField>
-              </div>
-
-              <FormField label="Address">
-                <Input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder={t('locationPlaceholder')}
-                  leadingIcon={MapPin}
-                  fullWidth
-                />
-              </FormField>
-
-              <FormField label="City">
-                <Input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  placeholder={t('cityName')}
-                  fullWidth
-                />
-              </FormField>
-
-              <div className="flex gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={handleCloseModal} className="flex-1">
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  loading={createMutation.isPending || updateMutation.isPending}
-                  loadingText="Saving..."
-                  className="flex-1"
-                >
-                  {editingWarehouse ? 'Update' : 'Create'}
-                </Button>
-              </div>
-            </form>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Name <span style={{ color: '#ef4444' }}>*</span></label>
+              <InputText
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder={t('warehouseNamePlaceholder')}
+                style={{ width: '100%' }}
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Address</label>
+            <span style={{ position: 'relative', display: 'block', width: '100%' }}>
+              <MapPin style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+              <InputText
+                type="text"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder={t('locationPlaceholder')}
+                style={{ width: '100%', paddingLeft: '2.5rem' }}
+              />
+            </span>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>City</label>
+            <InputText
+              type="text"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              placeholder={t('cityName')}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
+            <Button type="button" label="Cancel" onClick={handleCloseModal} outlined style={{ flex: 1 }} />
+            <Button
+              type="submit"
+              label={editingWarehouse ? 'Update' : 'Create'}
+              loading={createMutation.isPending || updateMutation.isPending}
+              style={{ flex: 1 }}
+            />
+          </div>
+        </form>
+      </Dialog>
 
     </AdminLayout>
   );

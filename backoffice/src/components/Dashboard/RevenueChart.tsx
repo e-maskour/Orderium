@@ -156,11 +156,11 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-      <div className="flex items-center justify-between mb-4">
+    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid rgba(226,232,240,0.6)', padding: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <div>
-          <h3 className="text-lg font-bold text-slate-800">{t('revenueTrend')}</h3>
-          <p className="text-sm text-slate-500 mt-1">{t('last7Days')}</p>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{t('revenueTrend')}</h3>
+          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{t('last7Days')}</p>
         </div>
       </div>
       <ReactApexChart options={chartOptions} series={series} type="area" height={280} />

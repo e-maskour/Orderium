@@ -1,5 +1,6 @@
 import { X, CheckSquare } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { Button } from 'primereact/button';
 import { ReactNode } from 'react';
 
 export interface FloatingAction {
@@ -19,7 +20,7 @@ interface FloatingActionBarProps {
   isAllSelected?: boolean;
   totalCount?: number;
   actions: FloatingAction[];
-  itemLabel?: string; // e.g., "order", "product"
+  itemLabel?: string;
   children?: ReactNode;
 }
 
@@ -30,81 +31,97 @@ export function FloatingActionBar({
   isAllSelected = false,
   totalCount,
   actions,
-  itemLabel,
   children,
 }: FloatingActionBarProps) {
   const { t } = useLanguage();
 
   if (selectedCount === 0) return null;
 
+  const getVariantStyle = (variant?: string): React.CSSProperties => {
+    if (variant === 'danger') return { background: '#ef4444', color: '#fff' };
+    if (variant === 'secondary') return { background: 'rgba(255,255,255,0.2)', color: '#fff' };
+    return { background: '#fff', color: '#d97706' };
+  };
+
   return (
-    <div className="fixed bottom-6 sm:bottom-8 left-0 right-0 z-40 flex justify-center pointer-events-none px-4 sm:px-6 lg:pl-64">
-      <div className="max-w-5xl w-full pointer-events-auto">
-        {/* Enhanced Card with Better Shadows */}
-        <div className="bg-gradient-to-r from-amber-600 to-amber-500 shadow-[0_20px_60px_-10px_rgba(217,119,6,0.5),0_10px_30px_-5px_rgba(0,0,0,0.3)] rounded-2xl overflow-hidden">
-          <div className="px-4 sm:px-6 py-3.5 sm:py-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-              {/* Selection Info with Refined Design */}
-              <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl flex-shrink-0 shadow-[0_4px_16px_rgba(0,0,0,0.15)]">
-                  <CheckSquare className="w-4 sm:w-4.5 h-4 sm:h-4.5 text-white" />
-                  <span className="text-white font-bold text-sm sm:text-base">
-                    {selectedCount}
-                  </span>
-                  <span className="text-white/90 font-medium text-xs sm:text-sm">
-                    {t('selected')}
-                  </span>
-                </div>
-                
-                {onSelectAll && totalCount && (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '2rem',
+        left: 0,
+        right: 0,
+        zIndex: 40,
+        display: 'flex',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+        padding: '0 1rem',
+      }}
+    >
+      <div style={{ maxWidth: '64rem', width: '100%', pointerEvents: 'auto' }}>
+        <div
+          className="border-round-2xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(90deg, #d97706, #f59e0b)',
+            boxShadow: '0 20px 60px -10px rgba(217,119,6,0.5), 0 10px 30px -5px rgba(0,0,0,0.3)',
+            padding: '1rem 1.5rem',
+          }}
+        >
+          <div className="flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between gap-3">
+            {/* Selection Info */}
+            <div className="flex align-items-center gap-2 flex-wrap">
+              <div
+                className="flex align-items-center gap-2 border-round-xl flex-shrink-0"
+                style={{ background: 'rgba(255,255,255,0.2)', padding: '0.5rem 1rem' }}
+              >
+                <CheckSquare style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                <span className="font-bold text-white">{selectedCount}</span>
+                <span className="font-medium" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.875rem' }}>
+                  {t('selected')}
+                </span>
+              </div>
+
+              {onSelectAll && totalCount && (
+                <Button
+                  label={isAllSelected ? t('deselectAll') : t('selectAll')}
+                  text
+                  size="small"
+                  onClick={onSelectAll}
+                  style={{ color: 'rgba(255,255,255,0.9)' }}
+                />
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex align-items-center gap-2 flex-wrap w-full sm:w-auto">
+              {children}
+
+              {actions
+                .filter(action => !action.hidden)
+                .map((action) => (
                   <button
-                    onClick={onSelectAll}
-                    className="px-3 py-1.5 text-xs sm:text-sm text-white/90 hover:text-white font-medium hover:bg-white/10 rounded-lg transition-all duration-200"
+                    key={action.id}
+                    onClick={action.onClick}
+                    className="flex align-items-center gap-2 border-round-xl font-semibold border-none cursor-pointer"
+                    style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.8125rem',
+                      whiteSpace: 'nowrap',
+                      ...getVariantStyle(action.variant),
+                    }}
                   >
-                    {isAllSelected ? t('deselectAll') : t('selectAll')}
+                    {action.icon}
+                    <span className="hidden sm:inline">{action.label}</span>
                   </button>
-                )}
-              </div>
+                ))}
 
-              {/* Actions with Enhanced Styling */}
-              <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto">
-                {children}
-                
-                {actions
-                  .filter(action => !action.hidden)
-                  .map((action) => {
-                    const baseClasses = "group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-200 font-semibold text-xs sm:text-sm whitespace-nowrap shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:-translate-y-0.5";
-                    
-                    let variantClasses = "bg-white text-amber-600 hover:bg-amber-50";
-                    if (action.variant === 'danger') {
-                      variantClasses = "bg-red-500 text-white hover:bg-red-600 hover:shadow-[0_8px_24px_rgba(239,68,68,0.35)]";
-                    } else if (action.variant === 'secondary') {
-                      variantClasses = "bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm";
-                    }
-
-                    return (
-                      <button
-                        key={action.id}
-                        onClick={action.onClick}
-                        className={`${baseClasses} ${variantClasses} ${action.className || ''}`}
-                      >
-                        <span className="group-hover:scale-110 transition-transform duration-200">
-                          {action.icon}
-                        </span>
-                        <span className="hidden sm:inline">{action.label}</span>
-                      </button>
-                    );
-                  })}
-
-                {/* Refined Close Button */}
-                <button
-                  onClick={onClearSelection}
-                  className="group flex items-center justify-center px-3 sm:px-4 py-2 sm:py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all duration-200 ml-2 sm:ml-0 shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:-translate-y-0.5"
-                  title={t('close')}
-                >
-                  <X className="w-4 sm:w-4.5 h-4 sm:h-4.5 group-hover:rotate-90 transition-transform duration-300" />
-                </button>
-              </div>
+              <button
+                onClick={onClearSelection}
+                className="flex align-items-center justify-content-center border-round-xl border-none cursor-pointer"
+                style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.2)', color: '#fff' }}
+                title={t('close')}
+              >
+                <X style={{ width: '1rem', height: '1rem' }} />
+              </button>
             </div>
           </div>
         </div>

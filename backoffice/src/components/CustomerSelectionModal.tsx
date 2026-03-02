@@ -1,59 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Search, User, MapPin, Plus } from 'lucide-react';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
+import { Search, User, MapPin, Plus } from 'lucide-react';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 import { useMutation } from '@tanstack/react-query';
 import { toastCreated, toastError } from '../services/toast.service';
 import { partnersService } from '../modules/partners';
 import { IPosCustomer as Customer } from '../modules/pos';
-
-// Keyframe animations for Apple-style entrance
-const backdropAnimation = `
-  @keyframes backdropFadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-`;
-
-const modalAnimation = `
-  @keyframes modalSlideUp {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-`;
-
-const contentAnimation = `
-  @keyframes contentFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(5px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-// Inject keyframes
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = backdropAnimation + modalAnimation + contentAnimation;
-  if (!document.head.querySelector('[data-modal-animations-customer]')) {
-    styleSheet.setAttribute('data-modal-animations-customer', 'true');
-    document.head.appendChild(styleSheet);
-  }
-}
 
 interface CustomerSelectionModalProps {
   isOpen: boolean;
@@ -89,7 +42,6 @@ export const CustomerSelectionModal = ({
         searchInputRef.current?.focus();
       }, 100);
     } else {
-      // Reset state when modal closes
       setCustomerSearch('');
       setCustomerSuggestions([]);
       setShowCustomerForm(false);
@@ -157,161 +109,131 @@ export const CustomerSelectionModal = ({
     onClose();
   };
 
-  if (!isOpen) return null;
+  const headerContent = (
+    <div className="flex align-items-center gap-2">
+      <User style={{ width: 20, height: 20, color: '#d97706' }} />
+      <span>{t('selectCustomer')}</span>
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" dir={dir}>
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-        style={{
-          animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
-        }}
-      />
+    <Dialog
+      visible={isOpen}
+      onHide={onClose}
+      header={headerContent}
+      modal
+      dismissableMask
+      style={{ width: '95vw', maxWidth: '32rem' }}
+      contentStyle={{ padding: '1rem' }}
+    >
+      <div className="flex flex-column gap-3">
+        {/* Search Input */}
+        <span className="p-input-icon-left" style={{ width: '100%' }}>
+          <i className="pi pi-search" />
+          <InputText
+            ref={searchInputRef}
+            placeholder={t('searchByNameOrPhone')}
+            value={customerSearch}
+            onChange={(e) => setCustomerSearch(e.target.value)}
+            style={{ width: '100%' }}
+          />
+        </span>
 
-      {/* Modal */}
-      <div
-        className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden max-h-[85vh] flex flex-col"
-        style={{
-          animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
-        }}
-      >
-        {/* Header */}
-        <div className="relative bg-gradient-to-br from-primary/10 to-primary/5 p-4 border-b border-gray-200 flex-shrink-0">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center shadow-sm transition-all hover:scale-110"
-          >
-            <X className="w-4 h-4 text-gray-700" />
-          </button>
-
-          <div className="pr-12">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" />
-              {t('selectCustomer')}
-            </h2>
+        {/* Currently Selected Customer */}
+        {selectedCustomer && customerSearch.length === 0 && (
+          <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '0.5rem', padding: '1rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#047857', marginBottom: '0.5rem' }}>{t('currentCustomer')}</div>
+            <div>
+              <div style={{ fontWeight: 600, color: '#064e3b' }}>{selectedCustomer.name}</div>
+              <div style={{ fontSize: '0.875rem', color: '#047857' }}>{selectedCustomer.phoneNumber}</div>
+              {selectedCustomer.address && (
+                <div className="flex align-items-start gap-1" style={{ fontSize: '0.875rem', color: '#047857', marginTop: '0.25rem' }}>
+                  <MapPin style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
+                  <span>{selectedCustomer.address}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Content */}
-        <div
-          className="flex-1 overflow-y-auto p-4 space-y-4"
-          style={{
-            animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
-          }}
-        >
-          {/* Search Input */}
-          <div className="relative">
-            <Input
-              ref={searchInputRef}
-              type="text"
-              placeholder={t('searchByNameOrPhone')}
-              value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
-              leadingIcon={Search}
-              fullWidth
-            />
-          </div>
-
-          {/* Currently Selected Customer */}
-          {selectedCustomer && customerSearch.length === 0 && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <p className="text-xs font-semibold text-emerald-700 mb-2">{t('currentCustomer')}</p>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-emerald-900">{selectedCustomer.name}</p>
-                  <p className="text-sm text-emerald-700">{selectedCustomer.phoneNumber}</p>
-                  {selectedCustomer.address && (
-                    <p className="text-sm text-emerald-700 flex items-start gap-1 mt-1">
-                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>{selectedCustomer.address}</span>
-                    </p>
+        {/* Customer Suggestions */}
+        {customerSuggestions.length > 0 && (
+          <div className="flex flex-column gap-2">
+            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>{t('searchResults')}</div>
+            <div className="flex flex-column gap-2" style={{ maxHeight: '15rem', overflowY: 'auto' }}>
+              {customerSuggestions.map((customer) => (
+                <div
+                  key={customer.id}
+                  onClick={() => handleSelectCustomer(customer)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSelectCustomer(customer)}
+                  style={{ width: '100%', textAlign: 'left', padding: '0.75rem', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '0.5rem', cursor: 'pointer' }}
+                >
+                  <div style={{ fontWeight: 600, color: '#111827' }}>{customer.name}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#4b5563' }}>{customer.phoneNumber}</div>
+                  {customer.address && (
+                    <div className="flex align-items-start gap-1 line-clamp-1" style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                      <MapPin style={{ width: 12, height: 12, marginTop: 2, flexShrink: 0 }} />
+                      <span>{customer.address}</span>
+                    </div>
                   )}
                 </div>
-              </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Customer Suggestions */}
-          {customerSuggestions.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700">{t('searchResults')}</p>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {customerSuggestions.map((customer) => (
-                  <button
-                    key={customer.id}
-                    onClick={() => handleSelectCustomer(customer)}
-                    className="w-full text-left p-3 bg-white hover:bg-primary/5 border border-gray-200 hover:border-primary/30 rounded-lg transition-all cursor-pointer"
-                  >
-                    <p className="font-semibold text-gray-900">{customer.name}</p>
-                    <p className="text-sm text-gray-600">{customer.phoneNumber}</p>
-                    {customer.address && (
-                      <p className="text-sm text-gray-500 flex items-start gap-1 mt-1">
-                        <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                        <span className="line-clamp-1">{customer.address}</span>
-                      </p>
-                    )}
-                  </button>
-                ))}
-              </div>
+        {/* Create New Customer Form */}
+        {showCustomerForm && (
+          <div className="flex flex-column gap-3" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', padding: '1rem' }}>
+            <div className="flex align-items-center gap-2" style={{ color: '#1d4ed8' }}>
+              <Plus style={{ width: 20, height: 20 }} />
+              <span style={{ fontWeight: 600 }}>{t('createNewCustomer')}</span>
             </div>
-          )}
-
-          {/* Create New Customer Form */}
-          {showCustomerForm && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-              <div className="flex items-center gap-2 text-blue-700">
-                <Plus className="w-5 h-5" />
-                <p className="font-semibold">{t('createNewCustomer')}</p>
-              </div>
-              <Input
-                type="text"
-                placeholder={t('name')}
-                value={newCustomer.name}
-                onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                fullWidth
-              />
-              <Input
-                type="tel"
-                placeholder={t('phoneNumber')}
-                value={newCustomer.phoneNumber}
-                onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
-                fullWidth
-              />
-              <Input
-                type="text"
+            <InputText
+              placeholder={t('name')}
+              value={newCustomer.name}
+              onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+              style={{ width: '100%' }}
+            />
+            <InputText
+              placeholder={t('phoneNumber')}
+              value={newCustomer.phoneNumber}
+              onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
+              style={{ width: '100%' }}
+            />
+            <span className="p-input-icon-left" style={{ width: '100%' }}>
+              <i><MapPin style={{ width: 16, height: 16 }} /></i>
+              <InputText
                 placeholder={t('address')}
                 value={newCustomer.address}
                 onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                leadingIcon={MapPin}
-                fullWidth
+                style={{ width: '100%' }}
               />
-              <Button
-                onClick={() => createCustomerMutation.mutate(newCustomer)}
-                disabled={!newCustomer.name || !newCustomer.phoneNumber}
-                loading={createCustomerMutation.isPending}
-                loadingText={t('loading')}
-                leadingIcon={Plus}
-                className="w-full"
-              >
-                {t('createCustomer')}
-              </Button>
-            </div>
-          )}
+            </span>
+            <Button
+              label={t('createCustomer')}
+              icon={<Plus style={{ width: 16, height: 16 }} />}
+              onClick={() => createCustomerMutation.mutate(newCustomer)}
+              disabled={!newCustomer.name || !newCustomer.phoneNumber}
+              loading={createCustomerMutation.isPending}
+              style={{ width: '100%' }}
+            />
+          </div>
+        )}
 
-          {/* Empty State */}
-          {customerSearch.length === 0 && !selectedCustomer && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-gray-300" />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900 mb-2">{t('searchForCustomer')}</h3>
-              <p className="text-sm text-gray-500">{t('searchCustomerInstructions')}</p>
+        {/* Empty State */}
+        {customerSearch.length === 0 && !selectedCustomer && (
+          <div className="flex flex-column align-items-center" style={{ padding: '3rem 0', textAlign: 'center' }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+              <Search style={{ width: 32, height: 32, color: '#d1d5db' }} />
             </div>
-          )}
-        </div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', marginBottom: '0.5rem' }}>{t('searchForCustomer')}</h3>
+            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('searchCustomerInstructions')}</p>
+          </div>
+        )}
       </div>
-    </div>
+    </Dialog>
   );
 };

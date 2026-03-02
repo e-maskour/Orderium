@@ -2,9 +2,7 @@ import { Product } from '@/types/database';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
-import { Button } from '@/components/ui/button';
-import { Plus, Minus, Package } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Package } from 'lucide-react';
 import { useState } from 'react';
 import { ProductQuantityModal } from './ProductQuantityModal';
 
@@ -17,59 +15,30 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
   const { language, t, dir } = useLanguage();
   const { addItem, removeItem, getItemQuantity, updateQuantity } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Get API base URL from environment or use window origin
+
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
   const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
   const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
 
-  // Helper to convert relative image paths to full URLs - supports multiple CDN providers
   const getImageUrl = (imageUrl?: string): string | undefined => {
     if (!imageUrl) return undefined;
-    
-    // Already a full URL
     if (imageUrl.startsWith('http')) return imageUrl;
-    
-    // Cloudinary (orderium/)
     if (imageUrl.startsWith('orderium/')) {
       return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
     }
-    
-    // S3 URL
     if (imageUrl.startsWith('s3://')) {
       return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
     }
-    
-    // Cloudflare (cf://)
     if (imageUrl.startsWith('cf://')) {
       return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
     }
-    // Relative path (LOCAL provider) - construct with API base URL
     return `${apiBaseUrl}/uploads/images/${imageUrl}`;
   };
-  
+
   const quantity = getItemQuantity(product.id);
-  
   const displayName = product.name;
 
-  const handleAddToCart = () => {
-    addItem(product);
-  };
-
-  const handleIncrement = () => {
-    updateQuantity(product.id, quantity + 1);
-  };
-
-  const handleDecrement = () => {
-    if (quantity > 1) {
-      updateQuantity(product.id, quantity - 1);
-    } else {
-      removeItem(product.id);
-    }
-  };
-
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't open modal if clicking on quantity controls
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
@@ -80,50 +49,47 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
   if (viewMode === 'list') {
     return (
       <>
-        <ProductQuantityModal 
+        <ProductQuantityModal
           product={product}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           initialQuantity={quantity}
         />
-        
-        <div 
+
+        <div
           onClick={handleCardClick}
-          className={cn(
-            "group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex gap-2 sm:gap-3 p-2 sm:p-2.5",
-            "cursor-pointer active:scale-[0.99]",
-            quantity > 0 && "ring-2 ring-primary bg-primary/5"
-          )}
+          className={`surface-card border-round-lg overflow-hidden shadow-1 flex gap-2 p-2 cursor-pointer ${quantity > 0 ? 'border-2 border-primary' : ''}`}
+          style={{ transition: 'box-shadow 0.3s', ...(quantity > 0 ? { background: 'rgba(var(--primary-color-rgb, 16,185,129), 0.05)' } : {}) }}
           dir={dir}
         >
           {/* Image */}
-          <div className="relative w-16 h-16 sm:w-18 sm:h-18 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="relative flex-shrink-0 border-round-lg overflow-hidden" style={{ width: '4rem', height: '4rem', background: '#f3f4f6' }}>
             {product.imageUrl ? (
               <img
                 src={getImageUrl(product.imageUrl)}
                 alt={displayName}
-                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 0.5s' }}
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                <Package className="w-4 h-4 text-gray-300" />
+              <div className="w-full h-full flex align-items-center justify-content-center" style={{ background: 'linear-gradient(to bottom right, #f3f4f6, #e5e7eb)' }}>
+                <Package style={{ width: '1rem', height: '1rem', color: '#d1d5db' }} />
               </div>
             )}
           </div>
 
           {/* Content */}
-          <div className="flex-1 flex flex-col justify-between min-w-0">
+          <div className="flex-1 flex flex-column justify-content-between" style={{ minWidth: 0 }}>
             <div>
-              <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight mb-1.5 text-sm sm:text-base">
+              <h3 className="font-semibold text-color line-clamp-2 text-sm mb-1" style={{ lineHeight: '1.25' }}>
                 {displayName}
               </h3>
-              <div className="flex items-center gap-2">
-                <p className="text-sm sm:text-base font-bold text-primary">
+              <div className="flex align-items-center gap-2">
+                <p className="text-sm font-bold text-primary m-0">
                   {formatCurrency(product.price ?? 0, language)}
                 </p>
                 {quantity > 0 && (
-                  <span className="px-2 py-0.5 bg-primary text-white text-xs font-semibold rounded-full">
+                  <span className="border-circle text-xs font-semibold text-white flex align-items-center justify-content-center" style={{ background: 'var(--primary-color)', minWidth: '1.25rem', height: '1.25rem', padding: '0 0.375rem' }}>
                     {quantity}
                   </span>
                 )}
@@ -135,62 +101,61 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
     );
   }
 
-  // Grid view layout (existing)
-
+  // Grid view layout
   return (
     <>
-      <ProductQuantityModal 
+      <ProductQuantityModal
         product={product}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialQuantity={quantity}
       />
-      
-      <div 
+
+      <div
         onClick={handleCardClick}
-        className={cn(
-          "group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col",
-          "cursor-pointer active:scale-[0.98]",
-          quantity > 0 && "ring-2 ring-primary bg-primary/5"
-        )}
+        className={`relative surface-card border-round-lg overflow-hidden shadow-1 flex flex-column cursor-pointer ${quantity > 0 ? 'border-2 border-primary' : ''}`}
+        style={{ transition: 'box-shadow 0.3s', ...(quantity > 0 ? { background: 'rgba(var(--primary-color-rgb, 16,185,129), 0.05)' } : {}) }}
         dir={dir}
       >
-      {/* Image */}
-      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-        {product.imageUrl ? (
-          <img
-            src={getImageUrl(product.imageUrl)}
-            alt={displayName}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-            <Package className="w-8 h-8 text-gray-300" />
+        {/* Image */}
+        <div className="relative overflow-hidden" style={{ aspectRatio: '4/3', background: '#f3f4f6' }}>
+          {product.imageUrl ? (
+            <img
+              src={getImageUrl(product.imageUrl)}
+              alt={displayName}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 0.5s' }}
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex align-items-center justify-content-center" style={{ background: 'linear-gradient(to bottom right, #f3f4f6, #e5e7eb)' }}>
+              <Package style={{ width: '2rem', height: '2rem', color: '#d1d5db' }} />
+            </div>
+          )}
+
+          {/* Quantity badge */}
+          {quantity > 0 && (
+            <div
+              className="absolute border-circle text-white font-bold flex align-items-center justify-content-center shadow-2"
+              style={{ top: '0.25rem', [dir === 'rtl' ? 'left' : 'right']: '0.25rem', minWidth: '1.25rem', height: '1.25rem', padding: '0 0.25rem', fontSize: '0.625rem', background: 'var(--primary-color)' }}
+            >
+              {quantity}
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-column p-2">
+          <h3 className="font-medium text-color line-clamp-2 mb-1" style={{ fontSize: '0.6875rem', lineHeight: '1.25' }}>
+            {displayName}
+          </h3>
+
+          <div className="mt-auto">
+            <span className="font-bold text-primary" style={{ fontSize: '0.6875rem' }}>
+              {formatCurrency(product.price ?? 0, language)}
+            </span>
           </div>
-        )}
-
-        {/* Quantity badge when in cart */}
-        {quantity > 0 && (
-          <div className={`absolute top-1 ${dir === 'rtl' ? 'left-1' : 'right-1'} min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md`}>
-            {quantity}
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
-        <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
-          {displayName}
-        </h3>
-
-        <div className="mt-auto">
-          <span className="text-[11px] sm:text-xs font-bold text-primary">
-            {formatCurrency(product.price ?? 0, language)}
-          </span>
         </div>
       </div>
-    </div>
     </>
   );
 };

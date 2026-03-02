@@ -11,14 +11,17 @@ import { PageHeader } from '../components/PageHeader';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { ImageUpload } from '../components/ImageUpload';
 import { Package, Save, ArrowLeft, RefreshCw } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { Checkbox } from '../components/ui/checkbox';
-import { FormField } from '../components/ui/form-field';
-import { Textarea } from '../components/ui/textarea';
+import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Checkbox } from 'primereact/checkbox';
 import { toastCreated, toastSuccess, toastError } from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 import { useLanguage } from '../context/LanguageContext';
+
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' };
+const dropdownItemStyle: React.CSSProperties = { padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' };
+const dropdownContainerStyle: React.CSSProperties = { position: 'absolute', zIndex: 10, width: '100%', marginTop: '0.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', maxHeight: '15rem', overflowY: 'auto' };
 
 export default function ProductCreate() {
   const navigate = useNavigate();
@@ -47,7 +50,6 @@ export default function ProductCreate() {
 
   const taxRates = taxesConfig?.rates || [];
 
-  // Autocomplete states
   const [showWarehouseSearch, setShowWarehouseSearch] = useState(false);
   const [warehouseSearchTerm, setWarehouseSearchTerm] = useState('');
   const [showCategorySearch, setShowCategorySearch] = useState(false);
@@ -57,7 +59,6 @@ export default function ProductCreate() {
   const [showSaleTaxSearch, setShowSaleTaxSearch] = useState(false);
   const [showPurchaseTaxSearch, setShowPurchaseTaxSearch] = useState(false);
 
-  // Refs for click outside handling
   const warehouseSearchRef = useRef<HTMLDivElement>(null);
   const categorySearchRef = useRef<HTMLDivElement>(null);
   const saleUnitSearchRef = useRef<HTMLDivElement>(null);
@@ -65,33 +66,17 @@ export default function ProductCreate() {
   const saleTaxSearchRef = useRef<HTMLDivElement>(null);
   const purchaseTaxSearchRef = useRef<HTMLDivElement>(null);
 
-  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (warehouseSearchRef.current && !warehouseSearchRef.current.contains(event.target as Node)) {
-        setShowWarehouseSearch(false);
-      }
-      if (categorySearchRef.current && !categorySearchRef.current.contains(event.target as Node)) {
-        setShowCategorySearch(false);
-      }
-      if (saleUnitSearchRef.current && !saleUnitSearchRef.current.contains(event.target as Node)) {
-        setShowSaleUnitSearch(false);
-      }
-      if (purchaseUnitSearchRef.current && !purchaseUnitSearchRef.current.contains(event.target as Node)) {
-        setShowPurchaseUnitSearch(false);
-      }
-      if (saleTaxSearchRef.current && !saleTaxSearchRef.current.contains(event.target as Node)) {
-        setShowSaleTaxSearch(false);
-      }
-      if (purchaseTaxSearchRef.current && !purchaseTaxSearchRef.current.contains(event.target as Node)) {
-        setShowPurchaseTaxSearch(false);
-      }
+      if (warehouseSearchRef.current && !warehouseSearchRef.current.contains(event.target as Node)) setShowWarehouseSearch(false);
+      if (categorySearchRef.current && !categorySearchRef.current.contains(event.target as Node)) setShowCategorySearch(false);
+      if (saleUnitSearchRef.current && !saleUnitSearchRef.current.contains(event.target as Node)) setShowSaleUnitSearch(false);
+      if (purchaseUnitSearchRef.current && !purchaseUnitSearchRef.current.contains(event.target as Node)) setShowPurchaseUnitSearch(false);
+      if (saleTaxSearchRef.current && !saleTaxSearchRef.current.contains(event.target as Node)) setShowSaleTaxSearch(false);
+      if (purchaseTaxSearchRef.current && !purchaseTaxSearchRef.current.contains(event.target as Node)) setShowPurchaseTaxSearch(false);
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const [formData, setFormData] = useState({
@@ -120,7 +105,6 @@ export default function ProductCreate() {
 
   useUnsavedChanges(formDirty);
 
-  // Generate unique code on mount
   useEffect(() => {
     const generateCode = async () => {
       try {
@@ -137,7 +121,6 @@ export default function ProductCreate() {
     generateCode();
   }, []);
 
-  // Function to regenerate product code
   const handleRegenerateCode = async () => {
     try {
       setIsGeneratingCode(true);
@@ -153,7 +136,6 @@ export default function ProductCreate() {
     }
   };
 
-  // Clear validation error for a specific field
   const clearFieldError = (fieldName: string) => {
     if (validationErrors[fieldName]) {
       setValidationErrors(prev => {
@@ -164,7 +146,6 @@ export default function ProductCreate() {
     }
   };
 
-  // Set default UOM to "Units" when UOMs load
   useEffect(() => {
     if (uoms.length > 0 && formData.saleUnit === 'Units') {
       const defaultUom = uoms.find((u: any) => u.code === 'UNIT');
@@ -182,23 +163,15 @@ export default function ProductCreate() {
     mutationFn: (data: any) => productsService.createProduct(data),
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-
-      // If image was uploaded, associate it with the product
       if (imageData && result.product?.id) {
         try {
-          await productsService.updateProductImage(
-            result.product.id,
-            imageData.url,
-            imageData.publicId,
-          );
+          await productsService.updateProductImage(result.product.id, imageData.url, imageData.publicId);
         } catch (error) {
           console.warn('Could not verify image association:', error);
         }
       }
-
       toastCreated(t('productCreatedSuccess'));
       setFormDirty(false);
-      // The result is { product: Product }
       navigate(`/products/${result.product.id}`);
     },
     onError: (error: any) => {
@@ -208,23 +181,15 @@ export default function ProductCreate() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate form
     const errors = validateProductForm(formData, true);
     setValidationErrors(errors);
-
     if (hasValidationErrors(errors)) {
       const firstError = getFirstError(errors);
-      if (firstError) {
-        toastError(firstError);
-      }
+      if (firstError) toastError(firstError);
       return;
     }
-
-    // Find UOM IDs from the selected unit names
     const saleUom = uoms.find((u: any) => u.name === formData.saleUnit);
     const purchaseUom = uoms.find((u: any) => u.name === formData.purchaseUnit);
-
     createMutation.mutate({
       name: formData.name,
       code: formData.code || null,
@@ -251,81 +216,72 @@ export default function ProductCreate() {
         title={t('createNewProduct')}
         subtitle={t('addNewProductToInventory')}
         actions={
-          <Button variant="outline" onClick={() => navigate('/products')} leadingIcon={ArrowLeft}>
-            {t('backToProducts')}
-          </Button>
+          <Button outlined onClick={() => navigate('/products')} icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />} label={t('backToProducts')} />
         }
       />
 
       <form onSubmit={handleSubmit} onChange={() => setFormDirty(true)}>
-        <div className="bg-white rounded-lg border border-slate-200 p-6 space-y-6">
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Basic Info Section */}
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('basicInformation')}</h3>
-            <div className="grid grid-cols-2 gap-6">
-              <FormField label={t('productName')} error={validationErrors.name} required>
-                <Input
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '1rem' }}>{t('basicInformation')}</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+              <div>
+                <label style={labelStyle}>{t('productName')} *</label>
+                {validationErrors.name && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.name}</p>}
+                <InputText
                   type="text"
                   value={formData.name}
-                  onChange={(e) => {
-                    setFormData({ ...formData, name: e.target.value });
-                    clearFieldError('name');
-                  }}
-                  variant={validationErrors.name ? 'error' : 'default'}
+                  onChange={(e) => { setFormData({ ...formData, name: e.target.value }); clearFieldError('name'); }}
                   placeholder={t('enterProductName')}
-                  fullWidth
+                  style={{ width: '100%' }}
                 />
-              </FormField>
+              </div>
 
-              <FormField label={t('productCodeEAN13')} error={validationErrors.code}>
-                <div className="relative">
-                  <Input
+              <div>
+                <label style={labelStyle}>{t('productCodeEAN13')}</label>
+                {validationErrors.code && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.code}</p>}
+                <div style={{ position: 'relative' }}>
+                  <InputText
                     type="text"
                     value={formData.code}
-                    onChange={(e) => {
-                      setFormData({ ...formData, code: e.target.value });
-                      clearFieldError('code');
-                    }}
-                    variant={validationErrors.code ? 'error' : 'default'}
+                    onChange={(e) => { setFormData({ ...formData, code: e.target.value }); clearFieldError('code'); }}
                     placeholder={t('autoGeneratedBarcode')}
                     maxLength={13}
-                    fullWidth
+                    style={{ width: '100%' }}
                   />
                   {!validationErrors.code && formData.code && (
-                    <p className="mt-1 text-xs text-slate-500">{t('eanBarcodeHint')}</p>
+                    <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#64748b' }}>{t('eanBarcodeHint')}</p>
                   )}
                   <button
                     type="button"
                     onClick={handleRegenerateCode}
                     disabled={isGeneratingCode}
-                    className="mt-1 inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ marginTop: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#d97706', cursor: isGeneratingCode ? 'not-allowed' : 'pointer', opacity: isGeneratingCode ? 0.5 : 1, background: 'none', border: 'none' }}
                     title={t('generateNewUniqueCode')}
                   >
-                    <RefreshCw className={`w-3 h-3 ${isGeneratingCode ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.75rem', height: '0.75rem' }} />
                     {isGeneratingCode ? t('generating') : t('generateCode')}
                   </button>
                 </div>
-              </FormField>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 mt-4">
-              <FormField label={t('warehouse')} error={validationErrors.warehouseId} required>
-                <div className="relative" ref={warehouseSearchRef}>
-                  <Input
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '1rem' }}>
+              <div>
+                <label style={labelStyle}>{t('warehouse')} *</label>
+                {validationErrors.warehouseId && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.warehouseId}</p>}
+                <div style={{ position: 'relative' }} ref={warehouseSearchRef}>
+                  <InputText
                     type="text"
                     value={warehouseSearchTerm}
-                    onChange={(e) => {
-                      setWarehouseSearchTerm(e.target.value);
-                      setShowWarehouseSearch(true);
-                      clearFieldError('warehouseId');
-                    }}
+                    onChange={(e) => { setWarehouseSearchTerm(e.target.value); setShowWarehouseSearch(true); clearFieldError('warehouseId'); }}
                     onFocus={() => setShowWarehouseSearch(true)}
-                    variant={validationErrors.warehouseId ? 'error' : 'default'}
                     placeholder={t('selectOrSearchWarehouse')}
-                    fullWidth
+                    style={{ width: '100%' }}
                   />
                   {showWarehouseSearch && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div style={dropdownContainerStyle}>
                       {warehouses.filter((w: any) =>
                         w.name.toLowerCase().includes(warehouseSearchTerm.toLowerCase()) ||
                         w.code?.toLowerCase().includes(warehouseSearchTerm.toLowerCase())
@@ -343,66 +299,49 @@ export default function ProductCreate() {
                                 setWarehouseSearchTerm(`${warehouse.name} (${warehouse.code})`);
                                 setShowWarehouseSearch(false);
                               }}
-                              className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
+                              style={dropdownItemStyle}
                             >
-                              <div className="font-medium text-slate-800">{warehouse.name}</div>
-                              <div className="text-sm text-slate-500">{warehouse.code}</div>
+                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{warehouse.name}</div>
+                              <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{warehouse.code}</div>
                             </div>
                           ))
                       ) : (
-                        <div className="p-4 text-center text-slate-500 text-sm">
+                        <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
                           {t('noWarehousesFound')}
                         </div>
                       )}
                     </div>
                   )}
                 </div>
-              </FormField>
+              </div>
 
-              <FormField label={t('categories')}>
-                <div className="relative" ref={categorySearchRef}>
-                  {/* Selected categories chips */}
+              <div>
+                <label style={labelStyle}>{t('categories')}</label>
+                <div style={{ position: 'relative' }} ref={categorySearchRef}>
                   {formData.categoryIds.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       {formData.categoryIds.map((categoryId: number) => {
                         const category = categories.find((c: any) => c.id === categoryId);
                         if (!category) return null;
                         return (
-                          <span
-                            key={categoryId}
-                            className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm"
-                          >
+                          <span key={categoryId} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '9999px', fontSize: '0.875rem' }}>
                             {category.name}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  categoryIds: formData.categoryIds.filter((id: number) => id !== categoryId)
-                                });
-                              }}
-                              className="hover:text-amber-900"
-                            >
-                              ×
-                            </button>
+                            <button type="button" onClick={() => { setFormData({ ...formData, categoryIds: formData.categoryIds.filter((id: number) => id !== categoryId) }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400e' }}>×</button>
                           </span>
                         );
                       })}
                     </div>
                   )}
-                  <Input
+                  <InputText
                     type="text"
                     value={categorySearchTerm}
-                    onChange={(e) => {
-                      setCategorySearchTerm(e.target.value);
-                      setShowCategorySearch(true);
-                    }}
+                    onChange={(e) => { setCategorySearchTerm(e.target.value); setShowCategorySearch(true); }}
                     onFocus={() => setShowCategorySearch(true)}
                     placeholder={t('typeToSearchCategories')}
-                    fullWidth
+                    style={{ width: '100%' }}
                   />
                   {showCategorySearch && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div style={dropdownContainerStyle}>
                       {categories.filter((c: any) =>
                         c.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) &&
                         !formData.categoryIds.includes(c.id)
@@ -416,334 +355,248 @@ export default function ProductCreate() {
                             <div
                               key={category.id}
                               onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  categoryIds: [...formData.categoryIds, category.id]
-                                });
+                                setFormData({ ...formData, categoryIds: [...formData.categoryIds, category.id] });
                                 setCategorySearchTerm('');
                                 setShowCategorySearch(false);
                               }}
-                              className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
+                              style={dropdownItemStyle}
                             >
-                              <div className="font-medium text-slate-800">{category.name}</div>
-                              {category.description && (
-                                <div className="text-sm text-slate-500">{category.description}</div>
-                              )}
+                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{category.name}</div>
+                              {category.description && <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{category.description}</div>}
                             </div>
                           ))
                       ) : (
-                        <div className="p-4 text-center text-slate-500 text-sm">
+                        <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
                           {categorySearchTerm ? t('noCategoriesFound') : t('startTypingToSearchCategories')}
                         </div>
                       )}
                     </div>
                   )}
                 </div>
-              </FormField>
+              </div>
             </div>
 
-            <FormField label={t('description')}>
-              <Textarea
+            <div style={{ marginTop: '1rem' }}>
+              <label style={labelStyle}>{t('description')}</label>
+              <InputTextarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
                 placeholder={t('enterProductDescription')}
-                className="w-full"
+                style={{ width: '100%' }}
               />
-            </FormField>
+            </div>
           </div>
 
           {/* Pricing Section */}
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('pricing')}</h3>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '1rem' }}>{t('pricing')}</h3>
 
-            {/* Sale Price Section */}
-            <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-200">
-              <h4 className="font-medium text-slate-900 mb-3">{t('salePrice')}</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <FormField label={t('price')} error={validationErrors.price} required>
-                  <div className="relative">
-                    <Input
+            {/* Sale Price */}
+            <div style={{ backgroundColor: '#f8fafc', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+              <h4 style={{ fontWeight: 500, color: '#0f172a', marginBottom: '0.75rem' }}>{t('salePrice')}</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                <div>
+                  <label style={labelStyle}>{t('price')} *</label>
+                  {validationErrors.price && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.price}</p>}
+                  <div style={{ position: 'relative' }}>
+                    <InputText
                       type="number"
                       step="0.01"
                       min="0"
                       value={formData.price}
-                      onChange={(e) => {
-                        setFormData({ ...formData, price: e.target.value });
-                        clearFieldError('price');
-                      }}
-                      variant={validationErrors.price ? 'error' : 'default'}
-                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      onChange={(e) => { setFormData({ ...formData, price: e.target.value }); clearFieldError('price'); }}
                       placeholder={t('numericPlaceholder')}
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
-                    <span className={`absolute top-2.5 text-slate-500 text-sm ${language === 'ar' ? 'left-3' : 'right-3'}`}>
+                    <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', fontSize: '0.875rem', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>
                       {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
-                </FormField>
+                </div>
 
-                <FormField label={t('unit')}>
-                  <div className="relative" ref={saleUnitSearchRef}>
-                    <Input
+                <div>
+                  <label style={labelStyle}>{t('unit')}</label>
+                  <div style={{ position: 'relative' }} ref={saleUnitSearchRef}>
+                    <InputText
                       type="text"
                       value={formData.saleUnit}
-                      onChange={(e) => {
-                        setFormData({ ...formData, saleUnit: e.target.value });
-                        setShowSaleUnitSearch(true);
-                      }}
+                      onChange={(e) => { setFormData({ ...formData, saleUnit: e.target.value }); setShowSaleUnitSearch(true); }}
                       onFocus={() => setShowSaleUnitSearch(true)}
                       placeholder={t('unit')}
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
                     {showSaleUnitSearch && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {uoms.filter((u: any) =>
-                          u.name.toLowerCase().includes(formData.saleUnit.toLowerCase()) ||
-                          u.code.toLowerCase().includes(formData.saleUnit.toLowerCase())
-                        ).length > 0 ? (
-                          uoms
-                            .filter((u: any) =>
-                              u.name.toLowerCase().includes(formData.saleUnit.toLowerCase()) ||
-                              u.code.toLowerCase().includes(formData.saleUnit.toLowerCase())
-                            )
-                            .map((uom: any) => (
-                              <div
-                                key={uom.id}
-                                onClick={() => {
-                                  setFormData({ ...formData, saleUnit: uom.name });
-                                  setShowSaleUnitSearch(false);
-                                }}
-                                className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
-                              >
-                                <div className="font-medium text-slate-800">{uom.name}</div>
-                                <div className="text-xs text-slate-500">{uom.code} - {uom.category}</div>
-                              </div>
-                            ))
-                        ) : (
-                          <div className="p-4 text-center text-slate-500 text-sm">
-                            {uoms.length === 0 ? t('noUnitsConfigured') : t('typeToCreateCustomUnit')}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </FormField>
-
-                <FormField label={t('tax')}>
-                  <div className="relative" ref={saleTaxSearchRef}>
-                    <Input
-                      type="text"
-                      value={formData.saleTax}
-                      onChange={(e) => {
-                        setFormData({ ...formData, saleTax: e.target.value });
-                        setShowSaleTaxSearch(true);
-                      }}
-                      onFocus={() => setShowSaleTaxSearch(true)}
-                      placeholder={t('taxPlaceholder')}
-                      fullWidth
-                    />
-                    {showSaleTaxSearch && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {taxRates.length > 0 ? (
-                          taxRates.map((tax: any) => (
-                            <div
-                              key={tax.name}
-                              onClick={() => {
-                                setFormData({ ...formData, saleTax: tax.rate.toString() });
-                                setShowSaleTaxSearch(false);
-                              }}
-                              className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
-                            >
-                              <div className="font-medium text-slate-800">{tax.name}</div>
-                              <div className="text-sm text-slate-500">{tax.rate}%</div>
+                      <div style={dropdownContainerStyle}>
+                        {uoms.filter((u: any) => u.name.toLowerCase().includes(formData.saleUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.saleUnit.toLowerCase())).length > 0 ? (
+                          uoms.filter((u: any) => u.name.toLowerCase().includes(formData.saleUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.saleUnit.toLowerCase())).map((uom: any) => (
+                            <div key={uom.id} onClick={() => { setFormData({ ...formData, saleUnit: uom.name }); setShowSaleUnitSearch(false); }} style={dropdownItemStyle}>
+                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{uom.name}</div>
+                              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{uom.code} - {uom.category}</div>
                             </div>
                           ))
                         ) : (
-                          <div className="p-4 text-center text-slate-500 text-sm">
-                            {t('noTaxRatesConfigured')}
-                          </div>
+                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{uoms.length === 0 ? t('noUnitsConfigured') : t('typeToCreateCustomUnit')}</div>
                         )}
                       </div>
                     )}
                   </div>
-                </FormField>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>{t('tax')}</label>
+                  <div style={{ position: 'relative' }} ref={saleTaxSearchRef}>
+                    <InputText
+                      type="text"
+                      value={formData.saleTax}
+                      onChange={(e) => { setFormData({ ...formData, saleTax: e.target.value }); setShowSaleTaxSearch(true); }}
+                      onFocus={() => setShowSaleTaxSearch(true)}
+                      placeholder={t('taxPlaceholder')}
+                      style={{ width: '100%' }}
+                    />
+                    {showSaleTaxSearch && (
+                      <div style={dropdownContainerStyle}>
+                        {taxRates.length > 0 ? taxRates.map((tax: any) => (
+                          <div key={tax.name} onClick={() => { setFormData({ ...formData, saleTax: tax.rate.toString() }); setShowSaleTaxSearch(false); }} style={dropdownItemStyle}>
+                            <div style={{ fontWeight: 500, color: '#1e293b' }}>{tax.name}</div>
+                            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{tax.rate}%</div>
+                          </div>
+                        )) : (
+                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{t('noTaxRatesConfigured')}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               {parseFloat(formData.saleTax) > 0 && formData.price && (
-                <p className="mt-2 text-slate-600">
+                <p style={{ marginTop: '0.5rem', color: '#475569' }}>
                   {t('priceWithTax')}: {(parseFloat(formData.price) * (1 + parseFloat(formData.saleTax) / 100)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'} {t('per')} {formData.saleUnit}
                 </p>
               )}
             </div>
 
-            {/* Cost Price Section */}
-            <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-200">
-              <h4 className="font-medium text-slate-900 mb-3">{t('costPrice')}</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <FormField label={t('costPrice')} error={validationErrors.cost}>
-                  <div className="relative">
-                    <Input
+            {/* Cost Price */}
+            <div style={{ backgroundColor: '#f8fafc', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+              <h4 style={{ fontWeight: 500, color: '#0f172a', marginBottom: '0.75rem' }}>{t('costPrice')}</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                <div>
+                  <label style={labelStyle}>{t('costPrice')}</label>
+                  {validationErrors.cost && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.cost}</p>}
+                  <div style={{ position: 'relative' }}>
+                    <InputText
                       type="number"
                       step="0.01"
                       min="0"
                       value={formData.cost}
-                      onChange={(e) => {
-                        setFormData({ ...formData, cost: e.target.value });
-                        clearFieldError('cost');
-                      }}
-                      variant={validationErrors.cost ? 'error' : 'default'}
-                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      onChange={(e) => { setFormData({ ...formData, cost: e.target.value }); clearFieldError('cost'); }}
                       placeholder={t('numericPlaceholder')}
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
-                    <span className={`absolute top-2.5 text-slate-500 text-sm ${language === 'ar' ? 'left-3' : 'right-3'}`}>
+                    <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', fontSize: '0.875rem', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>
                       {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
-                </FormField>
+                </div>
 
-                <FormField label={t('unit')}>
-                  <div className="relative" ref={purchaseUnitSearchRef}>
-                    <Input
+                <div>
+                  <label style={labelStyle}>{t('unit')}</label>
+                  <div style={{ position: 'relative' }} ref={purchaseUnitSearchRef}>
+                    <InputText
                       type="text"
                       value={formData.purchaseUnit}
-                      onChange={(e) => {
-                        setFormData({ ...formData, purchaseUnit: e.target.value });
-                        setShowPurchaseUnitSearch(true);
-                      }}
+                      onChange={(e) => { setFormData({ ...formData, purchaseUnit: e.target.value }); setShowPurchaseUnitSearch(true); }}
                       onFocus={() => setShowPurchaseUnitSearch(true)}
                       placeholder={t('unit')}
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
                     {showPurchaseUnitSearch && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {uoms.filter((u: any) =>
-                          u.name.toLowerCase().includes(formData.purchaseUnit.toLowerCase()) ||
-                          u.code.toLowerCase().includes(formData.purchaseUnit.toLowerCase())
-                        ).length > 0 ? (
-                          uoms
-                            .filter((u: any) =>
-                              u.name.toLowerCase().includes(formData.purchaseUnit.toLowerCase()) ||
-                              u.code.toLowerCase().includes(formData.purchaseUnit.toLowerCase())
-                            )
-                            .map((uom: any) => (
-                              <div
-                                key={uom.id}
-                                onClick={() => {
-                                  setFormData({ ...formData, purchaseUnit: uom.name });
-                                  setShowPurchaseUnitSearch(false);
-                                }}
-                                className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
-                              >
-                                <div className="font-medium text-slate-800">{uom.name}</div>
-                                <div className="text-xs text-slate-500">{uom.code} - {uom.category}</div>
-                              </div>
-                            ))
-                        ) : (
-                          <div className="p-4 text-center text-slate-500 text-sm">
-                            {uoms.length === 0 ? t('noUnitsConfigured') : t('typeToCreateCustomUnit')}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </FormField>
-
-                <FormField label={t('tax')}>
-                  <div className="relative" ref={purchaseTaxSearchRef}>
-                    <Input
-                      type="text"
-                      value={formData.purchaseTax}
-                      onChange={(e) => {
-                        setFormData({ ...formData, purchaseTax: e.target.value });
-                        setShowPurchaseTaxSearch(true);
-                      }}
-                      onFocus={() => setShowPurchaseTaxSearch(true)}
-                      placeholder={t('taxPlaceholder')}
-                      fullWidth
-                    />
-                    {showPurchaseTaxSearch && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {taxRates.length > 0 ? (
-                          taxRates.map((tax: any) => (
-                            <div
-                              key={tax.name}
-                              onClick={() => {
-                                setFormData({ ...formData, purchaseTax: tax.rate.toString() });
-                                setShowPurchaseTaxSearch(false);
-                              }}
-                              className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
-                            >
-                              <div className="font-medium text-slate-800">{tax.name}</div>
-                              <div className="text-sm text-slate-500">{tax.rate}%</div>
+                      <div style={dropdownContainerStyle}>
+                        {uoms.filter((u: any) => u.name.toLowerCase().includes(formData.purchaseUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.purchaseUnit.toLowerCase())).length > 0 ? (
+                          uoms.filter((u: any) => u.name.toLowerCase().includes(formData.purchaseUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.purchaseUnit.toLowerCase())).map((uom: any) => (
+                            <div key={uom.id} onClick={() => { setFormData({ ...formData, purchaseUnit: uom.name }); setShowPurchaseUnitSearch(false); }} style={dropdownItemStyle}>
+                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{uom.name}</div>
+                              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{uom.code} - {uom.category}</div>
                             </div>
                           ))
                         ) : (
-                          <div className="p-4 text-center text-slate-500 text-sm">
-                            {t('noTaxRatesConfigured')}
-                          </div>
+                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{uoms.length === 0 ? t('noUnitsConfigured') : t('typeToCreateCustomUnit')}</div>
                         )}
                       </div>
                     )}
                   </div>
-                </FormField>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>{t('tax')}</label>
+                  <div style={{ position: 'relative' }} ref={purchaseTaxSearchRef}>
+                    <InputText
+                      type="text"
+                      value={formData.purchaseTax}
+                      onChange={(e) => { setFormData({ ...formData, purchaseTax: e.target.value }); setShowPurchaseTaxSearch(true); }}
+                      onFocus={() => setShowPurchaseTaxSearch(true)}
+                      placeholder={t('taxPlaceholder')}
+                      style={{ width: '100%' }}
+                    />
+                    {showPurchaseTaxSearch && (
+                      <div style={dropdownContainerStyle}>
+                        {taxRates.length > 0 ? taxRates.map((tax: any) => (
+                          <div key={tax.name} onClick={() => { setFormData({ ...formData, purchaseTax: tax.rate.toString() }); setShowPurchaseTaxSearch(false); }} style={dropdownItemStyle}>
+                            <div style={{ fontWeight: 500, color: '#1e293b' }}>{tax.name}</div>
+                            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{tax.rate}%</div>
+                          </div>
+                        )) : (
+                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{t('noTaxRatesConfigured')}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Additional Pricing Fields */}
-            <div className="grid grid-cols-1 gap-4">
-              <FormField label={t('minPrice')}>
-                <div className="relative">
-                  <Input
+            {/* Min Price */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+              <div>
+                <label style={labelStyle}>{t('minPrice')}</label>
+                <div style={{ position: 'relative' }}>
+                  <InputText
                     type="number"
                     step="0.01"
                     min="0"
                     value={formData.minPrice}
                     onChange={(e) => setFormData({ ...formData, minPrice: e.target.value })}
-                    className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     placeholder={t('numericPlaceholder')}
-                    fullWidth
+                    style={{ width: '100%' }}
                   />
-                  <span className={`absolute top-2.5 text-slate-500 ${language === 'ar' ? 'left-3' : 'right-3'}`}>
+                  <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>
                     {language === 'ar' ? 'د.م' : 'DH'}
                   </span>
                 </div>
-              </FormField>
+              </div>
             </div>
 
             {/* Margin Preview */}
             {formData.price && formData.cost && (
-              <div className="mt-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
-                <h4 className="font-semibold text-slate-900 mb-3">{t('marginAnalysis')}</h4>
-                <div className="grid grid-cols-3 gap-4">
+              <div style={{ marginTop: '1rem', background: 'linear-gradient(to right, #fffbeb, #fff7ed)', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem' }}>
+                <h4 style={{ fontWeight: 600, color: '#0f172a', marginBottom: '0.75rem' }}>{t('marginAnalysis')}</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
                   <div>
-                    <p className="text-sm text-slate-600">{t('marginAmount')}</p>
-                    <p className="text-lg font-bold text-slate-900">
+                    <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('marginAmount')}</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a' }}>
                       {(parseFloat(formData.price) - parseFloat(formData.cost)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">{t('marginPercent')}</p>
-                    <p className="text-lg font-bold text-green-600">
-                      {parseFloat(formData.cost) > 0
-                        ? (((parseFloat(formData.price) - parseFloat(formData.cost)) /
-                          parseFloat(formData.cost)) *
-                          100
-                        ).toFixed(2)
-                        : '0.00'}
-                      %
+                    <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('marginPercent')}</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#16a34a' }}>
+                      {parseFloat(formData.cost) > 0 ? (((parseFloat(formData.price) - parseFloat(formData.cost)) / parseFloat(formData.cost)) * 100).toFixed(2) : '0.00'}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">{t('markupPercent')}</p>
-                    <p className="text-lg font-bold text-blue-600">
-                      {parseFloat(formData.price) > 0
-                        ? (((parseFloat(formData.price) - parseFloat(formData.cost)) /
-                          parseFloat(formData.price)) *
-                          100
-                        ).toFixed(2)
-                        : '0.00'}
-                      %
+                    <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('markupPercent')}</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#2563eb' }}>
+                      {parseFloat(formData.price) > 0 ? (((parseFloat(formData.price) - parseFloat(formData.cost)) / parseFloat(formData.price)) * 100).toFixed(2) : '0.00'}%
                     </p>
                   </div>
                 </div>
@@ -751,47 +604,40 @@ export default function ProductCreate() {
             )}
           </div>
 
-          {/* Product Options Section */}
+          {/* Product Options */}
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('options')}</h3>
-            <div className="space-y-3">
-              <Checkbox
-                checked={formData.isService}
-                onChange={() => setFormData({ ...formData, isService: !formData.isService })}
-                label={t('isService')}
-              />
-              <p className="text-xs text-slate-500 ml-8">{t('serviceDescription')}</p>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '1rem' }}>{t('options')}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Checkbox checked={formData.isService} onChange={() => setFormData({ ...formData, isService: !formData.isService })} />
+                <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('isService')}</label>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('serviceDescription')}</p>
 
-              <Checkbox
-                checked={formData.isEnabled}
-                onChange={() => setFormData({ ...formData, isEnabled: !formData.isEnabled })}
-                label={t('enabled')}
-              />
-              <p className="text-xs text-slate-500 ml-8">{t('enabledDescription')}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Checkbox checked={formData.isEnabled} onChange={() => setFormData({ ...formData, isEnabled: !formData.isEnabled })} />
+                <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('enabled')}</label>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('enabledDescription')}</p>
 
-              <Checkbox
-                checked={formData.isPriceChangeAllowed}
-                onChange={() => setFormData({ ...formData, isPriceChangeAllowed: !formData.isPriceChangeAllowed })}
-                label={t('allowPriceChange')}
-              />
-              <p className="text-xs text-slate-500 ml-8">{t('allowPriceChangeDescription')}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Checkbox checked={formData.isPriceChangeAllowed} onChange={() => setFormData({ ...formData, isPriceChangeAllowed: !formData.isPriceChangeAllowed })} />
+                <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('allowPriceChange')}</label>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('allowPriceChangeDescription')}</p>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => navigate('/products')}>
-            {t('cancel')}
-          </Button>
+        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <Button type="button" outlined onClick={() => navigate('/products')} label={t('cancel')} />
           <Button
             type="submit"
             loading={createMutation.isPending}
-            loadingText={t('creating')}
-            leadingIcon={Save}
-          >
-            {t('createProduct')}
-          </Button>
+            icon={<Save style={{ width: '1rem', height: '1rem' }} />}
+            label={t('createProduct')}
+          />
         </div>
       </form>
     </AdminLayout>

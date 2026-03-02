@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { Button } from 'primereact/button';
+import { OverlayPanel } from 'primereact/overlaypanel';
+import { Badge } from 'primereact/badge';
 
 interface Notification {
   Id: number;
@@ -21,11 +24,10 @@ interface NotificationBellProps {
 
 export function NotificationBell({ customerId }: NotificationBellProps) {
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const { t, language, dir } = useLanguage();
+  const op = useRef<OverlayPanel>(null);
 
-  // Fetch notifications
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', 'customer', customerId],
     queryFn: async () => {
@@ -37,7 +39,6 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
     refetchInterval: 30000,
   });
 
-  // Fetch unread count
   const { data: unreadData } = useQuery({
     queryKey: ['notifications', 'customer', customerId, 'unread-count'],
     queryFn: async () => {
@@ -51,12 +52,9 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
 
   const unreadCount = unreadData?.count || 0;
 
-  // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: number) => {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'PATCH',
-      });
+      const response = await fetch(`/api/notifications/${notificationId}/read`, { method: 'PATCH' });
       if (!response.ok) throw new Error('Failed to mark as read');
       return response.json();
     },
@@ -65,7 +63,6 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
     },
   });
 
-  // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch('/api/notifications/mark-all-read', {
@@ -96,23 +93,22 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
   };
 
   const getNotificationIcon = (type: string) => {
-    const iconClass = "w-10 h-10 rounded-full flex items-center justify-center text-white text-lg";
+    const baseStyle: React.CSSProperties = { width: '2.5rem', height: '2.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1rem' };
     switch (type) {
       case 'order_created':
-        return <div className={`${iconClass} bg-green-500`}>🆕</div>;
+        return <div style={{ ...baseStyle, background: '#22c55e' }}>🆕</div>;
       case 'order_assigned':
-        return <div className={`${iconClass} bg-blue-500`}>📦</div>;
+        return <div style={{ ...baseStyle, background: '#3b82f6' }}>📦</div>;
       case 'order_status_changed':
-        return <div className={`${iconClass} bg-yellow-500`}>🔄</div>;
+        return <div style={{ ...baseStyle, background: '#eab308' }}>🔄</div>;
       case 'order_cancelled':
-        return <div className={`${iconClass} bg-red-500`}>❌</div>;
+        return <div style={{ ...baseStyle, background: '#ef4444' }}>❌</div>;
       default:
-        return <div className={`${iconClass} bg-gray-500`}>📬</div>;
+        return <div style={{ ...baseStyle, background: '#6b7280' }}>📬</div>;
     }
   };
 
   const translateNotification = (notification: Notification) => {
-    // Map old English titles to translation keys
     const titleMap: Record<string, string> = {
       'New Order': 'notificationsNewOrder',
       'Order Created': 'notificationsNewOrder',
@@ -124,44 +120,36 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
       'Order Cancelled': 'notificationsOrderCancelled',
     };
 
-    // Translate title
     let titleKey = notification.Title;
-    
-    // Check if it's an old English title that needs mapping
     if (titleMap[notification.Title]) {
       titleKey = titleMap[notification.Title];
     } else if (notification.Title.startsWith('notifications.')) {
-      // New format: "notifications.newOrder" → "notificationsNewOrder"
       titleKey = notification.Title.replace('notifications.', 'notifications');
       titleKey = titleKey.charAt(0).toLowerCase() + titleKey.slice(1);
       titleKey = titleKey.replace(/\./g, '');
     }
-    
+
     const title = t(titleKey as any) || notification.Title;
-    
-    // Parse message - handle both old and new formats
+
     let orderNumber = notification.Message;
     let statusKey = '';
-    
-    // Check if message contains '|' (new format: "orderNumber|statusKey")
+
     if (notification.Message.includes('|')) {
       const parts = notification.Message.split('|');
       orderNumber = parts[0];
       statusKey = parts[1] || '';
     } else {
-      // Extract order number from old format messages like "Order 26-200-000001 has been..."
       const orderMatch = notification.Message.match(/\d{2}-\d{3}-\d{6}/);
       if (orderMatch) {
         orderNumber = orderMatch[0];
       }
     }
-    
+
     let message = '';
     if (statusKey) {
-      // Translate status key
       const statusTranslationKey = statusKey.replace('status.', 'status');
       const status = t(statusTranslationKey as any) || statusKey;
-      message = language === 'ar' 
+      message = language === 'ar'
         ? `${status} - #${orderNumber} طلب`
         : `Commande ${orderNumber} - ${status}`;
     } else {
@@ -169,7 +157,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
         ? `#${orderNumber} طلب`
         : `Commande #${orderNumber}`;
     }
-    
+
     return { title, message };
   };
 
@@ -182,96 +170,94 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
   if (!customerId) return null;
 
   return (
-    <div className="relative" dir={dir}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+    <div dir={dir}>
+      <Button
+        text
+        rounded
+        severity="secondary"
+        className="p-overlay-badge"
+        onClick={(e) => op.current?.toggle(e)}
+        aria-label={t('notifications')}
       >
-        <Bell className="h-6 w-6 text-gray-600" />
+        <Bell style={{ width: '1.25rem', height: '1.25rem' }} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+          <Badge value={unreadCount > 9 ? '9+' : unreadCount.toString()} severity="danger" />
         )}
-      </button>
+      </Button>
 
-      {isOpen && (
-        <>
-          <div 
-            className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute end-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg z-50 border" dir={dir}>
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-semibold">{t('notifications')}</h3>
-              {unreadCount > 0 && (
-                <button
-                  onClick={() => markAllAsReadMutation.mutate()}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+      <OverlayPanel ref={op} style={{ width: '20rem', maxWidth: 'calc(100vw - 2rem)' }} dir={dir}>
+        <div className="flex align-items-center justify-content-between pb-3 mb-3 border-bottom-1 surface-border">
+          <h3 className="font-semibold text-color m-0">{t('notifications')}</h3>
+          {unreadCount > 0 && (
+            <Button
+              text
+              size="small"
+              onClick={() => markAllAsReadMutation.mutate()}
+              className="p-0"
+              style={{ fontSize: '0.75rem' }}
+            >
+              <CheckCheck style={{ width: '0.875rem', height: '0.875rem', marginInlineEnd: '0.25rem' }} />
+              {t('markAllAsRead')}
+            </Button>
+          )}
+        </div>
+        <div style={{ maxHeight: '25rem', overflowY: 'auto' }}>
+          {notifications.length === 0 ? (
+            <div className="p-4 text-center text-color-secondary">
+              {t('noNotifications')}
+            </div>
+          ) : (
+            notifications.map((notification: Notification) => {
+              const { title, message } = translateNotification(notification);
+              return (
+                <div
+                  key={notification.Id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className="cursor-pointer p-3 border-round-lg mb-1"
+                  style={{
+                    background: !notification.IsRead ? '#eff6ff' : 'transparent',
+                    borderLeft: !notification.IsRead ? '4px solid #3b82f6' : '4px solid transparent',
+                    transition: 'background 0.2s',
+                  }}
                 >
-                  <CheckCheck className="h-4 w-4" />
-                  {t('markAllAsRead')}
-                </button>
-              )}
-            </div>
-            <div className="max-h-[400px] overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  {t('noNotifications')}
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {notifications.map((notification: Notification) => {
-                    const { title, message } = translateNotification(notification);
-                    return (
-                      <div
-                        key={notification.Id}
-                        onClick={() => handleNotificationClick(notification)}
-                        className={`p-4 hover:bg-gray-50 cursor-pointer transition-all ${
-                          !notification.IsRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {getNotificationIcon(notification.Type)}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <p className={`text-sm font-semibold ${!notification.IsRead ? 'text-gray-900' : 'text-gray-600'}`}>
-                                {title}
-                              </p>
-                              {!notification.IsRead && (
-                                <span className="h-2.5 w-2.5 rounded-full bg-blue-500 flex-shrink-0 animate-pulse" />
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {message}
-                            </p>
-                            <div className="flex items-center justify-between">
-                              <p className="text-xs text-gray-500">
-                                {formatDate(notification.DateCreated)}
-                              </p>
-                              {!notification.IsRead && (
-                                <button
-                                  className="text-xs text-blue-600 hover:text-blue-700 p-1"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    markAsReadMutation.mutate(notification.Id);
-                                  }}
-                                >
-                                  <Check className="h-3.5 w-3.5" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                  <div className="flex align-items-start gap-2">
+                    {getNotificationIcon(notification.Type)}
+                    <div className="flex-1" style={{ minWidth: 0 }}>
+                      <div className="flex align-items-center justify-content-between gap-2 mb-1">
+                        <p className="text-sm font-semibold m-0" style={{ color: !notification.IsRead ? '#111827' : '#4b5563' }}>
+                          {title}
+                        </p>
+                        {!notification.IsRead && (
+                          <span className="animate-pulse border-circle flex-shrink-0" style={{ width: '0.625rem', height: '0.625rem', background: '#3b82f6' }} />
+                        )}
                       </div>
-                    );
-                  })}
+                      <p className="text-sm text-color-secondary m-0 mb-2">{message}</p>
+                      <div className="flex align-items-center justify-content-between">
+                        <p className="text-xs text-color-secondary m-0">{formatDate(notification.DateCreated)}</p>
+                        {!notification.IsRead && (
+                          <Button
+                            text
+                            rounded
+                            severity="info"
+                            size="small"
+                            className="p-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsReadMutation.mutate(notification.Id);
+                            }}
+                          >
+                            <Check style={{ width: '0.875rem', height: '0.875rem' }} />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
+              );
+            })
+          )}
+        </div>
+      </OverlayPanel>
     </div>
   );
 }

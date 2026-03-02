@@ -18,13 +18,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const getStatusIcon = () => {
     switch (message.status) {
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return <AlertCircle style={{ width: '1rem', height: '1rem', color: '#ef4444' }} />;
       case 'tool-pending':
-        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+        return <Loader2 className="animate-spin" style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />;
       case 'tool-complete':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle style={{ width: '1rem', height: '1rem', color: '#22c55e' }} />;
       case 'streaming':
-        return <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />;
+        return <Loader2 className="animate-spin" style={{ width: '1rem', height: '1rem', color: '#9ca3af' }} />;
       default:
         return null;
     }
@@ -32,8 +32,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
   if (isSystem) {
     return (
-      <div className="flex justify-center">
-        <div className="max-w-md px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-400 text-center">
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{
+            maxWidth: '28rem',
+            padding: '0.5rem 0.75rem',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
+            color: '#4b5563',
+            textAlign: 'center',
+          }}
+        >
           {message.content}
         </div>
       </div>
@@ -41,33 +51,46 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   }
 
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+    <div style={{ display: 'flex', gap: '0.75rem', flexDirection: isUser ? 'row-reverse' : 'row' }}>
       {/* Avatar */}
       <div
-        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-          isUser
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-        }`}
+        style={{
+          flexShrink: 0,
+          width: '2rem',
+          height: '2rem',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: isUser ? '#2563eb' : '#e5e7eb',
+          color: isUser ? '#ffffff' : '#374151',
+        }}
       >
-        {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+        {isUser
+          ? <User style={{ width: '1rem', height: '1rem' }} />
+          : <Bot style={{ width: '1rem', height: '1rem' }} />
+        }
       </div>
 
       {/* Content */}
-      <div className={`flex-1 max-w-[80%] ${isUser ? 'text-right' : ''}`}>
+      <div style={{ flex: 1, maxWidth: '80%', textAlign: isUser ? 'right' : 'left' }}>
         <div
-          className={`inline-block px-4 py-2 rounded-lg ${
-            isUser
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-          }`}
+          style={{
+            display: 'inline-block',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            backgroundColor: isUser ? '#2563eb' : '#f3f4f6',
+            color: isUser ? '#ffffff' : '#111827',
+          }}
         >
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0 }}>
+            {message.content}
+          </p>
 
           {/* Tool Calls */}
           {message.toolCalls && message.toolCalls.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}>
+              <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
                 🔧 Using tools: {message.toolCalls.map(tc => tc.function.name).join(', ')}
               </p>
             </div>
@@ -75,8 +98,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
           {/* Error */}
           {message.error && (
-            <div className="mt-2 pt-2 border-t border-red-200 dark:border-red-800">
-              <p className="text-xs text-red-500 dark:text-red-400">
+            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #fecaca' }}>
+              <p style={{ fontSize: '0.75rem', color: '#ef4444', margin: 0 }}>
                 {message.error}
               </p>
             </div>
@@ -84,7 +107,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
         </div>
 
         {/* Status & Timestamp */}
-        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
           {getStatusIcon()}
           <span>
             {new Date(message.timestamp).toLocaleTimeString([], {

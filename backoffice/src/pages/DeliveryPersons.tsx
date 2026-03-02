@@ -3,10 +3,9 @@ import { PageHeader } from '../components/PageHeader';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, List, Plus, Truck, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, Check } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { Checkbox } from '../components/ui/checkbox';
-import { FormField } from '../components/ui/form-field';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Checkbox } from 'primereact/checkbox';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deliveryPersonService } from '../modules/delivery';
 import { DeliveryPerson } from '../types';
@@ -177,7 +176,7 @@ export default function DeliveryPersons() {
         {
           id: 'view',
           label: t('view'),
-          icon: <Eye className="w-4 h-4" />,
+          icon: <Eye style={{ width: '1rem', height: '1rem' }} />,
           onClick: () => {
             if (person) {
               handleViewPerson(person);
@@ -187,7 +186,7 @@ export default function DeliveryPersons() {
         {
           id: 'edit',
           label: t('edit'),
-          icon: <Edit2 className="w-4 h-4" />,
+          icon: <Edit2 style={{ width: '1rem', height: '1rem' }} />,
           onClick: () => {
             if (person) {
               handleEditPerson(person);
@@ -197,7 +196,7 @@ export default function DeliveryPersons() {
         {
           id: 'delete',
           label: t('delete'),
-          icon: <Trash2 className="w-4 h-4" />,
+          icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
           onClick: () => {
             if (person) {
               handleDeletePerson(person);
@@ -227,33 +226,28 @@ export default function DeliveryPersons() {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
         <PageHeader
           icon={Truck}
           title={t('deliveryPersons')}
           subtitle={t('manageDeliveryPersonnel')}
           actions={
-            <Button onClick={openCreateModal} leadingIcon={Plus}>
-              Nouveau livreur
-            </Button>
+            <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label="Nouveau livreur" onClick={openCreateModal} />
           }
         />
 
         {/* Tabs Navigation */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-6">
-          <div className="flex items-center gap-2 p-2 border-b border-slate-200">
+        <div style={{ background: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', borderBottom: '1px solid #e2e8f0' }}>
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.key
-                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                    : 'text-slate-600 hover:bg-slate-50'
-                    }`}
+                  style={activeTab === tab.key ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, background: '#f59e0b', color: '#ffffff', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)', border: 'none', cursor: 'pointer' } : { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent', cursor: 'pointer', border: 'none' }}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon style={{ width: '1rem', height: '1rem' }} />
                   {tab.label}
                 </button>
               );
@@ -261,78 +255,78 @@ export default function DeliveryPersons() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-3 pt-2">
+          <div style={{ padding: '0.75rem', paddingTop: '0.5rem' }}>
             {activeTab === 'dashboard' && (
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <Truck className="w-5 h-5 text-white" />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
+                  <div style={{ background: 'linear-gradient(to bottom right, #eff6ff, #dbeafe)', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #bfdbfe' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <div style={{ width: '2.5rem', height: '2.5rem', background: '#3b82f6', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Truck style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
                       </div>
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-200 px-2 py-1 rounded-full">Total</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#2563eb', background: '#bfdbfe', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', borderRadius: '9999px' }}>Total</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-blue-900 mb-1">{totalPersons}</h3>
-                    <p className="text-sm text-blue-700">Livreurs totaux</p>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e3a5f', marginBottom: '0.25rem' }}>{totalPersons}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#1d4ed8' }}>Livreurs totaux</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-5 border border-emerald-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
-                        <CheckCircle className="w-5 h-5 text-white" />
+                  <div style={{ background: 'linear-gradient(to bottom right, #ecfdf5, #d1fae5)', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #a7f3d0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <div style={{ width: '2.5rem', height: '2.5rem', background: '#10b981', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
                       </div>
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-200 px-2 py-1 rounded-full">Actifs</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#059669', background: '#a7f3d0', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', borderRadius: '9999px' }}>Actifs</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-emerald-900 mb-1">{activePersons}</h3>
-                    <p className="text-sm text-emerald-700">Livreurs actifs</p>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#064e3b', marginBottom: '0.25rem' }}>{activePersons}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#047857' }}>Livreurs actifs</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 border border-amber-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-white" />
+                  <div style={{ background: 'linear-gradient(to bottom right, #fffbeb, #fef3c7)', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #fde68a' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <div style={{ width: '2.5rem', height: '2.5rem', background: '#f59e0b', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Clock style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
                       </div>
-                      <span className="text-xs font-semibold text-amber-600 bg-amber-200 px-2 py-1 rounded-full">Inactifs</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#d97706', background: '#fde68a', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', borderRadius: '9999px' }}>Inactifs</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-amber-900 mb-1">{inactivePersons}</h3>
-                    <p className="text-sm text-amber-700">Livreurs inactifs</p>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#78350f', marginBottom: '0.25rem' }}>{inactivePersons}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#b45309' }}>Livreurs inactifs</p>
                   </div>
                 </div>
 
                 {/* Dashboard Grid - Recent Delivery Persons */}
-                <div className="bg-white rounded-xl p-6 border border-slate-200">
-                  <div className="mb-4">
-                    <h3 className="text-base font-bold text-slate-800 mb-2">Les 5 derniers livreurs ajoutés</h3>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-xs text-slate-500 w-32">Nom</span>
-                      <span className="text-xs text-slate-500 w-32">Téléphone</span>
-                      <span className="text-xs text-slate-500 w-24 text-right">Statut</span>
+                <div style={{ background: '#ffffff', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>Les 5 derniers livreurs ajoutés</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>Nom</span>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>Téléphone</span>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', width: '6rem', textAlign: 'right' }}>Statut</span>
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {recentPersons.map((person) => (
-                      <div key={person.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-                        <div className="flex items-center gap-2">
-                          <Truck className="w-4 h-4 text-blue-500" />
+                      <div key={person.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
                           <button
                             onClick={() => handleViewPerson(person)}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                            style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }}
                           >
                             {person.name}
                           </button>
                         </div>
-                        <div className="flex items-center justify-between gap-3 flex-1 ml-4">
-                          <span className="text-xs text-slate-500 w-32">{person.name}</span>
-                          <span className="text-xs text-slate-500 w-32">{person.phoneNumber}</span>
-                          <span className={`text-xs font-semibold w-24 text-right ${person.isActive ? 'text-emerald-600' : 'text-slate-600'}`}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flex: 1, marginLeft: '1rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>{person.name}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>{person.phoneNumber}</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, width: '6rem', textAlign: 'right', color: person.isActive ? '#059669' : '#475569' }}>
                             {person.isActive ? 'Actif' : 'Inactif'}
                           </span>
                         </div>
                       </div>
                     ))}
                     {recentPersons.length === 0 && (
-                      <p className="text-sm text-slate-400 text-center py-4">Aucun livreur trouvé</p>
+                      <p style={{ fontSize: '0.875rem', color: '#94a3b8', textAlign: 'center', paddingTop: '1rem', paddingBottom: '1rem' }}>Aucun livreur trouvé</p>
                     )}
                   </div>
                 </div>
@@ -340,69 +334,63 @@ export default function DeliveryPersons() {
             )}
 
             {activeTab === 'list' && (
-              <div className="space-y-1">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {/* Toolbar */}
-                <div className="flex items-center justify-between mb-3">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   {/* View Mode Toggle */}
-                  <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
                     <button
                       onClick={() => setViewMode('card')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'card'
-                        ? 'bg-white text-slate-900 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                      style={viewMode === 'card' ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, background: '#ffffff', color: '#0f172a', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer' } : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent', border: 'none', cursor: 'pointer' }}
                     >
-                      <Grid3x3 className="w-4 h-4" />
+                      <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list'
-                        ? 'bg-white text-slate-900 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                      style={viewMode === 'list' ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, background: '#ffffff', color: '#0f172a', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer' } : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent', border: 'none', cursor: 'pointer' }}
                     >
-                      <ListIcon className="w-4 h-4" />
+                      <ListIcon style={{ width: '1rem', height: '1rem' }} />
                     </button>
                   </div>
 
                   {/* Search */}
-                  <div className="relative">
-                    <Input
+                  <span style={{ position: 'relative', display: 'block', width: '24rem' }}>
+                    <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+                    <InputText
                       id="search-delivery-persons"
                       type="text"
                       placeholder={t('searchDeliveryPersons')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      leadingIcon={Search}
-                      className="w-96"
+                      style={{ width: '100%', paddingLeft: '2.5rem' }}
                       aria-label={t('searchDeliveryPersons')}
                     />
                     {searchTerm && (
                       <button
                         onClick={() => setSearchTerm('')}
-                        className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 z-10"
+                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}
                       >
-                        <X className="w-4 h-4" />
+                        <X style={{ width: '1rem', height: '1rem' }} />
                       </button>
                     )}
-                  </div>
+                  </span>
                 </div>
 
                 {/* Delivery Persons List */}
-                <div className="border-t border-slate-200 pt-4">
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
                   {isLoading ? (
-                    <div className="flex items-center justify-center py-16">
-                      <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '4rem', paddingBottom: '4rem' }}>
+                      <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
                     </div>
                   ) : filteredPersons.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
-                      <Truck className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-800 font-semibold text-lg">{t('noDeliveryPersonsFound')}</p>
+                    <div style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '4rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                      <Truck style={{ width: '5rem', height: '5rem', color: '#cbd5e1', display: 'block', margin: '0 auto', marginBottom: '1rem' }} />
+                      <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noDeliveryPersonsFound')}</p>
                     </div>
                   ) : (
                     <>
                       {viewMode === 'card' ? (
-                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(4,1fr)' }}>
                           {filteredPersons.map((person: DeliveryPerson) => {
                             const isSelected = selectedPersons.includes(person.id);
 
@@ -410,41 +398,41 @@ export default function DeliveryPersons() {
                               <div
                                 key={person.id}
                                 onClick={() => toggleSelectPerson(person.id)}
-                                className={`group relative bg-white rounded-lg overflow-hidden transition-all ${isSelected
-                                  ? 'ring-2 ring-amber-500 shadow-md cursor-pointer'
-                                  : 'shadow-sm hover:shadow-md cursor-pointer border border-slate-200'
-                                  }`}
+                                style={isSelected
+                                  ? { position: 'relative', background: '#ffffff', borderRadius: '0.5rem', overflow: 'hidden', outline: '2px solid #f59e0b', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', cursor: 'pointer' }
+                                  : { position: 'relative', background: '#ffffff', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', border: '1px solid #e2e8f0' }
+                                }
                               >
                                 {/* Selection Checkbox */}
-                                <div className="absolute top-2 left-2 z-10">
-                                  <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
-                                    ? 'bg-amber-500 border-amber-500 text-white'
-                                    : 'bg-white border-slate-300'
-                                    }`}>
-                                    {isSelected && <Check className="w-4 h-4" />}
+                                <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', zIndex: 10 }}>
+                                  <div style={isSelected
+                                    ? { width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f59e0b', color: '#ffffff' }
+                                    : { width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }
+                                  }>
+                                    {isSelected && <Check style={{ width: '1rem', height: '1rem' }} />}
                                   </div>
                                 </div>
 
                                 {/* Status Badge */}
-                                <div className="absolute top-2 right-2 z-10">
-                                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${person.isActive
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-slate-100 text-slate-600'
-                                    }`}>
+                                <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10 }}>
+                                  <span style={person.isActive
+                                    ? { paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', borderRadius: '0.375rem', fontSize: '10px', fontWeight: 500, background: '#dcfce7', color: '#15803d' }
+                                    : { paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', borderRadius: '0.375rem', fontSize: '10px', fontWeight: 500, background: '#f1f5f9', color: '#475569' }
+                                  }>
                                     {person.isActive ? t('active') : t('inactive')}
                                   </span>
                                 </div>
 
                                 {/* Card Content */}
-                                <div className="p-3 space-y-2">
+                                <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                   {/* Header */}
-                                  <div className="flex items-start justify-between gap-2 mt-8">
-                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                      <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Truck className="w-5 h-5 text-blue-600" />
+                                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginTop: '2rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+                                      <div style={{ width: '2.25rem', height: '2.25rem', background: '#dbeafe', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Truck style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
                                       </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h3 className="text-sm font-semibold text-slate-900 line-clamp-1" title={person.name}>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }} className="line-clamp-1" title={person.name}>
                                           {person.name}
                                         </h3>
                                       </div>
@@ -452,27 +440,27 @@ export default function DeliveryPersons() {
                                   </div>
 
                                   {/* Contact Info */}
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                                      <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                      <span className="truncate">{person.phoneNumber}</span>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
+                                      <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} />
+                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.phoneNumber}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                                      <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                      <span className="truncate">{person.email || '-'}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
+                                      <Mail style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} />
+                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.email || '-'}</span>
                                     </div>
                                   </div>
 
                                   {/* Action Buttons */}
-                                  <div className="flex gap-1.5 pt-2 border-t border-slate-100">
+                                  <div style={{ display: 'flex', gap: '0.375rem', paddingTop: '0.5rem', borderTop: '1px solid #f1f5f9' }}>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleViewPerson(person);
                                       }}
-                                      className="flex-1 px-2 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors text-xs font-medium flex items-center justify-center gap-1"
+                                      style={{ flex: 1, paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', background: '#eff6ff', color: '#1d4ed8', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', border: 'none', cursor: 'pointer' }}
                                     >
-                                      <Eye className="w-3 h-3" />
+                                      <Eye style={{ width: '0.75rem', height: '0.75rem' }} />
                                       Voir
                                     </button>
                                     <button
@@ -480,9 +468,9 @@ export default function DeliveryPersons() {
                                         e.stopPropagation();
                                         handleEditPerson(person);
                                       }}
-                                      className="flex-1 px-2 py-1.5 bg-slate-50 text-slate-700 rounded hover:bg-slate-100 transition-colors text-xs font-medium flex items-center justify-center gap-1"
+                                      style={{ flex: 1, paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', background: '#f8fafc', color: '#334155', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', border: 'none', cursor: 'pointer' }}
                                     >
-                                      <Edit2 className="w-3 h-3" />
+                                      <Edit2 style={{ width: '0.75rem', height: '0.75rem' }} />
                                       Modifier
                                     </button>
                                   </div>
@@ -492,89 +480,88 @@ export default function DeliveryPersons() {
                           })}
                         </div>
                       ) : (
-                        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-                          <div className="overflow-x-auto">
-                            <table className="w-full">
-                              <thead className="bg-slate-50 border-b border-slate-200">
+                        <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                          <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                              <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                                 <tr>
-                                  <th className="py-3 px-4 text-left">
+                                  <th style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'left' }}>
                                     <div
                                       onClick={toggleSelectAll}
-                                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${selectedPersons.length === filteredPersons.length && filteredPersons.length > 0
-                                        ? 'bg-amber-500 border-amber-500 text-white'
-                                        : 'bg-white border-slate-300'
-                                        }`}
+                                      style={selectedPersons.length === filteredPersons.length && filteredPersons.length > 0
+                                        ? { width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#f59e0b', color: '#ffffff' }
+                                        : { width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#ffffff' }
+                                      }
                                     >
-                                      {selectedPersons.length === filteredPersons.length && filteredPersons.length > 0 && <Check className="w-4 h-4" />}
+                                      {selectedPersons.length === filteredPersons.length && filteredPersons.length > 0 && <Check style={{ width: '1rem', height: '1rem' }} />}
                                     </div>
                                   </th>
-                                  <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase">Nom</th>
-                                  <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase">Téléphone</th>
-                                  <th className="py-3 px-4 text-left text-xs font-semibold text-slate-600 uppercase">Email</th>
-                                  <th className="py-3 px-4 text-center text-xs font-semibold text-slate-600 uppercase">Statut</th>
-                                  <th className="py-3 px-4 text-right text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                                  <th style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>Nom</th>
+                                  <th style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>Téléphone</th>
+                                  <th style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>Email</th>
+                                  <th style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>Statut</th>
+                                  <th style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {filteredPersons.map((person: DeliveryPerson) => (
                                   <tr
                                     key={person.id}
-                                    className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${selectedPersons.includes(person.id) ? 'bg-amber-50' : ''
-                                      }`}
+                                    style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer', background: selectedPersons.includes(person.id) ? '#fffbeb' : undefined }}
                                     onClick={() => toggleSelectPerson(person.id)}
                                   >
-                                    <td className="py-3 px-4">
+                                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
                                       {/* Checkbox is now handled above */}
                                     </td>
-                                    <td className="py-3 px-4">
-                                      <div className="flex items-center gap-2">
-                                        <Truck className="w-4 h-4 text-blue-500" />
-                                        <span className="text-sm font-medium text-slate-800">{person.name}</span>
+                                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
+                                        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{person.name}</span>
                                       </div>
                                     </td>
-                                    <td className="py-3 px-4 text-sm text-slate-600">{person.phoneNumber}</td>
-                                    <td className="py-3 px-4 text-sm text-slate-600">{person.email || '-'}</td>
-                                    <td className="py-3 px-4">
-                                      <div className="flex justify-center">
-                                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${person.isActive
-                                          ? 'bg-emerald-100 text-emerald-700'
-                                          : 'bg-slate-100 text-slate-600'
-                                          }`}>
+                                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.875rem', color: '#475569' }}>{person.phoneNumber}</td>
+                                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.875rem', color: '#475569' }}>{person.email || '-'}</td>
+                                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                        <span style={person.isActive
+                                          ? { display: 'inline-flex', paddingLeft: '0.625rem', paddingRight: '0.625rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, background: '#d1fae5', color: '#047857' }
+                                          : { display: 'inline-flex', paddingLeft: '0.625rem', paddingRight: '0.625rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, background: '#f1f5f9', color: '#475569' }
+                                        }>
                                           {person.isActive ? 'Actif' : 'Inactif'}
                                         </span>
                                       </div>
                                     </td>
-                                    <td className="py-3 px-4">
-                                      <div className="flex items-center justify-end gap-1">
+                                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleViewPerson(person);
                                           }}
-                                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                          style={{ padding: '0.375rem', color: '#2563eb', background: 'none', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}
                                           title={t('seeDetails')}
                                         >
-                                          <Eye className="w-4 h-4" />
+                                          <Eye style={{ width: '1rem', height: '1rem' }} />
                                         </button>
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleEditPerson(person);
                                           }}
-                                          className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors"
+                                          style={{ padding: '0.375rem', color: '#d97706', background: 'none', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}
                                           title={t('edit')}
                                         >
-                                          <Edit2 className="w-4 h-4" />
+                                          <Edit2 style={{ width: '1rem', height: '1rem' }} />
                                         </button>
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleDeletePerson(person);
                                           }}
-                                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                          style={{ padding: '0.375rem', color: '#dc2626', background: 'none', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}
                                           title={t('delete')}
                                         >
-                                          <Trash2 className="w-4 h-4" />
+                                          <Trash2 style={{ width: '1rem', height: '1rem' }} />
                                         </button>
                                       </div>
                                     </td>
@@ -612,71 +599,71 @@ export default function DeliveryPersons() {
         title={editingPerson ? t('editDeliveryPersonTitle') : t('addDeliveryPersonTitle')}
         size="md"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label={t('name')} required>
-              <Input
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
+              <InputText
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                fullWidth
+                style={{ width: '100%' }}
                 required
               />
-            </FormField>
-            <FormField label={t('phoneNumber')} required>
-              <Input
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('phoneNumber')} <span style={{ color: '#ef4444' }}>*</span></label>
+              <InputText
                 type="tel"
                 value={formData.phoneNumber}
                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                 placeholder="06XXXXXXXX"
-                fullWidth
+                style={{ width: '100%' }}
                 required
               />
-            </FormField>
-            <FormField label={t('email')}>
-              <Input
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('email')}</label>
+              <InputText
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                fullWidth
+                style={{ width: '100%' }}
               />
-            </FormField>
-            <FormField
-              label={editingPerson ? <>{t('password')} <span className="text-xs text-slate-500">(Laisser vide pour ne pas modifier)</span></> : t('password')}
-              required={!editingPerson}
-            >
-              <Input
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                {editingPerson ? <>{t('password')} <span style={{ fontSize: '0.75rem', color: '#64748b' }}>(Laisser vide pour ne pas modifier)</span></> : t('password')}
+                {!editingPerson && <span style={{ color: '#ef4444' }}> *</span>}
+              </label>
+              <InputText
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required={!editingPerson}
                 placeholder={editingPerson ? t('newPasswordOptional') : t('minCharacters')}
-                fullWidth
-              />
-            </FormField>
-            <div className="flex items-center pt-6">
-              <Checkbox
-                checked={formData.isActive}
-                onChange={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                label={t('active')}
+                style={{ width: '100%' }}
               />
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', paddingTop: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Checkbox checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.checked ?? false })} />
+                <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('active')}</label>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-3 pt-4 border-t border-slate-200">
+          <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
             <Button
               type="submit"
+              label={editingPerson ? t('update') : t('create')}
               loading={createMutation.isPending || updateMutation.isPending}
-              loadingText={editingPerson ? t('updating') : t('creatingDeliveryPerson')}
-            >
-              {editingPerson ? t('update') : t('create')}
-            </Button>
+            />
             <Button
               type="button"
-              variant="secondary"
+              label={t('cancel')}
               onClick={closeModal}
-            >
-              {t('cancel')}
-            </Button>
+              outlined
+            />
           </div>
         </form>
       </Modal>

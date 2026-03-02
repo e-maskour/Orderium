@@ -5,7 +5,7 @@ import { DocumentType } from '../../modules/documents/types';
 import { DocumentItem } from '../../modules/documents/services/documents.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { TrendingUp, Calendar, BarChart3, LineChart } from 'lucide-react';
-import { NativeSelect } from '../ui/native-select';
+import { Dropdown } from 'primereact/dropdown';
 
 interface DocumentAnalysisChartProps {
   documents: DocumentItem[];
@@ -358,79 +358,91 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
   }
 
   return (
-    <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200">
+    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #e2e8f0' }}>
       {/* Header with controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-            <TrendingUp className="w-5 h-5 text-amber-600" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <TrendingUp style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{chartTitle}</h3>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
+                {(selectedMeasure === 'count' || selectedMeasure === 'status')
+                  ? `${yearTotal} ${t('documents') || 'documents'}`
+                  : `${formatFrenchNumber(yearTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`
+                }
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-800">{chartTitle}</h3>
-            <p className="text-xs text-slate-500">
-              {(selectedMeasure === 'count' || selectedMeasure === 'status')
-                ? `${yearTotal} ${t('documents') || 'documents'}`
-                : `${formatFrenchNumber(yearTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`
-              }
-            </p>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Chart type buttons */}
+            <button
+              onClick={() => setChartType('bar')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.375rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '0.5rem',
+                border: chartType === 'bar' ? '1px solid #fcd34d' : '1px solid #e2e8f0',
+                backgroundColor: chartType === 'bar' ? '#fef3c7' : '#f8fafc',
+                color: chartType === 'bar' ? '#b45309' : '#475569',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+              }}
+              title="Bar Chart"
+            >
+              <BarChart3 style={{ width: '1rem', height: '1rem' }} />
+            </button>
+            <button
+              onClick={() => setChartType('line')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.375rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '0.5rem',
+                border: chartType === 'line' ? '1px solid #fcd34d' : '1px solid #e2e8f0',
+                backgroundColor: chartType === 'line' ? '#fef3c7' : '#f8fafc',
+                color: chartType === 'line' ? '#b45309' : '#475569',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+              }}
+              title="Line Chart"
+            >
+              <LineChart style={{ width: '1rem', height: '1rem' }} />
+            </button>
+
+            {/* Measure selector */}
+            <Dropdown
+              value={selectedMeasure}
+              options={measureOptions}
+              onChange={(e) => setSelectedMeasure(e.value as MeasureType)}
+              optionLabel="label"
+              optionValue="value"
+              style={{ fontSize: '0.875rem' }}
+            />
+
+            {/* Year selector */}
+            <Dropdown
+              value={selectedYear}
+              options={availableYears.map(y => ({ label: String(y), value: y }))}
+              onChange={(e) => handleYearChange(e.value)}
+              optionLabel="label"
+              optionValue="value"
+              style={{ fontSize: '0.875rem' }}
+            />
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Chart type buttons */}
-          <button
-            onClick={() => setChartType('bar')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${chartType === 'bar'
-                ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-              }`}
-            title="Bar Chart"
-          >
-            <BarChart3 className="w-4 h-4" />
-            <span className="text-xs font-medium hidden sm:inline">Bar</span>
-          </button>
-          <button
-            onClick={() => setChartType('line')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${chartType === 'line'
-                ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-              }`}
-            title="Line Chart"
-          >
-            <LineChart className="w-4 h-4" />
-            <span className="text-xs font-medium hidden sm:inline">Line</span>
-          </button>
-
-          {/* Measure selector */}
-          <NativeSelect
-            value={selectedMeasure}
-            onChange={(e) => setSelectedMeasure(e.target.value as MeasureType)}
-            selectSize="sm"
-          >
-            {measureOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </NativeSelect>
-
-          {/* Year selector */}
-          <NativeSelect
-            value={selectedYear}
-            onChange={(e) => handleYearChange(Number(e.target.value))}
-            selectSize="sm"
-          >
-            {availableYears.map(year => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </NativeSelect>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="w-full">
+      <div style={{ width: '100%' }}>
         <Chart
           options={chartOptions}
           series={series}

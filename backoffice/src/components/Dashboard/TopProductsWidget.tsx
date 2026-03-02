@@ -25,52 +25,82 @@ export const TopProductsWidget: React.FC<TopProductsWidgetProps> = ({ products }
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-      <div className="flex items-center justify-between mb-4">
+    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid rgba(226,232,240,0.6)', padding: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <div>
-          <h3 className="text-lg font-bold text-slate-800">{t('topProducts')}</h3>
-          <p className="text-sm text-slate-500 mt-1">{t('bestSellers')}</p>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{t('topProducts')}</h3>
+          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{t('bestSellers')}</p>
         </div>
-        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-          <Package className="w-5 h-5 text-blue-600" />
+        <div style={{
+          width: '2.5rem',
+          height: '2.5rem',
+          borderRadius: '0.75rem',
+          backgroundColor: '#eff6ff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Package style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         {defaultProducts.map((product, index) => (
           <div
             key={index}
-            className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50/50 transition-colors group"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0.75rem',
+              borderRadius: '0.75rem',
+            }}
           >
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+              <div style={{
+                width: '1.75rem',
+                height: '1.75rem',
+                borderRadius: '0.5rem',
+                background: 'linear-gradient(to bottom right, #3b82f6, #2563eb)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+              }}>
                 {index + 1}
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', margin: 0 }}>
                   {product.name}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.125rem' }}>
                   {product.sales} {t('sales').toLowerCase()}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm font-bold text-slate-800">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>
                   {formatCurrency(product.revenue, language)}
                 </p>
-                <div className="flex items-center justify-end gap-1 mt-0.5">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem', marginTop: '0.125rem' }}>
                   <TrendingUp
-                    className={`w-3 h-3 ${
-                      product.trend >= 0 ? 'text-green-600' : 'text-red-600 rotate-180'
-                    }`}
+                    style={{
+                      width: '0.75rem',
+                      height: '0.75rem',
+                      color: product.trend >= 0 ? '#16a34a' : '#dc2626',
+                      transform: product.trend >= 0 ? 'none' : 'rotate(180deg)',
+                    }}
                   />
                   <span
-                    className={`text-xs font-semibold ${
-                      product.trend >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: product.trend >= 0 ? '#16a34a' : '#dc2626',
+                    }}
                   >
                     {product.trend >= 0 ? '+' : ''}{product.trend}%
                   </span>

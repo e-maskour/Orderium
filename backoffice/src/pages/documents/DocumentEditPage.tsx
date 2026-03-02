@@ -15,10 +15,9 @@ import PDFActionButtons from '../../components/PDFActionButtons';
 import { pdfService } from '../../services/pdf.service';
 import { toastSuccess, toastError, toastValidated, toastDevalidated, toastDelivered, toastCancelled, toastDocument, toastLinked, toastConfirm } from '../../services/toast.service';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
-import { Textarea } from '../../components/ui/textarea';
-import { FormField } from '../../components/ui/form-field';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { InputTextarea } from 'primereact/inputtextarea';
 
 interface DocumentEditPageProps {
   documentType: DocumentType;
@@ -71,37 +70,37 @@ export default function DocumentEditPage({
         return {
           icon: CheckCircle,
           label: t('statusPaid'),
-          gradient: 'from-green-50 to-emerald-50',
-          border: 'border-green-200',
-          iconBg: 'bg-green-500',
-          textColor: 'text-green-700'
+          gradient: 'linear-gradient(to right, #f0fdf4, #ecfdf5)',
+          borderColor: '#bbf7d0',
+          iconBgColor: '#22c55e',
+          textColor: '#15803d'
         };
       case 'partial':
         return {
           icon: Clock,
           label: t('statusPartial'),
-          gradient: 'from-blue-50 to-cyan-50',
-          border: 'border-blue-200',
-          iconBg: 'bg-blue-500',
-          textColor: 'text-blue-700'
+          gradient: 'linear-gradient(to right, #eff6ff, #ecfeff)',
+          borderColor: '#bfdbfe',
+          iconBgColor: '#3b82f6',
+          textColor: '#1d4ed8'
         };
       case 'unpaid':
         return {
           icon: AlertCircle,
           label: t('statusUnpaid'),
-          gradient: 'from-red-50 to-rose-50',
-          border: 'border-red-200',
-          iconBg: 'bg-red-500',
-          textColor: 'text-red-700'
+          gradient: 'linear-gradient(to right, #fef2f2, #fff1f2)',
+          borderColor: '#fecaca',
+          iconBgColor: '#ef4444',
+          textColor: '#b91c1c'
         };
       default: // draft
         return {
           icon: FileText,
           label: t('statusDraft'),
-          gradient: 'from-slate-50 to-gray-50',
-          border: 'border-slate-300',
-          iconBg: 'bg-slate-500',
-          textColor: 'text-slate-700'
+          gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
+          borderColor: '#cbd5e1',
+          iconBgColor: '#64748b',
+          textColor: '#334155'
         };
     }
   };
@@ -113,55 +112,55 @@ export default function DocumentEditPage({
         return {
           icon: FileText,
           label: t('statusOpen'),
-          gradient: 'from-blue-50 to-sky-50',
-          border: 'border-blue-200',
-          iconBg: 'bg-blue-500',
-          textColor: 'text-blue-700'
+          gradient: 'linear-gradient(to right, #eff6ff, #f0f9ff)',
+          borderColor: '#bfdbfe',
+          iconBgColor: '#3b82f6',
+          textColor: '#1d4ed8'
         };
       case 'signed':
         return {
           icon: CheckCircle,
           label: t('statusSigned'),
-          gradient: 'from-green-50 to-emerald-50',
-          border: 'border-green-200',
-          iconBg: 'bg-green-500',
-          textColor: 'text-green-700'
+          gradient: 'linear-gradient(to right, #f0fdf4, #ecfdf5)',
+          borderColor: '#bbf7d0',
+          iconBgColor: '#22c55e',
+          textColor: '#15803d'
         };
       case 'closed':
         return {
           icon: XCircle,
           label: t('statusClosed'),
-          gradient: 'from-red-50 to-rose-50',
-          border: 'border-red-200',
-          iconBg: 'bg-red-500',
-          textColor: 'text-red-700'
+          gradient: 'linear-gradient(to right, #fef2f2, #fff1f2)',
+          borderColor: '#fecaca',
+          iconBgColor: '#ef4444',
+          textColor: '#b91c1c'
         };
       case 'delivered':
         return {
           icon: Truck,
           label: t('statusDelivered'),
-          gradient: 'from-orange-50 to-amber-50',
-          border: 'border-orange-200',
-          iconBg: 'bg-orange-500',
-          textColor: 'text-orange-700'
+          gradient: 'linear-gradient(to right, #fff7ed, #fffbeb)',
+          borderColor: '#fed7aa',
+          iconBgColor: '#f97316',
+          textColor: '#c2410c'
         };
       case 'invoiced':
         return {
           icon: DollarSign,
           label: t('statusInvoiced'),
-          gradient: 'from-purple-50 to-violet-50',
-          border: 'border-purple-200',
-          iconBg: 'bg-purple-500',
-          textColor: 'text-purple-700'
+          gradient: 'linear-gradient(to right, #faf5ff, #f5f3ff)',
+          borderColor: '#e9d5ff',
+          iconBgColor: '#a855f7',
+          textColor: '#7e22ce'
         };
       default: // draft
         return {
           icon: FileText,
           label: t('statusDraft'),
-          gradient: 'from-slate-50 to-gray-50',
-          border: 'border-slate-300',
-          iconBg: 'bg-slate-500',
-          textColor: 'text-slate-700'
+          gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
+          borderColor: '#cbd5e1',
+          iconBgColor: '#64748b',
+          textColor: '#334155'
         };
     }
   };
@@ -173,55 +172,55 @@ export default function DocumentEditPage({
         return {
           icon: CheckCircle,
           label: t('statusValidated'),
-          gradient: 'from-sky-50 to-blue-50',
-          border: 'border-sky-200',
-          iconBg: 'bg-sky-500',
-          textColor: 'text-sky-700'
+          gradient: 'linear-gradient(to right, #f0f9ff, #eff6ff)',
+          borderColor: '#bae6fd',
+          iconBgColor: '#0ea5e9',
+          textColor: '#0369a1'
         };
       case 'in_progress':
         return {
           icon: Truck,
           label: t('statusInProgress'),
-          gradient: 'from-cyan-50 to-teal-50',
-          border: 'border-cyan-200',
-          iconBg: 'bg-cyan-500',
-          textColor: 'text-cyan-700'
+          gradient: 'linear-gradient(to right, #ecfeff, #f0fdfa)',
+          borderColor: '#a5f3fc',
+          iconBgColor: '#06b6d4',
+          textColor: '#0e7490'
         };
       case 'delivered':
         return {
           icon: Truck,
           label: t('statusDeliveredBon'),
-          gradient: 'from-teal-50 to-emerald-50',
-          border: 'border-teal-200',
-          iconBg: 'bg-teal-500',
-          textColor: 'text-teal-700'
+          gradient: 'linear-gradient(to right, #f0fdfa, #ecfdf5)',
+          borderColor: '#99f6e4',
+          iconBgColor: '#14b8a6',
+          textColor: '#0f766e'
         };
       case 'cancelled':
         return {
           icon: XCircle,
           label: t('statusCancelled'),
-          gradient: 'from-rose-50 to-red-50',
-          border: 'border-rose-200',
-          iconBg: 'bg-rose-500',
-          textColor: 'text-rose-700'
+          gradient: 'linear-gradient(to right, #fff1f2, #fef2f2)',
+          borderColor: '#fecdd3',
+          iconBgColor: '#f43f5e',
+          textColor: '#be123c'
         };
       case 'invoiced':
         return {
           icon: DollarSign,
           label: t('statusInvoicedBon'),
-          gradient: 'from-purple-50 to-violet-50',
-          border: 'border-purple-200',
-          iconBg: 'bg-purple-500',
-          textColor: 'text-purple-700'
+          gradient: 'linear-gradient(to right, #faf5ff, #f5f3ff)',
+          borderColor: '#e9d5ff',
+          iconBgColor: '#a855f7',
+          textColor: '#7e22ce'
         };
       default: // draft
         return {
           icon: FileText,
           label: t('statusDraft'),
-          gradient: 'from-slate-50 to-gray-50',
-          border: 'border-slate-300',
-          iconBg: 'bg-slate-500',
-          textColor: 'text-slate-700'
+          gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
+          borderColor: '#cbd5e1',
+          iconBgColor: '#64748b',
+          textColor: '#334155'
         };
     }
   };
@@ -825,9 +824,9 @@ export default function DocumentEditPage({
   if (loading) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-slate-500">{t('loading')}</div>
+        <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
+            <div style={{ color: '#64748b' }}>{t('loading')}</div>
           </div>
         </div>
       </AdminLayout>
@@ -836,41 +835,41 @@ export default function DocumentEditPage({
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
+      <div style={{ maxWidth: '80rem', margin: '0 auto', paddingBottom: '6rem' }}>
         {/* Simplified Header with Back Button */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-start sm:items-center gap-2 sm:gap-3">
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
               onClick={() => navigate(listRoute)}
-              className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0"
+              style={{ padding: '0.5rem', borderRadius: '0.5rem', flexShrink: 0, cursor: 'pointer', border: 'none', background: 'transparent' }}
             >
-              <ArrowLeft className="w-4 sm:w-5 h-4 sm:h-5 text-slate-600" />
+              <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
             </button>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {config.titleShort} {invoiceNumber}
                   </h1>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{t('editDocument')} {config.titleShort.toLowerCase()}</p>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.125rem' }}>{t('editDocument')} {config.titleShort.toLowerCase()}</p>
                 </div>
                 {/* Status badges - positioned to the right */}
-                <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-end w-full sm:w-auto">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   {/* Validation status badge */}
                   {config.features.hasValidation && (
                     isValidated ? (
-                      <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 shadow-sm whitespace-nowrap">
-                        <div className="flex items-center justify-center w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-emerald-500 shadow-sm flex-shrink-0">
-                          <CheckCircle className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 text-white" strokeWidth={2.5} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(to right, #ecfdf5, #f0fdfa)', border: '1px solid #a7f3d0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: '#10b981', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
+                          <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                         </div>
-                        <span className="font-semibold text-xs sm:text-sm text-emerald-700">{t('validated')}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#047857' }}>{t('validated')}</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 shadow-sm whitespace-nowrap">
-                        <div className="flex items-center justify-center w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-amber-500 shadow-sm flex-shrink-0">
-                          <XCircle className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 text-white" strokeWidth={2.5} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(to right, #fffbeb, #fff7ed)', border: '1px solid #fcd34d', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: '#f59e0b', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
+                          <XCircle style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                         </div>
-                        <span className="font-semibold text-xs sm:text-sm text-amber-700">{t('notValidated')}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#b45309' }}>{t('notValidated')}</span>
                       </div>
                     )
                   )}
@@ -880,11 +879,11 @@ export default function DocumentEditPage({
                     const statusConfig = getPaymentStatusBadge(status);
                     const StatusIcon = statusConfig.icon;
                     return (
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${statusConfig.gradient} border ${statusConfig.border} shadow-sm`}>
-                        <div className={`flex items-center justify-center w-5 h-5 rounded-full ${statusConfig.iconBg} shadow-sm`}>
-                          <StatusIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                          <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                         </div>
-                        <span className={`font-semibold text-sm ${statusConfig.textColor}`}>{statusConfig.label}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
                       </div>
                     );
                   })()}
@@ -893,11 +892,11 @@ export default function DocumentEditPage({
                     const statusConfig = getDevisStatusBadge(status);
                     const StatusIcon = statusConfig.icon;
                     return (
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${statusConfig.gradient} border ${statusConfig.border} shadow-sm`}>
-                        <div className={`flex items-center justify-center w-5 h-5 rounded-full ${statusConfig.iconBg} shadow-sm`}>
-                          <StatusIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                          <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                         </div>
-                        <span className={`font-semibold text-sm ${statusConfig.textColor}`}>{statusConfig.label}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
                       </div>
                     );
                   })()}
@@ -906,11 +905,11 @@ export default function DocumentEditPage({
                     const statusConfig = getBonStatusBadge(status);
                     const StatusIcon = statusConfig.icon;
                     return (
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${statusConfig.gradient} border ${statusConfig.border} shadow-sm`}>
-                        <div className={`flex items-center justify-center w-5 h-5 rounded-full ${statusConfig.iconBg} shadow-sm`}>
-                          <StatusIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                          <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                         </div>
-                        <span className={`font-semibold text-sm ${statusConfig.textColor}`}>{statusConfig.label}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
                       </div>
                     );
                   })()}
@@ -922,35 +921,35 @@ export default function DocumentEditPage({
 
         {/* Payment Summary Section - Only for validated invoices */}
         {documentType === 'facture' && isValidated && status !== 'draft' && (
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg sm:rounded-lg shadow-sm border border-blue-200 p-3 sm:p-4 mb-4 sm:mb-6">
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <div className="flex items-center justify-center w-5 sm:w-6 h-5 sm:h-6 rounded-full bg-blue-500 shadow-sm flex-shrink-0">
-                <Receipt className="w-3 sm:w-4 h-3 sm:h-4 text-white" />
+          <div style={{ background: 'linear-gradient(to bottom right, #eff6ff, #eef2ff)', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', border: '1px solid #bfdbfe', padding: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.5rem', height: '1.5rem', borderRadius: '9999px', backgroundColor: '#3b82f6', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
+                <Receipt style={{ width: '1rem', height: '1rem', color: '#ffffff' }} />
               </div>
-              <h3 className="text-xs sm:text-sm font-bold text-blue-900">{t('paymentDetails')}</h3>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e3a5f' }}>{t('paymentDetails')}</h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
               {/* Total Amount */}
-              <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-blue-100 shadow-sm">
-                <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('totalAmount')}</p>
-                <p className="text-base sm:text-xl font-bold text-slate-900 truncate">
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', padding: '0.75rem', border: '1px solid #dbeafe', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569', marginBottom: '0.25rem' }}>{t('totalAmount')}</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {items.reduce((sum, item) => sum + (item.total || 0), 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                 </p>
               </div>
 
               {/* Paid Amount */}
-              <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-green-100 shadow-sm">
-                <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('paidAmount')}</p>
-                <p className="text-base sm:text-xl font-bold text-green-600 truncate">
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', padding: '0.75rem', border: '1px solid #dcfce7', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569', marginBottom: '0.25rem' }}>{t('paidAmount')}</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#16a34a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                 </p>
               </div>
 
               {/* Remaining Amount */}
-              <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-orange-100 shadow-sm">
-                <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('remainingAmount')}</p>
-                <p className="text-base sm:text-xl font-bold text-orange-600 truncate">
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', padding: '0.75rem', border: '1px solid #ffedd5', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569', marginBottom: '0.25rem' }}>{t('remainingAmount')}</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ea580c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
                 </p>
               </div>
@@ -958,9 +957,9 @@ export default function DocumentEditPage({
           </div>
         )}
 
-        <div className="bg-white rounded-lg sm:rounded-lg shadow-sm border border-slate-200 p-3 sm:p-6">
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
           {/* Two column layout: Partner on left, Document info on right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
             {/* Partner section - Left */}
             <div>
               <DocumentPartnerBox
@@ -985,53 +984,53 @@ export default function DocumentEditPage({
             </div>
 
             {/* Document information - Right */}
-            <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4">
-              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 sm:mb-3">
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>
                 {t('documentInformation')}
               </h3>
 
-              <div className="space-y-2 sm:space-y-3">
-                <FormField label={documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}>
-                  <Input
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}</label>
+                  <InputText
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                    inputSize="sm"
-                    fullWidth
+                    style={{ width: '100%' }}
                   />
-                </FormField>
+                </div>
 
                 {config.features.expirationDate && (
-                  <FormField label={t('expirationDate')}>
-                    <Input
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('expirationDate')}</label>
+                    <InputText
                       type="date"
                       value={expirationDate}
                       onChange={(e) => setExpirationDate(e.target.value)}
                       disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                      inputSize="sm"
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
-                  </FormField>
+                  </div>
                 )}
 
                 {/* Due Date - Show for all document types */}
-                <FormField label={t('dueDate')}>
-                  <Input
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('dueDate')}</label>
+                  <InputText
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                     disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                    inputSize="sm"
-                    fullWidth
+                    style={{ width: '100%' }}
                   />
-                </FormField>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Items table */}
-          <div className="mt-2">
+          <div style={{ marginTop: '0.5rem' }}>
             <DocumentItemsTable
               items={items}
               direction={direction}
@@ -1045,38 +1044,39 @@ export default function DocumentEditPage({
           </div>
 
           {/* Notes */}
-          <div className="mt-2">
-            <FormField label={t('notes')}>
-              <Textarea
+          <div style={{ marginTop: '0.5rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('notes')}</label>
+              <InputTextarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder={t('additionalNotes')}
                 disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                className="w-full"
+                style={{ width: '100%' }}
               />
-            </FormField>
+            </div>
           </div>
 
           {/* Signature Details and Totals section */}
-          <div className="mt-8">
+          <div style={{ marginTop: '2rem' }}>
             {documentType === 'devis' ? (
-              <div className="flex flex-col md:flex-row gap-6">
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '1.5rem' }}>
                 {/* Signature Details - Left Side */}
-                <div className="flex-1">
+                <div style={{ flex: 1 }}>
                   {status === 'signed' && signedBy && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                        <h4 className="font-bold text-green-900">{t('signature')}</h4>
+                    <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.5rem', padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                        <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: '#16a34a' }} />
+                        <h4 style={{ fontWeight: 700, color: '#14532d' }}>{t('signature')}</h4>
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-green-800">
-                          <span className="font-medium">{t('signedBy')}</span> {signedBy}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: '#166534' }}>
+                          <span style={{ fontWeight: 500 }}>{t('signedBy')}</span> {signedBy}
                         </p>
                         {signedDate && (
-                          <p className="text-sm text-green-700">
-                            <span className="font-medium">{t('dateLabel')}</span>{' '}
+                          <p style={{ fontSize: '0.875rem', color: '#15803d' }}>
+                            <span style={{ fontWeight: 500 }}>{t('dateLabel')}</span>{' '}
                             {new Date(signedDate).toLocaleDateString('fr-FR', {
                               day: 'numeric',
                               month: 'long',
@@ -1087,9 +1087,9 @@ export default function DocumentEditPage({
                           </p>
                         )}
                         {clientNotes && (
-                          <div className="mt-3 pt-3 border-t border-green-200">
-                            <p className="text-xs text-green-700 font-medium mb-1">{t('comment')}</p>
-                            <p className="text-sm text-slate-700">{clientNotes}</p>
+                          <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #bbf7d0' }}>
+                            <p style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 500, marginBottom: '0.25rem' }}>{t('comment')}</p>
+                            <p style={{ fontSize: '0.875rem', color: '#334155' }}>{clientNotes}</p>
                           </div>
                         )}
                       </div>
@@ -1097,7 +1097,7 @@ export default function DocumentEditPage({
                   )}
                 </div>
                 {/* Totals - Right Side */}
-                <div className="w-full md:w-96">
+                <div style={{ width: '24rem' }}>
                   <DocumentTotalsSection items={items} />
                 </div>
               </div>
@@ -1108,40 +1108,40 @@ export default function DocumentEditPage({
         </div>
 
         {/* Sticky Bottom Action Bar */}
-        <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 shadow-lg z-40">
-          <div className="max-w-7xl mx-auto px-6 py-3">
-            <div className="flex items-center justify-between">
+        <div style={{ position: 'fixed', bottom: 0, left: '16rem', right: 0, backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', boxShadow: '0 -4px 6px -1px rgb(0 0 0 / 0.1)', zIndex: 40 }}>
+          <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               {/* Left side - Payment History button for invoices */}
               <div>
                 {documentType === 'facture' && isValidated && status !== 'draft' && (
                   <button
                     onClick={() => setShowPaymentHistory(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all shadow-sm"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#ffffff', borderRadius: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
                   >
-                    <History className="w-4 h-4" />
+                    <History style={{ width: '1rem', height: '1rem' }} />
                     <span>{t('paymentHistory')}</span>
                   </button>
                 )}
               </div>
 
               {/* Right side - Action buttons */}
-              <div className="flex items-center gap-3">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 {/* Validation actions */}
                 {config.features.hasValidation && (
                   isValidated ? (
                     <button
                       onClick={() => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') })}
-                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2 font-medium"
+                      style={{ padding: '0.5rem 1rem', backgroundColor: '#f1f5f9', color: '#334155', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}
                     >
-                      <XCircle className="w-4 h-4" />
+                      <XCircle style={{ width: '1rem', height: '1rem' }} />
                       {t('devalidateDocument')}
                     </button>
                   ) : (
                     <button
                       onClick={() => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') })}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                      style={{ padding: '0.5rem 1rem', backgroundColor: '#16a34a', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
                     >
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle style={{ width: '1rem', height: '1rem' }} />
                       {t('validateDocument')}
                     </button>
                   )
@@ -1152,16 +1152,16 @@ export default function DocumentEditPage({
                   <>
                     <button
                       onClick={() => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') })}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                      style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
                     >
-                      <Truck className="w-4 h-4" />
+                      <Truck style={{ width: '1rem', height: '1rem' }} />
                       {t('markAsDelivered')}
                     </button>
                     <button
                       onClick={() => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') })}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                      style={{ padding: '0.5rem 1rem', backgroundColor: '#dc2626', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
                     >
-                      <Ban className="w-4 h-4" />
+                      <Ban style={{ width: '1rem', height: '1rem' }} />
                       {t('cancel')}
                     </button>
                   </>
@@ -1169,26 +1169,26 @@ export default function DocumentEditPage({
 
                 {/* Actions menu for bon_livraison */}
                 {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
-                  <div className="relative" ref={actionsMenuRef}>
+                  <div style={{ position: 'relative' }} ref={actionsMenuRef}>
                     <button
                       onClick={() => setShowActionsMenu(!showActionsMenu)}
-                      className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                      style={{ padding: '0.5rem 1rem', backgroundColor: '#d97706', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
                     >
                       {t('actions')}
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown style={{ width: '1rem', height: '1rem' }} />
                     </button>
                     {showActionsMenu && (
-                      <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
+                      <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
                         {/* Create Invoice from Bon */}
                         <button
                           onClick={() => {
                             setShowActionsMenu(false);
                             toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-lg"
+                          style={{ width: '100%', padding: '0.75rem 1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
                         >
-                          <FileText className="w-4 h-4 text-amber-600" />
-                          <span className="text-sm font-medium text-slate-700">{t('convertToInvoice')}</span>
+                          <FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{t('convertToInvoice')}</span>
                         </button>
                       </div>
                     )}
@@ -1201,17 +1201,17 @@ export default function DocumentEditPage({
                     <button
                       onClick={() => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') })}
                       disabled={status === 'signed'}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ padding: '0.5rem 1rem', backgroundColor: '#16a34a', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', opacity: status === 'signed' ? 0.5 : 1 }}
                     >
-                      <PenTool className="w-4 h-4" />
+                      <PenTool style={{ width: '1rem', height: '1rem' }} />
                       {t('signQuote')}
                     </button>
                     <button
                       onClick={() => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') })}
                       disabled={status !== 'signed'}
-                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ padding: '0.5rem 1rem', backgroundColor: '#ea580c', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', opacity: status !== 'signed' ? 0.5 : 1 }}
                     >
-                      <XCircle className="w-4 h-4" />
+                      <XCircle style={{ width: '1rem', height: '1rem' }} />
                       {t('rejectQuote')}
                     </button>
                   </>
@@ -1219,16 +1219,16 @@ export default function DocumentEditPage({
 
                 {/* Actions menu for devis */}
                 {documentType === 'devis' && status === 'signed' && (
-                  <div className="relative" ref={actionsMenuRef}>
+                  <div style={{ position: 'relative' }} ref={actionsMenuRef}>
                     <button
                       onClick={() => setShowActionsMenu(!showActionsMenu)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                      style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
                     >
                       {t('actions')}
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown style={{ width: '1rem', height: '1rem' }} />
                     </button>
                     {showActionsMenu && (
-                      <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50 divide-y divide-slate-100">
+                      <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
                         {/* Share Quote */}
                         {isValidated && (
                           <button
@@ -1236,10 +1236,10 @@ export default function DocumentEditPage({
                               setShowActionsMenu(false);
                               setShowShareDialog(true);
                             }}
-                            className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-t-lg"
+                            style={{ width: '100%', padding: '0.75rem 1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', borderTopLeftRadius: '0.5rem', borderTopRightRadius: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
                           >
-                            <Share2 className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-medium text-slate-700">{t('shareWithClient')}</span>
+                            <Share2 style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />
+                            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{t('shareWithClient')}</span>
                           </button>
                         )}
 
@@ -1249,10 +1249,10 @@ export default function DocumentEditPage({
                             setShowActionsMenu(false);
                             toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3"
+                          style={{ width: '100%', padding: '0.75rem 1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', background: 'transparent', cursor: 'pointer', borderTop: '1px solid #f1f5f9' }}
                         >
-                          <FileText className="w-4 h-4 text-amber-600" />
-                          <span className="text-sm font-medium text-slate-700">{t('createAnInvoice')}</span>
+                          <FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{t('createAnInvoice')}</span>
                         </button>
 
                         {/* Create Bon de Livraison */}
@@ -1261,10 +1261,10 @@ export default function DocumentEditPage({
                             setShowActionsMenu(false);
                             toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') });
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-b-lg"
+                          style={{ width: '100%', padding: '0.75rem 1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer', borderTop: '1px solid #f1f5f9' }}
                         >
-                          <Truck className="w-4 h-4 text-emerald-600" />
-                          <span className="text-sm font-medium text-slate-700">{t('createDeliveryNote')}</span>
+                          <Truck style={{ width: '1rem', height: '1rem', color: '#059669' }} />
+                          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{t('createDeliveryNote')}</span>
                         </button>
                       </div>
                     )}
@@ -1284,11 +1284,9 @@ export default function DocumentEditPage({
                   onClick={handleSave}
                   disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
                   loading={saving}
-                  loadingText={t('saving')}
-                  leadingIcon={Save}
-                >
-                  {t('save')}
-                </Button>
+                  icon={<Save style={{ width: '1rem', height: '1rem' }} />}
+                  label={t('save')}
+                />
               </div>
             </div>
           </div>

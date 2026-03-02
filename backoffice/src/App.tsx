@@ -1,6 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PrimeReactProvider } from 'primereact/api';
+import { orderiumPrimeConfig } from '@orderium/ui';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { OverlayPanelProvider } from './context/OverlayPanelContext';
@@ -11,10 +13,6 @@ import { Toaster } from 'sileo';
 import 'sileo/styles.css';
 import { AIAssistantOverlay, AIAssistantButton } from './components/AIAssistant';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Orders from './pages/Orders';
-import Products from './pages/Products';
-import POS from './pages/POS';
 
 // Lazy-loaded pages for code splitting
 const DeliveryPersons = lazy(() => import('./pages/DeliveryPersons'));
@@ -47,6 +45,10 @@ const Warehouses = lazy(() => import('./pages/Warehouses'));
 const StockMovements = lazy(() => import('./pages/StockMovements'));
 const InventoryAdjustments = lazy(() => import('./pages/InventoryAdjustments'));
 const Notifications = lazy(() => import('./pages/Notifications'));
+const POS = lazy(() => import('./pages/POS'));
+const Products = lazy(() => import('./pages/Products'));
+const Orders = lazy(() => import('./pages/Orders'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 
 // Document pages
 const FactureVenteList = lazy(() => import('./pages/documents/FactureVenteList'));
@@ -88,447 +90,449 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AuthProvider>
-          <PushNotificationProvider />
-          <OverlayPanelProvider>
-            <BrowserRouter
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-              }}
-            >
-              <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" /></div>}>
-                <Routes>
-                  {/* Public Routes - No Authentication Required */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/preview/quote/:token" element={<QuotePreviewPage />} />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/delivery-persons"
-                    element={
-                      <ProtectedRoute>
-                        <DeliveryPersons />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/orders"
-                    element={
-                      <ProtectedRoute>
-                        <Orders />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/pos"
-                    element={
-                      <ProtectedRoute>
-                        <POS />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/checkout"
-                    element={
-                      <ProtectedRoute>
-                        <CheckoutPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/checkout/success"
-                    element={
-                      <ProtectedRoute>
-                        <OrderSuccessPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/products"
-                    element={
-                      <ProtectedRoute>
-                        <Products />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/products/create"
-                    element={
-                      <ProtectedRoute>
-                        <ProductCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/products/:id"
-                    element={
-                      <ProtectedRoute>
-                        <ProductDetail />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories"
-                    element={
-                      <ProtectedRoute>
-                        <Categories />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customers"
-                    element={
-                      <ProtectedRoute>
-                        <Customers />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customers/create"
-                    element={
-                      <ProtectedRoute>
-                        <CustomerCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customers/edit/:id"
-                    element={
-                      <ProtectedRoute>
-                        <CustomerEdit />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customers/:id"
-                    element={
-                      <ProtectedRoute>
-                        <CustomerDetail />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/fournisseurs"
-                    element={
-                      <ProtectedRoute>
-                        <Fournisseurs />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/fournisseurs/create"
-                    element={
-                      <ProtectedRoute>
-                        <FournisseurCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/fournisseurs/edit/:id"
-                    element={
-                      <ProtectedRoute>
-                        <FournisseurEdit />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/fournisseurs/:id"
-                    element={
-                      <ProtectedRoute>
-                        <FournisseurDetail />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* Devis - New Unified System */}
-                  <Route
-                    path="/devis"
-                    element={
-                      <ProtectedRoute>
-                        <DevisVenteList />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/devis/create"
-                    element={
-                      <ProtectedRoute>
-                        <DevisVenteCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/devis/:id"
-                    element={
-                      <ProtectedRoute>
-                        <DevisVenteEdit />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* Bons de Livraison - New Unified System */}
-                  <Route
-                    path="/bons-livraison"
-                    element={
-                      <ProtectedRoute>
-                        <BonLivraisonList />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/bons-livraison/create"
-                    element={
-                      <ProtectedRoute>
-                        <BonLivraisonCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/bons-livraison/:id"
-                    element={
-                      <ProtectedRoute>
-                        <BonLivraisonEdit />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* Legacy route redirect */}
-                  <Route path="/bon-livraison" element={<Navigate to="/bons-livraison" replace />} />
+    <PrimeReactProvider value={orderiumPrimeConfig}>
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <AuthProvider>
+            <PushNotificationProvider />
+            <OverlayPanelProvider>
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
+                <Suspense fallback={<div className="flex align-items-center justify-content-center" style={{ height: '100vh' }}><i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem', color: 'var(--primary-color)' }} /></div>}>
+                  <Routes>
+                    {/* Public Routes - No Authentication Required */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/preview/quote/:token" element={<QuotePreviewPage />} />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/delivery-persons"
+                      element={
+                        <ProtectedRoute>
+                          <DeliveryPersons />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/orders"
+                      element={
+                        <ProtectedRoute>
+                          <Orders />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/pos"
+                      element={
+                        <ProtectedRoute>
+                          <POS />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/checkout"
+                      element={
+                        <ProtectedRoute>
+                          <CheckoutPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/checkout/success"
+                      element={
+                        <ProtectedRoute>
+                          <OrderSuccessPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/products"
+                      element={
+                        <ProtectedRoute>
+                          <Products />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/products/create"
+                      element={
+                        <ProtectedRoute>
+                          <ProductCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/products/:id"
+                      element={
+                        <ProtectedRoute>
+                          <ProductDetail />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/categories"
+                      element={
+                        <ProtectedRoute>
+                          <Categories />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/customers"
+                      element={
+                        <ProtectedRoute>
+                          <Customers />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/customers/create"
+                      element={
+                        <ProtectedRoute>
+                          <CustomerCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/customers/edit/:id"
+                      element={
+                        <ProtectedRoute>
+                          <CustomerEdit />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/customers/:id"
+                      element={
+                        <ProtectedRoute>
+                          <CustomerDetail />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/fournisseurs"
+                      element={
+                        <ProtectedRoute>
+                          <Fournisseurs />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/fournisseurs/create"
+                      element={
+                        <ProtectedRoute>
+                          <FournisseurCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/fournisseurs/edit/:id"
+                      element={
+                        <ProtectedRoute>
+                          <FournisseurEdit />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/fournisseurs/:id"
+                      element={
+                        <ProtectedRoute>
+                          <FournisseurDetail />
+                        </ProtectedRoute>
+                      }
+                    />
+                    {/* Devis - New Unified System */}
+                    <Route
+                      path="/devis"
+                      element={
+                        <ProtectedRoute>
+                          <DevisVenteList />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/devis/create"
+                      element={
+                        <ProtectedRoute>
+                          <DevisVenteCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/devis/:id"
+                      element={
+                        <ProtectedRoute>
+                          <DevisVenteEdit />
+                        </ProtectedRoute>
+                      }
+                    />
+                    {/* Bons de Livraison - New Unified System */}
+                    <Route
+                      path="/bons-livraison"
+                      element={
+                        <ProtectedRoute>
+                          <BonLivraisonList />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/bons-livraison/create"
+                      element={
+                        <ProtectedRoute>
+                          <BonLivraisonCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/bons-livraison/:id"
+                      element={
+                        <ProtectedRoute>
+                          <BonLivraisonEdit />
+                        </ProtectedRoute>
+                      }
+                    />
+                    {/* Legacy route redirect */}
+                    <Route path="/bon-livraison" element={<Navigate to="/bons-livraison" replace />} />
 
-                  {/* Factures de Vente - New Unified System */}
-                  <Route
-                    path="/factures/vente"
-                    element={
-                      <ProtectedRoute>
-                        <FactureVenteList />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/factures/vente/create"
-                    element={
-                      <ProtectedRoute>
-                        <FactureVenteCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/factures/vente/:id"
-                    element={
-                      <ProtectedRoute>
-                        <FactureVenteEdit />
-                      </ProtectedRoute>
-                    }
-                  />
+                    {/* Factures de Vente - New Unified System */}
+                    <Route
+                      path="/factures/vente"
+                      element={
+                        <ProtectedRoute>
+                          <FactureVenteList />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/factures/vente/create"
+                      element={
+                        <ProtectedRoute>
+                          <FactureVenteCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/factures/vente/:id"
+                      element={
+                        <ProtectedRoute>
+                          <FactureVenteEdit />
+                        </ProtectedRoute>
+                      }
+                    />
 
-                  <Route
-                    path="/paiements-vente"
-                    element={
-                      <ProtectedRoute>
-                        <PaiementsVente />
-                      </ProtectedRoute>
-                    }
-                  />
+                    <Route
+                      path="/paiements-vente"
+                      element={
+                        <ProtectedRoute>
+                          <PaiementsVente />
+                        </ProtectedRoute>
+                      }
+                    />
 
-                  {/* Factures d'Achat - New Unified System */}
-                  <Route
-                    path="/factures/achat"
-                    element={
-                      <ProtectedRoute>
-                        <FactureAchatList />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/factures/achat/create"
-                    element={
-                      <ProtectedRoute>
-                        <FactureAchatCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/factures/achat/:id"
-                    element={
-                      <ProtectedRoute>
-                        <FactureAchatEdit />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/paiements-achat"
-                    element={
-                      <ProtectedRoute>
-                        <PaiementsAchat />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/demande-prix"
-                    element={
-                      <ProtectedRoute>
-                        <DemandePrix />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/demande-prix/create"
-                    element={
-                      <ProtectedRoute>
-                        <DemandeAchatCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/demande-prix/:id"
-                    element={
-                      <ProtectedRoute>
-                        <DemandeAchatEdit />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/bon-achat"
-                    element={
-                      <ProtectedRoute>
-                        <BonAchat />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/bon-achat/create"
-                    element={
-                      <ProtectedRoute>
-                        <BonAchatCreate />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/bon-achat/:id"
-                    element={
-                      <ProtectedRoute>
-                        <BonAchatEdit />
-                      </ProtectedRoute>
-                    }
-                  />
+                    {/* Factures d'Achat - New Unified System */}
+                    <Route
+                      path="/factures/achat"
+                      element={
+                        <ProtectedRoute>
+                          <FactureAchatList />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/factures/achat/create"
+                      element={
+                        <ProtectedRoute>
+                          <FactureAchatCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/factures/achat/:id"
+                      element={
+                        <ProtectedRoute>
+                          <FactureAchatEdit />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/paiements-achat"
+                      element={
+                        <ProtectedRoute>
+                          <PaiementsAchat />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/demande-prix"
+                      element={
+                        <ProtectedRoute>
+                          <DemandePrix />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/demande-prix/create"
+                      element={
+                        <ProtectedRoute>
+                          <DemandeAchatCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/demande-prix/:id"
+                      element={
+                        <ProtectedRoute>
+                          <DemandeAchatEdit />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/bon-achat"
+                      element={
+                        <ProtectedRoute>
+                          <BonAchat />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/bon-achat/create"
+                      element={
+                        <ProtectedRoute>
+                          <BonAchatCreate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/bon-achat/:id"
+                      element={
+                        <ProtectedRoute>
+                          <BonAchatEdit />
+                        </ProtectedRoute>
+                      }
+                    />
 
-                  <Route
-                    path="/configurations"
-                    element={
-                      <ProtectedRoute>
-                        <Configurations />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/configurations/taxes"
-                    element={
-                      <ProtectedRoute>
-                        <Taxes />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/configurations/currencies"
-                    element={
-                      <ProtectedRoute>
-                        <Currencies />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/configurations/payment-terms"
-                    element={
-                      <ProtectedRoute>
-                        <PaymentTerms />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/configurations/sequences"
-                    element={
-                      <ProtectedRoute>
-                        <Sequences />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/configurations/uom"
-                    element={
-                      <ProtectedRoute>
-                        <UnitsOfMeasure />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/configurations/company"
-                    element={
-                      <ProtectedRoute>
-                        <CompanySettings />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/warehouses"
-                    element={
-                      <ProtectedRoute>
-                        <Warehouses />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/stock-movements"
-                    element={
-                      <ProtectedRoute>
-                        <StockMovements />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/inventory-adjustments"
-                    element={
-                      <ProtectedRoute>
-                        <InventoryAdjustments />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/notifications"
-                    element={
-                      <ProtectedRoute>
-                        <Notifications />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-              </Suspense>
-              <Toaster position="top-center" theme="light" />
-              <GlobalOverlayPanel />
+                    <Route
+                      path="/configurations"
+                      element={
+                        <ProtectedRoute>
+                          <Configurations />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/configurations/taxes"
+                      element={
+                        <ProtectedRoute>
+                          <Taxes />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/configurations/currencies"
+                      element={
+                        <ProtectedRoute>
+                          <Currencies />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/configurations/payment-terms"
+                      element={
+                        <ProtectedRoute>
+                          <PaymentTerms />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/configurations/sequences"
+                      element={
+                        <ProtectedRoute>
+                          <Sequences />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/configurations/uom"
+                      element={
+                        <ProtectedRoute>
+                          <UnitsOfMeasure />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/configurations/company"
+                      element={
+                        <ProtectedRoute>
+                          <CompanySettings />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/warehouses"
+                      element={
+                        <ProtectedRoute>
+                          <Warehouses />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/stock-movements"
+                      element={
+                        <ProtectedRoute>
+                          <StockMovements />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/inventory-adjustments"
+                      element={
+                        <ProtectedRoute>
+                          <InventoryAdjustments />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/notifications"
+                      element={
+                        <ProtectedRoute>
+                          <Notifications />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </Suspense>
+                <Toaster position="top-center" theme="light" />
+                <GlobalOverlayPanel />
 
-              {/* AI Assistant - Available on all pages */}
-              {ENABLE_CHAT_AI_AGENT && (
-                <>
-                  {!isAIAssistantOpen && (
-                    <AIAssistantButton onClick={() => setIsAIAssistantOpen(true)} />
-                  )}
-                  <AIAssistantOverlay
-                    isOpen={isAIAssistantOpen}
-                    onClose={() => setIsAIAssistantOpen(false)}
-                  />
-                </>
-              )}
-            </BrowserRouter>
-          </OverlayPanelProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </QueryClientProvider>
+                {/* AI Assistant - Available on all pages */}
+                {ENABLE_CHAT_AI_AGENT && (
+                  <>
+                    {!isAIAssistantOpen && (
+                      <AIAssistantButton onClick={() => setIsAIAssistantOpen(true)} />
+                    )}
+                    <AIAssistantOverlay
+                      isOpen={isAIAssistantOpen}
+                      onClose={() => setIsAIAssistantOpen(false)}
+                    />
+                  </>
+                )}
+              </BrowserRouter>
+            </OverlayPanelProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </QueryClientProvider>
+    </PrimeReactProvider>
   );
 }
 

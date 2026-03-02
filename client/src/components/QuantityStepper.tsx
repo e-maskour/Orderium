@@ -1,6 +1,5 @@
-import { Button } from '@/components/ui/button';
+import { Button } from 'primereact/button';
 import { Plus, Minus, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface QuantityStepperProps {
   quantity: number;
@@ -19,56 +18,47 @@ export const QuantityStepper = ({
   size = 'md',
   showRemove = false,
 }: QuantityStepperProps) => {
-  const sizeClasses = {
-    sm: 'h-8',
-    md: 'h-10',
-    lg: 'h-12',
-  };
-
-  const buttonSizes = {
-    sm: 'iconSm' as const,
-    md: 'icon' as const,
-    lg: 'iconLg' as const,
-  };
+  const sizeMap = { sm: 'small' as const, md: undefined, lg: 'large' as const };
+  const btnSize = sizeMap[size];
 
   return (
-    <div className={cn('flex items-center gap-1 bg-secondary rounded-xl p-1', sizeClasses[size])}>
+    <div className="flex align-items-center gap-1 surface-100 border-round-xl p-1">
       {showRemove && quantity === 1 ? (
         <Button
-          variant="ghost"
-          size={buttonSizes[size]}
+          text
+          rounded
+          severity="danger"
+          size={btnSize}
           onClick={onRemove}
-          className="hover:bg-destructive/20 hover:text-destructive"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+          icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
+          aria-label="Remove"
+        />
       ) : (
         <Button
-          variant="ghost"
-          size={buttonSizes[size]}
+          text
+          rounded
+          severity="secondary"
+          size={btnSize}
           onClick={onDecrement}
           disabled={quantity <= 1 && !showRemove}
-          className="hover:bg-muted"
-        >
-          <Minus className="w-4 h-4" />
-        </Button>
+          icon={<Minus style={{ width: '1rem', height: '1rem' }} />}
+          aria-label="Decrease"
+        />
       )}
-      
-      <span className={cn(
-        'min-w-[2rem] text-center font-bold text-foreground',
-        size === 'lg' && 'min-w-[3rem] text-lg'
-      )}>
+
+      <span className="font-bold text-color text-center" style={{ minWidth: size === 'lg' ? '3rem' : '2rem', fontSize: size === 'lg' ? '1.125rem' : undefined }}>
         {quantity}
       </span>
-      
+
       <Button
-        variant="ghost"
-        size={buttonSizes[size]}
+        text
+        rounded
+        severity="secondary"
+        size={btnSize}
         onClick={onIncrement}
-        className="hover:bg-primary/20 hover:text-primary"
-      >
-        <Plus className="w-4 h-4" />
-      </Button>
+        icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+        aria-label="Increase"
+      />
     </div>
   );
 };

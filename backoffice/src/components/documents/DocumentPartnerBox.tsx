@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Dropdown } from 'primereact/dropdown';
+import { InputText } from 'primereact/inputtext';
 import { IPartner } from '../../modules/partners/partners.interface';
 import { partnersService } from '../../modules/partners/partners.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { Phone, MapPin, Truck, CreditCard } from 'lucide-react';
-import { Autocomplete } from '../ui/autocomplete';
-import { Input } from '../ui/input';
-import { FormField } from '../ui/form-field';
 
 interface DocumentPartnerBoxProps {
   direction: 'vente' | 'achat';
@@ -61,39 +60,43 @@ export function DocumentPartnerBox({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-4">
-      <h3 className="text-base font-bold text-slate-800 mb-3">
+    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1rem' }}>
+      <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>
         {t('invoice.customerInfo').replace('client', partnerLabel)}
       </h3>
 
-      <div className="space-y-3">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1.5">
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#334155', marginBottom: '0.375rem' }}>
             {partnerLabel} *
           </label>
-          <Autocomplete
+          <Dropdown
+            value={partnerId ? String(partnerId) : null}
             options={partners.map(partner => ({
               value: String(partner.id),
               label: partner.name
             }))}
-            value={partnerId ? String(partnerId) : ''}
-            onValueChange={handlePartnerSelect}
+            onChange={(e) => handlePartnerSelect(e.value)}
+            optionLabel="label"
+            optionValue="value"
             placeholder={t('invoice.partnerNamePlaceholder').replace('{partner}', partnerLabel.toLowerCase())}
-            emptyMessage={t('invoice.noPartnerFound').replace('{partner}', partnerLabel.toLowerCase())}
+            emptyFilterMessage={t('invoice.noPartnerFound').replace('{partner}', partnerLabel.toLowerCase())}
             disabled={readOnly}
-            allowCustomValue={false}
+            filter
+            showClear
+            style={{ width: '100%' }}
           />
           {(partnerPhone || partnerAddress) && (
-            <div className="mt-2 space-y-1.5">
+            <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               {partnerPhone && (
-                <div className="flex items-center gap-2 text-xs text-slate-600">
-                  <Phone className="w-3.5 h-3.5 text-slate-400" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
+                  <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8' }} />
                   <span>{partnerPhone}</span>
                 </div>
               )}
               {partnerAddress && (
-                <div className="flex items-center gap-2 text-xs text-slate-600">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
+                  <MapPin style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8' }} />
                   <span>{partnerAddress}</span>
                 </div>
               )}
@@ -103,31 +106,29 @@ export function DocumentPartnerBox({
 
         {partnerIce && (
           <div>
-            <FormField label={<span className="flex items-center gap-1.5"><CreditCard className="w-3.5 h-3.5 text-slate-500" />{t('invoice.iceLabel')}</span>}>
-              <Input
-                type="text"
-                value={partnerIce}
-                readOnly
-                className="bg-slate-50 text-slate-600"
-                inputSize="sm"
-                fullWidth
-              />
-            </FormField>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', marginBottom: '0.25rem' }}>
+              <CreditCard style={{ width: '0.875rem', height: '0.875rem', color: '#64748b' }} />
+              {t('invoice.iceLabel')}
+            </label>
+            <InputText
+              value={partnerIce}
+              readOnly
+              style={{ width: '100%', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.875rem' }}
+            />
           </div>
         )}
 
         {deliveryAddress && (
           <div>
-            <FormField label={<span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-slate-500" />{t('invoice.deliveryAddressLabel')}</span>}>
-              <Input
-                type="text"
-                value={deliveryAddress}
-                readOnly
-                className="bg-slate-50 text-slate-600"
-                inputSize="sm"
-                fullWidth
-              />
-            </FormField>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', marginBottom: '0.25rem' }}>
+              <Truck style={{ width: '0.875rem', height: '0.875rem', color: '#64748b' }} />
+              {t('invoice.deliveryAddressLabel')}
+            </label>
+            <InputText
+              value={deliveryAddress}
+              readOnly
+              style={{ width: '100%', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.875rem' }}
+            />
           </div>
         )}
       </div>

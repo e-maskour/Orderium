@@ -1,6 +1,5 @@
 import { useLanguage } from '@/context/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { Languages } from 'lucide-react';
+import { Button } from 'primereact/button';
 
 export const LanguageToggle = () => {
   const { language, setLanguage } = useLanguage();
@@ -11,15 +10,12 @@ export const LanguageToggle = () => {
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      text
+      severity="secondary"
+      size="small"
+      icon="pi pi-globe"
+      label={language === 'ar' ? 'FR' : 'العربية'}
       onClick={toggleLanguage}
-      className="gap-2"
-    >
-      <Languages className="w-4 h-4" />
-      <span className="text-sm">
-        {language === 'ar' ? 'FR' : 'العربية'}
-      </span>
-    </Button>
+    />
   );
 };
