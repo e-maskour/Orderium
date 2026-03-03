@@ -269,17 +269,16 @@ export default function POS() {
           )}
         </div>
         {cart.length > 0 && (
-          <button
+          <Button
+            icon={<Trash2 style={{ width: '0.75rem', height: '0.75rem' }} />}
             onClick={clearCart}
+            text rounded severity="danger"
             style={{
-              display: 'flex', alignItems: 'center', gap: '0.25rem',
               color: '#ef4444', fontSize: '0.6875rem', fontWeight: 600,
               padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
-              border: '1px solid #fee2e2', background: '#fef2f2', cursor: 'pointer',
+              border: '1px solid #fee2e2', background: '#fef2f2',
             }}
-          >
-            <Trash2 style={{ width: '0.75rem', height: '0.75rem' }} />
-          </button>
+          />
         )}
       </div>
 
@@ -329,12 +328,12 @@ export default function POS() {
                       <p style={{ fontWeight: 600, color: '#111827', fontSize: '0.75rem', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0, flex: 1 }}>
                         {item.product.name}
                       </p>
-                      <button
+                      <Button
+                        icon={<X style={{ width: '0.75rem', height: '0.75rem' }} />}
                         onClick={(e) => { e.stopPropagation(); removeFromCart(item.product.id); }}
-                        style={{ flexShrink: 0, width: '1.125rem', height: '1.125rem', color: '#9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', borderRadius: '0.25rem', padding: 0 }}
-                      >
-                        <X style={{ width: '0.75rem', height: '0.75rem' }} />
-                      </button>
+                        text rounded
+                        style={{ flexShrink: 0, width: '1.125rem', height: '1.125rem', padding: 0, color: '#9ca3af' }}
+                      />
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
@@ -356,21 +355,20 @@ export default function POS() {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                      <button
+                      <Button
+                        icon={<Tag style={{ height: '0.625rem', width: '0.625rem' }} />}
+                        label={item.discount > 0
+                          ? (item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount))
+                          : t('discount')}
                         onClick={(e) => { e.stopPropagation(); openDiscountModal(item); }}
+                        text
                         style={{
-                          fontSize: '0.625rem', display: 'flex', alignItems: 'center', gap: '0.25rem',
-                          padding: '0.125rem 0.375rem', borderRadius: '0.375rem', border: 'none', cursor: 'pointer',
+                          fontSize: '0.625rem', padding: '0.125rem 0.375rem', borderRadius: '0.375rem',
                           background: item.discount > 0 ? '#fff7ed' : '#f3f4f6',
                           color: item.discount > 0 ? '#ea580c' : '#6b7280',
                           fontWeight: 600,
                         }}
-                      >
-                        <Tag style={{ height: '0.625rem', width: '0.625rem' }} />
-                        {item.discount > 0
-                          ? (item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount))
-                          : t('discount')}
-                      </button>
+                      />
                       {item.discount > 0 && (
                         <span style={{ fontSize: '0.5625rem', color: '#9ca3af', textDecoration: 'line-through' }}>
                           {formatCurrency(itemSubtotal)}
@@ -465,19 +463,18 @@ export default function POS() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '3.75rem' }}>
             {/* Left: back + branding */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-              <button
+              <Button
+                icon={<ArrowLeft style={{ width: '0.875rem', height: '0.875rem', transform: dir === 'rtl' ? 'rotate(180deg)' : undefined }} />}
+                label={t('back')}
                 onClick={() => navigate('/dashboard')}
+                text
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.375rem',
                   padding: '0.375rem 0.625rem', fontSize: '0.8125rem', fontWeight: 500,
                   color: 'rgba(255,255,255,0.65)', borderRadius: '0.5rem',
                   border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)',
-                  cursor: 'pointer', transition: 'all 0.15s',
                 }}
-              >
-                <ArrowLeft style={{ width: '0.875rem', height: '0.875rem', transform: dir === 'rtl' ? 'rotate(180deg)' : undefined }} />
-                <span className="pos-back-label">{t('back')}</span>
-              </button>
+              />
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <div style={{
@@ -500,44 +497,25 @@ export default function POS() {
             </div>
 
             {/* Right: customer selector */}
-            <button
+            <Button
               onClick={() => setShowCustomerModal(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
-            >
-              {selectedCustomer ? (
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  padding: '0.375rem 0.75rem',
-                  background: 'rgba(34,197,94,0.12)',
-                  border: '1px solid rgba(34,197,94,0.25)',
-                  borderRadius: '2rem',
-                }}>
-                  <div style={{
-                    width: '1.625rem', height: '1.625rem', borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <User style={{ width: '0.75rem', height: '0.75rem', color: '#fff' }} />
-                  </div>
-                  <div style={{ textAlign: 'start' }}>
-                    <p style={{ fontWeight: 700, color: '#fff', fontSize: '0.8125rem', margin: 0 }}>{selectedCustomer.name}</p>
-                    <p style={{ fontSize: '0.625rem', color: 'rgba(34,197,94,0.8)', margin: 0 }}>{selectedCustomer.phoneNumber}</p>
-                  </div>
-                  <ChevronRight style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.4)' }} />
-                </div>
-              ) : (
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  padding: '0.375rem 0.75rem',
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: '2rem',
-                }}>
-                  <User style={{ width: '0.875rem', height: '0.875rem', color: 'rgba(255,255,255,0.5)' }} />
-                  <span style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>{t('selectCustomer')}</span>
-                </div>
-              )}
-            </button>
+              icon={<User style={{ width: selectedCustomer ? '0.75rem' : '0.875rem', height: selectedCustomer ? '0.75rem' : '0.875rem', color: selectedCustomer ? '#fff' : 'rgba(255,255,255,0.5)' }} />}
+              label={selectedCustomer ? selectedCustomer.name : t('selectCustomer')}
+              style={selectedCustomer ? {
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                padding: '0.375rem 0.75rem',
+                background: 'rgba(34,197,94,0.12)',
+                border: '1px solid rgba(34,197,94,0.25)',
+                borderRadius: '2rem', color: '#fff', fontSize: '0.8125rem', fontWeight: 700,
+              } : {
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                padding: '0.375rem 0.75rem',
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '2rem', color: 'rgba(255,255,255,0.6)',
+                fontSize: '0.8125rem', fontWeight: 500,
+              }}
+            />
           </div>
         </div>
       </header>
@@ -616,17 +594,16 @@ export default function POS() {
                 }}
               />
               {searchQuery && (
-                <button
+                <Button
+                  icon={<X style={{ width: '0.625rem', height: '0.625rem', color: '#6b7280' }} />}
                   onClick={() => setSearchQuery('')}
+                  rounded text
                   style={{
                     position: 'absolute', right: '0.625rem', top: '50%', transform: 'translateY(-50%)',
-                    background: '#e5e7eb', border: 'none', cursor: 'pointer',
-                    width: '1.25rem', height: '1.25rem', borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: '#e5e7eb',
+                    width: '1.25rem', height: '1.25rem', padding: 0,
                   }}
-                >
-                  <X style={{ width: '0.625rem', height: '0.625rem', color: '#6b7280' }} />
-                </button>
+                />
               )}
             </div>
           </div>
@@ -732,9 +709,12 @@ export default function POS() {
 
       {/* ═══ MOBILE: Floating Cart Button ═══ */}
       {cart.length > 0 && (
-        <button
+        <Button
           className="pos-mobile-fab"
           onClick={() => setIsMobileCartOpen(true)}
+          icon={<ShoppingCart style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} strokeWidth={2.2} />}
+          badge={String(cartTotalItems)}
+          badgeSeverity="danger"
           style={{
             position: 'fixed',
             bottom: '1.25rem',
@@ -745,22 +725,8 @@ export default function POS() {
             background: 'linear-gradient(135deg, #f59e0b, #d97706)',
             border: 'none',
             boxShadow: '0 6px 20px rgba(245,158,11,0.50)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
           }}
-        >
-          <ShoppingCart style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} strokeWidth={2.2} />
-          <span style={{
-            position: 'absolute', top: '-0.125rem', right: '-0.125rem',
-            minWidth: '1.25rem', height: '1.25rem', padding: '0 0.25rem',
-            background: '#ef4444', color: '#fff', borderRadius: '2rem',
-            fontSize: '0.625rem', fontWeight: 800,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '2px solid #fff',
-          }}>
-            {cartTotalItems}
-          </span>
-        </button>
+        />
       )}
 
       {/* ═══ MOBILE: Cart Overlay ═══ */}

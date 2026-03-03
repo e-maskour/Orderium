@@ -125,12 +125,12 @@ export default function CheckoutPage() {
       <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '1rem 1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button
+            <Button
+              icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />}
               onClick={() => navigate('/pos')}
-              style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
-            >
-              <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#374151' }} />
-            </button>
+              text rounded
+              style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#f3f4f6' }}
+            />
             <div style={{ flex: 1 }}>
               <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', margin: 0 }}>{t('cart')}</h1>
               <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Review and confirm order</p>
@@ -228,28 +228,28 @@ export default function CheckoutPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
+                    <Button
+                      icon={<DollarSign style={{ width: '1rem', height: '1rem' }} />}
+                      label="Amount"
                       onClick={() => { setGlobalDiscountType(0); setGlobalDiscount(0); }}
                       style={{
-                        flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.875rem', border: 'none', cursor: 'pointer',
+                        flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem',
                         backgroundColor: globalDiscountType === 0 ? '#f97316' : '#f3f4f6',
+                        borderColor: globalDiscountType === 0 ? '#f97316' : '#f3f4f6',
                         color: globalDiscountType === 0 ? '#ffffff' : '#374151',
                       }}
-                    >
-                      <DollarSign style={{ width: '1rem', height: '1rem' }} />
-                      Amount
-                    </button>
-                    <button
+                    />
+                    <Button
+                      icon={<Percent style={{ width: '1rem', height: '1rem' }} />}
+                      label="Percentage"
                       onClick={() => { setGlobalDiscountType(1); setGlobalDiscount(0); }}
                       style={{
-                        flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.875rem', border: 'none', cursor: 'pointer',
+                        flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem',
                         backgroundColor: globalDiscountType === 1 ? '#f97316' : '#f3f4f6',
+                        borderColor: globalDiscountType === 1 ? '#f97316' : '#f3f4f6',
                         color: globalDiscountType === 1 ? '#ffffff' : '#374151',
                       }}
-                    >
-                      <Percent style={{ width: '1rem', height: '1rem' }} />
-                      Percentage
-                    </button>
+                    />
                   </div>
 
                   <div>
