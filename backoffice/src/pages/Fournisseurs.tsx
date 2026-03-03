@@ -1,10 +1,13 @@
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
+import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, Check } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
@@ -138,7 +141,7 @@ export default function Fournisseurs() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         <PageHeader
           icon={Users}
           title={t('suppliers')}
@@ -177,55 +180,15 @@ export default function Fournisseurs() {
             {activeTab === 'dashboard' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Stats Cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
-                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#dbeafe', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Users style={{ width: '1.5rem', height: '1.5rem', color: '#2563eb' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Fournisseurs</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{totalSuppliers}</h3>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#d1fae5', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <TrendingUp style={{ width: '1.5rem', height: '1.5rem', color: '#059669' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Avec Factures</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{suppliersWithInvoices}</h3>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#f3e8ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <TrendingUp style={{ width: '1.5rem', height: '1.5rem', color: '#9333ea' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Dépenses</p>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{formatDH(totalExpenses, 0)}</h3>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <CheckCircle style={{ width: '1.5rem', height: '1.5rem', color: '#d97706' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Total Factures</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{totalInvoices}</h3>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <KpiGrid count={4}>
+                  <KpiCard label="Fournisseurs" value={totalSuppliers} icon={Users} color="blue" />
+                  <KpiCard label="Avec Factures" value={suppliersWithInvoices} icon={TrendingUp} color="emerald" />
+                  <KpiCard label="Dépenses" value={formatDH(totalExpenses, 0)} icon={TrendingUp} color="purple" />
+                  <KpiCard label="Total Factures" value={totalInvoices} icon={CheckCircle} color="amber" />
+                </KpiGrid>
 
                 {/* Dashboard Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+                <div className="partner-dash-grid">
                   {/* Top 5 Suppliers */}
                   <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
@@ -326,17 +289,18 @@ export default function Fournisseurs() {
             {activeTab === 'list' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {/* Toolbar */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-                    <button onClick={() => setViewMode('card')} style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer', ...(viewMode === 'card' ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' } : { backgroundColor: 'transparent', color: '#475569' }) }}>
+                <div className="partner-list-toolbar">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.625rem', padding: '0.25rem', flexShrink: 0 }}>
+                    <button onClick={() => setViewMode('card')} title="Vue cartes" style={{ padding: '0.4rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(viewMode === 'card' ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' } : { backgroundColor: 'transparent', color: '#64748b' }) }}>
                       <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
                     </button>
-                    <button onClick={() => setViewMode('list')} style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer', ...(viewMode === 'list' ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' } : { backgroundColor: 'transparent', color: '#475569' }) }}>
+                    <button onClick={() => setViewMode('list')} title="Vue liste" style={{ padding: '0.4rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(viewMode === 'list' ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' } : { backgroundColor: 'transparent', color: '#64748b' }) }}>
                       <ListIcon style={{ width: '1rem', height: '1rem' }} />
                     </button>
                   </div>
-                  <div style={{ position: 'relative' }}>
-                    <InputText id="search-suppliers" type="text" placeholder={t('searchSuppliersPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '24rem' }} aria-label={t('searchSuppliersPlaceholder')} />
+                  <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                    <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '0.9rem', height: '0.9rem', color: '#94a3b8', pointerEvents: 'none' }} />
+                    <InputText id="search-suppliers" type="text" placeholder={t('searchSuppliersPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', paddingLeft: '2.25rem' }} aria-label={t('searchSuppliersPlaceholder')} />
                     {searchTerm && (
                       <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}>
                         <X style={{ width: '1rem', height: '1rem' }} />
@@ -354,7 +318,7 @@ export default function Fournisseurs() {
                   ) : (
                     <>
                       {viewMode === 'card' ? (
-                        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                        <div className="partner-card-grid">
                           {filteredSuppliers.map((supplier: Partner) => {
                             const isSelected = selectedSuppliers.includes(supplier.id);
                             return (
@@ -396,40 +360,56 @@ export default function Fournisseurs() {
                           })}
                         </div>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          {filteredSuppliers.map((supplier: Partner) => (
-                            <div key={supplier.id} onClick={() => toggleSelectSupplier(supplier.id)} style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', padding: '0.75rem 1rem', cursor: 'pointer', ...(selectedSuppliers.includes(supplier.id) ? { border: '1px solid #f59e0b', outline: '2px solid rgba(245,158,11,0.2)' } : { border: '1px solid #e2e8f0' }) }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <div style={{ width: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <div style={{ width: '1.25rem', height: '1.25rem', borderRadius: '0.25rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', ...(selectedSuppliers.includes(supplier.id) ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' } : { backgroundColor: 'white', borderColor: '#cbd5e1' }) }}>
-                                    {selectedSuppliers.includes(supplier.id) && <Check style={{ width: '0.875rem', height: '0.875rem' }} />}
-                                  </div>
+                        <>
+                          <style>{`
+                            .fourn-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+                            .fourn-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+                            .fourn-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+                            .fourn-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+                            .fourn-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+                            .fourn-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                          `}</style>
+                          <DataTable
+                            className="fourn-datatable"
+                            value={filteredSuppliers}
+                            selection={filteredSuppliers.filter((s: Partner) => selectedSuppliers.includes(s.id))}
+                            onSelectionChange={(e) => setSelectedSuppliers((e.value as Partner[]).map((s) => s.id))}
+                            selectionMode="checkbox"
+                            dataKey="id"
+                            paginator
+                            paginatorPosition="top"
+                            rows={25}
+                            rowsPerPageOptions={[10, 25, 50, 100]}
+                            removableSort
+                            emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Aucun fournisseur trouvé</div>}
+                            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                          >
+                            <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                            <Column field="name" header={t('name')} sortable body={(row: Partner) => (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
                                 </div>
-                                <div style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                  <Users style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('name')}</p>
-                                  <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.name}</p>
-                                </div>
-                                <div style={{ width: '8rem' }}>
-                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('phone')}</p>
-                                  <p style={{ fontSize: '0.875rem', color: '#475569' }}>{supplier.phoneNumber || '-'}</p>
-                                </div>
-                                <div style={{ width: '12rem' }}>
-                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('email')}</p>
-                                  <p style={{ fontSize: '0.875rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.email || '-'}</p>
-                                </div>
-                                <div style={{ width: '6rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('status')}</p>
-                                  <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(supplier.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
-                                    {supplier.isEnabled ? t('active') : t('inactive')}
-                                  </span>
-                                </div>
+                                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            )} />
+                            <Column field="phoneNumber" header={t('phone')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber || '-'}</span>} />
+                            <Column field="email" header={t('email')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                            <Column field="isEnabled" header={t('status')} body={(row: Partner) => (
+                              <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
+                                {row.isEnabled ? t('active') : t('inactive')}
+                              </span>
+                            )} />
+                            <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Partner) => (
+                              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                <button onClick={() => handleViewSupplier(row)} style={{ color: '#475569', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}><Eye style={{ width: '1rem', height: '1rem' }} /></button>
+                                <button onClick={() => handleEditSupplier(row)} style={{ color: '#2563eb', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}><Edit2 style={{ width: '1rem', height: '1rem' }} /></button>
+                                <button onClick={() => handleDeletePartner(row)} style={{ color: '#dc2626', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}><Trash2 style={{ width: '1rem', height: '1rem' }} /></button>
+                              </div>
+                            )} />
+                          </DataTable>
+                        </>
                       )}
                     </>
                   )}
@@ -463,6 +443,50 @@ export default function Fournisseurs() {
           </div>
         </div>
       )}
+      <style>{`
+        .partner-dash-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.5rem;
+        }
+        .partner-card-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.75rem;
+        }
+        .partner-list-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 1279px) {
+          .partner-card-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        @media (max-width: 1023px) {
+          .partner-dash-grid {
+            grid-template-columns: 1fr;
+          }
+          .partner-card-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .partner-list-col-email {
+            display: none;
+          }
+        }
+        @media (max-width: 639px) {
+          .partner-card-grid {
+            grid-template-columns: 1fr;
+          }
+          .partner-list-col-phone,
+          .partner-list-col-email {
+            display: none;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }

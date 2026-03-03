@@ -1,10 +1,13 @@
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
+import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, Check } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
@@ -141,7 +144,7 @@ export default function Customers() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         <PageHeader
           icon={Users}
           title={t('customers')}
@@ -157,21 +160,17 @@ export default function Customers() {
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
-                <button
+                <Button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
-                    borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500,
-                    whiteSpace: 'nowrap', flexShrink: 0, border: 'none', cursor: 'pointer',
-                    ...(activeTab === tab.key
-                      ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)' }
-                      : { backgroundColor: 'transparent', color: '#475569' }),
-                  }}
-                >
-                  <Icon style={{ width: '1rem', height: '1rem' }} />
-                  <span>{tab.label}</span>
-                </button>
+                  icon={<Icon style={{ width: '1rem', height: '1rem' }} />}
+                  label={tab.label}
+                  text={activeTab !== tab.key}
+                  style={activeTab === tab.key
+                    ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }
+                    : { backgroundColor: 'transparent', color: '#475569', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }
+                  }
+                />
               );
             })}
           </div>
@@ -181,55 +180,12 @@ export default function Customers() {
             {activeTab === 'dashboard' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Stats Cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
-                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#dbeafe', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Users style={{ width: '1.5rem', height: '1.5rem', color: '#2563eb' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Total Clients</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{totalCustomers}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#d1fae5', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <TrendingUp style={{ width: '1.5rem', height: '1.5rem', color: '#059669' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Avec Factures</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{customersWithInvoices}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#f3e8ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <TrendingUp style={{ width: '1.5rem', height: '1.5rem', color: '#9333ea' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Revenu Total</p>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{formatDH(totalRevenue, 0)}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <CheckCircle style={{ width: '1.5rem', height: '1.5rem', color: '#d97706' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>Total Factures</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{totalInvoices}</h3>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <KpiGrid count={4}>
+                  <KpiCard label="Total Clients" value={totalCustomers} icon={Users} color="blue" />
+                  <KpiCard label="Avec Factures" value={customersWithInvoices} icon={TrendingUp} color="emerald" />
+                  <KpiCard label="Revenu Total" value={formatDH(totalRevenue, 0)} icon={TrendingUp} color="purple" />
+                  <KpiCard label="Total Factures" value={totalInvoices} icon={CheckCircle} color="amber" />
+                </KpiGrid>
 
                 {/* Dashboard Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
@@ -271,13 +227,13 @@ export default function Customers() {
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.5rem', height: '1.5rem', borderRadius: '9999px', backgroundColor: bgColors[index], color: textColors[index], fontSize: '0.75rem', fontWeight: 700 }}>
                                     {index + 1}
                                   </div>
-                                  <button
+                                  <Button
+                                    link
                                     onClick={() => navigate(`/customers/${customer.id}`)}
-                                    style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', background: 'none', border: 'none', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}
+                                    label={customer.name}
                                     title={customer.name}
-                                  >
-                                    {customer.name}
-                                  </button>
+                                    style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px', padding: 0 }}
+                                  />
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{percentage.toFixed(1).replace('.', ',')}%</span>
@@ -320,12 +276,12 @@ export default function Customers() {
                           <div key={customer.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flex: 1 }}>
                               <Users style={{ width: '1rem', height: '1rem', color: '#a855f7', flexShrink: 0 }} />
-                              <button
+                              <Button
+                                link
                                 onClick={() => navigate(`/customers/${customer.id}`)}
-                                style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                              >
-                                {customer.name}
-                              </button>
+                                label={customer.name}
+                                style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}
+                              />
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                               <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customer.phoneNumber || '-'}</span>
@@ -346,30 +302,24 @@ export default function Customers() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
                   {/* View Mode Toggle */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-                    <button
+                    <Button
+                      icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />}
                       onClick={() => setViewMode('card')}
-                      style={{
-                        padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500,
-                        border: 'none', cursor: 'pointer',
-                        ...(viewMode === 'card'
-                          ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
-                          : { backgroundColor: 'transparent', color: '#475569' }),
-                      }}
-                    >
-                      <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
-                    </button>
-                    <button
+                      text={viewMode !== 'card'}
+                      style={viewMode === 'card'
+                        ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.375rem' }
+                        : { backgroundColor: 'transparent', color: '#475569', borderRadius: '0.375rem' }
+                      }
+                    />
+                    <Button
+                      icon={<ListIcon style={{ width: '1rem', height: '1rem' }} />}
                       onClick={() => setViewMode('list')}
-                      style={{
-                        padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500,
-                        border: 'none', cursor: 'pointer',
-                        ...(viewMode === 'list'
-                          ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
-                          : { backgroundColor: 'transparent', color: '#475569' }),
-                      }}
-                    >
-                      <ListIcon style={{ width: '1rem', height: '1rem' }} />
-                    </button>
+                      text={viewMode !== 'list'}
+                      style={viewMode === 'list'
+                        ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.375rem' }
+                        : { backgroundColor: 'transparent', color: '#475569', borderRadius: '0.375rem' }
+                      }
+                    />
                   </div>
 
                   {/* Search */}
@@ -384,12 +334,12 @@ export default function Customers() {
                       aria-label={t('searchCustomers')}
                     />
                     {searchTerm && (
-                      <button
+                      <Button
+                        icon={<X style={{ width: '1rem', height: '1rem' }} />}
                         onClick={() => setSearchTerm('')}
-                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', zIndex: 10 }}
-                      >
-                        <X style={{ width: '1rem', height: '1rem' }} />
-                      </button>
+                        text rounded
+                        style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10, padding: '0.25rem' }}
+                      />
                     )}
                   </div>
                 </div>
@@ -475,68 +425,56 @@ export default function Customers() {
                           })}
                         </div>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          {filteredCustomers.map((customer: Partner) => (
-                            <div
-                              key={customer.id}
-                              onClick={() => toggleSelectCustomer(customer.id)}
-                              style={{
-                                backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                padding: '0.75rem 1rem', cursor: 'pointer',
-                                ...(selectedCustomers.includes(customer.id)
-                                  ? { border: '1px solid #f59e0b', outline: '2px solid rgba(245,158,11,0.2)' }
-                                  : { border: '1px solid #e2e8f0' }),
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <div style={{ width: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <div
-                                    style={{
-                                      width: '1.25rem', height: '1.25rem', borderRadius: '0.25rem', border: '2px solid',
-                                      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                      ...(selectedCustomers.includes(customer.id)
-                                        ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' }
-                                        : { backgroundColor: 'white', borderColor: '#cbd5e1' }),
-                                    }}
-                                  >
-                                    {selectedCustomers.includes(customer.id) && <Check style={{ width: '0.875rem', height: '0.875rem' }} />}
-                                  </div>
+                        <>
+                          <style>{`
+                            .cust-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+                            .cust-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+                            .cust-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+                            .cust-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+                            .cust-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+                            .cust-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                          `}</style>
+                          <DataTable
+                            className="cust-datatable"
+                            value={filteredCustomers}
+                            selection={filteredCustomers.filter((c: Partner) => selectedCustomers.includes(c.id))}
+                            onSelectionChange={(e) => setSelectedCustomers((e.value as Partner[]).map((c) => c.id))}
+                            selectionMode="checkbox"
+                            dataKey="id"
+                            paginator
+                            paginatorPosition="top"
+                            rows={25}
+                            rowsPerPageOptions={[10, 25, 50, 100]}
+                            removableSort
+                            emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCustomersFound')}</div>}
+                            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                          >
+                            <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                            <Column field="name" header={t('name')} sortable body={(row: Partner) => (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
                                 </div>
-
-                                <div style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                  <Users style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-                                </div>
-
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('name')}</p>
-                                  <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customer.name}</p>
-                                </div>
-
-                                <div style={{ width: '8rem' }}>
-                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('phone')}</p>
-                                  <p style={{ fontSize: '0.875rem', color: '#475569' }}>{customer.phoneNumber || '-'}</p>
-                                </div>
-
-                                <div style={{ width: '12rem' }}>
-                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('email')}</p>
-                                  <p style={{ fontSize: '0.875rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customer.email || '-'}</p>
-                                </div>
-
-                                <div style={{ width: '6rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                  <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('status')}</p>
-                                  <span style={{
-                                    display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600,
-                                    ...(customer.isEnabled
-                                      ? { backgroundColor: '#dcfce7', color: '#166534' }
-                                      : { backgroundColor: '#fee2e2', color: '#991b1b' }),
-                                  }}>
-                                    {customer.isEnabled ? t('active') : t('inactive')}
-                                  </span>
-                                </div>
+                                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            )} />
+                            <Column field="phoneNumber" header={t('phone')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber || '-'}</span>} />
+                            <Column field="email" header={t('email')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                            <Column field="isEnabled" header={t('status')} body={(row: Partner) => (
+                              <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
+                                {row.isEnabled ? t('active') : t('inactive')}
+                              </span>
+                            )} />
+                            <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Partner) => (
+                              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                <Button icon={<Eye style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleViewCustomer(row)} text rounded severity="secondary" />
+                                <Button icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleEditCustomer(row)} text rounded severity="info" />
+                                <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDeletePartner(row)} text rounded severity="danger" />
+                              </div>
+                            )} />
+                          </DataTable>
+                        </>
                       )}
                     </>
                   )}

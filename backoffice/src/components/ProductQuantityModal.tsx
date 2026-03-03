@@ -126,35 +126,54 @@ export const ProductQuantityModal = ({
   const unitCode = product.saleUnitOfMeasure?.code || 'UNIT';
 
   const headerContent = (
-    <div>
-      <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827' }}>{product.name}</div>
-      <div className="flex align-items-baseline gap-2" style={{ marginTop: '0.25rem' }}>
-        <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--primary-color)' }}>
-          {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-        </span>
-        <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>/ {unitCode}</span>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+      <div style={{
+        width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem', flexShrink: 0,
+        background: 'linear-gradient(135deg, #1e1e2d, #16213e)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 10px rgba(30,30,45,0.25)',
+      }}>
+        <ShoppingCart style={{ width: '1.25rem', height: '1.25rem', color: '#f59e0b' }} strokeWidth={2.2} />
       </div>
-      {product.code && (
-        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
-          {t('code')}: {product.code}
+      <div>
+        <div style={{ fontWeight: 700, fontSize: '1rem', color: '#111827', lineHeight: 1.3 }}>{product.name}</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginTop: '0.25rem' }}>
+          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f59e0b', letterSpacing: '-0.01em' }}>
+            {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+          </span>
+          <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500 }}>/ {unitCode}</span>
         </div>
-      )}
+        {product.code && (
+          <div style={{ fontSize: '0.6875rem', color: '#9ca3af', marginTop: '0.125rem', fontWeight: 500 }}>
+            #{product.code}
+          </div>
+        )}
+      </div>
     </div>
   );
 
   const footerContent = hasQuantity ? (
-    <div className="flex flex-column gap-3" style={{ width: '100%' }}>
-      <div className="flex align-items-center justify-content-between" style={{ padding: '0.75rem', background: 'var(--primary-50, #f0fdfa)', borderRadius: '0.75rem', border: '1px solid var(--primary-200, #99f6e4)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0.75rem', background: '#f9fafb', borderRadius: '0.75rem', border: '1px solid #e5e7eb',
+      }}>
         <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>{t('total')}</span>
-        <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--primary-color)' }}>
+        <span style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>
           {totalPrice.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
         </span>
       </div>
       <Button
         label={initialQuantity > 0 ? t('updateQty') : t('addToCart')}
-        icon={<ShoppingCart style={{ width: 16, height: 16, marginRight: 6 }} />}
+        icon={<ShoppingCart style={{ width: 14, height: 14, marginRight: 6 }} />}
         onClick={handleAddToCart}
-        style={{ width: '100%' }}
+        style={{
+          width: '100%', height: '2.875rem',
+          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          border: 'none', borderRadius: '0.625rem',
+          fontSize: '0.9375rem', fontWeight: 700, color: '#fff',
+          boxShadow: '0 4px 12px rgba(245,158,11,0.35)',
+        }}
       />
     </div>
   ) : null;
@@ -167,41 +186,65 @@ export const ProductQuantityModal = ({
       footer={footerContent}
       modal
       dismissableMask
-      style={{ width: '95vw', maxWidth: '32rem' }}
-      contentStyle={{ padding: '1rem' }}
+      style={{ width: '95vw', maxWidth: '30rem' }}
+      breakpoints={{ '640px': '95vw' }}
+      contentStyle={{ padding: '1rem', overflowY: 'auto' }}
     >
-      <div className="flex flex-column gap-3">
+      <style>{`
+        .pos-keypad-num { transition: all 0.1s ease; }
+        .pos-keypad-num:hover { filter: brightness(0.92); }
+        .pos-keypad-num:active { transform: scale(0.94); }
+      `}</style>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {/* Quantity Input */}
-        <div className="flex flex-column gap-2">
-          <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
-            {t('quantity')} {product.stock && `(${t('available')}: ${maxQuantity})`}
-          </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>
+              {t('quantity')}
+            </label>
+            {product.stock && (
+              <span style={{ fontSize: '0.6875rem', color: '#9ca3af', fontWeight: 500 }}>
+                {t('available')}: {maxQuantity}
+              </span>
+            )}
+          </div>
           <InputText
             ref={inputRef}
             type="text"
             inputMode="decimal"
             value={quantity}
             onChange={handleInputChange}
-            style={{ height: '3.5rem', fontSize: '1.75rem', fontWeight: 700, textAlign: 'center', width: '100%' }}
+            style={{
+              height: '4rem', fontSize: '2rem', fontWeight: 800,
+              textAlign: 'center', width: '100%',
+              borderRadius: '0.75rem', border: '2px solid #e5e7eb',
+              color: quantity ? '#111827' : '#9ca3af',
+              letterSpacing: '-0.02em',
+            }}
           />
         </div>
 
-        {/* Numeric Keypad */}
+        {/* Keypad */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
           {numbers.map((num) => (
             <button
               key={num}
               onClick={() => handleNumberClick(num)}
+              className="pos-keypad-num"
               style={{
-                height: '3rem',
-                fontSize: '1.125rem',
-                fontWeight: 600,
-                borderRadius: '0.5rem',
-                border: num === 'C' || num === '.' ? 'none' : '1px solid #d1d5db',
-                background: num === 'C' ? '#ef4444' : num === '.' ? '#3b82f6' : '#f3f4f6',
+                height: '3.25rem',
+                fontSize: num === 'C' ? '0.8125rem' : '1.25rem',
+                fontWeight: 700,
+                borderRadius: '0.625rem',
+                border: 'none',
+                background: num === 'C'
+                  ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                  : num === '.'
+                    ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
+                    : '#f3f4f6',
                 color: num === 'C' || num === '.' ? '#fff' : '#111827',
                 cursor: 'pointer',
-                transition: 'background 0.15s',
+                boxShadow: num === 'C' ? '0 3px 8px rgba(239,68,68,0.3)' : num === '.' ? '0 3px 8px rgba(59,130,246,0.3)' : '0 1px 3px rgba(0,0,0,0.06)',
               }}
             >
               {num === 'C' ? t('clear') : num}

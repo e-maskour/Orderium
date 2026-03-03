@@ -218,18 +218,26 @@ export default function DocumentCreatePage({
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto', paddingBottom: '6rem' }}>
-        {/* Simplified Header with Back Button */}
+      <style>{`
+        .doc-create-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: #fff; border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); z-index: 40; }
+        @media (max-width: 768px) { .doc-create-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } }
+      `}</style>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
+        {/* Header with Back Button */}
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <button
+            <Button
+              icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
               onClick={() => navigate(listRoute)}
-              style={{ padding: '0.5rem', borderRadius: '0.5rem', flexShrink: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
-            >
-              <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
-            </button>
+              text rounded
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+            />
+            <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 10px rgba(245,158,11,0.3)' }}>
+              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />; })()}
+            </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {t('new')} {config.titleShort}
               </h1>
               <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('createNew')} {config.titleShort.toLowerCase()}</p>
@@ -237,9 +245,9 @@ export default function DocumentCreatePage({
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1.5px solid #e2e8f0', padding: '1.5rem' }}>
           {/* Two column layout: Partner on left, Document info on right */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="doc-create-grid">
             {/* Partner section - Left */}
             <div>
               <DocumentPartnerBox
@@ -342,8 +350,8 @@ export default function DocumentCreatePage({
         </div>
 
         {/* Sticky Bottom Action Bar */}
-        <div style={{ position: 'fixed', bottom: 0, left: '16rem', right: 0, backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', zIndex: 40 }}>
-          <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
+        <div className="doc-sticky-bar">
+          <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.75rem' }}>
               <Button
                 label={t('cancel')}

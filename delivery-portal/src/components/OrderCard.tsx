@@ -93,7 +93,7 @@ export default function OrderCard({ order }: OrderCardProps) {
 
       {/* Address */}
       <div className="flex align-items-start gap-2 mb-3">
-        <i className="pi pi-map-marker border-circle flex align-items-center justify-content-center" style={{ width: '1.5rem', height: '1.5rem', fontSize: '0.7rem', color: 'var(--orderium-primary)', background: 'rgba(192, 97, 43, 0.1)' }} />
+        <i className="pi pi-map-marker border-circle flex align-items-center justify-content-center" style={{ width: '1.5rem', height: '1.5rem', fontSize: '0.7rem', color: 'var(--orderium-primary)', background: 'rgba(223, 120, 23, 0.1)' }} />
         <span className="text-xs flex-1" style={{ color: 'var(--orderium-text-muted)' }}>{order.customerAddress}</span>
       </div>
 

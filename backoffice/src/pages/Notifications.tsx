@@ -38,6 +38,7 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Menu } from 'primereact/menu';
+import { Checkbox } from 'primereact/checkbox';
 import {
   notificationsService,
   type INotification,
@@ -306,11 +307,9 @@ export default function Notifications() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {/* Select All */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', borderBottom: '1px solid #e5e7eb' }}>
-        <input
-          type="checkbox"
+        <Checkbox
           checked={selectedNotifications.length === notifications.length}
           onChange={toggleSelectAll}
-          style={{ width: '1rem', height: '1rem', borderRadius: '0.25rem' }}
         />
         <span style={{ marginLeft: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>{t('selectAll')}</span>
       </div>
@@ -332,14 +331,13 @@ export default function Notifications() {
             onClick={() => handleNotificationClick(notification)}
           >
             {/* Checkbox */}
-            <input
-              type="checkbox"
+            <Checkbox
               checked={selectedNotifications.includes(notification.id)}
               onChange={(e) => {
-                e.stopPropagation();
+                e.originalEvent?.stopPropagation();
                 toggleSelectNotification(notification.id);
               }}
-              style={{ marginTop: '0.25rem', width: '1rem', height: '1rem', borderRadius: '0.25rem' }}
+              style={{ marginTop: '0.25rem' }}
             />
 
             {/* Icon */}
@@ -449,7 +447,7 @@ export default function Notifications() {
           minHeight: 'calc(100vh - 64px)',
           display: 'flex',
           flexDirection: 'column',
-          maxWidth: '80rem',
+          maxWidth: '1600px',
           margin: '0 auto',
           width: '100%',
           textAlign: dir === 'rtl' ? 'right' : 'left',

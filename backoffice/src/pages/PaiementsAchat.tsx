@@ -1,9 +1,13 @@
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
+import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useLanguage } from '../context/LanguageContext';
 import { useState, useEffect } from 'react';
-import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard, FileText, Plus } from 'lucide-react';
+import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import { invoicesService } from '../modules/invoices';
 import PaymentModal from '../components/PaymentModal';
@@ -17,6 +21,7 @@ export default function PaiementsAchat() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Payment[]>([]);
 
 
   useEffect(() => {
@@ -100,7 +105,7 @@ export default function PaiementsAchat() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         <PageHeader
           icon={Wallet}
           title={t('purchasePayments')}
@@ -108,48 +113,12 @@ export default function PaiementsAchat() {
         />
 
         {/* Stats Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
-          <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('totalPayments')}</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{filteredPayments.length}</p>
-              </div>
-              <div style={{ width: '3rem', height: '3rem', background: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CreditCard style={{ width: '1.5rem', height: '1.5rem', color: '#2563eb' }} />
-              </div>
-            </div>
-          </div>
-
-          <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('totalAmount')}</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#dc2626' }}>{totalAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</p>
-              </div>
-              <div style={{ width: '3rem', height: '3rem', background: '#fef2f2', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Wallet style={{ width: '1.5rem', height: '1.5rem', color: '#dc2626' }} />
-              </div>
-            </div>
-          </div>
-
-          <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('thisMonth')}</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
-                  {filteredPayments.filter(p => {
-                    const date = new Date(p.paymentDate);
-                    const now = new Date();
-                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-                  }).length}
-                </p>
-              </div>
-              <div style={{ width: '3rem', height: '3rem', background: '#fffbeb', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Calendar style={{ width: '1.5rem', height: '1.5rem', color: '#d97706' }} />
-              </div>
-            </div>
-          </div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <KpiGrid count={3}>
+            <KpiCard label={t('totalPayments')} value={filteredPayments.length} icon={CreditCard} color="blue" />
+            <KpiCard label={t('totalAmount')} value={`${totalAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`} icon={Wallet} color="red" />
+            <KpiCard label={t('thisMonth')} value={filteredPayments.filter(p => { const d = new Date(p.paymentDate); const n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); }).length} icon={Calendar} color="amber" />
+          </KpiGrid>
         </div>
 
         {/* Search Bar */}
@@ -169,96 +138,68 @@ export default function PaiementsAchat() {
         </div>
 
         {/* Payments Table */}
-        <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t('invoice.date')}
-                  </th>
-                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t('invoice')}
-                  </th>
-                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t('supplier')}
-                  </th>
-                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t('paymentMethod')}
-                  </th>
-                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t('reference')}
-                  </th>
-                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t('amount')}
-                  </th>
-                  <th style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t('invoice.actions')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} style={{ paddingTop: '3rem', paddingBottom: '3rem', textAlign: 'center' }}>
-                      <div className="animate-spin" style={{ display: 'inline-block', borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #2563eb' }}></div>
-                    </td>
-                  </tr>
-                ) : filteredPayments.length > 0 ? (
-                  filteredPayments.map((payment) => (
-                    <tr key={payment.id} style={{ borderTop: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}>
-                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', color: '#0f172a' }}>
-                        {new Date(payment.paymentDate).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', fontWeight: 500, color: '#0f172a' }}>
-                        {getInvoiceNumber(payment.invoiceId)}
-                      </td>
-                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', color: '#475569' }}>
-                        {getSupplierName(payment.invoiceId)}
-                      </td>
-                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', color: '#475569' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <CreditCard style={{ width: '1rem', height: '1rem', color: '#94a3b8' }} />
-                          {PAYMENT_TYPE_LABELS[payment.paymentType]}
-                        </div>
-                      </td>
-                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', color: '#475569' }}>
-                        {payment.referenceNumber || '-'}
-                      </td>
-                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.875rem', fontWeight: 600, textAlign: 'right', color: '#dc2626' }}>
-                        {payment.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                      </td>
-                      <td style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                          <button
-                            onClick={() => handleEdit(payment)}
-                            style={{ padding: '0.5rem', color: '#2563eb', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                            title={t('modify')}
-                          >
-                            <Edit2 style={{ width: '1rem', height: '1rem' }} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(payment.id)}
-                            style={{ padding: '0.5rem', color: '#dc2626', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                            title={t('delete')}
-                          >
-                            <Trash2 style={{ width: '1rem', height: '1rem' }} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} style={{ paddingTop: '3rem', paddingBottom: '3rem', textAlign: 'center' }}>
-                      <Wallet style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto', marginBottom: '0.75rem' }} />
-                      <p style={{ color: '#64748b' }}>Aucun paiement trouvé</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <style>{`
+            .pa-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 1rem 1.5rem; font-size: 0.75rem; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+            .pa-datatable .p-datatable-tbody > tr > td { padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; font-size: 0.875rem; }
+            .pa-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+            .pa-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+            .pa-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+            .pa-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+          `}</style>
+          <DataTable
+            className="pa-datatable"
+            value={filteredPayments}
+            selection={selectedRows}
+            onSelectionChange={(e) => setSelectedRows(e.value as Payment[])}
+            selectionMode="checkbox"
+            dataKey="id"
+            paginator
+            paginatorPosition="top"
+            rows={25}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            removableSort
+            loading={loading}
+            emptyMessage={
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <Wallet style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
+                <p style={{ color: '#64748b' }}>Aucun paiement trouvé</p>
+              </div>
+            }
+            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+            currentPageReportTemplate="{first} - {last} / {totalRecords}"
+          >
+            <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+            <Column field="paymentDate" header={t('invoice.date')} sortable body={(p: Payment) => (
+              <span>{new Date(p.paymentDate).toLocaleDateString('fr-FR')}</span>
+            )} />
+            <Column header={t('invoice')} body={(p: Payment) => (
+              <span style={{ fontWeight: 500, color: '#0f172a' }}>{getInvoiceNumber(p.invoiceId)}</span>
+            )} />
+            <Column header={t('supplier')} body={(p: Payment) => (
+              <span style={{ color: '#475569' }}>{getSupplierName(p.invoiceId)}</span>
+            )} />
+            <Column field="paymentType" header={t('paymentMethod')} sortable body={(p: Payment) => (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#475569' }}>
+                <CreditCard style={{ width: '1rem', height: '1rem', color: '#94a3b8' }} />
+                {PAYMENT_TYPE_LABELS[p.paymentType]}
+              </div>
+            )} />
+            <Column field="referenceNumber" header={t('reference')} sortable body={(p: Payment) => (
+              <span style={{ color: '#475569' }}>{p.referenceNumber || '-'}</span>
+            )} />
+            <Column field="amount" header={t('amount')} sortable align="right" headerStyle={{ textAlign: 'right' }} body={(p: Payment) => (
+              <span style={{ fontWeight: 600, color: '#dc2626' }}>
+                {p.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              </span>
+            )} />
+            <Column header={t('invoice.actions')} align="center" headerStyle={{ textAlign: 'center' }} body={(p: Payment) => (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <Button icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleEdit(p)} text rounded severity="info" title={t('modify')} />
+                <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(p.id)} text rounded severity="danger" title={t('delete')} />
+              </div>
+            )} />
+          </DataTable>
         </div>
       </div>
 

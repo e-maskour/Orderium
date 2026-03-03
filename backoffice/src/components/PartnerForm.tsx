@@ -141,8 +141,8 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
     <div style={{ width: '100%' }}>
       <form onSubmit={handleSubmit} className="flex flex-column gap-4">
         {/* Partner Type & Status Card */}
-        <div style={{ background: '#f8fafc', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-          <div className="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
+        <div style={{ background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', borderRadius: '0.875rem', padding: '1.25rem', border: '1px solid #e2e8f0' }}>
+          <div className="partner-form-type-row">
             {/* Partner Type Section */}
             <div className="flex flex-column gap-2 flex-1">
               <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('partnerType')}</label>
@@ -173,14 +173,12 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
         </div>
 
         {/* Basic Information Card */}
-        <div style={{ background: '#fff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          <div style={{ background: '#f8fafc', padding: '0.625rem 1rem', borderBottom: '1px solid #e2e8f0' }}>
-            <h3 className="flex align-items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-              <div style={{ padding: '0.375rem', background: '#3b82f6', borderRadius: '0.375rem' }}>
-                <User style={{ width: 14, height: 14, color: '#fff' }} />
-              </div>
-              <span>{t('basicInformation')}</span>
-            </h3>
+        <div style={{ background: '#fff', borderRadius: '0.875rem', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ background: 'linear-gradient(135deg, #eff6ff, #f8fafc)', padding: '0.75rem 1.25rem', borderBottom: '1px solid #dbeafe', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <div style={{ padding: '0.375rem', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', borderRadius: '0.5rem', flexShrink: 0 }}>
+              <User style={{ width: 14, height: 14, color: '#fff' }} />
+            </div>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e3a5f', margin: 0 }}>{t('basicInformation')}</h3>
           </div>
 
           <div style={{ padding: '1rem' }}>
@@ -271,13 +269,11 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
         {/* Business Identifiers Card - Only for Companies */}
         {formData.isCompany && (
           <div style={{ background: '#fff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-            <div style={{ background: '#fffbeb', padding: '0.625rem 1rem', borderBottom: '1px solid #fcd34d' }}>
-              <h3 className="flex align-items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                <div style={{ padding: '0.375rem', background: '#f59e0b', borderRadius: '0.375rem' }}>
-                  <FileText style={{ width: 14, height: 14, color: '#fff' }} />
-                </div>
-                <span>{t('businessIdentifiers')}</span>
-              </h3>
+            <div style={{ background: 'linear-gradient(135deg, #fffbeb, #fef9ee)', padding: '0.75rem 1.25rem', borderBottom: '1px solid #fcd34d', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <div style={{ padding: '0.375rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.5rem', flexShrink: 0 }}>
+                <FileText style={{ width: 14, height: 14, color: '#fff' }} />
+              </div>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#78350f', margin: 0 }}>{t('businessIdentifiers')}</h3>
             </div>
 
             <div style={{ padding: '1rem' }}>
@@ -341,7 +337,7 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
         )}
 
         {/* Action Buttons */}
-        <div className="flex align-items-center justify-content-end gap-3" style={{ paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+        <div className="partner-form-actions" style={{ paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
           <Button type="button" label={t('cancel')} outlined onClick={onCancel} />
           <Button
             type="submit"
@@ -350,6 +346,36 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
             loading={isSubmitting}
           />
         </div>
+
+        <style>{`
+          .partner-form-type-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+          }
+          .partner-form-type-row > * {
+            flex: 1;
+            min-width: 200px;
+          }
+          .partner-form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+          }
+          @media (max-width: 479px) {
+            .partner-form-actions {
+              flex-direction: column-reverse;
+              align-items: stretch;
+            }
+            .partner-form-actions .p-button {
+              width: 100%;
+              justify-content: center;
+            }
+          }
+        `}</style>
       </form>
     </div>
   );

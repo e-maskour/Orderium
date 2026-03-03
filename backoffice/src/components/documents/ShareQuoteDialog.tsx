@@ -71,14 +71,27 @@ export function ShareQuoteDialog({
     </div>
   );
 
+  const footerContent = (
+    <div className="flex justify-content-end">
+      <button
+        onClick={onClose}
+        style={{ padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', background: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+      >
+        {t('close')}
+      </button>
+    </div>
+  );
+
   return (
     <Dialog
       visible={isOpen}
       onHide={onClose}
       header={headerContent}
+      footer={footerContent}
       modal
       dismissableMask
       style={{ width: '28rem' }}
+      breakpoints={{ '640px': '95vw' }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {!shareToken ? (

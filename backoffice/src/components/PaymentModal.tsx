@@ -155,6 +155,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       footer={footerContent}
       modal
       style={{ width: '95vw', maxWidth: '42rem' }}
+      breakpoints={{ '960px': '75vw', '640px': '95vw' }}
       contentStyle={{ overflowY: 'auto' }}
     >
       <form onSubmit={handleSubmit} className="flex flex-column gap-4">

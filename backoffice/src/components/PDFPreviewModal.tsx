@@ -27,7 +27,8 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
       dismissableMask
       maximizable
       style={{ width: '90vw', maxWidth: '80rem' }}
-      contentStyle={{ height: '80vh', padding: 0, position: 'relative', background: '#f1f5f9' }}
+      breakpoints={{ '960px': '90vw', '640px': '95vw' }}
+      contentStyle={{ height: '80vh', padding: 0, position: 'relative', background: '#f1f5f9', overflow: 'hidden' }}
     >
       {isLoading && (
         <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: '#f1f5f9', zIndex: 1 }}>

@@ -1,303 +1,283 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { Tooltip } from 'primereact/tooltip';
+import { Badge } from 'primereact/badge';
+import { Ripple } from 'primereact/ripple';
 import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  UserCircle,
-  Truck,
-  CreditCard,
-  FileText,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  TrendingUp,
-  TrendingDown,
-  FileCheck,
-  PackageCheck,
-  Receipt,
-  ShoppingBag,
-  DollarSign,
-  Wallet,
-  Settings,
-  Building2,
-  FolderTree,
+    LayoutDashboard,
+    Package,
+    ShoppingCart,
+    Users,
+    CreditCard,
+    ChevronLeft,
+    ChevronRight,
+    TrendingUp,
+    TrendingDown,
+    Settings,
 } from 'lucide-react';
 
 interface SidebarProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
+    isCollapsed: boolean;
+    setIsCollapsed: (value: boolean) => void;
 }
 
-const iconSize = (collapsed: boolean) => ({
-  width: collapsed ? '1.25rem' : '1rem',
-  height: collapsed ? '1.25rem' : '1rem',
-  flexShrink: 0,
-});
+const ICON_SIZE = 18;
+const COLLAPSED_ICON_SIZE = 20;
 
 export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
-  const location = useLocation();
-  const { t, language } = useLanguage();
-  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
-  const isRtl = language === 'ar';
+    const location = useLocation();
+    const { t, language } = useLanguage();
+    const isRtl = language === 'ar';
 
-  useEffect(() => {
-    const menuGroups = [
-      { key: 'ventes', submenu: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'] },
-      { key: 'achats', submenu: ['/demande-prix', '/bon-achat', '/factures/achat', '/paiements-achat', '/fournisseurs'] },
-      { key: 'products', submenu: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
-    ];
-    menuGroups.forEach(menu => {
-      if (menu.submenu.some(path => location.pathname.startsWith(path))) {
-        if (!expandedMenus.includes(menu.key)) {
-          setExpandedMenus(prev => [...prev, menu.key]);
-        }
-      }
-    });
-  }, [location.pathname]);
+    // Groups that own sub-paths — used to highlight the sidebar item when inside a group
+    const groupPaths: Record<string, string[]> = {
+        '/devis': ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'],
+        '/demande-prix': ['/demande-prix', '/bon-achat', '/factures/achat', '/paiements-achat', '/fournisseurs'],
+        '/products': ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'],
+    };
 
-  const toggleMenu = (menuKey: string) => {
-    if (isCollapsed) setIsCollapsed(false);
-    setExpandedMenus(prev =>
-      prev.includes(menuKey) ? prev.filter(k => k !== menuKey) : [...prev, menuKey]
-    );
-  };
+    const isGroupActive = (groupRoot: string) =>
+        groupPaths[groupRoot]?.some(p => location.pathname.startsWith(p)) ?? false;
 
-  const menuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
-    {
-      key: 'ventes', icon: TrendingUp, label: t('sales'),
-      submenu: [
-        { path: '/devis', icon: FileCheck, label: t('quote') },
-        { path: '/bons-livraison', icon: PackageCheck, label: t('deliveryNote') },
-        { path: '/factures/vente', icon: FileText, label: t('salesInvoice') },
-        { path: '/paiements-vente', icon: Wallet, label: t('payments') },
-        { path: '/customers', icon: UserCircle, label: t('clients') },
-      ],
-    },
-    {
-      key: 'achats', icon: TrendingDown, label: t('purchases'),
-      submenu: [
-        { path: '/demande-prix', icon: DollarSign, label: t('priceRequest') },
-        { path: '/bon-achat', icon: ShoppingBag, label: t('purchaseOrder') },
-        { path: '/factures/achat', icon: Receipt, label: t('purchaseInvoice') },
-        { path: '/paiements-achat', icon: Wallet, label: t('payments') },
-        { path: '/fournisseurs', icon: Truck, label: t('suppliers') },
-      ],
-    },
-    { path: '/orders', icon: ShoppingCart, label: t('orders') },
-    {
-      key: 'products', icon: Package, label: t('products'),
-      submenu: [
-        { path: '/products', icon: Package, label: t('products') },
-        { path: '/categories', icon: FolderTree, label: t('categories') },
-        { path: '/warehouses', icon: Building2, label: t('warehouses') },
-        { path: '/stock-movements', icon: TrendingUp, label: t('stockMovements') },
-        { path: '/inventory-adjustments', icon: FileCheck, label: t('inventoryAdjustments') },
-      ],
-    },
-    { path: '/delivery-persons', icon: Users, label: t('deliveryPersons') },
-    { path: '/pos', icon: CreditCard, label: t('pointOfSale') },
-    { path: '/configurations', icon: Settings, label: t('configurations') },
-  ];
+    const menuItems = useMemo(() => [
+        { path: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
+        { path: '/devis', icon: TrendingUp, label: t('sales'), groupRoot: true },
+        { path: '/demande-prix', icon: TrendingDown, label: t('purchases'), groupRoot: true },
+        { path: '/orders', icon: ShoppingCart, label: t('orders') },
+        { path: '/products', icon: Package, label: t('products'), groupRoot: true },
+        { path: '/delivery-persons', icon: Users, label: t('deliveryPersons') },
+        { path: '/pos', icon: CreditCard, label: t('pointOfSale') },
+        { path: '/configurations', icon: Settings, label: t('configurations') },
+    ], [t]);
 
-  const activeColor = '#d97706';
-  const activeBg = '#fffbeb';
-
-  return (
-    <aside
-      style={{
-        position: 'fixed',
-        top: 0,
-        [isRtl ? 'right' : 'left']: 0,
-        height: '100vh',
-        width: isCollapsed ? '5rem' : '16rem',
-        background: '#fff',
-        borderInlineEnd: '1px solid #e2e8f0',
-        transition: 'width 0.3s',
-        zIndex: 20,
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {/* Logo */}
-      <div
-        className="flex align-items-center justify-content-between flex-shrink-0"
-        style={{ height: '4rem', padding: '0 0.75rem', borderBottom: '1px solid #e2e8f0' }}
-      >
-        {!isCollapsed ? (
-          <div className="flex align-items-center gap-2">
+    return (
+        <aside
+            className="sidebar-enterprise"
+            style={{
+                position: 'fixed',
+                top: 0,
+                [isRtl ? 'right' : 'left']: 0,
+                height: '100vh',
+                width: isCollapsed ? '4.5rem' : '16.5rem',
+                background: 'linear-gradient(195deg, #1e1e2d 0%, #1a1a2e 50%, #16213e 100%)',
+                transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                zIndex: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '4px 0 24px rgba(0, 0, 0, 0.15)',
+                overflow: 'hidden',
+            }}
+        >
+            {/* Logo Area */}
             <div
-              className="flex align-items-center justify-content-center border-round-lg flex-shrink-0"
-              style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(135deg, #dd7c1a, #c86b14)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-            >
-              <span className="font-bold text-white" style={{ fontSize: '1.25rem' }}>O</span>
-            </div>
-            <span className="font-bold" style={{ fontSize: '1.125rem', color: '#1e293b' }}>Orderium</span>
-          </div>
-        ) : (
-          <div className="flex justify-content-center w-full">
-            <div
-              className="flex align-items-center justify-content-center border-round-lg"
-              style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(135deg, #dd7c1a, #c86b14)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-            >
-              <span className="font-bold text-white" style={{ fontSize: '1.25rem' }}>O</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Collapse Toggle */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="hidden sm:flex"
-        style={{
-          position: 'absolute',
-          [isRtl ? 'left' : 'right']: '-0.75rem',
-          top: '5rem',
-          width: '1.5rem',
-          height: '1.5rem',
-          borderRadius: '50%',
-          background: '#fff',
-          border: '1px solid #e2e8f0',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-          zIndex: 21,
-        }}
-      >
-        {(isRtl ? !isCollapsed : isCollapsed) ? (
-          <ChevronRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />
-        ) : (
-          <ChevronLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />
-        )}
-      </button>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto" style={{ marginTop: '1rem', padding: '0 0.5rem' }}>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-
-            if ('submenu' in item && item.submenu) {
-              const isExpanded = expandedMenus.includes(item.key);
-              const hasActiveChild = item.submenu.some(sub => location.pathname.startsWith(sub.path));
-
-              return (
-                <li key={item.key} style={{ marginBottom: '0.25rem' }}>
-                  <button
-                    onClick={() => toggleMenu(item.key)}
-                    className="w-full flex align-items-center border-round-lg"
-                    style={{
-                      gap: isCollapsed ? 0 : '0.5rem',
-                      justifyContent: isCollapsed ? 'center' : 'flex-start',
-                      padding: '0.5rem 0.75rem',
-                      background: hasActiveChild ? activeBg : 'transparent',
-                      color: hasActiveChild ? activeColor : '#475569',
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'background 0.2s',
-                    }}
-                    title={isCollapsed ? item.label : undefined}
-                  >
-                    <Icon style={{ ...iconSize(isCollapsed), color: hasActiveChild ? activeColor : '#64748b' }} />
-                    {!isCollapsed && (
-                      <>
-                        <span className="font-medium flex-1" style={{ fontSize: '0.875rem', textAlign: isRtl ? 'right' : 'left' }}>{item.label}</span>
-                        <ChevronDown style={{
-                          width: '0.875rem', height: '0.875rem', flexShrink: 0,
-                          transition: 'transform 0.2s',
-                          transform: isRtl
-                            ? (isExpanded ? 'rotate(0deg)' : 'rotate(90deg)')
-                            : (isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'),
-                        }} />
-                      </>
-                    )}
-                  </button>
-
-                  {!isCollapsed && isExpanded && (
-                    <ul style={{
-                      listStyle: 'none', padding: 0, margin: '0.25rem 0 0 0',
-                      [isRtl ? 'marginRight' : 'marginLeft']: '1rem',
-                      [isRtl ? 'borderRight' : 'borderLeft']: '2px solid #e2e8f0',
-                      [isRtl ? 'paddingRight' : 'paddingLeft']: '0.75rem',
-                    }}>
-                      {item.submenu.map((subItem) => {
-                        const SubIcon = subItem.icon;
-                        const isActive = location.pathname.startsWith(subItem.path);
-                        return (
-                          <li key={subItem.path} style={{ marginBottom: '0.125rem' }}>
-                            <Link
-                              to={subItem.path}
-                              className="flex align-items-center gap-2 border-round-lg no-underline"
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                fontSize: '0.8125rem',
-                                fontWeight: 500,
-                                background: isActive ? activeBg : 'transparent',
-                                color: isActive ? activeColor : '#475569',
-                                transition: 'background 0.2s',
-                              }}
-                            >
-                              <SubIcon style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0, color: isActive ? activeColor : '#94a3b8' }} />
-                              <span className="flex-1" style={{ textAlign: isRtl ? 'right' : 'left' }}>{subItem.label}</span>
-                              {isActive && <div style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', background: activeColor, flexShrink: 0 }} />}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </li>
-              );
-            }
-
-            const isActive = location.pathname === item.path;
-            return (
-              <li key={item.path} style={{ marginBottom: '0.25rem' }}>
-                <Link
-                  to={item.path}
-                  className="flex align-items-center border-round-lg no-underline"
-                  style={{
-                    gap: isCollapsed ? 0 : '0.5rem',
+                className="flex align-items-center flex-shrink-0"
+                style={{
+                    height: '4.25rem',
+                    padding: isCollapsed ? '0' : '0 1.25rem',
                     justifyContent: isCollapsed ? 'center' : 'flex-start',
-                    padding: '0.5rem 0.75rem',
-                    background: isActive ? activeBg : 'transparent',
-                    color: isActive ? activeColor : '#475569',
-                    fontWeight: 500,
-                    fontSize: '0.875rem',
-                    transition: 'background 0.2s',
-                  }}
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <Icon style={{ ...iconSize(isCollapsed), color: isActive ? activeColor : '#64748b' }} />
-                  {!isCollapsed && (
-                    <>
-                      <span className="flex-1" style={{ textAlign: isRtl ? 'right' : 'left' }}>{item.label}</span>
-                      {isActive && <div style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', background: activeColor, flexShrink: 0 }} />}
-                    </>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                }}
+            >
+                <div className="flex align-items-center gap-3">
+                    <div
+                        className="flex align-items-center justify-content-center flex-shrink-0"
+                        style={{
+                            width: '2.25rem',
+                            height: '2.25rem',
+                            borderRadius: '0.625rem',
+                            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+                        }}
+                    >
+                        <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>O</span>
+                    </div>
+                    {!isCollapsed && (
+                        <div className="flex flex-column">
+                            <span className="brand-name" style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
+                                Orderium
+                            </span>
+                            <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'var(--font-latin)' }}>
+                                Enterprise
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </div>
 
-      {/* Bottom Info */}
-      {!isCollapsed && (
-        <div className="flex-shrink-0" style={{ padding: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
-          <div className="border-round-lg" style={{ padding: '0.75rem', background: 'linear-gradient(135deg, #fffbeb, #fef3c7)' }}>
-            <p className="font-semibold" style={{ fontSize: '0.75rem', color: '#78350f', marginBottom: '0.25rem' }}>
-              {t('adminBackoffice')}
-            </p>
-            <p style={{ fontSize: '0.75rem', color: '#92400e' }}>v2.0.0</p>
-          </div>
-        </div>
-      )}
-    </aside>
-  );
+            {/* Collapse Toggle */}
+            <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex"
+                style={{
+                    position: 'absolute',
+                    [isRtl ? 'left' : 'right']: '-0.75rem',
+                    top: '5.25rem',
+                    width: '1.5rem',
+                    height: '1.5rem',
+                    borderRadius: '50%',
+                    background: '#1e1e2d',
+                    border: '2px solid rgba(255,255,255,0.1)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                    zIndex: 21,
+                    transition: 'all 0.2s ease',
+                }}
+            >
+                {(isRtl ? !isCollapsed : isCollapsed) ? (
+                    <ChevronRight style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.7)' }} />
+                ) : (
+                    <ChevronLeft style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.7)' }} />
+                )}
+            </button>
+
+            {/* Section Label */}
+            {!isCollapsed && (
+                <div style={{ padding: '1rem 1.25rem 0.5rem', opacity: 0.4 }}>
+                    <span className="section-label" style={{ fontSize: '0.6rem', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-latin)' }}>
+                        {t('menu') || 'Menu'}
+                    </span>
+                </div>
+            )}
+
+            {/* Navigation */}
+            <nav
+                className="flex-1"
+                style={{
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    padding: isCollapsed ? '0.5rem 0.375rem' : '0.25rem 0.75rem',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+                }}
+            >
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {menuItems.map((item) => {
+                        const Icon = item.icon;
+                        const iconSz = isCollapsed ? COLLAPSED_ICON_SIZE : ICON_SIZE;
+                        const isActive = item.groupRoot
+                            ? isGroupActive(item.path)
+                            : location.pathname === item.path;
+                        return (
+                            <li key={item.path} style={{ marginBottom: '0.125rem' }}>
+                                <Link
+                                    to={item.path}
+                                    className={`flex align-items-center no-underline p-ripple ${isActive ? 'sidebar-active-item' : 'sidebar-menu-item'}`}
+                                    data-pr-tooltip={isCollapsed ? item.label : undefined}
+                                    data-pr-position={isRtl ? 'left' : 'right'}
+                                    style={{
+                                        gap: isCollapsed ? 0 : '0.75rem',
+                                        justifyContent: isCollapsed ? 'center' : 'flex-start',
+                                        padding: isCollapsed ? '0.625rem' : '0.5rem 0.75rem',
+                                        background: isActive ? 'rgba(245, 158, 11, 0.12)' : 'transparent',
+                                        color: isActive ? '#f59e0b' : 'rgba(255,255,255,0.65)',
+                                        fontWeight: isActive ? 600 : 500,
+                                        fontSize: '0.8125rem',
+                                        borderRadius: '0.5rem',
+                                        transition: 'all 0.15s ease',
+                                        position: 'relative',
+                                    }}
+                                >
+                                    {isActive && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            [isRtl ? 'right' : 'left']: 0,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            width: '0.1875rem',
+                                            height: '1.25rem',
+                                            borderRadius: '0 0.25rem 0.25rem 0',
+                                            background: '#f59e0b',
+                                            boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
+                                        }} />
+                                    )}
+                                    <div
+                                        className="flex align-items-center justify-content-center flex-shrink-0"
+                                        style={{
+                                            width: '2rem',
+                                            height: '2rem',
+                                            borderRadius: '0.375rem',
+                                            background: isActive ? 'rgba(245, 158, 11, 0.15)' : 'transparent',
+                                            transition: 'background 0.15s ease',
+                                        }}
+                                    >
+                                        <Icon style={{ width: iconSz, height: iconSz }} strokeWidth={1.75} />
+                                    </div>
+                                    {!isCollapsed && (
+                                        <>
+                                            <span className="flex-1" style={{ textAlign: isRtl ? 'right' : 'left', whiteSpace: 'nowrap' }}>{item.label}</span>
+                                            {isActive && (
+                                                <div style={{
+                                                    width: '0.3125rem',
+                                                    height: '0.3125rem',
+                                                    borderRadius: '50%',
+                                                    background: '#f59e0b',
+                                                    boxShadow: '0 0 6px rgba(245, 158, 11, 0.5)',
+                                                    flexShrink: 0,
+                                                }} />
+                                            )}
+                                        </>
+                                    )}
+                                    <Ripple />
+                                </Link>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </nav>
+
+            {/* Tooltip for collapsed mode */}
+            {isCollapsed && <Tooltip target=".sidebar-menu-item,.sidebar-active-item" />}
+
+            {/* Bottom Section */}
+            <div className="flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: isCollapsed ? '0.75rem 0.375rem' : '0.75rem' }}>
+                {!isCollapsed ? (
+                    <div
+                        style={{
+                            padding: '0.75rem',
+                            borderRadius: '0.625rem',
+                            background: 'rgba(245, 158, 11, 0.08)',
+                            border: '1px solid rgba(245, 158, 11, 0.12)',
+                        }}
+                    >
+                        <div className="flex align-items-center justify-content-between">
+                            <div>
+                                <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#f59e0b', marginBottom: '0.125rem' }}>
+                                    Orderium ERP
+                                </p>
+                                <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)' }}>v2.0.0</p>
+                            </div>
+                            <Badge value="PRO" severity="warning" style={{ fontSize: '0.5625rem' }} />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex justify-content-center">
+                        <Badge value="P" severity="warning" style={{ fontSize: '0.5625rem' }} />
+                    </div>
+                )}
+            </div>
+
+            <style>{`
+        .sidebar-menu-item:hover {
+          background: rgba(255,255,255,0.05) !important;
+          color: rgba(255,255,255,0.9) !important;
+        }
+        .sidebar-active-item:hover {
+          background: rgba(245, 158, 11, 0.16) !important;
+        }
+        .sidebar-enterprise nav::-webkit-scrollbar {
+          width: 3px;
+        }
+        .sidebar-enterprise nav::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .sidebar-enterprise nav::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.1);
+          border-radius: 3px;
+        }
+      `}</style>
+        </aside>
+    );
 };

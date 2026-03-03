@@ -110,9 +110,19 @@ export const CustomerSelectionModal = ({
   };
 
   const headerContent = (
-    <div className="flex align-items-center gap-2">
-      <User style={{ width: 20, height: 20, color: '#d97706' }} />
-      <span>{t('selectCustomer')}</span>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+      <div style={{
+        width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem', flexShrink: 0,
+        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 10px rgba(245,158,11,0.35)',
+      }}>
+        <User style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} strokeWidth={2.5} />
+      </div>
+      <div>
+        <div style={{ fontWeight: 700, fontSize: '1rem', color: '#111827' }}>{t('selectCustomer')}</div>
+        <div style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem' }}>{t('searchByNameOrPhone')}</div>
+      </div>
     </div>
   );
 
@@ -124,43 +134,74 @@ export const CustomerSelectionModal = ({
       modal
       dismissableMask
       style={{ width: '95vw', maxWidth: '32rem' }}
-      contentStyle={{ padding: '1rem' }}
+      breakpoints={{ '960px': '75vw', '640px': '95vw' }}
+      contentStyle={{ padding: '1rem', overflowY: 'auto' }}
     >
-      <div className="flex flex-column gap-3">
+      <style>{`
+        .cust-card { transition: all 0.15s ease; }
+        .cust-card:hover { background: #fffbeb !important; border-color: #f59e0b !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,0.15); }
+        .cust-input:focus { border-color: #f59e0b !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.15) !important; outline: none; }
+      `}</style>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
         {/* Search Input */}
-        <span className="p-input-icon-left" style={{ width: '100%' }}>
-          <i className="pi pi-search" />
+        <div style={{ position: 'relative' }}>
+          <Search style={{
+            position: 'absolute', [dir === 'rtl' ? 'right' : 'left']: '0.875rem',
+            top: '50%', transform: 'translateY(-50%)',
+            width: '1rem', height: '1rem', color: '#9ca3af', pointerEvents: 'none',
+          }} />
           <InputText
             ref={searchInputRef}
             placeholder={t('searchByNameOrPhone')}
             value={customerSearch}
             onChange={(e) => setCustomerSearch(e.target.value)}
-            style={{ width: '100%' }}
+            className="cust-input"
+            style={{
+              width: '100%', height: '2.875rem',
+              paddingLeft: dir === 'rtl' ? '0.875rem' : '2.75rem',
+              paddingRight: dir === 'rtl' ? '2.75rem' : '0.875rem',
+              borderRadius: '0.75rem', border: '1.5px solid #e5e7eb',
+              fontSize: '0.9375rem', transition: 'all 0.2s',
+            }}
           />
-        </span>
+        </div>
 
         {/* Currently Selected Customer */}
         {selectedCustomer && customerSearch.length === 0 && (
-          <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '0.5rem', padding: '1rem' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#047857', marginBottom: '0.5rem' }}>{t('currentCustomer')}</div>
-            <div>
-              <div style={{ fontWeight: 600, color: '#064e3b' }}>{selectedCustomer.name}</div>
-              <div style={{ fontSize: '0.875rem', color: '#047857' }}>{selectedCustomer.phoneNumber}</div>
-              {selectedCustomer.address && (
-                <div className="flex align-items-start gap-1" style={{ fontSize: '0.875rem', color: '#047857', marginTop: '0.25rem' }}>
-                  <MapPin style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
-                  <span>{selectedCustomer.address}</span>
-                </div>
-              )}
+          <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '0.875rem', padding: '0.875rem 1rem' }}>
+            <div style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#16a34a', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {t('currentCustomer')}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <div style={{
+                width: '2.25rem', height: '2.25rem', borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.875rem', fontWeight: 700, color: '#fff',
+              }}>
+                {selectedCustomer.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: '#166534', fontSize: '0.9375rem' }}>{selectedCustomer.name}</div>
+                <div style={{ fontSize: '0.8125rem', color: '#16a34a' }}>{selectedCustomer.phoneNumber}</div>
+                {selectedCustomer.address && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.25rem', fontSize: '0.75rem', color: '#166534', marginTop: '0.125rem' }}>
+                    <MapPin style={{ width: 12, height: 12, marginTop: 2, flexShrink: 0 }} />
+                    <span>{selectedCustomer.address}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* Customer Suggestions */}
         {customerSuggestions.length > 0 && (
-          <div className="flex flex-column gap-2">
-            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>{t('searchResults')}</div>
-            <div className="flex flex-column gap-2" style={{ maxHeight: '15rem', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {t('searchResults')}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', maxHeight: '15rem', overflowY: 'auto' }}>
               {customerSuggestions.map((customer) => (
                 <div
                   key={customer.id}
@@ -168,16 +209,31 @@ export const CustomerSelectionModal = ({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && handleSelectCustomer(customer)}
-                  style={{ width: '100%', textAlign: 'left', padding: '0.75rem', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '0.5rem', cursor: 'pointer' }}
+                  className="cust-card"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    padding: '0.75rem', background: '#fff',
+                    border: '1.5px solid #e5e7eb', borderRadius: '0.75rem', cursor: 'pointer',
+                  }}
                 >
-                  <div style={{ fontWeight: 600, color: '#111827' }}>{customer.name}</div>
-                  <div style={{ fontSize: '0.875rem', color: '#4b5563' }}>{customer.phoneNumber}</div>
-                  {customer.address && (
-                    <div className="flex align-items-start gap-1 line-clamp-1" style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                      <MapPin style={{ width: 12, height: 12, marginTop: 2, flexShrink: 0 }} />
-                      <span>{customer.address}</span>
-                    </div>
-                  )}
+                  <div style={{
+                    width: '2.25rem', height: '2.25rem', borderRadius: '50%', flexShrink: 0,
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.875rem', fontWeight: 700, color: '#fff',
+                  }}>
+                    {customer.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.9375rem' }}>{customer.name}</div>
+                    <div style={{ fontSize: '0.8125rem', color: '#6b7280' }}>{customer.phoneNumber}</div>
+                    {customer.address && (
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.25rem', fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.125rem' }}>
+                        <MapPin style={{ width: 11, height: 11, marginTop: 2, flexShrink: 0 }} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customer.address}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -186,51 +242,79 @@ export const CustomerSelectionModal = ({
 
         {/* Create New Customer Form */}
         {showCustomerForm && (
-          <div className="flex flex-column gap-3" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', padding: '1rem' }}>
-            <div className="flex align-items-center gap-2" style={{ color: '#1d4ed8' }}>
-              <Plus style={{ width: 20, height: 20 }} />
-              <span style={{ fontWeight: 600 }}>{t('createNewCustomer')}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '0.875rem', padding: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.125rem' }}>
+              <div style={{
+                width: '1.75rem', height: '1.75rem', borderRadius: '0.5rem',
+                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Plus style={{ width: '0.875rem', height: '0.875rem', color: '#fff' }} strokeWidth={2.5} />
+              </div>
+              <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#1e293b' }}>{t('createNewCustomer')}</span>
             </div>
             <InputText
               placeholder={t('name')}
               value={newCustomer.name}
               onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-              style={{ width: '100%' }}
+              className="cust-input"
+              style={{ width: '100%', height: '2.625rem', borderRadius: '0.625rem', border: '1.5px solid #e5e7eb', fontSize: '0.9375rem', transition: 'all 0.2s' }}
             />
             <InputText
               placeholder={t('phoneNumber')}
               value={newCustomer.phoneNumber}
               onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
-              style={{ width: '100%' }}
+              className="cust-input"
+              style={{ width: '100%', height: '2.625rem', borderRadius: '0.625rem', border: '1.5px solid #e5e7eb', fontSize: '0.9375rem', transition: 'all 0.2s' }}
             />
-            <span className="p-input-icon-left" style={{ width: '100%' }}>
-              <i><MapPin style={{ width: 16, height: 16 }} /></i>
+            <div style={{ position: 'relative' }}>
+              <MapPin style={{
+                position: 'absolute', [dir === 'rtl' ? 'right' : 'left']: '0.875rem',
+                top: '50%', transform: 'translateY(-50%)',
+                width: '1rem', height: '1rem', color: '#9ca3af', pointerEvents: 'none',
+              }} />
               <InputText
                 placeholder={t('address')}
                 value={newCustomer.address}
                 onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                style={{ width: '100%' }}
+                className="cust-input"
+                style={{
+                  width: '100%', height: '2.625rem',
+                  paddingLeft: dir === 'rtl' ? '0.875rem' : '2.75rem',
+                  paddingRight: dir === 'rtl' ? '2.75rem' : '0.875rem',
+                  borderRadius: '0.625rem', border: '1.5px solid #e5e7eb', fontSize: '0.9375rem', transition: 'all 0.2s',
+                }}
               />
-            </span>
+            </div>
             <Button
               label={t('createCustomer')}
-              icon={<Plus style={{ width: 16, height: 16 }} />}
               onClick={() => createCustomerMutation.mutate(newCustomer)}
               disabled={!newCustomer.name || !newCustomer.phoneNumber}
               loading={createCustomerMutation.isPending}
-              style={{ width: '100%' }}
+              style={{
+                width: '100%', height: '2.875rem',
+                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                border: 'none', borderRadius: '0.625rem',
+                fontSize: '0.9375rem', fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
+              }}
             />
           </div>
         )}
 
         {/* Empty State */}
         {customerSearch.length === 0 && !selectedCustomer && (
-          <div className="flex flex-column align-items-center" style={{ padding: '3rem 0', textAlign: 'center' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-              <Search style={{ width: 32, height: 32, color: '#d1d5db' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem 0', textAlign: 'center' }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '1rem',
+              background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.08))',
+              border: '1.5px solid rgba(245,158,11,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.875rem',
+            }}>
+              <Search style={{ width: 28, height: 28, color: '#d97706' }} />
             </div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', marginBottom: '0.5rem' }}>{t('searchForCustomer')}</h3>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('searchCustomerInstructions')}</p>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#111827', marginBottom: '0.375rem' }}>{t('searchForCustomer')}</div>
+            <div style={{ fontSize: '0.8125rem', color: '#9ca3af', maxWidth: '18rem' }}>{t('searchCustomerInstructions')}</div>
           </div>
         )}
       </div>

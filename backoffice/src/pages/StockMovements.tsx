@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { ArrowLeftRight, Search, Plus, Eye, CheckCircle2, XCircle, Package, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import { ArrowLeftRight, Search, Eye, CheckCircle2, XCircle, Package, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { stockMovementService } from '../modules/inventory/stock-movements.service';
 import { StockMovement } from '../modules/inventory/inventory.model';
 import { toastValidated, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
@@ -16,6 +19,7 @@ export default function StockMovements() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedMovement, setSelectedMovement] = useState<StockMovement | null>(null);
+  const [selectedRows, setSelectedRows] = useState<StockMovement[]>([]);
 
   const queryClient = useQueryClient();
 
@@ -169,119 +173,86 @@ export default function StockMovements() {
 
       {/* Movements List */}
       <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-        {isLoading ? (
-          <div style={{ padding: '3rem', textAlign: 'center' }}>
-            <div className="animate-spin" style={{ borderRadius: '9999px', height: '3rem', width: '3rem', borderBottom: '2px solid #f59e0b', margin: '0 auto' }}></div>
-            <p style={{ color: '#475569', marginTop: '1rem' }}>Chargement...</p>
-          </div>
-        ) : filteredMovements.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center' }}>
-            <ArrowLeftRight style={{ width: '4rem', height: '4rem', color: '#cbd5e1', margin: '0 auto 1rem', display: 'block' }} />
-            <p style={{ color: '#475569', marginBottom: '0.5rem' }}>Aucun mouvement trouvé</p>
-            <p style={{ fontSize: '0.875rem', color: '#64748b' }}>Les mouvements de stock apparaîtront ici</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Référence</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Produit</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Origine → Destination</th>
-                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quantité</th>
-                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</th>
-                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Statut</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMovements.map((movement) => (
-                  <tr key={movement.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                        {movement.reference}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {getTypeIcon(movement.movementType)}
-                        <span style={{ fontSize: '0.875rem', color: '#334155' }}>{getTypeLabel(movement.movementType)}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <div>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', margin: 0 }}>
-                          {movement.productName || `Produit #${movement.productId}`}
-                        </p>
-                        {movement.productCode && (
-                          <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>{movement.productCode}</p>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569' }}>
-                        <span>{movement.sourceWarehouseName || (movement.sourceWarehouseId ? `Entrepôt ${movement.sourceWarehouseId}` : '-')}</span>
-                        <ArrowLeftRight style={{ width: '0.75rem', height: '0.75rem' }} />
-                        <span>{movement.destWarehouseName || (movement.destWarehouseId ? `Entrepôt ${movement.destWarehouseId}` : '-')}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
-                        {parseFloat(movement.quantity.toString()).toFixed(2)} {movement.unitOfMeasureCode || 'U'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                        {movement.dateDone
-                          ? new Date(movement.dateDone).toLocaleDateString('fr-FR')
-                          : movement.dateScheduled
-                            ? new Date(movement.dateScheduled).toLocaleDateString('fr-FR')
-                            : '-'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                      {getStatusBadge(movement.status)}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                        {(movement.status === 'draft' || movement.status === 'waiting' || movement.status === 'confirmed') && (
-                          <button
-                            onClick={() => validateMutation.mutate(movement.id)}
-                            style={{ padding: '0.375rem', color: '#059669', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}
-                            title={t('validate')}
-                          >
-                            <CheckCircle2 style={{ width: '1rem', height: '1rem' }} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setSelectedMovement(movement)}
-                          style={{ padding: '0.375rem', color: '#475569', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}
-                          title={t('details')}
-                        >
-                          <Eye style={{ width: '1rem', height: '1rem' }} />
-                        </button>
-                        {movement.status !== 'done' && movement.status !== 'cancelled' && (
-                          <button
-                            onClick={() => {
-                              toastConfirm(t('confirmCancelMovement'), () => {
-                                cancelMutation.mutate(movement.id);
-                              });
-                            }}
-                            style={{ padding: '0.375rem', color: '#dc2626', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}
-                            title={t('cancel')}
-                          >
-                            <XCircle style={{ width: '1rem', height: '1rem' }} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <style>{`
+          .sm-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+          .sm-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+          .sm-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+          .sm-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+          .sm-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+          .sm-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+        `}</style>
+        <DataTable
+          className="sm-datatable"
+          value={filteredMovements}
+          selection={selectedRows}
+          onSelectionChange={(e) => setSelectedRows(e.value as StockMovement[])}
+          selectionMode="checkbox"
+          dataKey="id"
+          paginator
+          paginatorPosition="top"
+          rows={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          removableSort
+          loading={isLoading}
+          emptyMessage={
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+              <ArrowLeftRight style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
+              Aucun mouvement trouvé
+            </div>
+          }
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+          currentPageReportTemplate="{first} - {last} / {totalRecords}"
+        >
+          <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+          <Column field="reference" header="Référence" sortable body={(mov: StockMovement) => (
+            <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{mov.reference}</span>
+          )} />
+          <Column field="movementType" header="Type" sortable body={(mov: StockMovement) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {getTypeIcon(mov.movementType)}
+              <span style={{ fontSize: '0.875rem', color: '#334155' }}>{getTypeLabel(mov.movementType)}</span>
+            </div>
+          )} />
+          <Column field="productName" header="Produit" sortable body={(mov: StockMovement) => (
+            <div>
+              <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', margin: 0 }}>{mov.productName || `Produit #${mov.productId}`}</p>
+              {mov.productCode && <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>{mov.productCode}</p>}
+            </div>
+          )} />
+          <Column header="Origine → Destination" body={(mov: StockMovement) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569' }}>
+              <span>{mov.sourceWarehouseName || (mov.sourceWarehouseId ? `Entrepôt ${mov.sourceWarehouseId}` : '-')}</span>
+              <ArrowLeftRight style={{ width: '0.75rem', height: '0.75rem' }} />
+              <span>{mov.destWarehouseName || (mov.destWarehouseId ? `Entrepôt ${mov.destWarehouseId}` : '-')}</span>
+            </div>
+          )} />
+          <Column field="quantity" header="Quantité" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => (
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
+              {parseFloat(mov.quantity.toString()).toFixed(2)} {mov.unitOfMeasureCode || 'U'}
+            </span>
+          )} />
+          <Column field="dateDone" header="Date" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => (
+            <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+              {mov.dateDone ? new Date(mov.dateDone).toLocaleDateString('fr-FR') : mov.dateScheduled ? new Date(mov.dateScheduled).toLocaleDateString('fr-FR') : '-'}
+            </span>
+          )} />
+          <Column field="status" header="Statut" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => getStatusBadge(mov.status)} />
+          <Column header="Actions" align="right" headerStyle={{ textAlign: 'right' }} body={(mov: StockMovement) => (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+              {(mov.status === 'draft' || mov.status === 'waiting' || mov.status === 'confirmed') && (
+                <Button icon={<CheckCircle2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => validateMutation.mutate(mov.id)} text rounded severity="success" title={t('validate')} />
+              )}
+              <Button icon={<Eye style={{ width: '1rem', height: '1rem' }} />} onClick={() => setSelectedMovement(mov)} text rounded severity="secondary" title={t('details')} />
+              {mov.status !== 'done' && mov.status !== 'cancelled' && (
+                <Button
+                  icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
+                  onClick={() => toastConfirm(t('confirmCancelMovement'), () => cancelMutation.mutate(mov.id))}
+                  text rounded severity="danger" title={t('cancel')}
+                />
+              )}
+            </div>
+          )} />
+        </DataTable>
       </div>
     </AdminLayout>
   );

@@ -7,6 +7,7 @@ import { PartnerForm } from '../components/PartnerForm';
 import { Users, ArrowLeft } from 'lucide-react';
 import { toastUpdated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
+import { Button } from 'primereact/button';
 
 export default function CustomerEdit() {
   const { id } = useParams<{ id: string }>();
@@ -50,7 +51,7 @@ export default function CustomerEdit() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
             <div className="animate-spin" style={{ borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #f59e0b' }}></div>
           </div>
@@ -62,7 +63,7 @@ export default function CustomerEdit() {
   if (!partner) {
     return (
       <AdminLayout>
-        <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', padding: '2rem 0' }}>
             <p style={{ color: '#64748b' }}>{t('customerNotFound')}</p>
           </div>
@@ -73,17 +74,16 @@ export default function CustomerEdit() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         {/* Compact Header */}
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <button
+              <Button
+                icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />}
                 onClick={() => navigate('/customers')}
-                style={{ padding: '0.5rem', borderRadius: '0.5rem' }}
-              >
-                <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
-              </button>
+                text rounded
+              />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />

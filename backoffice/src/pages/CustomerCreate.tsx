@@ -35,7 +35,7 @@ export default function CustomerCreate() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         {/* Compact Header */}
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

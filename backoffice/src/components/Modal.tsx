@@ -6,10 +6,11 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, footer, size = 'md' }: ModalProps) {
   const sizeWidths: Record<string, string> = {
     sm: '28rem',
     md: '42rem',
@@ -22,10 +23,12 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       visible={isOpen}
       onHide={onClose}
       header={title}
+      footer={footer}
       modal
       dismissableMask
-      style={{ width: sizeWidths[size], maxWidth: '95vw' }}
-      contentStyle={{ maxHeight: '70vh', overflow: 'auto' }}
+      style={{ width: sizeWidths[size] }}
+      breakpoints={{ '960px': '75vw', '640px': '95vw' }}
+      contentStyle={{ overflowY: 'auto' }}
     >
       {children}
     </Dialog>

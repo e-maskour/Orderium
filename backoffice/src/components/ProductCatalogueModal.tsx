@@ -123,14 +123,17 @@ export function ProductCatalogueModal({
   };
 
   const headerContent = (
-    <div className="flex align-items-center justify-content-between" style={{ width: '100%' }}>
-      <div>
-        <div style={{ fontWeight: 600, fontSize: '1.125rem', color: '#0f172a' }}>Catalogue des produits</div>
-        <div style={{ fontSize: '0.875rem', color: '#475569' }}>
-          {currentItems.filter(item => item.productId).length} produit(s) sélectionné(s)
-        </div>
+    <div>
+      <div style={{ fontWeight: 600, fontSize: '1.125rem', color: '#0f172a' }}>Catalogue des produits</div>
+      <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+        {currentItems.filter(item => item.productId).length} produit(s) sélectionné(s)
       </div>
-      <Button label="Terminé" onClick={handleClose} size="small" />
+    </div>
+  );
+
+  const footerContent = (
+    <div className="flex justify-content-end">
+      <Button label="Terminé" onClick={handleClose} />
     </div>
   );
 
@@ -139,10 +142,12 @@ export function ProductCatalogueModal({
       visible={isOpen}
       onHide={handleClose}
       header={headerContent}
+      footer={footerContent}
       modal
       dismissableMask
       style={{ width: '95vw', maxWidth: '56rem' }}
-      contentStyle={{ padding: 0 }}
+      breakpoints={{ '960px': '75vw', '640px': '95vw' }}
+      contentStyle={{ padding: 0, overflowY: 'auto' }}
     >
       <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0' }}>
         <InputText
@@ -153,7 +158,7 @@ export function ProductCatalogueModal({
         />
       </div>
 
-      <div style={{ overflowY: 'auto', maxHeight: '24rem', padding: '1rem' }}>
+      <div style={{ overflowY: 'auto', padding: '1rem' }}>
         {catalogueLoading ? (
           <div className="flex align-items-center justify-content-center" style={{ padding: '2rem 0' }}>
             <ProgressSpinner style={{ width: '2rem', height: '2rem' }} />

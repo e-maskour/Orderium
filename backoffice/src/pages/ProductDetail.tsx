@@ -19,6 +19,7 @@ import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
+import { RadioButton } from 'primereact/radiobutton';
 
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' };
 const dropdownItemStyle: React.CSSProperties = { padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' };
@@ -279,9 +280,11 @@ export default function ProductDetail() {
       <div style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <button onClick={() => navigate('/products')} style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', backgroundColor: 'transparent' }}>
-              <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
-            </button>
+            <Button
+              icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />}
+              onClick={() => navigate('/products')}
+              text rounded
+            />
             <div>
               <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{product.name}</h1>
               <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{product.code || t('noCode')}</p>
@@ -294,24 +297,21 @@ export default function ProductDetail() {
       <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
         <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', paddingLeft: '1rem', paddingRight: '1rem' }}>
           {(['info', 'pricing', 'stock'] as const).map((tab) => (
-            <button
+            <Button
               key={tab}
               onClick={() => setActiveTab(tab)}
+              label={tab === 'info' ? 'Information' : tab === 'pricing' ? 'Tarification' : 'Stock'}
+              badge={tab === 'stock' ? String(totalStock) : undefined}
+              badgeSeverity="secondary"
+              text
               style={{
                 paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem',
-                fontSize: '0.875rem', fontWeight: 500, position: 'relative', border: 'none', cursor: 'pointer', backgroundColor: 'transparent',
+                fontSize: '0.875rem', fontWeight: 500, position: 'relative', borderRadius: 0,
                 ...(activeTab === tab
                   ? { color: '#d97706', borderBottom: '2px solid #d97706' }
                   : { color: '#475569' }),
               }}
-            >
-              {tab === 'info' ? 'Information' : tab === 'pricing' ? 'Tarification' : 'Stock'}
-              {tab === 'stock' && (
-                <span style={{ marginLeft: '0.375rem', paddingLeft: '0.375rem', paddingRight: '0.375rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#f1f5f9', color: '#475569', fontSize: '0.75rem', borderRadius: '0.25rem' }}>
-                  {totalStock}
-                </span>
-              )}
-            </button>
+            />
           ))}
         </div>
 
@@ -350,10 +350,16 @@ export default function ProductDetail() {
                         <div style={{ position: 'relative' }}>
                           <InputText type="text" value={formData.code} onChange={(e) => { setFormData({ ...formData, code: e.target.value }); clearFieldError('code'); }} placeholder={t('eanBarcodeePlaceholder')} maxLength={13} style={{ width: '100%' }} />
                           {!validationErrors.code && formData.code && <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#64748b' }}>{t('eanBarcodeHint')}</p>}
-                          <button type="button" onClick={handleRegenerateCode} disabled={isGeneratingCode} style={{ marginTop: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#d97706', cursor: isGeneratingCode ? 'not-allowed' : 'pointer', opacity: isGeneratingCode ? 0.5 : 1, background: 'none', border: 'none' }} title={t('generateNewUniqueCode')}>
-                            <RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.75rem', height: '0.75rem' }} />
-                            {isGeneratingCode ? t('generating') : t('generateCode')}
-                          </button>
+                          <Button
+                            type="button"
+                            icon={<RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.75rem', height: '0.75rem' }} />}
+                            label={isGeneratingCode ? t('generating') : t('generateCode')}
+                            onClick={handleRegenerateCode}
+                            disabled={isGeneratingCode}
+                            text
+                            style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#d97706', padding: '0.125rem 0' }}
+                            title={t('generateNewUniqueCode')}
+                          />
                         </div>
                       </div>
                     </div>
@@ -401,10 +407,10 @@ export default function ProductDetail() {
                         {selectedCategories.map((category: any) => (
                           <span key={category.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '9999px', fontSize: '0.875rem' }}>
                             {category.name}
-                            <button type="button" onClick={() => { setSelectedCategories(selectedCategories.filter((c: any) => c.id !== category.id)); setFormData({ ...formData, categoryIds: formData.categoryIds.filter((cid: number) => cid !== category.id) }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400e' }}>×</button>
+                            <Button type="button" label="×" onClick={() => { setSelectedCategories(selectedCategories.filter((c: any) => c.id !== category.id)); setFormData({ ...formData, categoryIds: formData.categoryIds.filter((cid: number) => cid !== category.id) }); }} text style={{ color: '#92400e', padding: '0 0.25rem', minWidth: 'unset', lineHeight: 1 }} />
                           </span>
                         ))}
-                        <input type="text" value={categorySearchTerm} onChange={(e) => { setCategorySearchTerm(e.target.value); setShowCategorySearch(true); }} onFocus={() => setShowCategorySearch(true)} style={{ flex: 1, minWidth: '120px', outline: 'none', border: 'none' }} placeholder={selectedCategories.length === 0 ? t('typeToSearchAndAddCategories') : ""} />
+                        <InputText value={categorySearchTerm} onChange={(e) => { setCategorySearchTerm(e.target.value); setShowCategorySearch(true); }} onFocus={() => setShowCategorySearch(true)} style={{ flex: 1, minWidth: '120px', outline: 'none', border: 'none', boxShadow: 'none', padding: '0' }} placeholder={selectedCategories.length === 0 ? t('typeToSearchAndAddCategories') : ""} />
                       </div>
                       {showCategorySearch && (
                         <div style={dropdownContainerStyle}>
@@ -684,7 +690,7 @@ export default function ProductDetail() {
                 <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem' }}>
                   <p style={{ fontSize: '0.875rem', color: '#92400e', marginBottom: '0.5rem' }}><strong>Aucun entrepôt disponible.</strong></p>
                   <p style={{ fontSize: '0.75rem', color: '#a16207', marginBottom: '0.75rem' }}>Vous devez créer au moins un entrepôt pour gérer le stock.</p>
-                  <button type="button" onClick={() => window.open('/warehouses', '_blank')} style={{ fontSize: '0.75rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', backgroundColor: '#d97706', color: 'white', borderRadius: '0.25rem', border: 'none', cursor: 'pointer' }}>Créer un entrepôt →</button>
+                  <Button type="button" label="Créer un entrepôt →" onClick={() => window.open('/warehouses', '_blank')} style={{ fontSize: '0.75rem', backgroundColor: '#d97706', borderColor: '#d97706' }} />
                 </div>
               )}
 
@@ -705,11 +711,11 @@ export default function ProductDetail() {
                 <label style={labelStyle}>Ajouter/Supprimer *</label>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <input type="radio" checked={stockCorrectionData.operation === 'add'} onChange={() => setStockCorrectionData({ ...stockCorrectionData, operation: 'add' })} />
+                    <RadioButton inputId="op-add" value="add" checked={stockCorrectionData.operation === 'add'} onChange={() => setStockCorrectionData({ ...stockCorrectionData, operation: 'add' })} />
                     <span style={{ fontSize: '0.875rem' }}>{t('add')}</span>
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <input type="radio" checked={stockCorrectionData.operation === 'remove'} onChange={() => setStockCorrectionData({ ...stockCorrectionData, operation: 'remove' })} />
+                    <RadioButton inputId="op-remove" value="remove" checked={stockCorrectionData.operation === 'remove'} onChange={() => setStockCorrectionData({ ...stockCorrectionData, operation: 'remove' })} />
                     <span style={{ fontSize: '0.875rem' }}>{t('remove')}</span>
                   </label>
                 </div>
@@ -756,7 +762,7 @@ export default function ProductDetail() {
                 <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem' }}>
                   <p style={{ fontSize: '0.875rem', color: '#92400e', marginBottom: '0.5rem' }}><strong>Aucun entrepôt disponible.</strong></p>
                   <p style={{ fontSize: '0.75rem', color: '#a16207', marginBottom: '0.75rem' }}>Vous devez créer au moins deux entrepôts pour transférer le stock.</p>
-                  <button type="button" onClick={() => window.open('/warehouses', '_blank')} style={{ fontSize: '0.75rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', backgroundColor: '#d97706', color: 'white', borderRadius: '0.25rem', border: 'none', cursor: 'pointer' }}>Créer un entrepôt →</button>
+                  <Button type="button" label="Créer un entrepôt →" onClick={() => window.open('/warehouses', '_blank')} style={{ fontSize: '0.75rem', backgroundColor: '#d97706', borderColor: '#d97706' }} />
                 </div>
               )}
 

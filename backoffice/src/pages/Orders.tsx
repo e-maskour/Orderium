@@ -11,6 +11,8 @@ import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
+import { DataTable, DataTablePageEvent } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { PDFPreviewModal } from '../components/PDFPreviewModal';
@@ -73,15 +75,15 @@ export default function Orders() {
         return { start: new Date(y.getFullYear(), y.getMonth(), y.getDate()), end: new Date(y.getFullYear(), y.getMonth(), y.getDate(), 23, 59, 59, 999) };
       }
       case 'week': {
-        const s = new Date(now); s.setDate(now.getDate() - now.getDay()); s.setHours(0,0,0,0);
-        const e = new Date(s); e.setDate(s.getDate() + 6); e.setHours(23,59,59,999);
+        const s = new Date(now); s.setDate(now.getDate() - now.getDay()); s.setHours(0, 0, 0, 0);
+        const e = new Date(s); e.setDate(s.getDate() + 6); e.setHours(23, 59, 59, 999);
         return { start: s, end: e };
       }
       case 'month': return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999) };
       case 'year': return { start: new Date(now.getFullYear(), 0, 1), end: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999) };
       case 'custom':
         if (appliedFilters.dateRange.start && appliedFilters.dateRange.end) return { start: appliedFilters.dateRange.start, end: appliedFilters.dateRange.end };
-        if (appliedFilters.dateRange.start) { const e2 = new Date(appliedFilters.dateRange.start); e2.setHours(23,59,59,999); return { start: appliedFilters.dateRange.start, end: e2 }; }
+        if (appliedFilters.dateRange.start) { const e2 = new Date(appliedFilters.dateRange.start); e2.setHours(23, 59, 59, 999); return { start: appliedFilters.dateRange.start, end: e2 }; }
         return { start: undefined, end: undefined };
       default: return { start: undefined, end: undefined };
     }
@@ -187,7 +189,7 @@ export default function Orders() {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const time = `${hours}:${minutes}`;
     if (language?.startsWith('fr')) {
-      const m = ['Jan','Fev','Mar','Avr','Mai','Juin','Juil','Aou','Sep','Oct','Nov','Dec'];
+      const m = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec'];
       return `${date.getDate()} ${m[date.getMonth()]} ${date.getFullYear()} ${time}`;
     }
     return new Intl.DateTimeFormat('ar-MA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
@@ -236,7 +238,7 @@ export default function Orders() {
 
   return (
     <AdminLayout>
-      <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', maxWidth: '80rem', margin: '0 auto', width: '100%' }}>
+      <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto', width: '100%' }}>
         {/* Header */}
         <div style={{ marginBottom: '1.5rem', flexShrink: 0 }}>
           <PageHeader
@@ -608,83 +610,117 @@ export default function Orders() {
           </div>
         ) : viewMode === 'list' ? (
           <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {orders.map((order: any) => {
-                const dsb = getDeliveryStatusBadge(order.deliveryStatus);
-                const sb = getSourceBadge(order);
-                return (
-                  <div
-                    key={order.id}
-                    onClick={() => toggleSelectOrder(order.id)}
-                    style={{
-                      position: 'relative', backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'hidden', cursor: 'pointer',
-                      border: selectedOrders.includes(order.id) ? '2px solid #f59e0b' : '1px solid #e2e8f0',
-                    }}
-                  >
-                    <div style={{ padding: '0.625rem 1.25rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 'min-content', overflowX: 'auto' }}>
-                        {/* Checkbox */}
-                        <div style={{ flexShrink: 0 }}>
-                          <div style={{
-                            width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            backgroundColor: selectedOrders.includes(order.id) ? '#f59e0b' : '#ffffff',
-                            borderColor: selectedOrders.includes(order.id) ? '#f59e0b' : '#cbd5e1',
-                            color: selectedOrders.includes(order.id) ? '#ffffff' : 'transparent',
-                          }}>
-                            {selectedOrders.includes(order.id) && <Check style={{ width: '1rem', height: '1rem' }} />}
-                          </div>
-                        </div>
-                        {/* Order Number */}
-                        <div style={{ flexShrink: 0, minWidth: 'fit-content' }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>#{order.orderNumber}</span>
-                          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.125rem', whiteSpace: 'nowrap', margin: 0 }}>{formatOrderDate(order.dateCreated)}</p>
-                        </div>
-                        {/* Status badges */}
-                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', backgroundColor: dsb.bg, color: dsb.color, border: `1px solid ${dsb.border}` }}>
-                            {dsb.icon}
-                            <span>{dsb.label}</span>
-                          </span>
-                          <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}` }}>
-                            {sb.icon}
-                            {sb.label}
-                          </span>
-                        </div>
-                        {/* Customer */}
-                        <div style={{ display: 'flex', width: '10rem', minWidth: 'fit-content', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #fbbf24, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Package style={{ width: '0.75rem', height: '0.75rem', color: '#ffffff' }} />
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{order.customerName}</p>
-                            <a href={`tel:${order.customerPhone}`} style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.125rem', textDecoration: 'none' }}>
-                              <Phone style={{ width: '0.625rem', height: '0.625rem' }} />
-                              {order.customerPhone}
-                            </a>
-                          </div>
-                        </div>
-                        {/* Address */}
-                        {order.customerAddress && (
-                          <div style={{ display: 'flex', flex: 1, minWidth: 'fit-content', alignItems: 'center', gap: '0.375rem' }} title={order.customerAddress}>
-                            <div style={{ width: '1.25rem', height: '1.25rem', backgroundColor: '#fef3c7', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <MapPin style={{ width: '0.625rem', height: '0.625rem', color: '#d97706' }} />
-                            </div>
-                            <p style={{ fontSize: '0.75rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{order.customerAddress}</p>
-                          </div>
-                        )}
-                        {/* Total */}
-                        <div style={{ flexShrink: 0, textAlign: 'right', minWidth: 'fit-content' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>{t('total')}</span>
-                          <span style={{ fontSize: '1rem', fontWeight: 700, color: '#d97706', display: 'block', marginTop: '0.125rem' }}>
-                            {order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
-                          </span>
-                        </div>
-                      </div>
+            <style>{`
+              .ord-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+              .ord-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+              .ord-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+              .ord-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+              .ord-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+              .ord-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+            `}</style>
+            <DataTable
+              className="ord-datatable"
+              value={orders}
+              lazy
+              totalRecords={totalCount}
+              first={(currentPage - 1) * pageSize}
+              onPage={(e: DataTablePageEvent) => {
+                setCurrentPage(Math.floor(e.first / e.rows) + 1);
+                setPageSize(e.rows);
+              }}
+              selection={orders.filter((o: any) => selectedOrders.includes(o.id))}
+              onSelectionChange={(e) => setSelectedOrders((e.value as any[]).map((o) => o.id))}
+              selectionMode="checkbox"
+              dataKey="id"
+              paginator
+              paginatorPosition="top"
+              rows={pageSize}
+              rowsPerPageOptions={[10, 25, 50, 100]}
+              removableSort
+              loading={ordersLoading}
+              emptyMessage="Aucune commande trouvée."
+              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+              currentPageReportTemplate="{first} - {last} / {totalRecords}"
+            >
+              <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+              <Column
+                header="#"
+                sortable
+                sortField="orderNumber"
+                body={(order: any) => (
+                  <div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>#{order.orderNumber}</span>
+                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>{formatOrderDate(order.dateCreated)}</p>
+                  </div>
+                )}
+              />
+              <Column
+                header={t('status')}
+                body={(order: any) => {
+                  const dsb = getDeliveryStatusBadge(order.deliveryStatus);
+                  const sb = getSourceBadge(order);
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.375rem', backgroundColor: dsb.bg, color: dsb.color, border: `1px solid ${dsb.border}` }}>
+                        {dsb.icon}<span>{dsb.label}</span>
+                      </span>
+                      <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}` }}>
+                        {sb.icon}{sb.label}
+                      </span>
+                    </div>
+                  );
+                }}
+              />
+              <Column
+                header={t('customer')}
+                sortable
+                sortField="customerName"
+                body={(order: any) => (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #fbbf24, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Package style={{ width: '0.75rem', height: '0.75rem', color: '#ffffff' }} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{order.customerName}</p>
+                      <a href={`tel:${order.customerPhone}`} style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.125rem', textDecoration: 'none' }}>
+                        <Phone style={{ width: '0.625rem', height: '0.625rem' }} />{order.customerPhone}
+                      </a>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                )}
+              />
+              <Column
+                header={t('address')}
+                body={(order: any) => order.customerAddress ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    <MapPin style={{ width: '0.75rem', height: '0.75rem', color: '#d97706', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.75rem', color: '#475569' }}>{order.customerAddress}</span>
+                  </div>
+                ) : <span style={{ color: '#cbd5e1' }}>—</span>}
+              />
+              <Column
+                header={t('total')}
+                sortable
+                sortField="total"
+                body={(order: any) => (
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#d97706' }}>
+                    {order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
+                  </span>
+                )}
+              />
+              <Column
+                header={t('actions')}
+                body={(order: any) => (
+                  <button
+                    onClick={() => setSelectedOrderId(order.id)}
+                    style={{ padding: '0.375rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                    title={t('details')}
+                  >
+                    <Info style={{ width: '1rem', height: '1rem', color: '#64748b' }} />
+                  </button>
+                )}
+              />
+            </DataTable>
           </div>
         ) : (
           <div style={{ flex: 1 }}>

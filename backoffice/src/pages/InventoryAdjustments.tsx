@@ -3,10 +3,12 @@ import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { ClipboardCheck, Plus, Search, Filter, Eye, Play, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { ClipboardCheck, Plus, Search, Eye, Play, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjustments.service';
 import { InventoryAdjustment } from '../modules/inventory/inventory.model';
 import { toastSuccess, toastValidated, toastDeleted, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
@@ -18,6 +20,7 @@ export default function InventoryAdjustments() {
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAdjustment, setSelectedAdjustment] = useState<InventoryAdjustment | null>(null);
+  const [selectedRows, setSelectedRows] = useState<InventoryAdjustment[]>([]);
 
   const queryClient = useQueryClient();
 
@@ -123,131 +126,75 @@ export default function InventoryAdjustments() {
 
       {/* Adjustments List */}
       <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-        {isLoading ? (
-          <div style={{ padding: '3rem', textAlign: 'center' }}>
-            <div className="animate-spin" style={{ borderRadius: '9999px', width: '3rem', height: '3rem', borderBottom: '2px solid #f59e0b', margin: '0 auto' }}></div>
-            <p style={{ color: '#475569', marginTop: '1rem' }}>Chargement...</p>
-          </div>
-        ) : filteredAdjustments.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center' }}>
-            <ClipboardCheck style={{ width: '4rem', height: '4rem', color: '#cbd5e1', margin: '0 auto', marginBottom: '1rem' }} />
-            <p style={{ color: '#475569', marginBottom: '0.5rem' }}>{t('noAdjustmentsFound')}</p>
-            <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('createFirstAdjustment')}</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%' }}>
-              <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <tr>
-                  <th style={{ textAlign: 'left', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Référence
-                  </th>
-                  <th style={{ textAlign: 'left', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Nom
-                  </th>
-                  <th style={{ textAlign: 'left', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Entrepôt
-                  </th>
-                  <th style={{ textAlign: 'center', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Date
-                  </th>
-                  <th style={{ textAlign: 'center', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Statut
-                  </th>
-                  <th style={{ textAlign: 'center', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Lignes
-                  </th>
-                  <th style={{ textAlign: 'right', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAdjustments.map((adjustment) => (
-                  <tr key={adjustment.id} style={{ borderTop: '1px solid #f1f5f9', transition: 'background-color 0.15s' }}>
-                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                        {adjustment.reference}
-                      </span>
-                    </td>
-                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-                      <span style={{ fontSize: '0.875rem', color: '#334155' }}>{adjustment.name}</span>
-                    </td>
-                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>{adjustment.warehouseName || `Entrepôt ${adjustment.warehouseId}`}</span>
-                    </td>
-                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'center' }}>
-                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                        {adjustment.adjustmentDate
-                          ? new Date(adjustment.adjustmentDate).toLocaleDateString('fr-FR')
-                          : '-'}
-                      </span>
-                    </td>
-                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'center' }}>
-                      {getStatusBadge(adjustment.status)}
-                    </td>
-                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'center' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#334155', fontWeight: 700, paddingLeft: '0.625rem', paddingRight: '0.625rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
-                        {adjustment.lines?.length || 0}
-                      </span>
-                    </td>
-                    <td style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                        {adjustment.status === 'draft' && (
-                          <button
-                            onClick={() => startCountingMutation.mutate(adjustment.id)}
-                            style={{ padding: '0.375rem', color: '#2563eb', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                            title={t('start')}
-                          >
-                            <Play style={{ width: '1rem', height: '1rem' }} />
-                          </button>
-                        )}
-                        {adjustment.status === 'in_progress' && (
-                          <button
-                            onClick={() => setSelectedAdjustment(adjustment)}
-                            style={{ padding: '0.375rem', color: '#059669', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                            title={t('validate')}
-                          >
-                            <CheckCircle2 style={{ width: '1rem', height: '1rem' }} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setSelectedAdjustment(adjustment)}
-                          style={{ padding: '0.375rem', color: '#475569', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                          title={t('details')}
-                        >
-                          <Eye style={{ width: '1rem', height: '1rem' }} />
-                        </button>
-                        {adjustment.status === 'draft' && (
-                          <>
-                            <button
-                              onClick={() => cancelMutation.mutate(adjustment.id)}
-                              style={{ padding: '0.375rem', color: '#ea580c', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                              title={t('cancel')}
-                            >
-                              <XCircle style={{ width: '1rem', height: '1rem' }} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                toastConfirm(t('confirmDeleteAdjustment'), () => {
-                                  deleteMutation.mutate(adjustment.id);
-                                });
-                              }}
-                              style={{ padding: '0.375rem', color: '#dc2626', borderRadius: '0.5rem', transition: 'background-color 0.15s', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                              title={t('delete')}
-                            >
-                              <Trash2 style={{ width: '1rem', height: '1rem' }} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <style>{`
+          .ia-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+          .ia-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+          .ia-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+          .ia-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+          .ia-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+          .ia-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+        `}</style>
+        <DataTable
+          className="ia-datatable"
+          value={filteredAdjustments}
+          selection={selectedRows}
+          onSelectionChange={(e) => setSelectedRows(e.value as InventoryAdjustment[])}
+          selectionMode="checkbox"
+          dataKey="id"
+          paginator
+          paginatorPosition="top"
+          rows={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          removableSort
+          loading={isLoading}
+          emptyMessage={
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+              <ClipboardCheck style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
+              {t('noAdjustmentsFound')}
+            </div>
+          }
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+          currentPageReportTemplate="{first} - {last} / {totalRecords}"
+        >
+          <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+          <Column field="reference" header="Référence" sortable body={(adj: InventoryAdjustment) => (
+            <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{adj.reference}</span>
+          )} />
+          <Column field="name" header="Nom" sortable body={(adj: InventoryAdjustment) => (
+            <span style={{ fontSize: '0.875rem', color: '#334155' }}>{adj.name}</span>
+          )} />
+          <Column field="warehouseName" header="Entrepôt" sortable body={(adj: InventoryAdjustment) => (
+            <span style={{ fontSize: '0.875rem', color: '#475569' }}>{adj.warehouseName || `Entrepôt ${adj.warehouseId}`}</span>
+          )} />
+          <Column field="adjustmentDate" header="Date" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
+            <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+              {adj.adjustmentDate ? new Date(adj.adjustmentDate).toLocaleDateString('fr-FR') : '-'}
+            </span>
+          )} />
+          <Column field="status" header="Statut" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => getStatusBadge(adj.status)} />
+          <Column header="Lignes" align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#334155', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
+              {adj.lines?.length || 0}
+            </span>
+          )} />
+          <Column header="Actions" align="right" headerStyle={{ textAlign: 'right' }} body={(adj: InventoryAdjustment) => (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+              {adj.status === 'draft' && (
+                <Button icon={<Play style={{ width: '1rem', height: '1rem' }} />} onClick={() => startCountingMutation.mutate(adj.id)} text rounded severity="info" title={t('start')} />
+              )}
+              {adj.status === 'in_progress' && (
+                <Button icon={<CheckCircle2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => setSelectedAdjustment(adj)} text rounded severity="success" title={t('validate')} />
+              )}
+              <Button icon={<Eye style={{ width: '1rem', height: '1rem' }} />} onClick={() => setSelectedAdjustment(adj)} text rounded severity="secondary" title={t('details')} />
+              {adj.status === 'draft' && (
+                <>
+                  <Button icon={<XCircle style={{ width: '1rem', height: '1rem' }} />} onClick={() => cancelMutation.mutate(adj.id)} text rounded severity="warning" title={t('cancel')} />
+                  <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => toastConfirm(t('confirmDeleteAdjustment'), () => deleteMutation.mutate(adj.id))} text rounded severity="danger" title={t('delete')} />
+                </>
+              )}
+            </div>
+          )} />
+        </DataTable>
       </div>
     </AdminLayout>
   );

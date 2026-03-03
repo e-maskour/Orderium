@@ -5,6 +5,8 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { Link } from 'react-router-dom';
 import {
     sequencesService,
@@ -25,6 +27,7 @@ export default function Sequences() {
     const [showModal, setShowModal] = useState(false);
     const [editingSequence, setEditingSequence] = useState<Sequence | null>(null);
     const [previewSequence, setPreviewSequence] = useState<string>('');
+    const [selectedRows, setSelectedRows] = useState<Sequence[]>([]);
     const [formData, setFormData] = useState<CreateSequenceDTO>({
         name: '',
         entityType: 'invoice_sale',
@@ -201,65 +204,47 @@ export default function Sequences() {
                     <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('addSequence')} onClick={openCreateModal} />
                 </div>
 
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%' }}>
-                        <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                            <tr>
-                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('name')}</th>
-                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('entityType')}</th>
-                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('format')}</th>
-                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('nextDocumentNumber')}</th>
-                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('status')}</th>
-                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sequences.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} style={{ padding: '1.5rem 1.5rem 2rem', textAlign: 'center', color: '#64748b' }}>
-                                        {t('noSequencesConfigured')}
-                                    </td>
-                                </tr>
-                            ) : (
-                                sequences.map((sequence) => (
-                                    <tr key={sequence.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                        <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{sequence.name}</td>
-                                        <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#475569' }}>
-                                            {entityTypeOptions.find(opt => opt.value === sequence.entityType)?.label || sequence.entityType}
-                                        </td>
-                                        <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#475569', fontFamily: 'monospace' }}>
-                                            {sequence.format || 'N/A'}
-                                        </td>
-                                        <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#16a34a', fontFamily: 'monospace' }}>
-                                            {sequence.nextDocumentNumber || 'N/A'}
-                                        </td>
-                                        <td style={{ padding: '1rem 1.5rem' }}>
-                                            <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, borderRadius: '0.375rem', ...(sequence.isActive ? { background: '#dcfce7', color: '#166534' } : { background: '#fee2e2', color: '#991b1b' }) }}>
-                                                {sequence.isActive ? t('active') : t('inactive')}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
-                                            <button
-                                                onClick={() => handleReset(sequence)}
-                                                style={{ color: '#ea580c', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem', marginRight: '0.75rem' }}
-                                                title={t('resetSequence')}
-                                            >
-                                                <RotateCcw style={{ width: '1rem', height: '1rem' }} />
-                                            </button>
-                                            <button
-                                                onClick={() => openEditModal(sequence)}
-                                                style={{ color: '#2563eb', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}
-                                                title={t('edit')}
-                                            >
-                                                <Pencil style={{ width: '1rem', height: '1rem' }} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <style>{`
+                    .seq-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+                    .seq-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+                    .seq-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+                    .seq-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+                    .seq-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+                    .seq-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                `}</style>
+                <DataTable
+                    className="seq-datatable"
+                    value={sequences}
+                    selection={selectedRows}
+                    onSelectionChange={(e) => setSelectedRows(e.value as Sequence[])}
+                    selectionMode="checkbox"
+                    dataKey="id"
+                    paginator
+                    paginatorPosition="top"
+                    rows={25}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    removableSort
+                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noSequencesConfigured')}</div>}
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+                    currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                >
+                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                    <Column field="name" header={t('name')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
+                    <Column field="entityType" header={t('entityType')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{entityTypeOptions.find(opt => opt.value === row.entityType)?.label || row.entityType}</span>} />
+                    <Column field="format" header={t('format')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569', fontFamily: 'monospace' }}>{row.format || 'N/A'}</span>} />
+                    <Column field="nextDocumentNumber" header={t('nextDocumentNumber')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#16a34a', fontFamily: 'monospace' }}>{row.nextDocumentNumber || 'N/A'}</span>} />
+                    <Column field="isActive" header={t('status')} body={(row: Sequence) => (
+                        <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, borderRadius: '0.375rem', ...(row.isActive ? { background: '#dcfce7', color: '#166534' } : { background: '#fee2e2', color: '#991b1b' }) }}>
+                            {row.isActive ? t('active') : t('inactive')}
+                        </span>
+                    )} />
+                    <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Sequence) => (
+                        <div style={{ textAlign: 'right' }}>
+                            <Button icon={<RotateCcw style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleReset(row)} text rounded severity="warning" title={t('resetSequence')} />
+                            <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row)} text rounded severity="info" title={t('edit')} />
+                        </div>
+                    )} />
+                </DataTable>
             </div>
 
             {/* Modal */}
@@ -267,8 +252,20 @@ export default function Sequences() {
                 isOpen={showModal}
                 onClose={closeModal}
                 title={editingSequence ? t('editSequence') : t('addSequence')}
+                footer={
+                    <div className="flex justify-content-end gap-2">
+                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
+                        <Button
+                            form="sequences-modal-form"
+                            type="submit"
+                            loading={createMutation.isPending || updateMutation.isPending}
+                            disabled={!!editingSequence && editingSequence.nextNumber > 1}
+                            label={t('save')}
+                        />
+                    </div>
+                }
             >
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <form id="sequences-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {editingSequence && editingSequence.nextNumber > 1 && (
                         <div style={{ padding: '0.75rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem', marginBottom: '1rem' }}>
                             <p style={{ fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>
@@ -432,15 +429,6 @@ export default function Sequences() {
                         </div>
                     )}
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', paddingTop: '1rem' }}>
-                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
-                        <Button
-                            type="submit"
-                            loading={createMutation.isPending || updateMutation.isPending}
-                            label={t('save')}
-                            disabled={!!editingSequence && editingSequence.nextNumber > 1}
-                        />
-                    </div>
                 </form>
             </Modal>
         </AdminLayout>

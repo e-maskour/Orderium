@@ -63,7 +63,8 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
       modal
       dismissableMask
       style={{ width: '95vw', maxWidth: '56rem' }}
-      contentStyle={{ padding: '1rem' }}
+      breakpoints={{ '960px': '75vw', '640px': '95vw' }}
+      contentStyle={{ padding: '1rem', overflowY: 'auto' }}
     >
       <div className="flex flex-column gap-3">
         {/* Order and Customer Information */}

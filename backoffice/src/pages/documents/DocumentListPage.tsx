@@ -1,5 +1,6 @@
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
+import { KpiCard, KpiGrid } from '../../components/KpiCard';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, List, Plus, FileText, TrendingUp, TrendingDown, Clock, CheckCircle, Filter, X, ChevronDown, ChevronUp, Download } from 'lucide-react';
@@ -202,30 +203,6 @@ export default function DocumentListPage({
     { key: 'list', label: `${t('listOf')} ${config.title.toLowerCase()}`, icon: List },
   ];
 
-  // Color mapping for KPI cards
-  const colorStyles = {
-    blue: {
-      bg: { backgroundColor: '#dbeafe' },
-      text: { color: '#2563eb' },
-    },
-    emerald: {
-      bg: { backgroundColor: '#d1fae5' },
-      text: { color: '#059669' },
-    },
-    amber: {
-      bg: { backgroundColor: '#fef3c7' },
-      text: { color: '#d97706' },
-    },
-    purple: {
-      bg: { backgroundColor: '#f3e8ff' },
-      text: { color: '#9333ea' },
-    },
-    red: {
-      bg: { backgroundColor: '#fee2e2' },
-      text: { color: '#dc2626' },
-    }
-  };
-
   // Document type specific KPIs from API analytics
   let kpi1, kpi2, kpi3, kpi4;
 
@@ -309,7 +286,7 @@ export default function DocumentListPage({
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto', width: '100%' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', width: '100%' }}>
         <PageHeader
           icon={Icon}
           title={config.title}
@@ -340,20 +317,19 @@ export default function DocumentListPage({
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
               return (
-                <button
+                <Button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
+                  icon={<TabIcon style={{ width: 16, height: 16 }} />}
+                  label={tab.label}
+                  text={activeTab !== tab.key}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500,
-                    whiteSpace: 'nowrap', flexShrink: 0, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                    whiteSpace: 'nowrap', flexShrink: 0,
                     ...(activeTab === tab.key
-                      ? { backgroundColor: '#f59e0b', color: '#fff', boxShadow: '0 4px 6px rgba(245,158,11,0.25)' }
-                      : { backgroundColor: 'transparent', color: '#475569' })
+                      ? { backgroundColor: '#f59e0b', color: '#fff', boxShadow: '0 4px 6px rgba(245,158,11,0.25)', border: 'none' }
+                      : { color: '#475569' })
                   }}
-                >
-                  <TabIcon style={{ width: 16, height: 16 }} />
-                  <span>{tab.label}</span>
-                </button>
+                />
               );
             })}
           </div>
@@ -362,59 +338,16 @@ export default function DocumentListPage({
           <div style={{ padding: '0.75rem', paddingTop: '0.5rem' }}>
             {activeTab === 'dashboard' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
-                  {/* KPI 1 */}
-                  <div style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0', transition: 'border-color 0.2s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', ...colorStyles[kpi1.color as keyof typeof colorStyles].bg, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <kpi1.icon style={{ width: '1.5rem', height: '1.5rem', ...colorStyles[kpi1.color as keyof typeof colorStyles].text }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>{kpi1.label}</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{kpi1.count}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* KPI 2 */}
-                  <div style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0', transition: 'border-color 0.2s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', ...colorStyles[kpi2.color as keyof typeof colorStyles].bg, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <kpi2.icon style={{ width: '1.5rem', height: '1.5rem', ...colorStyles[kpi2.color as keyof typeof colorStyles].text }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>{kpi2.label}</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{kpi2.count}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* KPI 3 */}
-                  <div style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0', transition: 'border-color 0.2s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', ...colorStyles[kpi3.color as keyof typeof colorStyles].bg, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <kpi3.icon style={{ width: '1.5rem', height: '1.5rem', ...colorStyles[kpi3.color as keyof typeof colorStyles].text }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>{kpi3.label}</p>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{kpi3.count}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* KPI 4 */}
-                  <div style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0', transition: 'border-color 0.2s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '3rem', height: '3rem', ...colorStyles[kpi4.color as keyof typeof colorStyles].bg, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <kpi4.icon style={{ width: '1.5rem', height: '1.5rem', ...colorStyles[kpi4.color as keyof typeof colorStyles].text }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '0.75rem', color: '#475569' }}>{kpi4.label}</p>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{kpi4.count}</h3>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <style>{`
+                  .doc-dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+                  @media (max-width: 768px) { .doc-dash-grid { grid-template-columns: 1fr !important; } }
+                `}</style>
+                <KpiGrid count={4}>
+                  <KpiCard label={kpi1.label} value={kpi1.count} icon={kpi1.icon} color={kpi1.color as any} loading={analyticsLoading} />
+                  <KpiCard label={kpi2.label} value={kpi2.count} icon={kpi2.icon} color={kpi2.color as any} loading={analyticsLoading} />
+                  <KpiCard label={kpi3.label} value={kpi3.count} icon={kpi3.icon} color={kpi3.color as any} loading={analyticsLoading} />
+                  <KpiCard label={kpi4.label} value={kpi4.count} icon={kpi4.icon} color={kpi4.color as any} loading={analyticsLoading} />
+                </KpiGrid>
 
                 {/* Analysis Chart - Full Width */}
                 <DocumentAnalysisChart
@@ -425,9 +358,9 @@ export default function DocumentListPage({
                 />
 
                 {/* Dashboard Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1.5rem' }}>
+                <div className="doc-dash-grid">
                   {/* Recent Documents */}
-                  <div style={{ backgroundColor: '#fff', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                  <div style={{ backgroundColor: '#fff', borderRadius: '0.875rem', padding: '1.25rem 1.5rem', border: '1.5px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
                     <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>
                       {t('lastThree')} {config.titleShort.toLowerCase()}
                     </h3>
@@ -436,12 +369,12 @@ export default function DocumentListPage({
                         <div key={facture.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <FileText style={{ width: 16, height: 16, color: '#3b82f6' }} />
-                            <button
+                            <Button
+                              label={facture.number}
+                              link
                               onClick={() => handleEdit(facture.id)}
-                              style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }}
-                            >
-                              {facture.number}
-                            </button>
+                              style={{ fontSize: '0.875rem', fontWeight: 500, padding: 0 }}
+                            />
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                             <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{facture.partnerName}</span>
@@ -457,7 +390,7 @@ export default function DocumentListPage({
                   </div>
 
                   {/* Draft Documents */}
-                  <div style={{ backgroundColor: '#fff', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                  <div style={{ backgroundColor: '#fff', borderRadius: '0.875rem', padding: '1.25rem 1.5rem', border: '1.5px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
                     <div style={{ marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>{t('drafts')}</h3>
@@ -472,12 +405,12 @@ export default function DocumentListPage({
                           <div key={facture.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <FileText style={{ width: 16, height: 16, color: '#64748b' }} />
-                              <button
+                              <Button
+                                label={facture.number}
+                                link
                                 onClick={() => handleEdit(facture.id)}
-                                style={{ fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}
-                              >
-                                {facture.number}
-                              </button>
+                                style={{ fontSize: '0.875rem', fontWeight: 500, padding: 0, color: '#475569' }}
+                              />
                             </div>
                             <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#475569' }}>{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
@@ -508,12 +441,12 @@ export default function DocumentListPage({
                           <Filter style={{ width: 20, height: 20, color: '#fff' }} />
                           <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#fff' }}>{t('filters')}</h2>
                         </div>
-                        <button
+                        <Button
                           onClick={() => setFiltersExpanded(false)}
-                          style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer', transition: 'background 0.2s' }}
-                        >
-                          <X style={{ width: 20, height: 20, color: '#fff' }} />
-                        </button>
+                          icon={<X style={{ width: 20, height: 20, color: '#fff' }} />}
+                          text
+                          rounded
+                        />
                       </div>
 
                       {/* Panel Content - Scrollable */}
@@ -531,12 +464,13 @@ export default function DocumentListPage({
                               style={{ width: '100%' }}
                             />
                             {documentNumberSearch && (
-                              <button
+                              <Button
                                 onClick={() => setDocumentNumberSearch('')}
-                                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}
-                              >
-                                <X style={{ width: 16, height: 16 }} />
-                              </button>
+                                icon={<X style={{ width: 16, height: 16 }} />}
+                                text
+                                rounded
+                                style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10, padding: '0.25rem' }}
+                              />
                             )}
                           </div>
                         </div>
@@ -610,20 +544,18 @@ export default function DocumentListPage({
                               { key: 'paid', label: t('statusPaid'), icon: '✅' },
                               { key: 'overdue', label: t('invoice.overdue'), icon: '🔴' },
                             ]).map((filter) => (
-                              <button
+                              <Button
                                 key={filter.key}
                                 onClick={() => setStatusFilter(filter.key)}
+                                label={`${filter.icon} ${filter.label}`}
+                                outlined={statusFilter !== filter.key}
                                 style={{
-                                  padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600,
-                                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer',
+                                  fontSize: '0.75rem',
                                   ...(statusFilter === filter.key
                                     ? { backgroundColor: '#f59e0b', color: '#fff', boxShadow: '0 10px 15px rgba(245,158,11,0.3)', border: 'none' }
-                                    : { backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' })
+                                    : { backgroundColor: '#f8fafc', color: '#334155' })
                                 }}
-                              >
-                                <span>{filter.icon}</span>
-                                <span>{filter.label}</span>
-                              </button>
+                              />
                             ))}
                           </div>
                         </div>

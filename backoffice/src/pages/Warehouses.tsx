@@ -180,18 +180,16 @@ export default function Warehouses() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
+                  <Button
+                    icon={<Edit style={{ width: '1rem', height: '1rem' }} />}
                     onClick={() => handleOpenModal(warehouse)}
-                    style={{ padding: '0.5rem', color: '#475569', borderRadius: '0.5rem', transition: 'background-color 0.15s' }}
-                  >
-                    <Edit style={{ width: '1rem', height: '1rem' }} />
-                  </button>
-                  <button
+                    text rounded severity="secondary"
+                  />
+                  <Button
+                    icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
                     onClick={() => handleDeleteClick(warehouse.id)}
-                    style={{ padding: '0.5rem', color: '#dc2626', borderRadius: '0.5rem', transition: 'background-color 0.15s' }}
-                  >
-                    <Trash2 style={{ width: '1rem', height: '1rem' }} />
-                  </button>
+                    text rounded severity="danger"
+                  />
                 </div>
               </div>
 

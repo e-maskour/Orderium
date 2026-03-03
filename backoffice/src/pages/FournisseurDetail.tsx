@@ -49,7 +49,7 @@ export default function FournisseurDetail() {
   if (partnerLoading || analyticsLoading) {
     return (
       <AdminLayout>
-        <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
             <div className="animate-spin" style={{ borderRadius: '9999px', width: '2rem', height: '2rem', borderBottom: '2px solid #f59e0b' }}></div>
           </div>
@@ -61,7 +61,7 @@ export default function FournisseurDetail() {
   if (!partner || !analytics) {
     return (
       <AdminLayout>
-        <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', padding: '2rem 0' }}>
             <p style={{ color: '#64748b' }}>Fournisseur non trouvé</p>
           </div>
@@ -86,20 +86,23 @@ export default function FournisseurDetail() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
-        <div style={{ marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <button onClick={() => navigate('/fournisseurs')} style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', backgroundColor: 'transparent' }}>
-                <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+              <Button
+                icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
+                onClick={() => navigate('/fournisseurs')}
+                text rounded
+                style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #fef3c7, #fde68a)', border: '1px solid #fcd34d', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 8px rgba(245,158,11,0.2)' }}>
                   <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
                 </div>
                 <div>
-                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{partner.name}</h1>
-                  <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('supplierDetails')}</p>
+                  <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>{partner.name}</h1>
+                  <p style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.125rem', fontWeight: 500 }}>{t('supplierDetails')}</p>
                 </div>
               </div>
             </div>
@@ -110,56 +113,28 @@ export default function FournisseurDetail() {
         <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* KPIs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-              <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '3rem', height: '3rem', backgroundColor: '#dbeafe', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <FileText style={{ width: '1.5rem', height: '1.5rem', color: '#2563eb' }} />
+            <div className="partner-detail-kpi-grid">
+              {[
+                { icon: <FileText style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />, iconBg: 'linear-gradient(135deg,#dbeafe,#eff6ff)', iconBorder: '#bfdbfe', label: 'Total Factures', value: String(totalInvoices) },
+                { icon: <CreditCard style={{ width: '1.25rem', height: '1.25rem', color: '#059669' }} />, iconBg: 'linear-gradient(135deg,#d1fae5,#ecfdf5)', iconBorder: '#a7f3d0', label: 'Dépenses Totales', value: formatDH(totalExpenses, 0) },
+                { icon: <Clock style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />, iconBg: 'linear-gradient(135deg,#fef3c7,#fffbeb)', iconBorder: '#fde68a', label: 'Impayé', value: formatDH(unpaidAmount, 0) },
+                { icon: <BarChart3 style={{ width: '1.25rem', height: '1.25rem', color: '#9333ea' }} />, iconBg: 'linear-gradient(135deg,#f3e8ff,#faf5ff)', iconBorder: '#e9d5ff', label: 'Moyenne/Facture', value: formatDH(averagePerInvoice, 0) },
+              ].map((kpi, i) => (
+                <div key={i} style={{ background: 'white', borderRadius: '0.875rem', padding: '1.25rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '3rem', height: '3rem', background: kpi.iconBg, border: `1px solid ${kpi.iconBorder}`, borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {kpi.icon}
                   </div>
-                  <div>
-                    <p style={{ fontSize: '0.75rem', color: '#475569' }}>Total Factures</p>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{totalInvoices}</h3>
-                  </div>
-                </div>
-              </div>
-              <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '3rem', height: '3rem', backgroundColor: '#d1fae5', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <CreditCard style={{ width: '1.5rem', height: '1.5rem', color: '#059669' }} />
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '0.75rem', color: '#475569' }}>Dépenses Totales</p>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{formatDH(totalExpenses, 0)}</h3>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, marginBottom: '0.125rem' }}>{kpi.label}</p>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{kpi.value}</h3>
                   </div>
                 </div>
-              </div>
-              <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '3rem', height: '3rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Clock style={{ width: '1.5rem', height: '1.5rem', color: '#d97706' }} />
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '0.75rem', color: '#475569' }}>Impayé</p>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{formatDH(unpaidAmount, 0)}</h3>
-                  </div>
-                </div>
-              </div>
-              <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '3rem', height: '3rem', backgroundColor: '#f3e8ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <BarChart3 style={{ width: '1.5rem', height: '1.5rem', color: '#9333ea' }} />
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '0.75rem', color: '#475569' }}>Moyenne/Facture</p>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{formatDH(averagePerInvoice, 0)}</h3>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Chart Section */}
             <div style={{ background: 'linear-gradient(to bottom right, white, #f8fafc)', borderRadius: '1rem', padding: '2rem', border: '1px solid rgba(226,232,240,0.6)', boxShadow: '0 10px 15px -3px rgba(226,232,240,0.4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ padding: '0.625rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.75rem', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)' }}>
@@ -261,6 +236,24 @@ export default function FournisseurDetail() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .partner-detail-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1rem;
+        }
+        @media (max-width: 1023px) {
+          .partner-detail-kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 479px) {
+          .partner-detail-kpi-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }

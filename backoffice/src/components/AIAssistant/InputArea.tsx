@@ -5,6 +5,7 @@
 
 import React, { useState, useRef, KeyboardEvent } from 'react';
 import { Button } from 'primereact/button';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { Send, StopCircle } from 'lucide-react';
 
 interface InputAreaProps {
@@ -66,13 +67,15 @@ export const InputArea: React.FC<InputAreaProps> = ({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
-        <textarea
+        <InputTextarea
           ref={textareaRef}
           value={input}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           placeholder={disabled ? 'Waiting for response...' : 'Ask me anything...'}
           disabled={disabled}
+          rows={1}
+          autoResize
           style={{
             flex: 1,
             padding: '0.5rem 0.75rem',
@@ -88,7 +91,6 @@ export const InputArea: React.FC<InputAreaProps> = ({
             opacity: disabled ? 0.5 : 1,
             cursor: disabled ? 'not-allowed' : 'text',
           }}
-          rows={1}
         />
 
         {disabled && onCancel ? (

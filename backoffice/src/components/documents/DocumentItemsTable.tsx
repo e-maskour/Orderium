@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, BookOpen } from 'lucide-react';
-import { Button } from 'primereact/button';
 import { Dropdown as PrDropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
 import { DocumentItem } from '../../modules/documents/types';
 import { calculateItemTotal } from '../../modules/documents/hooks';
 import { IProduct } from '../../modules/products/products.interface';
@@ -131,9 +131,12 @@ export function DocumentItemsTable({
 
   return (
     <>
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1rem', overflow: 'visible' }}>
-        <div style={{ marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('invoice.articlesTitle')}</h3>
+      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', padding: '1rem', overflow: 'visible', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
+          <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 6px rgba(245,158,11,0.3)' }}>
+            <BookOpen style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+          </div>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>{t('invoice.articlesTitle')}</h3>
         </div>
 
         {/* Desktop Table View - Hidden on mobile and tablet */}
@@ -218,14 +221,14 @@ export function DocumentItemsTable({
                   {showDiscountColumn && (
                     <td style={{ padding: '0.75rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '0.5rem', overflow: 'hidden' }}>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.1"
+                        <InputNumber
+                          min={0}
+                          step={0.1}
                           value={item.discount}
-                          onChange={(e) => handleItemChange(item.id, 'discount', parseFloat(e.target.value) || 0)}
-                          style={{ width: '3.5rem', flex: 'none', padding: '0.5rem', fontSize: '0.875rem', textAlign: 'center', border: 'none', outline: 'none', opacity: readOnly ? 0.5 : 1 }}
+                          onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
+                          inputStyle={{ width: '3.5rem', flex: 'none', padding: '0.5rem', fontSize: '0.875rem', textAlign: 'center', border: 'none', outline: 'none', opacity: readOnly ? 0.5 : 1, boxShadow: 'none' }}
                           disabled={readOnly}
+                          pt={{ root: { style: { border: 'none' } } }}
                         />
                         <button
                           type="button"
@@ -367,14 +370,14 @@ export function DocumentItemsTable({
                         {t('invoice.discountHeader')}
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', overflow: 'hidden' }}>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.1"
+                        <InputNumber
+                          min={0}
+                          step={0.1}
                           value={item.discount}
-                          onChange={(e) => handleItemChange(item.id, 'discount', parseFloat(e.target.value) || 0)}
-                          style={{ flex: 1, padding: '0.625rem', fontSize: '0.875rem', textAlign: 'center', border: 'none', outline: 'none', opacity: readOnly ? 0.5 : 1 }}
+                          onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
+                          inputStyle={{ flex: 1, padding: '0.625rem', fontSize: '0.875rem', textAlign: 'center', border: 'none', outline: 'none', opacity: readOnly ? 0.5 : 1, boxShadow: 'none' }}
                           disabled={readOnly}
+                          pt={{ root: { style: { border: 'none', flex: 1 } } }}
                         />
                         <button
                           type="button"
@@ -447,19 +450,22 @@ export function DocumentItemsTable({
 
         {!readOnly && (
           <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', gap: '0.5rem' }}>
-            <Button
+            <button
               type="button"
               onClick={handleAddItem}
-              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
-              label={t('invoice.addLine')}
-            />
-            <Button
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', borderRadius: '0.625rem', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 2px 6px rgba(245,158,11,0.3)' }}
+            >
+              <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
+              {t('invoice.addLine')}
+            </button>
+            <button
               type="button"
               onClick={() => setShowCatalogueModal(true)}
-              outlined
-              icon={<BookOpen style={{ width: '1rem', height: '1rem' }} />}
-              label={t('invoice.productCatalogue')}
-            />
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', background: '#fff', color: '#475569', borderRadius: '0.625rem', border: '1.5px solid #e2e8f0', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}
+            >
+              <BookOpen style={{ width: '0.875rem', height: '0.875rem' }} />
+              {t('invoice.productCatalogue')}
+            </button>
           </div>
         )}
       </div>

@@ -45,7 +45,7 @@ export default function Login() {
             <div className="flex justify-content-center mb-4">
               <div className="relative">
                 <div className="flex align-items-center justify-content-center border-circle"
-                  style={{ width: '6rem', height: '6rem', background: 'linear-gradient(135deg, var(--orderium-primary), var(--orderium-primary-dark))', boxShadow: '0 8px 32px rgba(192,97,43,0.3)' }}>
+                  style={{ width: '6rem', height: '6rem', background: 'linear-gradient(135deg, var(--orderium-primary), var(--orderium-primary-dark))', boxShadow: '0 8px 32px rgba(223,120,23,0.3)' }}>
                   <span className="text-5xl font-bold text-white">O</span>
                 </div>
                 <div className="absolute flex align-items-center justify-content-center border-circle bg-white shadow-3"

@@ -60,10 +60,15 @@ export function DocumentPartnerBox({
   };
 
   return (
-    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1rem' }}>
-      <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>
-        {t('invoice.customerInfo').replace('client', partnerLabel)}
-      </h3>
+    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: `1.5px solid ${partnerId ? '#fcd34d' : '#e2e8f0'}`, padding: '1rem', transition: 'border-color 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+        <div style={{ width: '1.75rem', height: '1.75rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#fff' }} />
+        </div>
+        <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
+          {t('invoice.customerInfo').replace('client', partnerLabel)}
+        </h3>
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div>
@@ -87,7 +92,7 @@ export function DocumentPartnerBox({
             style={{ width: '100%' }}
           />
           {(partnerPhone || partnerAddress) && (
-            <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+            <div style={{ marginTop: '0.5rem', borderLeft: '2px solid #fcd34d', paddingLeft: '0.625rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               {partnerPhone && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
                   <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8' }} />

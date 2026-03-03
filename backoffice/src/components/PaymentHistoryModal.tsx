@@ -108,7 +108,8 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
         footer={footerContent}
         modal
         style={{ width: '95vw', maxWidth: '56rem' }}
-        contentStyle={{ padding: '1.5rem' }}
+        breakpoints={{ '960px': '75vw', '640px': '95vw' }}
+        contentStyle={{ padding: '1.5rem', overflowY: 'auto' }}
       >
         {/* Payment Summary */}
         <div style={{ background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', padding: '1.5rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>

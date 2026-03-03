@@ -18,10 +18,10 @@ export function DocumentTotalsSection({
     <div style={{ maxWidth: '28rem', marginLeft: 'auto' }}>
       <div style={{
         background: 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)',
-        borderRadius: '0.75rem',
+        borderRadius: '0.875rem',
         padding: '1.5rem',
-        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
-        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        border: '1.5px solid #e2e8f0',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {/* Subtotal HT */}

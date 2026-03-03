@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Edit, Trash2, Download, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, CheckCircle, Eye, Columns, FileText } from 'lucide-react';
-import { Dropdown } from 'primereact/dropdown';
-import { InputText } from 'primereact/inputtext';
+import { Edit, Trash2, Filter, ChevronDown, ChevronUp, CreditCard, CheckCircle, Eye, Columns, FileText } from 'lucide-react';
+import { Checkbox } from 'primereact/checkbox';
+import { Button } from 'primereact/button'; import { DataTable, DataTablePageEvent } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { FloatingActionBar } from '../FloatingActionBar';
 import { DocumentType } from '../../modules/documents/types';
 import { pdfService } from '../../services/pdf.service';
@@ -73,58 +74,39 @@ export function DocumentTable({
   onPageSizeChange
 }: DocumentTableProps) {
   const { t, language } = useLanguage();
-  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'number'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Document[]>([]);
   const [showColumnsMenu, setShowColumnsMenu] = useState(false);
+
+  const selectedDocuments = selectedRows.map(r => r.id);
   const [visibleColumns, setVisibleColumns] = useState({
     tax: false,
     paidAmount: false,
     remainingAmount: false
   });
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
   const columnsMenuRef = useRef<HTMLDivElement>(null);
-  const tableScrollRef = useRef<HTMLDivElement>(null);
 
-  // Selection functions
+  const clearSelection = () => setSelectedRows([]);
+
   const handleSelectAll = () => {
-    if (selectedDocuments.length === documents.length) {
-      setSelectedDocuments([]);
+    if (selectedRows.length === documents.length) {
+      setSelectedRows([]);
     } else {
-      setSelectedDocuments(documents.map(d => d.id));
+      setSelectedRows([...documents]);
     }
   };
 
-  const handleSelectDocument = (id: number) => {
-    setSelectedDocuments(prev =>
-      prev.includes(id)
-        ? prev.filter(dId => dId !== id)
-        : [...prev, id]
-    );
-  };
-
-  const clearSelection = () => {
-    setSelectedDocuments([]);
-  };
-
-  // Map document type to PDF service type
   const getPDFDocumentType = (docType: DocumentType): 'invoice' | 'quote' | 'delivery-note' => {
     switch (docType) {
-      case 'facture':
-        return 'invoice';
-      case 'devis':
-        return 'quote';
-      case 'bon_livraison':
-        return 'delivery-note';
-      default:
-        return 'invoice';
+      case 'facture': return 'invoice';
+      case 'devis': return 'quote';
+      case 'bon_livraison': return 'delivery-note';
+      default: return 'invoice';
     }
   };
 
-  // Close columns menu on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (columnsMenuRef.current && !columnsMenuRef.current.contains(event.target as Node)) {
@@ -135,30 +117,10 @@ export function DocumentTable({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Detect scroll for indicator
+  // Clear selection when page changes
   useEffect(() => {
-    const handleScroll = () => {
-      if (tableScrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = tableScrollRef.current;
-        setShowScrollIndicator(scrollLeft < scrollWidth - clientWidth - 10);
-      }
-    };
-
-    const scrollElement = tableScrollRef.current;
-    if (scrollElement) {
-      handleScroll(); // Initial check
-      scrollElement.addEventListener('scroll', handleScroll);
-      window.addEventListener('resize', handleScroll);
-      return () => {
-        scrollElement.removeEventListener('scroll', handleScroll);
-        window.removeEventListener('resize', handleScroll);
-      };
-    }
-  }, [documents, visibleColumns]);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
+    setSelectedRows([]);
+  }, [currentPage]);
 
   const getStatusStyle = (status: string): React.CSSProperties => {
     switch (status) {
@@ -235,27 +197,27 @@ export function DocumentTable({
     }
   };
 
-  // Calculate column count based on features and visible columns
-  const columnCount = 5 +
-    (documentType === 'facture' ? 1 : 0) +
-    (showValidationColumn ? 1 : 0) +
-    (visibleColumns.tax ? 1 : 0) +
-    (showPaymentColumns && visibleColumns.paidAmount ? 1 : 0) +
-    (showPaymentColumns && visibleColumns.remainingAmount ? 1 : 0);
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <style>{`
+        .doc-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+        .doc-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+        .doc-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+        .doc-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+        .doc-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+        .doc-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+      `}</style>
       {/* Column Toggle and Filter Button */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }} ref={columnsMenuRef}>
-          <button
+          <Button
             onClick={() => setShowColumnsMenu(!showColumnsMenu)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', fontSize: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', background: '#ffffff', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
-          >
-            <Columns style={{ width: '0.875rem', height: '0.875rem' }} />
-            {t('columns')}
-            <ChevronDown style={{ width: '0.75rem', height: '0.75rem' }} />
-          </button>
+            outlined
+            size="small"
+            icon={<Columns style={{ width: '0.875rem', height: '0.875rem' }} />}
+            iconPos="left"
+            label={t('columns')}
+          />
           {showColumnsMenu && (
             <div style={{ position: 'absolute', left: 0, top: '100%', marginTop: '0.25rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid #e2e8f0', zIndex: 50, padding: '0.5rem 0' }}>
               <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid #f1f5f9' }}>
@@ -263,31 +225,25 @@ export function DocumentTable({
               </div>
               <div style={{ padding: '0.25rem 0' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={visibleColumns.tax}
-                    onChange={(e) => setVisibleColumns(prev => ({ ...prev, tax: e.target.checked }))}
-                    style={{ width: '1rem', height: '1rem', accentColor: '#f59e0b' }}
+                    onChange={(e) => setVisibleColumns(prev => ({ ...prev, tax: e.checked ?? false }))}
                   />
                   <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('taxAmount')}</span>
                 </label>
                 {showPaymentColumns && (
                   <>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={visibleColumns.paidAmount}
-                        onChange={(e) => setVisibleColumns(prev => ({ ...prev, paidAmount: e.target.checked }))}
-                        style={{ width: '1rem', height: '1rem', accentColor: '#f59e0b' }}
+                        onChange={(e) => setVisibleColumns(prev => ({ ...prev, paidAmount: e.checked ?? false }))}
                       />
                       <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('alreadyPaid')}</span>
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={visibleColumns.remainingAmount}
-                        onChange={(e) => setVisibleColumns(prev => ({ ...prev, remainingAmount: e.target.checked }))}
-                        style={{ width: '1rem', height: '1rem', accentColor: '#f59e0b' }}
+                        onChange={(e) => setVisibleColumns(prev => ({ ...prev, remainingAmount: e.checked ?? false }))}
                       />
                       <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('remainingToPay')}</span>
                     </label>
@@ -300,99 +256,16 @@ export function DocumentTable({
 
         {/* Filter Button */}
         {onFiltersToggle && (
-          <button
+          <Button
             onClick={onFiltersToggle}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer', border: filtersExpanded ? 'none' : '1px solid #cbd5e1',
-              backgroundColor: filtersExpanded ? '#f59e0b' : '#ffffff',
-              color: filtersExpanded ? '#ffffff' : '#334155',
-              boxShadow: filtersExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none'
-            }}
-          >
-            <Filter style={{ width: '1rem', height: '1rem' }} />
-            <span>{t('filters')}</span>
-            {filtersExpanded ? (
-              <ChevronUp style={{ width: '1rem', height: '1rem' }} />
-            ) : (
-              <ChevronDown style={{ width: '1rem', height: '1rem' }} />
-            )}
-          </button>
+            icon={<Filter style={{ width: '1rem', height: '1rem' }} />}
+            iconPos="left"
+            label={t('filters')}
+            severity={filtersExpanded ? undefined : 'secondary'}
+            outlined={!filtersExpanded}
+          />
         )}
       </div>
-
-      {/* Separator Line */}
-      <div style={{ borderTop: '1px solid #e2e8f0' }}></div>
-
-      {/* Pagination Info Bar - Top */}
-      {totalCount > 0 && (
-        <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem 1rem', borderRadius: '0.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-            <div style={{ fontSize: '0.875rem', color: '#475569' }}>
-              {t('showing')} <span style={{ fontWeight: 600 }}>{startIndex + 1}</span> {t('to')}{' '}
-              <span style={{ fontWeight: 600 }}>{Math.min(startIndex + pageSize, totalCount)}</span> {t('of')} <span style={{ fontWeight: 600 }}>{totalCount}</span> {t('results')}
-            </div>
-
-            {/* Page Size Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569' }}>{t('perPage')}</span>
-              <Dropdown
-                value={pageSize}
-                options={[
-                  { label: '10', value: 10 },
-                  { label: '25', value: 25 },
-                  { label: '50', value: 50 },
-                  { label: '100', value: 100 },
-                ]}
-                onChange={(e) => onPageSizeChange(e.value)}
-                optionLabel="label"
-                optionValue="value"
-                style={{ fontSize: '0.75rem' }}
-              />
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button
-                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.375rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', background: '#ffffff', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
-              >
-                <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <InputText
-                  type="number"
-                  min={1}
-                  max={totalPages}
-                  value={String(currentPage)}
-                  onChange={(e) => {
-                    const page = parseInt(e.target.value, 10);
-                    if (!isNaN(page) && page >= 1 && page <= totalPages) {
-                      onPageChange(page);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.currentTarget.blur();
-                    }
-                  }}
-                  style={{ width: '3rem', textAlign: 'center', fontSize: '0.875rem' }}
-                  aria-label="Page number"
-                />
-                <span style={{ fontSize: '0.875rem', color: '#64748b' }}>/</span>
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{totalPages}</span>
-              </div>
-              <button
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.375rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', background: '#ffffff', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
-              >
-                <ChevronRight style={{ width: '1rem', height: '1rem' }} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Floating Action Bar */}
       <FloatingActionBar
@@ -502,225 +375,153 @@ export function DocumentTable({
         })()}
       />
 
-      {/* Table */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden', position: 'relative' }}>
-        <div
-          ref={tableScrollRef}
-          style={{
-            overflowX: 'auto',
-            scrollBehavior: 'smooth',
-            WebkitOverflowScrolling: 'touch'
-          }}
-        >
-          {/* Scroll indicator shadow */}
-          {showScrollIndicator && (
-            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '2rem', background: 'linear-gradient(to left, rgba(226,232,240,0.5), transparent)', pointerEvents: 'none', zIndex: 10 }} />
+      {/* DataTable */}
+      <DataTable
+        className="doc-datatable"
+        value={documents}
+        lazy
+        totalRecords={totalCount}
+        first={(currentPage - 1) * pageSize}
+        onPage={(e: DataTablePageEvent) => {
+          onPageChange(Math.floor(e.first / e.rows) + 1);
+          onPageSizeChange(e.rows);
+        }}
+        selection={selectedRows}
+        onSelectionChange={(e) => setSelectedRows(e.value as Document[])}
+        selectionMode="checkbox"
+        dataKey="id"
+        paginator
+        paginatorPosition="top"
+        rows={pageSize}
+        rowsPerPageOptions={[10, 25, 50, 100]}
+        removableSort
+        loading={loading}
+        emptyMessage={t('noDocumentFound')}
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+        currentPageReportTemplate="{first} - {last} / {totalRecords}"
+      >
+        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+        <Column
+          field="number"
+          header={t('number')}
+          sortable
+          body={(doc: Document) => (
+            <Button
+              label={doc.number}
+              link
+              onClick={(e) => { e.stopPropagation(); onEdit?.(doc.id); }}
+              style={{ fontSize: '0.875rem', fontWeight: 600, padding: 0 }}
+            />
           )}
-          <table style={{ width: '100%', minWidth: '800px' }}>
-            <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-              <tr>
-                <th style={{ padding: '0.5rem 0.5rem 0.5rem 0.75rem', position: 'sticky', left: 0, zIndex: 20, backgroundColor: '#f8fafc', whiteSpace: 'nowrap', width: '2.5rem' }}>
-                  <div
-                    onClick={handleSelectAll}
-                    style={{
-                      width: '1.25rem', height: '1.25rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                      backgroundColor: selectedDocuments.length === documents.length && documents.length > 0 ? '#f59e0b' : '#ffffff',
-                      borderColor: selectedDocuments.length === documents.length && documents.length > 0 ? '#f59e0b' : '#cbd5e1',
-                      color: selectedDocuments.length === documents.length && documents.length > 0 ? '#ffffff' : 'transparent'
-                    }}
-                  >
-                    {selectedDocuments.length === documents.length && documents.length > 0 && (
-                      <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
-                    )}
-                  </div>
-                </th>
-                <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', position: 'sticky', left: '2.5rem', zIndex: 20, backgroundColor: '#f8fafc', boxShadow: '2px 0 4px rgba(0,0,0,0.05)', whiteSpace: 'nowrap' }}>
-                  {t('number')}
-                </th>
-                <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                  {partnerLabel}
-                </th>
-                <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                  {documentType === 'facture' ? t('invoiceDate') : documentType === 'devis' ? t('quoteDate') : t('deliveryDate')}
-                </th>
-                {documentType === 'facture' && (
-                  <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                    {t('dueDate')}
-                  </th>
-                )}
-                {showValidationColumn && (
-                  <th style={{ textAlign: language === 'ar' ? 'right' : 'left', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                    {t('validationDate')}
-                  </th>
-                )}
-                <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                  {t('amountHT')}
-                </th>
-                {visibleColumns.tax && (
-                  <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                    {t('taxAmount')}
-                  </th>
-                )}
-                <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                  {t('amountTTC')}
-                </th>
-                {showPaymentColumns && visibleColumns.paidAmount && (
-                  <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                    {t('alreadyPaid')}
-                  </th>
-                )}
-                {showPaymentColumns && visibleColumns.remainingAmount && (
-                  <th style={{ textAlign: language === 'ar' ? 'left' : 'right', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                    {t('remainingToPay')}
-                  </th>
-                )}
-                <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', fontSize: '10px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                  {t('status')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={columnCount} style={{ padding: '2rem 0', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                      <div className="animate-spin" style={{ borderRadius: '50%', width: '1.5rem', height: '1.5rem', borderBottom: '2px solid #f59e0b', borderTop: '2px solid transparent', borderLeft: '2px solid transparent', borderRight: '2px solid transparent' }}></div>
-                      <p style={{ fontSize: '0.75rem', color: '#64748b' }}>{t('loading')}</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : documents.length > 0 ? (
-                documents.map((doc) => {
-                  const isSelected = selectedDocuments.includes(doc.id);
-                  return (
-                    <tr
-                      key={doc.id}
-                      style={{
-                        cursor: 'pointer',
-                        borderLeft: `4px solid ${isSelected ? '#f59e0b' : 'transparent'}`,
-                        borderBottom: '1px solid #e2e8f0',
-                        backgroundColor: isSelected ? '#fffbeb' : undefined
-                      }}
-                      onClick={() => handleSelectDocument(doc.id)}
-                    >
-                      <td style={{ padding: '0.5rem 0.5rem 0.5rem 0.75rem', position: 'sticky', left: 0, zIndex: 10, whiteSpace: 'nowrap', width: '2.5rem', backgroundColor: isSelected ? '#fffbeb' : '#ffffff' }}>
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectDocument(doc.id);
-                          }}
-                          style={{
-                            width: '1.25rem', height: '1.25rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                            backgroundColor: isSelected ? '#f59e0b' : '#ffffff',
-                            borderColor: isSelected ? '#f59e0b' : '#cbd5e1',
-                            color: isSelected ? '#ffffff' : 'transparent'
-                          }}
-                        >
-                          {isSelected && (
-                            <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
-                          )}
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.5rem 0.75rem', position: 'sticky', left: '2.5rem', zIndex: 10, boxShadow: '2px 0 4px rgba(0,0,0,0.05)', whiteSpace: 'nowrap', backgroundColor: isSelected ? '#fffbeb' : '#ffffff' }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit?.(doc.id);
-                          }}
-                          style={{ fontSize: '0.75rem', fontWeight: 600, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none', padding: 0 }}
-                        >
-                          {doc.number}
-                        </button>
-                      </td>
-                      <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap', textAlign: language === 'ar' ? 'right' : 'left' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#1e293b' }}>{doc.partnerName}</span>
-                      </td>
-                      <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap', textAlign: language === 'ar' ? 'right' : 'left' }}>
-                        <span style={{ fontSize: '0.75rem', color: '#475569' }}>
-                          {new Date(doc.date).toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </span>
-                      </td>
-                      {documentType === 'facture' && (
-                        <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap', textAlign: language === 'ar' ? 'right' : 'left' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#475569' }}>
-                            {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            }) : '-'}
-                          </span>
-                        </td>
-                      )}
-                      {showValidationColumn && (
-                        <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap', textAlign: language === 'ar' ? 'right' : 'left' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#475569' }}>
-                            {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            }) : '-'}
-                          </span>
-                        </td>
-                      )}
-                      <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>
-                          {doc.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                        </span>
-                      </td>
-                      {visibleColumns.tax && (
-                        <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>
-                            {doc.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                          </span>
-                        </td>
-                      )}
-                      <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f172a' }}>
-                          {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                        </span>
-                      </td>
-                      {showPaymentColumns && visibleColumns.paidAmount && (
-                        <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#15803d' }}>
-                            {doc.paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                          </span>
-                        </td>
-                      )}
-                      {showPaymentColumns && visibleColumns.remainingAmount && (
-                        <td style={{ padding: '0.5rem 0.75rem', textAlign: language === 'ar' ? 'left' : 'right', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 500, color: doc.remainingAmount > 0 ? '#b91c1c' : '#64748b' }}>
-                            {doc.remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                          </span>
-                        </td>
-                      )}
-                      <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                          <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, ...getStatusStyle(doc.status) }}>
-                            {getStatusLabel(doc.status)}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={columnCount} style={{ padding: '2rem 0', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                      <Filter style={{ width: '2.5rem', height: '2.5rem', color: '#cbd5e1' }} />
-                      <p style={{ fontSize: '0.75rem', color: '#64748b' }}>{t('noDocumentFound')}</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        />
+        <Column
+          field="partnerName"
+          header={partnerLabel}
+          sortable
+          body={(doc: Document) => (
+            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{doc.partnerName}</span>
+          )}
+        />
+        <Column
+          field="date"
+          header={documentType === 'facture' ? t('invoiceDate') : documentType === 'devis' ? t('quoteDate') : t('deliveryDate')}
+          sortable
+          body={(doc: Document) => (
+            <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+              {new Date(doc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </span>
+          )}
+        />
+        {documentType === 'facture' && (
+          <Column
+            field="dueDate"
+            header={t('dueDate')}
+            sortable
+            body={(doc: Document) => (
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+              </span>
+            )}
+          />
+        )}
+        {showValidationColumn && (
+          <Column
+            field="validationDate"
+            header={t('validationDate')}
+            sortable
+            body={(doc: Document) => (
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+              </span>
+            )}
+          />
+        )}
+        <Column
+          field="subtotal"
+          header={t('amountHT')}
+          sortable
+          body={(doc: Document) => (
+            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
+              {doc.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+            </span>
+          )}
+        />
+        {visibleColumns.tax && (
+          <Column
+            field="tax"
+            header={t('taxAmount')}
+            sortable
+            body={(doc: Document) => (
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
+                {doc.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              </span>
+            )}
+          />
+        )}
+        <Column
+          field="total"
+          header={t('amountTTC')}
+          sortable
+          body={(doc: Document) => (
+            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
+              {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+            </span>
+          )}
+        />
+        {showPaymentColumns && visibleColumns.paidAmount && (
+          <Column
+            field="paidAmount"
+            header={t('alreadyPaid')}
+            sortable
+            body={(doc: Document) => (
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#15803d' }}>
+                {doc.paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              </span>
+            )}
+          />
+        )}
+        {showPaymentColumns && visibleColumns.remainingAmount && (
+          <Column
+            field="remainingAmount"
+            header={t('remainingToPay')}
+            sortable
+            body={(doc: Document) => (
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: doc.remainingAmount > 0 ? '#b91c1c' : '#64748b' }}>
+                {doc.remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              </span>
+            )}
+          />
+        )}
+        <Column
+          field="status"
+          header={t('status')}
+          body={(doc: Document) => (
+            <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, ...getStatusStyle(doc.status) }}>
+              {getStatusLabel(doc.status)}
+            </span>
+          )}
+        />
+      </DataTable>
 
       {/* PDF Preview Modal */}
       <PDFPreviewModal

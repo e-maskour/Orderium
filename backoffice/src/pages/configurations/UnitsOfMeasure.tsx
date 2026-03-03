@@ -5,6 +5,8 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { Link } from 'react-router-dom';
 import { uomService, IUnitOfMeasure, CreateUomDTO, UpdateUomDTO, UOM_CATEGORIES } from '../../modules/uom';
 import { Modal } from '../../components/Modal';
@@ -21,6 +23,7 @@ export default function UnitsOfMeasure() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState<string>('');
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+    const [selectedRows, setSelectedRows] = useState<IUnitOfMeasure[]>([]);
     const categoryRef = useRef<HTMLDivElement>(null);
 
     const [formData, setFormData] = useState<CreateUomDTO>({
@@ -208,35 +211,35 @@ export default function UnitsOfMeasure() {
                         </div>
 
                         <div style={{ position: 'relative' }} ref={categoryRef}>
-                            <button
+                            <Button
                                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                style={{ padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                            >
-                                <Filter style={{ width: '1rem', height: '1rem' }} />
-                                {filterCategory || t('allCategories') || 'All Categories'}
-                            </button>
+                                icon={<Filter style={{ width: '1rem', height: '1rem' }} />}
+                                iconPos="left"
+                                label={filterCategory || t('allCategories') || 'All Categories'}
+                                outlined
+                            />
                             {showCategoryDropdown && (
                                 <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '0.25rem', width: '12rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 10, maxHeight: '16rem', overflowY: 'auto' }}>
-                                    <button
+                                    <Button
                                         onClick={() => {
                                             setFilterCategory('');
                                             setShowCategoryDropdown(false);
                                         }}
-                                        style={{ width: '100%', padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer' }}
-                                    >
-                                        {t('allCategories') || 'All Categories'}
-                                    </button>
+                                        label={t('allCategories') || 'All Categories'}
+                                        text
+                                        style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem' }}
+                                    />
                                     {UOM_CATEGORIES.map((cat) => (
-                                        <button
+                                        <Button
                                             key={cat}
                                             onClick={() => {
                                                 setFilterCategory(cat);
                                                 setShowCategoryDropdown(false);
                                             }}
-                                            style={{ width: '100%', padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer' }}
-                                        >
-                                            {cat}
-                                        </button>
+                                            label={cat}
+                                            text
+                                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem' }}
+                                        />
                                     ))}
                                 </div>
                             )}
@@ -246,80 +249,56 @@ export default function UnitsOfMeasure() {
                     <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('addUom') || 'Add UOM'} onClick={openCreateModal} />
                 </div>
 
-                <div>
-                    {Object.keys(groupedUoms).length === 0 ? (
-                        <div style={{ padding: '1.5rem 1.5rem 2rem', textAlign: 'center', color: '#64748b' }}>
-                            {t('noUomFound') || 'No units of measure found'}
-                        </div>
+                <style>{`
+                    .uom-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+                    .uom-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+                    .uom-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+                    .uom-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+                    .uom-datatable .p-rowgroup-header td { background: #f8fafc !important; padding: 0.75rem 1rem !important; font-size: 0.875rem; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; }
+                    .uom-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+                    .uom-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                `}</style>
+                <DataTable
+                    className="uom-datatable"
+                    value={filteredUoms.slice().sort((a, b) => a.category.localeCompare(b.category))}
+                    selection={selectedRows}
+                    onSelectionChange={(e) => setSelectedRows(e.value as IUnitOfMeasure[])}
+                    selectionMode="checkbox"
+                    dataKey="id"
+                    paginator
+                    paginatorPosition="top"
+                    rows={25}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    removableSort
+                    rowGroupMode="subheader"
+                    groupRowsBy="category"
+                    rowGroupHeaderTemplate={(row: IUnitOfMeasure) => <span>{row.category}</span>}
+                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noUomFound') || 'No units of measure found'}</div>}
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+                    currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                >
+                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                    <Column field="name" header={t('name')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
+                    <Column field="code" header={t('code')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.code}</span>} />
+                    <Column field="isBaseUnit" header={t('type') || 'Type'} body={(row: IUnitOfMeasure) => row.isBaseUnit ? (
+                        <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#dbeafe', color: '#1e40af', borderRadius: '0.375rem' }}>{t('baseUnit') || 'Base Unit'}</span>
                     ) : (
-                        Object.entries(groupedUoms).map(([category, categoryUoms]) => (
-                            <div key={category} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                <div style={{ padding: '0.75rem 1.5rem', background: '#f8fafc' }}>
-                                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{category}</h3>
-                                </div>
-                                <div style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%' }}>
-                                        <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                                            <tr>
-                                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('name')}</th>
-                                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('code')}</th>
-                                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('type') || 'Type'}</th>
-                                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('ratio')}</th>
-                                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('rounding') || 'Rounding'}</th>
-                                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('status')}</th>
-                                                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>{t('actions')}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {categoryUoms.map((uom: IUnitOfMeasure) => (
-                                                <tr key={uom.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                                    <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{uom.name}</td>
-                                                    <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#475569' }}>{uom.code}</td>
-                                                    <td style={{ padding: '1rem 1.5rem' }}>
-                                                        {uom.isBaseUnit ? (
-                                                            <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#dbeafe', color: '#1e40af', borderRadius: '0.375rem' }}>
-                                                                {t('baseUnit') || 'Base Unit'}
-                                                            </span>
-                                                        ) : (
-                                                            <span style={{ fontSize: '0.75rem', color: '#475569' }}>{t('derived') || 'Derived'}</span>
-                                                        )}
-                                                    </td>
-                                                    <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#475569' }}>{uom.ratio}</td>
-                                                    <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#475569' }}>{uom.roundingPrecision || '-'}</td>
-                                                    <td style={{ padding: '1rem 1.5rem' }}>
-                                                        {uom.isActive ? (
-                                                            <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#dcfce7', color: '#166534', borderRadius: '0.375rem' }}>
-                                                                {t('active')}
-                                                            </span>
-                                                        ) : (
-                                                            <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#fee2e2', color: '#991b1b', borderRadius: '0.375rem' }}>
-                                                                {t('inactive')}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
-                                                        <button
-                                                            onClick={() => openEditModal(uom)}
-                                                            style={{ color: '#2563eb', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem', marginRight: '0.75rem' }}
-                                                        >
-                                                            <Pencil style={{ width: '1rem', height: '1rem' }} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(uom.id!)}
-                                                            style={{ color: '#dc2626', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}
-                                                        >
-                                                            <Trash2 style={{ width: '1rem', height: '1rem' }} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
+                        <span style={{ fontSize: '0.75rem', color: '#475569' }}>{t('derived') || 'Derived'}</span>
+                    )} />
+                    <Column field="ratio" header={t('ratio')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.ratio}</span>} />
+                    <Column field="roundingPrecision" header={t('rounding') || 'Rounding'} body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.roundingPrecision || '-'}</span>} />
+                    <Column field="isActive" header={t('status')} body={(row: IUnitOfMeasure) => row.isActive ? (
+                        <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#dcfce7', color: '#166534', borderRadius: '0.375rem' }}>{t('active')}</span>
+                    ) : (
+                        <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#fee2e2', color: '#991b1b', borderRadius: '0.375rem' }}>{t('inactive')}</span>
+                    )} />
+                    <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: IUnitOfMeasure) => (
+                        <div style={{ textAlign: 'right' }}>
+                            <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row)} text rounded severity="info" />
+                            <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row.id!)} text rounded severity="danger" />
+                        </div>
+                    )} />
+                </DataTable>
             </div>
 
             {/* Modal */}
@@ -327,8 +306,19 @@ export default function UnitsOfMeasure() {
                 isOpen={showModal}
                 onClose={closeModal}
                 title={editingUom ? (t('editUom') || 'Edit Unit of Measure') : (t('addUom') || 'Add Unit of Measure')}
+                footer={
+                    <div className="flex justify-content-end gap-2">
+                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
+                        <Button
+                            form="uom-modal-form"
+                            type="submit"
+                            loading={createMutation.isPending || updateMutation.isPending}
+                            label={t('save')}
+                        />
+                    </div>
+                }
             >
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <form id="uom-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
@@ -423,14 +413,6 @@ export default function UnitsOfMeasure() {
                         <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('active')}</label>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', paddingTop: '1rem' }}>
-                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
-                        <Button
-                            type="submit"
-                            loading={createMutation.isPending || updateMutation.isPending}
-                            label={t('save')}
-                        />
-                    </div>
                 </form>
             </Modal>
         </AdminLayout>

@@ -149,16 +149,11 @@ export default function Categories() {
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '0.5rem', paddingLeft: `${level * 24 + 12}px`, borderBottom: '1px solid #f1f5f9' }}
         >
           {hasChildren ? (
-            <button
+            <Button
+              icon={isExpanded ? <ChevronDown style={{ width: '1rem', height: '1rem' }} /> : <ChevronRight style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => toggleExpand(category.id)}
-              style={{ padding: '0.25rem', borderRadius: '0.25rem', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              {isExpanded ? (
-                <ChevronDown style={{ width: '1rem', height: '1rem', color: '#475569' }} />
-              ) : (
-                <ChevronRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />
-              )}
-            </button>
+              text rounded
+            />
           ) : (
             <div style={{ width: '1.5rem' }} />
           )}
@@ -178,25 +173,22 @@ export default function Categories() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button
+            <Button
+              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => openCreateModal(category.id)}
-              style={{ padding: '0.5rem', color: '#2563eb', borderRadius: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
+              text rounded severity="info"
               title={t('addSubcategory')}
-            >
-              <Plus style={{ width: '1rem', height: '1rem' }} />
-            </button>
-            <button
+            />
+            <Button
+              icon={<Pencil style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => openEditModal(category)}
-              style={{ padding: '0.5rem', color: '#d97706', borderRadius: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              <Pencil style={{ width: '1rem', height: '1rem' }} />
-            </button>
-            <button
+              text rounded severity="warning"
+            />
+            <Button
+              icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => handleDelete(category.id, category.name)}
-              style={{ padding: '0.5rem', color: '#dc2626', borderRadius: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              <Trash2 style={{ width: '1rem', height: '1rem' }} />
-            </button>
+              text rounded severity="danger"
+            />
           </div>
         </div>
 
@@ -245,6 +237,17 @@ export default function Categories() {
         isOpen={showModal}
         onClose={closeModal}
         title={editingCategory ? t('editCategory') : t('createCategory')}
+        footer={
+          <div className="flex justify-content-end gap-2">
+            <Button label={t('cancel')} onClick={closeModal} outlined />
+            <Button
+              severity="warning"
+              onClick={handleSubmit}
+              loading={createMutation.isPending || updateMutation.isPending}
+              label={editingCategory ? t('update') : t('create')}
+            />
+          </div>
+        }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
@@ -304,15 +307,6 @@ export default function Categories() {
           </div>
         </div>
 
-        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-          <Button label={t('cancel')} onClick={closeModal} outlined />
-          <Button
-            severity="warning"
-            onClick={handleSubmit}
-            loading={createMutation.isPending || updateMutation.isPending}
-            label={editingCategory ? t('update') : t('create')}
-          />
-        </div>
       </Modal>
     </AdminLayout>
   );

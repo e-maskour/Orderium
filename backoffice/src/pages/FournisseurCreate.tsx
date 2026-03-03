@@ -35,31 +35,27 @@ export default function FournisseurCreate() {
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
-        {/* Compact Header */}
-        <div style={{ marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <button
-                onClick={() => navigate('/fournisseurs')}
-                style={{ padding: '0.5rem', borderRadius: '0.5rem' }}
-              >
-                <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
-                </div>
-                <div>
-                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{t('newSupplier')}</h1>
-                  <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('addSupplier')}</p>
-                </div>
-              </div>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+        {/* Page Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <button
+              onClick={() => navigate('/fournisseurs')}
+              style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', border: '1px solid #e2e8f0', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
+            >
+              <ArrowLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />
+            </button>
+            <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #1e1e2d, #16213e)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(30,30,45,0.25)' }}>
+              <Users style={{ width: '1.25rem', height: '1.25rem', color: '#f59e0b' }} />
+            </div>
+            <div>
+              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>{t('newSupplier')}</h1>
+              <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem', fontWeight: 500 }}>{t('addSupplier')}</p>
             </div>
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
           <PartnerForm
             type="supplier"
             onSubmit={handleSubmit}

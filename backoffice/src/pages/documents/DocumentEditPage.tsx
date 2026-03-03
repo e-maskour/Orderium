@@ -824,7 +824,7 @@ export default function DocumentEditPage({
   if (loading) {
     return (
       <AdminLayout>
-        <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
             <div style={{ color: '#64748b' }}>{t('loading')}</div>
           </div>
@@ -835,20 +835,28 @@ export default function DocumentEditPage({
 
   return (
     <AdminLayout>
-      <div style={{ maxWidth: '80rem', margin: '0 auto', paddingBottom: '6rem' }}>
-        {/* Simplified Header with Back Button */}
+      <style>{`
+        .doc-edit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: #fff; border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); z-index: 40; }
+        @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } }
+      `}</style>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
+        {/* Header with Back Button */}
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <button
+            <Button
+              icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
               onClick={() => navigate(listRoute)}
-              style={{ padding: '0.5rem', borderRadius: '0.5rem', flexShrink: 0, cursor: 'pointer', border: 'none', background: 'transparent' }}
-            >
-              <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
-            </button>
+              text rounded
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+            />
+            <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 10px rgba(245,158,11,0.3)' }}>
+              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />; })()}
+            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {config.titleShort} {invoiceNumber}
                   </h1>
                   <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.125rem' }}>{t('editDocument')} {config.titleShort.toLowerCase()}</p>
@@ -921,7 +929,7 @@ export default function DocumentEditPage({
 
         {/* Payment Summary Section - Only for validated invoices */}
         {documentType === 'facture' && isValidated && status !== 'draft' && (
-          <div style={{ background: 'linear-gradient(to bottom right, #eff6ff, #eef2ff)', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', border: '1px solid #bfdbfe', padding: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ background: 'linear-gradient(to bottom right, #eff6ff, #eef2ff)', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1.5px solid #bfdbfe', padding: '1rem', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.5rem', height: '1.5rem', borderRadius: '9999px', backgroundColor: '#3b82f6', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
                 <Receipt style={{ width: '1rem', height: '1rem', color: '#ffffff' }} />
@@ -957,9 +965,9 @@ export default function DocumentEditPage({
           </div>
         )}
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1.5px solid #e2e8f0', padding: '1.5rem' }}>
           {/* Two column layout: Partner on left, Document info on right */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="doc-edit-grid">
             {/* Partner section - Left */}
             <div>
               <DocumentPartnerBox
@@ -1108,19 +1116,18 @@ export default function DocumentEditPage({
         </div>
 
         {/* Sticky Bottom Action Bar */}
-        <div style={{ position: 'fixed', bottom: 0, left: '16rem', right: 0, backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', boxShadow: '0 -4px 6px -1px rgb(0 0 0 / 0.1)', zIndex: 40 }}>
-          <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
+        <div className="doc-sticky-bar">
+          <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               {/* Left side - Payment History button for invoices */}
               <div>
                 {documentType === 'facture' && isValidated && status !== 'draft' && (
-                  <button
+                  <Button
+                    icon={<History style={{ width: '1rem', height: '1rem' }} />}
+                    label={t('paymentHistory')}
                     onClick={() => setShowPaymentHistory(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#ffffff', borderRadius: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
-                  >
-                    <History style={{ width: '1rem', height: '1rem' }} />
-                    <span>{t('paymentHistory')}</span>
-                  </button>
+                    severity="info"
+                  />
                 )}
               </div>
 
@@ -1129,67 +1136,64 @@ export default function DocumentEditPage({
                 {/* Validation actions */}
                 {config.features.hasValidation && (
                   isValidated ? (
-                    <button
+                    <Button
+                      icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('devalidateDocument')}
                       onClick={() => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') })}
-                      style={{ padding: '0.5rem 1rem', backgroundColor: '#f1f5f9', color: '#334155', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}
-                    >
-                      <XCircle style={{ width: '1rem', height: '1rem' }} />
-                      {t('devalidateDocument')}
-                    </button>
+                      severity="secondary"
+                    />
                   ) : (
-                    <button
+                    <Button
+                      icon={<CheckCircle style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('validateDocument')}
                       onClick={() => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') })}
-                      style={{ padding: '0.5rem 1rem', backgroundColor: '#16a34a', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
-                    >
-                      <CheckCircle style={{ width: '1rem', height: '1rem' }} />
-                      {t('validateDocument')}
-                    </button>
+                      severity="success"
+                    />
                   )
                 )}
 
                 {/* Deliver and Cancel buttons for bon_livraison */}
                 {documentType === 'bon_livraison' && status === 'in_progress' && (
                   <>
-                    <button
+                    <Button
+                      icon={<Truck style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('markAsDelivered')}
                       onClick={() => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') })}
-                      style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
-                    >
-                      <Truck style={{ width: '1rem', height: '1rem' }} />
-                      {t('markAsDelivered')}
-                    </button>
-                    <button
+                      severity="info"
+                    />
+                    <Button
+                      icon={<Ban style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('cancel')}
                       onClick={() => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') })}
-                      style={{ padding: '0.5rem 1rem', backgroundColor: '#dc2626', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
-                    >
-                      <Ban style={{ width: '1rem', height: '1rem' }} />
-                      {t('cancel')}
-                    </button>
+                      severity="danger"
+                    />
                   </>
                 )}
 
                 {/* Actions menu for bon_livraison */}
                 {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
                   <div style={{ position: 'relative' }} ref={actionsMenuRef}>
-                    <button
+                    <Button
+                      icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
+                      iconPos="right"
+                      label={t('actions')}
                       onClick={() => setShowActionsMenu(!showActionsMenu)}
-                      style={{ padding: '0.5rem 1rem', backgroundColor: '#d97706', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
-                    >
-                      {t('actions')}
-                      <ChevronDown style={{ width: '1rem', height: '1rem' }} />
-                    </button>
+                      style={{ backgroundColor: '#d97706', borderColor: '#d97706' }}
+                    />
                     {showActionsMenu && (
                       <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
                         {/* Create Invoice from Bon */}
-                        <button
+                        <Button
                           onClick={() => {
                             setShowActionsMenu(false);
                             toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                           }}
-                          style={{ width: '100%', padding: '0.75rem 1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
-                        >
-                          <FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
-                          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{t('convertToInvoice')}</span>
-                        </button>
+                          icon={<FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />}
+                          iconPos="left"
+                          label={t('convertToInvoice')}
+                          text
+                          style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderRadius: '0.5rem' }}
+                        />
                       </div>
                     )}
                   </div>
@@ -1198,74 +1202,75 @@ export default function DocumentEditPage({
                 {/* Sign/Unsign buttons for devis */}
                 {documentType === 'devis' && isValidated && status !== 'closed' && (
                   <>
-                    <button
+                    <Button
+                      icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('signQuote')}
                       onClick={() => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') })}
                       disabled={status === 'signed'}
-                      style={{ padding: '0.5rem 1rem', backgroundColor: '#16a34a', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', opacity: status === 'signed' ? 0.5 : 1 }}
-                    >
-                      <PenTool style={{ width: '1rem', height: '1rem' }} />
-                      {t('signQuote')}
-                    </button>
-                    <button
+                      severity="success"
+                    />
+                    <Button
+                      icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('rejectQuote')}
                       onClick={() => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') })}
                       disabled={status !== 'signed'}
-                      style={{ padding: '0.5rem 1rem', backgroundColor: '#ea580c', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', opacity: status !== 'signed' ? 0.5 : 1 }}
-                    >
-                      <XCircle style={{ width: '1rem', height: '1rem' }} />
-                      {t('rejectQuote')}
-                    </button>
+                      severity="warning"
+                    />
                   </>
                 )}
 
                 {/* Actions menu for devis */}
                 {documentType === 'devis' && status === 'signed' && (
                   <div style={{ position: 'relative' }} ref={actionsMenuRef}>
-                    <button
+                    <Button
+                      icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
+                      iconPos="right"
+                      label={t('actions')}
                       onClick={() => setShowActionsMenu(!showActionsMenu)}
-                      style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#ffffff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
-                    >
-                      {t('actions')}
-                      <ChevronDown style={{ width: '1rem', height: '1rem' }} />
-                    </button>
+                      severity="info"
+                    />
                     {showActionsMenu && (
                       <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
                         {/* Share Quote */}
                         {isValidated && (
-                          <button
+                          <Button
                             onClick={() => {
                               setShowActionsMenu(false);
                               setShowShareDialog(true);
                             }}
-                            style={{ width: '100%', padding: '0.75rem 1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', borderTopLeftRadius: '0.5rem', borderTopRightRadius: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
-                          >
-                            <Share2 style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />
-                            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{t('shareWithClient')}</span>
-                          </button>
+                            icon={<Share2 style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />}
+                            iconPos="left"
+                            label={t('shareWithClient')}
+                            text
+                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTopLeftRadius: '0.5rem', borderTopRightRadius: '0.5rem' }}
+                          />
                         )}
 
                         {/* Create Invoice */}
-                        <button
+                        <Button
                           onClick={() => {
                             setShowActionsMenu(false);
                             toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                           }}
-                          style={{ width: '100%', padding: '0.75rem 1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', background: 'transparent', cursor: 'pointer', borderTop: '1px solid #f1f5f9' }}
-                        >
-                          <FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
-                          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{t('createAnInvoice')}</span>
-                        </button>
+                          icon={<FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />}
+                          iconPos="left"
+                          label={t('createAnInvoice')}
+                          text
+                          style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTop: '1px solid #f1f5f9' }}
+                        />
 
                         {/* Create Bon de Livraison */}
-                        <button
+                        <Button
                           onClick={() => {
                             setShowActionsMenu(false);
                             toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') });
                           }}
-                          style={{ width: '100%', padding: '0.75rem 1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer', borderTop: '1px solid #f1f5f9' }}
-                        >
-                          <Truck style={{ width: '1rem', height: '1rem', color: '#059669' }} />
-                          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{t('createDeliveryNote')}</span>
-                        </button>
+                          icon={<Truck style={{ width: '1rem', height: '1rem', color: '#059669' }} />}
+                          iconPos="left"
+                          label={t('createDeliveryNote')}
+                          text
+                          style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', borderTop: '1px solid #f1f5f9' }}
+                        />
                       </div>
                     )}
                   </div>

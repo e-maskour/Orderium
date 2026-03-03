@@ -13,6 +13,8 @@ import { toastExported, toastImported, toastError, toastWarning, toastInfo, toas
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
+import { DataTable, DataTablePageEvent } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 
 export default function Products() {
   const { t } = useLanguage();
@@ -268,7 +270,7 @@ export default function Products() {
 
   return (
     <AdminLayout>
-      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '80rem', margin: '0 auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto' }}>
         {/* Page Header */}
         <div>
           <PageHeader icon={Package} title={t('products')} subtitle={t('manageProducts')} />
@@ -438,110 +440,105 @@ export default function Products() {
               ))}
             </div>
           ) : viewMode === 'list' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {productsList && productsList.length > 0 ? (
-                productsList.map((product: IProduct) => (
-                  <div
-                    key={product.id}
-                    onClick={() => handleViewProduct(product.id)}
-                    style={{
-                      backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                      paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem', cursor: 'pointer',
-                      ...(selectedProducts.includes(product.id)
-                        ? { border: '1px solid #f59e0b', outline: '2px solid rgba(245,158,11,0.2)' }
-                        : { border: '1px solid rgba(226,232,240,0.6)' }),
-                    }}
-                  >
+            <div style={{ flex: 1 }}>
+              <style>{`
+                .prod-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+                .prod-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+                .prod-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+                .prod-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+                .prod-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+                .prod-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+              `}</style>
+              <DataTable
+                className="prod-datatable"
+                value={productsList}
+                lazy
+                totalRecords={totalCount}
+                first={(currentPage - 1) * pageSize}
+                onPage={(e: DataTablePageEvent) => {
+                  setCurrentPage(Math.floor(e.first / e.rows) + 1);
+                  setPageSize(e.rows);
+                }}
+                selection={productsList.filter((p: IProduct) => selectedProducts.includes(p.id))}
+                onSelectionChange={(e) => setSelectedProducts((e.value as IProduct[]).map((p) => p.id))}
+                selectionMode="checkbox"
+                dataKey="id"
+                paginator
+                paginatorPosition="top"
+                rows={pageSize}
+                rowsPerPageOptions={[10, 25, 50, 100]}
+                removableSort
+                loading={isLoading}
+                emptyMessage={t('noProductsFound')}
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+              >
+                <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                <Column
+                  header={t('name')}
+                  sortable
+                  sortField="name"
+                  body={(product: IProduct) => (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      {/* Checkbox */}
-                      <div style={{ width: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleSelectProduct(product.id);
-                          }}
-                          style={{
-                            width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', borderWidth: '2px', borderStyle: 'solid',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                            ...(selectedProducts.includes(product.id)
-                              ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' }
-                              : { backgroundColor: 'white', borderColor: '#cbd5e1' }),
-                          }}
-                        >
-                          {selectedProducts.includes(product.id) && <CheckSquare style={{ width: '1rem', height: '1rem' }} />}
+                      {product.imageUrl ? (
+                        <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', borderRadius: '0.5rem', flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(to bottom right, #f1f5f9, #e2e8f0)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Package style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8' }} />
                         </div>
-                      </div>
-
-                      {/* Image */}
-                      <div style={{ width: '2.5rem' }}>
-                        {product.imageUrl ? (
-                          <img
-                            src={getImageUrl(product.imageUrl)}
-                            alt={product.name}
-                            style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-                          />
-                        ) : (
-                          <div style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(to bottom right, #f1f5f9, #e2e8f0)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Package style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8' }} />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Name */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('name')}</p>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</p>
-                        {product.code && <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.125rem' }}>{product.code}</p>}
-                      </div>
-
-                      {/* Price */}
-                      <div style={{ width: '7rem' }}>
-                        <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('price')}</p>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#d97706' }}>
-                          {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                        </span>
-                      </div>
-
-                      {/* Cost */}
-                      <div style={{ width: '7rem' }}>
-                        <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('cost')}</p>
-                        <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                          {(product.cost || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                        </span>
-                      </div>
-
-                      {/* Stock */}
-                      <div style={{ width: '6rem', textAlign: 'center' }}>
-                        <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('stock')}</p>
-                        <span style={{ fontSize: '0.875rem', color: '#334155', fontWeight: 500 }}>
-                          {product.stock !== null && product.stock !== undefined
-                            ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
-                            : '-'}
-                        </span>
+                      )}
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{product.name}</p>
+                        {product.code && <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>{product.code}</p>}
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '5rem', paddingBottom: '5rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ position: 'relative', background: 'linear-gradient(to bottom right, #fffbeb, #fff7ed)', borderRadius: '1rem', padding: '2rem', border: '2px solid #fef3c7' }}>
-                      <Package style={{ width: '4rem', height: '4rem', color: '#f59e0b', margin: '0 auto' }} strokeWidth={1.5} />
-                    </div>
-                  </div>
-                  <h3 style={{ marginTop: '1.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('noProductsFound')}</h3>
-                  <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#64748b', maxWidth: '24rem', textAlign: 'center' }}>
-                    {activeFiltersCount > 0
-                      ? "Aucun produit ne correspond à vos critères de recherche. Essayez de modifier les filtres."
-                      : "Commencez par ajouter votre premier produit pour le voir apparaître ici."}
-                  </p>
-                  {activeFiltersCount > 0 ? (
-                    <Button onClick={handleClearFilters} label="Réinitialiser les filtres" style={{ marginTop: '1.5rem' }} />
-                  ) : (
-                    <Button onClick={() => navigate('/products/create')} icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label="Ajouter un produit" style={{ marginTop: '1.5rem' }} />
                   )}
-                </div>
-              )}
+                />
+                <Column
+                  header={t('price')}
+                  sortable
+                  sortField="price"
+                  body={(product: IProduct) => (
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#d97706' }}>
+                      {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
+                    </span>
+                  )}
+                />
+                <Column
+                  header={t('cost')}
+                  sortable
+                  sortField="cost"
+                  body={(product: IProduct) => (
+                    <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                      {(product.cost || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
+                    </span>
+                  )}
+                />
+                <Column
+                  header={t('stock')}
+                  sortable
+                  sortField="stock"
+                  body={(product: IProduct) => (
+                    <span style={{ fontSize: '0.875rem', color: '#334155', fontWeight: 500 }}>
+                      {product.stock !== null && product.stock !== undefined
+                        ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
+                        : '—'}
+                    </span>
+                  )}
+                />
+                <Column
+                  header={t('actions')}
+                  body={(product: IProduct) => (
+                    <button
+                      onClick={() => handleViewProduct(product.id)}
+                      style={{ padding: '0.375rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                      title={t('view')}
+                    >
+                      <Eye style={{ width: '1rem', height: '1rem', color: '#64748b' }} />
+                    </button>
+                  )}
+                />
+              </DataTable>
             </div>
           ) : (
             <div>

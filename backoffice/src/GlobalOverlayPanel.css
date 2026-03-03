@@ -17,6 +17,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -69,6 +70,7 @@
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -80,6 +82,7 @@
     transform: translateX(-100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -91,6 +94,7 @@
     transform: translateY(-100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -102,6 +106,7 @@
     transform: translateY(100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -113,6 +118,7 @@
     transform: scale(0.9);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -208,17 +214,17 @@
 }
 
 .overlay-panel-button--primary {
-  background-color: #3b82f6;
+  background-color: #df7817;
   color: white;
 }
 
 .overlay-panel-button--primary:hover {
-  background-color: #2563eb;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  background-color: #b86314;
+  box-shadow: 0 2px 8px rgba(223, 120, 23, 0.3);
 }
 
 .overlay-panel-button--primary:active {
-  background-color: #1d4ed8;
+  background-color: #9a5210;
 }
 
 .overlay-panel-button--secondary {
