@@ -249,50 +249,42 @@ export default function Orders() {
               <>
                 {/* View Mode Toggle */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-                  <button
+                  <Button
                     onClick={() => setViewMode('card')}
-                    style={{
-                      padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer',
-                      backgroundColor: viewMode === 'card' ? '#ffffff' : 'transparent',
-                      color: viewMode === 'card' ? '#0f172a' : '#475569',
-                      boxShadow: viewMode === 'card' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
-                    }}
-                  >
-                    <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
-                  </button>
-                  <button
+                    text={viewMode !== 'card'}
+                    style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', backgroundColor: viewMode === 'card' ? '#ffffff' : 'transparent', color: viewMode === 'card' ? '#0f172a' : '#475569', boxShadow: viewMode === 'card' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}
+                    icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />}
+                  />
+                  <Button
                     onClick={() => setViewMode('list')}
-                    style={{
-                      padding: '0.375rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer',
-                      backgroundColor: viewMode === 'list' ? '#ffffff' : 'transparent',
-                      color: viewMode === 'list' ? '#0f172a' : '#475569',
-                      boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
-                    }}
-                  >
-                    <List style={{ width: '1rem', height: '1rem' }} />
-                  </button>
+                    text={viewMode !== 'list'}
+                    style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', backgroundColor: viewMode === 'list' ? '#ffffff' : 'transparent', color: viewMode === 'list' ? '#0f172a' : '#475569', boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}
+                    icon={<List style={{ width: '1rem', height: '1rem' }} />}
+                  />
                 </div>
 
                 {/* Filters Toggle */}
-                <button
+                <Button
                   onClick={() => setFiltersExpanded(!filtersExpanded)}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem', border: 'none', cursor: 'pointer',
+                    paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
                     backgroundColor: filtersExpanded ? '#f59e0b' : '#ffffff',
                     color: filtersExpanded ? '#ffffff' : '#334155',
                     boxShadow: filtersExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
                     ...(filtersExpanded ? {} : { border: '1px solid #cbd5e1' }),
                   }}
+                  text={!filtersExpanded}
+                  icon={<Filter style={{ width: '1rem', height: '1rem' }} />}
+                  label={t('filters')}
+                  iconPos="left"
                 >
-                  <Filter style={{ width: '1rem', height: '1rem' }} />
-                  <span>{t('filters')}</span>
                   {filtersExpanded ? <ChevronUp style={{ width: '1rem', height: '1rem' }} /> : <ChevronDown style={{ width: '1rem', height: '1rem' }} />}
                   {(appliedFilters.search || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && !filtersExpanded && (
                     <span style={{ marginLeft: '0.25rem', padding: '0.125rem 0.5rem', backgroundColor: '#f59e0b', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px' }}>
                       {[appliedFilters.search, appliedFilters.fromClient !== 'all', Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end)].filter(Boolean).length}
                     </span>
                   )}
-                </button>
+                </Button>
               </>
             }
           />
@@ -309,9 +301,7 @@ export default function Orders() {
                   <Filter style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
                   <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>{t('filters')}</h2>
                 </div>
-                <button onClick={() => setFiltersExpanded(false)} style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}>
-                  <X style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
-                </button>
+                <Button onClick={() => setFiltersExpanded(false)} text rounded icon={<X style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />} style={{ padding: '0.5rem' }} />
               </div>
 
               {/* Panel Content */}
@@ -368,12 +358,13 @@ export default function Orders() {
                           style={{ width: '100%' }}
                         />
                         {customerPhoneSearch && (
-                          <button
+                          <Button
                             onClick={() => setCustomerPhoneSearch('')}
-                            style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', border: 'none', background: 'none', cursor: 'pointer', zIndex: 10 }}
-                          >
-                            <X style={{ width: '1rem', height: '1rem' }} />
-                          </button>
+                            text
+                            rounded
+                            icon={<X style={{ width: '1rem', height: '1rem' }} />}
+                            style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }}
+                          />
                         )}
                       </div>
                     </div>
@@ -433,18 +424,18 @@ export default function Orders() {
                       { key: 'locale', label: t('local') },
                       { key: 'client', label: t('client') }
                     ].map((filter) => (
-                      <button
+                      <Button
                         key={filter.key}
                         onClick={() => setFromClientFilter(filter.key as any)}
+                        label={filter.label}
+                        text={fromClientFilter !== filter.key}
                         style={{
-                          padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                          padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600,
                           backgroundColor: fromClientFilter === filter.key ? '#3b82f6' : '#f8fafc',
                           color: fromClientFilter === filter.key ? '#ffffff' : '#334155',
                           border: fromClientFilter === filter.key ? 'none' : '2px solid #e2e8f0',
                         }}
-                      >
-                        {filter.label}
-                      </button>
+                      />
                     ))}
                   </div>
                 </div>
@@ -468,12 +459,8 @@ export default function Orders() {
                 <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{t('deliveryStatus')}</h3>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <button onClick={scrollStatusLeft} style={{ backgroundColor: '#f1f5f9', borderRadius: '9999px', padding: '0.375rem', border: 'none', cursor: 'pointer' }}>
-                  <ChevronLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />
-                </button>
-                <button onClick={scrollStatusRight} style={{ backgroundColor: '#f1f5f9', borderRadius: '9999px', padding: '0.375rem', border: 'none', cursor: 'pointer' }}>
-                  <ChevronRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />
-                </button>
+                <Button onClick={scrollStatusLeft} text rounded icon={<ChevronLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />} style={{ backgroundColor: '#f1f5f9', borderRadius: '9999px', padding: '0.375rem' }} />
+                <Button onClick={scrollStatusRight} text rounded icon={<ChevronRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />} style={{ backgroundColor: '#f1f5f9', borderRadius: '9999px', padding: '0.375rem' }} />
               </div>
             </div>
             <div ref={statusScrollRef} style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', scrollBehavior: 'smooth' }}>
@@ -488,14 +475,15 @@ export default function Orders() {
                 { key: 'delivered', label: t('delivered'), icon: '✅' },
                 { key: 'canceled', label: t('canceled'), icon: '❌' }
               ].map((filter) => (
-                <button
+                <Button
                   key={filter.key}
                   onClick={() => {
                     setDeliveryStatusFilter(filter.key as any);
                     setAppliedFilters(prev => ({ ...prev, deliveryStatus: filter.key as any, dateFilterType: 'custom', dateRange: { start: prev.dateRange.start, end: prev.dateRange.end } }));
                   }}
+                  text={deliveryStatusFilter !== filter.key}
                   style={{
-                    padding: '0.375rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0, border: 'none', cursor: 'pointer',
+                    padding: '0.375rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
                     backgroundColor: deliveryStatusFilter === filter.key ? '#f59e0b' : '#f8fafc',
                     color: deliveryStatusFilter === filter.key ? '#ffffff' : '#334155',
                     ...(deliveryStatusFilter !== filter.key ? { border: '2px solid #e2e8f0' } : {}),
@@ -510,7 +498,7 @@ export default function Orders() {
                   }}>
                     {deliveryStatusCounts[filter.key as keyof typeof deliveryStatusCounts]}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -536,13 +524,14 @@ export default function Orders() {
                 />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <button
+                <Button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.375rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1, background: 'none' }}
-                >
-                  <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
-                </button>
+                  text
+                  outlined
+                  icon={<ChevronLeft style={{ width: '1rem', height: '1rem' }} />}
+                  style={{ padding: '0.375rem 0.5rem' }}
+                />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <InputText
                     type="number"
@@ -561,13 +550,14 @@ export default function Orders() {
                   <span style={{ fontSize: '0.875rem', color: '#64748b' }}>/</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{Math.ceil(totalCount / pageSize)}</span>
                 </div>
-                <button
+                <Button
                   onClick={() => setCurrentPage(Math.min(Math.ceil(totalCount / pageSize), currentPage + 1))}
                   disabled={currentPage === Math.ceil(totalCount / pageSize)}
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.375rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: currentPage === Math.ceil(totalCount / pageSize) ? 'not-allowed' : 'pointer', opacity: currentPage === Math.ceil(totalCount / pageSize) ? 0.5 : 1, background: 'none' }}
-                >
-                  <ChevronRight style={{ width: '1rem', height: '1rem' }} />
-                </button>
+                  text
+                  outlined
+                  icon={<ChevronRight style={{ width: '1rem', height: '1rem' }} />}
+                  style={{ padding: '0.375rem 0.5rem' }}
+                />
               </div>
             </div>
           </div>
@@ -711,13 +701,14 @@ export default function Orders() {
               <Column
                 header={t('actions')}
                 body={(order: any) => (
-                  <button
+                  <Button
+                    text
+                    rounded
                     onClick={() => setSelectedOrderId(order.id)}
-                    style={{ padding: '0.375rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                    icon={<Info style={{ width: '1rem', height: '1rem', color: '#64748b' }} />}
                     title={t('details')}
-                  >
-                    <Info style={{ width: '1rem', height: '1rem', color: '#64748b' }} />
-                  </button>
+                    style={{ padding: '0.375rem' }}
+                  />
                 )}
               />
             </DataTable>

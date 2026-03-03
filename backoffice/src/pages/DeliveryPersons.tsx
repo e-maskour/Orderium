@@ -245,14 +245,16 @@ export default function DeliveryPersons() {
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
-                <button
+                <Button
                   key={tab.key}
+                  text={activeTab !== tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  style={activeTab === tab.key ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, background: '#f59e0b', color: '#ffffff', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)', border: 'none', cursor: 'pointer' } : { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent', cursor: 'pointer', border: 'none' }}
-                >
-                  <Icon style={{ width: '1rem', height: '1rem' }} />
-                  {tab.label}
-                </button>
+                  style={activeTab === tab.key
+                    ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, background: '#f59e0b', color: '#ffffff', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)' }
+                    : { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent' }}
+                  icon={<Icon style={{ width: '1rem', height: '1rem' }} />}
+                  label={tab.label}
+                />
               );
             })}
           </div>
@@ -283,12 +285,12 @@ export default function DeliveryPersons() {
                       <div key={person.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
-                          <button
+                          <Button
+                            link
+                            label={person.name}
                             onClick={() => handleViewPerson(person)}
-                            style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }}
-                          >
-                            {person.name}
-                          </button>
+                            style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', padding: 0 }}
+                          />
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flex: 1, marginLeft: '1rem' }}>
                           <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>{person.name}</span>
@@ -313,18 +315,22 @@ export default function DeliveryPersons() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   {/* View Mode Toggle */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-                    <button
+                    <Button
                       onClick={() => setViewMode('card')}
-                      style={viewMode === 'card' ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, background: '#ffffff', color: '#0f172a', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer' } : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                    >
-                      <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
-                    </button>
-                    <button
+                      text={viewMode !== 'card'}
+                      style={viewMode === 'card'
+                        ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', background: '#ffffff', color: '#0f172a', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }
+                        : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', color: '#475569', background: 'transparent' }}
+                      icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />}
+                    />
+                    <Button
                       onClick={() => setViewMode('list')}
-                      style={viewMode === 'list' ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, background: '#ffffff', color: '#0f172a', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer' } : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                    >
-                      <ListIcon style={{ width: '1rem', height: '1rem' }} />
-                    </button>
+                      text={viewMode !== 'list'}
+                      style={viewMode === 'list'
+                        ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', background: '#ffffff', color: '#0f172a', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }
+                        : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', color: '#475569', background: 'transparent' }}
+                      icon={<ListIcon style={{ width: '1rem', height: '1rem' }} />}
+                    />
                   </div>
 
                   {/* Search */}
@@ -340,12 +346,13 @@ export default function DeliveryPersons() {
                       aria-label={t('searchDeliveryPersons')}
                     />
                     {searchTerm && (
-                      <button
+                      <Button
+                        text
+                        rounded
                         onClick={() => setSearchTerm('')}
-                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}
-                      >
-                        <X style={{ width: '1rem', height: '1rem' }} />
-                      </button>
+                        icon={<X style={{ width: '1rem', height: '1rem' }} />}
+                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }}
+                      />
                     )}
                   </span>
                 </div>
@@ -427,26 +434,18 @@ export default function DeliveryPersons() {
 
                                   {/* Action Buttons */}
                                   <div style={{ display: 'flex', gap: '0.375rem', paddingTop: '0.5rem', borderTop: '1px solid #f1f5f9' }}>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleViewPerson(person);
-                                      }}
-                                      style={{ flex: 1, paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', background: '#eff6ff', color: '#1d4ed8', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', border: 'none', cursor: 'pointer' }}
-                                    >
-                                      <Eye style={{ width: '0.75rem', height: '0.75rem' }} />
-                                      Voir
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEditPerson(person);
-                                      }}
-                                      style={{ flex: 1, paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', background: '#f8fafc', color: '#334155', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', border: 'none', cursor: 'pointer' }}
-                                    >
-                                      <Edit2 style={{ width: '0.75rem', height: '0.75rem' }} />
-                                      Modifier
-                                    </button>
+                                    <Button
+                                      onClick={(e) => { e.stopPropagation(); handleViewPerson(person); }}
+                                      label="Voir"
+                                      icon={<Eye style={{ width: '0.75rem', height: '0.75rem' }} />}
+                                      style={{ flex: 1, paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', background: '#eff6ff', color: '#1d4ed8', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, border: 'none' }}
+                                    />
+                                    <Button
+                                      onClick={(e) => { e.stopPropagation(); handleEditPerson(person); }}
+                                      label="Modifier"
+                                      icon={<Edit2 style={{ width: '0.75rem', height: '0.75rem' }} />}
+                                      style={{ flex: 1, paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', background: '#f8fafc', color: '#334155', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, border: 'none' }}
+                                    />
                                   </div>
                                 </div>
                               </div>
@@ -495,9 +494,9 @@ export default function DeliveryPersons() {
                             )} />
                             <Column header="Actions" headerStyle={{ textAlign: 'right' }} body={(row: DeliveryPerson) => (
                               <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
-                                <button onClick={(e) => { e.stopPropagation(); handleViewPerson(row); }} style={{ padding: '0.375rem', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }}><Eye style={{ width: '1rem', height: '1rem' }} /></button>
-                                <button onClick={(e) => { e.stopPropagation(); handleEditPerson(row); }} style={{ padding: '0.375rem', color: '#d97706', background: 'none', border: 'none', cursor: 'pointer' }}><Edit2 style={{ width: '1rem', height: '1rem' }} /></button>
-                                <button onClick={(e) => { e.stopPropagation(); handleDeletePerson(row); }} style={{ padding: '0.375rem', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 style={{ width: '1rem', height: '1rem' }} /></button>
+                                <Button text rounded severity="info" onClick={(e) => { e.stopPropagation(); handleViewPerson(row); }} icon={<Eye style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
+                                <Button text rounded severity="warning" onClick={(e) => { e.stopPropagation(); handleEditPerson(row); }} icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
+                                <Button text rounded severity="danger" onClick={(e) => { e.stopPropagation(); handleDeletePerson(row); }} icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
                               </div>
                             )} />
                           </DataTable>

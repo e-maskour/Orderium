@@ -5,6 +5,7 @@ import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
 import { PartnerForm } from '../components/PartnerForm';
 import { Users, ArrowLeft } from 'lucide-react';
+import { Button } from 'primereact/button';
 import { toastCreated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -40,12 +41,13 @@ export default function CustomerCreate() {
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <button
+              <Button
+                text
+                rounded
                 onClick={() => navigate('/customers')}
-                style={{ padding: '0.5rem', borderRadius: '0.5rem' }}
-              >
-                <ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
-              </button>
+                icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />}
+                style={{ padding: '0.5rem' }}
+              />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />

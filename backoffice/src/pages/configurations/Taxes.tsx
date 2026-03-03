@@ -163,12 +163,8 @@ export default function Taxes() {
                     <Column field="isDefault" header={t('status')} body={(row) => row.isDefault ? <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#dcfce7', color: '#166534', borderRadius: '0.375rem' }}>{t('default')}</span> : null} />
                     <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row) => (
                         <div style={{ textAlign: 'right' }}>
-                            <button onClick={() => openEditModal(row._idx)} style={{ color: '#2563eb', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem', marginRight: '0.75rem' }}>
-                                <Pencil style={{ width: '1rem', height: '1rem' }} />
-                            </button>
-                            <button onClick={() => handleDelete(row._idx)} style={{ color: '#dc2626', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}>
-                                <Trash2 style={{ width: '1rem', height: '1rem' }} />
-                            </button>
+                            <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row._idx)} text rounded severity="info" />
+                            <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row._idx)} text rounded severity="danger" />
                         </div>
                     )} />
                 </DataTable>

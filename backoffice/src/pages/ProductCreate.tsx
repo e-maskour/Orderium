@@ -253,16 +253,16 @@ export default function ProductCreate() {
                   {!validationErrors.code && formData.code && (
                     <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#64748b' }}>{t('eanBarcodeHint')}</p>
                   )}
-                  <button
+                  <Button
                     type="button"
+                    text
                     onClick={handleRegenerateCode}
                     disabled={isGeneratingCode}
-                    style={{ marginTop: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#d97706', cursor: isGeneratingCode ? 'not-allowed' : 'pointer', opacity: isGeneratingCode ? 0.5 : 1, background: 'none', border: 'none' }}
+                    icon={<RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.75rem', height: '0.75rem' }} />}
+                    label={isGeneratingCode ? t('generating') : t('generateCode')}
                     title={t('generateNewUniqueCode')}
-                  >
-                    <RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.75rem', height: '0.75rem' }} />
-                    {isGeneratingCode ? t('generating') : t('generateCode')}
-                  </button>
+                    style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#d97706' }}
+                  />
                 </div>
               </div>
             </div>
@@ -326,7 +326,7 @@ export default function ProductCreate() {
                         return (
                           <span key={categoryId} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '9999px', fontSize: '0.875rem' }}>
                             {category.name}
-                            <button type="button" onClick={() => { setFormData({ ...formData, categoryIds: formData.categoryIds.filter((id: number) => id !== categoryId) }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400e' }}>×</button>
+                            <Button type="button" text label="×" onClick={() => { setFormData({ ...formData, categoryIds: formData.categoryIds.filter((id: number) => id !== categoryId) }); }} style={{ color: '#92400e', padding: '0 0.25rem' }} />
                           </span>
                         );
                       })}

@@ -714,7 +714,6 @@ export default function POS() {
           onClick={() => setIsMobileCartOpen(true)}
           icon={<ShoppingCart style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} strokeWidth={2.2} />}
           badge={String(cartTotalItems)}
-          badgeSeverity="danger"
           style={{
             position: 'fixed',
             bottom: '1.25rem',

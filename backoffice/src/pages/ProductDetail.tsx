@@ -302,7 +302,6 @@ export default function ProductDetail() {
               onClick={() => setActiveTab(tab)}
               label={tab === 'info' ? 'Information' : tab === 'pricing' ? 'Tarification' : 'Stock'}
               badge={tab === 'stock' ? String(totalStock) : undefined}
-              badgeSeverity="secondary"
               text
               style={{
                 paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem',

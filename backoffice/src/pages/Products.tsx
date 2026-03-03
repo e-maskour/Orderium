@@ -280,69 +280,59 @@ export default function Products() {
         <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
           {/* View Mode Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-            <button
+            <Button
               onClick={() => setViewMode('card')}
-              style={{
-                paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem',
-                borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer',
-                ...(viewMode === 'card'
-                  ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
-                  : { backgroundColor: 'transparent', color: '#475569' }),
-              }}
-            >
-              <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
-            </button>
-            <button
+              text={viewMode !== 'card'}
+              style={viewMode === 'card'
+                ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
+                : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', color: '#475569' }}
+              icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />}
+            />
+            <Button
               onClick={() => setViewMode('list')}
-              style={{
-                paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem',
-                borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer',
-                ...(viewMode === 'list'
-                  ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
-                  : { backgroundColor: 'transparent', color: '#475569' }),
-              }}
-            >
-              <List style={{ width: '1rem', height: '1rem' }} />
-            </button>
+              text={viewMode !== 'list'}
+              style={viewMode === 'list'
+                ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
+                : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', color: '#475569' }}
+              icon={<List style={{ width: '1rem', height: '1rem' }} />}
+            />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, justifyContent: 'flex-end' }}>
             {/* Filters Button */}
-            <button
+            <Button
               onClick={() => setFiltersExpanded(true)}
-              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
+              outlined
+              style={{ position: 'relative', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
+              icon={<Filter style={{ width: '1.25rem', height: '1.25rem' }} />}
+              label={t('filters')}
             >
-              <Filter style={{ width: '1.25rem', height: '1.25rem' }} />
-              {t('filters')}
               {activeFiltersCount > 0 && (
                 <span style={{ position: 'absolute', top: '-0.25rem', right: '-0.25rem', backgroundColor: '#f59e0b', color: 'white', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {activeFiltersCount}
                 </span>
               )}
-            </button>
+            </Button>
 
             {/* Import/Export Buttons */}
-            <button
+            <Button
               onClick={handleDownloadTemplate}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
+              outlined
+              icon={<FileSpreadsheet style={{ width: '1rem', height: '1rem' }} />}
               title="Télécharger le modèle"
-            >
-              <FileSpreadsheet style={{ width: '1rem', height: '1rem' }} />
-            </button>
-            <button
+            />
+            <Button
               onClick={handleImport}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
+              outlined
+              icon={<Upload style={{ width: '1rem', height: '1rem' }} />}
               title="Importer"
-            >
-              <Upload style={{ width: '1rem', height: '1rem' }} />
-            </button>
-            <button
+            />
+            <Button
               onClick={handleExport}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}
+              outlined
+              icon={<Download style={{ width: '1rem', height: '1rem' }} />}
               title="Exporter"
-            >
-              <Download style={{ width: '1rem', height: '1rem' }} />
-            </button>
+            />
 
             {/* Add Product Button */}
             <Button
@@ -379,13 +369,14 @@ export default function Products() {
 
               {/* Navigation */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <button
+                <Button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1, backgroundColor: 'white' }}
-                >
-                  <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
-                </button>
+                  text
+                  outlined
+                  icon={<ChevronLeft style={{ width: '1rem', height: '1rem' }} />}
+                  style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem' }}
+                />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <InputText
                     type="number"
@@ -409,13 +400,14 @@ export default function Products() {
                   <span style={{ fontSize: '0.875rem', color: '#64748b' }}>/</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{totalPages}</span>
                 </div>
-                <button
+                <Button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1, backgroundColor: 'white' }}
-                >
-                  <ChevronRight style={{ width: '1rem', height: '1rem' }} />
-                </button>
+                  text
+                  outlined
+                  icon={<ChevronRight style={{ width: '1rem', height: '1rem' }} />}
+                  style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem' }}
+                />
               </div>
             </div>
           </div>
@@ -529,13 +521,14 @@ export default function Products() {
                 <Column
                   header={t('actions')}
                   body={(product: IProduct) => (
-                    <button
+                    <Button
+                      text
+                      rounded
                       onClick={() => handleViewProduct(product.id)}
-                      style={{ padding: '0.375rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                      icon={<Eye style={{ width: '1rem', height: '1rem', color: '#64748b' }} />}
                       title={t('view')}
-                    >
-                      <Eye style={{ width: '1rem', height: '1rem', color: '#64748b' }} />
-                    </button>
+                      style={{ padding: '0.375rem' }}
+                    />
                   )}
                 />
               </DataTable>
@@ -711,12 +704,13 @@ export default function Products() {
                   </span>
                 )}
               </div>
-              <button
+              <Button
                 onClick={() => setFiltersExpanded(false)}
-                style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', backgroundColor: 'transparent' }}
-              >
-                <X style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-              </button>
+                text
+                rounded
+                icon={<X style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />}
+                style={{ padding: '0.5rem' }}
+              />
             </div>
 
             {/* Panel Content */}
@@ -778,19 +772,15 @@ export default function Products() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '16rem', overflowY: 'auto' }}>
                   {categoriesList.length > 0 ? (
                     categoriesList.map((category: any) => (
-                      <button
+                      <Button
                         key={category.id}
                         onClick={() => toggleCategory(category.id)}
-                        style={{
-                          paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
-                          borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
-                          ...(selectedCategories.includes(category.id)
-                            ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
-                            : { backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }),
-                        }}
-                      >
-                        <span>{category.name}</span>
-                      </button>
+                        label={category.name}
+                        style={selectedCategories.includes(category.id)
+                          ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
+                          : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }}
+                        text={!selectedCategories.includes(category.id)}
+                      />
                     ))
                   ) : (
                     <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No categories available</p>
@@ -809,19 +799,15 @@ export default function Products() {
                     { key: true, label: 'Service' },
                     { key: false, label: t('product') }
                   ].map((filter) => (
-                    <button
+                    <Button
                       key={String(filter.key)}
                       onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
-                      style={{
-                        paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
-                        borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
-                        ...(isServiceFilter === filter.key
-                          ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
-                          : { backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }),
-                      }}
-                    >
-                      <span>{filter.label}</span>
-                    </button>
+                      label={filter.label}
+                      style={isServiceFilter === filter.key
+                        ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
+                        : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }}
+                      text={isServiceFilter !== filter.key}
+                    />
                   ))}
                 </div>
               </div>

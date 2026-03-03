@@ -5,6 +5,7 @@ import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
 import { PartnerForm } from '../components/PartnerForm';
 import { Users, ArrowLeft } from 'lucide-react';
+import { Button } from 'primereact/button';
 import { toastCreated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -39,12 +40,13 @@ export default function FournisseurCreate() {
         {/* Page Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-            <button
+            <Button
+              text
+              rounded
               onClick={() => navigate('/fournisseurs')}
-              style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', border: '1px solid #e2e8f0', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
-            >
-              <ArrowLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />
-            </button>
+              icon={<ArrowLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />}
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+            />
             <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #1e1e2d, #16213e)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(30,30,45,0.25)' }}>
               <Users style={{ width: '1.25rem', height: '1.25rem', color: '#f59e0b' }} />
             </div>

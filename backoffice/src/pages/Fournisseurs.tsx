@@ -157,21 +157,16 @@ export default function Fournisseurs() {
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
-                <button
+                <Button
                   key={tab.key}
+                  text={activeTab !== tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
-                    borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500,
-                    whiteSpace: 'nowrap', flexShrink: 0, border: 'none', cursor: 'pointer',
-                    ...(activeTab === tab.key
-                      ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)' }
-                      : { backgroundColor: 'transparent', color: '#475569' }),
-                  }}
-                >
-                  <Icon style={{ width: '1rem', height: '1rem' }} />
-                  <span>{tab.label}</span>
-                </button>
+                  style={activeTab === tab.key
+                    ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)' }
+                    : { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, color: '#475569' }}
+                  icon={<Icon style={{ width: '1rem', height: '1rem' }} />}
+                  label={tab.label}
+                />
               );
             })}
           </div>
@@ -226,9 +221,7 @@ export default function Fournisseurs() {
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.5rem', height: '1.5rem', borderRadius: '9999px', backgroundColor: bgColors[index], color: textColors[index], fontSize: '0.75rem', fontWeight: 700 }}>
                                     {index + 1}
                                   </div>
-                                  <button onClick={() => navigate(`/fournisseurs/${supplier.id}`)} style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', background: 'none', border: 'none', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }} title={supplier.name}>
-                                    {supplier.name}
-                                  </button>
+                                  <Button link label={supplier.name} onClick={() => navigate(`/fournisseurs/${supplier.id}`)} style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px', padding: 0 }} title={supplier.name} />
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{percentage.toFixed(1).replace('.', ',')}%</span>
@@ -269,9 +262,7 @@ export default function Fournisseurs() {
                           <div key={supplier.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flex: 1 }}>
                               <Users style={{ width: '1rem', height: '1rem', color: '#a855f7', flexShrink: 0 }} />
-                              <button onClick={() => navigate(`/fournisseurs/${supplier.id}`)} style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {supplier.name}
-                              </button>
+                              <Button link label={supplier.name} onClick={() => navigate(`/fournisseurs/${supplier.id}`)} style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }} />
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                               <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.phoneNumber || '-'}</span>
@@ -291,20 +282,14 @@ export default function Fournisseurs() {
                 {/* Toolbar */}
                 <div className="partner-list-toolbar">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.625rem', padding: '0.25rem', flexShrink: 0 }}>
-                    <button onClick={() => setViewMode('card')} title="Vue cartes" style={{ padding: '0.4rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(viewMode === 'card' ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' } : { backgroundColor: 'transparent', color: '#64748b' }) }}>
-                      <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
-                    </button>
-                    <button onClick={() => setViewMode('list')} title="Vue liste" style={{ padding: '0.4rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(viewMode === 'list' ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' } : { backgroundColor: 'transparent', color: '#64748b' }) }}>
-                      <ListIcon style={{ width: '1rem', height: '1rem' }} />
-                    </button>
+                    <Button onClick={() => setViewMode('card')} title="Vue cartes" text={viewMode !== 'card'} style={viewMode === 'card' ? { padding: '0.4rem 0.75rem', borderRadius: '0.375rem', backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' } : { padding: '0.4rem 0.75rem', borderRadius: '0.375rem', color: '#64748b' }} icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />} />
+                    <Button onClick={() => setViewMode('list')} title="Vue liste" text={viewMode !== 'list'} style={viewMode === 'list' ? { padding: '0.4rem 0.75rem', borderRadius: '0.375rem', backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' } : { padding: '0.4rem 0.75rem', borderRadius: '0.375rem', color: '#64748b' }} icon={<ListIcon style={{ width: '1rem', height: '1rem' }} />} />
                   </div>
                   <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                     <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '0.9rem', height: '0.9rem', color: '#94a3b8', pointerEvents: 'none' }} />
                     <InputText id="search-suppliers" type="text" placeholder={t('searchSuppliersPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', paddingLeft: '2.25rem' }} aria-label={t('searchSuppliersPlaceholder')} />
                     {searchTerm && (
-                      <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}>
-                        <X style={{ width: '1rem', height: '1rem' }} />
-                      </button>
+                      <Button text rounded onClick={() => setSearchTerm('')} icon={<X style={{ width: '1rem', height: '1rem' }} />} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }} />
                     )}
                   </div>
                 </div>
@@ -403,9 +388,9 @@ export default function Fournisseurs() {
                             )} />
                             <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Partner) => (
                               <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                <button onClick={() => handleViewSupplier(row)} style={{ color: '#475569', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}><Eye style={{ width: '1rem', height: '1rem' }} /></button>
-                                <button onClick={() => handleEditSupplier(row)} style={{ color: '#2563eb', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}><Edit2 style={{ width: '1rem', height: '1rem' }} /></button>
-                                <button onClick={() => handleDeletePartner(row)} style={{ color: '#dc2626', cursor: 'pointer', background: 'none', border: 'none', padding: '0.25rem' }}><Trash2 style={{ width: '1rem', height: '1rem' }} /></button>
+                                <Button text rounded severity="secondary" onClick={() => handleViewSupplier(row)} icon={<Eye style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.25rem' }} />
+                                <Button text rounded severity="info" onClick={() => handleEditSupplier(row)} icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.25rem' }} />
+                                <Button text rounded severity="danger" onClick={() => handleDeletePartner(row)} icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.25rem' }} />
                               </div>
                             )} />
                           </DataTable>

@@ -252,13 +252,14 @@ export default function OrderSuccessPage() {
                 </h3>
                 <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('preview')}</p>
               </div>
-              <button
+              <Button
+                text
+                rounded
                 onClick={closePreview}
-                style={{ width: '2rem', height: '2rem', background: '#f3f4f6', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                label="✕"
                 aria-label="Close preview"
-              >
-                ✕
-              </button>
+                style={{ width: '2rem', height: '2rem', background: '#f3f4f6' }}
+              />
             </div>
             <div style={{ flex: 1, background: '#f9fafb' }}>
               <iframe
