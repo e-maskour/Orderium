@@ -42,9 +42,12 @@ RUN npx playwright install chromium
 FROM node:20-bookworm-slim AS dependencies
 
 WORKDIR /app
-COPY package*.json ./
 
-RUN npm ci --omit=dev --prefer-offline
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY package.json pnpm-lock.yaml ./
+
+RUN pnpm install --frozen-lockfile --prod
 
 # ==================================
 # Builder Stage
@@ -52,12 +55,15 @@ RUN npm ci --omit=dev --prefer-offline
 FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --prefer-offline
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN npm run build
-RUN npm prune --production
+RUN pnpm run build
+RUN pnpm prune --prod
 
 # ==================================
 # Development Stage
@@ -65,13 +71,16 @@ RUN npm prune --production
 FROM playwright-base AS development
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --prefer-offline
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
 EXPOSE 3000 9229
-CMD ["npm", "run", "start:dev"]
+CMD ["pnpm", "run", "start:dev"]
 
 # ==================================
 # Production Stage
@@ -92,7 +101,7 @@ COPY --from=dependencies --chown=nestjs:nodejs /app/node_modules ./node_modules
 # Copy built app
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 
-COPY --chown=nestjs:nodejs package*.json ./
+COPY --chown=nestjs:nodejs package.json pnpm-lock.yaml ./
 
 # Create uploads directory
 RUN mkdir -p uploads/images && \

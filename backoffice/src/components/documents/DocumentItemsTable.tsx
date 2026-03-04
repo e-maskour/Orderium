@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, BookOpen } from 'lucide-react';
+import { Plus, Trash2, BookOpen, Hash, Package2 } from 'lucide-react';
 import { Dropdown as PrDropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
@@ -21,6 +21,86 @@ interface DocumentItemsTableProps {
   showTotalColumn?: boolean;
 }
 
+const DIT_STYLES = `
+  .dit-wrap { border-radius: 1rem; border: 1.5px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.07); background: #fff; }
+  .dit-thead-row { background: linear-gradient(to right, #f8fafc, #f1f5f9); border-bottom: 2px solid #e2e8f0; }
+  .dit-tbody-row { transition: background 0.12s; border-bottom: 1px solid #f0f4f8; }
+  .dit-tbody-row.row-odd { background: #ffffff; }
+  .dit-tbody-row.row-even { background: #fafbfc; }
+  .dit-tbody-row:hover { background: #f0f7ff !important; }
+  .dit-row-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.625rem; height: 1.625rem;
+    background: #f1f5f9; color: #94a3b8;
+    border-radius: 50%; font-size: 0.75rem; font-weight: 700;
+    transition: background 0.15s, color 0.15s;
+  }
+  .dit-tbody-row:hover .dit-row-num { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+  .dit-dg .p-dropdown {
+    border: 1.5px solid transparent !important; background: transparent !important;
+    transition: border-color 0.15s, box-shadow 0.15s; border-radius: 6px !important;
+  }
+  .dit-dg .p-dropdown:hover:not(.p-disabled) { border-color: #e2e8f0 !important; background: #fff !important; }
+  .dit-dg .p-dropdown.p-focus, .dit-dg .p-dropdown:focus-within { border-color: #f59e0b !important; background: #fff !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important; }
+  .dit-ig .p-inputtext {
+    border: 1.5px solid transparent !important; background: transparent !important;
+    padding: 0.4rem 0.5rem !important; font-size: 0.875rem !important;
+    height: 2.5rem !important; text-align: center !important;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; border-radius: 6px !important;
+  }
+  .dit-ig .p-inputtext:hover:not([disabled]) { border-color: #e2e8f0 !important; background: #fff !important; }
+  .dit-ig .p-inputtext:focus { border-color: #f59e0b !important; background: #fff !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important; }
+  .dit-ig .p-inputtext[type=number]::-webkit-inner-spin-button,
+  .dit-ig .p-inputtext[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .dit-ig .p-inputtext[type=number] { -moz-appearance: textfield; }
+  .dit-dg .p-dropdown { height: 2.5rem !important; }
+  .dit-dsc {
+    display: inline-flex; align-items: center; overflow: hidden;
+    border: 1.5px solid transparent; border-radius: 6px; background: transparent;
+    height: 2.5rem;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .dit-dsc:hover { border-color: #e2e8f0 !important; background: #fff !important; }
+  .dit-dsc:focus-within { border-color: #f59e0b !important; background: #fff !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important; }
+  .dit-dsc .p-inputnumber-input { width: 3.5rem !important; border: none !important; background: transparent !important; padding: 0.4rem 0.25rem !important; font-size: 0.875rem !important; text-align: center !important; box-shadow: none !important; }
+  .dit-dsc .p-inputnumber-input::-webkit-inner-spin-button,
+  .dit-dsc .p-inputnumber-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .dit-dsc .p-inputnumber-input { -moz-appearance: textfield; }
+  .dit-dtb { padding: 0.3rem 0.5rem; min-width: 36px; border: none; cursor: pointer; background: #f1f5f9; color: #475569; font-size: 0.7rem; font-weight: 700; transition: background 0.15s; }
+  .dit-dtb:hover:not(:disabled) { background: #e2e8f0; }
+  .dit-del {
+    display: flex; align-items: center; justify-content: center;
+    width: 1.75rem; height: 1.75rem; border-radius: 6px;
+    border: 1.5px solid #fecaca; background: #fff5f5; color: #dc2626;
+    cursor: pointer; transition: all 0.15s; opacity: 0;
+  }
+  .dit-tbody-row:hover .dit-del { opacity: 1; }
+  .dit-del:hover { background: #dc2626 !important; color: #fff !important; border-color: #dc2626 !important; }
+  .dit-btn-add {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.5rem 1rem; background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff; border: none; border-radius: 8px; font-size: 0.8125rem; font-weight: 600;
+    cursor: pointer; box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+    transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap;
+  }
+  .dit-btn-add:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(245,158,11,0.4); }
+  .dit-btn-cat {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.5rem 1rem; background: #f1f5f9;
+    color: #475569; border: 1.5px solid #cbd5e1; border-radius: 8px;
+    font-size: 0.8125rem; font-weight: 600; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s; white-space: nowrap;
+  }
+  .dit-btn-cat:hover { background: #e2e8f0; border-color: #94a3b8; color: #1e293b; }
+  .dit-mob-card { border: 1.5px solid #e2e8f0; border-radius: 0.875rem; overflow: hidden; background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .dit-mob-hdr { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 0.875rem; background: linear-gradient(to right, #f8fafc, #f1f5f9); border-bottom: 1px solid #e2e8f0; }
+  .dit-mob-body { padding: 0.875rem; }
+  .dit-mob-total { margin-top: 0.875rem; padding: 0.625rem 0.875rem; background: linear-gradient(to right, #f8fafc, #f1f5f9); border: 1.5px solid #e2e8f0; border-radius: 0.5rem; display: flex; align-items: center; justify-content: space-between; }
+  .dit-field-label { display: block; font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; }
+  @media (max-width: 1023px) { .dit-desktop { display: none !important; } .dit-mobile { display: flex !important; } }
+  @media (min-width: 1024px) { .dit-desktop { display: block !important; } .dit-mobile { display: none !important; } }
+`;
+
 export function DocumentItemsTable({
   items,
   direction,
@@ -33,9 +113,12 @@ export function DocumentItemsTable({
 }: DocumentItemsTableProps) {
   const { t, language } = useLanguage();
   const isVente = direction === 'vente';
+  const currency = language === 'ar' ? 'د.م' : 'DH';
+  const fmt = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [showCatalogueModal, setShowCatalogueModal] = useState(false);
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   // Load products
   useEffect(() => {
@@ -48,12 +131,14 @@ export function DocumentItemsTable({
         setProducts([]);
       }
     };
-
     loadProducts();
   }, []);
 
+  const grandTotal = items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+  const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
+
   const handleAddItem = () => {
-    const newId = (Math.max(...items.map(i => parseInt(i.id)), 0) + 1).toString();
+    const newId = `new_${Date.now()}`;
     const newItems = [...items, {
       id: newId,
       productId: undefined,
@@ -131,148 +216,198 @@ export function DocumentItemsTable({
 
   return (
     <>
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', padding: '1rem', overflow: 'visible', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-          <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 6px rgba(245,158,11,0.3)' }}>
-            <BookOpen style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+      <style>{DIT_STYLES}</style>
+      <div className="dit-wrap">
+
+        {/* ── Panel Header ── */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: '0.75rem', padding: '0.875rem 1.25rem',
+          background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+          borderBottom: '1.5px solid #e2e8f0'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: '2.25rem', height: '2.25rem', flexShrink: 0,
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              borderRadius: '0.625rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 3px 10px rgba(245,158,11,0.4)'
+            }}>
+              <BookOpen style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
+                {t('invoice.articlesTitle')}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                {items.length} {t('items')}
+                {showTotalColumn && ` — ${fmt(grandTotal)} ${currency}`}
+              </p>
+            </div>
           </div>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>{t('invoice.articlesTitle')}</h3>
+          {!readOnly && (
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button type="button" className="dit-btn-add" onClick={handleAddItem}>
+                <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
+                {t('invoice.addLine')}
+              </button>
+              <button type="button" className="dit-btn-cat" onClick={() => setShowCatalogueModal(true)}>
+                <Package2 style={{ width: '0.875rem', height: '0.875rem' }} />
+                {t('invoice.productCatalogue')}
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Desktop Table View - Hidden on mobile and tablet */}
-        <div className="hidden lg:block" style={{ overflowX: 'auto', overflowY: 'visible' }}>
-          <table style={{ width: '100%', overflow: 'visible' }}>
+        {/* ── Desktop Table ── */}
+        <div className="dit-desktop" style={{ overflowX: 'auto', overflowY: 'visible' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', overflowY: 'visible' }}>
+            <colgroup>
+              <col style={{ width: '3rem' }} />
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '7rem' }} />
+              {showPriceColumn && <col style={{ width: '9.5rem' }} />}
+              {showDiscountColumn && <col style={{ width: '9rem' }} />}
+              {showTaxColumn && <col style={{ width: '7.5rem' }} />}
+              {showTotalColumn && <col style={{ width: '12rem' }} />}
+              <col style={{ width: '3rem' }} />
+            </colgroup>
             <thead>
-              <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '35%', minWidth: '240px' }}>
+              <tr className="dit-thead-row">
+                <th style={{ padding: '0.625rem 0.5rem', textAlign: 'center' }}>
+                  <Hash style={{ width: '0.75rem', height: '0.75rem', color: '#94a3b8', display: 'inline-block' }} />
+                </th>
+                <th style={{ padding: '0.625rem 0.75rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   {t('invoice.descriptionHeader')}
                 </th>
-                <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '6rem' }}>
+                <th style={{ padding: '0.625rem 0.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   {t('invoice.quantityHeader')}
                 </th>
                 {showPriceColumn && (
-                  <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '14rem' }}>
+                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('invoice.unitPriceHeader')}
                   </th>
                 )}
                 {showDiscountColumn && (
-                  <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '4rem' }}>
+                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('invoice.discountHeader')}
                   </th>
                 )}
                 {showTaxColumn && (
-                  <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '8rem' }}>
+                  <th style={{ padding: '0.625rem 0.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('invoice.tax')}
                   </th>
                 )}
                 {showTotalColumn && (
-                  <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', width: '8rem' }}>
+                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('invoice.totalHeader')}
                   </th>
                 )}
-                <th style={{ width: '2.5rem' }}></th>
+                <th style={{ padding: '0.5rem' }} />
               </tr>
             </thead>
-            <tbody style={{ overflow: 'visible' }}>
-              {items.map((item) => (
-                <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', overflow: 'visible' }}>
-                  <td style={{ padding: '0.75rem', width: '35%', minWidth: '240px', overflow: 'visible' }}>
+            <tbody style={{ overflowY: 'visible' }}>
+              {items.map((item, index) => (
+                <tr
+                  key={item.id}
+                  className={`dit-tbody-row ${index % 2 === 0 ? 'row-odd' : 'row-even'}`}
+                  onMouseEnter={() => setHoveredRow(item.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  style={{ overflowY: 'visible' }}
+                >
+                  {/* # */}
+                  <td style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
+                    <span className="dit-row-num">{index + 1}</span>
+                  </td>
+
+                  {/* Description */}
+                  <td className="dit-dg" style={{ padding: '0.5rem 0.75rem', overflowY: 'visible' }}>
                     <PrDropdown
                       value={item.productId ? String(item.productId) : null}
-                      options={products.map(product => ({
-                        value: String(product.id),
-                        label: product.name
-                      }))}
+                      options={products.map(p => ({ value: String(p.id), label: p.name }))}
                       onChange={(e) => handleSelectProduct(item.id, e.value)}
-                      optionLabel="label"
-                      optionValue="value"
+                      optionLabel="label" optionValue="value"
                       placeholder={t('invoice.itemDescriptionPlaceholder')}
                       emptyFilterMessage={t('invoice.noProductsFound')}
-                      disabled={readOnly}
-                      filter
-                      showClear
+                      disabled={readOnly} filter showClear
                       style={{ width: '100%', fontSize: '0.875rem' }}
                     />
                   </td>
-                  <td style={{ padding: '0.75rem' }}>
+
+                  {/* Quantity */}
+                  <td className="dit-ig" style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
                     <InputText
-                      type="number"
-                      min={0.1}
-                      step={0.1}
+                      type="number" min={0.1} step={0.1}
                       value={String(item.quantity)}
                       onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                      disabled={readOnly}
+                      readOnly={readOnly}
                       style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem' }}
                     />
                   </td>
+
+                  {/* Unit Price */}
                   {showPriceColumn && (
-                    <td style={{ padding: '0.75rem' }}>
+                    <td className="dit-ig" style={{ padding: '0.5rem 0.75rem' }}>
                       <InputText
-                        type="number"
-                        min={0}
-                        step={0.1}
+                        type="number" min={0} step={0.01}
                         value={String(item.unitPrice)}
                         onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        disabled={readOnly}
+                        readOnly={readOnly}
                         style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem' }}
                       />
                     </td>
                   )}
+
+                  {/* Discount */}
                   {showDiscountColumn && (
-                    <td style={{ padding: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                    <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
+                      <div className="dit-dsc">
                         <InputNumber
-                          min={0}
-                          step={0.1}
-                          value={item.discount}
+                          min={0} step={0.1} value={item.discount}
                           onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
-                          inputStyle={{ width: '3.5rem', flex: 'none', padding: '0.5rem', fontSize: '0.875rem', textAlign: 'center', border: 'none', outline: 'none', opacity: readOnly ? 0.5 : 1, boxShadow: 'none' }}
-                          disabled={readOnly}
-                          pt={{ root: { style: { border: 'none' } } }}
+                          inputStyle={{ width: '3.5rem', border: 'none', background: 'transparent', padding: '0.4rem 0.25rem', fontSize: '0.875rem', textAlign: 'center', boxShadow: 'none' }}
+                          readOnly={readOnly}
+                          pt={{ root: { style: { border: 'none', background: 'transparent' } } }}
                         />
                         <button
-                          type="button"
+                          type="button" className="dit-dtb"
                           onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
-                          style={{ padding: '0.5rem', backgroundColor: '#f1f5f9', color: '#334155', fontSize: '0.75rem', fontWeight: 500, minWidth: '40px', border: 'none', cursor: readOnly ? 'default' : 'pointer' }}
                           disabled={readOnly}
                         >
-                          {item.discountType === 0 ? 'DH' : '%'}
+                          {item.discountType === 0 ? currency : '%'}
                         </button>
                       </div>
                     </td>
                   )}
+
+                  {/* Tax */}
                   {showTaxColumn && (
-                    <td style={{ padding: '0.75rem' }}>
+                    <td className="dit-dg" style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
                       <PrDropdown
                         value={item.tax}
-                        options={[
-                          { label: '0%', value: 0 },
-                          { label: '10%', value: 10 },
-                          { label: '20%', value: 20 },
-                        ]}
+                        options={[{ label: '0%', value: 0 }, { label: '10%', value: 10 }, { label: '20%', value: 20 }]}
                         onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
-                        optionLabel="label"
-                        optionValue="value"
+                        optionLabel="label" optionValue="value"
                         disabled={readOnly}
                         style={{ width: '100%', fontSize: '0.875rem' }}
                       />
                     </td>
                   )}
+
+                  {/* Total */}
                   {showTotalColumn && (
-                    <td style={{ padding: '0.75rem' }}>
-                      <div style={{ textAlign: 'center', fontWeight: 600, color: '#1e293b', fontSize: '0.875rem' }}>
-                        {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                      </div>
+                    <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                        {fmt(calculateItemTotal(item))} <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>{currency}</span>
+                      </span>
                     </td>
                   )}
-                  <td style={{ padding: '0.75rem' }}>
+
+                  {/* Delete */}
+                  <td style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
                     {!readOnly && items.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveItem(item.id)}
-                        style={{ padding: '0.5rem', color: '#dc2626', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}
-                      >
-                        <Trash2 style={{ width: '1rem', height: '1rem' }} />
+                      <button type="button" className="dit-del" onClick={() => handleRemoveItem(item.id)}>
+                        <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
                       </button>
                     )}
                   </td>
@@ -280,194 +415,172 @@ export function DocumentItemsTable({
               ))}
             </tbody>
           </table>
+
+          {/* Summary Footer Bar */}
+          {showTotalColumn && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0.75rem 1.25rem',
+              background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+              borderTop: '1.5px solid #e2e8f0'
+            }}>
+              <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+                {items.length} {t('items')} · {t('invoice.quantityHeader')}: {totalQty}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+                  {t('invoice.totalHeader')} HT
+                </span>
+                <span style={{
+                  color: '#d97706',
+                  fontSize: '1.125rem', fontWeight: 800, letterSpacing: '-0.01em'
+                }}>
+                  {fmt(grandTotal)} {currency}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Mobile & Tablet Card View - Shown on mobile and tablet */}
-        <div className="lg:hidden" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {/* ── Mobile Cards ── */}
+        <div className="dit-mobile" style={{ flexDirection: 'column', gap: '0.75rem', padding: '0.875rem', display: 'none' }}>
           {items.map((item, index) => (
-            <div key={item.id} style={{ border: '1px solid #e2e8f0', borderRadius: '0.5rem', padding: '0.75rem', background: 'linear-gradient(to bottom right, #f8fafc, #ffffff)' }}>
-              {/* Item Number */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                  Item {index + 1}
-                </h4>
+            <div key={item.id} className="dit-mob-card">
+              <div className="dit-mob-hdr">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flex: 1 }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '1.5rem', height: '1.5rem', flexShrink: 0,
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: '#fff', borderRadius: '50%', fontSize: '0.75rem', fontWeight: 700
+                  }}>
+                    {index + 1}
+                  </span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.description || t('invoice.itemDescriptionPlaceholder')}
+                  </span>
+                </div>
                 {!readOnly && items.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveItem(item.id)}
-                    style={{ padding: '0.375rem', color: '#dc2626', borderRadius: '0.5rem', border: 'none', background: 'none', cursor: 'pointer' }}
-                  >
-                    <Trash2 style={{ width: '1rem', height: '1rem' }} />
+                  <button type="button" onClick={() => handleRemoveItem(item.id)} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '1.75rem', height: '1.75rem', flexShrink: 0,
+                    borderRadius: '6px', border: '1.5px solid #fecaca', background: '#fff5f5', color: '#dc2626', cursor: 'pointer'
+                  }}>
+                    <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
                   </button>
                 )}
               </div>
-
-              {/* Description Field */}
-              <div style={{ marginBottom: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
-                    {t('invoice.descriptionHeader')} <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
+              <div className="dit-mob-body">
+                {/* Product */}
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <label className="dit-field-label">{t('invoice.descriptionHeader')}</label>
                   <PrDropdown
                     value={item.productId ? String(item.productId) : null}
-                    options={products.map(product => ({
-                      value: String(product.id),
-                      label: product.name
-                    }))}
+                    options={products.map(p => ({ value: String(p.id), label: p.name }))}
                     onChange={(e) => handleSelectProduct(item.id, e.value)}
-                    optionLabel="label"
-                    optionValue="value"
+                    optionLabel="label" optionValue="value"
                     placeholder={t('invoice.itemDescriptionPlaceholder')}
                     emptyFilterMessage={t('invoice.noProductsFound')}
-                    disabled={readOnly}
-                    filter
-                    showClear
+                    disabled={readOnly} filter showClear
                     style={{ width: '100%' }}
                   />
                 </div>
-              </div>
-
-              {/* Quantity & Unit Price - Side by side on mobile */}
-              <div style={{ display: 'grid', gridTemplateColumns: showPriceColumn ? '1fr 2fr' : '1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
-                    {t('invoice.quantityHeader')}
-                  </label>
-                  <InputText
-                    type="number"
-                    min={0.1}
-                    step={0.1}
-                    value={String(item.quantity)}
-                    onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                    disabled={readOnly}
-                    style={{ width: '100%', textAlign: 'center' }}
-                  />
-                </div>
-                {showPriceColumn && (
+                {/* Qty + Price */}
+                <div style={{ display: 'grid', gridTemplateColumns: showPriceColumn ? '1fr 1.5fr' : '1fr', gap: '0.625rem', marginBottom: '0.75rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
-                      {t('invoice.unitPriceHeader')}
-                    </label>
+                    <label className="dit-field-label">{t('invoice.quantityHeader')}</label>
                     <InputText
-                      type="number"
-                      min={0}
-                      step={0.1}
-                      value={String(item.unitPrice)}
-                      onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                      disabled={readOnly}
-                      style={{ width: '100%', textAlign: 'center' }}
+                      type="number" min={0.1} step={0.1}
+                      value={String(item.quantity)}
+                      onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                      readOnly={readOnly} style={{ width: '100%', textAlign: 'center' }}
                     />
                   </div>
-                )}
-              </div>
-
-              {/* Discount & Tax - Side by side on mobile */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {showDiscountColumn && (
-                  <div style={{ display: 'grid', gridTemplateColumns: showTaxColumn ? '1fr 1fr' : '1fr', gap: '0.5rem' }}>
+                  {showPriceColumn && (
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
-                        {t('invoice.discountHeader')}
-                      </label>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', overflow: 'hidden' }}>
-                        <InputNumber
-                          min={0}
-                          step={0.1}
-                          value={item.discount}
-                          onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
-                          inputStyle={{ flex: 1, padding: '0.625rem', fontSize: '0.875rem', textAlign: 'center', border: 'none', outline: 'none', opacity: readOnly ? 0.5 : 1, boxShadow: 'none' }}
-                          disabled={readOnly}
-                          pt={{ root: { style: { border: 'none', flex: 1 } } }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
-                          style={{ padding: '0.625rem 0.5rem', backgroundColor: '#f1f5f9', color: '#334155', fontSize: '0.75rem', fontWeight: 500, minWidth: '44px', border: 'none', cursor: readOnly ? 'default' : 'pointer' }}
-                          disabled={readOnly}
-                        >
-                          {item.discountType === 0 ? 'DH' : '%'}
-                        </button>
-                      </div>
+                      <label className="dit-field-label">{t('invoice.unitPriceHeader')}</label>
+                      <InputText
+                        type="number" min={0} step={0.01}
+                        value={String(item.unitPrice)}
+                        onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        readOnly={readOnly} style={{ width: '100%' }}
+                      />
                     </div>
+                  )}
+                </div>
+                {/* Discount + Tax */}
+                {(showDiscountColumn || showTaxColumn) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: showDiscountColumn && showTaxColumn ? '1fr 1fr' : '1fr', gap: '0.625rem' }}>
+                    {showDiscountColumn && (
+                      <div>
+                        <label className="dit-field-label">{t('invoice.discountHeader')}</label>
+                        <div className="dit-dsc" style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: '6px' }}>
+                          <InputNumber
+                            min={0} step={0.1} value={item.discount}
+                            onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
+                            inputStyle={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '0.5rem 0.25rem', fontSize: '0.875rem', textAlign: 'center', boxShadow: 'none' }}
+                            readOnly={readOnly}
+                            pt={{ root: { style: { border: 'none', background: 'transparent', flex: 1 } } }}
+                          />
+                          <button type="button" className="dit-dtb"
+                            onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
+                            disabled={readOnly}>
+                            {item.discountType === 0 ? currency : '%'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {showTaxColumn && (
                       <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
-                          {t('invoice.tax')}
-                        </label>
+                        <label className="dit-field-label">{t('invoice.tax')}</label>
                         <PrDropdown
                           value={item.tax}
-                          options={[
-                            { label: '0%', value: 0 },
-                            { label: '10%', value: 10 },
-                            { label: '20%', value: 20 },
-                          ]}
+                          options={[{ label: '0%', value: 0 }, { label: '10%', value: 10 }, { label: '20%', value: 20 }]}
                           onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
-                          optionLabel="label"
-                          optionValue="value"
-                          disabled={readOnly}
-                          style={{ width: '100%' }}
+                          optionLabel="label" optionValue="value"
+                          disabled={readOnly} style={{ width: '100%' }}
                         />
                       </div>
                     )}
                   </div>
                 )}
-                {showDiscountColumn === false && showTaxColumn && (
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
-                      {t('invoice.tax')}
-                    </label>
-                    <PrDropdown
-                      value={item.tax}
-                      options={[
-                        { label: '0%', value: 0 },
-                        { label: '10%', value: 10 },
-                        { label: '20%', value: 20 },
-                      ]}
-                      onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
-                      optionLabel="label"
-                      optionValue="value"
-                      disabled={readOnly}
-                      style={{ width: '100%' }}
-                    />
+                {/* Total */}
+                {showTotalColumn && (
+                  <div className="dit-mob-total">
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      {t('invoice.totalHeader')} HT
+                    </span>
+                    <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#d97706' }}>
+                      {fmt(calculateItemTotal(item))} {currency}
+                    </span>
                   </div>
                 )}
               </div>
-
-              {/* Total - Highlighted */}
-              {showTotalColumn && (
-                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', background: 'linear-gradient(to right, #fffbeb, #fff7ed)', margin: '0.75rem -0.75rem 0', padding: '0.625rem 0.75rem', borderRadius: '0 0 0.5rem 0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('invoice.totalHeader')}:</span>
-                    <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#b45309' }}>
-                      {calculateItemTotal(item).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
+          {/* Mobile action buttons */}
+          {!readOnly && (
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
+              <button type="button" className="dit-btn-add" onClick={handleAddItem}>
+                <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
+                {t('invoice.addLine')}
+              </button>
+              <button type="button"
+                onClick={() => setShowCatalogueModal(true)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                  padding: '0.5rem 1rem', background: '#fff', color: '#475569',
+                  border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '0.8125rem',
+                  fontWeight: 600, cursor: 'pointer'
+                }}
+              >
+                <Package2 style={{ width: '0.875rem', height: '0.875rem' }} />
+                {t('invoice.productCatalogue')}
+              </button>
+            </div>
+          )}
         </div>
 
-        {!readOnly && (
-          <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', gap: '0.5rem' }}>
-            <button
-              type="button"
-              onClick={handleAddItem}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', borderRadius: '0.625rem', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 2px 6px rgba(245,158,11,0.3)' }}
-            >
-              <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
-              {t('invoice.addLine')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowCatalogueModal(true)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', background: '#fff', color: '#475569', borderRadius: '0.625rem', border: '1.5px solid #e2e8f0', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}
-            >
-              <BookOpen style={{ width: '0.875rem', height: '0.875rem' }} />
-              {t('invoice.productCatalogue')}
-            </button>
-          </div>
-        )}
       </div>
 
       <ProductCatalogueModal
@@ -480,3 +593,4 @@ export function DocumentItemsTable({
     </>
   );
 }
+

@@ -13,6 +13,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { DataTable, DataTablePageEvent } from 'primereact/datatable';
+import { Sidebar } from 'primereact/sidebar';
 import { Column } from 'primereact/column';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { FloatingActionBar } from '../components/FloatingActionBar';
@@ -284,182 +285,184 @@ export default function Orders() {
         </div>
 
         {/* Filters Overlay Panel */}
-        {filtersExpanded && (
-          <>
-            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 40 }} onClick={() => setFiltersExpanded(false)} />
-            <div style={{ position: 'fixed', top: 0, bottom: 0, right: 0, width: '35rem', maxWidth: '100%', backgroundColor: '#ffffff', boxShadow: '-10px 0 30px rgba(0,0,0,0.1)', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
-              {/* Panel Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <Filter style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>{t('filters')}</h2>
-                </div>
-                <Button onClick={() => setFiltersExpanded(false)} text rounded icon={<X style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />} style={{ padding: '0.5rem' }} />
+        <Sidebar
+          visible={filtersExpanded}
+          onHide={() => setFiltersExpanded(false)}
+          position="right"
+          style={{ width: '35rem' }}
+          showCloseIcon={false}
+          blockScroll
+          pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
+        >
+          {/* Panel Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Filter style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>{t('filters')}</h2>
+            </div>
+            <Button onClick={() => setFiltersExpanded(false)} text rounded icon={<X style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />} style={{ padding: '0.5rem' }} />
+          </div>
+
+          {/* Panel Content */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* Search */}
+            <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Search style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                {t('search')}
               </div>
-
-              {/* Panel Content */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {/* Search */}
-                <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Search style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
-                    {t('search')}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {/* Order Number */}
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('orderNumber')}</label>
-                      <Dropdown
-                        value={orderNumberSearch}
-                        onChange={(e) => { setOrderNumberSearch(e.value); handleOrderNumberSearch(e.value || ''); }}
-                        options={orderNumberOptions}
-                        optionLabel="label"
-                        optionValue="value"
-                        filter
-                        showClear
-                        placeholder="E.g., ORD-1001"
-                        emptyMessage={t('noOrdersFound')}
-                        style={{ width: '100%' }}
-                        editable
-                      />
-                    </div>
-                    {/* Customer Name */}
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('customerName')}</label>
-                      <Dropdown
-                        value={customerIdSearch}
-                        onChange={(e) => setCustomerIdSearch(e.value)}
-                        options={customerOptions}
-                        optionLabel="label"
-                        optionValue="value"
-                        filter
-                        showClear
-                        placeholder={t('typeCustomerName')}
-                        emptyMessage={t('noCustomersFound')}
-                        style={{ width: '100%' }}
-                      />
-                    </div>
-                    {/* Customer Phone */}
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('phoneNumber')}</label>
-                      <div style={{ position: 'relative' }}>
-                        <InputText
-                          type="tel"
-                          placeholder="E.g., 0612345678..."
-                          value={customerPhoneSearch}
-                          onChange={(e) => setCustomerPhoneSearch(e.target.value)}
-                          style={{ width: '100%' }}
-                        />
-                        {customerPhoneSearch && (
-                          <Button
-                            onClick={() => setCustomerPhoneSearch('')}
-                            text
-                            rounded
-                            icon={<X style={{ width: '1rem', height: '1rem' }} />}
-                            style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    {/* Delivery Person */}
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('deliveryPerson')}</label>
-                      <Dropdown
-                        value={deliveryPersonIdSearch}
-                        onChange={(e) => setDeliveryPersonIdSearch(e.value)}
-                        options={deliveryPersonOptions}
-                        optionLabel="label"
-                        optionValue="value"
-                        filter
-                        showClear
-                        placeholder={t('selectDeliveryPerson')}
-                        emptyMessage={t('noDeliveryPersons')}
-                        style={{ width: '100%' }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Date Range */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Order Number */}
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Clock style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
-                    {t('dateRange')}
-                  </div>
-                  <Calendar
-                    value={calendarDates as any}
-                    onChange={(e) => {
-                      const val = e.value as Date[] | null;
-                      if (val && val.length >= 1) {
-                        setDateRange({ start: val[0], end: val[1] || undefined });
-                        if (val[0]) setDateFilterType('custom');
-                      } else {
-                        setDateRange({ start: undefined, end: undefined });
-                      }
-                    }}
-                    selectionMode="range"
-                    placeholder={t('selectDate')}
-                    dateFormat="dd/mm/yy"
-                    showIcon
-                    style={{ width: '100%' }}
-                  />
-                </div>
-
-                {/* Source Filter */}
-                <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
-                    {t('orderSource')}
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {[
-                      { key: 'all', label: t('all') },
-                      { key: 'locale', label: t('local') },
-                      { key: 'client', label: t('client') }
-                    ].map((filter) => (
-                      <Button
-                        key={filter.key}
-                        onClick={() => setFromClientFilter(filter.key as any)}
-                        label={filter.label}
-                        text={fromClientFilter !== filter.key}
-                        style={{
-                          padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600,
-                          backgroundColor: fromClientFilter === filter.key ? '#3b82f6' : '#f8fafc',
-                          color: fromClientFilter === filter.key ? '#ffffff' : '#334155',
-                          border: fromClientFilter === filter.key ? 'none' : '2px solid #e2e8f0',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Delivery Status Filter */}
-                <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Truck style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
-                    {t('deliveryStatus')}
-                  </div>
-                  <MultiSelect
-                    value={deliveryStatusFilter}
-                    onChange={(e) => setDeliveryStatusFilter(e.value)}
-                    options={deliveryStatusOptions}
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('orderNumber')}</label>
+                  <Dropdown
+                    value={orderNumberSearch}
+                    onChange={(e) => { setOrderNumberSearch(e.value); handleOrderNumberSearch(e.value || ''); }}
+                    options={orderNumberOptions}
                     optionLabel="label"
                     optionValue="value"
-                    placeholder={t('all')}
-                    display="chip"
+                    filter
+                    showClear={orderNumberSearch !== ''}
+                    placeholder="E.g., ORD-1001"
+                    emptyMessage={t('noOrdersFound')}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                {/* Customer Name */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('customerName')}</label>
+                  <Dropdown
+                    value={customerIdSearch}
+                    onChange={(e) => setCustomerIdSearch(e.value)}
+                    options={customerOptions}
+                    optionLabel="label"
+                    optionValue="value"
+                    filter
+                    showClear={customerIdSearch !== ''}
+                    placeholder={t('typeCustomerName')}
+                    emptyMessage={t('noCustomersFound')}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                {/* Customer Phone */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('phoneNumber')}</label>
+                  <div style={{ position: 'relative' }}>
+                    <InputText
+                      type="tel"
+                      placeholder="E.g., 0612345678..."
+                      value={customerPhoneSearch}
+                      onChange={(e) => setCustomerPhoneSearch(e.target.value)}
+                      style={{ width: '100%' }}
+                    />
+                    {customerPhoneSearch && (
+                      <Button
+                        onClick={() => setCustomerPhoneSearch('')}
+                        text
+                        rounded
+                        icon={<X style={{ width: '1rem', height: '1rem' }} />}
+                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }}
+                      />
+                    )}
+                  </div>
+                </div>
+                {/* Delivery Person */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('deliveryPerson')}</label>
+                  <Dropdown
+                    value={deliveryPersonIdSearch}
+                    onChange={(e) => setDeliveryPersonIdSearch(e.value)}
+                    options={deliveryPersonOptions}
+                    optionLabel="label"
+                    optionValue="value"
+                    filter
+                    showClear={deliveryPersonIdSearch !== ''}
+                    placeholder={t('selectDeliveryPerson')}
+                    emptyMessage={t('noDeliveryPersons')}
                     style={{ width: '100%' }}
                   />
                 </div>
               </div>
+            </div>
 
-              {/* Panel Footer */}
-              <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
-                <Button label={t('reset')} outlined onClick={resetFilters} style={{ flex: 1 }} />
-                <Button label={t('apply')} onClick={applyFilters} style={{ flex: 1 }} />
+            {/* Date Range */}
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Clock style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                {t('dateRange')}
+              </div>
+              <Calendar
+                value={calendarDates as any}
+                onChange={(e) => {
+                  const val = e.value as Date[] | null;
+                  if (val && val.length >= 1) {
+                    setDateRange({ start: val[0], end: val[1] || undefined });
+                    if (val[0]) setDateFilterType('custom');
+                  } else {
+                    setDateRange({ start: undefined, end: undefined });
+                  }
+                }}
+                selectionMode="range"
+                placeholder={t('selectDate')}
+                dateFormat="dd/mm/yy"
+                showIcon
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            {/* Source Filter */}
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                {t('orderSource')}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {[
+                  { key: 'all', label: t('all') },
+                  { key: 'locale', label: t('local') },
+                  { key: 'client', label: t('client') }
+                ].map((filter) => (
+                  <Button
+                    key={filter.key}
+                    onClick={() => setFromClientFilter(filter.key as any)}
+                    label={filter.label}
+                    text={fromClientFilter !== filter.key}
+                    style={{
+                      padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600,
+                      backgroundColor: fromClientFilter === filter.key ? '#3b82f6' : '#f8fafc',
+                      color: fromClientFilter === filter.key ? '#ffffff' : '#334155',
+                      border: fromClientFilter === filter.key ? 'none' : '2px solid #e2e8f0',
+                    }}
+                  />
+                ))}
               </div>
             </div>
-          </>
-        )}
+
+            {/* Delivery Status Filter */}
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Truck style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                {t('deliveryStatus')}
+              </div>
+              <MultiSelect
+                value={deliveryStatusFilter}
+                onChange={(e) => setDeliveryStatusFilter(e.value)}
+                options={deliveryStatusOptions}
+                optionLabel="label"
+                optionValue="value"
+                placeholder={t('all')}
+                display="chip"
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
+          {/* Panel Footer */}
+          <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
+            <Button label={t('reset')} outlined onClick={resetFilters} style={{ flex: 1 }} />
+            <Button label={t('apply')} onClick={applyFilters} style={{ flex: 1 }} />
+          </div>
+        </Sidebar>
 
         {/* Orders Content */}
         {ordersLoading ? (
@@ -527,12 +530,12 @@ export default function Orders() {
               removableSort
               loading={ordersLoading}
               emptyMessage="Aucune commande trouvée."
-              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-              currentPageReportTemplate="{first} - {last} / {totalRecords}"
+              paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="{first}-{last} of {totalRecords}"
             >
               <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
               <Column
-                header="#"
+                header={t('orderNumber')}
                 sortable
                 sortField="orderNumber"
                 body={(order: any) => (

@@ -205,8 +205,8 @@ export default function PaiementsAchat() {
                 <p style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>Aucun paiement d'achat ne correspond à votre recherche</p>
               </div>
             }
-            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-            currentPageReportTemplate="{first} - {last} / {totalRecords}"
+            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="{first}-{last} of {totalRecords}"
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
 

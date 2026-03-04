@@ -3,6 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.5.2",
   "description": "Professional backoffice and management system for Orderium",
   "author": "Orderium Team",
   "scripts": {

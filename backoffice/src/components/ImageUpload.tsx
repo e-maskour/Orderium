@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Loader, CheckCircle, AlertCircle, Image as ImageIcon, Link } from 'lucide-react';
+import { Upload, X, Loader, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { productsService } from '../modules/products';
 import { imagesService } from '../modules/images';
@@ -14,7 +14,6 @@ interface ImageUploadProps {
   isLoading?: boolean;
   disabled?: boolean;
   showPreview?: boolean;
-  onModeChange?: (mode: 'file' | 'url') => void;
 }
 
 interface UploadStatus {
@@ -39,7 +38,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   isLoading: externalLoading,
   disabled,
   showPreview = true,
-  onModeChange,
 }) => {
   const { t } = useLanguage();
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
@@ -59,13 +57,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
-  const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
-
-  const handleModeChange = (mode: 'file' | 'url') => {
-    setUploadMode(mode);
-    if (onModeChange) onModeChange(mode);
-  };
-
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -154,31 +145,30 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const displayImage = localPreview || getFullImageUrl(currentImage);
 
   const getDropZoneStyle = (): React.CSSProperties => {
-    const base: React.CSSProperties = { position: 'relative', borderRadius: '0.5rem', transition: 'all 0.2s' };
+    const base: React.CSSProperties = { position: 'relative', borderRadius: '0.5rem', transition: 'all 0.2s', height: '148px' };
     if (displayImage) {
-      return { ...base, border: '2px solid #cbd5e1', background: '#fff', overflow: 'hidden', height: '16rem' };
+      return { ...base, border: '2px solid #cbd5e1', background: '#fff', overflow: 'hidden' };
     }
     if (disabled || isLoading) {
-      return { ...base, border: '2px dashed #e2e8f0', background: '#f8fafc', opacity: 0.5, cursor: 'not-allowed', padding: '1.5rem' };
+      return { ...base, border: '2px dashed #e2e8f0', background: '#f8fafc', opacity: 0.5, cursor: 'not-allowed' };
     }
     if (dragActive) {
-      return { ...base, border: '2px dashed #f59e0b', background: '#fffbeb', padding: '1.5rem' };
+      return { ...base, border: '2px dashed #f59e0b', background: '#fffbeb' };
     }
-    return { ...base, border: '2px dashed #cbd5e1', padding: '1.5rem', cursor: 'pointer' };
+    return { ...base, border: '2px dashed #cbd5e1', cursor: 'pointer' };
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%' }}>
       {/* Upload Area / Preview Card */}
       <div
-        onDragEnter={displayImage || uploadMode === 'url' ? undefined : handleDrag}
-        onDragLeave={displayImage || uploadMode === 'url' ? undefined : handleDrag}
-        onDragOver={displayImage || uploadMode === 'url' ? undefined : handleDrag}
-        onDrop={displayImage || uploadMode === 'url' ? undefined : handleDrop}
+        onDragEnter={displayImage ? undefined : handleDrag}
+        onDragLeave={displayImage ? undefined : handleDrag}
+        onDragOver={displayImage ? undefined : handleDrag}
+        onDrop={displayImage ? undefined : handleDrop}
         style={getDropZoneStyle()}
         onClick={() => {
           if (displayImage) return;
-          if (uploadMode === 'url') return;
           if (!disabled && !isLoading) fileInputRef.current?.click();
         }}
       >
@@ -244,48 +234,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             )}
           </div>
         ) : (
-          <div className="flex flex-column align-items-center justify-content-center gap-3">
+          <div className="flex flex-column align-items-center justify-content-center gap-2" style={{ width: '100%', height: '100%' }}>
             {isLoading ? (
               <>
-                <Loader className="animate-spin" style={{ width: 32, height: 32, color: '#f59e0b' }} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>Uploading...</span>
+                <Loader className="animate-spin" style={{ width: 24, height: 24, color: '#f59e0b' }} />
+                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>Uploading...</span>
               </>
             ) : (
               <>
-                {/* Mode Toggle */}
-                <div className="flex gap-2" style={{ marginBottom: '0.5rem' }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleModeChange('file'); }}
-                    style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: uploadMode === 'file' ? '#f59e0b' : '#f1f5f9', color: uploadMode === 'file' ? '#fff' : '#475569' }}
-                  >
-                    <Upload style={{ width: 12, height: 12, display: 'inline', marginRight: 4 }} /> Upload File
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleModeChange('url'); }}
-                    style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: uploadMode === 'url' ? '#f59e0b' : '#f1f5f9', color: uploadMode === 'url' ? '#fff' : '#475569' }}
-                  >
-                    <Link style={{ width: 12, height: 12, display: 'inline', marginRight: 4 }} /> Paste URL
-                  </button>
-                </div>
-
-                {uploadMode === 'file' && (
-                  <>
-                    <Upload style={{ width: 32, height: 32, color: '#94a3b8' }} />
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#0f172a' }}>Drag and drop your image here</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>or click to browse (Max {maxSizeMB}MB)</div>
-                    </div>
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem' }}>Supported formats: JPEG, PNG, WebP</span>
-                  </>
-                )}
-
-                {uploadMode === 'url' && (
-                  <div style={{ textAlign: 'center' }}>
-                    <Link style={{ width: 32, height: 32, color: '#94a3b8', margin: '0 auto 0.5rem' }} />
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#0f172a' }}>Paste URL mode active</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>Use the input field below product code</div>
-                  </div>
-                )}
+                <Upload style={{ width: 24, height: 24, color: '#94a3b8' }} />
+                <span style={{ fontSize: '0.6875rem', color: '#64748b', textAlign: 'center' }}>Click or drag</span>
               </>
             )}
           </div>

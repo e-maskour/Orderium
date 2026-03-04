@@ -370,8 +370,8 @@ export default function DeliveryPersons() {
                         rowsPerPageOptions={[10, 25, 50, 100]}
                         removableSort
                         emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
-                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-                        currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="{first}-{last} of {totalRecords}"
                       >
                         <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                         <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (

@@ -2,6 +2,7 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import { useDocumentCalculation } from '../../modules/documents/hooks';
 import { Save, X, CheckCircle, XCircle, ChevronDown, FileText, Truck, ArrowLeft, DollarSign, Clock, AlertCircle, Share2, PenTool, Ban, Receipt, History } from 'lucide-react';
 import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
 import { Partner, IPartner, partnersService } from '../../modules/partners';
@@ -492,7 +493,7 @@ export default function DocumentEditPage({
           const itemTotal = itemSubtotal - discountAmount;
 
           return {
-            id: Number(item.id),
+            id: item.id.startsWith('new_') ? undefined : Number(item.id),
             productId: item.productId,
             description: item.description,
             quantity: item.quantity,
@@ -825,8 +826,17 @@ export default function DocumentEditPage({
     return (
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-            <div style={{ color: '#64748b' }}>{t('loading')}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '20rem', gap: '1rem' }}>
+            <div style={{
+              width: '3rem', height: '3rem',
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(245,158,11,0.3)',
+              animation: 'pulse 1.5s ease-in-out infinite'
+            }}>
+              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
+            </div>
+            <p style={{ color: '#64748b', fontWeight: 500, fontSize: '0.9375rem' }}>{t('loading')}</p>
           </div>
         </div>
       </AdminLayout>
@@ -837,208 +847,233 @@ export default function DocumentEditPage({
     <AdminLayout>
       <style>{`
         .doc-edit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
-        .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: #fff; border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); z-index: 40; }
+        .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-top: 1.5px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 40; }
+        .doc-field-label { display: block; font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.375rem; }
         @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } }
       `}</style>
       <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
-        {/* Header with Back Button */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Button
-              icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
-              onClick={() => navigate(listRoute)}
-              text rounded
-              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
-            />
-            <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 10px rgba(245,158,11,0.3)' }}>
-              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />; })()}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {config.titleShort} {invoiceNumber}
-                  </h1>
-                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.125rem' }}>{t('editDocument')} {config.titleShort.toLowerCase()}</p>
-                </div>
-                {/* Status badges - positioned to the right */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  {/* Validation status badge */}
-                  {config.features.hasValidation && (
-                    isValidated ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(to right, #ecfdf5, #f0fdfa)', border: '1px solid #a7f3d0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: '#10b981', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
-                          <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                        </div>
-                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#047857' }}>{t('validated')}</span>
+        {/* ── Page Header ── */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '1rem',
+          marginBottom: '0.75rem',
+          padding: '1.125rem 1.375rem',
+          background: '#ffffff',
+          borderRadius: '1rem',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+          border: '1.5px solid #e2e8f0',
+          flexWrap: 'wrap'
+        }}>
+          <Button
+            icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
+            onClick={() => navigate(listRoute)}
+            style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem' }}
+          />
+          <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.4)' }}>
+            {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />; })()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <h1 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0, letterSpacing: '-0.01em' }}>
+                  {config.titleShort} {invoiceNumber}
+                </h1>
+                <p style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.125rem', margin: '0.125rem 0 0' }}>{t('editDocument')} {config.titleShort.toLowerCase()}</p>
+              </div>
+              {/* Status badges - positioned to the right */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {/* Validation status badge */}
+                {config.features.hasValidation && (
+                  isValidated ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(to right, #ecfdf5, #f0fdfa)', border: '1px solid #a7f3d0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: '#10b981', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
+                        <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                       </div>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(to right, #fffbeb, #fff7ed)', border: '1px solid #fcd34d', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: '#f59e0b', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
-                          <XCircle style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                        </div>
-                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#b45309' }}>{t('notValidated')}</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#047857' }}>{t('validated')}</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(to right, #fffbeb, #fff7ed)', border: '1px solid #fcd34d', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: '#f59e0b', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
+                        <XCircle style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                       </div>
-                    )
-                  )}
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#b45309' }}>{t('notValidated')}</span>
+                    </div>
+                  )
+                )}
 
-                  {/* Document status badge - different for each document type */}
-                  {documentType === 'facture' && (() => {
-                    const statusConfig = getPaymentStatusBadge(status);
-                    const StatusIcon = statusConfig.icon;
-                    return (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                          <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                        </div>
-                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
+                {/* Document status badge - different for each document type */}
+                {documentType === 'facture' && (() => {
+                  const statusConfig = getPaymentStatusBadge(status);
+                  const StatusIcon = statusConfig.icon;
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                        <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                       </div>
-                    );
-                  })()}
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
+                    </div>
+                  );
+                })()}
 
-                  {documentType === 'devis' && (() => {
-                    const statusConfig = getDevisStatusBadge(status);
-                    const StatusIcon = statusConfig.icon;
-                    return (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                          <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                        </div>
-                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
+                {documentType === 'devis' && (() => {
+                  const statusConfig = getDevisStatusBadge(status);
+                  const StatusIcon = statusConfig.icon;
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                        <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                       </div>
-                    );
-                  })()}
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
+                    </div>
+                  );
+                })()}
 
-                  {documentType === 'bon_livraison' && (() => {
-                    const statusConfig = getBonStatusBadge(status);
-                    const StatusIcon = statusConfig.icon;
-                    return (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                          <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                        </div>
-                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
+                {documentType === 'bon_livraison' && (() => {
+                  const statusConfig = getBonStatusBadge(status);
+                  const StatusIcon = statusConfig.icon;
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                        <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
                       </div>
-                    );
-                  })()}
-                </div>
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Payment Summary Section - Only for validated invoices */}
+        {/* ── Payment Summary – validated invoices only ── */}
         {documentType === 'facture' && isValidated && status !== 'draft' && (
-          <div style={{ background: 'linear-gradient(to bottom right, #eff6ff, #eef2ff)', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1.5px solid #bfdbfe', padding: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.5rem', height: '1.5rem', borderRadius: '9999px', backgroundColor: '#3b82f6', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
+          <div style={{ borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1.5px solid #bfdbfe', marginBottom: '1.5rem' }}>
+            <div style={{
+              padding: '0.75rem 1.25rem',
+              background: 'linear-gradient(to right, #eff6ff, #eef2ff)',
+              borderBottom: '1.5px solid #bfdbfe',
+              display: 'flex', alignItems: 'center', gap: '0.625rem'
+            }}>
+              <div style={{ width: '1.75rem', height: '1.75rem', background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Receipt style={{ width: '1rem', height: '1rem', color: '#ffffff' }} />
               </div>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e3a5f' }}>{t('paymentDetails')}</h3>
+              <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e40af' }}>{t('paymentDetails')}</h3>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-              {/* Total Amount */}
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', padding: '0.75rem', border: '1px solid #dbeafe', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569', marginBottom: '0.25rem' }}>{t('totalAmount')}</p>
-                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {items.reduce((sum, item) => sum + (item.total || 0), 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', background: 'linear-gradient(to right, #eff6ff, #eef2ff)' }}>
+              <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid #dbeafe' }}>
+                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('totalAmount')}</p>
+                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
+                  {totalTTC.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
                 </p>
               </div>
-
-              {/* Paid Amount */}
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', padding: '0.75rem', border: '1px solid #dcfce7', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569', marginBottom: '0.25rem' }}>{t('paidAmount')}</p>
-                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#16a34a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid #dcfce7', background: 'linear-gradient(135deg, rgba(240,253,244,0.7), rgba(236,253,245,0.7))' }}>
+                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('paidAmount')}</p>
+                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#15803d', letterSpacing: '-0.01em' }}>
+                  {paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.875rem', color: '#16a34a', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
                 </p>
               </div>
-
-              {/* Remaining Amount */}
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', padding: '0.75rem', border: '1px solid #ffedd5', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569', marginBottom: '0.25rem' }}>{t('remainingAmount')}</p>
-                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ea580c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              <div style={{ padding: '1rem 1.25rem', background: remainingAmount > 0 ? 'linear-gradient(135deg, rgba(255,237,213,0.7), rgba(254,242,242,0.7))' : 'transparent' }}>
+                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: remainingAmount > 0 ? '#ea580c' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('remainingAmount')}</p>
+                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: remainingAmount > 0 ? '#c2410c' : '#16a34a', letterSpacing: '-0.01em' }}>
+                  {remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1.5px solid #e2e8f0', padding: '1.5rem' }}>
-          {/* Two column layout: Partner on left, Document info on right */}
-          <div className="doc-edit-grid">
-            {/* Partner section - Left */}
-            <div>
-              <DocumentPartnerBox
-                direction={direction}
-                partnerId={partner?.id}
-                partnerName={partner?.name}
-                partnerPhone={partner?.phoneNumber}
-                partnerAddress={partner?.address || undefined}
-                partnerIce={partner?.ice || undefined}
-                deliveryAddress={partner?.deliveryAddress || undefined}
-                onPartnerChange={(updatedPartner) => {
-                  if ('id' in updatedPartner && 'name' in updatedPartner && 'phoneNumber' in updatedPartner) {
-                    // Full partner object selected from dropdown
-                    setPartner(updatedPartner as IPartner);
-                  } else {
-                    // Partial update (typing in field)
-                    setPartner(prev => prev ? { ...prev, ...updatedPartner } : null);
-                  }
-                }}
-                readOnly={isValidated || (documentType === 'devis' && status === 'closed')}
-              />
-            </div>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '1rem', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', border: '1.5px solid #e2e8f0', overflow: 'hidden' }}>
+          {/* Top accent bar */}
+          <div style={{ height: '3px', background: 'linear-gradient(to right, #f59e0b, #d97706, #f59e0b)' }} />
+          <div style={{ padding: '1.5rem' }}>
+            {/* Two column layout: Partner on left, Document info on right */}
+            <div className="doc-edit-grid">
+              {/* Partner section - Left */}
+              <div>
+                <DocumentPartnerBox
+                  direction={direction}
+                  partnerId={partner?.id}
+                  partnerName={partner?.name}
+                  partnerPhone={partner?.phoneNumber}
+                  partnerAddress={partner?.address || undefined}
+                  partnerIce={partner?.ice || undefined}
+                  deliveryAddress={partner?.deliveryAddress || undefined}
+                  onPartnerChange={(updatedPartner) => {
+                    if ('id' in updatedPartner && 'name' in updatedPartner && 'phoneNumber' in updatedPartner) {
+                      // Full partner object selected from dropdown
+                      setPartner(updatedPartner as IPartner);
+                    } else {
+                      // Partial update (typing in field)
+                      setPartner(prev => prev ? { ...prev, ...updatedPartner } : null);
+                    }
+                  }}
+                  readOnly={isValidated || (documentType === 'devis' && status === 'closed')}
+                />
+              </div>
 
-            {/* Document information - Right */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>
-                {t('documentInformation')}
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}</label>
-                  <InputText
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-
-                {config.features.expirationDate && (
+              {/* Document information - Right */}
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
+                <div style={{ padding: '0.875rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                  <div style={{
+                    width: '2rem', height: '2rem',
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    borderRadius: '0.5rem', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(245,158,11,0.4)'
+                  }}>
+                    <FileText style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                  </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('expirationDate')}</label>
+                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>{t('documentInformation')}</h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                      {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ padding: '1rem 1.125rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                  <div>
+                    <label className="doc-field-label">{documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}</label>
                     <InputText
                       type="date"
-                      value={expirationDate}
-                      onChange={(e) => setExpirationDate(e.target.value)}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
                       disabled={isValidated || (documentType === 'devis' && status === 'closed')}
                       style={{ width: '100%' }}
                     />
                   </div>
-                )}
 
-                {/* Due Date - Show for all document types */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('dueDate')}</label>
-                  <InputText
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                    style={{ width: '100%' }}
-                  />
+                  {config.features.expirationDate && (
+                    <div>
+                      <label className="doc-field-label">{t('expirationDate')}</label>
+                      <InputText
+                        type="date"
+                        value={expirationDate}
+                        onChange={(e) => setExpirationDate(e.target.value)}
+                        disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="doc-field-label">{t('dueDate')}</label>
+                    <InputText
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Items table */}
-          <div style={{ marginTop: '0.5rem' }}>
+            {/* Items Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.5rem 0 1rem' }}>
+              <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, #e2e8f0, transparent)' }} />
+            </div>
+
+            {/* Items table */}
             <DocumentItemsTable
               items={items}
               direction={direction}
@@ -1049,49 +1084,39 @@ export default function DocumentEditPage({
               showTotalColumn={!(documentType === 'devis' && direction === 'achat')}
               readOnly={isValidated || (documentType === 'devis' && status === 'closed')}
             />
-          </div>
 
-          {/* Notes */}
-          <div style={{ marginTop: '0.5rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('notes')}</label>
-              <InputTextarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder={t('additionalNotes')}
-                disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                style={{ width: '100%' }}
-              />
-            </div>
-          </div>
+            {/* Notes + Totals Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1.5rem', marginTop: '1.5rem', alignItems: 'flex-start' }}>
+              {/* Notes - 60% */}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
+                  <div style={{ padding: '0.75rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #94a3b8, #64748b)', borderRadius: '2px' }} />
+                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('notes')}</h3>
+                  </div>
+                  <div style={{ padding: '1rem 1.125rem' }}>
+                    <InputTextarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={3}
+                      placeholder={t('additionalNotes')}
+                      disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                      style={{ width: '100%', resize: 'vertical' }}
+                    />
+                  </div>
+                </div>
 
-          {/* Signature Details and Totals section */}
-          <div style={{ marginTop: '2rem' }}>
-            {documentType === 'devis' ? (
-              <div style={{ display: 'flex', flexDirection: 'row', gap: '1.5rem' }}>
-                {/* Signature Details - Left Side */}
-                <div style={{ flex: 1 }}>
-                  {status === 'signed' && signedBy && (
-                    <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.5rem', padding: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                        <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: '#16a34a' }} />
-                        <h4 style={{ fontWeight: 700, color: '#14532d' }}>{t('signature')}</h4>
-                      </div>
+                {/* Signature card (devis only) */}
+                {documentType === 'devis' && status === 'signed' && signedBy && (
+                  <div style={{ marginTop: '1rem', backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 2px 10px rgba(22,163,74,0.1)' }}>
+                    <div style={{ padding: '0.625rem 1rem', background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', borderBottom: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle style={{ width: '1rem', height: '1rem', color: '#16a34a' }} /><h4 style={{ margin: 0, fontWeight: 700, color: '#14532d', fontSize: '0.875rem' }}>{t('signature')}</h4></div>
+                    <div style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <p style={{ fontSize: '0.875rem', color: '#166534' }}>
-                          <span style={{ fontWeight: 500 }}>{t('signedBy')}</span> {signedBy}
-                        </p>
+                        <p style={{ fontSize: '0.875rem', color: '#166534' }}><span style={{ fontWeight: 500 }}>{t('signedBy')}</span> {signedBy}</p>
                         {signedDate && (
                           <p style={{ fontSize: '0.875rem', color: '#15803d' }}>
                             <span style={{ fontWeight: 500 }}>{t('dateLabel')}</span>{' '}
-                            {new Date(signedDate).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {new Date(signedDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </p>
                         )}
                         {clientNotes && (
@@ -1102,228 +1127,228 @@ export default function DocumentEditPage({
                         )}
                       </div>
                     </div>
-                  )}
-                </div>
-                {/* Totals - Right Side */}
-                <div style={{ width: '24rem' }}>
-                  <DocumentTotalsSection items={items} />
-                </div>
-              </div>
-            ) : (
-              <DocumentTotalsSection items={items} />
-            )}
-          </div>
-        </div>
-
-        {/* Sticky Bottom Action Bar */}
-        <div className="doc-sticky-bar">
-          <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              {/* Left side - Payment History button for invoices */}
-              <div>
-                {documentType === 'facture' && isValidated && status !== 'draft' && (
-                  <Button
-                    icon={<History style={{ width: '1rem', height: '1rem' }} />}
-                    label={t('paymentHistory')}
-                    onClick={() => setShowPaymentHistory(true)}
-                    severity="info"
-                  />
-                )}
-              </div>
-
-              {/* Right side - Action buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                {/* Validation actions */}
-                {config.features.hasValidation && (
-                  isValidated ? (
-                    <Button
-                      icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
-                      label={t('devalidateDocument')}
-                      onClick={() => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') })}
-                      severity="secondary"
-                    />
-                  ) : (
-                    <Button
-                      icon={<CheckCircle style={{ width: '1rem', height: '1rem' }} />}
-                      label={t('validateDocument')}
-                      onClick={() => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') })}
-                      severity="success"
-                    />
-                  )
-                )}
-
-                {/* Deliver and Cancel buttons for bon_livraison */}
-                {documentType === 'bon_livraison' && status === 'in_progress' && (
-                  <>
-                    <Button
-                      icon={<Truck style={{ width: '1rem', height: '1rem' }} />}
-                      label={t('markAsDelivered')}
-                      onClick={() => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') })}
-                      severity="info"
-                    />
-                    <Button
-                      icon={<Ban style={{ width: '1rem', height: '1rem' }} />}
-                      label={t('cancel')}
-                      onClick={() => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') })}
-                      severity="danger"
-                    />
-                  </>
-                )}
-
-                {/* Actions menu for bon_livraison */}
-                {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
-                  <div style={{ position: 'relative' }} ref={actionsMenuRef}>
-                    <Button
-                      icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
-                      iconPos="right"
-                      label={t('actions')}
-                      onClick={() => setShowActionsMenu(!showActionsMenu)}
-                      style={{ backgroundColor: '#d97706', borderColor: '#d97706' }}
-                    />
-                    {showActionsMenu && (
-                      <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
-                        {/* Create Invoice from Bon */}
-                        <Button
-                          onClick={() => {
-                            setShowActionsMenu(false);
-                            toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
-                          }}
-                          icon={<FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />}
-                          iconPos="left"
-                          label={t('convertToInvoice')}
-                          text
-                          style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderRadius: '0.5rem' }}
-                        />
-                      </div>
-                    )}
                   </div>
                 )}
+              </div>
 
-                {/* Sign/Unsign buttons for devis */}
-                {documentType === 'devis' && isValidated && status !== 'closed' && (
-                  <>
-                    <Button
-                      icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
-                      label={t('signQuote')}
-                      onClick={() => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') })}
-                      disabled={status === 'signed'}
-                      severity="success"
-                    />
-                    <Button
-                      icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
-                      label={t('rejectQuote')}
-                      onClick={() => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') })}
-                      disabled={status !== 'signed'}
-                      severity="warning"
-                    />
-                  </>
-                )}
+              {/* Totals - 40% */}
+              <div style={{ minWidth: 0 }}>
+                <DocumentTotalsSection items={items} />
+              </div>
+            </div>
+          </div>
 
-                {/* Actions menu for devis */}
-                {documentType === 'devis' && status === 'signed' && (
-                  <div style={{ position: 'relative' }} ref={actionsMenuRef}>
+          {/* Sticky Bottom Action Bar */}
+          <div className="doc-sticky-bar">
+            <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                {/* Left side - Payment History button for invoices */}
+                <div>
+                  {documentType === 'facture' && isValidated && status !== 'draft' && (
                     <Button
-                      icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
-                      iconPos="right"
-                      label={t('actions')}
-                      onClick={() => setShowActionsMenu(!showActionsMenu)}
+                      icon={<History style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('paymentHistory')}
+                      onClick={() => setShowPaymentHistory(true)}
                       severity="info"
                     />
-                    {showActionsMenu && (
-                      <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
-                        {/* Share Quote */}
-                        {isValidated && (
+                  )}
+                </div>
+
+                {/* Right side - Action buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {/* Validation actions */}
+                  {config.features.hasValidation && (
+                    isValidated ? (
+                      <Button
+                        icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('devalidateDocument')}
+                        onClick={() => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') })}
+                        severity="secondary"
+                      />
+                    ) : (
+                      <Button
+                        icon={<CheckCircle style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('validateDocument')}
+                        onClick={() => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') })}
+                        severity="success"
+                      />
+                    )
+                  )}
+
+                  {/* Deliver and Cancel buttons for bon_livraison */}
+                  {documentType === 'bon_livraison' && status === 'in_progress' && (
+                    <>
+                      <Button
+                        icon={<Truck style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('markAsDelivered')}
+                        onClick={() => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') })}
+                        severity="info"
+                      />
+                      <Button
+                        icon={<Ban style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('cancel')}
+                        onClick={() => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') })}
+                        severity="danger"
+                      />
+                    </>
+                  )}
+
+                  {/* Actions menu for bon_livraison */}
+                  {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
+                    <div style={{ position: 'relative' }} ref={actionsMenuRef}>
+                      <Button
+                        icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
+                        iconPos="right"
+                        label={t('actions')}
+                        onClick={() => setShowActionsMenu(!showActionsMenu)}
+                        style={{ backgroundColor: '#d97706', borderColor: '#d97706' }}
+                      />
+                      {showActionsMenu && (
+                        <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
+                          {/* Create Invoice from Bon */}
                           <Button
                             onClick={() => {
                               setShowActionsMenu(false);
-                              setShowShareDialog(true);
+                              toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                             }}
-                            icon={<Share2 style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />}
+                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />}
                             iconPos="left"
-                            label={t('shareWithClient')}
+                            label={t('convertToInvoice')}
                             text
-                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTopLeftRadius: '0.5rem', borderTopRightRadius: '0.5rem' }}
+                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderRadius: '0.5rem' }}
                           />
-                        )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                        {/* Create Invoice */}
-                        <Button
-                          onClick={() => {
-                            setShowActionsMenu(false);
-                            toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
-                          }}
-                          icon={<FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />}
-                          iconPos="left"
-                          label={t('createAnInvoice')}
-                          text
-                          style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTop: '1px solid #f1f5f9' }}
-                        />
+                  {/* Sign/Unsign buttons for devis */}
+                  {documentType === 'devis' && isValidated && status !== 'closed' && (
+                    <>
+                      <Button
+                        icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('signQuote')}
+                        onClick={() => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') })}
+                        disabled={status === 'signed'}
+                        severity="success"
+                      />
+                      <Button
+                        icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('rejectQuote')}
+                        onClick={() => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') })}
+                        disabled={status !== 'signed'}
+                        severity="warning"
+                      />
+                    </>
+                  )}
 
-                        {/* Create Bon de Livraison */}
-                        <Button
-                          onClick={() => {
-                            setShowActionsMenu(false);
-                            toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') });
-                          }}
-                          icon={<Truck style={{ width: '1rem', height: '1rem', color: '#059669' }} />}
-                          iconPos="left"
-                          label={t('createDeliveryNote')}
-                          text
-                          style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', borderTop: '1px solid #f1f5f9' }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+                  {/* Actions menu for devis */}
+                  {documentType === 'devis' && status === 'signed' && (
+                    <div style={{ position: 'relative' }} ref={actionsMenuRef}>
+                      <Button
+                        icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
+                        iconPos="right"
+                        label={t('actions')}
+                        onClick={() => setShowActionsMenu(!showActionsMenu)}
+                        severity="info"
+                      />
+                      {showActionsMenu && (
+                        <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
+                          {/* Share Quote */}
+                          {isValidated && (
+                            <Button
+                              onClick={() => {
+                                setShowActionsMenu(false);
+                                setShowShareDialog(true);
+                              }}
+                              icon={<Share2 style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />}
+                              iconPos="left"
+                              label={t('shareWithClient')}
+                              text
+                              style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTopLeftRadius: '0.5rem', borderTopRightRadius: '0.5rem' }}
+                            />
+                          )}
 
-                {/* PDF Action Buttons - Show when validated and not draft */}
-                {isValidated && status !== 'draft' && id && (
-                  <PDFActionButtons
-                    documentType={getPDFDocumentType(documentType)}
-                    documentId={Number(id)}
+                          {/* Create Invoice */}
+                          <Button
+                            onClick={() => {
+                              setShowActionsMenu(false);
+                              toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
+                            }}
+                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />}
+                            iconPos="left"
+                            label={t('createAnInvoice')}
+                            text
+                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTop: '1px solid #f1f5f9' }}
+                          />
+
+                          {/* Create Bon de Livraison */}
+                          <Button
+                            onClick={() => {
+                              setShowActionsMenu(false);
+                              toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') });
+                            }}
+                            icon={<Truck style={{ width: '1rem', height: '1rem', color: '#059669' }} />}
+                            iconPos="left"
+                            label={t('createDeliveryNote')}
+                            text
+                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', borderTop: '1px solid #f1f5f9' }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* PDF Action Buttons - Show when validated and not draft */}
+                  {isValidated && status !== 'draft' && id && (
+                    <PDFActionButtons
+                      documentType={getPDFDocumentType(documentType)}
+                      documentId={Number(id)}
+                    />
+                  )}
+
+                  {/* Save button */}
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
+                    loading={saving}
+                    icon={<Save style={{ width: '1rem', height: '1rem' }} />}
+                    label={t('save')}
+                    style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', fontWeight: 700, boxShadow: '0 4px 12px rgba(245,158,11,0.35)' }}
                   />
-                )}
-
-                {/* Save button */}
-                <Button
-                  onClick={handleSave}
-                  disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
-                  loading={saving}
-                  icon={<Save style={{ width: '1rem', height: '1rem' }} />}
-                  label={t('save')}
-                />
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+
+
+        {documentType === 'devis' && (
+          <ShareQuoteDialog
+            isOpen={showShareDialog}
+            onClose={() => setShowShareDialog(false)}
+            quoteNumber={invoiceNumber}
+            shareToken={shareToken}
+            expiresAt={shareTokenExpiry}
+            onGenerateLink={handleGenerateShareLink}
+          />
+        )}
+
+
+
+        {documentType === 'facture' && (
+          <PaymentHistoryModal
+            isOpen={showPaymentHistory}
+            onClose={() => setShowPaymentHistory(false)}
+            invoiceId={Number(id)}
+            invoiceNumber={invoiceNumber}
+            invoiceTotal={totalTTC}
+            customerId={partner?.id}
+            onPaymentUpdate={loadDocument}
+          />
+        )}
       </div>
-
-
-
-      {documentType === 'devis' && (
-        <ShareQuoteDialog
-          isOpen={showShareDialog}
-          onClose={() => setShowShareDialog(false)}
-          quoteNumber={invoiceNumber}
-          shareToken={shareToken}
-          expiresAt={shareTokenExpiry}
-          onGenerateLink={handleGenerateShareLink}
-        />
-      )}
-
-
-
-      {documentType === 'facture' && (
-        <PaymentHistoryModal
-          isOpen={showPaymentHistory}
-          onClose={() => setShowPaymentHistory(false)}
-          invoiceId={Number(id)}
-          invoiceNumber={invoiceNumber}
-          invoiceTotal={items.reduce((sum, item) => sum + (item.total || 0), 0)}
-          customerId={partner?.id}
-          onPaymentUpdate={loadDocument}
-        />
-      )}
     </AdminLayout>
   );
 }

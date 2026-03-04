@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService, validateProductForm, hasValidationErrors, getFirstError, ValidationErrors } from '../modules/products';
@@ -8,79 +8,56 @@ import { categoriesService } from '../modules/categories';
 import { taxesService } from '../modules/taxes';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
-import { PageHeader } from '../components/PageHeader';
 import { ImageUpload } from '../components/ImageUpload';
-import { Package, ArrowLeft, Save, Plus, ArrowRightLeft, Edit2, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Save, Plus, ArrowRightLeft, RefreshCw, ShoppingCart, TrendingUp, SlidersHorizontal, Building2, Tag as TagIcon, Package } from 'lucide-react';
 import { toastSuccess, toastUpdated, toastDeleted, toastError } from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
-import { Checkbox } from 'primereact/checkbox';
+import { InputNumber } from 'primereact/inputnumber';
+import { InputSwitch } from 'primereact/inputswitch';
 import { Dropdown } from 'primereact/dropdown';
-import { RadioButton } from 'primereact/radiobutton';
+import { MultiSelect } from 'primereact/multiselect';
 
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' };
-const dropdownItemStyle: React.CSSProperties = { padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' };
-const dropdownContainerStyle: React.CSSProperties = { position: 'absolute', zIndex: 10, width: '100%', marginTop: '0.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', maxHeight: '15rem', overflowY: 'auto' };
+import { Dialog } from 'primereact/dialog';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { ColumnGroup } from 'primereact/columngroup';
+import { Row } from 'primereact/row';
+import { Tag as PTag } from 'primereact/tag';
+import { Message } from 'primereact/message';
+import { RadioButton } from 'primereact/radiobutton';
+import { TabView, TabPanel } from 'primereact/tabview';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'info' | 'stock' | 'pricing'>('info');
-  const [isEditing, setIsEditing] = useState(true);
+  const currency = language === 'ar' ? 'د.م' : 'DH';
+
   const [showStockCorrection, setShowStockCorrection] = useState(false);
   const [showStockTransfer, setShowStockTransfer] = useState(false);
 
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+
   const [formData, setFormData] = useState({
-    name: '', code: '', description: '', price: '', cost: '', minPrice: '',
-    saleTax: '20', purchaseTax: '20', saleUnit: 'Unité(s)', purchaseUnit: 'Unité(s)',
-    categoryIds: [] as number[], warehouseId: '', isService: false, isEnabled: true, isPriceChangeAllowed: true,
+    name: '', code: '', description: '',
+    price: null as number | null, cost: null as number | null, minPrice: null as number | null,
+    saleTaxId: null as string | null, purchaseTaxId: null as string | null,
+    saleUnitId: null as number | null, purchaseUnitId: null as number | null,
+    categoryIds: [] as number[], warehouseId: null as number | null,
+    isService: false, isEnabled: true, isPriceChangeAllowed: true,
   });
 
-  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
-  const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
-  const [imageUrlInput, setImageUrlInput] = useState('');
-  const [showUrlInput, setShowUrlInput] = useState(false);
-
-  const handleImageModeChange = (mode: 'file' | 'url') => { setShowUrlInput(mode === 'url'); };
-
-  const clearFieldError = (fieldName: string) => {
-    if (validationErrors[fieldName]) {
-      setValidationErrors(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
-    }
-  };
-
-  const handleRegenerateCode = async () => {
-    try {
-      setIsGeneratingCode(true);
-      const uniqueCode = await generateUniqueProductCode();
-      setFormData(prev => ({ ...prev, code: uniqueCode }));
-      clearFieldError('code');
-      toastSuccess(t('newUniqueCodeGenerated'));
-    } catch (error) {
-      console.error('Failed to generate unique code:', error);
-      toastError(t('failedToGenerateUniqueCode'));
-    } finally {
-      setIsGeneratingCode(false);
-    }
-  };
-
-  const handleSaveImageUrl = async () => {
-    if (!imageUrlInput.trim() || !id) return;
-    try {
-      await updateMutation.mutateAsync({ imageUrl: imageUrlInput.trim() });
-      setImageUrlInput('');
-      setShowUrlInput(false);
-      toastUpdated(t('imageUrlSavedSuccessfully'));
-      queryClient.invalidateQueries({ queryKey: ['product', id] });
-    } catch (error) {
-      toastError(t('failedToSaveImageUrl'));
+  const setField = <K extends keyof typeof formData>(key: K, value: typeof formData[K]) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+    if (validationErrors[key as string]) {
+      setValidationErrors(prev => { const n = { ...prev }; delete n[key as string]; return n; });
     }
   };
 
@@ -118,49 +95,19 @@ export default function ProductDetail() {
     queryFn: () => uomService.getAll(),
   });
 
-  const taxRates = taxesConfig?.rates || [];
-
-  const [showWarehouseSearch, setShowWarehouseSearch] = useState(false);
-  const [warehouseSearchTerm, setWarehouseSearchTerm] = useState('');
-  const [showCategorySearch, setShowCategorySearch] = useState(false);
-  const [categorySearchTerm, setCategorySearchTerm] = useState('');
-  const [showSaleUnitSearch, setShowSaleUnitSearch] = useState(false);
-  const [showPurchaseUnitSearch, setShowPurchaseUnitSearch] = useState(false);
-  const [showSaleTaxSearch, setShowSaleTaxSearch] = useState(false);
-  const [showPurchaseTaxSearch, setShowPurchaseTaxSearch] = useState(false);
-
-  const warehouseSearchRef = useRef<HTMLDivElement>(null);
-  const categorySearchRef = useRef<HTMLDivElement>(null);
-  const saleUnitSearchRef = useRef<HTMLDivElement>(null);
-  const purchaseUnitSearchRef = useRef<HTMLDivElement>(null);
-  const saleTaxSearchRef = useRef<HTMLDivElement>(null);
-  const purchaseTaxSearchRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (warehouseSearchRef.current && !warehouseSearchRef.current.contains(event.target as Node)) setShowWarehouseSearch(false);
-      if (categorySearchRef.current && !categorySearchRef.current.contains(event.target as Node)) setShowCategorySearch(false);
-      if (saleUnitSearchRef.current && !saleUnitSearchRef.current.contains(event.target as Node)) setShowSaleUnitSearch(false);
-      if (purchaseUnitSearchRef.current && !purchaseUnitSearchRef.current.contains(event.target as Node)) setShowPurchaseUnitSearch(false);
-      if (saleTaxSearchRef.current && !saleTaxSearchRef.current.contains(event.target as Node)) setShowSaleTaxSearch(false);
-      if (purchaseTaxSearchRef.current && !purchaseTaxSearchRef.current.contains(event.target as Node)) setShowPurchaseTaxSearch(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const { data: stockQuants = [] } = useQuery({
     queryKey: ['stock-quants', id],
     queryFn: () => stockService.getProductStock(Number(id)),
     enabled: !!id,
   });
 
+  const taxRates = taxesConfig?.rates || [];
+
   const updateMutation = useMutation({
     mutationFn: (data: any) => productsService.updateProduct(Number(id), data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['product', id] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      setIsEditing(false);
       toastUpdated(t('productUpdatedSuccessfully'));
     },
     onError: (error: any) => { toastError(error.message || t('failedToUpdateProduct')); },
@@ -207,50 +154,90 @@ export default function ProductDetail() {
   useEffect(() => {
     if (product) {
       const productCategories = (product as any).categories || [];
-      const categoryIdsFromProduct = productCategories.map((c: any) => c.id);
-      const saleUnitName = (product as any).saleUnitOfMeasure?.name || '';
-      const purchaseUnitName = (product as any).purchaseUnitOfMeasure?.name || '';
       setFormData({
-        name: product.name, code: product.code || '', description: product.description || '',
-        price: product.price.toString(), cost: product.cost.toString(), minPrice: product.minPrice.toString(),
-        saleTax: product.saleTax?.toString() || '20', purchaseTax: product.purchaseTax?.toString() || '20',
-        saleUnit: saleUnitName, purchaseUnit: purchaseUnitName,
-        categoryIds: categoryIdsFromProduct, warehouseId: product.warehouseId?.toString() || '',
-        isService: product.isService, isEnabled: product.isEnabled, isPriceChangeAllowed: product.isPriceChangeAllowed,
+        name: product.name,
+        code: product.code || '',
+        description: product.description || '',
+        price: product.price,
+        cost: product.cost,
+        minPrice: product.minPrice,
+        saleTaxId: taxRates.find((r: any) => r.rate === product.saleTax)?.name ?? null,
+        purchaseTaxId: taxRates.find((r: any) => r.rate === product.purchaseTax)?.name ?? null,
+        saleUnitId: (product as any).saleUnitOfMeasure?.id ?? null,
+        purchaseUnitId: (product as any).purchaseUnitOfMeasure?.id ?? null,
+        categoryIds: productCategories.map((c: any) => c.id),
+        warehouseId: product.warehouseId ?? null,
+        isService: product.isService,
+        isEnabled: product.isEnabled,
+        isPriceChangeAllowed: product.isPriceChangeAllowed,
       });
-      setSelectedCategories(productCategories);
-      if (product.warehouseId) {
-        const warehouseFromProduct = (product as any).warehouse;
-        const warehouse = warehouseFromProduct || warehouses.find((w: any) => w.id === product.warehouseId);
-        if (warehouse) { setSelectedWarehouse(warehouse); setWarehouseSearchTerm(`${warehouse.name} (${warehouse.code})`); }
-      } else { setSelectedWarehouse(null); setWarehouseSearchTerm(''); }
     }
-  }, [product, warehouses]);
+  }, [product, taxRates.length]);
+
+  const handleRegenerateCode = async () => {
+    try {
+      setIsGeneratingCode(true);
+      const uniqueCode = await generateUniqueProductCode();
+      setField('code', uniqueCode);
+      toastSuccess(t('newUniqueCodeGenerated'));
+    } catch {
+      toastError(t('failedToGenerateUniqueCode'));
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
+
 
   const handleSave = () => {
-    const errors = validateProductForm(formData, false);
+    const legacyForm = {
+      name: formData.name, code: formData.code, description: formData.description,
+      price: formData.price?.toString() ?? '',
+      cost: formData.cost?.toString() ?? '',
+      minPrice: formData.minPrice?.toString() ?? '',
+      warehouseId: formData.warehouseId?.toString() ?? '',
+      categoryIds: formData.categoryIds,
+    };
+    const errors = validateProductForm(legacyForm as any, false);
     setValidationErrors(errors);
     if (hasValidationErrors(errors)) { const firstError = getFirstError(errors); if (firstError) toastError(firstError); return; }
-    const saleUom = uoms.find((u: any) => u.name === formData.saleUnit);
-    const purchaseUom = uoms.find((u: any) => u.name === formData.purchaseUnit);
+    const saleTaxRate = taxRates.find((r: any) => r.name === formData.saleTaxId);
+    const purchaseTaxRate = taxRates.find((r: any) => r.name === formData.purchaseTaxId);
     updateMutation.mutate({
       name: formData.name, code: formData.code || null, description: formData.description || null,
-      price: parseFloat(formData.price), cost: parseFloat(formData.cost), minPrice: parseFloat(formData.minPrice),
-      saleTax: parseFloat(formData.saleTax), purchaseTax: parseFloat(formData.purchaseTax),
-      warehouseId: formData.warehouseId ? parseInt(formData.warehouseId) : null,
+      price: formData.price ?? 0, cost: formData.cost ?? 0, minPrice: formData.minPrice ?? 0,
+      saleTax: saleTaxRate?.rate ?? 0, purchaseTax: purchaseTaxRate?.rate ?? 0,
+      warehouseId: formData.warehouseId,
       categoryIds: formData.categoryIds, isService: formData.isService, isEnabled: formData.isEnabled,
-      isPriceChangeAllowed: formData.isPriceChangeAllowed, saleUnitId: saleUom?.id || null, purchaseUnitId: purchaseUom?.id || null,
+      isPriceChangeAllowed: formData.isPriceChangeAllowed,
+      saleUnitId: formData.saleUnitId, purchaseUnitId: formData.purchaseUnitId,
     });
   };
 
   const handleStockCorrection = () => { stockCorrectionMutation.mutate(stockCorrectionData); };
   const handleStockTransfer = () => { stockTransferMutation.mutate(stockTransferData); };
 
+  const warehouseOptions = warehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w.id }));
+  const categoryOptions = categories.map((c: any) => ({ label: c.name, value: c.id }));
+  const uomOptions = uoms.map((u: any) => ({ label: `${u.name} — ${u.code}`, value: u.id }));
+  const taxOptions = [{ label: '0%', value: null }, ...taxRates.map((r: any) => ({ label: `${r.name} (${r.rate}%)`, value: r.name }))];
+  const warehouseDropdownOptions = warehouses.map((w: any) => ({ label: w.name, value: w.id.toString() }));
+  const destWarehouseOptions = warehouses
+    .filter((wh: any) => wh.id.toString() !== stockTransferData.sourceWarehouseId)
+    .map((wh: any) => ({ label: wh.name, value: wh.id.toString() }));
+
+  const saleTaxRate = taxRates.find((r: any) => r.name === formData.saleTaxId)?.rate ?? 0;
+  const priceWithTax = formData.price != null ? formData.price * (1 + saleTaxRate / 100) : null;
+  const margin = (formData.price != null && formData.cost != null) ? formData.price - formData.cost : null;
+  const marginPct = (margin != null && formData.cost) ? (margin / formData.cost) * 100 : null;
+  const markupPct = (margin != null && formData.price) ? (margin / formData.price) * 100 : null;
+  const totalStock = stockQuants.reduce((sum, sq) => sum + parseFloat(sq.quantity?.toString() || '0'), 0);
+
   if (isLoading) {
     return (
       <AdminLayout>
-        <div style={{ textAlign: 'center', paddingTop: '3rem', paddingBottom: '3rem' }}>
-          <div className="animate-spin" style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '4px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '9999px' }}></div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem', color: '#d97706' }}></i>
         </div>
       </AdminLayout>
     );
@@ -259,560 +246,698 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <AdminLayout>
-        <div style={{ textAlign: 'center', paddingTop: '3rem', paddingBottom: '3rem' }}>
+        <div style={{ textAlign: 'center', paddingTop: '3rem' }}>
           <p style={{ color: '#64748b' }}>Product not found</p>
         </div>
       </AdminLayout>
     );
   }
 
-  const totalStock = stockQuants.reduce((sum, sq) => sum + parseFloat(sq.quantity?.toString() || '0'), 0).toFixed(2);
+  const fieldClass = (field: string) => validationErrors[field] ? 'p-invalid' : '';
 
-  const warehouseOptions = warehouses.map((wh) => ({ label: wh.name, value: wh.id.toString() }));
-  const sourceWarehouseOptions = warehouses.map((wh) => ({ label: wh.name, value: wh.id.toString() }));
-  const destWarehouseOptions = warehouses
-    .filter((wh) => wh.id.toString() !== stockTransferData.sourceWarehouseId)
-    .map((wh) => ({ label: wh.name, value: wh.id.toString() }));
+  const panel: React.CSSProperties = {
+    background: 'white',
+    border: '1px solid #e2e8f0',
+    borderRadius: '0.875rem',
+    padding: '1.5rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+  };
+
+  const iconBox = (bg: string): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '2rem',
+    height: '2rem',
+    borderRadius: '0.5rem',
+    background: bg,
+    flexShrink: 0,
+  });
+
+  const totalOnHand = stockQuants.reduce((s, sq) => s + parseFloat(sq.quantity?.toString() || '0'), 0);
+  const totalAvailable = stockQuants.reduce((s, sq) => s + parseFloat(sq.availableQuantity?.toString() || '0'), 0);
+  const totalReserved = stockQuants.reduce((s, sq) => s + parseFloat(sq.reservedQuantity?.toString() || '0'), 0);
+  const totalIncoming = stockQuants.reduce((s, sq) => s + parseFloat(sq.incomingQuantity?.toString() || '0'), 0);
+  const totalOutgoing = stockQuants.reduce((s, sq) => s + parseFloat(sq.outgoingQuantity?.toString() || '0'), 0);
 
   return (
     <AdminLayout>
-      {/* Compact Header */}
-      <div style={{ marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Button
-              icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />}
-              onClick={() => navigate('/products')}
-              text rounded
-            />
-            <div>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{product.name}</h1>
-              <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{product.code || t('noCode')}</p>
+
+      {/* ── Page Header ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '1rem',
+        marginBottom: '0.75rem',
+        padding: '1.125rem 1.375rem',
+        background: '#ffffff',
+        borderRadius: '1rem',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+        border: '1.5px solid #e2e8f0',
+        flexWrap: 'wrap',
+      }}>
+        <Button
+          icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
+          onClick={() => navigate('/products')}
+          style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem', padding: 0 }}
+        />
+        <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.4)' }}>
+          <Package style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' }}>{product.name}</h1>
+                <PTag value={product.isEnabled ? t('active') : t('inactive')} severity={product.isEnabled ? 'success' : 'danger'} />
+                {product.isService && <PTag value="Service" severity="info" />}
+              </div>
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0.125rem 0 0', fontFamily: 'monospace', letterSpacing: '0.03em' }}>
+                {product.code || t('noCode')}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+              <Button text onClick={() => navigate('/products')} label={t('cancel')} style={{ color: '#64748b' }} />
+              <Button
+                onClick={handleSave}
+                loading={updateMutation.isPending}
+                icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
+                label={t('saveChanges')}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Compact Tabs */}
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', paddingLeft: '1rem', paddingRight: '1rem' }}>
-          {(['info', 'pricing', 'stock'] as const).map((tab) => (
-            <Button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              label={tab === 'info' ? 'Information' : tab === 'pricing' ? 'Tarification' : 'Stock'}
-              badge={tab === 'stock' ? String(totalStock) : undefined}
-              text
-              style={{
-                paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem',
-                fontSize: '0.875rem', fontWeight: 500, position: 'relative', borderRadius: 0,
-                ...(activeTab === tab
-                  ? { color: '#d97706', borderBottom: '2px solid #d97706' }
-                  : { color: '#475569' }),
-              }}
-            />
-          ))}
-        </div>
+      <TabView
+        activeIndex={activeTabIndex}
+        onTabChange={(e) => setActiveTabIndex(e.index)}
+        pt={{ root: { className: 'product-tabview' }, panelContainer: { style: { padding: '0.75rem 0 0', background: 'transparent' } }, nav: { style: { background: 'transparent' } } }}
+      >
+        <TabPanel header="Information">
+          <div className="product-form-grid">
 
-        {/* Tab Content */}
-        <div style={{ padding: '1rem' }}>
-          {/* Product Info Tab */}
-          {activeTab === 'info' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '1rem' }}>{t('basicInformation')}</h3>
+            {/* Left */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-                {/* Image + Name/Code Layout */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              {/* Basic Information */}
+              <div style={panel}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                  <div style={iconBox('#eef2ff')}>
+                    <TagIcon style={{ width: '1rem', height: '1rem', color: '#6366f1' }} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{t('basicInformation')}</h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Name, barcode and description</p>
+                  </div>
+                </div>
+
+                {/* Image + fields */}
+                <div style={{ display: 'grid', gridTemplateColumns: '148px 1fr', gap: '1.25rem', marginBottom: '1.25rem' }} className="product-img-grid">
                   <div>
                     {id && (
                       <ImageUpload
                         productId={Number(id)}
                         currentImage={(product as any)?.imageUrl}
-                        onImageUpload={(url, publicId) => { queryClient.invalidateQueries({ queryKey: ['product', id] }); toastUpdated(t('imageUpdatedSuccessfully')); }}
+                        onImageUpload={() => { queryClient.invalidateQueries({ queryKey: ['product', id] }); toastUpdated(t('imageUpdatedSuccessfully')); }}
                         onImageRemove={() => { queryClient.invalidateQueries({ queryKey: ['product', id] }); toastDeleted(t('imageRemovedSuccessfully')); }}
                         folder="products"
                         maxSizeMB={5}
-                        onModeChange={handleImageModeChange}
+
                       />
                     )}
                   </div>
-                  <div style={{ gridColumn: 'span 2' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div>
-                        <label style={labelStyle}>{t('productName')} *</label>
-                        <InputText type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder={t('enterProductName')} style={{ width: '100%' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="p-field">
+                      <label className="p-label">{t('productName')} <span style={{ color: '#ef4444' }}>*</span></label>
+                      <InputText
+                        value={formData.name}
+                        onChange={(e) => setField('name', e.target.value)}
+                        placeholder={t('enterProductName')}
+                        className={fieldClass('name')}
+                        style={{ width: '100%' }}
+                      />
+                      {validationErrors.name && <Message severity="error" text={validationErrors.name} style={{ marginTop: '0.25rem' }} />}
+                    </div>
+                    <div className="p-field">
+                      <label className="p-label">{t('productCodeEAN13')}</label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <InputText
+                          value={formData.code}
+                          onChange={(e) => setField('code', e.target.value)}
+                          placeholder={t('eanBarcodeePlaceholder')}
+                          maxLength={13}
+                          className={fieldClass('code')}
+                          style={{ flex: 1, fontFamily: 'monospace', letterSpacing: '0.05em' }}
+                        />
+                        <Button
+                          type="button"
+                          outlined
+                          onClick={handleRegenerateCode}
+                          disabled={isGeneratingCode}
+                          icon={<RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.875rem', height: '0.875rem' }} />}
+                          tooltip={t('generateNewUniqueCode')}
+                          tooltipOptions={{ position: 'top' }}
+                        />
                       </div>
-                      <div>
-                        <label style={labelStyle}>{t('productCodeEAN13')}</label>
-                        {validationErrors.code && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.code}</p>}
-                        <div style={{ position: 'relative' }}>
-                          <InputText type="text" value={formData.code} onChange={(e) => { setFormData({ ...formData, code: e.target.value }); clearFieldError('code'); }} placeholder={t('eanBarcodeePlaceholder')} maxLength={13} style={{ width: '100%' }} />
-                          {!validationErrors.code && formData.code && <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#64748b' }}>{t('eanBarcodeHint')}</p>}
-                          <Button
-                            type="button"
-                            icon={<RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.75rem', height: '0.75rem' }} />}
-                            label={isGeneratingCode ? t('generating') : t('generateCode')}
-                            onClick={handleRegenerateCode}
-                            disabled={isGeneratingCode}
-                            text
-                            style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#d97706', padding: '0.125rem 0' }}
-                            title={t('generateNewUniqueCode')}
-                          />
-                        </div>
-                      </div>
+                      {validationErrors.code && <Message severity="error" text={validationErrors.code} style={{ marginTop: '0.25rem' }} />}
                     </div>
                   </div>
                 </div>
 
-                {/* Image URL Input */}
-                {showUrlInput && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={labelStyle}>{t('imageUrl')}</label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <InputText type="text" value={imageUrlInput} onChange={(e) => setImageUrlInput(e.target.value)} placeholder={t('exampleImageUrl')} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSaveImageUrl(); } }} style={{ flex: 1 }} />
-                      <Button type="button" onClick={handleSaveImageUrl} disabled={!imageUrlInput.trim() || updateMutation.isPending} label={t('saveUrl')} />
-                    </div>
-                  </div>
-                )}
 
-                {/* Warehouse and Categories */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '1rem' }}>
-                  <div>
-                    <label style={labelStyle}>{t('warehouse')} *</label>
-                    <div style={{ position: 'relative' }} ref={warehouseSearchRef}>
-                      <InputText type="text" value={warehouseSearchTerm} onChange={(e) => { setWarehouseSearchTerm(e.target.value); setShowWarehouseSearch(true); }} onFocus={() => setShowWarehouseSearch(true)} placeholder={t('selectOrSearchWarehouse')} style={{ width: '100%' }} />
-                      {showWarehouseSearch && (
-                        <div style={dropdownContainerStyle}>
-                          {warehouses.filter((w: any) => w.name.toLowerCase().includes(warehouseSearchTerm.toLowerCase()) || w.code?.toLowerCase().includes(warehouseSearchTerm.toLowerCase())).length > 0 ? (
-                            warehouses.filter((w: any) => w.name.toLowerCase().includes(warehouseSearchTerm.toLowerCase()) || w.code?.toLowerCase().includes(warehouseSearchTerm.toLowerCase())).map((warehouse: any) => (
-                              <div key={warehouse.id} onClick={() => { setSelectedWarehouse(warehouse); setFormData({ ...formData, warehouseId: warehouse.id.toString() }); setWarehouseSearchTerm(`${warehouse.name} (${warehouse.code})`); setShowWarehouseSearch(false); }} style={dropdownItemStyle}>
-                                <div style={{ fontWeight: 500, color: '#1e293b' }}>{warehouse.name}</div>
-                                <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{warehouse.code}</div>
-                              </div>
-                            ))
-                          ) : (
-                            <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{t('noWarehousesFound')}</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
-                  <div>
-                    <label style={labelStyle}>{t('categories')}</label>
-                    <div style={{ position: 'relative' }} ref={categorySearchRef}>
-                      <div style={{ width: '100%', minHeight: '42px', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-                        {selectedCategories.map((category: any) => (
-                          <span key={category.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '9999px', fontSize: '0.875rem' }}>
-                            {category.name}
-                            <Button type="button" label="×" onClick={() => { setSelectedCategories(selectedCategories.filter((c: any) => c.id !== category.id)); setFormData({ ...formData, categoryIds: formData.categoryIds.filter((cid: number) => cid !== category.id) }); }} text style={{ color: '#92400e', padding: '0 0.25rem', minWidth: 'unset', lineHeight: 1 }} />
-                          </span>
-                        ))}
-                        <InputText value={categorySearchTerm} onChange={(e) => { setCategorySearchTerm(e.target.value); setShowCategorySearch(true); }} onFocus={() => setShowCategorySearch(true)} style={{ flex: 1, minWidth: '120px', outline: 'none', border: 'none', boxShadow: 'none', padding: '0' }} placeholder={selectedCategories.length === 0 ? t('typeToSearchAndAddCategories') : ""} />
-                      </div>
-                      {showCategorySearch && (
-                        <div style={dropdownContainerStyle}>
-                          {categories.filter((c: any) => c.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) && !formData.categoryIds.includes(c.id)).length > 0 ? (
-                            categories.filter((c: any) => c.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) && !formData.categoryIds.includes(c.id)).map((category: any) => (
-                              <div key={category.id} onClick={() => { setSelectedCategories([...selectedCategories, category]); setFormData({ ...formData, categoryIds: [...formData.categoryIds, category.id] }); setCategorySearchTerm(''); setShowCategorySearch(false); }} style={dropdownItemStyle}>
-                                <div style={{ fontWeight: 500, color: '#1e293b' }}>{category.name}</div>
-                                {category.description && <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{category.description}</div>}
-                              </div>
-                            ))
-                          ) : (
-                            <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{categorySearchTerm ? t('noCategoriesFound') : t('startTypingToSearchCategories')}</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '1rem' }}>
-                  <label style={labelStyle}>{t('description')}</label>
-                  <InputTextarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={4} placeholder={t('enterProductDescription')} style={{ width: '100%' }} />
+                <div className="p-field">
+                  <label className="p-label">{t('description')}</label>
+                  <InputTextarea
+                    value={formData.description}
+                    onChange={(e) => setField('description', e.target.value)}
+                    rows={3}
+                    autoResize
+                    placeholder={t('enterProductDescription')}
+                    style={{ width: '100%', resize: 'none' }}
+                  />
                 </div>
               </div>
 
-              {/* Product Options */}
-              <div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '1rem' }}>{t('options')}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Checkbox checked={formData.isService} onChange={() => setFormData({ ...formData, isService: !formData.isService })} />
-                    <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('isService')}</label>
+            </div>
+
+            {/* Right sidebar */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Classification */}
+              <div style={panel}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                  <div style={iconBox('#fff7ed')}>
+                    <Building2 style={{ width: '1rem', height: '1rem', color: '#ea580c' }} />
                   </div>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('serviceDescription')}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Checkbox checked={formData.isEnabled} onChange={() => setFormData({ ...formData, isEnabled: !formData.isEnabled })} />
-                    <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('enabled')}</label>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>Classification</h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Warehouse and categories</p>
                   </div>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('enabledDescription')}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Checkbox checked={formData.isPriceChangeAllowed} onChange={() => setFormData({ ...formData, isPriceChangeAllowed: !formData.isPriceChangeAllowed })} />
-                    <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('allowPriceChange')}</label>
-                  </div>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('allowPriceChangeDescription')}</p>
+                </div>
+
+                <div className="p-field" style={{ marginBottom: '1rem' }}>
+                  <label className="p-label">{t('warehouse')} <span style={{ color: '#ef4444' }}>*</span></label>
+                  <Dropdown
+                    value={formData.warehouseId}
+                    onChange={(e) => setField('warehouseId', e.value)}
+                    options={warehouseOptions}
+                    placeholder={t('selectOrSearchWarehouse')}
+                    filter
+                    filterPlaceholder={t('search')}
+                    className={fieldClass('warehouseId')}
+                    style={{ width: '100%' }}
+                  />
+                  {validationErrors.warehouseId && <Message severity="error" text={validationErrors.warehouseId} style={{ marginTop: '0.25rem' }} />}
+                </div>
+
+                <div className="p-field">
+                  <label className="p-label">{t('categories')}</label>
+                  <MultiSelect
+                    value={formData.categoryIds}
+                    onChange={(e) => setField('categoryIds', e.value)}
+                    options={categoryOptions}
+                    placeholder={t('typeToSearchCategories')}
+                    filter
+                    display="chip"
+                    style={{ width: '100%' }}
+                  />
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                <Button type="button" outlined onClick={() => navigate('/products')} label="Cancel" />
-                <Button type="button" onClick={handleSave} loading={updateMutation.isPending} icon={<Save style={{ width: '1rem', height: '1rem' }} />} label={t('saveChanges')} />
+              {/* Settings */}
+              <div style={panel}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                  <div style={iconBox('#f5f3ff')}>
+                    <SlidersHorizontal style={{ width: '1rem', height: '1rem', color: '#7c3aed' }} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>Settings</h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Product behavior options</p>
+                  </div>
+                </div>
+
+                {([
+                  { key: 'isService' as const, label: t('isService'), desc: t('serviceDescription'), value: formData.isService, onChange: (v: boolean) => setField('isService', v) },
+                  { key: 'isEnabled' as const, label: t('enabled'), desc: t('enabledDescription'), value: formData.isEnabled, onChange: (v: boolean) => setField('isEnabled', v) },
+                  { key: 'isPriceChangeAllowed' as const, label: t('allowPriceChange'), desc: t('allowPriceChangeDescription'), value: formData.isPriceChangeAllowed, onChange: (v: boolean) => setField('isPriceChangeAllowed', v) },
+                ] as const).map(({ key, label, desc, value, onChange }, i, arr) => (
+                  <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', padding: '0.75rem 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 500, fontSize: '0.875rem', color: '#0f172a', margin: 0 }}>{label}</p>
+                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0.125rem 0 0' }}>{desc}</p>
+                    </div>
+                    <InputSwitch checked={value} onChange={(e) => onChange(e.value ?? false)} />
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+          </div>
+        </TabPanel>
+        <TabPanel header={t('pricing') || 'Tarification'}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-          {/* Stock Tab */}
-          {activeTab === 'stock' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}>{t('stockManagement')}</h3>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <Button onClick={() => setShowStockCorrection(true)} icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('correctStock')} />
-                  <Button onClick={() => setShowStockTransfer(true)} icon={<ArrowRightLeft style={{ width: '1rem', height: '1rem' }} />} label={t('transferStock')} severity="help" />
+            {/* Sale Price */}
+            <div style={panel}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={iconBox('#ecfdf5')}>
+                  <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#10b981' }} />
                 </div>
-              </div>
-
-              {/* Stock Table */}
-              <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
-                <table style={{ width: '100%' }}>
-                  <thead style={{ backgroundColor: '#f8fafc' }}>
-                    <tr>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('location')}</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('onHand')}</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('reserved')}</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('available')}</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('incoming')}</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{t('outgoing')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stockQuants.length === 0 ? (
-                      <tr><td colSpan={6} style={{ padding: '2rem 1rem', textAlign: 'center', fontSize: '0.875rem', color: '#64748b' }}>{t('noStockRecordsFound')}</td></tr>
-                    ) : (
-                      stockQuants.map((sq) => (
-                        <tr key={sq.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#0f172a' }}>{sq.warehouse?.name || t('unknown')}</td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#0f172a', textAlign: 'right', fontWeight: 500 }}>{parseFloat(sq.quantity.toString()).toFixed(2)}</td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#d97706', textAlign: 'right' }}>{parseFloat(sq.reservedQuantity.toString()).toFixed(2)}</td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#16a34a', textAlign: 'right', fontWeight: 500 }}>{parseFloat(sq.availableQuantity.toString()).toFixed(2)}</td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#2563eb', textAlign: 'right' }}>{parseFloat(sq.incomingQuantity.toString()).toFixed(2)}</td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#ea580c', textAlign: 'right' }}>{parseFloat(sq.outgoingQuantity.toString()).toFixed(2)}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                  <tfoot style={{ backgroundColor: '#f8fafc', borderTop: '2px solid #e2e8f0' }}>
-                    <tr>
-                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>{t('total')}</td>
-                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', textAlign: 'right' }}>{stockQuants.reduce((sum, sq) => sum + parseFloat(sq.quantity?.toString() || '0'), 0).toFixed(2)}</td>
-                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 700, color: '#d97706', textAlign: 'right' }}>{stockQuants.reduce((sum, sq) => sum + parseFloat(sq.reservedQuantity?.toString() || '0'), 0).toFixed(2)}</td>
-                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 700, color: '#16a34a', textAlign: 'right' }}>{stockQuants.reduce((sum, sq) => sum + parseFloat(sq.availableQuantity?.toString() || '0'), 0).toFixed(2)}</td>
-                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 700, color: '#2563eb', textAlign: 'right' }}>{stockQuants.reduce((sum, sq) => sum + parseFloat(sq.incomingQuantity?.toString() || '0'), 0).toFixed(2)}</td>
-                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 700, color: '#ea580c', textAlign: 'right' }}>{stockQuants.reduce((sum, sq) => sum + parseFloat(sq.outgoingQuantity?.toString() || '0'), 0).toFixed(2)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Pricing Tab */}
-          {activeTab === 'pricing' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}>{t('pricing')}</h3>
-
-              {/* Sale Price */}
-              <div style={{ backgroundColor: '#f8fafc', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontWeight: 500, color: '#0f172a', marginBottom: '0.75rem' }}>{t('salePrice')}</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                  <div>
-                    <label style={labelStyle}>{t('price')} *</label>
-                    <div style={{ position: 'relative' }}>
-                      <InputText type="number" step="0.01" min="0" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} disabled={!isEditing} placeholder={t('numericPlaceholder')} style={{ width: '100%' }} />
-                      <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', fontSize: '0.875rem', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>{t('unit')}</label>
-                    <div style={{ position: 'relative' }} ref={saleUnitSearchRef}>
-                      <InputText type="text" value={formData.saleUnit} onChange={(e) => { setFormData({ ...formData, saleUnit: e.target.value }); setShowSaleUnitSearch(true); }} onFocus={() => setShowSaleUnitSearch(true)} placeholder={t('unit')} style={{ width: '100%' }} />
-                      {showSaleUnitSearch && (
-                        <div style={dropdownContainerStyle}>
-                          {uoms.filter((u: any) => u.name.toLowerCase().includes(formData.saleUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.saleUnit.toLowerCase())).length > 0 ? (
-                            uoms.filter((u: any) => u.name.toLowerCase().includes(formData.saleUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.saleUnit.toLowerCase())).map((uom: any) => (
-                              <div key={uom.id} onClick={() => { setFormData({ ...formData, saleUnit: uom.name }); setShowSaleUnitSearch(false); }} style={dropdownItemStyle}>
-                                <div style={{ fontWeight: 500, color: '#1e293b' }}>{uom.name}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{uom.code} - {uom.category}</div>
-                              </div>
-                            ))
-                          ) : (
-                            <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{uoms.length === 0 ? 'No units configured' : 'Type to create custom unit'}</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>{t('tax')}</label>
-                    <div style={{ position: 'relative' }} ref={saleTaxSearchRef}>
-                      <InputText type="text" value={formData.saleTax} onChange={(e) => { setFormData({ ...formData, saleTax: e.target.value }); setShowSaleTaxSearch(true); }} onFocus={() => setShowSaleTaxSearch(true)} placeholder={t('taxPlaceholder')} style={{ width: '100%' }} />
-                      {showSaleTaxSearch && (
-                        <div style={dropdownContainerStyle}>
-                          {taxRates.length > 0 ? taxRates.map((tax: any) => (
-                            <div key={tax.name} onClick={() => { setFormData({ ...formData, saleTax: tax.rate.toString() }); setShowSaleTaxSearch(false); }} style={dropdownItemStyle}>
-                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{tax.name}</div>
-                              <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{tax.rate}%</div>
-                            </div>
-                          )) : (
-                            <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{t('noTaxRatesConfigured')}</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {parseFloat(formData.saleTax) > 0 && formData.price && (
-                  <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#475569' }}>
-                    {t('priceWithTax')}: {(parseFloat(formData.price) * (1 + parseFloat(formData.saleTax) / 100)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'} par {formData.saleUnit}
-                  </p>
-                )}
-              </div>
-
-              {/* Cost Price */}
-              <div style={{ backgroundColor: '#f8fafc', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontWeight: 500, color: '#0f172a', marginBottom: '0.75rem' }}>{t('costPrice')}</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                  <div>
-                    <label style={labelStyle}>{t('price')} *</label>
-                    <div style={{ position: 'relative' }}>
-                      <InputText type="number" step="0.01" min="0" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} placeholder={t('numericPlaceholder')} style={{ width: '100%' }} />
-                      <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', fontSize: '0.875rem', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>{t('unitLabel')}</label>
-                    <div style={{ position: 'relative' }} ref={purchaseUnitSearchRef}>
-                      <InputText type="text" value={formData.purchaseUnit} onChange={(e) => { setFormData({ ...formData, purchaseUnit: e.target.value }); setShowPurchaseUnitSearch(true); }} onFocus={() => setShowPurchaseUnitSearch(true)} placeholder={t('unit')} style={{ width: '100%' }} />
-                      {showPurchaseUnitSearch && (
-                        <div style={dropdownContainerStyle}>
-                          {uoms.filter((u: any) => u.name.toLowerCase().includes(formData.purchaseUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.purchaseUnit.toLowerCase())).length > 0 ? (
-                            uoms.filter((u: any) => u.name.toLowerCase().includes(formData.purchaseUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.purchaseUnit.toLowerCase())).map((uom: any) => (
-                              <div key={uom.id} onClick={() => { setFormData({ ...formData, purchaseUnit: uom.name }); setShowPurchaseUnitSearch(false); }} style={dropdownItemStyle}>
-                                <div style={{ fontWeight: 500, color: '#1e293b' }}>{uom.name}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{uom.code} - {uom.category}</div>
-                              </div>
-                            ))
-                          ) : (
-                            <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{uoms.length === 0 ? 'No units configured' : 'Type to create custom unit'}</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>{t('tax')}</label>
-                    <div style={{ position: 'relative' }} ref={purchaseTaxSearchRef}>
-                      <InputText type="text" value={formData.purchaseTax} onChange={(e) => { setFormData({ ...formData, purchaseTax: e.target.value }); setShowPurchaseTaxSearch(true); }} onFocus={() => setShowPurchaseTaxSearch(true)} placeholder={t('taxPlaceholder')} style={{ width: '100%' }} />
-                      {showPurchaseTaxSearch && (
-                        <div style={dropdownContainerStyle}>
-                          {taxRates.length > 0 ? taxRates.map((tax: any) => (
-                            <div key={tax.name} onClick={() => { setFormData({ ...formData, purchaseTax: tax.rate.toString() }); setShowPurchaseTaxSearch(false); }} style={dropdownItemStyle}>
-                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{tax.name}</div>
-                              <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{tax.rate}%</div>
-                            </div>
-                          )) : (
-                            <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{t('noTaxRatesConfigured')}</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Min Price */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                 <div>
-                  <label style={labelStyle}>{t('minPrice')}</label>
-                  <div style={{ position: 'relative' }}>
-                    <InputText type="number" step="0.01" min="0" value={formData.minPrice} onChange={(e) => setFormData({ ...formData, minPrice: e.target.value })} disabled={!isEditing} placeholder={t('numericPlaceholder')} style={{ width: '100%' }} />
-                    <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
+                  <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{t('salePrice')}</h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Price shown to customers</p>
+                </div>
+              </div>
+              <div className="product-pricing-grid">
+                <div className="p-field">
+                  <label className="p-label">{t('price')} <span style={{ color: '#ef4444' }}>*</span></label>
+                  <InputNumber
+                    value={formData.price}
+                    onValueChange={(e) => setField('price', e.value ?? null)}
+                    mode="decimal" minFractionDigits={2} maxFractionDigits={2} min={0}
+                    suffix={` ${currency}`} placeholder="0.00"
+                    className={fieldClass('price')}
+                    inputStyle={{ width: '100%' }} style={{ width: '100%' }}
+                  />
+                  {validationErrors.price && <Message severity="error" text={validationErrors.price} style={{ marginTop: '0.25rem' }} />}
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('unit')}</label>
+                  <Dropdown value={formData.saleUnitId} onChange={(e) => setField('saleUnitId', e.value)} options={uomOptions} placeholder="Select unit" style={{ width: '100%' }} showClear />
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('tax')}</label>
+                  <Dropdown value={formData.saleTaxId} onChange={(e) => setField('saleTaxId', e.value)} options={taxOptions} placeholder="0%" style={{ width: '100%' }} />
+                </div>
+              </div>
+              {priceWithTax != null && saleTaxRate > 0 && (
+                <div style={{ marginTop: '0.875rem', padding: '0.625rem 0.875rem', background: '#f0fdf4', borderRadius: '0.5rem', border: '1px solid #bbf7d0' }}>
+                  <span style={{ fontSize: '0.8125rem', color: '#166534' }}>
+                    {t('priceWithTax')}: <strong>{priceWithTax.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</strong>
+                  </span>
+                </div>
+              )}
+
+              <div style={{ marginTop: '1.25rem' }} className="p-field">
+                <label className="p-label">{t('minPrice')}</label>
+                <InputNumber
+                  value={formData.minPrice}
+                  onValueChange={(e) => setField('minPrice', e.value ?? null)}
+                  mode="decimal" minFractionDigits={2} maxFractionDigits={2} min={0}
+                  suffix={` ${currency}`} placeholder="0.00"
+                  inputStyle={{ width: '100%' }} style={{ maxWidth: '16rem', width: '100%' }}
+                />
+              </div>
+            </div>
+
+            {/* Cost Price */}
+            <div style={panel}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={iconBox('#fffbeb')}>
+                  <TrendingUp style={{ width: '1rem', height: '1rem', color: '#f59e0b' }} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{t('costPrice')}</h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Purchase cost</p>
+                </div>
+              </div>
+              <div className="product-pricing-grid">
+                <div className="p-field">
+                  <label className="p-label">{t('costPrice')}</label>
+                  <InputNumber
+                    value={formData.cost}
+                    onValueChange={(e) => setField('cost', e.value ?? null)}
+                    mode="decimal" minFractionDigits={2} maxFractionDigits={2} min={0}
+                    suffix={` ${currency}`} placeholder="0.00"
+                    inputStyle={{ width: '100%' }} style={{ width: '100%' }}
+                  />
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('unit')}</label>
+                  <Dropdown value={formData.purchaseUnitId} onChange={(e) => setField('purchaseUnitId', e.value)} options={uomOptions} placeholder="Select unit" style={{ width: '100%' }} showClear />
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('tax')}</label>
+                  <Dropdown value={formData.purchaseTaxId} onChange={(e) => setField('purchaseTaxId', e.value)} options={taxOptions} placeholder="0%" style={{ width: '100%' }} />
+                </div>
+              </div>
+
+              {margin != null && (
+                <div style={{ marginTop: '1.25rem', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                  <p style={{ margin: '0 0 0.75rem', fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Margin Analysis</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
+                    {[
+                      { label: t('marginAmount'), value: `${margin.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`, color: margin >= 0 ? '#0f172a' : '#ef4444', border: '#f1f5f9' },
+                      { label: t('marginPercent'), value: `${marginPct?.toFixed(1) ?? '—'}%`, color: '#16a34a', border: '#dcfce7' },
+                      { label: t('markupPercent'), value: `${markupPct?.toFixed(1) ?? '—'}%`, color: '#2563eb', border: '#dbeafe' },
+                    ].map(({ label, value, color, border }) => (
+                      <div key={label} style={{ background: 'white', borderRadius: '0.625rem', padding: '0.75rem 0.5rem', textAlign: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.04)', border: `1px solid ${border}` }}>
+                        <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 0.375rem' }}>{label}</p>
+                        <p style={{ fontSize: '1.125rem', fontWeight: 700, color, margin: 0 }}>{value}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Margin Preview */}
-              {formData.price && formData.cost && (
-                <div style={{ background: 'linear-gradient(to right, #fffbeb, #fff7ed)', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem' }}>
-                  <h4 style={{ fontWeight: 600, color: '#0f172a', marginBottom: '0.75rem' }}>{t('marginAnalysis')}</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                    <div>
-                      <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('marginAmount')}</p>
-                      <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a' }}>{(parseFloat(formData.price) - parseFloat(formData.cost)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('marginPercent')}</p>
-                      <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#16a34a' }}>{parseFloat(formData.cost) > 0 ? (((parseFloat(formData.price) - parseFloat(formData.cost)) / parseFloat(formData.cost)) * 100).toFixed(2) : '0.00'}%</p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('markupPercent')}</p>
-                      <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#2563eb' }}>{parseFloat(formData.price) > 0 ? (((parseFloat(formData.price) - parseFloat(formData.cost)) / parseFloat(formData.price)) * 100).toFixed(2) : '0.00'}%</p>
-                    </div>
+          </div>
+        </TabPanel>
+        <TabPanel
+          header={
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+              {t('stockManagement')}
+              {totalStock > 0 && (
+                <span style={{ background: '#eef2ff', color: '#6366f1', fontSize: '0.6875rem', fontWeight: 600, padding: '0.125rem 0.4375rem', borderRadius: '9999px', lineHeight: 1.4 }}>
+                  {totalStock.toFixed(0)}
+                </span>
+              )}
+            </span>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+            {/* ── Summary KPI cards ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+              {[
+                { label: t('onHand'), value: totalOnHand, icon: '📦', bg: 'linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%)', border: '#e2e8f0', color: '#0f172a' },
+                { label: t('available'), value: totalAvailable, icon: '✅', bg: 'linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%)', border: '#6ee7b7', color: '#059669' },
+                { label: t('reserved'), value: totalReserved, icon: '🔒', bg: 'linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%)', border: '#fcd34d', color: '#d97706' },
+                { label: t('incoming'), value: totalIncoming, icon: '⬇️', bg: 'linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%)', border: '#93c5fd', color: '#2563eb' },
+                { label: t('outgoing'), value: totalOutgoing, icon: '⬆️', bg: 'linear-gradient(135deg,#fff7ed 0%,#ffedd5 100%)', border: '#fdba74', color: '#ea580c' },
+              ].map(({ label, value, icon, bg, border, color }) => (
+                <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: '1rem', padding: '1.125rem 1.25rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.625rem' }}>
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+                    <span style={{ fontSize: '1rem' }}>{icon}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '1.875rem', fontWeight: 800, color, lineHeight: 1, letterSpacing: '-0.03em' }}>{value.toFixed(0)}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Stock table panel ── */}
+            <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+              {/* Panel header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', borderBottom: '1px solid #f1f5f9', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', background: 'linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%)', border: '1px solid #86efac', flexShrink: 0 }}>
+                    <Building2 style={{ width: '1rem', height: '1rem', color: '#16a34a' }} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a' }}>{t('stockManagement')}</h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>{stockQuants.length} {stockQuants.length === 1 ? 'entrepôt' : 'entrepôts'}</p>
                   </div>
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                <Button type="button" outlined onClick={() => navigate('/products')} label="Cancel" />
-                <Button type="button" onClick={handleSave} loading={updateMutation.isPending} icon={<Save style={{ width: '1rem', height: '1rem' }} />} label={t('saveChanges')} />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Stock Correction Modal */}
-      {showStockCorrection && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', maxWidth: '32rem', width: '100%' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>Correction du stock</h2>
-              <p style={{ fontSize: '0.875rem', color: '#475569', marginTop: '0.25rem' }}>Pour le produit {product.code || product.name}</p>
-            </div>
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {warehouses.length === 0 && (
-                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem' }}>
-                  <p style={{ fontSize: '0.875rem', color: '#92400e', marginBottom: '0.5rem' }}><strong>Aucun entrepôt disponible.</strong></p>
-                  <p style={{ fontSize: '0.75rem', color: '#a16207', marginBottom: '0.75rem' }}>Vous devez créer au moins un entrepôt pour gérer le stock.</p>
-                  <Button type="button" label="Créer un entrepôt →" onClick={() => window.open('/warehouses', '_blank')} style={{ fontSize: '0.75rem', backgroundColor: '#d97706', borderColor: '#d97706' }} />
+                <div style={{ display: 'flex', gap: '0.625rem' }}>
+                  <Button
+                    onClick={() => setShowStockCorrection(true)}
+                    icon={<Plus style={{ width: '0.875rem', height: '0.875rem' }} />}
+                    label={t('correctStock')}
+                    size="small"
+                    outlined
+                  />
+                  <Button
+                    onClick={() => setShowStockTransfer(true)}
+                    icon={<ArrowRightLeft style={{ width: '0.875rem', height: '0.875rem' }} />}
+                    label={t('transferStock')}
+                    size="small"
+                    severity="help"
+                    outlined
+                  />
                 </div>
-              )}
+              </div>
 
-              <div>
-                <label style={labelStyle}>Entrepôt *</label>
-                <Dropdown
-                  value={stockCorrectionData.warehouseId}
-                  onChange={(e) => setStockCorrectionData({ ...stockCorrectionData, warehouseId: e.value })}
-                  options={[{ label: warehousesLoading ? t('loading') : warehouses.length === 0 ? t('noWarehouseCreateOne') : t('selectWarehouse'), value: '' }, ...warehouseOptions]}
-                  optionLabel="label"
-                  optionValue="value"
-                  disabled={warehouses.length === 0}
-                  style={{ width: '100%' }}
+              {/* DataTable */}
+              <DataTable
+                value={stockQuants}
+                stripedRows
+                showGridlines
+                size="small"
+                emptyMessage={
+                  <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8' }}>
+                    <Building2 style={{ width: 40, height: 40, margin: '0 auto 0.75rem', opacity: 0.3 }} />
+                    <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>{t('noStockRecordsFound')}</p>
+                  </div>
+                }
+                pt={{
+                  thead: { style: { background: '#f8fafc' } },
+                  table: { style: { borderRadius: 0, width: '100%' } },
+                  tfoot: { style: { background: '#f1f5f9', borderTop: '2px solid #cbd5e1' } },
+                }}
+                footerColumnGroup={
+                  <ColumnGroup>
+                    <Row>
+                      <Column
+                        footer={<span style={{ fontWeight: 700, fontSize: '0.8125rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('total')}</span>}
+                        footerStyle={{ padding: '0.625rem 1rem' }}
+                      />
+                      <Column
+                        footer={<span style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#0f172a' }}>{totalOnHand.toFixed(2)}</span>}
+                        footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
+                      />
+                      <Column
+                        footer={<span style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#d97706' }}>{totalReserved.toFixed(2)}</span>}
+                        footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
+                      />
+                      <Column
+                        footer={<span style={{ fontWeight: 800, fontSize: '0.9375rem', color: totalAvailable > 0 ? '#059669' : '#ef4444' }}>{totalAvailable.toFixed(2)}</span>}
+                        footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
+                      />
+                      <Column
+                        footer={<span style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#2563eb' }}>{totalIncoming.toFixed(2)}</span>}
+                        footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
+                      />
+                      <Column
+                        footer={<span style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#ea580c' }}>{totalOutgoing.toFixed(2)}</span>}
+                        footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
+                      />
+                    </Row>
+                  </ColumnGroup>
+                }
+              >
+                <Column
+                  field="warehouse.name"
+                  header={t('location')}
+                  body={(row) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                      <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', flexShrink: 0, background: parseFloat(row.availableQuantity?.toString() || '0') > 0 ? '#22c55e' : '#e2e8f0' }} />
+                      <span style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem' }}>{row.warehouse?.name || t('unknown')}</span>
+                    </div>
+                  )}
+                  headerStyle={{ padding: '0.625rem 1rem', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#64748b', background: '#f8fafc' }}
+                  bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
+                  style={{ minWidth: '11rem' }}
                 />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Ajouter/Supprimer *</label>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <RadioButton inputId="op-add" value="add" checked={stockCorrectionData.operation === 'add'} onChange={() => setStockCorrectionData({ ...stockCorrectionData, operation: 'add' })} />
-                    <span style={{ fontSize: '0.875rem' }}>{t('add')}</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <RadioButton inputId="op-remove" value="remove" checked={stockCorrectionData.operation === 'remove'} onChange={() => setStockCorrectionData({ ...stockCorrectionData, operation: 'remove' })} />
-                    <span style={{ fontSize: '0.875rem' }}>{t('remove')}</span>
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Nombre de pièces *</label>
-                <InputText type="number" min="0" value={stockCorrectionData.quantity} onChange={(e) => setStockCorrectionData({ ...stockCorrectionData, quantity: e.target.value })} style={{ width: '100%' }} />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Prix d'achat unitaire</label>
-                <InputText type="number" step="0.01" min="0" value={stockCorrectionData.unitPrice} onChange={(e) => setStockCorrectionData({ ...stockCorrectionData, unitPrice: e.target.value })} style={{ width: '100%' }} />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Libellé du mouvement</label>
-                <InputText type="text" value={stockCorrectionData.notes} onChange={(e) => setStockCorrectionData({ ...stockCorrectionData, notes: e.target.value })} placeholder={`Correction du stock pour le produit ${product.code || product.name}`} style={{ width: '100%' }} />
-              </div>
-
-              <div style={{ backgroundColor: '#f8fafc', borderRadius: '0.5rem', padding: '0.75rem' }}>
-                <p style={{ fontSize: '0.75rem', color: '#475569' }}>Code mouvement ou inventaire</p>
-                <p style={{ fontSize: '0.875rem', fontFamily: 'monospace', color: '#0f172a' }}>{new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}</p>
-              </div>
-            </div>
-            <div style={{ padding: '1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.75rem' }}>
-              <Button outlined onClick={() => setShowStockCorrection(false)} label="Annuler" style={{ flex: 1 }} />
-              <Button onClick={handleStockCorrection} disabled={!stockCorrectionData.warehouseId || !stockCorrectionData.quantity || stockCorrectionMutation.isPending} loading={stockCorrectionMutation.isPending} label={t('validate')} style={{ flex: 1 }} />
+                <Column
+                  field="quantity"
+                  header={t('onHand')}
+                  body={(row) => (
+                    <span style={{ display: 'block', textAlign: 'right', fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a' }}>
+                      {parseFloat(row.quantity.toString()).toFixed(2)}
+                    </span>
+                  )}
+                  headerStyle={{ padding: '0.625rem 1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#64748b', background: '#f8fafc' }}
+                  bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
+                  style={{ width: '9rem' }}
+                />
+                <Column
+                  field="reservedQuantity"
+                  header={t('reserved')}
+                  body={(row) => {
+                    const val = parseFloat(row.reservedQuantity?.toString() || '0');
+                    return (
+                      <div style={{ textAlign: 'right' }}>
+                        {val > 0
+                          ? <span style={{ display: 'inline-block', minWidth: '3.5rem', textAlign: 'right', fontWeight: 600, fontSize: '0.875rem', color: '#d97706', background: '#fffbeb', padding: '0.125rem 0.5rem', borderRadius: '0.375rem', border: '1px solid #fde68a' }}>{val.toFixed(2)}</span>
+                          : <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
+                        }
+                      </div>
+                    );
+                  }}
+                  headerStyle={{ padding: '0.625rem 1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#64748b', background: '#f8fafc' }}
+                  bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
+                  style={{ width: '9rem' }}
+                />
+                <Column
+                  field="availableQuantity"
+                  header={t('available')}
+                  body={(row) => {
+                    const val = parseFloat(row.availableQuantity?.toString() || '0');
+                    return (
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ display: 'inline-block', minWidth: '3.5rem', textAlign: 'right', fontWeight: 700, fontSize: '0.875rem', color: val > 0 ? '#059669' : '#ef4444', background: val > 0 ? '#ecfdf5' : '#fef2f2', padding: '0.125rem 0.5rem', borderRadius: '0.375rem', border: `1px solid ${val > 0 ? '#bbf7d0' : '#fecaca'}` }}>
+                          {val.toFixed(2)}
+                        </span>
+                      </div>
+                    );
+                  }}
+                  headerStyle={{ padding: '0.625rem 1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#64748b', background: '#f8fafc' }}
+                  bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
+                  style={{ width: '9rem' }}
+                />
+                <Column
+                  field="incomingQuantity"
+                  header={t('incoming')}
+                  body={(row) => {
+                    const val = parseFloat(row.incomingQuantity?.toString() || '0');
+                    return (
+                      <div style={{ textAlign: 'right' }}>
+                        {val > 0
+                          ? <span style={{ display: 'inline-block', minWidth: '3.5rem', textAlign: 'right', fontWeight: 600, fontSize: '0.875rem', color: '#2563eb', background: '#eff6ff', padding: '0.125rem 0.5rem', borderRadius: '0.375rem', border: '1px solid #bfdbfe' }}>{val.toFixed(2)}</span>
+                          : <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
+                        }
+                      </div>
+                    );
+                  }}
+                  headerStyle={{ padding: '0.625rem 1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#64748b', background: '#f8fafc' }}
+                  bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
+                  style={{ width: '9rem' }}
+                />
+                <Column
+                  field="outgoingQuantity"
+                  header={t('outgoing')}
+                  body={(row) => {
+                    const val = parseFloat(row.outgoingQuantity?.toString() || '0');
+                    return (
+                      <div style={{ textAlign: 'right' }}>
+                        {val > 0
+                          ? <span style={{ display: 'inline-block', minWidth: '3.5rem', textAlign: 'right', fontWeight: 600, fontSize: '0.875rem', color: '#ea580c', background: '#fff7ed', padding: '0.125rem 0.5rem', borderRadius: '0.375rem', border: '1px solid #fed7aa' }}>{val.toFixed(2)}</span>
+                          : <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
+                        }
+                      </div>
+                    );
+                  }}
+                  headerStyle={{ padding: '0.625rem 1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#64748b', background: '#f8fafc' }}
+                  bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
+                  style={{ width: '9rem' }}
+                />
+              </DataTable>
             </div>
           </div>
-        </div>
-      )}
+        </TabPanel>
+      </TabView>
 
-      {/* Stock Transfer Modal */}
-      {showStockTransfer && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', maxWidth: '32rem', width: '100%' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>Transfert de stock</h2>
-              <p style={{ fontSize: '0.875rem', color: '#475569', marginTop: '0.25rem' }}>Pour le produit {product.code || product.name}</p>
-            </div>
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {warehouses.length === 0 && (
-                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem' }}>
-                  <p style={{ fontSize: '0.875rem', color: '#92400e', marginBottom: '0.5rem' }}><strong>Aucun entrepôt disponible.</strong></p>
-                  <p style={{ fontSize: '0.75rem', color: '#a16207', marginBottom: '0.75rem' }}>Vous devez créer au moins deux entrepôts pour transférer le stock.</p>
-                  <Button type="button" label="Créer un entrepôt →" onClick={() => window.open('/warehouses', '_blank')} style={{ fontSize: '0.75rem', backgroundColor: '#d97706', borderColor: '#d97706' }} />
-                </div>
-              )}
+      {/* ── Stock Correction Dialog ── */}
+      <Dialog
+        visible={showStockCorrection}
+        onHide={() => setShowStockCorrection(false)}
+        header={t('correctStock')}
+        style={{ width: '32rem' }}
+        modal
+        footer={
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button outlined onClick={() => setShowStockCorrection(false)} label={t('cancel')} style={{ flex: 1 }} />
+            <Button
+              onClick={handleStockCorrection}
+              disabled={!stockCorrectionData.warehouseId || !stockCorrectionData.quantity || stockCorrectionMutation.isPending}
+              loading={stockCorrectionMutation.isPending}
+              label={t('validate')}
+              style={{ flex: 1 }}
+            />
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '0.5rem' }}>
+          {warehouses.length === 0 && <Message severity="warn" text={t('noWarehouseCreateOne')} />}
 
-              <div>
-                <label style={labelStyle}>Entrepôt source *</label>
-                <Dropdown
-                  value={stockTransferData.sourceWarehouseId}
-                  onChange={(e) => setStockTransferData({ ...stockTransferData, sourceWarehouseId: e.value })}
-                  options={[{ label: warehousesLoading ? t('loading') : warehouses.length === 0 ? t('noWarehouseCreateOne') : t('selectSourceWarehouse'), value: '' }, ...sourceWarehouseOptions]}
-                  optionLabel="label"
-                  optionValue="value"
-                  disabled={warehouses.length === 0}
-                  style={{ width: '100%' }}
-                />
-              </div>
+          <div className="p-field">
+            <label className="p-label">{t('warehouse')} *</label>
+            <Dropdown
+              value={stockCorrectionData.warehouseId}
+              onChange={(e) => setStockCorrectionData({ ...stockCorrectionData, warehouseId: e.value })}
+              options={[{ label: warehousesLoading ? t('loading') : t('selectWarehouse'), value: '' }, ...warehouseDropdownOptions]}
+              disabled={warehouses.length === 0}
+              style={{ width: '100%' }}
+            />
+          </div>
 
-              <div>
-                <label style={labelStyle}>Entrepôt destination *</label>
-                <Dropdown
-                  value={stockTransferData.destWarehouseId}
-                  onChange={(e) => setStockTransferData({ ...stockTransferData, destWarehouseId: e.value })}
-                  options={[{ label: warehousesLoading ? t('loading') : warehouses.length === 0 ? t('noWarehouseCreateOne') : t('selectDestinationWarehouse'), value: '' }, ...destWarehouseOptions]}
-                  optionLabel="label"
-                  optionValue="value"
-                  disabled={warehouses.length === 0}
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Nombre de pièces *</label>
-                <InputText type="number" min="0" value={stockTransferData.quantity} onChange={(e) => setStockTransferData({ ...stockTransferData, quantity: e.target.value })} style={{ width: '100%' }} />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Libellé du mouvement</label>
-                <InputText type="text" value={stockTransferData.notes} onChange={(e) => setStockTransferData({ ...stockTransferData, notes: e.target.value })} placeholder={`Transfert de stock du produit ${product.code || product.name} dans un autre entrepôt`} style={{ width: '100%' }} />
-              </div>
-
-              <div style={{ backgroundColor: '#f8fafc', borderRadius: '0.5rem', padding: '0.75rem' }}>
-                <p style={{ fontSize: '0.75rem', color: '#475569' }}>Code mouvement ou inventaire</p>
-                <p style={{ fontSize: '0.875rem', fontFamily: 'monospace', color: '#0f172a' }}>{new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}</p>
-              </div>
-            </div>
-            <div style={{ padding: '1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.75rem' }}>
-              <Button outlined onClick={() => setShowStockTransfer(false)} label="Annuler" style={{ flex: 1 }} />
-              <Button onClick={handleStockTransfer} disabled={!stockTransferData.sourceWarehouseId || !stockTransferData.destWarehouseId || !stockTransferData.quantity || stockTransferMutation.isPending} loading={stockTransferMutation.isPending} label={t('transfer')} style={{ flex: 1 }} />
+          <div className="p-field">
+            <label className="p-label">Operation *</label>
+            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.375rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <RadioButton value="add" checked={stockCorrectionData.operation === 'add'} onChange={() => setStockCorrectionData({ ...stockCorrectionData, operation: 'add' })} />
+                <span style={{ fontSize: '0.875rem' }}>{t('add')}</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <RadioButton value="remove" checked={stockCorrectionData.operation === 'remove'} onChange={() => setStockCorrectionData({ ...stockCorrectionData, operation: 'remove' })} />
+                <span style={{ fontSize: '0.875rem' }}>{t('remove')}</span>
+              </label>
             </div>
           </div>
+
+          <div className="p-field">
+            <label className="p-label">{t('quantity')} *</label>
+            <InputText type="number" min="0" value={stockCorrectionData.quantity} onChange={(e) => setStockCorrectionData({ ...stockCorrectionData, quantity: e.target.value })} style={{ width: '100%' }} />
+          </div>
+
+          <div className="p-field">
+            <label className="p-label">{t('unitPrice')}</label>
+            <InputText type="number" step="0.01" min="0" value={stockCorrectionData.unitPrice} onChange={(e) => setStockCorrectionData({ ...stockCorrectionData, unitPrice: e.target.value })} style={{ width: '100%' }} />
+          </div>
+
+          <div className="p-field">
+            <label className="p-label">{t('notes')}</label>
+            <InputText value={stockCorrectionData.notes} onChange={(e) => setStockCorrectionData({ ...stockCorrectionData, notes: e.target.value })} placeholder={`Stock correction — ${product.code || product.name}`} style={{ width: '100%' }} />
+          </div>
         </div>
-      )}
+      </Dialog>
+
+      {/* ── Stock Transfer Dialog ── */}
+      <Dialog
+        visible={showStockTransfer}
+        onHide={() => setShowStockTransfer(false)}
+        header={t('transferStock')}
+        style={{ width: '32rem' }}
+        modal
+        footer={
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button outlined onClick={() => setShowStockTransfer(false)} label={t('cancel')} style={{ flex: 1 }} />
+            <Button
+              onClick={handleStockTransfer}
+              disabled={!stockTransferData.sourceWarehouseId || !stockTransferData.destWarehouseId || !stockTransferData.quantity || stockTransferMutation.isPending}
+              loading={stockTransferMutation.isPending}
+              label={t('transfer')}
+              style={{ flex: 1 }}
+            />
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '0.5rem' }}>
+          {warehouses.length === 0 && <Message severity="warn" text={t('noWarehouseCreateOne')} />}
+
+          <div className="p-field">
+            <label className="p-label">Source warehouse *</label>
+            <Dropdown
+              value={stockTransferData.sourceWarehouseId}
+              onChange={(e) => setStockTransferData({ ...stockTransferData, sourceWarehouseId: e.value })}
+              options={[{ label: warehousesLoading ? t('loading') : t('selectSourceWarehouse'), value: '' }, ...warehouseDropdownOptions]}
+              disabled={warehouses.length === 0}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div className="p-field">
+            <label className="p-label">Destination warehouse *</label>
+            <Dropdown
+              value={stockTransferData.destWarehouseId}
+              onChange={(e) => setStockTransferData({ ...stockTransferData, destWarehouseId: e.value })}
+              options={[{ label: warehousesLoading ? t('loading') : t('selectDestinationWarehouse'), value: '' }, ...destWarehouseOptions]}
+              disabled={warehouses.length === 0}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div className="p-field">
+            <label className="p-label">{t('quantity')} *</label>
+            <InputText type="number" min="0" value={stockTransferData.quantity} onChange={(e) => setStockTransferData({ ...stockTransferData, quantity: e.target.value })} style={{ width: '100%' }} />
+          </div>
+
+          <div className="p-field">
+            <label className="p-label">{t('notes')}</label>
+            <InputText value={stockTransferData.notes} onChange={(e) => setStockTransferData({ ...stockTransferData, notes: e.target.value })} placeholder={`Stock transfer — ${product.code || product.name}`} style={{ width: '100%' }} />
+          </div>
+        </div>
+      </Dialog>
+
     </AdminLayout>
   );
 }

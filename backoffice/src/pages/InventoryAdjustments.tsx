@@ -153,8 +153,8 @@ export default function InventoryAdjustments() {
               {t('noAdjustmentsFound')}
             </div>
           }
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-          currentPageReportTemplate="{first} - {last} / {totalRecords}"
+          paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="{first}-{last} of {totalRecords}"
         >
           <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
           <Column field="reference" header="Référence" sortable body={(adj: InventoryAdjustment) => (

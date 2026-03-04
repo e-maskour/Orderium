@@ -1,7 +1,7 @@
 import { AdminLayout } from '../../components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Save, X, ArrowLeft } from 'lucide-react';
+import { Save, X, ArrowLeft, FileText } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -220,36 +220,72 @@ export default function DocumentCreatePage({
     <AdminLayout>
       <style>{`
         .doc-create-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
-        .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: #fff; border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); z-index: 40; }
-        @media (max-width: 768px) { .doc-create-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } }
+        .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-top: 1.5px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 40; }
+        .doc-field-label { display: block; font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.375rem; }
+        .doc-section-card { background: #ffffff; border-radius: 0.75rem; border: 1.5px solid #e2e8f0; padding: 1.25rem; }
+        .doc-section-title { font-size: 0.875rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+        .doc-section-accent { width: 0.25rem; height: 1.25rem; background: linear-gradient(to bottom, #f59e0b, #d97706); border-radius: 2px; flex-shrink: 0; }
+        @media (max-width: 768px) {
+          .doc-create-grid { grid-template-columns: 1fr !important; }
+          .doc-sticky-bar { left: 0 !important; }
+        }
       `}</style>
       <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
-        {/* Header with Back Button */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Button
-              icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
-              onClick={() => navigate(listRoute)}
-              text rounded
-              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
-            />
-            <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 10px rgba(245,158,11,0.3)' }}>
-              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />; })()}
-            </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {t('new')} {config.titleShort}
-              </h1>
-              <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('createNew')} {config.titleShort.toLowerCase()}</p>
-            </div>
+
+        {/* ── Page Header ── */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '1rem',
+          marginBottom: '0.75rem',
+          padding: '1.125rem 1.375rem',
+          background: '#ffffff',
+          borderRadius: '1rem',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+          border: '1.5px solid #e2e8f0'
+        }}>
+          <Button
+            icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
+            onClick={() => navigate(listRoute)}
+            style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem' }}
+          />
+          <div style={{
+            width: '2.75rem', height: '2.75rem', flexShrink: 0,
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(245,158,11,0.4)'
+          }}>
+            {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />; })()}
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h1 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+              {t('new')} {config.titleShort}
+            </h1>
+            <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0 }}>{t('createNew')} {config.titleShort.toLowerCase()}</p>
+          </div>
+          {/* New badge */}
+          <div style={{
+            padding: '0.375rem 0.875rem', borderRadius: '9999px',
+            background: '#fffbeb',
+            border: '1px solid #fcd34d'
+          }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#d97706' }}>NOUVEAU</span>
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1.5px solid #e2e8f0', padding: '1.5rem' }}>
-          {/* Two column layout: Partner on left, Document info on right */}
-          <div className="doc-create-grid">
-            {/* Partner section - Left */}
-            <div>
+        {/* ── Main Content Card ── */}
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '1rem',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+          border: '1.5px solid #e2e8f0',
+          overflow: 'hidden'
+        }}>
+          {/* Top accent bar */}
+          <div style={{ height: '3px', background: 'linear-gradient(to right, #f59e0b, #d97706, #f59e0b)' }} />
+
+          <div style={{ padding: '1.5rem' }}>
+            {/* Two column layout: Partner on left, Document info on right */}
+            <div className="doc-create-grid">
+              {/* Partner section */}
               <DocumentPartnerBox
                 direction={direction}
                 partnerId={partner?.id}
@@ -260,64 +296,89 @@ export default function DocumentCreatePage({
                 deliveryAddress={partner?.deliveryAddress || undefined}
                 onPartnerChange={(updatedPartner) => {
                   if ('id' in updatedPartner && 'name' in updatedPartner && 'phoneNumber' in updatedPartner) {
-                    // Full partner object selected from dropdown
                     setPartner(updatedPartner as IPartner);
                   } else {
-                    // Partial update (typing in field)
                     setPartner(prev => prev ? { ...prev, ...updatedPartner } : null);
                   }
                 }}
               />
-            </div>
 
-            {/* Document information - Right */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>
-                {t('documentInformation')}
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
-                    {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')} <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <InputText
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    style={{ width: '100%' }}
-                    required
-                  />
-                </div>
-
-                {config.features.expirationDate && (
+              {/* Document information */}
+              <div style={{
+                backgroundColor: '#ffffff', borderRadius: '0.875rem',
+                border: '1.5px solid #e2e8f0', overflow: 'hidden',
+                boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+              }}>
+                {/* Section header */}
+                <div style={{
+                  padding: '0.875rem 1.125rem',
+                  background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+                  borderBottom: '1.5px solid #e2e8f0',
+                  display: 'flex', alignItems: 'center', gap: '0.625rem'
+                }}>
+                  <div style={{
+                    width: '2rem', height: '2rem',
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    borderRadius: '0.5rem', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(245,158,11,0.4)'
+                  }}>
+                    <FileText style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                  </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('expirationDate')}</label>
+                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
+                      {t('documentInformation')}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                      {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ padding: '1rem 1.125rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                  <div>
+                    <label className="doc-field-label">
+                      {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')} <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
                     <InputText
                       type="date"
-                      value={expirationDate}
-                      onChange={(e) => setExpirationDate(e.target.value)}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      style={{ width: '100%' }}
+                      required
+                    />
+                  </div>
+
+                  {config.features.expirationDate && (
+                    <div>
+                      <label className="doc-field-label">{t('expirationDate')}</label>
+                      <InputText
+                        type="date"
+                        value={expirationDate}
+                        onChange={(e) => setExpirationDate(e.target.value)}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="doc-field-label">{t('dueDate')}</label>
+                    <InputText
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
                       style={{ width: '100%' }}
                     />
                   </div>
-                )}
-
-                {/* Due Date - Show for all document types */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('dueDate')}</label>
-                  <InputText
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    style={{ width: '100%' }}
-                  />
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Items table */}
-          <div style={{ marginTop: '0.5rem' }}>
+            {/* Items Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.5rem 0 1rem' }}>
+              <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, #e2e8f0, transparent)' }} />
+            </div>
+
+            {/* Items table */}
             <DocumentItemsTable
               items={items}
               direction={direction}
@@ -327,31 +388,48 @@ export default function DocumentCreatePage({
               showPriceColumn={!(documentType === 'devis' && direction === 'achat')}
               showTotalColumn={!(documentType === 'devis' && direction === 'achat')}
             />
-          </div>
 
-          {/* Notes */}
-          <div style={{ marginTop: '0.5rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('notes')}</label>
-              <InputTextarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder={t('additionalNotes')}
-                style={{ width: '100%' }}
-              />
+            {/* Notes + Totals Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1.5rem', marginTop: '1.5rem', alignItems: 'flex-start' }}>
+              {/* Notes */}
+              <div style={{ minWidth: 0 }}>
+                <div style={{
+                  backgroundColor: '#ffffff', borderRadius: '0.875rem',
+                  border: '1.5px solid #e2e8f0', overflow: 'hidden',
+                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+                }}>
+                  <div style={{
+                    padding: '0.75rem 1.125rem',
+                    background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+                    borderBottom: '1.5px solid #e2e8f0',
+                    display: 'flex', alignItems: 'center', gap: '0.5rem'
+                  }}>
+                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #94a3b8, #64748b)', borderRadius: '2px' }} />
+                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('notes')}</h3>
+                  </div>
+                  <div style={{ padding: '1rem 1.125rem' }}>
+                    <InputTextarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={4}
+                      placeholder={t('additionalNotes')}
+                      style={{ width: '100%', resize: 'vertical' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Totals */}
+              <div style={{ minWidth: 0 }}>
+                <DocumentTotalsSection items={items} />
+              </div>
             </div>
-          </div>
-
-          {/* Totals section */}
-          <div style={{ marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
-            <DocumentTotalsSection items={items} />
           </div>
         </div>
 
-        {/* Sticky Bottom Action Bar */}
+        {/* ── Sticky Bottom Action Bar ── */}
         <div className="doc-sticky-bar">
-          <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
+          <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.875rem 1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.75rem' }}>
               <Button
                 label={t('cancel')}
@@ -359,6 +437,7 @@ export default function DocumentCreatePage({
                 disabled={saving}
                 icon={<X style={{ width: '1rem', height: '1rem' }} />}
                 outlined
+                severity="secondary"
               />
               <Button
                 label={t('draft')}
@@ -366,6 +445,7 @@ export default function DocumentCreatePage({
                 disabled={saving}
                 loading={saving}
                 icon={<Save style={{ width: '1rem', height: '1rem' }} />}
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}
               />
             </div>
           </div>

@@ -15,6 +15,8 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { Sidebar } from 'primereact/sidebar';
+import { AutoComplete } from 'primereact/autocomplete';
 
 export default function Products() {
   const { t } = useLanguage();
@@ -41,8 +43,9 @@ export default function Products() {
   const [nameFilter, setNameFilter] = useState('');
   const [codeFilter, setCodeFilter] = useState('');
   const [stockFilter, setStockFilter] = useState<'all' | 'negative' | 'zero' | 'positive'>('all');
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
   const [isServiceFilter, setIsServiceFilter] = useState<boolean | undefined>(undefined);
+  const [categorySearchSuggestions, setCategorySearchSuggestions] = useState<any[]>([]);
 
   const [appliedFilters, setAppliedFilters] = useState({
     name: '',
@@ -94,6 +97,15 @@ export default function Products() {
     },
   });
 
+  const searchCategories = (event: { query: string }) => {
+    const query = event.query.toLowerCase();
+    setCategorySearchSuggestions(
+      query
+        ? (categoriesList as any[]).filter((c: any) => c.name.toLowerCase().includes(query))
+        : [...(categoriesList as any[])]
+    );
+  };
+
   const toggleSelectProduct = (id: number) => {
     setSelectedProducts((prev) =>
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
@@ -144,7 +156,7 @@ export default function Products() {
       name: nameFilter,
       code: codeFilter,
       stockFilter: stockFilter === 'all' ? undefined : stockFilter,
-      categoryIds: selectedCategories,
+      categoryIds: selectedCategories.map((c: any) => c.id),
       isService: isServiceFilter,
     });
     setCurrentPage(1);
@@ -165,14 +177,6 @@ export default function Products() {
       isService: undefined,
     });
     setCurrentPage(1);
-  };
-
-  const toggleCategory = (categoryId: number) => {
-    setSelectedCategories(prev =>
-      prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-    );
   };
 
   const activeFiltersCount = [
@@ -271,56 +275,56 @@ export default function Products() {
     <AdminLayout>
       <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto' }}>
         {/* Page Header */}
-        <div>
-          <PageHeader icon={Package} title={t('products')} subtitle={t('manageProducts')} />
-        </div>
+        <PageHeader
+          icon={Package}
+          title={t('products')}
+          subtitle={t('manageProducts')}
+          actions={
+            <>
+              {/* Filters Button */}
+              <div style={{ position: 'relative' }}>
+                <Button
+                  onClick={() => setFiltersExpanded(true)}
+                  outlined
+                  icon={<Filter style={{ width: '1.125rem', height: '1.125rem' }} />}
+                  label={t('filters')}
+                />
+                {activeFiltersCount > 0 && (
+                  <span style={{ position: 'absolute', top: '-0.35rem', right: '-0.35rem', backgroundColor: '#f59e0b', color: 'white', fontSize: '0.7rem', fontWeight: 700, borderRadius: '9999px', width: '1.2rem', height: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </div>
 
-        {/* Toolbar */}
-        <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, justifyContent: 'flex-end' }}>
-            {/* Filters Button */}
-            <Button
-              onClick={() => setFiltersExpanded(true)}
-              outlined
-              style={{ position: 'relative', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
-              icon={<Filter style={{ width: '1.25rem', height: '1.25rem' }} />}
-              label={t('filters')}
-            >
-              {activeFiltersCount > 0 && (
-                <span style={{ position: 'absolute', top: '-0.25rem', right: '-0.25rem', backgroundColor: '#f59e0b', color: 'white', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {activeFiltersCount}
-                </span>
-              )}
-            </Button>
+              {/* Import/Export Buttons */}
+              <Button
+                onClick={handleDownloadTemplate}
+                outlined
+                icon={<FileSpreadsheet style={{ width: '1rem', height: '1rem' }} />}
+                title="Télécharger le modèle"
+              />
+              <Button
+                onClick={handleImport}
+                outlined
+                icon={<Upload style={{ width: '1rem', height: '1rem' }} />}
+                title="Importer"
+              />
+              <Button
+                onClick={handleExport}
+                outlined
+                icon={<Download style={{ width: '1rem', height: '1rem' }} />}
+                title="Exporter"
+              />
 
-            {/* Import/Export Buttons */}
-            <Button
-              onClick={handleDownloadTemplate}
-              outlined
-              icon={<FileSpreadsheet style={{ width: '1rem', height: '1rem' }} />}
-              title="Télécharger le modèle"
-            />
-            <Button
-              onClick={handleImport}
-              outlined
-              icon={<Upload style={{ width: '1rem', height: '1rem' }} />}
-              title="Importer"
-            />
-            <Button
-              onClick={handleExport}
-              outlined
-              icon={<Download style={{ width: '1rem', height: '1rem' }} />}
-              title="Exporter"
-            />
-
-            {/* Add Product Button */}
-            <Button
-              onClick={() => navigate('/products/create')}
-              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
-              label={t('addProduct')}
-            />
-          </div>
-        </div>
+              {/* Add Product Button */}
+              <Button
+                onClick={() => navigate('/products/create')}
+                icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+                label={t('addProduct')}
+              />
+            </>
+          }
+        />
 
         {/* Products View */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -371,8 +375,8 @@ export default function Products() {
                 removableSort
                 loading={isLoading}
                 emptyMessage={t('noProductsFound')}
-                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="{first}-{last} of {totalRecords}"
               >
                 <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                 <Column
@@ -476,153 +480,146 @@ export default function Products() {
       />
 
       {/* Filters Overlay Panel */}
-      {filtersExpanded && (
-        <>
-          {/* Backdrop */}
-          <div
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 40 }}
+      <Sidebar
+        visible={filtersExpanded}
+        onHide={() => setFiltersExpanded(false)}
+        position="right"
+        style={{ width: '560px' }}
+        showCloseIcon={false}
+        blockScroll
+        pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
+      >
+        {/* Panel Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Filter style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>{t('filters')}</h2>
+            {activeFiltersCount > 0 && (
+              <span style={{ backgroundColor: 'white', color: '#d97706', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {activeFiltersCount}
+              </span>
+            )}
+          </div>
+          <Button
             onClick={() => setFiltersExpanded(false)}
+            text
+            rounded
+            icon={<X style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />}
+            style={{ padding: '0.5rem' }}
           />
+        </div>
 
-          {/* Slide-in Panel */}
-          <div style={{ position: 'fixed', top: 0, bottom: 0, right: 0, width: '560px', backgroundColor: 'white', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
-            {/* Panel Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Filter style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>{t('filters')}</h2>
-                {activeFiltersCount > 0 && (
-                  <span style={{ backgroundColor: 'white', color: '#d97706', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </div>
-              <Button
-                onClick={() => setFiltersExpanded(false)}
-                text
-                rounded
-                icon={<X style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />}
-                style={{ padding: '0.5rem' }}
-              />
-            </div>
+        {/* Panel Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Search Filters Section */}
+          <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
+              {t('search')}
+            </label>
 
-            {/* Panel Content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {/* Search Filters Section */}
-              <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
-                  {t('search')}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
+                  {t('name')}
                 </label>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                  <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
-                      {t('name')}
-                    </label>
-                    <InputText
-                      type="text"
-                      value={nameFilter}
-                      onChange={(e) => setNameFilter(e.target.value)}
-                      placeholder={t('search')}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
-                      {t('code')}
-                    </label>
-                    <InputText
-                      type="text"
-                      value={codeFilter}
-                      onChange={(e) => setCodeFilter(e.target.value)}
-                      placeholder={t('search')}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Stock Filter */}
-              <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
-                  {t('stock')}
-                </label>
-                <Dropdown
-                  value={stockFilter}
-                  onChange={(e) => setStockFilter(e.value as 'all' | 'negative' | 'zero' | 'positive')}
-                  options={stockFilterOptions}
-                  optionLabel="label"
-                  optionValue="value"
+                <InputText
+                  type="text"
+                  value={nameFilter}
+                  onChange={(e) => setNameFilter(e.target.value)}
+                  placeholder={t('search')}
+                  style={{ width: '100%' }}
                 />
               </div>
 
-              {/* Category Filter */}
-              <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
-                  {t('categories')}
-                </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '16rem', overflowY: 'auto' }}>
-                  {categoriesList.length > 0 ? (
-                    categoriesList.map((category: any) => (
-                      <Button
-                        key={category.id}
-                        onClick={() => toggleCategory(category.id)}
-                        label={category.name}
-                        style={selectedCategories.includes(category.id)
-                          ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
-                          : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }}
-                        text={!selectedCategories.includes(category.id)}
-                      />
-                    ))
-                  ) : (
-                    <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No categories available</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Is Service Filter */}
               <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
-                  Type
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
+                  {t('code')}
                 </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {[
-                    { key: undefined, label: t('all') },
-                    { key: true, label: 'Service' },
-                    { key: false, label: t('product') }
-                  ].map((filter) => (
-                    <Button
-                      key={String(filter.key)}
-                      onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
-                      label={filter.label}
-                      style={isServiceFilter === filter.key
-                        ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
-                        : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }}
-                      text={isServiceFilter !== filter.key}
-                    />
-                  ))}
-                </div>
+                <InputText
+                  type="text"
+                  value={codeFilter}
+                  onChange={(e) => setCodeFilter(e.target.value)}
+                  placeholder={t('search')}
+                  style={{ width: '100%' }}
+                />
               </div>
-            </div>
-
-            {/* Panel Footer */}
-            <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
-              <Button
-                outlined
-                onClick={handleClearFilters}
-                label={t('reset')}
-                style={{ flex: 1 }}
-              />
-              <Button
-                onClick={handleApplyFilters}
-                label={t('apply')}
-                style={{ flex: 1 }}
-              />
             </div>
           </div>
-        </>
-      )}
+
+          {/* Stock Filter */}
+          <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
+              {t('stock')}
+            </label>
+            <Dropdown
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.value as 'all' | 'negative' | 'zero' | 'positive')}
+              options={stockFilterOptions}
+              optionLabel="label"
+              optionValue="value"
+            />
+          </div>
+
+          {/* Category Filter */}
+          <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
+              {t('categories')}
+            </label>
+            <AutoComplete
+              multiple
+              value={selectedCategories}
+              suggestions={categorySearchSuggestions}
+              completeMethod={searchCategories}
+              field="name"
+              onChange={(e) => setSelectedCategories(e.value)}
+              placeholder={t('categories')}
+              dropdown
+              style={{ width: '100%' }}
+              inputStyle={{ width: '100%' }}
+              pt={{ container: { style: { width: '100%' } } }}
+            />
+          </div>
+
+          {/* Is Service Filter */}
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
+              Type
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {[
+                { key: undefined, label: t('all') },
+                { key: true, label: 'Service' },
+                { key: false, label: t('product') }
+              ].map((filter) => (
+                <Button
+                  key={String(filter.key)}
+                  onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
+                  label={filter.label}
+                  style={isServiceFilter === filter.key
+                    ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
+                    : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }}
+                  text={isServiceFilter !== filter.key}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Panel Footer */}
+        <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
+          <Button
+            outlined
+            onClick={handleClearFilters}
+            label={t('reset')}
+            style={{ flex: 1 }}
+          />
+          <Button
+            onClick={handleApplyFilters}
+            label={t('apply')}
+            style={{ flex: 1 }}
+          />
+        </div>
+      </Sidebar>
     </AdminLayout>
   );
 }

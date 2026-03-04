@@ -1,14 +1,9 @@
 import { useEffect } from 'react';
-import { useBlocker } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export function useUnsavedChanges(isDirty: boolean, message?: string) {
     const msg = message ?? 'You have unsaved changes. Are you sure you want to leave?';
-
-    // Block in-app navigation via react-router
-    useBlocker(
-        ({ currentLocation, nextLocation }) =>
-            isDirty && currentLocation.pathname !== nextLocation.pathname
-    );
+    const navigate = useNavigate();
 
     // Block browser close/refresh
     useEffect(() => {
@@ -22,4 +17,19 @@ export function useUnsavedChanges(isDirty: boolean, message?: string) {
         window.addEventListener('beforeunload', handler);
         return () => window.removeEventListener('beforeunload', handler);
     }, [isDirty, msg]);
+
+    // Block back/forward browser navigation
+    useEffect(() => {
+        if (!isDirty) return;
+
+        const handler = (e: PopStateEvent) => {
+            if (!window.confirm(msg)) {
+                // Re-push current state to cancel the navigation
+                window.history.pushState(e.state, '');
+            }
+        };
+
+        window.addEventListener('popstate', handler);
+        return () => window.removeEventListener('popstate', handler);
+    }, [isDirty, msg, navigate]);
 }

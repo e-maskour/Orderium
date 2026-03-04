@@ -60,20 +60,45 @@ export function DocumentPartnerBox({
   };
 
   return (
-    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: `1.5px solid ${partnerId ? '#fcd34d' : '#e2e8f0'}`, padding: '1rem', transition: 'border-color 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-        <div style={{ width: '1.75rem', height: '1.75rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#fff' }} />
+    <div style={{
+      backgroundColor: '#ffffff',
+      borderRadius: '0.875rem',
+      border: '1.5px solid #e2e8f0',
+      overflow: 'hidden',
+      boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
+      transition: 'border-color 0.2s, box-shadow 0.2s'
+    }}>
+      {/* Card Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '0.625rem',
+        padding: '0.875rem 1.125rem',
+        background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+        borderBottom: '1.5px solid #e2e8f0'
+      }}>
+        <div style={{
+          width: '2rem', height: '2rem',
+          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          borderRadius: '0.5rem', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 2px 8px rgba(245,158,11,0.4)'
+        }}>
+          <Phone style={{ width: '1rem', height: '1rem', color: '#fff' }} />
         </div>
-        <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
-          {t('invoice.customerInfo').replace('client', partnerLabel)}
-        </h3>
+        <div>
+          <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
+            {t('invoice.customerInfo').replace('client', partnerLabel)}
+          </h3>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+            {partnerId ? partnerName : `${t('pleaseSelect')} ${partnerLabel.toLowerCase()}`}
+          </p>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {/* Card Body */}
+      <div style={{ padding: '1rem 1.125rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#334155', marginBottom: '0.375rem' }}>
-            {partnerLabel} *
+          <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.375rem' }}>
+            {partnerLabel} <span style={{ color: '#ef4444' }}>*</span>
           </label>
           <Dropdown
             value={partnerId ? String(partnerId) : null}
@@ -91,42 +116,53 @@ export function DocumentPartnerBox({
             showClear
             style={{ width: '100%' }}
           />
-          {(partnerPhone || partnerAddress) && (
-            <div style={{ marginTop: '0.5rem', borderLeft: '2px solid #fcd34d', paddingLeft: '0.625rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-              {partnerPhone && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
-                  <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8' }} />
-                  <span>{partnerPhone}</span>
-                </div>
-              )}
-              {partnerAddress && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
-                  <MapPin style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8' }} />
-                  <span>{partnerAddress}</span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
+
+        {(partnerPhone || partnerAddress) && (
+          <div style={{
+            background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+            borderRadius: '0.625rem',
+            border: '1px solid #e2e8f0',
+            padding: '0.75rem',
+            display: 'flex', flexDirection: 'column', gap: '0.5rem'
+          }}>
+            {partnerPhone && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <div style={{ width: '1.5rem', height: '1.5rem', background: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Phone style={{ width: '0.75rem', height: '0.75rem', color: '#3b82f6' }} />
+                </div>
+                <span style={{ fontSize: '0.875rem', color: '#334155', fontWeight: 500 }}>{partnerPhone}</span>
+              </div>
+            )}
+            {partnerAddress && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <div style={{ width: '1.5rem', height: '1.5rem', background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <MapPin style={{ width: '0.75rem', height: '0.75rem', color: '#16a34a' }} />
+                </div>
+                <span style={{ fontSize: '0.875rem', color: '#334155' }}>{partnerAddress}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {partnerIce && (
           <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', marginBottom: '0.25rem' }}>
-              <CreditCard style={{ width: '0.875rem', height: '0.875rem', color: '#64748b' }} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.375rem' }}>
+              <CreditCard style={{ width: '0.75rem', height: '0.75rem' }} />
               {t('invoice.iceLabel')}
             </label>
             <InputText
               value={partnerIce}
               readOnly
-              style={{ width: '100%', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.875rem' }}
+              style={{ width: '100%', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.875rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}
             />
           </div>
         )}
 
         {deliveryAddress && (
           <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', marginBottom: '0.25rem' }}>
-              <Truck style={{ width: '0.875rem', height: '0.875rem', color: '#64748b' }} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.375rem' }}>
+              <Truck style={{ width: '0.75rem', height: '0.75rem' }} />
               {t('invoice.deliveryAddressLabel')}
             </label>
             <InputText

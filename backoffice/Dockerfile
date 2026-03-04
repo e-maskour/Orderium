@@ -7,16 +7,22 @@ FROM node:20-alpine AS dependencies
 
 WORKDIR /app
 
+# Enable pnpm via corepack
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN npm ci --prefer-offline
+RUN pnpm install --frozen-lockfile
 
 # ============ Stage 2: Build ============
 FROM node:20-alpine AS builder
 
 WORKDIR /app
+
+# Enable pnpm via corepack
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy dependencies
 COPY --from=dependencies /app/node_modules ./node_modules
@@ -47,18 +53,21 @@ ENV VITE_FIREBASE_VAPID_KEY=${VITE_FIREBASE_VAPID_KEY}
 
 # Build the application
 # Vite outputs to dist/ by default
-RUN npm run build
+RUN pnpm run build
 
 # ============ Stage 3: Development ============
 FROM node:20-alpine AS development
 
 WORKDIR /app
 
+# Enable pnpm via corepack
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install all dependencies (including devDependencies)
-RUN npm ci --prefer-offline
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -68,7 +77,7 @@ EXPOSE 3001
 
 # Start Vite dev server
 # --host 0.0.0.0 allows external access from Docker
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # ============ Stage 4: Production with Nginx ============
 FROM nginx:1.25-alpine AS production
@@ -81,12 +90,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create non-root user
 RUN addgroup -g 1001 -S nginx-run && \
-    adduser -S nginx-run -u 1001 && \
-    chown -R nginx-run:nginx-run /usr/share/nginx/html && \
-    chown -R nginx-run:nginx-run /var/cache/nginx && \
-    chown -R nginx-run:nginx-run /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown nginx-run:nginx-run /var/run/nginx.pid
+  adduser -S nginx-run -u 1001 && \
+  chown -R nginx-run:nginx-run /usr/share/nginx/html && \
+  chown -R nginx-run:nginx-run /var/cache/nginx && \
+  chown -R nginx-run:nginx-run /var/log/nginx && \
+  touch /var/run/nginx.pid && \
+  chown nginx-run:nginx-run /var/run/nginx.pid
 
 # Switch to non-root user
 USER nginx-run

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { productsService, validateProductForm, hasValidationErrors, getFirstError, ValidationErrors } from '../modules/products';
@@ -7,26 +7,26 @@ import { taxesService } from '../modules/taxes';
 import { categoriesService } from '../modules/categories';
 import { uomService } from '../modules/uom';
 import { AdminLayout } from '../components/AdminLayout';
-import { PageHeader } from '../components/PageHeader';
+
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
-import { ImageUpload } from '../components/ImageUpload';
-import { Package, Save, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Save, ArrowLeft, RefreshCw, ShoppingCart, TrendingUp, SlidersHorizontal, Building2, Tag as TagIcon, Package } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
-import { Checkbox } from 'primereact/checkbox';
+import { InputNumber } from 'primereact/inputnumber';
+import { InputSwitch } from 'primereact/inputswitch';
+import { Dropdown } from 'primereact/dropdown';
+import { MultiSelect } from 'primereact/multiselect';
+import { Message } from 'primereact/message';
 import { toastCreated, toastSuccess, toastError } from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
 import { useLanguage } from '../context/LanguageContext';
-
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' };
-const dropdownItemStyle: React.CSSProperties = { padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' };
-const dropdownContainerStyle: React.CSSProperties = { position: 'absolute', zIndex: 10, width: '100%', marginTop: '0.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', maxHeight: '15rem', overflowY: 'auto' };
 
 export default function ProductCreate() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
+  const currency = language === 'ar' ? 'د.م' : 'DH';
 
   const { data: warehouses = [] } = useQuery({
     queryKey: ['warehouses'],
@@ -50,60 +50,37 @@ export default function ProductCreate() {
 
   const taxRates = taxesConfig?.rates || [];
 
-  const [showWarehouseSearch, setShowWarehouseSearch] = useState(false);
-  const [warehouseSearchTerm, setWarehouseSearchTerm] = useState('');
-  const [showCategorySearch, setShowCategorySearch] = useState(false);
-  const [categorySearchTerm, setCategorySearchTerm] = useState('');
-  const [showSaleUnitSearch, setShowSaleUnitSearch] = useState(false);
-  const [showPurchaseUnitSearch, setShowPurchaseUnitSearch] = useState(false);
-  const [showSaleTaxSearch, setShowSaleTaxSearch] = useState(false);
-  const [showPurchaseTaxSearch, setShowPurchaseTaxSearch] = useState(false);
-
-  const warehouseSearchRef = useRef<HTMLDivElement>(null);
-  const categorySearchRef = useRef<HTMLDivElement>(null);
-  const saleUnitSearchRef = useRef<HTMLDivElement>(null);
-  const purchaseUnitSearchRef = useRef<HTMLDivElement>(null);
-  const saleTaxSearchRef = useRef<HTMLDivElement>(null);
-  const purchaseTaxSearchRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (warehouseSearchRef.current && !warehouseSearchRef.current.contains(event.target as Node)) setShowWarehouseSearch(false);
-      if (categorySearchRef.current && !categorySearchRef.current.contains(event.target as Node)) setShowCategorySearch(false);
-      if (saleUnitSearchRef.current && !saleUnitSearchRef.current.contains(event.target as Node)) setShowSaleUnitSearch(false);
-      if (purchaseUnitSearchRef.current && !purchaseUnitSearchRef.current.contains(event.target as Node)) setShowPurchaseUnitSearch(false);
-      if (saleTaxSearchRef.current && !saleTaxSearchRef.current.contains(event.target as Node)) setShowSaleTaxSearch(false);
-      if (purchaseTaxSearchRef.current && !purchaseTaxSearchRef.current.contains(event.target as Node)) setShowPurchaseTaxSearch(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     description: '',
-    price: '',
-    cost: '',
-    minPrice: '',
-    saleTax: '20',
-    purchaseTax: '20',
-    saleUnit: 'Units',
-    purchaseUnit: 'Units',
+    price: null as number | null,
+    cost: null as number | null,
+    minPrice: null as number | null,
+    saleTaxId: null as string | null,
+    purchaseTaxId: null as string | null,
+    saleUnitId: null as number | null,
+    purchaseUnitId: null as number | null,
     categoryIds: [] as number[],
-    warehouseId: '',
+    warehouseId: null as number | null,
     isService: false,
     isEnabled: true,
     isPriceChangeAllowed: true,
   });
 
-  const [imageData, setImageData] = useState<{ url: string; publicId: string } | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [formDirty, setFormDirty] = useState(false);
 
   useUnsavedChanges(formDirty);
+
+  const setField = <K extends keyof typeof formData>(key: K, value: typeof formData[K]) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+    setFormDirty(true);
+    if (validationErrors[key as string]) {
+      setValidationErrors(prev => { const n = { ...prev }; delete n[key as string]; return n; });
+    }
+  };
 
   useEffect(() => {
     const generateCode = async () => {
@@ -111,8 +88,7 @@ export default function ProductCreate() {
         setIsGeneratingCode(true);
         const uniqueCode = await generateUniqueProductCode();
         setFormData(prev => ({ ...prev, code: uniqueCode }));
-      } catch (error) {
-        console.error('Failed to generate unique code:', error);
+      } catch {
         toastError(t('failedToGenerateCode'));
       } finally {
         setIsGeneratingCode(false);
@@ -121,55 +97,32 @@ export default function ProductCreate() {
     generateCode();
   }, []);
 
+  useEffect(() => {
+    if (uoms.length > 0 && formData.saleUnitId === null) {
+      const defaultUom = uoms.find((u: any) => u.code === 'UNIT') || uoms[0];
+      if (defaultUom) {
+        setFormData(prev => ({ ...prev, saleUnitId: defaultUom.id, purchaseUnitId: defaultUom.id }));
+      }
+    }
+  }, [uoms]);
+
   const handleRegenerateCode = async () => {
     try {
       setIsGeneratingCode(true);
       const uniqueCode = await generateUniqueProductCode();
       setFormData(prev => ({ ...prev, code: uniqueCode }));
-      clearFieldError('code');
       toastSuccess(t('newCodeGenerated'));
-    } catch (error) {
-      console.error('Failed to generate unique code:', error);
+    } catch {
       toastError(t('failedToGenerateCodeRetry'));
     } finally {
       setIsGeneratingCode(false);
     }
   };
 
-  const clearFieldError = (fieldName: string) => {
-    if (validationErrors[fieldName]) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[fieldName];
-        return newErrors;
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (uoms.length > 0 && formData.saleUnit === 'Units') {
-      const defaultUom = uoms.find((u: any) => u.code === 'UNIT');
-      if (defaultUom) {
-        setFormData(prev => ({
-          ...prev,
-          saleUnit: defaultUom.name,
-          purchaseUnit: defaultUom.name,
-        }));
-      }
-    }
-  }, [uoms]);
-
   const createMutation = useMutation({
     mutationFn: (data: any) => productsService.createProduct(data),
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      if (imageData && result.product?.id) {
-        try {
-          await productsService.updateProductImage(result.product.id, imageData.url, imageData.publicId);
-        } catch (error) {
-          console.warn('Could not verify image association:', error);
-        }
-      }
       toastCreated(t('productCreatedSuccess'));
       setFormDirty(false);
       navigate(`/products/${result.product.id}`);
@@ -181,463 +134,365 @@ export default function ProductCreate() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const errors = validateProductForm(formData, true);
+    const legacyForm = {
+      name: formData.name,
+      code: formData.code,
+      description: formData.description,
+      price: formData.price?.toString() ?? '',
+      cost: formData.cost?.toString() ?? '',
+      minPrice: formData.minPrice?.toString() ?? '',
+      warehouseId: formData.warehouseId?.toString() ?? '',
+      categoryIds: formData.categoryIds,
+    };
+    const errors = validateProductForm(legacyForm, true);
     setValidationErrors(errors);
     if (hasValidationErrors(errors)) {
       const firstError = getFirstError(errors);
       if (firstError) toastError(firstError);
       return;
     }
-    const saleUom = uoms.find((u: any) => u.name === formData.saleUnit);
-    const purchaseUom = uoms.find((u: any) => u.name === formData.purchaseUnit);
+    const saleTaxRate = taxRates.find((r: any) => r.name === formData.saleTaxId);
+    const purchaseTaxRate = taxRates.find((r: any) => r.name === formData.purchaseTaxId);
     createMutation.mutate({
       name: formData.name,
       code: formData.code || null,
       description: formData.description || null,
-      price: parseFloat(formData.price),
-      cost: parseFloat(formData.cost),
-      minPrice: parseFloat(formData.minPrice || '0'),
-      saleTax: parseFloat(formData.saleTax || '0'),
-      purchaseTax: parseFloat(formData.purchaseTax || '0'),
-      warehouseId: parseInt(formData.warehouseId),
+      price: formData.price ?? 0,
+      cost: formData.cost ?? 0,
+      minPrice: formData.minPrice ?? 0,
+      saleTax: saleTaxRate?.rate ?? 0,
+      purchaseTax: purchaseTaxRate?.rate ?? 0,
+      warehouseId: formData.warehouseId,
       categoryIds: formData.categoryIds,
       isService: formData.isService,
       isEnabled: formData.isEnabled,
       isPriceChangeAllowed: formData.isPriceChangeAllowed,
-      saleUnitId: saleUom?.id || null,
-      purchaseUnitId: purchaseUom?.id || null,
+      saleUnitId: formData.saleUnitId,
+      purchaseUnitId: formData.purchaseUnitId,
     });
   };
 
+  const warehouseOptions = warehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w.id }));
+  const categoryOptions = categories.map((c: any) => ({ label: c.name, value: c.id }));
+  const uomOptions = uoms.map((u: any) => ({ label: `${u.name} — ${u.code}`, value: u.id }));
+  const taxOptions = [{ label: '0%', value: null }, ...taxRates.map((r: any) => ({ label: `${r.name} (${r.rate}%)`, value: r.name }))];
+
+  const saleTaxRate = taxRates.find((r: any) => r.name === formData.saleTaxId)?.rate ?? 0;
+  const priceWithTax = formData.price ? formData.price * (1 + saleTaxRate / 100) : null;
+  const margin = (formData.price != null && formData.cost != null) ? formData.price - formData.cost : null;
+  const marginPct = (margin != null && formData.cost) ? (margin / formData.cost) * 100 : null;
+  const markupPct = (margin != null && formData.price) ? (margin / formData.price) * 100 : null;
+
+  const fieldClass = (field: string) => validationErrors[field] ? 'p-invalid' : '';
+
+  const panel: React.CSSProperties = {
+    background: 'white',
+    border: '1px solid #e2e8f0',
+    borderRadius: '0.875rem',
+    padding: '1.5rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+  };
+
+  const iconBox = (bg: string): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '2rem',
+    height: '2rem',
+    borderRadius: '0.5rem',
+    background: bg,
+    flexShrink: 0,
+  });
+
   return (
     <AdminLayout>
-      <PageHeader
-        icon={Package}
-        title={t('createNewProduct')}
-        subtitle={t('addNewProductToInventory')}
-        actions={
-          <Button outlined onClick={() => navigate('/products')} icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />} label={t('backToProducts')} />
-        }
-      />
 
-      <form onSubmit={handleSubmit} onChange={() => setFormDirty(true)}>
-        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Basic Info Section */}
-          <div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '1rem' }}>{t('basicInformation')}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
-              <div>
-                <label style={labelStyle}>{t('productName')} *</label>
-                {validationErrors.name && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.name}</p>}
-                <InputText
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => { setFormData({ ...formData, name: e.target.value }); clearFieldError('name'); }}
-                  placeholder={t('enterProductName')}
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>{t('productCodeEAN13')}</label>
-                {validationErrors.code && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.code}</p>}
-                <div style={{ position: 'relative' }}>
-                  <InputText
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => { setFormData({ ...formData, code: e.target.value }); clearFieldError('code'); }}
-                    placeholder={t('autoGeneratedBarcode')}
-                    maxLength={13}
-                    style={{ width: '100%' }}
-                  />
-                  {!validationErrors.code && formData.code && (
-                    <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#64748b' }}>{t('eanBarcodeHint')}</p>
-                  )}
-                  <Button
-                    type="button"
-                    text
-                    onClick={handleRegenerateCode}
-                    disabled={isGeneratingCode}
-                    icon={<RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.75rem', height: '0.75rem' }} />}
-                    label={isGeneratingCode ? t('generating') : t('generateCode')}
-                    title={t('generateNewUniqueCode')}
-                    style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#d97706' }}
-                  />
-                </div>
-              </div>
+      {/* ── Page Header ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '1rem',
+        marginBottom: '0.75rem',
+        padding: '1.125rem 1.375rem',
+        background: '#ffffff',
+        borderRadius: '1rem',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+        border: '1.5px solid #e2e8f0',
+        flexWrap: 'wrap',
+      }}>
+        <Button
+          icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
+          onClick={() => navigate('/products')}
+          style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem', padding: 0 }}
+        />
+        <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.4)' }}>
+          <Package style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h1 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0, letterSpacing: '-0.01em' }}>
+                {t('createNewProduct')}
+              </h1>
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0.125rem 0 0' }}>{t('addNewProductToInventory')}</p>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '1rem' }}>
-              <div>
-                <label style={labelStyle}>{t('warehouse')} *</label>
-                {validationErrors.warehouseId && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.warehouseId}</p>}
-                <div style={{ position: 'relative' }} ref={warehouseSearchRef}>
-                  <InputText
-                    type="text"
-                    value={warehouseSearchTerm}
-                    onChange={(e) => { setWarehouseSearchTerm(e.target.value); setShowWarehouseSearch(true); clearFieldError('warehouseId'); }}
-                    onFocus={() => setShowWarehouseSearch(true)}
-                    placeholder={t('selectOrSearchWarehouse')}
-                    style={{ width: '100%' }}
-                  />
-                  {showWarehouseSearch && (
-                    <div style={dropdownContainerStyle}>
-                      {warehouses.filter((w: any) =>
-                        w.name.toLowerCase().includes(warehouseSearchTerm.toLowerCase()) ||
-                        w.code?.toLowerCase().includes(warehouseSearchTerm.toLowerCase())
-                      ).length > 0 ? (
-                        warehouses
-                          .filter((w: any) =>
-                            w.name.toLowerCase().includes(warehouseSearchTerm.toLowerCase()) ||
-                            w.code?.toLowerCase().includes(warehouseSearchTerm.toLowerCase())
-                          )
-                          .map((warehouse: any) => (
-                            <div
-                              key={warehouse.id}
-                              onClick={() => {
-                                setFormData({ ...formData, warehouseId: warehouse.id.toString() });
-                                setWarehouseSearchTerm(`${warehouse.name} (${warehouse.code})`);
-                                setShowWarehouseSearch(false);
-                              }}
-                              style={dropdownItemStyle}
-                            >
-                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{warehouse.name}</div>
-                              <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{warehouse.code}</div>
-                            </div>
-                          ))
-                      ) : (
-                        <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
-                          {t('noWarehousesFound')}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label style={labelStyle}>{t('categories')}</label>
-                <div style={{ position: 'relative' }} ref={categorySearchRef}>
-                  {formData.categoryIds.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      {formData.categoryIds.map((categoryId: number) => {
-                        const category = categories.find((c: any) => c.id === categoryId);
-                        if (!category) return null;
-                        return (
-                          <span key={categoryId} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '9999px', fontSize: '0.875rem' }}>
-                            {category.name}
-                            <Button type="button" text label="×" onClick={() => { setFormData({ ...formData, categoryIds: formData.categoryIds.filter((id: number) => id !== categoryId) }); }} style={{ color: '#92400e', padding: '0 0.25rem' }} />
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                  <InputText
-                    type="text"
-                    value={categorySearchTerm}
-                    onChange={(e) => { setCategorySearchTerm(e.target.value); setShowCategorySearch(true); }}
-                    onFocus={() => setShowCategorySearch(true)}
-                    placeholder={t('typeToSearchCategories')}
-                    style={{ width: '100%' }}
-                  />
-                  {showCategorySearch && (
-                    <div style={dropdownContainerStyle}>
-                      {categories.filter((c: any) =>
-                        c.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) &&
-                        !formData.categoryIds.includes(c.id)
-                      ).length > 0 ? (
-                        categories
-                          .filter((c: any) =>
-                            c.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) &&
-                            !formData.categoryIds.includes(c.id)
-                          )
-                          .map((category: any) => (
-                            <div
-                              key={category.id}
-                              onClick={() => {
-                                setFormData({ ...formData, categoryIds: [...formData.categoryIds, category.id] });
-                                setCategorySearchTerm('');
-                                setShowCategorySearch(false);
-                              }}
-                              style={dropdownItemStyle}
-                            >
-                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{category.name}</div>
-                              {category.description && <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{category.description}</div>}
-                            </div>
-                          ))
-                      ) : (
-                        <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
-                          {categorySearchTerm ? t('noCategoriesFound') : t('startTypingToSearchCategories')}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '1rem' }}>
-              <label style={labelStyle}>{t('description')}</label>
-              <InputTextarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-                placeholder={t('enterProductDescription')}
-                style={{ width: '100%' }}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+              <Button type="button" text onClick={() => navigate('/products')} label={t('cancel')} style={{ color: '#64748b' }} />
+              <Button
+                type="submit"
+                form="product-create-form"
+                loading={createMutation.isPending}
+                icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
+                label={t('createNewProduct')}
               />
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Pricing Section */}
-          <div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '1rem' }}>{t('pricing')}</h3>
+      <form id="product-create-form" onSubmit={handleSubmit}>
+        <div className="product-form-grid">
 
-            {/* Sale Price */}
-            <div style={{ backgroundColor: '#f8fafc', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
-              <h4 style={{ fontWeight: 500, color: '#0f172a', marginBottom: '0.75rem' }}>{t('salePrice')}</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                <div>
-                  <label style={labelStyle}>{t('price')} *</label>
-                  {validationErrors.price && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.price}</p>}
-                  <div style={{ position: 'relative' }}>
-                    <InputText
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.price}
-                      onChange={(e) => { setFormData({ ...formData, price: e.target.value }); clearFieldError('price'); }}
-                      placeholder={t('numericPlaceholder')}
-                      style={{ width: '100%' }}
-                    />
-                    <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', fontSize: '0.875rem', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>
-                      {language === 'ar' ? 'د.م' : 'DH'}
-                    </span>
-                  </div>
+          {/* ── Left column ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+            {/* Basic Information */}
+            <div style={panel}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={iconBox('#eef2ff')}>
+                  <TagIcon style={{ width: '1rem', height: '1rem', color: '#6366f1' }} />
                 </div>
-
                 <div>
-                  <label style={labelStyle}>{t('unit')}</label>
-                  <div style={{ position: 'relative' }} ref={saleUnitSearchRef}>
-                    <InputText
-                      type="text"
-                      value={formData.saleUnit}
-                      onChange={(e) => { setFormData({ ...formData, saleUnit: e.target.value }); setShowSaleUnitSearch(true); }}
-                      onFocus={() => setShowSaleUnitSearch(true)}
-                      placeholder={t('unit')}
-                      style={{ width: '100%' }}
-                    />
-                    {showSaleUnitSearch && (
-                      <div style={dropdownContainerStyle}>
-                        {uoms.filter((u: any) => u.name.toLowerCase().includes(formData.saleUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.saleUnit.toLowerCase())).length > 0 ? (
-                          uoms.filter((u: any) => u.name.toLowerCase().includes(formData.saleUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.saleUnit.toLowerCase())).map((uom: any) => (
-                            <div key={uom.id} onClick={() => { setFormData({ ...formData, saleUnit: uom.name }); setShowSaleUnitSearch(false); }} style={dropdownItemStyle}>
-                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{uom.name}</div>
-                              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{uom.code} - {uom.category}</div>
-                            </div>
-                          ))
-                        ) : (
-                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{uoms.length === 0 ? t('noUnitsConfigured') : t('typeToCreateCustomUnit')}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>{t('tax')}</label>
-                  <div style={{ position: 'relative' }} ref={saleTaxSearchRef}>
-                    <InputText
-                      type="text"
-                      value={formData.saleTax}
-                      onChange={(e) => { setFormData({ ...formData, saleTax: e.target.value }); setShowSaleTaxSearch(true); }}
-                      onFocus={() => setShowSaleTaxSearch(true)}
-                      placeholder={t('taxPlaceholder')}
-                      style={{ width: '100%' }}
-                    />
-                    {showSaleTaxSearch && (
-                      <div style={dropdownContainerStyle}>
-                        {taxRates.length > 0 ? taxRates.map((tax: any) => (
-                          <div key={tax.name} onClick={() => { setFormData({ ...formData, saleTax: tax.rate.toString() }); setShowSaleTaxSearch(false); }} style={dropdownItemStyle}>
-                            <div style={{ fontWeight: 500, color: '#1e293b' }}>{tax.name}</div>
-                            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{tax.rate}%</div>
-                          </div>
-                        )) : (
-                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{t('noTaxRatesConfigured')}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{t('basicInformation')}</h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Name, barcode and description</p>
                 </div>
               </div>
-              {parseFloat(formData.saleTax) > 0 && formData.price && (
-                <p style={{ marginTop: '0.5rem', color: '#475569' }}>
-                  {t('priceWithTax')}: {(parseFloat(formData.price) * (1 + parseFloat(formData.saleTax) / 100)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'} {t('per')} {formData.saleUnit}
-                </p>
-              )}
-            </div>
 
-            {/* Cost Price */}
-            <div style={{ backgroundColor: '#f8fafc', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
-              <h4 style={{ fontWeight: 500, color: '#0f172a', marginBottom: '0.75rem' }}>{t('costPrice')}</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                <div>
-                  <label style={labelStyle}>{t('costPrice')}</label>
-                  {validationErrors.cost && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{validationErrors.cost}</p>}
-                  <div style={{ position: 'relative' }}>
-                    <InputText
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.cost}
-                      onChange={(e) => { setFormData({ ...formData, cost: e.target.value }); clearFieldError('cost'); }}
-                      placeholder={t('numericPlaceholder')}
-                      style={{ width: '100%' }}
-                    />
-                    <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', fontSize: '0.875rem', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>
-                      {language === 'ar' ? 'د.م' : 'DH'}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>{t('unit')}</label>
-                  <div style={{ position: 'relative' }} ref={purchaseUnitSearchRef}>
-                    <InputText
-                      type="text"
-                      value={formData.purchaseUnit}
-                      onChange={(e) => { setFormData({ ...formData, purchaseUnit: e.target.value }); setShowPurchaseUnitSearch(true); }}
-                      onFocus={() => setShowPurchaseUnitSearch(true)}
-                      placeholder={t('unit')}
-                      style={{ width: '100%' }}
-                    />
-                    {showPurchaseUnitSearch && (
-                      <div style={dropdownContainerStyle}>
-                        {uoms.filter((u: any) => u.name.toLowerCase().includes(formData.purchaseUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.purchaseUnit.toLowerCase())).length > 0 ? (
-                          uoms.filter((u: any) => u.name.toLowerCase().includes(formData.purchaseUnit.toLowerCase()) || u.code.toLowerCase().includes(formData.purchaseUnit.toLowerCase())).map((uom: any) => (
-                            <div key={uom.id} onClick={() => { setFormData({ ...formData, purchaseUnit: uom.name }); setShowPurchaseUnitSearch(false); }} style={dropdownItemStyle}>
-                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{uom.name}</div>
-                              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{uom.code} - {uom.category}</div>
-                            </div>
-                          ))
-                        ) : (
-                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{uoms.length === 0 ? t('noUnitsConfigured') : t('typeToCreateCustomUnit')}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>{t('tax')}</label>
-                  <div style={{ position: 'relative' }} ref={purchaseTaxSearchRef}>
-                    <InputText
-                      type="text"
-                      value={formData.purchaseTax}
-                      onChange={(e) => { setFormData({ ...formData, purchaseTax: e.target.value }); setShowPurchaseTaxSearch(true); }}
-                      onFocus={() => setShowPurchaseTaxSearch(true)}
-                      placeholder={t('taxPlaceholder')}
-                      style={{ width: '100%' }}
-                    />
-                    {showPurchaseTaxSearch && (
-                      <div style={dropdownContainerStyle}>
-                        {taxRates.length > 0 ? taxRates.map((tax: any) => (
-                          <div key={tax.name} onClick={() => { setFormData({ ...formData, purchaseTax: tax.rate.toString() }); setShowPurchaseTaxSearch(false); }} style={dropdownItemStyle}>
-                            <div style={{ fontWeight: 500, color: '#1e293b' }}>{tax.name}</div>
-                            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{tax.rate}%</div>
-                          </div>
-                        )) : (
-                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{t('noTaxRatesConfigured')}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Min Price */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-              <div>
-                <label style={labelStyle}>{t('minPrice')}</label>
-                <div style={{ position: 'relative' }}>
+              <div className="product-two-col" style={{ marginBottom: '1.25rem' }}>
+                <div className="p-field">
+                  <label className="p-label">{t('productName')} <span style={{ color: '#ef4444' }}>*</span></label>
                   <InputText
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.minPrice}
-                    onChange={(e) => setFormData({ ...formData, minPrice: e.target.value })}
-                    placeholder={t('numericPlaceholder')}
+                    value={formData.name}
+                    onChange={(e) => setField('name', e.target.value)}
+                    placeholder={t('enterProductName')}
+                    className={fieldClass('name')}
                     style={{ width: '100%' }}
                   />
-                  <span style={{ position: 'absolute', top: '0.625rem', color: '#64748b', ...(language === 'ar' ? { left: '0.75rem' } : { right: '0.75rem' }) }}>
-                    {language === 'ar' ? 'د.م' : 'DH'}
+                  {validationErrors.name && <Message severity="error" text={validationErrors.name} style={{ marginTop: '0.25rem' }} />}
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('productCodeEAN13')}</label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <InputText
+                      value={formData.code}
+                      onChange={(e) => setField('code', e.target.value)}
+                      placeholder={t('autoGeneratedBarcode')}
+                      maxLength={13}
+                      className={fieldClass('code')}
+                      style={{ flex: 1, fontFamily: 'monospace', letterSpacing: '0.05em' }}
+                    />
+                    <Button
+                      type="button"
+                      outlined
+                      onClick={handleRegenerateCode}
+                      disabled={isGeneratingCode}
+                      icon={<RefreshCw className={isGeneratingCode ? 'animate-spin' : ''} style={{ width: '0.875rem', height: '0.875rem' }} />}
+                      tooltip={t('generateNewUniqueCode')}
+                      tooltipOptions={{ position: 'top' }}
+                    />
+                  </div>
+                  {validationErrors.code && <Message severity="error" text={validationErrors.code} style={{ marginTop: '0.25rem' }} />}
+                </div>
+              </div>
+
+              <div className="p-field">
+                <label className="p-label">{t('description')}</label>
+                <InputTextarea
+                  value={formData.description}
+                  onChange={(e) => setField('description', e.target.value)}
+                  rows={3}
+                  autoResize
+                  placeholder={t('enterProductDescription')}
+                  style={{ width: '100%', resize: 'none' }}
+                />
+              </div>
+            </div>
+
+            {/* Sale Pricing */}
+            <div style={panel}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={iconBox('#ecfdf5')}>
+                  <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#10b981' }} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{t('salePrice')}</h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Price shown to customers</p>
+                </div>
+              </div>
+
+              <div className="product-pricing-grid">
+                <div className="p-field">
+                  <label className="p-label">{t('price')} <span style={{ color: '#ef4444' }}>*</span></label>
+                  <InputNumber
+                    value={formData.price}
+                    onValueChange={(e) => setField('price', e.value ?? null)}
+                    mode="decimal" minFractionDigits={2} maxFractionDigits={2} min={0}
+                    suffix={` ${currency}`} placeholder="0.00"
+                    className={fieldClass('price')}
+                    inputStyle={{ width: '100%' }} style={{ width: '100%' }}
+                  />
+                  {validationErrors.price && <Message severity="error" text={validationErrors.price} style={{ marginTop: '0.25rem' }} />}
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('unit')}</label>
+                  <Dropdown value={formData.saleUnitId} onChange={(e) => setField('saleUnitId', e.value)} options={uomOptions} placeholder={t('selectUnit')} style={{ width: '100%' }} showClear />
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('tax')}</label>
+                  <Dropdown value={formData.saleTaxId} onChange={(e) => setField('saleTaxId', e.value)} options={taxOptions} placeholder="0%" style={{ width: '100%' }} />
+                </div>
+              </div>
+
+              {priceWithTax != null && saleTaxRate > 0 && (
+                <div style={{ marginTop: '0.875rem', padding: '0.625rem 0.875rem', background: '#f0fdf4', borderRadius: '0.5rem', border: '1px solid #bbf7d0' }}>
+                  <span style={{ fontSize: '0.8125rem', color: '#166534' }}>
+                    {t('priceWithTax')}: <strong>{priceWithTax.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</strong>
                   </span>
                 </div>
+              )}
+
+              <div style={{ marginTop: '1.25rem' }} className="p-field">
+                <label className="p-label">{t('minPrice')}</label>
+                <InputNumber
+                  value={formData.minPrice}
+                  onValueChange={(e) => setField('minPrice', e.value ?? null)}
+                  mode="decimal" minFractionDigits={2} maxFractionDigits={2} min={0}
+                  suffix={` ${currency}`} placeholder="0.00"
+                  inputStyle={{ width: '100%' }} style={{ maxWidth: '16rem', width: '100%' }}
+                />
               </div>
             </div>
 
-            {/* Margin Preview */}
-            {formData.price && formData.cost && (
-              <div style={{ marginTop: '1rem', background: 'linear-gradient(to right, #fffbeb, #fff7ed)', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem' }}>
-                <h4 style={{ fontWeight: 600, color: '#0f172a', marginBottom: '0.75rem' }}>{t('marginAnalysis')}</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                  <div>
-                    <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('marginAmount')}</p>
-                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a' }}>
-                      {(parseFloat(formData.price) - parseFloat(formData.cost)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('marginPercent')}</p>
-                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#16a34a' }}>
-                      {parseFloat(formData.cost) > 0 ? (((parseFloat(formData.price) - parseFloat(formData.cost)) / parseFloat(formData.cost)) * 100).toFixed(2) : '0.00'}%
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '0.875rem', color: '#475569' }}>{t('markupPercent')}</p>
-                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#2563eb' }}>
-                      {parseFloat(formData.price) > 0 ? (((parseFloat(formData.price) - parseFloat(formData.cost)) / parseFloat(formData.price)) * 100).toFixed(2) : '0.00'}%
-                    </p>
-                  </div>
+            {/* Cost Pricing */}
+            <div style={panel}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={iconBox('#fffbeb')}>
+                  <TrendingUp style={{ width: '1rem', height: '1rem', color: '#f59e0b' }} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{t('costPrice')}</h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Purchase cost</p>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Product Options */}
-          <div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '1rem' }}>{t('options')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Checkbox checked={formData.isService} onChange={() => setFormData({ ...formData, isService: !formData.isService })} />
-                <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('isService')}</label>
+              <div className="product-pricing-grid">
+                <div className="p-field">
+                  <label className="p-label">{t('costPrice')}</label>
+                  <InputNumber
+                    value={formData.cost}
+                    onValueChange={(e) => setField('cost', e.value ?? null)}
+                    mode="decimal" minFractionDigits={2} maxFractionDigits={2} min={0}
+                    suffix={` ${currency}`} placeholder="0.00"
+                    inputStyle={{ width: '100%' }} style={{ width: '100%' }}
+                  />
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('unit')}</label>
+                  <Dropdown value={formData.purchaseUnitId} onChange={(e) => setField('purchaseUnitId', e.value)} options={uomOptions} placeholder={t('selectUnit')} style={{ width: '100%' }} showClear />
+                </div>
+                <div className="p-field">
+                  <label className="p-label">{t('tax')}</label>
+                  <Dropdown value={formData.purchaseTaxId} onChange={(e) => setField('purchaseTaxId', e.value)} options={taxOptions} placeholder="0%" style={{ width: '100%' }} />
+                </div>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('serviceDescription')}</p>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Checkbox checked={formData.isEnabled} onChange={() => setFormData({ ...formData, isEnabled: !formData.isEnabled })} />
-                <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('enabled')}</label>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('enabledDescription')}</p>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Checkbox checked={formData.isPriceChangeAllowed} onChange={() => setFormData({ ...formData, isPriceChangeAllowed: !formData.isPriceChangeAllowed })} />
-                <label style={{ fontSize: '0.875rem', color: '#0f172a' }}>{t('allowPriceChange')}</label>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '2rem' }}>{t('allowPriceChangeDescription')}</p>
+              {margin != null && (
+                <div style={{ marginTop: '1.25rem', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                  <p style={{ margin: '0 0 0.75rem', fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Margin Analysis</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
+                    {[
+                      { label: t('marginAmount'), value: `${margin.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`, color: margin >= 0 ? '#0f172a' : '#ef4444', border: '#f1f5f9' },
+                      { label: t('marginPercent'), value: `${marginPct?.toFixed(1) ?? '—'}%`, color: '#16a34a', border: '#dcfce7' },
+                      { label: t('markupPercent'), value: `${markupPct?.toFixed(1) ?? '—'}%`, color: '#2563eb', border: '#dbeafe' },
+                    ].map(({ label, value, color, border }) => (
+                      <div key={label} style={{ background: 'white', borderRadius: '0.625rem', padding: '0.75rem 0.5rem', textAlign: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.04)', border: `1px solid ${border}` }}>
+                        <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 0.375rem' }}>{label}</p>
+                        <p style={{ fontSize: '1.125rem', fontWeight: 700, color, margin: 0 }}>{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-          <Button type="button" outlined onClick={() => navigate('/products')} label={t('cancel')} />
-          <Button
-            type="submit"
-            loading={createMutation.isPending}
-            icon={<Save style={{ width: '1rem', height: '1rem' }} />}
-            label={t('createProduct')}
-          />
+          {/* ── Right sidebar ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+            {/* Settings */}
+            <div style={panel}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={iconBox('#f5f3ff')}>
+                  <SlidersHorizontal style={{ width: '1rem', height: '1rem', color: '#7c3aed' }} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>Settings</h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Product behavior options</p>
+                </div>
+              </div>
+
+              {([
+                { key: 'isService' as const, label: t('isService'), desc: t('serviceDescription'), value: formData.isService, onChange: (v: boolean) => setField('isService', v) },
+                { key: 'isEnabled' as const, label: t('enabled'), desc: t('enabledDescription'), value: formData.isEnabled, onChange: (v: boolean) => setField('isEnabled', v) },
+                { key: 'isPriceChangeAllowed' as const, label: t('allowPriceChange'), desc: t('allowPriceChangeDescription'), value: formData.isPriceChangeAllowed, onChange: (v: boolean) => setField('isPriceChangeAllowed', v) },
+              ] as const).map(({ key, label, desc, value, onChange }, i, arr) => (
+                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', padding: '0.75rem 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 500, fontSize: '0.875rem', color: '#0f172a', margin: 0 }}>{label}</p>
+                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0.125rem 0 0' }}>{desc}</p>
+                  </div>
+                  <InputSwitch checked={value} onChange={(e) => onChange(e.value ?? false)} />
+                </div>
+              ))}
+            </div>
+
+            {/* Organization */}
+            <div style={panel}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={iconBox('#fff7ed')}>
+                  <Building2 style={{ width: '1rem', height: '1rem', color: '#ea580c' }} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{t('classification')}</h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Warehouse and categories</p>
+                </div>
+              </div>
+
+              <div className="p-field" style={{ marginBottom: '1rem' }}>
+                <label className="p-label">{t('warehouse')} <span style={{ color: '#ef4444' }}>*</span></label>
+                <Dropdown
+                  value={formData.warehouseId}
+                  onChange={(e) => setField('warehouseId', e.value)}
+                  options={warehouseOptions}
+                  placeholder={t('selectOrSearchWarehouse')}
+                  filter filterPlaceholder={t('search')}
+                  className={fieldClass('warehouseId')}
+                  style={{ width: '100%' }}
+                />
+                {validationErrors.warehouseId && <Message severity="error" text={validationErrors.warehouseId} style={{ marginTop: '0.25rem' }} />}
+              </div>
+
+              <div className="p-field">
+                <label className="p-label">{t('categories')}</label>
+                <MultiSelect
+                  value={formData.categoryIds}
+                  onChange={(e) => setField('categoryIds', e.value)}
+                  options={categoryOptions}
+                  placeholder={t('typeToSearchCategories')}
+                  filter display="chip"
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </form>
     </AdminLayout>
