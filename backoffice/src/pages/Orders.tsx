@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersService, deliveryPersonService, partnersService } from '../modules';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, Grid3x3, List, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { MultiSelect } from 'primereact/multiselect';
+import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toastSuccess, toastDeleted, toastCancelled, toastError, toastWarning, toastConfirm } from '../services/toast.service';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -27,9 +28,8 @@ export default function Orders() {
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchInput, setSearchInput] = useState('');
-  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<'all' | 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string[]>([]);
   const [fromClientFilter, setFromClientFilter] = useState<'all' | 'locale' | 'client'>('all');
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +45,7 @@ export default function Orders() {
   }>({
     search: '',
     orderNumber: '',
-    deliveryStatus: 'all' as any,
+    deliveryStatus: [] as string[],
     fromClient: 'all' as any,
     dateFilterType: 'custom' as any,
     dateRange: { start: undefined, end: undefined },
@@ -59,10 +59,7 @@ export default function Orders() {
   const [deliveryPersonIdSearch, setDeliveryPersonIdSearch] = useState('');
   const [dateFilterType, setDateFilterType] = useState<'today' | 'yesterday' | 'week' | 'month' | 'year' | 'custom'>('custom');
   const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({ start: undefined, end: undefined });
-  const statusScrollRef = useRef<HTMLDivElement>(null);
 
-  const scrollStatusLeft = () => { statusScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' }); };
-  const scrollStatusRight = () => { statusScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' }); };
 
   const getDateRange = useMemo(() => {
     const now = new Date();
@@ -93,7 +90,7 @@ export default function Orders() {
     queryKey: ['orders', JSON.stringify(appliedFilters), currentPage, pageSize],
     queryFn: () => ordersService.getAll(
       appliedFilters.search, getDateRange.start, getDateRange.end, true,
-      appliedFilters.deliveryStatus !== 'all' ? appliedFilters.deliveryStatus : undefined,
+      appliedFilters.deliveryStatus?.length > 0 ? appliedFilters.deliveryStatus : undefined,
       appliedFilters.fromClient === 'client' ? true : appliedFilters.fromClient === 'locale' ? false : undefined,
       appliedFilters.orderNumber, currentPage, pageSize,
     ),
@@ -211,11 +208,23 @@ export default function Orders() {
   const customerOptions = partners.map((partner: any) => ({ label: `${partner.name}${partner.phone ? ` (${partner.phone})` : ''}`, value: String(partner.id) }));
   const deliveryPersonOptions = deliveryPersons.filter((p: any) => p.isActive).map((person: any) => ({ label: person.name, value: String(person.id) }));
 
+  const deliveryStatusOptions = [
+    { label: t('pending'), value: 'pending' },
+    { label: t('assigned'), value: 'assigned' },
+    { label: t('confirmed'), value: 'confirmed' },
+    { label: t('pickedUp'), value: 'picked_up' },
+    { label: t('toDelivery'), value: 'to_delivery' },
+    { label: t('inDelivery'), value: 'in_delivery' },
+    { label: t('delivered'), value: 'delivered' },
+    { label: t('canceled'), value: 'canceled' },
+  ];
+
   const resetFilters = () => {
     setOrderNumberSearch(''); setCustomerIdSearch(''); setCustomerPhoneSearch(''); setDeliveryPersonIdSearch('');
     setSearchInput(''); setFromClientFilter('all'); setDateFilterType('custom'); setDateRange({ start: undefined, end: undefined });
+    setDeliveryStatusFilter([]);
     setCurrentPage(1); setPageSize(50);
-    setAppliedFilters({ search: '', orderNumber: '', deliveryStatus: 'all', fromClient: 'all', dateFilterType: 'custom', dateRange: { start: undefined, end: undefined } });
+    setAppliedFilters({ search: '', orderNumber: '', deliveryStatus: [], fromClient: 'all', dateFilterType: 'custom', dateRange: { start: undefined, end: undefined } });
   };
 
   const applyFilters = () => {
@@ -227,7 +236,7 @@ export default function Orders() {
     setCurrentPage(1); setPageSize(50);
     setAppliedFilters({
       search: searchParts.join(' '), orderNumber: orderNumberSearch,
-      deliveryStatus: appliedFilters.deliveryStatus, fromClient: fromClientFilter,
+      deliveryStatus: deliveryStatusFilter, fromClient: fromClientFilter,
       dateFilterType: 'custom', dateRange: { start: dateRange.start, end: dateRange.end },
     });
     setFiltersExpanded(false);
@@ -247,22 +256,6 @@ export default function Orders() {
             subtitle={t('viewAndAssignOrders')}
             actions={
               <>
-                {/* View Mode Toggle */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-                  <Button
-                    onClick={() => setViewMode('card')}
-                    text={viewMode !== 'card'}
-                    style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', backgroundColor: viewMode === 'card' ? '#ffffff' : 'transparent', color: viewMode === 'card' ? '#0f172a' : '#475569', boxShadow: viewMode === 'card' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}
-                    icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />}
-                  />
-                  <Button
-                    onClick={() => setViewMode('list')}
-                    text={viewMode !== 'list'}
-                    style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', backgroundColor: viewMode === 'list' ? '#ffffff' : 'transparent', color: viewMode === 'list' ? '#0f172a' : '#475569', boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}
-                    icon={<List style={{ width: '1rem', height: '1rem' }} />}
-                  />
-                </div>
-
                 {/* Filters Toggle */}
                 <Button
                   onClick={() => setFiltersExpanded(!filtersExpanded)}
@@ -279,9 +272,9 @@ export default function Orders() {
                   iconPos="left"
                 >
                   {filtersExpanded ? <ChevronUp style={{ width: '1rem', height: '1rem' }} /> : <ChevronDown style={{ width: '1rem', height: '1rem' }} />}
-                  {(appliedFilters.search || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && !filtersExpanded && (
+                  {(appliedFilters.search || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end || appliedFilters.deliveryStatus?.length > 0) && !filtersExpanded && (
                     <span style={{ marginLeft: '0.25rem', padding: '0.125rem 0.5rem', backgroundColor: '#f59e0b', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px' }}>
-                      {[appliedFilters.search, appliedFilters.fromClient !== 'all', Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end)].filter(Boolean).length}
+                      {[appliedFilters.search, appliedFilters.fromClient !== 'all', Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end), appliedFilters.deliveryStatus?.length > 0].filter(Boolean).length}
                     </span>
                   )}
                 </Button>
@@ -439,6 +432,24 @@ export default function Orders() {
                     ))}
                   </div>
                 </div>
+
+                {/* Delivery Status Filter */}
+                <div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Truck style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                    {t('deliveryStatus')}
+                  </div>
+                  <MultiSelect
+                    value={deliveryStatusFilter}
+                    onChange={(e) => setDeliveryStatusFilter(e.value)}
+                    options={deliveryStatusOptions}
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder={t('all')}
+                    display="chip"
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
 
               {/* Panel Footer */}
@@ -448,119 +459,6 @@ export default function Orders() {
               </div>
             </div>
           </>
-        )}
-
-        {/* Delivery Status Filter Bar */}
-        <div style={{ marginBottom: '0.75rem', flexShrink: 0 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Truck style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{t('deliveryStatus')}</h3>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <Button onClick={scrollStatusLeft} text rounded icon={<ChevronLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />} style={{ backgroundColor: '#f1f5f9', borderRadius: '9999px', padding: '0.375rem' }} />
-                <Button onClick={scrollStatusRight} text rounded icon={<ChevronRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />} style={{ backgroundColor: '#f1f5f9', borderRadius: '9999px', padding: '0.375rem' }} />
-              </div>
-            </div>
-            <div ref={statusScrollRef} style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', scrollBehavior: 'smooth' }}>
-              {[
-                { key: 'all', label: t('all'), icon: '📦' },
-                { key: 'pending', label: t('pending'), icon: '⏳' },
-                { key: 'assigned', label: t('assigned'), icon: '👤' },
-                { key: 'confirmed', label: t('confirmed'), icon: '✓' },
-                { key: 'picked_up', label: t('pickedUp'), icon: '📦' },
-                { key: 'to_delivery', label: t('toDelivery'), icon: '⚠️' },
-                { key: 'in_delivery', label: t('inDelivery'), icon: '🚗' },
-                { key: 'delivered', label: t('delivered'), icon: '✅' },
-                { key: 'canceled', label: t('canceled'), icon: '❌' }
-              ].map((filter) => (
-                <Button
-                  key={filter.key}
-                  onClick={() => {
-                    setDeliveryStatusFilter(filter.key as any);
-                    setAppliedFilters(prev => ({ ...prev, deliveryStatus: filter.key as any, dateFilterType: 'custom', dateRange: { start: prev.dateRange.start, end: prev.dateRange.end } }));
-                  }}
-                  text={deliveryStatusFilter !== filter.key}
-                  style={{
-                    padding: '0.375rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
-                    backgroundColor: deliveryStatusFilter === filter.key ? '#f59e0b' : '#f8fafc',
-                    color: deliveryStatusFilter === filter.key ? '#ffffff' : '#334155',
-                    ...(deliveryStatusFilter !== filter.key ? { border: '2px solid #e2e8f0' } : {}),
-                  }}
-                >
-                  <span style={{ fontSize: '0.875rem' }}>{filter.icon}</span>
-                  <span style={{ whiteSpace: 'nowrap' }}>{filter.label}</span>
-                  <span style={{
-                    padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontSize: '0.625rem', fontWeight: 700,
-                    backgroundColor: deliveryStatusFilter === filter.key ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
-                    color: deliveryStatusFilter === filter.key ? '#ffffff' : '#475569',
-                  }}>
-                    {deliveryStatusCounts[filter.key as keyof typeof deliveryStatusCounts]}
-                  </span>
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Pagination Info */}
-        {orders.length > 0 && (
-          <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem 0.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-              <div style={{ fontSize: '0.875rem', color: '#475569' }}>
-                {t('showing')} <span style={{ fontWeight: 600 }}>{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
-                <span style={{ fontWeight: 600 }}>{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span style={{ fontWeight: 600 }}>{totalCount}</span> {t('results')}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569' }}>{t('perPage')}</span>
-                <Dropdown
-                  value={pageSize}
-                  onChange={(e) => { setPageSize(e.value); setCurrentPage(1); }}
-                  options={pageSizeOptions}
-                  optionLabel="label"
-                  optionValue="value"
-                  style={{ width: '5rem' }}
-                />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  text
-                  outlined
-                  icon={<ChevronLeft style={{ width: '1rem', height: '1rem' }} />}
-                  style={{ padding: '0.375rem 0.5rem' }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <InputText
-                    type="number"
-                    min={1}
-                    max={Math.ceil(totalCount / pageSize)}
-                    value={String(currentPage)}
-                    onChange={(e) => {
-                      const page = parseInt(e.target.value, 10);
-                      const maxPage = Math.ceil(totalCount / pageSize);
-                      if (!isNaN(page) && page >= 1 && page <= maxPage) setCurrentPage(page);
-                    }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                    style={{ width: '3rem', textAlign: 'center' }}
-                    aria-label="Page number"
-                  />
-                  <span style={{ fontSize: '0.875rem', color: '#64748b' }}>/</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{Math.ceil(totalCount / pageSize)}</span>
-                </div>
-                <Button
-                  onClick={() => setCurrentPage(Math.min(Math.ceil(totalCount / pageSize), currentPage + 1))}
-                  disabled={currentPage === Math.ceil(totalCount / pageSize)}
-                  text
-                  outlined
-                  icon={<ChevronRight style={{ width: '1rem', height: '1rem' }} />}
-                  style={{ padding: '0.375rem 0.5rem' }}
-                />
-              </div>
-            </div>
-          </div>
         )}
 
         {/* Orders Content */}
@@ -589,23 +487,23 @@ export default function Orders() {
               </div>
               <h3 style={{ marginTop: '1.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('noOrdersFound')}</h3>
               <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#64748b', maxWidth: '24rem', textAlign: 'center' }}>
-                {(appliedFilters.search || appliedFilters.orderNumber || appliedFilters.deliveryStatus !== 'all' || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end)
+                {(appliedFilters.search || appliedFilters.orderNumber || appliedFilters.deliveryStatus?.length > 0 || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end)
                   ? "Aucune commande ne correspond à vos critères de recherche. Essayez de modifier les filtres."
                   : "Aucune commande pour le moment. Les nouvelles commandes apparaîtront ici."}
               </p>
-              {(appliedFilters.search || appliedFilters.orderNumber || appliedFilters.deliveryStatus !== 'all' || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && (
-                <Button label="Réinitialiser les filtres" onClick={() => { resetFilters(); setDeliveryStatusFilter('all'); }} style={{ marginTop: '1.5rem' }} />
+              {(appliedFilters.search || appliedFilters.orderNumber || appliedFilters.deliveryStatus?.length > 0 || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && (
+                <Button label="Réinitialiser les filtres" onClick={resetFilters} style={{ marginTop: '1.5rem' }} />
               )}
             </div>
           </div>
-        ) : viewMode === 'list' ? (
+        ) : (
           <div style={{ flex: 1 }}>
             <style>{`
               .ord-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
               .ord-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
               .ord-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
               .ord-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-              .ord-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+              .ord-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
               .ord-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
             `}</style>
             <DataTable
@@ -712,90 +610,6 @@ export default function Orders() {
                 )}
               />
             </DataTable>
-          </div>
-        ) : (
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-              {orders.map((order: any) => {
-                const dsb = getDeliveryStatusBadge(order.deliveryStatus);
-                const sb = getSourceBadge(order);
-                return (
-                  <div
-                    key={order.id}
-                    onClick={() => toggleSelectOrder(order.id)}
-                    style={{
-                      position: 'relative', backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', height: '16rem', overflow: 'hidden', cursor: 'pointer',
-                      border: selectedOrders.includes(order.id) ? '2px solid #f59e0b' : '1px solid #e2e8f0',
-                    }}
-                  >
-                    {/* Card Header */}
-                    <div style={{ padding: '0.75rem 1rem', background: 'linear-gradient(to right, #f8fafc, #ffffff, #f8fafc)', borderBottom: '1px solid #e2e8f0' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f172a' }}>#{order.orderNumber}</span>
-                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatOrderDate(order.dateCreated)}</span>
-                          </div>
-                        </div>
-                        <div style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-                          <div style={{
-                            width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            backgroundColor: selectedOrders.includes(order.id) ? '#f59e0b' : '#ffffff',
-                            borderColor: selectedOrders.includes(order.id) ? '#f59e0b' : '#cbd5e1',
-                            color: selectedOrders.includes(order.id) ? '#ffffff' : 'transparent',
-                          }}>
-                            {selectedOrders.includes(order.id) && <Check style={{ width: '1rem', height: '1rem' }} />}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginTop: '0.625rem', width: '100%' }}>
-                        <span style={{ padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', backgroundColor: dsb.bg, color: dsb.color, border: `1px solid ${dsb.border}` }}>
-                          {dsb.icon}
-                          <span>{dsb.label}</span>
-                        </span>
-                        <span style={{ padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.375rem', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}` }}>
-                          {sb.icon}
-                          <span>{sb.label}</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Card Content */}
-                    <div style={{ padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.625rem', flex: 1, overflowY: 'auto' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                        <div style={{ width: '1.75rem', height: '1.75rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid #fde68a' }}>
-                          <Package style={{ width: '0.875rem', height: '0.875rem', color: '#d97706' }} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{order.customerName}</p>
-                          <a href={`tel:${order.customerPhone}`} style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.125rem', textDecoration: 'none' }}>
-                            <Phone style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0 }} />
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{order.customerPhone}</span>
-                          </a>
-                        </div>
-                      </div>
-                      {order.customerAddress && (
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem', padding: '0.625rem', border: '1px solid #dbeafe' }}>
-                          <div style={{ width: '1rem', height: '1rem', backgroundColor: '#dbeafe', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.125rem' }}>
-                            <MapPin style={{ width: '0.625rem', height: '0.625rem', color: '#2563eb' }} />
-                          </div>
-                          <p style={{ fontSize: '0.75rem', color: '#334155', lineHeight: 1.3, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>{order.customerAddress}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Card Footer */}
-                    <div style={{ borderTop: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('total')}</span>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#d97706' }}>{order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>{t('currency')}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         )}
       </div>

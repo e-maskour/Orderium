@@ -178,7 +178,7 @@ export default function StockMovements() {
           .sm-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
           .sm-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
           .sm-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-          .sm-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+          .sm-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
           .sm-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
         `}</style>
         <DataTable

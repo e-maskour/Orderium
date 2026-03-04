@@ -3,7 +3,7 @@ import { PageHeader } from '../components/PageHeader';
 import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Plus, Truck, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, Check } from 'lucide-react';
+import { LayoutDashboard, List, Plus, Truck, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Phone, Mail } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
@@ -21,7 +21,6 @@ export default function DeliveryPersons() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPersons, setSelectedPersons] = useState<number[]>([]);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -313,26 +312,6 @@ export default function DeliveryPersons() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {/* Toolbar */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                  {/* View Mode Toggle */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-                    <Button
-                      onClick={() => setViewMode('card')}
-                      text={viewMode !== 'card'}
-                      style={viewMode === 'card'
-                        ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', background: '#ffffff', color: '#0f172a', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }
-                        : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', color: '#475569', background: 'transparent' }}
-                      icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />}
-                    />
-                    <Button
-                      onClick={() => setViewMode('list')}
-                      text={viewMode !== 'list'}
-                      style={viewMode === 'list'
-                        ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', background: '#ffffff', color: '#0f172a', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }
-                        : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', color: '#475569', background: 'transparent' }}
-                      icon={<ListIcon style={{ width: '1rem', height: '1rem' }} />}
-                    />
-                  </div>
-
                   {/* Search */}
                   <span style={{ position: 'relative', display: 'block', width: '24rem' }}>
                     <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
@@ -370,138 +349,52 @@ export default function DeliveryPersons() {
                     </div>
                   ) : (
                     <>
-                      {viewMode === 'card' ? (
-                        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(4,1fr)' }}>
-                          {filteredPersons.map((person: DeliveryPerson) => {
-                            const isSelected = selectedPersons.includes(person.id);
-
-                            return (
-                              <div
-                                key={person.id}
-                                onClick={() => toggleSelectPerson(person.id)}
-                                style={isSelected
-                                  ? { position: 'relative', background: '#ffffff', borderRadius: '0.5rem', overflow: 'hidden', outline: '2px solid #f59e0b', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', cursor: 'pointer' }
-                                  : { position: 'relative', background: '#ffffff', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', border: '1px solid #e2e8f0' }
-                                }
-                              >
-                                {/* Selection Checkbox */}
-                                <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', zIndex: 10 }}>
-                                  <div style={isSelected
-                                    ? { width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f59e0b', color: '#ffffff' }
-                                    : { width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }
-                                  }>
-                                    {isSelected && <Check style={{ width: '1rem', height: '1rem' }} />}
-                                  </div>
-                                </div>
-
-                                {/* Status Badge */}
-                                <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10 }}>
-                                  <span style={person.isActive
-                                    ? { paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', borderRadius: '0.375rem', fontSize: '10px', fontWeight: 500, background: '#dcfce7', color: '#15803d' }
-                                    : { paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', borderRadius: '0.375rem', fontSize: '10px', fontWeight: 500, background: '#f1f5f9', color: '#475569' }
-                                  }>
-                                    {person.isActive ? t('active') : t('inactive')}
-                                  </span>
-                                </div>
-
-                                {/* Card Content */}
-                                <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                  {/* Header */}
-                                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginTop: '2rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-                                      <div style={{ width: '2.25rem', height: '2.25rem', background: '#dbeafe', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <Truck style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
-                                      </div>
-                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }} className="line-clamp-1" title={person.name}>
-                                          {person.name}
-                                        </h3>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Contact Info */}
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
-                                      <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} />
-                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.phoneNumber}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
-                                      <Mail style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} />
-                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.email || '-'}</span>
-                                    </div>
-                                  </div>
-
-                                  {/* Action Buttons */}
-                                  <div style={{ display: 'flex', gap: '0.375rem', paddingTop: '0.5rem', borderTop: '1px solid #f1f5f9' }}>
-                                    <Button
-                                      onClick={(e) => { e.stopPropagation(); handleViewPerson(person); }}
-                                      label="Voir"
-                                      icon={<Eye style={{ width: '0.75rem', height: '0.75rem' }} />}
-                                      style={{ flex: 1, paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', background: '#eff6ff', color: '#1d4ed8', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, border: 'none' }}
-                                    />
-                                    <Button
-                                      onClick={(e) => { e.stopPropagation(); handleEditPerson(person); }}
-                                      label="Modifier"
-                                      icon={<Edit2 style={{ width: '0.75rem', height: '0.75rem' }} />}
-                                      style={{ flex: 1, paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', background: '#f8fafc', color: '#334155', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, border: 'none' }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <>
-                          <style>{`
-                            .dp-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-                            .dp-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
-                            .dp-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
-                            .dp-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-                            .dp-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
-                            .dp-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
-                          `}</style>
-                          <DataTable
-                            className="dp-datatable"
-                            value={filteredPersons}
-                            selection={filteredPersons.filter((p: DeliveryPerson) => selectedPersons.includes(p.id))}
-                            onSelectionChange={(e) => setSelectedPersons((e.value as DeliveryPerson[]).map((p) => p.id))}
-                            selectionMode="checkbox"
-                            dataKey="id"
-                            paginator
-                            paginatorPosition="top"
-                            rows={25}
-                            rowsPerPageOptions={[10, 25, 50, 100]}
-                            removableSort
-                            emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
-                            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                          >
-                            <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                            <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
-                                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>
-                              </div>
-                            )} />
-                            <Column field="phoneNumber" header="Téléphone" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
-                            <Column field="email" header="Email" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
-                            <Column field="isActive" header="Statut" body={(row: DeliveryPerson) => (
-                              <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
-                                {row.isActive ? 'Actif' : 'Inactif'}
-                              </span>
-                            )} />
-                            <Column header="Actions" headerStyle={{ textAlign: 'right' }} body={(row: DeliveryPerson) => (
-                              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
-                                <Button text rounded severity="info" onClick={(e) => { e.stopPropagation(); handleViewPerson(row); }} icon={<Eye style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
-                                <Button text rounded severity="warning" onClick={(e) => { e.stopPropagation(); handleEditPerson(row); }} icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
-                                <Button text rounded severity="danger" onClick={(e) => { e.stopPropagation(); handleDeletePerson(row); }} icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
-                              </div>
-                            )} />
-                          </DataTable>
-                        </>
-                      )}
+                      <style>{`
+                        .dp-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+                        .dp-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+                        .dp-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+                        .dp-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+                        .dp-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
+                        .dp-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                      `}</style>
+                      <DataTable
+                        className="dp-datatable"
+                        value={filteredPersons}
+                        selection={filteredPersons.filter((p: DeliveryPerson) => selectedPersons.includes(p.id))}
+                        onSelectionChange={(e) => setSelectedPersons((e.value as DeliveryPerson[]).map((p) => p.id))}
+                        selectionMode="checkbox"
+                        dataKey="id"
+                        paginator
+                        paginatorPosition="top"
+                        rows={25}
+                        rowsPerPageOptions={[10, 25, 50, 100]}
+                        removableSort
+                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+                        currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                      >
+                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                        <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
+                            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>
+                          </div>
+                        )} />
+                        <Column field="phoneNumber" header="Téléphone" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
+                        <Column field="email" header="Email" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                        <Column field="isActive" header="Statut" body={(row: DeliveryPerson) => (
+                          <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
+                            {row.isActive ? 'Actif' : 'Inactif'}
+                          </span>
+                        )} />
+                        <Column header="Actions" headerStyle={{ textAlign: 'right' }} body={(row: DeliveryPerson) => (
+                          <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                            <Button text rounded severity="info" onClick={(e) => { e.stopPropagation(); handleViewPerson(row); }} icon={<Eye style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
+                            <Button text rounded severity="warning" onClick={(e) => { e.stopPropagation(); handleEditPerson(row); }} icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
+                            <Button text rounded severity="danger" onClick={(e) => { e.stopPropagation(); handleDeletePerson(row); }} icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
+                          </div>
+                        )} />
+                      </DataTable>
                     </>
                   )}
                 </div>

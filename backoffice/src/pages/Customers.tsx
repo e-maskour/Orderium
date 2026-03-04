@@ -3,7 +3,7 @@ import { PageHeader } from '../components/PageHeader';
 import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Grid3x3, List as ListIcon, Phone, Mail, Check } from 'lucide-react';
+import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Phone, Mail } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
@@ -20,7 +20,6 @@ export default function Customers() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -300,28 +299,6 @@ export default function Customers() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {/* Toolbar */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  {/* View Mode Toggle */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-                    <Button
-                      icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />}
-                      onClick={() => setViewMode('card')}
-                      text={viewMode !== 'card'}
-                      style={viewMode === 'card'
-                        ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.375rem' }
-                        : { backgroundColor: 'transparent', color: '#475569', borderRadius: '0.375rem' }
-                      }
-                    />
-                    <Button
-                      icon={<ListIcon style={{ width: '1rem', height: '1rem' }} />}
-                      onClick={() => setViewMode('list')}
-                      text={viewMode !== 'list'}
-                      style={viewMode === 'list'
-                        ? { backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.375rem' }
-                        : { backgroundColor: 'transparent', color: '#475569', borderRadius: '0.375rem' }
-                      }
-                    />
-                  </div>
-
                   {/* Search */}
                   <div style={{ position: 'relative' }}>
                     <InputText
@@ -353,129 +330,54 @@ export default function Customers() {
                     </div>
                   ) : (
                     <>
-                      {viewMode === 'card' ? (
-                        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                          {filteredCustomers.map((customer: Partner) => {
-                            const isSelected = selectedCustomers.includes(customer.id);
-
-                            return (
-                              <div
-                                key={customer.id}
-                                onClick={() => toggleSelectCustomer(customer.id)}
-                                style={{
-                                  position: 'relative', backgroundColor: 'white', borderRadius: '0.5rem', overflow: 'hidden', cursor: 'pointer',
-                                  ...(isSelected
-                                    ? { outline: '2px solid #f59e0b', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }
-                                    : { boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }),
-                                }}
-                              >
-                                {/* Selection Checkbox */}
-                                <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', zIndex: 10 }}>
-                                  <div style={{
-                                    width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', border: '2px solid',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    ...(isSelected
-                                      ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' }
-                                      : { backgroundColor: 'white', borderColor: '#cbd5e1' }),
-                                  }}>
-                                    {isSelected && <Check style={{ width: '1rem', height: '1rem' }} />}
-                                  </div>
-                                </div>
-
-                                {/* Status Badge */}
-                                <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10 }}>
-                                  <span style={{
-                                    padding: '0.125rem 0.5rem', borderRadius: '0.375rem', fontSize: '10px', fontWeight: 500,
-                                    ...(customer.isEnabled
-                                      ? { backgroundColor: '#dcfce7', color: '#15803d' }
-                                      : { backgroundColor: '#f1f5f9', color: '#475569' }),
-                                  }}>
-                                    {customer.isEnabled ? t('active') : t('inactive')}
-                                  </span>
-                                </div>
-
-                                {/* Card Content */}
-                                <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginTop: '2rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-                                      <div style={{ width: '2.25rem', height: '2.25rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
-                                      </div>
-                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={customer.name}>
-                                          {customer.name}
-                                        </h3>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
-                                      <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} />
-                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customer.phoneNumber || '-'}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>
-                                      <Mail style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} />
-                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customer.email || '-'}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <>
-                          <style>{`
-                            .cust-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-                            .cust-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
-                            .cust-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
-                            .cust-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-                            .cust-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
-                            .cust-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
-                          `}</style>
-                          <DataTable
-                            className="cust-datatable"
-                            value={filteredCustomers}
-                            selection={filteredCustomers.filter((c: Partner) => selectedCustomers.includes(c.id))}
-                            onSelectionChange={(e) => setSelectedCustomers((e.value as Partner[]).map((c) => c.id))}
-                            selectionMode="checkbox"
-                            dataKey="id"
-                            paginator
-                            paginatorPosition="top"
-                            rows={25}
-                            rowsPerPageOptions={[10, 25, 50, 100]}
-                            removableSort
-                            emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCustomersFound')}</div>}
-                            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                          >
-                            <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                            <Column field="name" header={t('name')} sortable body={(row: Partner) => (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                  <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
-                                </div>
-                                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>
-                              </div>
-                            )} />
-                            <Column field="phoneNumber" header={t('phone')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber || '-'}</span>} />
-                            <Column field="email" header={t('email')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
-                            <Column field="isEnabled" header={t('status')} body={(row: Partner) => (
-                              <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
-                                {row.isEnabled ? t('active') : t('inactive')}
-                              </span>
-                            )} />
-                            <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Partner) => (
-                              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                <Button icon={<Eye style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleViewCustomer(row)} text rounded severity="secondary" />
-                                <Button icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleEditCustomer(row)} text rounded severity="info" />
-                                <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDeletePartner(row)} text rounded severity="danger" />
-                              </div>
-                            )} />
-                          </DataTable>
-                        </>
-                      )}
+                      <style>{`
+                        .cust-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+                        .cust-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
+                        .cust-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
+                        .cust-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
+                        .cust-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
+                        .cust-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                      `}</style>
+                      <DataTable
+                        className="cust-datatable"
+                        value={filteredCustomers}
+                        selection={filteredCustomers.filter((c: Partner) => selectedCustomers.includes(c.id))}
+                        onSelectionChange={(e) => setSelectedCustomers((e.value as Partner[]).map((c) => c.id))}
+                        selectionMode="checkbox"
+                        dataKey="id"
+                        paginator
+                        paginatorPosition="top"
+                        rows={25}
+                        rowsPerPageOptions={[10, 25, 50, 100]}
+                        removableSort
+                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCustomersFound')}</div>}
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+                        currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                      >
+                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                        <Column field="name" header={t('name')} sortable body={(row: Partner) => (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
+                            </div>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>
+                          </div>
+                        )} />
+                        <Column field="phoneNumber" header={t('phone')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber || '-'}</span>} />
+                        <Column field="email" header={t('email')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                        <Column field="isEnabled" header={t('status')} body={(row: Partner) => (
+                          <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
+                            {row.isEnabled ? t('active') : t('inactive')}
+                          </span>
+                        )} />
+                        <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Partner) => (
+                          <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                            <Button icon={<Eye style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleViewCustomer(row)} text rounded severity="secondary" />
+                            <Button icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleEditCustomer(row)} text rounded severity="info" />
+                            <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDeletePartner(row)} text rounded severity="danger" />
+                          </div>
+                        )} />
+                      </DataTable>
                     </>
                   )}
                 </div>

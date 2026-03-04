@@ -3,7 +3,7 @@ import { PageHeader } from '../components/PageHeader';
 import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useLanguage } from '../context/LanguageContext';
 import { useState, useEffect } from 'react';
-import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard } from 'lucide-react';
+import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard, Banknote, Building2, Smartphone, FileCheck } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
@@ -102,6 +102,20 @@ export default function PaiementsAchat() {
   });
 
   const totalAmount = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
+  const thisMonthPayments = filteredPayments.filter(p => {
+    const d = new Date(p.paymentDate); const n = new Date();
+    return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
+  });
+  const thisMonthAmount = thisMonthPayments.reduce((sum, p) => sum + p.amount, 0);
+
+  const PAYMENT_METHOD_CONFIG: Record<string, { bg: string; color: string; border: string; icon: React.ElementType }> = {
+    cash: { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', icon: Banknote },
+    check: { bg: '#fefce8', color: '#a16207', border: '#fde68a', icon: FileCheck },
+    bank_transfer: { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', icon: Building2 },
+    credit_card: { bg: '#faf5ff', color: '#7e22ce', border: '#e9d5ff', icon: CreditCard },
+    mobile_payment: { bg: '#eef2ff', color: '#4338ca', border: '#c7d2fe', icon: Smartphone },
+    other: { bg: '#f8fafc', color: '#475569', border: '#e2e8f0', icon: Wallet },
+  };
 
   return (
     <AdminLayout>
@@ -112,41 +126,63 @@ export default function PaiementsAchat() {
           subtitle={t('managePurchasePayments')}
         />
 
-        {/* Stats Cards */}
+        {/* KPI Cards */}
         <div style={{ marginBottom: '1.5rem' }}>
           <KpiGrid count={3}>
             <KpiCard label={t('totalPayments')} value={filteredPayments.length} icon={CreditCard} color="blue" />
-            <KpiCard label={t('totalAmount')} value={`${totalAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`} icon={Wallet} color="red" />
-            <KpiCard label={t('thisMonth')} value={filteredPayments.filter(p => { const d = new Date(p.paymentDate); const n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); }).length} icon={Calendar} color="amber" />
+            <KpiCard
+              label={t('totalAmount')}
+              value={`${totalAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`}
+              icon={Wallet}
+              color="red"
+            />
+            <KpiCard
+              label={t('thisMonth')}
+              value={`${thisMonthAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`}
+              icon={Calendar}
+              color="amber"
+              subtitle={`${thisMonthPayments.length} paiements`}
+            />
           </KpiGrid>
         </div>
 
-        {/* Search Bar */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <span style={{ position: 'relative', display: 'block', width: '100%' }}>
-            <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-            <InputText
-              id="search-payments"
-              type="text"
-              placeholder={t('searchByInvoice')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              aria-label={t('searchByInvoice')}
-              style={{ width: '100%', paddingLeft: '2.5rem' }}
-            />
-          </span>
-        </div>
+        {/* Table Card */}
+        <div style={{ background: '#fff', borderRadius: '0.875rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
-        {/* Payments Table */}
-        <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          {/* Toolbar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1.25rem', borderBottom: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: '1', minWidth: '14rem' }}>
+              <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '0.875rem', height: '0.875rem', color: '#94a3b8', pointerEvents: 'none' }} />
+              <InputText
+                id="search-payments"
+                type="text"
+                placeholder={t('searchByInvoice')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ width: '100%', paddingLeft: '2.25rem', height: '2.25rem', fontSize: '0.875rem', borderRadius: '0.5rem' }}
+              />
+            </div>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              {selectedRows.length > 0 && (
+                <span style={{ background: '#fee2e2', color: '#dc2626', borderRadius: '9999px', padding: '0.125rem 0.75rem', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {selectedRows.length} sélectionnés
+                </span>
+              )}
+              <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
+                {filteredPayments.length} résultat{filteredPayments.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+
           <style>{`
-            .pa-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 1rem 1.5rem; font-size: 0.75rem; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
-            .pa-datatable .p-datatable-tbody > tr > td { padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; font-size: 0.875rem; }
+            .pa-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+            .pa-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; }
             .pa-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
             .pa-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-            .pa-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+            .pa-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
             .pa-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
           `}</style>
+
           <DataTable
             className="pa-datatable"
             value={filteredPayments}
@@ -161,42 +197,104 @@ export default function PaiementsAchat() {
             removableSort
             loading={loading}
             emptyMessage={
-              <div style={{ textAlign: 'center', padding: '2rem' }}>
-                <Wallet style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
-                <p style={{ color: '#64748b' }}>Aucun paiement trouvé</p>
+              <div style={{ textAlign: 'center', padding: '3.5rem 1rem' }}>
+                <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', background: 'linear-gradient(135deg, #fef2f2, #fee2e2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', border: '1px solid #fecaca' }}>
+                  <Wallet style={{ width: '1.5rem', height: '1.5rem', color: '#ef4444' }} />
+                </div>
+                <p style={{ color: '#1e293b', fontWeight: 600, marginBottom: '0.25rem', fontSize: '0.9375rem' }}>Aucun paiement trouvé</p>
+                <p style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>Aucun paiement d'achat ne correspond à votre recherche</p>
               </div>
             }
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
             currentPageReportTemplate="{first} - {last} / {totalRecords}"
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+
+            {/* Date */}
             <Column field="paymentDate" header={t('invoice.date')} sortable body={(p: Payment) => (
-              <span>{new Date(p.paymentDate).toLocaleDateString('fr-FR')}</span>
-            )} />
-            <Column header={t('invoice')} body={(p: Payment) => (
-              <span style={{ fontWeight: 500, color: '#0f172a' }}>{getInvoiceNumber(p.invoiceId)}</span>
-            )} />
-            <Column header={t('supplier')} body={(p: Payment) => (
-              <span style={{ color: '#475569' }}>{getSupplierName(p.invoiceId)}</span>
-            )} />
-            <Column field="paymentType" header={t('paymentMethod')} sortable body={(p: Payment) => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#475569' }}>
-                <CreditCard style={{ width: '1rem', height: '1rem', color: '#94a3b8' }} />
-                {PAYMENT_TYPE_LABELS[p.paymentType]}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: '1.875rem', height: '1.875rem', borderRadius: '0.4rem', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Calendar style={{ width: '0.875rem', height: '0.875rem', color: '#3b82f6' }} />
+                </div>
+                <span style={{ fontWeight: 500, color: '#334155', whiteSpace: 'nowrap' }}>
+                  {new Date(p.paymentDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
               </div>
             )} />
-            <Column field="referenceNumber" header={t('reference')} sortable body={(p: Payment) => (
-              <span style={{ color: '#475569' }}>{p.referenceNumber || '-'}</span>
-            )} />
-            <Column field="amount" header={t('amount')} sortable align="right" headerStyle={{ textAlign: 'right' }} body={(p: Payment) => (
-              <span style={{ fontWeight: 600, color: '#dc2626' }}>
-                {p.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+
+            {/* Invoice */}
+            <Column header={t('invoice')} body={(p: Payment) => (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a',
+                borderRadius: '0.375rem', padding: '0.1875rem 0.5rem',
+                fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'monospace',
+                letterSpacing: '0.02em',
+              }}>
+                {getInvoiceNumber(p.invoiceId)}
               </span>
             )} />
+
+            {/* Supplier */}
+            <Column header={t('supplier')} body={(p: Payment) => {
+              const name = getSupplierName(p.invoiceId);
+              const initials = name !== '-'
+                ? name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+                : '?';
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{
+                    width: '1.875rem', height: '1.875rem', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                    color: '#fff', fontSize: '0.625rem', fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    {initials}
+                  </div>
+                  <span style={{ color: '#334155', fontWeight: 500 }}>{name}</span>
+                </div>
+              );
+            }} />
+
+            {/* Payment Method */}
+            <Column field="paymentType" header={t('paymentMethod')} sortable body={(p: Payment) => {
+              const cfg = PAYMENT_METHOD_CONFIG[p.paymentType] || PAYMENT_METHOD_CONFIG.other;
+              const MethodIcon = cfg.icon;
+              return (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                  background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+                  borderRadius: '9999px', padding: '0.25rem 0.625rem',
+                  fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap',
+                }}>
+                  <MethodIcon style={{ width: '0.75rem', height: '0.75rem' }} />
+                  {PAYMENT_TYPE_LABELS[p.paymentType]}
+                </span>
+              );
+            }} />
+
+            {/* Reference */}
+            <Column field="referenceNumber" header={t('reference')} sortable body={(p: Payment) => (
+              p.referenceNumber
+                ? <span style={{ fontFamily: 'monospace', fontSize: '0.8125rem', color: '#475569', background: '#f8fafc', padding: '0.125rem 0.4375rem', borderRadius: '0.25rem', border: '1px solid #e2e8f0' }}>{p.referenceNumber}</span>
+                : <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
+            )} />
+
+            {/* Amount */}
+            <Column field="amount" header={t('amount')} sortable align="right" headerStyle={{ textAlign: 'right' }} body={(p: Payment) => (
+              <div style={{ textAlign: 'right', lineHeight: 1.2 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#dc2626' }}>
+                  −{p.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <span style={{ color: '#94a3b8', fontSize: '0.6875rem', fontWeight: 500, marginLeft: '0.25rem' }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
+                </div>
+              </div>
+            )} />
+
+            {/* Actions */}
             <Column header={t('invoice.actions')} align="center" headerStyle={{ textAlign: 'center' }} body={(p: Payment) => (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                <Button icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleEdit(p)} text rounded severity="info" title={t('modify')} />
-                <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(p.id)} text rounded severity="danger" title={t('delete')} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                <Button icon={<Edit2 style={{ width: '0.875rem', height: '0.875rem' }} />} onClick={() => handleEdit(p)} text rounded severity="info" title={t('modify')} />
+                <Button icon={<Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />} onClick={() => handleDelete(p.id)} text rounded severity="danger" title={t('delete')} />
               </div>
             )} />
           </DataTable>

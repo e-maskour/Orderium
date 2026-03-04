@@ -1,3 +1,13 @@
+/* ─── Global PrimeReact Button: gap between icon and label ─── */
+.p-button:not(.p-button-icon-only) {
+  gap: 0.4rem;
+}
+
+/* ─── Sileo Toast: ensure toasts appear above the sticky header ─── */
+[data-sileo-viewport] {
+  z-index: 99999 !important;
+}
+
 /* Overlay Panel Backdrop */
 .overlay-panel-backdrop {
   position: fixed;
@@ -9,7 +19,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  z-index: 1000;
+  z-index: 10000;
   animation: fadeIn 0.3s ease-in-out;
 }
 

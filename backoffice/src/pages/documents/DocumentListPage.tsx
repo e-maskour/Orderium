@@ -294,6 +294,14 @@ export default function DocumentListPage({
           actions={
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Button
+                onClick={() => setFiltersExpanded(!filtersExpanded)}
+                icon={<Filter style={{ width: 16, height: 16 }} />}
+                label={t('filters')}
+                severity="secondary"
+                outlined
+                size="small"
+              />
+              <Button
                 onClick={handleExport}
                 icon={<Download style={{ width: 16, height: 16 }} />}
                 label="Exporter"

@@ -509,7 +509,7 @@ export class OrdersService {
   async filterOrders(
     startDate?: Date,
     endDate?: Date,
-    deliveryStatus?: string,
+    deliveryStatus?: string[],
     orderNumber?: string,
     customerId?: number,
     deliveryPersonId?: number,
@@ -585,15 +585,11 @@ export class OrdersService {
       queryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
     }
 
-    if (deliveryStatus) {
+    if (deliveryStatus && deliveryStatus.length > 0) {
       if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
-        queryBuilder.andWhere('order.deliveryStatus = :deliveryStatus', {
-          deliveryStatus,
-        });
+        queryBuilder.andWhere('order.deliveryStatus IN (:...deliveryStatuses)', { deliveryStatuses: deliveryStatus });
       } else {
-        queryBuilder.where('order.deliveryStatus = :deliveryStatus', {
-          deliveryStatus,
-        });
+        queryBuilder.where('order.deliveryStatus IN (:...deliveryStatuses)', { deliveryStatuses: deliveryStatus });
       }
     }
 

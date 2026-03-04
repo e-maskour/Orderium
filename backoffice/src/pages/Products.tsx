@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
 import type { IProduct } from '../modules/products/products.interface';
-import { Plus, Eye, Trash2, Search, Package, Grid3x3, List, X, Filter, ChevronDown, ChevronLeft, ChevronRight, Download, Upload, FileSpreadsheet, CheckSquare } from 'lucide-react';
+import { Plus, Eye, Trash2, Search, Package, X, Filter, ChevronDown, ChevronLeft, ChevronRight, Download, Upload, FileSpreadsheet, CheckSquare } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
@@ -35,7 +35,6 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
@@ -278,26 +277,6 @@ export default function Products() {
 
         {/* Toolbar */}
         <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
-          {/* View Mode Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', borderRadius: '0.5rem', padding: '0.25rem' }}>
-            <Button
-              onClick={() => setViewMode('card')}
-              text={viewMode !== 'card'}
-              style={viewMode === 'card'
-                ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
-                : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', color: '#475569' }}
-              icon={<Grid3x3 style={{ width: '1rem', height: '1rem' }} />}
-            />
-            <Button
-              onClick={() => setViewMode('list')}
-              text={viewMode !== 'list'}
-              style={viewMode === 'list'
-                ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', backgroundColor: 'white', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
-                : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', borderRadius: '0.375rem', color: '#475569' }}
-              icon={<List style={{ width: '1rem', height: '1rem' }} />}
-            />
-          </div>
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, justifyContent: 'flex-end' }}>
             {/* Filters Button */}
             <Button
@@ -343,76 +322,6 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Pagination Info Bar - Top */}
-        {productsList && productsList.length > 0 && (
-          <div style={{ backgroundColor: '#f8fafc', paddingTop: '0.5rem', paddingBottom: '0.5rem', paddingLeft: '0.25rem', paddingRight: '0.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-              <div style={{ fontSize: '0.875rem', color: '#475569' }}>
-                {t('showing')} <span style={{ fontWeight: 600 }}>{(currentPage - 1) * pageSize + 1}</span> {t('to')}{' '}
-                <span style={{ fontWeight: 600 }}>{Math.min(currentPage * pageSize, totalCount)}</span> {t('of')} <span style={{ fontWeight: 600 }}>{totalCount}</span> {t('results')}
-              </div>
-
-              {/* Page Size Selector */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 500, color: '#475569' }}>{t('perPage')}</label>
-                <Dropdown
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.value));
-                    setCurrentPage(1);
-                  }}
-                  options={pageSizeOptions}
-                  optionLabel="label"
-                  optionValue="value"
-                />
-              </div>
-
-              {/* Navigation */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  text
-                  outlined
-                  icon={<ChevronLeft style={{ width: '1rem', height: '1rem' }} />}
-                  style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem' }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <InputText
-                    type="number"
-                    min={1}
-                    max={totalPages}
-                    value={String(currentPage)}
-                    onChange={(e) => {
-                      const page = parseInt(e.target.value, 10);
-                      if (!isNaN(page) && page >= 1 && page <= totalPages) {
-                        setCurrentPage(page);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    style={{ width: '3rem', textAlign: 'center' }}
-                    aria-label="Page number"
-                  />
-                  <span style={{ fontSize: '0.875rem', color: '#64748b' }}>/</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>{totalPages}</span>
-                </div>
-                <Button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  text
-                  outlined
-                  icon={<ChevronRight style={{ width: '1rem', height: '1rem' }} />}
-                  style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.375rem', paddingBottom: '0.375rem' }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Products View */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {isLoading ? (
@@ -431,14 +340,14 @@ export default function Products() {
                 </div>
               ))}
             </div>
-          ) : viewMode === 'list' ? (
+          ) : (
             <div style={{ flex: 1 }}>
               <style>{`
                 .prod-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
                 .prod-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
                 .prod-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
                 .prod-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-                .prod-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+                .prod-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
                 .prod-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
               `}</style>
               <DataTable
@@ -532,122 +441,6 @@ export default function Products() {
                   )}
                 />
               </DataTable>
-            </div>
-          ) : (
-            <div>
-              <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(8, 1fr)' }}>
-                {productsList && productsList.length > 0 ? (
-                  productsList.map((product: IProduct) => (
-                    <div
-                      key={product.id}
-                      onClick={() => handleViewProduct(product.id)}
-                      style={{
-                        position: 'relative', backgroundColor: 'white', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                        overflow: 'hidden', cursor: 'pointer',
-                        ...(selectedProducts.includes(product.id)
-                          ? { border: '1px solid #f59e0b', outline: '2px solid rgba(245,158,11,0.2)' }
-                          : { border: '1px solid rgba(226,232,240,0.6)' }),
-                      }}
-                    >
-                      {/* Selection Checkbox */}
-                      <div style={{ position: 'absolute', top: '0.375rem', left: '0.375rem', zIndex: 10 }}>
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleSelectProduct(product.id);
-                          }}
-                          style={{
-                            width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', borderWidth: '2px', borderStyle: 'solid',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                            ...(selectedProducts.includes(product.id)
-                              ? { backgroundColor: '#f59e0b', borderColor: '#f59e0b', color: 'white' }
-                              : { backgroundColor: 'white', borderColor: '#cbd5e1' }),
-                          }}
-                        >
-                          {selectedProducts.includes(product.id) && <CheckSquare style={{ width: '1rem', height: '1rem' }} />}
-                        </div>
-                      </div>
-
-                      {/* Product Image */}
-                      <div style={{ position: 'relative', height: '8rem', overflow: 'hidden', borderTopLeftRadius: '0.75rem', borderTopRightRadius: '0.75rem' }}>
-                        {product.imageUrl ? (
-                          <img
-                            src={getImageUrl(product.imageUrl)}
-                            alt={product.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'contain', opacity: 0.9 }}
-                          />
-                        ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)' }}>
-                            <Package style={{ width: '4rem', height: '4rem', color: '#cbd5e1' }} />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Product Info */}
-                      <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <div style={{ paddingBottom: '0.25rem' }}>
-                          <h3 style={{ fontSize: '10px', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, paddingBottom: '0.25rem' }} title={product.name}>
-                            {product.name}
-                          </h3>
-                          {product.code && (
-                            <p style={{ fontSize: '9px', color: '#94a3b8', marginTop: '0.125rem', paddingLeft: '0.125rem' }}>
-                              {t('code')}: {product.code}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Price & Cost */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.25rem', borderTop: '1px solid #f1f5f9' }}>
-                          <div style={{ flex: 1 }}>
-                            <p style={{ fontSize: '8px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('price')}</p>
-                            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#d97706' }}>
-                              {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
-                              <span style={{ fontSize: '8px' }}>{t('currency')}</span>
-                            </p>
-                          </div>
-                          <div style={{ textAlign: 'right', flex: 1 }}>
-                            <p style={{ fontSize: '8px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('cost')}</p>
-                            <p style={{ fontSize: '9px', color: '#475569' }}>
-                              {(product.cost || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Stock */}
-                        {!product.isService && (
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px' }}>
-                            <span style={{ color: '#64748b' }}>{t('stock')}:</span>
-                            <span style={{ fontWeight: 600, color: '#334155' }}>
-                              {product.stock !== null && product.stock !== undefined
-                                ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
-                                : '-'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '5rem', paddingBottom: '5rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ position: 'relative', background: 'linear-gradient(to bottom right, #fffbeb, #fff7ed)', borderRadius: '1rem', padding: '2rem', border: '2px solid #fef3c7' }}>
-                        <Package style={{ width: '4rem', height: '4rem', color: '#f59e0b', margin: '0 auto' }} strokeWidth={1.5} />
-                      </div>
-                    </div>
-                    <h3 style={{ marginTop: '1.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('noProductsFound')}</h3>
-                    <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#64748b', maxWidth: '24rem', textAlign: 'center' }}>
-                      {activeFiltersCount > 0
-                        ? "Aucun produit ne correspond à vos critères de recherche. Essayez de modifier les filtres."
-                        : "Commencez par ajouter votre premier produit pour le voir apparaître ici."}
-                    </p>
-                    {activeFiltersCount > 0 ? (
-                      <Button onClick={handleClearFilters} label="Réinitialiser les filtres" style={{ marginTop: '1.5rem' }} />
-                    ) : (
-                      <Button onClick={() => navigate('/products/create')} icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label="Ajouter un produit" style={{ marginTop: '1.5rem' }} />
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>

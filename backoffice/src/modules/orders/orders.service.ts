@@ -12,7 +12,7 @@ export class OrdersService {
     startDate?: Date,
     endDate?: Date,
     fromPortal?: boolean,
-    deliveryStatus?: string,
+    deliveryStatus?: string[],
     fromClient?: boolean,
     orderNumber?: string,
     page: number = 1,

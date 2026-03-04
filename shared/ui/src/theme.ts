@@ -10,11 +10,11 @@ export const orderiumPrimeConfig = {
     ripple: true,
     inputStyle: 'filled' as const,
     zIndex: {
-        modal: 1100,
-        overlay: 1000,
-        menu: 1000,
-        tooltip: 1100,
-        toast: 1200,
+        modal: 10100,
+        overlay: 10000,
+        menu: 10000,
+        tooltip: 10100,
+        toast: 10200,
     },
 };
 

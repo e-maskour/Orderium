@@ -131,7 +131,7 @@ export default function InventoryAdjustments() {
           .ia-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
           .ia-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
           .ia-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-          .ia-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+          .ia-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
           .ia-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
         `}</style>
         <DataTable

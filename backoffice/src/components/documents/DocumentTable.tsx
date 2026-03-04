@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Edit, Trash2, Filter, ChevronDown, ChevronUp, CreditCard, CheckCircle, Eye, Columns, FileText } from 'lucide-react';
-import { Checkbox } from 'primereact/checkbox';
+import { useState, useEffect } from 'react';
+import { Edit, Trash2, ChevronDown, ChevronUp, CreditCard, CheckCircle, Eye, FileText } from 'lucide-react';
 import { Button } from 'primereact/button'; import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { FloatingActionBar } from '../FloatingActionBar';
@@ -75,19 +74,11 @@ export function DocumentTable({
 }: DocumentTableProps) {
   const { t, language } = useLanguage();
   const [selectedRows, setSelectedRows] = useState<Document[]>([]);
-  const [showColumnsMenu, setShowColumnsMenu] = useState(false);
-
   const selectedDocuments = selectedRows.map(r => r.id);
-  const [visibleColumns, setVisibleColumns] = useState({
-    tax: false,
-    paidAmount: false,
-    remainingAmount: false
-  });
+  const visibleColumns = { tax: false, paidAmount: false, remainingAmount: false };
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
-  const columnsMenuRef = useRef<HTMLDivElement>(null);
-
   const clearSelection = () => setSelectedRows([]);
 
   const handleSelectAll = () => {
@@ -106,16 +97,6 @@ export function DocumentTable({
       default: return 'invoice';
     }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (columnsMenuRef.current && !columnsMenuRef.current.contains(event.target as Node)) {
-        setShowColumnsMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Clear selection when page changes
   useEffect(() => {
@@ -204,69 +185,9 @@ export function DocumentTable({
         .doc-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
         .doc-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
         .doc-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-        .doc-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 0.375rem 0.75rem; border-radius: 0; }
+        .doc-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
         .doc-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
       `}</style>
-      {/* Column Toggle and Filter Button */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative' }} ref={columnsMenuRef}>
-          <Button
-            onClick={() => setShowColumnsMenu(!showColumnsMenu)}
-            outlined
-            size="small"
-            icon={<Columns style={{ width: '0.875rem', height: '0.875rem' }} />}
-            iconPos="left"
-            label={t('columns')}
-          />
-          {showColumnsMenu && (
-            <div style={{ position: 'absolute', left: 0, top: '100%', marginTop: '0.25rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid #e2e8f0', zIndex: 50, padding: '0.5rem 0' }}>
-              <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid #f1f5f9' }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#334155' }}>{t('showHideColumns')}</p>
-              </div>
-              <div style={{ padding: '0.25rem 0' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
-                  <Checkbox
-                    checked={visibleColumns.tax}
-                    onChange={(e) => setVisibleColumns(prev => ({ ...prev, tax: e.checked ?? false }))}
-                  />
-                  <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('taxAmount')}</span>
-                </label>
-                {showPaymentColumns && (
-                  <>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
-                      <Checkbox
-                        checked={visibleColumns.paidAmount}
-                        onChange={(e) => setVisibleColumns(prev => ({ ...prev, paidAmount: e.checked ?? false }))}
-                      />
-                      <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('alreadyPaid')}</span>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', cursor: 'pointer' }}>
-                      <Checkbox
-                        checked={visibleColumns.remainingAmount}
-                        onChange={(e) => setVisibleColumns(prev => ({ ...prev, remainingAmount: e.checked ?? false }))}
-                      />
-                      <span style={{ fontSize: '0.75rem', color: '#334155' }}>{t('remainingToPay')}</span>
-                    </label>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Filter Button */}
-        {onFiltersToggle && (
-          <Button
-            onClick={onFiltersToggle}
-            icon={<Filter style={{ width: '1rem', height: '1rem' }} />}
-            iconPos="left"
-            label={t('filters')}
-            severity={filtersExpanded ? undefined : 'secondary'}
-            outlined={!filtersExpanded}
-          />
-        )}
-      </div>
-
       {/* Floating Action Bar */}
       <FloatingActionBar
         selectedCount={selectedDocuments.length}
