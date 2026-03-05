@@ -15,25 +15,13 @@ interface CartDrawerProps {
   isPanelMode?: boolean;
 }
 
-// Get API base URL from environment or use window origin
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
-const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
-
-// Helper to convert relative image paths to full URLs - supports multiple CDN providers
+// Resolve an image URL.  MinIO provider stores full public URLs; this function
+// also handles legacy relative paths stored before the MinIO migration.
 const getImageUrl = (imageUrl?: string): string | undefined => {
   if (!imageUrl) return undefined;
   if (imageUrl.startsWith('http')) return imageUrl;
-  if (imageUrl.startsWith('orderium/')) {
-    return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
-  }
-  if (imageUrl.startsWith('s3://')) {
-    return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
-  }
-  if (imageUrl.startsWith('cf://')) {
-    return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
-  }
-  return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+  const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
+  return `${minioPublicUrl}/orderium-media/${imageUrl}`;
 };
 
 const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item: CartItem) => void }) => {

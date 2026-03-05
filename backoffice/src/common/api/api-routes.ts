@@ -224,5 +224,6 @@ export const API_ROUTES = {
     // ─── Images ────────────────────────────────────────────────
     IMAGES: {
         UPLOAD: '/api/images/upload',
+        DELETE: '/api/images/delete',
     },
 } as const;

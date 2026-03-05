@@ -41,15 +41,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const { t } = useLanguage();
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-  const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
-  const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
 
   const getFullImageUrl = (imagePath?: string): string | null => {
     if (!imagePath) return null;
+    // Full URL (MinIO or any absolute URL): use directly
     if (imagePath.startsWith('http')) return imagePath;
-    if (imagePath.startsWith('orderium/')) return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imagePath}`;
-    if (imagePath.startsWith('s3://')) return `${s3BaseUrl}/${imagePath.replace('s3://', '')}`;
-    return `${apiBaseUrl}/uploads/images/${imagePath}`;
+    // Legacy fallback: construct from MinIO public URL
+    const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
+    return `${minioPublicUrl}/orderium-media/${imagePath}`;
   };
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({ state: 'idle' });
@@ -89,9 +88,15 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     try {
       let imageData: { url: string; publicId: string; size?: number; format?: string };
       if (productId) {
+        // Server handles deleting the old image before uploading the new one
         const result = await productsService.uploadImage(productId, file);
         imageData = { url: result.imageUrl ?? '', publicId: result.publicId };
       } else {
+        // Delete the previous image from storage before uploading the new one
+        const previousPublicId = uploadStatus.imageData?.publicId;
+        if (previousPublicId) {
+          try { await imagesService.delete(previousPublicId); } catch { /* non-fatal */ }
+        }
         const result = await imagesService.upload(file, folder);
         imageData = { url: result.url, publicId: result.publicId, size: result.size, format: result.format };
       }
@@ -182,7 +187,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         />
 
         {displayImage ? (
-          <div style={{ position: 'relative', width: '100%', height: '100%', background: '#f1f5f9' }}>
+          <div style={{ position: 'relative', width: '100%', height: '100%', background: '#f1f5f9', overflow: 'visible' }}>
             {!imageLoadError ? (
               <img
                 src={displayImage}
@@ -206,7 +211,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             {!isLoading && (
               <button
                 onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
-                style={{ position: 'absolute', top: 8, right: 8, padding: '0.375rem', background: '#ef4444', color: '#fff', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', zIndex: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+                style={{ position: 'absolute', top: 8, right: 8, padding: '0.375rem', background: '#ef4444', color: '#fff', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', zIndex: 50, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}
                 title={t('removeImage')}
               >
                 <X style={{ width: 16, height: 16 }} />

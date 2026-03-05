@@ -7,7 +7,6 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ApiResponseInterceptor } from './common/interceptors/api-response.interceptor';
 import helmet from 'helmet';
 import * as express from 'express';
-import * as path from 'path';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -16,12 +15,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('app.port') ?? 3000;
   const corsOrigin = configService.get<string[]>('app.corsOrigin') ?? [];
-
-  // Static file serving for uploaded images
-  // Intentionally public — product images are not sensitive.
-  // Path traversal is mitigated by express.static's built-in directory boundary enforcement.
-  const uploadsDir = path.resolve(process.cwd(), 'uploads');
-  app.use('/uploads', express.static(uploadsDir));
 
   // Root path handler - redirect to API documentation or health check
   app.use('/', (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -48,7 +41,7 @@ async function bootstrap() {
           defaultSrc: ["'self'"],
           scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com', 'https://*.s3.amazonaws.com'],
+          imgSrc: ["'self'", 'data:', 'http://localhost:9000', 'https://*.amazonaws.com'],
           connectSrc: ["'self'"],
           fontSrc: ["'self'"],
           frameAncestors: ["'none'"],

@@ -102,8 +102,8 @@ export class ProductsService {
     const response = await apiClient.upload<any>(API_ROUTES.PRODUCTS.IMAGE_UPLOAD(productId), formData);
     return {
       product: Product.fromApiResponse(response.data.product),
-      imageUrl: response.data.imageUrl,
-      publicId: response.data.publicId,
+      imageUrl: response.data.image?.url ?? '',
+      publicId: response.data.image?.publicId ?? '',
     };
   }
 

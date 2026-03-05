@@ -13,23 +13,13 @@ import { toastError } from '@/services/toast.service';
 import { partnersService, ordersService, Partner } from '@/modules';
 import { AddressInput } from '@/components/AddressInput';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
-const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
-
 const getImageUrl = (imageUrl?: string): string | undefined => {
   if (!imageUrl) return undefined;
+  // Full URL (MinIO or any absolute URL): use directly
   if (imageUrl.startsWith('http')) return imageUrl;
-  if (imageUrl.startsWith('orderium/')) {
-    return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
-  }
-  if (imageUrl.startsWith('s3://')) {
-    return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
-  }
-  if (imageUrl.startsWith('cf://')) {
-    return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
-  }
-  return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+  // Legacy fallback: construct from MinIO public URL
+  const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
+  return `${minioPublicUrl}/orderium-media/${imageUrl}`;
 };
 
 interface FormData {

@@ -10,8 +10,11 @@ WORKDIR /app
 # Enable pnpm via corepack
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
+COPY shared/ui /shared/ui
+
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -24,11 +27,14 @@ WORKDIR /app
 # Enable pnpm via corepack
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Copy shared UI package
+COPY shared/ui /shared/ui
+
 # Copy dependencies
 COPY --from=dependencies /app/node_modules ./node_modules
 
 # Copy source code
-COPY . .
+COPY backoffice/ .
 
 # Build arguments for environment variables (can be overridden at build time)
 ARG VITE_API_BASE_URL=http://localhost:3000
@@ -63,14 +69,17 @@ WORKDIR /app
 # Enable pnpm via corepack
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
+COPY shared/ui /shared/ui
+
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
 
 # Install all dependencies (including devDependencies)
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
-COPY . .
+COPY backoffice/ .
 
 # Expose Vite dev server port
 EXPOSE 3001
@@ -83,7 +92,7 @@ CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
 FROM nginx:1.25-alpine AS production
 
 # Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY backoffice/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built static files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html

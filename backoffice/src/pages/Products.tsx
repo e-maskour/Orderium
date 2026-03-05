@@ -23,15 +23,13 @@ export default function Products() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-
   const getImageUrl = (imageUrl?: string): string | undefined => {
     if (!imageUrl) return undefined;
+    // Full URL (MinIO or any absolute URL): use directly
     if (imageUrl.startsWith('http')) return imageUrl;
-    if (imageUrl.startsWith('orderium/')) {
-      return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
-    }
-    return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+    // Legacy fallback: construct from MinIO public URL
+    const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
+    return `${minioPublicUrl}/orderium-media/${imageUrl}`;
   };
 
   const [searchTerm, setSearchTerm] = useState('');

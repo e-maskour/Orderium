@@ -5,6 +5,7 @@
 # This compose file orchestrates:
 # - PostgreSQL database
 # - NestJS API backend
+# - MinIO object storage
 # - Backoffice React/Vite frontend
 # - Client Portal React/Vite frontend
 # - Delivery Portal React/Vite frontend
@@ -53,8 +54,15 @@ services:
       DEFAULT_DOCUMENT_TYPE_ID: ${DEFAULT_DOCUMENT_TYPE_ID:-2}
       DEFAULT_PAID_STATUS: ${DEFAULT_PAID_STATUS:-2}
 
-      # Storage
-      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-LOCAL}
+      # Storage - MinIO (internal endpoint for API, public URL for browsers)
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-orderium-media}
+      # MINIO_PUBLIC_URL must be the URL reachable from the browser host machine
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
 
       # Firebase Admin SDK
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
@@ -63,10 +71,6 @@ services:
 
       # Redis
       REDIS_URL: redis://redis:6379
-
-    volumes:
-      # Persist uploaded images
-      - api_uploads:/app/uploads
 
     ports:
       - "3000:3000"
@@ -78,6 +82,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
     healthcheck:
@@ -92,11 +98,12 @@ services:
   # ==================================
   backoffice:
     build:
-      context: ./backoffice
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backoffice/Dockerfile
       args:
         # Pass environment variables at build time
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+        VITE_MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
         VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
         VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
         VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
@@ -130,10 +137,11 @@ services:
   # ==================================
   client:
     build:
-      context: ./client
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: client/Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+        VITE_MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
         VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
         VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
         VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
@@ -167,10 +175,11 @@ services:
   # ==================================
   delivery-portal:
     build:
-      context: ./delivery-portal
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: delivery-portal/Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+        VITE_MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
         VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
         VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
         VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
@@ -202,6 +211,31 @@ services:
   # ==================================
   # Networks
   # ==================================
+
+  # ==================================
+  # MinIO Object Storage
+  # ==================================
+  minio:
+    image: minio/minio:latest
+    container_name: orderium-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000" # S3-compatible API
+      - "9001:9001" # Web console
+    networks:
+      - orderium-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   # ==================================
   # Redis Cache
@@ -236,10 +270,10 @@ volumes:
     driver: local
     name: orderium_postgres_data
 
-  # API uploads persistence
-  api_uploads:
+  # MinIO object storage data
+  minio_data:
     driver: local
-    name: orderium_api_uploads
+    name: orderium_minio_data
 
   # Redis data persistence
   redis_data:
