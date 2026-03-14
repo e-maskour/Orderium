@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -31,28 +31,15 @@ export const PriceConfirmModal = ({
 }: PriceConfirmModalProps) => {
   const [price, setPrice] = useState('');
   const [decimalMode, setDecimalMode] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen && product) {
       setPrice(product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       setDecimalMode(false);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
     }
   }, [isOpen, product]);
 
-  useEffect(() => {
-    if (isOpen) {
-      const interval = setInterval(() => {
-        if (document.activeElement !== inputRef.current) {
-          inputRef.current?.focus();
-        }
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [isOpen]);
+
 
   if (!product) return null;
 
@@ -73,7 +60,6 @@ export const PriceConfirmModal = ({
       }
       setPrice(newValue);
     }
-    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,7 +148,6 @@ export const PriceConfirmModal = ({
             {t('price')} ({t('currency')})
           </label>
           <InputText
-            ref={inputRef}
             type="text"
             inputMode="decimal"
             value={price}

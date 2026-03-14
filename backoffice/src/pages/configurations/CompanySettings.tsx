@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, Loader2, Save } from 'lucide-react';
+import { Building2, Loader2, Save, ArrowLeft, MapPin, FileText, Mail, Phone, Globe } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toastUpdated, toastError } from '../../services/toast.service';
 import { companyService, ICompany } from '../../modules/company';
 import { AdminLayout } from '../../components/AdminLayout';
@@ -38,6 +39,7 @@ const MONTHS: { value: number; label: (t: (key: TranslationKey) => string) => st
 
 export default function CompanySettings() {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [formData, setFormData] = useState<ICompany | null>(null);
 
@@ -90,21 +92,72 @@ export default function CompanySettings() {
                 icon={Building2}
                 title={t('companyInformation')}
                 subtitle={t('manageCompanyInfo')}
+                actions={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Button
+                            onClick={() => navigate('/configurations')}
+                            icon={<ArrowLeft style={{ width: 16, height: 16 }} />}
+                            label={t('retour')}
+                            severity="secondary"
+                            outlined
+                            size="small"
+                        />
+                        <Button
+                            onClick={() => { if (formData) updateMutation.mutate(formData); }}
+                            icon={updateMutation.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <Save style={{ width: 16, height: 16 }} />}
+                            label={t('save')}
+                            disabled={updateMutation.isPending || !formData}
+                            size="small"
+                        />
+                    </div>
+                }
             />
 
-            <div style={{ padding: '1.5rem' }}>
-                <form onSubmit={handleSubmit} style={{ maxWidth: '64rem' }}>
-                    {/* Basic Information Section */}
-                    <div style={{ background: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                        <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-                            <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1e293b' }}>Informations de base</h2>
+            <style>{`
+                .cs-form { padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
+                @media (min-width: 768px) { .cs-form { padding: 1.5rem; } }
+                .cs-card { background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); }
+                .cs-card-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); }
+                .cs-icon-badge { width: 2.25rem; height: 2.25rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+                .cs-card-body { padding: 1.25rem; }
+                @media (min-width: 768px) { .cs-card-body { padding: 1.5rem; } }
+                .cs-grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+                @media (min-width: 600px) { .cs-grid { grid-template-columns: repeat(2, 1fr); } }
+                .cs-col-2 { grid-column: span 1; }
+                @media (min-width: 600px) { .cs-col-2 { grid-column: span 2; } }
+                .cs-label { display: block; font-size: 0.8125rem; font-weight: 500; color: #374151; margin-bottom: 0.375rem; }
+                .cs-req { color: #f43f5e; }
+                .cs-hint { font-size: 0.75rem; color: #9ca3af; margin-top: 0.3rem; }
+                .cs-sep { border: none; border-top: 1px solid #f1f5f9; margin: 0.25rem 0; }
+                .cs-identity-wrap { display: flex; gap: 1.25rem; align-items: flex-start; }
+                @media (max-width: 480px) { .cs-identity-wrap { flex-direction: column; align-items: stretch; } }
+                .cs-avatar { flex-shrink: 0; width: 4.5rem; height: 4.5rem; border-radius: 1rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); display: flex; align-items: center; justify-content: center; font-size: 1.375rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; box-shadow: 0 4px 14px rgba(99,102,241,0.3); }
+                .cs-identity-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.875rem; }
+            `}</style>
+
+            <form onSubmit={handleSubmit} className="cs-form">
+
+                {/* Identity */}
+                <div className="cs-card">
+                    <div className="cs-card-header">
+                        <div className="cs-icon-badge" style={{ background: '#ede9fe' }}>
+                            <Building2 style={{ width: '1rem', height: '1rem', color: '#7c3aed' }} />
                         </div>
-                        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
-                                <div style={{ gridColumn: 'span 2' }}>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Nom de l'entreprise *</label>
+                        <div>
+                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>Identité de l'entreprise</p>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>Nom officiel et secteur d'activité</p>
+                        </div>
+                    </div>
+                    <div className="cs-card-body">
+                        <div className="cs-identity-wrap">
+                            <div className="cs-avatar">
+                                {(formData.companyName || 'EN').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('') || 'E'}
+                            </div>
+                            <div className="cs-identity-fields">
+                                <div>
+                                    <label className="cs-label" htmlFor="cs-cname">Nom de l'entreprise <span className="cs-req">*</span></label>
                                     <InputText
-                                        id="company-name"
+                                        id="cs-cname"
                                         type="text"
                                         required
                                         value={formData.companyName}
@@ -112,230 +165,244 @@ export default function CompanySettings() {
                                         style={{ width: '100%' }}
                                     />
                                 </div>
-
-                                <div style={{ gridColumn: 'span 2' }}>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Adresse</label>
-                                    <InputText
-                                        id="company-address"
-                                        type="text"
-                                        value={formData.address || ''}
-                                        onChange={(e) => handleChange('address', e.target.value)}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Code postal</label>
+                                    <label className="cs-label" htmlFor="cs-professions">Professions / Activités</label>
                                     <InputText
-                                        id="company-zip"
-                                        type="text"
-                                        value={formData.zipCode || ''}
-                                        onChange={(e) => handleChange('zipCode', e.target.value)}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Ville</label>
-                                    <Dropdown
-                                        id="company-city"
-                                        value={formData.city || ''}
-                                        onChange={(e) => handleChange('city', e.value)}
-                                        options={[{ label: 'Sélectionner une ville', value: '' }, ...MOROCCAN_CITIES.map(city => ({ label: city, value: city }))]}
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>État/Province</label>
-                                    <InputText
-                                        id="company-state"
-                                        type="text"
-                                        value={formData.state || ''}
-                                        onChange={(e) => handleChange('state', e.target.value)}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Pays</label>
-                                    <InputText
-                                        id="company-country"
-                                        type="text"
-                                        value={formData.country || 'Maroc'}
-                                        readOnly
-                                        style={{ width: '100%', background: '#f8fafc' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Téléphone</label>
-                                    <InputText
-                                        id="company-phone"
-                                        type="tel"
-                                        value={formData.phone || ''}
-                                        onChange={(e) => handleChange('phone', e.target.value)}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Fax</label>
-                                    <InputText
-                                        id="company-fax"
-                                        type="tel"
-                                        value={formData.fax || ''}
-                                        onChange={(e) => handleChange('fax', e.target.value)}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Email</label>
-                                    <InputText
-                                        id="company-email"
-                                        type="email"
-                                        value={formData.email || ''}
-                                        onChange={(e) => handleChange('email', e.target.value)}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Site web</label>
-                                    <InputText
-                                        id="company-website"
-                                        type="url"
-                                        value={formData.website || ''}
-                                        onChange={(e) => handleChange('website', e.target.value)}
-                                        placeholder="https://www.exemple.com"
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div style={{ gridColumn: 'span 2' }}>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Professions / Mots-clés</label>
-                                    <InputText
-                                        id="company-professions"
+                                        id="cs-professions"
                                         type="text"
                                         value={formData.professions || ''}
                                         onChange={(e) => handleChange('professions', e.target.value)}
-                                        placeholder="Ex: Distribution, Vente en gros"
+                                        placeholder="Ex: Distribution, Vente en gros..."
                                         style={{ width: '100%' }}
                                     />
+                                    <p className="cs-hint">Apparaît sur vos documents commerciaux</p>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Legal & Administrative Section */}
-                    <div style={{ background: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                        <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-                            <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1e293b' }}>Informations légales et administratives</h2>
+                {/* Contact & Localisation */}
+                <div className="cs-card">
+                    <div className="cs-card-header">
+                        <div className="cs-icon-badge" style={{ background: '#dbeafe' }}>
+                            <MapPin style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />
                         </div>
-                        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Numéro de TVA</label>
-                                    <InputText
-                                        id="company-vat"
-                                        type="text"
-                                        value={formData.vatNumber || ''}
-                                        onChange={(e) => handleChange('vatNumber', e.target.value)}
-                                        placeholder="MA12345678"
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
+                        <div>
+                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>Contact & Localisation</p>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>Adresse postale et coordonnées</p>
+                        </div>
+                    </div>
+                    <div className="cs-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        <div className="cs-grid">
+                            <div className="cs-col-2">
+                                <label className="cs-label" htmlFor="cs-address">Adresse</label>
+                                <InputText
+                                    id="cs-address"
+                                    type="text"
+                                    value={formData.address || ''}
+                                    onChange={(e) => handleChange('address', e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-zip">Code postal</label>
+                                <InputText
+                                    id="cs-zip"
+                                    type="text"
+                                    value={formData.zipCode || ''}
+                                    onChange={(e) => handleChange('zipCode', e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-city">Ville</label>
+                                <Dropdown
+                                    id="cs-city"
+                                    value={formData.city || ''}
+                                    onChange={(e) => handleChange('city', e.value)}
+                                    options={[{ label: 'Sélectionner une ville', value: '' }, ...MOROCCAN_CITIES.map(city => ({ label: city, value: city }))]}
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-state">État / Province</label>
+                                <InputText
+                                    id="cs-state"
+                                    type="text"
+                                    value={formData.state || ''}
+                                    onChange={(e) => handleChange('state', e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-country">Pays</label>
+                                <InputText
+                                    id="cs-country"
+                                    type="text"
+                                    value={formData.country || 'Maroc'}
+                                    readOnly
+                                    style={{ width: '100%', background: '#f8fafc', color: '#64748b' }}
+                                />
+                            </div>
+                        </div>
 
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>ICE (Identifiant Commun de l'Entreprise)</label>
-                                    <InputText
-                                        id="company-ice"
-                                        type="text"
-                                        value={formData.ice || ''}
-                                        onChange={(e) => handleChange('ice', e.target.value)}
-                                        placeholder="000000000000000"
-                                        maxLength={15}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
+                        <hr className="cs-sep" />
 
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>IF (Identifiant Fiscal)</label>
-                                    <InputText
-                                        id="company-tax-id"
-                                        type="text"
-                                        value={formData.taxId || ''}
-                                        onChange={(e) => handleChange('taxId', e.target.value)}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>RC (Registre de Commerce)</label>
-                                    <InputText
-                                        id="company-rc"
-                                        type="text"
-                                        value={formData.registrationNumber || ''}
-                                        onChange={(e) => handleChange('registrationNumber', e.target.value)}
-                                        placeholder="RC123456"
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Forme juridique</label>
-                                    <Dropdown
-                                        id="company-legal"
-                                        value={formData.legalStructure || ''}
-                                        onChange={(e) => handleChange('legalStructure', e.value)}
-                                        options={[{ label: 'Sélectionner', value: '' }, ...LEGAL_STRUCTURES.map(structure => ({ label: structure, value: structure }))]}
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Capital (MAD)</label>
-                                    <InputText
-                                        id="company-capital"
-                                        type="number"
-                                        value={String(formData.capital || '')}
-                                        onChange={(e) => handleChange('capital', parseFloat(e.target.value))}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Début de l'exercice fiscal</label>
-                                    <Dropdown
-                                        id="company-fiscal"
-                                        value={formData.fiscalYearStartMonth || 1}
-                                        onChange={(e) => handleChange('fiscalYearStartMonth', e.value)}
-                                        options={MONTHS.map(month => ({ label: month.label(t), value: month.value }))}
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
+                        <div className="cs-grid">
+                            <div>
+                                <label className="cs-label" htmlFor="cs-phone">
+                                    <Phone style={{ display: 'inline', width: '0.75rem', height: '0.75rem', marginRight: '0.25rem', verticalAlign: 'middle' }} />
+                                    Téléphone
+                                </label>
+                                <InputText
+                                    id="cs-phone"
+                                    type="tel"
+                                    value={formData.phone || ''}
+                                    onChange={(e) => handleChange('phone', e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-fax">Fax</label>
+                                <InputText
+                                    id="cs-fax"
+                                    type="tel"
+                                    value={formData.fax || ''}
+                                    onChange={(e) => handleChange('fax', e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-email">
+                                    <Mail style={{ display: 'inline', width: '0.75rem', height: '0.75rem', marginRight: '0.25rem', verticalAlign: 'middle' }} />
+                                    Email
+                                </label>
+                                <InputText
+                                    id="cs-email"
+                                    type="email"
+                                    value={formData.email || ''}
+                                    onChange={(e) => handleChange('email', e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-website">
+                                    <Globe style={{ display: 'inline', width: '0.75rem', height: '0.75rem', marginRight: '0.25rem', verticalAlign: 'middle' }} />
+                                    Site web
+                                </label>
+                                <InputText
+                                    id="cs-website"
+                                    type="url"
+                                    value={formData.website || ''}
+                                    onChange={(e) => handleChange('website', e.target.value)}
+                                    placeholder="https://"
+                                    style={{ width: '100%' }}
+                                />
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Save Button */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                        <Button
-                            type="submit"
-                            loading={updateMutation.isPending}
-                            icon={<Save style={{ width: '1rem', height: '1rem' }} />}
-                            label="Enregistrer"
-                        />
+                {/* Informations légales */}
+                <div className="cs-card">
+                    <div className="cs-card-header">
+                        <div className="cs-icon-badge" style={{ background: '#dcfce7' }}>
+                            <FileText style={{ width: '1rem', height: '1rem', color: '#16a34a' }} />
+                        </div>
+                        <div>
+                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>Informations légales & administratives</p>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>Identifiants fiscaux et structure juridique</p>
+                        </div>
                     </div>
-                </form>
-            </div>
+                    <div className="cs-card-body">
+                        <div className="cs-grid">
+                            <div>
+                                <label className="cs-label" htmlFor="cs-vat">Numéro de TVA</label>
+                                <InputText
+                                    id="cs-vat"
+                                    type="text"
+                                    value={formData.vatNumber || ''}
+                                    onChange={(e) => handleChange('vatNumber', e.target.value)}
+                                    placeholder="MA12345678"
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-ice">ICE — Identifiant Commun de l'Entreprise</label>
+                                <InputText
+                                    id="cs-ice"
+                                    type="text"
+                                    value={formData.ice || ''}
+                                    onChange={(e) => handleChange('ice', e.target.value)}
+                                    placeholder="000000000000000"
+                                    maxLength={15}
+                                    style={{ width: '100%' }}
+                                />
+                                <p className="cs-hint">15 chiffres obligatoires</p>
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-taxid">IF — Identifiant Fiscal</label>
+                                <InputText
+                                    id="cs-taxid"
+                                    type="text"
+                                    value={formData.taxId || ''}
+                                    onChange={(e) => handleChange('taxId', e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-rc">RC — Registre de Commerce</label>
+                                <InputText
+                                    id="cs-rc"
+                                    type="text"
+                                    value={formData.registrationNumber || ''}
+                                    onChange={(e) => handleChange('registrationNumber', e.target.value)}
+                                    placeholder="RC123456"
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-legal">Forme juridique</label>
+                                <Dropdown
+                                    id="cs-legal"
+                                    value={formData.legalStructure || ''}
+                                    onChange={(e) => handleChange('legalStructure', e.value)}
+                                    options={[{ label: 'Sélectionner', value: '' }, ...LEGAL_STRUCTURES.map(structure => ({ label: structure, value: structure }))]}
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-capital">Capital (MAD)</label>
+                                <InputText
+                                    id="cs-capital"
+                                    type="number"
+                                    value={String(formData.capital || '')}
+                                    onChange={(e) => handleChange('capital', parseFloat(e.target.value))}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="cs-label" htmlFor="cs-fiscal">Début de l'exercice fiscal</label>
+                                <Dropdown
+                                    id="cs-fiscal"
+                                    value={formData.fiscalYearStartMonth || 1}
+                                    onChange={(e) => handleChange('fiscalYearStartMonth', e.value)}
+                                    options={MONTHS.map(month => ({ label: month.label(t), value: month.value }))}
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
         </AdminLayout>
     );
 }

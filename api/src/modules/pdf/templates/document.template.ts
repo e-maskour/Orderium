@@ -54,11 +54,12 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
         height: 100%;
         margin: 0;
         padding: 0;
+        font-family: "Noto Sans Arabic", "Noto Sans", "Helvetica Neue", "Arial", sans-serif;
       }
       .header-wrapper {
         width: 100%;
         padding: 5mm;
-        font-family: "DejaVu Sans", "Helvetica", "Arial", sans-serif;
+        font-family: "Noto Sans Arabic", "Noto Sans", "Helvetica Neue", "Arial", sans-serif;
         font-size: 9pt;
       }
       header.header-content {
@@ -69,23 +70,27 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
       }
       .company-info {
         font-size: 14pt;
-        font-weight: bold;
+        font-weight: 700;
         color: #000000;
         letter-spacing: 0.3pt;
+        unicode-bidi: plaintext;
+        text-align: start;
       }
       .company-details {
         font-size: 8pt;
-        line-height: 1.4;
+        line-height: 1.5;
         color: #222222;
         margin-top: 1mm;
         font-weight: normal;
+        unicode-bidi: plaintext;
+        text-align: start;
       }
       .document-title {
         text-align: right;
       }
       .invoice-title {
         font-size: 15pt;
-        font-weight: bold;
+        font-weight: 700;
         color: #000000;
         margin-bottom: 2mm;
       }
@@ -96,10 +101,10 @@ export function renderHeaderTemplate(data: HeaderTemplateData): string {
     </style>
     <div class="header-wrapper">
       <header class="header-content">
-        <div class="company-info">
+        <div class="company-info" dir="auto">
           ${data.companyName}
           <div class="company-details">
-            ${data.companyLines.map((line) => `<div>${line}</div>`).join('')}
+            ${data.companyLines.map((line) => `<div dir="auto">${line}</div>`).join('')}
           </div>
         </div>
         <div class="document-title">
@@ -129,11 +134,12 @@ export function renderFooterTemplate(data: FooterTemplateData): string {
         height: 100%;
         margin: 0;
         padding: 0;
+        font-family: "Noto Sans Arabic", "Noto Sans", "Helvetica Neue", "Arial", sans-serif;
       }
       .footer-wrapper {
         width: 100%;
         padding: 0 5mm;
-        font-family: "DejaVu Sans", "Helvetica", "Arial", sans-serif;
+        font-family: "Noto Sans Arabic", "Noto Sans", "Helvetica Neue", "Arial", sans-serif;
         font-size: 6.5pt;
         color: #777777;
       }
@@ -174,19 +180,22 @@ export function renderFooterTemplate(data: FooterTemplateData): string {
 }
 
 export function renderDocumentTemplate(data: DocumentTemplateData): string {
-    // Build discount row if it exists
-    const discountRowHtml = data.discount && data.discount !== '0.00' 
-      ? `<div class="totals-row">
+  // Build discount row if it exists
+  const discountRowHtml = data.discount && data.discount !== '0.00'
+    ? `<div class="totals-row">
            <span class="totals-label">Remise${data.discountType === 1 ? ' (%)' : ''}</span>
            <span class="totals-value">-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</span>
          </div>`
-      : '';
+    : '';
 
-    return `
+  return `
         <!DOCTYPE html>
-        <html>
+        <html lang="ar">
         <head>
         <meta charset="UTF-8">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&display=block" rel="stylesheet">
         <title>${data.documentTitle} ${data.documentNumber}</title>
         ${data.styles}
         </head>
@@ -200,9 +209,9 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                         <div class="bill-to">
                             <div class="section-title">${data.isPurchaseDocument ? 'Fournisseur' : 'Client'}</div>
                             <div class="info-box">
-                            <div style="font-weight: bold; margin-bottom: 1mm;">${data.customerName}</div>
-                            ${data.customerPhone ? `<div style="font-size: 8pt; color: #666666;">Tél: ${data.customerPhone}</div>` : ''}
-                            ${data.customerAddress ? `<div style="font-size: 8pt; color: #666666; margin-top: 1mm;">${data.customerAddress}</div>` : ''}
+                            <div dir="auto" style="font-weight: bold; margin-bottom: 1mm;">${data.customerName}</div>
+                            ${data.customerPhone ? `<div dir="auto" style="font-size: 8pt; color: #666666;">Tél: ${data.customerPhone}</div>` : ''}
+                            ${data.customerAddress ? `<div dir="auto" style="font-size: 8pt; color: #666666; margin-top: 1mm;">${data.customerAddress}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -265,7 +274,7 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                     ${data.notes ? `
                     <div style="margin-top: 4mm; padding: 3mm; background-color: #F8F9FA; border: 1px solid #DDDDDD; border-radius: 2mm;">
                     <div style="font-weight: bold; margin-bottom: 1mm;">Notes:</div>
-                    <div style="font-size: 8pt; color: #555555;">${data.notes}</div>
+                    <div dir="auto" style="font-size: 8pt; color: #555555; unicode-bidi: plaintext; text-align: start;">${data.notes}</div>
                     </div>
                     ` : ''}
                 </section>

@@ -7,7 +7,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     sequencesService,
     Sequence,
@@ -23,6 +23,7 @@ import { toastConfirm } from '../../services/toast.service';
 
 export default function Sequences() {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [showModal, setShowModal] = useState(false);
     const [editingSequence, setEditingSequence] = useState<Sequence | null>(null);
@@ -179,31 +180,26 @@ export default function Sequences() {
                 title={t('sequences')}
                 subtitle={t('manageDocumentSequences')}
                 actions={
-                    <Link
-                        to="/configurations"
-                        style={{ padding: '0.5rem 1rem', background: '#f1f5f9', color: '#334155', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
-                    >
-                        <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
-                        {t('retour')}
-                    </Link>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Button
+                            onClick={() => navigate('/configurations')}
+                            icon={<ArrowLeft style={{ width: 16, height: 16 }} />}
+                            label={t('retour')}
+                            severity="secondary"
+                            outlined
+                            size="small"
+                        />
+                        <Button
+                            onClick={openCreateModal}
+                            icon={<Plus style={{ width: 16, height: 16 }} />}
+                            label={t('addSequence')}
+                            size="small"
+                        />
+                    </div>
                 }
             />
 
             <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <span style={{ position: 'relative', display: 'block', width: '16rem' }}>
-                            <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                            <InputText
-                                type="text"
-                                placeholder={t('searchSequences')}
-                                style={{ width: '100%', paddingLeft: '2.5rem' }}
-                            />
-                        </span>
-                    </div>
-                    <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('addSequence')} onClick={openCreateModal} />
-                </div>
-
                 <style>{`
                     .seq-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
                     .seq-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
@@ -226,7 +222,7 @@ export default function Sequences() {
                     removableSort
                     emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noSequencesConfigured')}</div>}
                     paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                     <Column field="name" header={t('name')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />

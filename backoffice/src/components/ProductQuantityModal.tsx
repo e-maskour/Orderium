@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -38,7 +38,6 @@ export const ProductQuantityModal = ({
   t
 }: ProductQuantityModalProps) => {
   const [quantity, setQuantity] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,22 +46,10 @@ export const ProductQuantityModal = ({
       } else {
         setQuantity('');
       }
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
     }
   }, [isOpen, initialQuantity]);
 
-  useEffect(() => {
-    if (isOpen) {
-      const interval = setInterval(() => {
-        if (document.activeElement !== inputRef.current) {
-          inputRef.current?.focus();
-        }
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [isOpen]);
+
 
   if (!product) return null;
 
@@ -84,7 +71,6 @@ export const ProductQuantityModal = ({
       }
       setQuantity(newValue);
     }
-    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +195,6 @@ export const ProductQuantityModal = ({
             )}
           </div>
           <InputText
-            ref={inputRef}
             type="text"
             inputMode="decimal"
             value={quantity}

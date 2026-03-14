@@ -28,9 +28,13 @@ export default function POS() {
   };
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const hasSetDefaultCustomer = useRef(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(() => {
+    try { return JSON.parse(localStorage.getItem('pos_customer') || 'null'); } catch { return null; }
+  });
+  const hasSetDefaultCustomer = useRef(selectedCustomer !== null);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try { return JSON.parse(localStorage.getItem('pos_cart') || '[]'); } catch { return []; }
+  });
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,6 +46,17 @@ export default function POS() {
   const [isResizing, setIsResizing] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem('pos_cart', JSON.stringify(cart)); } catch { }
+  }, [cart]);
+
+  useEffect(() => {
+    try {
+      if (selectedCustomer) localStorage.setItem('pos_customer', JSON.stringify(selectedCustomer));
+      else localStorage.removeItem('pos_customer');
+    } catch { }
+  }, [selectedCustomer]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -117,6 +132,7 @@ export default function POS() {
       setCart([...cart, { product: productWithPrice, quantity, discount: 0, discountType: 0 }]);
     }
     setConfirmedPrice(null);
+    if (isMobile) setIsMobileCartOpen(true);
   };
 
   const removeFromCart = (productId: number) => {
@@ -155,6 +171,7 @@ export default function POS() {
     onSuccess: (data: any) => {
       const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
       const orderId = data?.order?.id || data?.id;
+      localStorage.removeItem('pos_cart');
       navigate('/checkout/success', {
         state: {
           orderNumber, orderId,
@@ -169,6 +186,7 @@ export default function POS() {
   const handleCheckout = () => {
     if (!selectedCustomer) { toastError(t('selectCustomer')); return; }
     if (cart.length === 0) { toastError(t('cartEmpty')); return; }
+    localStorage.removeItem('pos_cart');
     navigate('/checkout', {
       state: {
         cart,

@@ -14,6 +14,9 @@ import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
+import { PDFService } from '../pdf/pdf.service';
+import { StockService } from '../inventory/stock.service';
+import { MovementType } from '../inventory/entities/stock-movement.entity';
 
 interface CreateInvoiceItemDTO {
   id?: number;
@@ -60,6 +63,8 @@ export class InvoicesService {
     private readonly productRepository: Repository<Product>,
     private readonly configurationsService: ConfigurationsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly pdfService: PDFService,
+    private readonly stockService: StockService,
   ) { }
 
   private async calculateInvoiceStatus(
@@ -726,7 +731,9 @@ export class InvoicesService {
       throw new Error('Cannot delete invoice that has payments.');
     }
 
+    const invoice = await this.findOne(id);
     await this.invoiceItemRepository.delete({ invoiceId: id });
+    await this.pdfService.deletePDF(invoice?.pdfUrl);
     await this.invoiceRepository.delete(id);
     await this.invalidateInvoiceCache(id);
   }
@@ -765,6 +772,64 @@ export class InvoicesService {
       validationDate: new Date(),
       status: InvoiceStatus.UNPAID,
     });
+
+    // Auto-create stock movements based on inventory configuration
+    try {
+      const inventoryConfig = await this.configurationsService.findByEntity('inventory');
+      const inventoryValues = inventoryConfig?.values as Record<string, unknown> | null;
+      const defaultWarehouseId = inventoryValues?.defaultWarehouseId as number | null;
+
+      if (defaultWarehouseId) {
+        const shouldCreateMovement =
+          (invoice.direction === DocumentDirection.ACHAT && inventoryValues?.incrementStockOnInvoiceAchat) ||
+          (invoice.direction === DocumentDirection.VENTE && inventoryValues?.decrementStockOnInvoiceVente);
+
+        if (shouldCreateMovement) {
+          const invoiceWithItems = await this.invoiceRepository.findOne({
+            where: { id },
+            relations: ['items'],
+          });
+
+          if (invoiceWithItems?.items?.length) {
+            const isAchat = invoice.direction === DocumentDirection.ACHAT;
+            const movementType = isAchat ? MovementType.RECEIPT : MovementType.DELIVERY;
+            const partnerName = isAchat ? invoice.supplierName : invoice.customerName;
+
+            for (const item of invoiceWithItems.items) {
+              if (!item.productId || item.quantity <= 0) continue;
+              try {
+                const movement = await this.stockService.createMovement({
+                  movementType,
+                  productId: item.productId,
+                  quantity: item.quantity,
+                  ...(isAchat ? { destWarehouseId: defaultWarehouseId } : { sourceWarehouseId: defaultWarehouseId }),
+                  origin: finalInvoiceNumber,
+                  partnerName: partnerName ?? undefined,
+                });
+                await this.stockService.validateMovement({ movementId: movement.id });
+              } catch (itemError) {
+                this.logger.warn(
+                  `Failed to create stock movement for invoice ${id}, product ${item.productId}: ${(itemError as Error)?.message}`,
+                );
+              }
+            }
+          }
+        }
+      }
+    } catch (stockError) {
+      this.logger.warn(
+        `Failed to process stock movements for invoice ${id}: ${(stockError as Error)?.message}`,
+      );
+    }
+
+    // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
+    const documentType = (await this.invoiceRepository.findOne({ where: { id }, select: ['supplierId'] }))?.supplierId
+      ? 'invoice' // facture achat
+      : 'invoice'; // facture vente
+    const pdfUrl = await this.pdfService.generateAndUploadPDF(documentType, id);
+    if (pdfUrl) {
+      await this.invoiceRepository.update(id, { pdfUrl });
+    }
 
     const result = await this.findOne(id);
     if (!result) {
@@ -856,11 +921,13 @@ export class InvoicesService {
     }
 
     // Update invoice back to draft status with new provisional number
+    await this.pdfService.deletePDF(invoice.pdfUrl);
     await this.invoiceRepository.update(id, {
       documentNumber: nextProvNumber,
       isValidated: false,
       validationDate: null,
       status: InvoiceStatus.DRAFT,
+      pdfUrl: null,
     });
 
     const result = await this.findOne(id);

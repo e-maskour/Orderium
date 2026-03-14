@@ -6,7 +6,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { currenciesService, Currency, ICurrency, CreateCurrencyDTO, UpdateCurrencyDTO } from '../../modules/currencies';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
@@ -16,6 +16,7 @@ import { toastConfirm } from '../../services/toast.service';
 
 export default function Currencies() {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [showModal, setShowModal] = useState(false);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -110,27 +111,26 @@ export default function Currencies() {
                 title={t('currencies')}
                 subtitle={t('manageSupportedCurrencies')}
                 actions={
-                    <Link
-                        to="/configurations"
-                        style={{ padding: '0.5rem 1rem', background: '#f1f5f9', color: '#334155', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
-                    >
-                        <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
-                        {t('retour')}
-                    </Link>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Button
+                            onClick={() => navigate('/configurations')}
+                            icon={<ArrowLeft style={{ width: 16, height: 16 }} />}
+                            label={t('retour')}
+                            severity="secondary"
+                            outlined
+                            size="small"
+                        />
+                        <Button
+                            onClick={openCreateModal}
+                            icon={<Plus style={{ width: 16, height: 16 }} />}
+                            label={t('addCurrency')}
+                            size="small"
+                        />
+                    </div>
                 }
             />
 
             <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <InputText
-                            type="text"
-                            placeholder={t('searchCurrencies')}
-                            style={{ width: '16rem' }}
-                        />
-                    </div>
-                    <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('addCurrency')} onClick={openCreateModal} severity="warning" />
-                </div>
                 <style>{`
                     .curr-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
                     .curr-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
@@ -153,7 +153,7 @@ export default function Currencies() {
                     removableSort
                     emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCurrenciesConfigured')}</div>}
                     paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                     <Column field="code" header={t('code')} sortable body={(row) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.code}</span>} />

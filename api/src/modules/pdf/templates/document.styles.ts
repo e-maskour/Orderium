@@ -3,19 +3,28 @@
 export function getDocumentStyles(): string {
   return `
     <style>
+      /* ── Arabic / Latin professional font ──────────────────────────── */
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&display=block');
+
       * {
         box-sizing: border-box;
       }
 
       body {
-        font-family: "DejaVu Sans", "Helvetica", "Arial", sans-serif;
+        font-family: "Noto Sans Arabic", "Noto Sans", "Helvetica Neue", "Arial", sans-serif;
         background-color: #ffffff;
         width: 100%;
         margin: 0;
         padding: 0;
         font-size: 9pt;
         color: #000000;
-        line-height: 1.3;
+        line-height: 1.4;
+      }
+
+      /* ── Bidirectional text helpers ─────────────────────────────────── */
+      .bidi {
+        unicode-bidi: plaintext;
+        text-align: start;
       }
 
       .invoice-page {
@@ -45,7 +54,7 @@ export function getDocumentStyles(): string {
 
       .section-title {
         font-size: 8pt;
-        font-weight: bold;
+        font-weight: 600;
         text-transform: uppercase;
         margin-bottom: 2mm;
         color: #666666;
@@ -53,10 +62,12 @@ export function getDocumentStyles(): string {
 
       .info-box {
         font-size: 10pt;
-        line-height: 1.4;
+        line-height: 1.5;
         border: 1px solid #DDDDDD;
         padding: 3mm;
         background-color: #FAFAFA;
+        unicode-bidi: plaintext;
+        text-align: start;
       }
 
       section.table-section {
@@ -81,7 +92,7 @@ export function getDocumentStyles(): string {
       .table-header th {
         border: 0.75pt solid #CCCCCC;
         padding: 2mm 2mm;
-        font-weight: bold;
+        font-weight: 600;
         color: #000000;
       }
 
@@ -89,6 +100,11 @@ export function getDocumentStyles(): string {
         border: 1px solid #DDDDDD;
         padding: 2mm 2mm;
         vertical-align: middle;
+      }
+
+      .table-row .cell-desc {
+        unicode-bidi: plaintext;
+        text-align: start;
       }
 
       .table-row {
@@ -121,12 +137,13 @@ export function getDocumentStyles(): string {
       }
 
       .totals-label {
-        font-weight: bold;
+        font-weight: 600;
       }
 
       .totals-value {
-        font-family: monospace;
-        font-weight: bold;
+        font-family: "Noto Sans Arabic", "Noto Sans", monospace;
+        font-weight: 600;
+        direction: ltr;
       }
 
       .totals-grand {

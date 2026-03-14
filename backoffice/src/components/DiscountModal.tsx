@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Tag, Percent, DollarSign } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -29,28 +29,15 @@ export const DiscountModal = ({
 }: DiscountModalProps) => {
   const [discount, setDiscount] = useState('');
   const [discountType, setDiscountType] = useState<number>(0);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setDiscount(currentDiscount > 0 ? currentDiscount.toString() : '');
       setDiscountType(currentDiscountType);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
     }
   }, [isOpen, currentDiscount, currentDiscountType]);
 
-  useEffect(() => {
-    if (isOpen) {
-      const interval = setInterval(() => {
-        if (document.activeElement !== inputRef.current) {
-          inputRef.current?.focus();
-        }
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [isOpen]);
+
 
   const subtotal = unitPrice * quantity;
   const discountValue = parseFloat(discount) || 0;
@@ -78,7 +65,6 @@ export const DiscountModal = ({
       if (numValue > maxDiscount) return;
       setDiscount(newValue);
     }
-    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,7 +166,7 @@ export const DiscountModal = ({
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             <button
-              onClick={() => { setDiscountType(0); setDiscount(''); setTimeout(() => inputRef.current?.focus(), 0); }}
+              onClick={() => { setDiscountType(0); setDiscount(''); }}
               className="disc-type-btn"
               style={{
                 height: '2.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
@@ -196,7 +182,7 @@ export const DiscountModal = ({
               {t('amount') || 'Amount'}
             </button>
             <button
-              onClick={() => { setDiscountType(1); setDiscount(''); setTimeout(() => inputRef.current?.focus(), 0); }}
+              onClick={() => { setDiscountType(1); setDiscount(''); }}
               className="disc-type-btn"
               style={{
                 height: '2.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
@@ -220,7 +206,6 @@ export const DiscountModal = ({
             {t('discount')} {discountType === 1 ? '(%)' : `(${t('currency')})`}
           </label>
           <InputText
-            ref={inputRef}
             type="text"
             inputMode="decimal"
             value={discount}

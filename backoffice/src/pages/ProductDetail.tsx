@@ -601,18 +601,7 @@ export default function ProductDetail() {
 
           </div>
         </TabPanel>
-        <TabPanel
-          header={
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              {t('stockManagement')}
-              {totalStock > 0 && (
-                <span style={{ background: '#eef2ff', color: '#6366f1', fontSize: '0.6875rem', fontWeight: 600, padding: '0.125rem 0.4375rem', borderRadius: '9999px', lineHeight: 1.4 }}>
-                  {totalStock.toFixed(0)}
-                </span>
-              )}
-            </span>
-          }
-        >
+        <TabPanel header={t('stock') || 'Stock'}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
             {/* ── Summary KPI cards ── */}

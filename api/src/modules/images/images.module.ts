@@ -8,6 +8,6 @@ import { MinioProvider } from './providers/minio.provider';
   imports: [ConfigModule],
   providers: [ImageService, MinioProvider],
   controllers: [ImagesController],
-  exports: [ImageService],
+  exports: [ImageService, MinioProvider],
 })
 export class ImagesModule { }

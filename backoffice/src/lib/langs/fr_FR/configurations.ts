@@ -254,4 +254,20 @@ export default {
   rounding: 'Arrondi',
   roundingPrecision: 'Précision d\'arrondi',
   allCategories: 'Toutes les catégories',
+
+  // Inventory Settings
+  inventorySettings: 'Paramètres d\'inventaire',
+  inventorySettingsSubtitle: 'Configurer les mouvements de stock automatiques',
+  incrementStock: 'Incrémenter le stock',
+  decrementStock: 'Décrémenter le stock',
+  noAutomaticMovement: 'Aucun mouvement automatique',
+  defaultWarehouse: 'Entrepôt par défaut',
+  selectDefaultWarehouse: 'Sélectionner un entrepôt par défaut',
+  stockMovementAutomation: 'Automatisation des mouvements de stock',
+  incrementOnInvoiceAchat: 'Incrémenter le stock lors de la validation d\'une facture d\'achat',
+  decrementOnInvoiceVente: 'Décrémenter le stock lors de la validation d\'une facture de vente',
+  incrementOnOrderAchat: 'Incrémenter le stock lors de la validation d\'un bon d\'achat',
+  decrementOnOrderVente: 'Décrémenter le stock lors de la validation d\'un bon de livraison',
+  inventorySettingsSaved: 'Paramètres d\'inventaire sauvegardés',
+  noWarehouseConfigured: 'Aucun entrepôt par défaut configuré. Les mouvements de stock ne seront pas créés.',
 };

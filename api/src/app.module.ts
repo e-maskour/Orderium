@@ -32,6 +32,7 @@ import { PDFModule } from './modules/pdf/pdf.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { HealthModule } from './modules/health/health.module';
+import { DriveModule } from './modules/drive/drive.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { HealthModule } from './modules/health/health.module';
     PDFModule,
     AuthModule,
     HealthModule,
+    DriveModule,
   ],
   controllers: [AppController],
   providers: [

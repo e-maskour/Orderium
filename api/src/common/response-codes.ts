@@ -508,6 +508,60 @@ export const ADJ = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  DRIVE
+// ─────────────────────────────────────────────────────────────
+export const DRV = {
+    /** GET  /drive/nodes                → data: DriveNode[]   | metadata: { total, page, limit } */
+    NODES_LISTED: { code: 'DRV200_01', status: 200, message: 'Drive Nodes Retrieved' },
+    /** GET  /drive/nodes/:id            → data: DriveNode     | metadata: null */
+    NODE_DETAIL: { code: 'DRV200_02', status: 200, message: 'Drive Node Retrieved' },
+    /** POST /drive/folders              → data: DriveNode     | metadata: null */
+    FOLDER_CREATED: { code: 'DRV201_01', status: 201, message: 'Folder Created' },
+    /** PATCH /drive/nodes/:id           → data: DriveNode     | metadata: null */
+    NODE_UPDATED: { code: 'DRV200_03', status: 200, message: 'Drive Node Updated' },
+    /** DELETE /drive/nodes/:id          → data: null          | metadata: null */
+    NODE_TRASHED: { code: 'DRV200_04', status: 200, message: 'Drive Node Trashed' },
+    /** POST /drive/nodes/:id/restore    → data: DriveNode     | metadata: null */
+    NODE_RESTORED: { code: 'DRV200_05', status: 200, message: 'Drive Node Restored' },
+    /** DELETE /drive/nodes/:id/permanent→ data: null          | metadata: null */
+    NODE_DELETED: { code: 'DRV200_06', status: 200, message: 'Drive Node Permanently Deleted' },
+    /** POST /drive/files                → data: DriveNode     | metadata: null */
+    FILE_UPLOADED: { code: 'DRV201_02', status: 201, message: 'File Uploaded' },
+    /** PUT  /drive/files/:id/replace    → data: DriveVersion  | metadata: null */
+    FILE_REPLACED: { code: 'DRV200_07', status: 200, message: 'File Version Replaced' },
+    /** GET  /drive/files/:id/download   → data: { url }       | metadata: null */
+    DOWNLOAD_URL: { code: 'DRV200_08', status: 200, message: 'Download URL Generated' },
+    /** GET  /drive/files/:id/versions   → data: DriveVersion[]| metadata: { total } */
+    VERSIONS_LISTED: { code: 'DRV200_09', status: 200, message: 'Versions Retrieved' },
+    /** GET  /drive/nodes/:id/shares     → data: DriveShare[]  | metadata: null */
+    SHARES_LISTED: { code: 'DRV200_10', status: 200, message: 'Shares Retrieved' },
+    /** POST /drive/nodes/:id/shares     → data: DriveShare    | metadata: null */
+    SHARE_CREATED: { code: 'DRV201_03', status: 201, message: 'Share Created' },
+    /** PATCH /drive/nodes/:id/shares/:s → data: DriveShare    | metadata: null */
+    SHARE_UPDATED: { code: 'DRV200_11', status: 200, message: 'Share Updated' },
+    /** DELETE /drive/nodes/:id/shares/:s→ data: null          | metadata: null */
+    SHARE_REVOKED: { code: 'DRV200_12', status: 200, message: 'Share Revoked' },
+    /** GET  /drive/search               → data: DriveNode[]   | metadata: { total, page, limit } */
+    SEARCH_RESULTS: { code: 'DRV200_13', status: 200, message: 'Search Results' },
+    /** GET  /drive/nodes/:id/activity   → data: DriveActivity[]| metadata: { total } */
+    ACTIVITY_LISTED: { code: 'DRV200_14', status: 200, message: 'Activity Retrieved' },
+    /** GET  /drive/tags                 → data: DriveTag[]    | metadata: null */
+    TAGS_LISTED: { code: 'DRV200_15', status: 200, message: 'Tags Retrieved' },
+    /** POST /drive/nodes/:id/tags/:tagId→ data: null          | metadata: null */
+    TAG_ADDED: { code: 'DRV200_16', status: 200, message: 'Tag Added' },
+    /** DELETE /drive/nodes/:id/tags/:tagId→ data: null        | metadata: null */
+    TAG_REMOVED: { code: 'DRV200_17', status: 200, message: 'Tag Removed' },
+    /** GET  /drive/stats                → data: DriveStats    | metadata: null */
+    STATS: { code: 'DRV200_18', status: 200, message: 'Drive Stats Retrieved' },
+    /** PATCH /drive/nodes/:id/move      → data: DriveNode     | metadata: null */
+    NODE_MOVED: { code: 'DRV200_19', status: 200, message: 'Node Moved' },
+    /** GET  /drive/trash                → data: DriveNode[]   | metadata: { total, page, limit } */
+    TRASH_LISTED: { code: 'DRV200_20', status: 200, message: 'Trash Listed' },
+    /** GET  /drive/shared-with-me       → data: DriveNode[]   | metadata: { total, page, limit } */
+    SHARED_WITH_ME: { code: 'DRV200_21', status: 200, message: 'Shared Nodes Retrieved' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  ERROR CODES  (Shared across all modules)
 // ─────────────────────────────────────────────────────────────
 export const ERR = {

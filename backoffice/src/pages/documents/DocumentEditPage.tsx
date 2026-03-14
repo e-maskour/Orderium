@@ -64,6 +64,16 @@ export default function DocumentEditPage({
 
   const isVente = direction === 'vente';
 
+  const totalTTC = items.reduce((sum, item) => {
+    const itemTotal = item.quantity * item.unitPrice;
+    const discountAmount = item.discountType === 1
+      ? itemTotal * (item.discount / 100)
+      : item.discount;
+    const afterDiscount = itemTotal - discountAmount;
+    const tax = afterDiscount * (item.tax / 100);
+    return sum + afterDiscount + tax;
+  }, 0);
+
   // Helper function to get payment status badge configuration
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {

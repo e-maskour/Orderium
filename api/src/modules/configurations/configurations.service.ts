@@ -82,6 +82,20 @@ export class ConfigurationsService {
       });
     }
 
+    // Create inventory entity with defaults if it doesn't exist
+    if (!config && entity === 'inventory') {
+      config = await this.create({
+        entity: 'inventory',
+        values: {
+          defaultWarehouseId: null,
+          incrementStockOnInvoiceAchat: false,
+          decrementStockOnInvoiceVente: false,
+          incrementStockOnOrderAchat: false,
+          decrementStockOnOrderVente: false,
+        },
+      });
+    }
+
     if (!config) {
       throw new NotFoundException(`Configuration "${entity}" not found`);
     }

@@ -14,6 +14,7 @@ import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
+import { PDFService } from '../pdf/pdf.service';
 
 interface CreateQuoteItemDTO {
   productId?: number;
@@ -60,6 +61,7 @@ export class QuotesService {
     private readonly productRepository: Repository<Product>,
     private readonly configurationsService: ConfigurationsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly pdfService: PDFService,
   ) { }
 
   private async getOrCreateSequence(
@@ -719,6 +721,7 @@ export class QuotesService {
     }
 
     await this.quoteItemRepository.delete({ quoteId: id });
+    await this.pdfService.deletePDF(quote.pdfUrl);
     await this.quoteRepository.delete(id);
     await this.invalidateQuoteCache(id);
   }
@@ -757,6 +760,12 @@ export class QuotesService {
       validationDate: new Date(),
       status: QuoteStatus.OPEN,
     });
+
+    // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
+    const pdfUrl = await this.pdfService.generateAndUploadPDF('quote', id);
+    if (pdfUrl) {
+      await this.quoteRepository.update(id, { pdfUrl });
+    }
 
     const result = await this.findOne(id);
     if (!result) {
@@ -859,11 +868,13 @@ export class QuotesService {
     }
 
     // Update quote back to draft status with new provisional number
+    await this.pdfService.deletePDF(quote.pdfUrl);
     await this.quoteRepository.update(id, {
       documentNumber: nextProvNumber,
       isValidated: false,
       validationDate: null,
       status: QuoteStatus.DRAFT,
+      pdfUrl: null,
     });
 
     const result = await this.findOne(id);

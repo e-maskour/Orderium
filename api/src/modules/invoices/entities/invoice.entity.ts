@@ -68,6 +68,9 @@ export class Invoice extends BaseDocument {
   @Column({ type: 'date', nullable: true })
   validationDate: Date | null;
 
+  @Column({ type: 'text', nullable: true })
+  pdfUrl: string | null;
+
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
   paidAmount: number;
 

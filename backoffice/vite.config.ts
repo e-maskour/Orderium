@@ -10,6 +10,17 @@ export default defineConfig({
       '@orderium/ui': path.resolve(__dirname, '../shared/ui/src'),
     },
   },
+  // @ts-ignore - vitest config lives alongside vite config
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/modules/**/*.ts'],
+      exclude: ['src/modules/**/index.ts'],
+    },
+  },
   server: {
     port: 3001,
     host: '0.0.0.0',

@@ -9,6 +9,7 @@ import notifications from './notifications';
 import pos from './pos';
 import configurations from './configurations';
 import purchases from './purchases';
+import drive from './drive';
 
 export default {
   ...common,
@@ -22,4 +23,5 @@ export default {
   ...pos,
   ...configurations,
   ...purchases,
+  ...drive,
 };

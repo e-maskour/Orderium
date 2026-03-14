@@ -19,7 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import { ordersService } from '../../modules/orders/orders.service';
-import { toastExported, toastError, toastConfirm } from '../../services/toast.service';
+import { toastExported, toastError, toastConfirm, toastDocument } from '../../services/toast.service';
 
 interface DocumentListPageProps {
   documentType: DocumentType;
@@ -123,6 +123,7 @@ export default function DocumentListPage({
       try {
         await documentsService.validateDocument(documentType, id);
         await refetch();
+        toastDocument(t('pdfGenerated'));
       } catch (error) {
         console.error('Error validating document:', error);
         toastError(t('error'), { description: t('errorValidatingDocument') });

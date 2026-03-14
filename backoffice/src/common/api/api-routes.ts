@@ -226,4 +226,44 @@ export const API_ROUTES = {
         UPLOAD: '/api/images/upload',
         DELETE: '/api/images/delete',
     },
+
+    // ─── Drive (File Storage) ──────────────────────────────────
+    DRIVE: {
+        // Node browsing
+        LIST_ROOT: '/api/drive/nodes',
+        LIST_CHILDREN: (nodeId: string) => `/api/drive/nodes/${nodeId}/children`,
+        NODE_DETAIL: (nodeId: string) => `/api/drive/nodes/${nodeId}`,
+        MOVE_NODE: (nodeId: string) => `/api/drive/nodes/${nodeId}/move`,
+        // Folders
+        CREATE_FOLDER: '/api/drive/folders',
+        UPDATE_NODE: (nodeId: string) => `/api/drive/nodes/${nodeId}`,
+        DELETE_NODE: (nodeId: string) => `/api/drive/nodes/${nodeId}`,
+        RESTORE_NODE: (nodeId: string) => `/api/drive/nodes/${nodeId}/restore`,
+        PERMANENT_DELETE: (nodeId: string) => `/api/drive/nodes/${nodeId}/permanent`,
+        TRASH: '/api/drive/trash',
+        // Files
+        UPLOAD_FILE: '/api/drive/files',
+        REPLACE_FILE: (nodeId: string) => `/api/drive/files/${nodeId}/replace`,
+        DOWNLOAD_URL: (nodeId: string) => `/api/drive/files/${nodeId}/download`,
+        // Versions
+        LIST_VERSIONS: (nodeId: string) => `/api/drive/files/${nodeId}/versions`,
+        RESTORE_VERSION: (nodeId: string, versionId: string) => `/api/drive/files/${nodeId}/versions/${versionId}/restore`,
+        // Sharing
+        LIST_SHARES: (nodeId: string) => `/api/drive/nodes/${nodeId}/shares`,
+        CREATE_SHARE: (nodeId: string) => `/api/drive/nodes/${nodeId}/shares`,
+        UPDATE_SHARE: (nodeId: string, shareId: string) => `/api/drive/nodes/${nodeId}/shares/${shareId}`,
+        REVOKE_SHARE: (nodeId: string, shareId: string) => `/api/drive/nodes/${nodeId}/shares/${shareId}`,
+        SHARED_WITH_ME: '/api/drive/shared-with-me',
+        SHARED_BY_ME: '/api/drive/shared-by-me',
+        // Search & Discovery
+        SEARCH: '/api/drive/search',
+        // Activity
+        NODE_ACTIVITY: (nodeId: string) => `/api/drive/nodes/${nodeId}/activity`,
+        // Tags
+        LIST_TAGS: '/api/drive/tags',
+        ADD_TAG: (nodeId: string, tagId: number) => `/api/drive/nodes/${nodeId}/tags/${tagId}`,
+        REMOVE_TAG: (nodeId: string, tagId: number) => `/api/drive/nodes/${nodeId}/tags/${tagId}`,
+        // Stats
+        STATS: '/api/drive/stats',
+    },
 } as const;

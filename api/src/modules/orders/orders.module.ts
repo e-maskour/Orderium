@@ -6,16 +6,20 @@ import { Order, OrderItem } from './entities/order.entity';
 import { PartnersModule } from '../partners/partners.module';
 import { ConfigurationsModule } from '../configurations/configurations.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { PDFModule } from '../pdf/pdf.module';
+import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]), 
+    TypeOrmModule.forFeature([Order, OrderItem]),
     PartnersModule,
     ConfigurationsModule,
     forwardRef(() => NotificationsModule),
+    PDFModule,
+    InventoryModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],
 })
-export class OrdersModule {}
+export class OrdersModule { }

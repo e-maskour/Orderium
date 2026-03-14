@@ -30,6 +30,9 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
 <html>
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=block" rel="stylesheet">
   <title>Reçu ${data.documentNumber}</title>
   <style>
     @page {
@@ -37,14 +40,14 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
       margin: 0;
     }
     body {
-      font-family: "Courier New", monospace;
+      font-family: "Noto Sans Arabic", "Noto Sans", "Courier New", monospace;
       background-color: #ffffff;
       width: 80mm;
       margin: 0;
       padding: 0;
       font-size: 8pt;
       color: #000000;
-      line-height: 1.2;
+      line-height: 1.4;
     }
     .receipt-content {
       padding: 3mm;
@@ -76,8 +79,8 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   <div class="receipt-content">
     <!-- Header -->
     <div class="header">
-      <div style="font-size: 12pt;">${data.companyName}</div>
-      ${data.companyLines.map(line => `<div style="font-size: 7pt;">${line}</div>`).join('')}
+      <div dir="auto" style="font-size: 12pt;">${data.companyName}</div>
+      ${data.companyLines.map(line => `<div dir="auto" style="font-size: 7pt;">${line}</div>`).join('')}
     </div>
     
     <div class="divider"></div>
@@ -88,7 +91,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     </div>
     <div style="font-size: 7pt; margin-bottom: 3mm;">
       Date: ${data.date}<br />
-      Client: ${data.customerName}<br />
+      Client: <span dir="auto">${data.customerName}</span><br />
       ${data.customerPhone ? `Tel: ${data.customerPhone}<br />` : ''}
     </div>
     

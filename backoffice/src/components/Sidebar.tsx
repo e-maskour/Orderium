@@ -15,6 +15,7 @@ import {
     TrendingUp,
     TrendingDown,
     Settings,
+    HardDrive,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -46,6 +47,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         { path: '/demande-prix', icon: TrendingDown, label: t('purchases'), groupRoot: true },
         { path: '/orders', icon: ShoppingCart, label: t('orders') },
         { path: '/products', icon: Package, label: t('products'), groupRoot: true },
+        { path: '/drive', icon: HardDrive, label: t('drive') },
         { path: '/delivery-persons', icon: Users, label: t('deliveryPersons') },
         { path: '/pos', icon: CreditCard, label: t('pointOfSale') },
         { path: '/configurations', icon: Settings, label: t('configurations') },

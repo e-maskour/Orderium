@@ -203,6 +203,43 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
         return url;
     }
 
+    /**
+     * Upload a raw buffer to MinIO (e.g. a PDF file).
+     *
+     * @param buffer      - The raw file content
+     * @param folder      - Destination folder within the bucket (e.g. 'pdfs')
+     * @param filename    - Object filename including extension (e.g. 'Facture_F001.pdf')
+     * @param contentType - MIME type (e.g. 'application/pdf')
+     * @returns The full public URL of the stored object
+     */
+    async uploadBuffer(
+        buffer: Buffer,
+        folder: string,
+        filename: string,
+        contentType: string,
+    ): Promise<string> {
+        if (!this.ready) {
+            throw new Error('MinIO provider is not initialised');
+        }
+
+        // Sanitise inputs to prevent path traversal
+        const safeFolder = folder.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
+        const safeFilename = filename.replace(/[^a-z0-9._-]/gi, '_');
+        const objectName = `${safeFolder}/${safeFilename}`;
+
+        await this.client.putObject(
+            this.bucket,
+            objectName,
+            buffer,
+            buffer.length,
+            { 'Content-Type': contentType },
+        );
+
+        this.logger.log(`📤  ${objectName}  (${buffer.length} B)`);
+
+        return this.objectUrl(objectName);
+    }
+
     isConfigured(): boolean {
         return this.ready;
     }

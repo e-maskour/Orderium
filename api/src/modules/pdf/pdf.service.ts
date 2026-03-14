@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { chromium } from 'playwright';
@@ -10,6 +10,7 @@ import { renderReceiptTemplate } from './templates/receipt.template';
 import { getDocumentStyles } from './templates/document.styles';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { Order } from '../orders/entities/order.entity';
+import { MinioProvider } from '../images/providers/minio.provider';
 
 type DocumentType = 'invoice' | 'quote' | 'delivery-note' | 'receipt';
 
@@ -70,6 +71,8 @@ interface CompanyConfigData {
 
 @Injectable()
 export class PDFService {
+  private readonly logger = new Logger(PDFService.name);
+
   constructor(
     @InjectRepository(Invoice)
     private readonly invoiceRepository: Repository<Invoice>,
@@ -78,7 +81,8 @@ export class PDFService {
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     private readonly configurationsService: ConfigurationsService,
-  ) {}
+    private readonly minioProvider: MinioProvider,
+  ) { }
 
   async generateDocumentPDF(
     documentType: DocumentType,
@@ -98,6 +102,61 @@ export class PDFService {
     const fileName = this.getFileName(documentType, documentData);
 
     return { pdfBuffer, fileName };
+  }
+
+  /**
+   * Delete a previously-stored PDF from MinIO using its full public URL.
+   * Silently ignores missing objects. Never throws.
+   */
+  async deletePDF(pdfUrl: string | null | undefined): Promise<void> {
+    if (!pdfUrl) return;
+    try {
+      // Extract the object key from the full URL: everything after /<bucket>/
+      const match = pdfUrl.match(/\/([^/]+\/[^/]+\.pdf)$/i);
+      if (!match) {
+        this.logger.warn(`Cannot parse object key from PDF URL: ${pdfUrl}`);
+        return;
+      }
+      const objectKey = match[1];
+      await this.minioProvider.delete(objectKey);
+      this.logger.log(`🗑️  PDF deleted from MinIO: ${objectKey}`);
+    } catch (error) {
+      // Non-fatal — just log and continue
+      this.logger.warn(
+        `Could not delete PDF from MinIO (${pdfUrl}): ${(error as Error)?.message}`,
+      );
+    }
+  }
+
+  /**
+   * Generate a PDF for the given document and upload it to MinIO.
+   * Returns the public URL of the stored PDF, or null if upload failed.
+   * Never throws — errors are logged and the validation continues regardless.
+   */
+  async generateAndUploadPDF(
+    documentType: DocumentType,
+    documentId: number,
+  ): Promise<string | null> {
+    try {
+      const { pdfBuffer, fileName } = await this.generateDocumentPDF(
+        documentType,
+        documentId,
+      );
+      const url = await this.minioProvider.uploadBuffer(
+        pdfBuffer,
+        'pdfs',
+        fileName,
+        'application/pdf',
+      );
+      this.logger.log(`📄 PDF uploaded to MinIO: ${url}`);
+      return url;
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate/upload PDF for ${documentType} #${documentId}`,
+        (error as Error)?.stack,
+      );
+      return null;
+    }
   }
 
   private async fetchDocumentData(
@@ -183,7 +242,7 @@ export class PDFService {
       quoteNumber: quote.quoteNumber,
       date: quote.date,
       expirationDate: quote.expirationDate || undefined,
-      customerName: isDemandePrix 
+      customerName: isDemandePrix
         ? (quote.supplierName || quote.supplier?.name || 'Fournisseur')
         : (quote.customerName || quote.customer?.name || 'Client'),
       customerPhone: isDemandePrix
@@ -295,6 +354,8 @@ export class PDFService {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-zygote',
       ],
     });
 
@@ -313,6 +374,8 @@ export class PDFService {
         waitUntil: 'networkidle',
         timeout: 30000,
       });
+      // Ensure web fonts (Noto Sans Arabic) are fully loaded before rendering
+      await page.evaluate(() => (document as any).fonts.ready);
 
       const companyConfig = await this.getCompanyConfig();
       const companyLines = this.buildCompanyLines(companyConfig);
@@ -329,7 +392,7 @@ export class PDFService {
         expirationDate: data.expirationDate ? new Date(data.expirationDate).toLocaleDateString('fr-FR') : undefined,
       });
 
-      const footerTemplate = renderFooterTemplate({ 
+      const footerTemplate = renderFooterTemplate({
         footerLines,
         hideVAT: data.fromPortal || false,
       });
@@ -361,6 +424,8 @@ export class PDFService {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-zygote',
       ],
     });
 
@@ -379,6 +444,8 @@ export class PDFService {
         waitUntil: 'networkidle',
         timeout: 30000,
       });
+      // Ensure web fonts (Noto Sans Arabic) are fully loaded before rendering
+      await page.evaluate(() => (document as any).fonts.ready);
 
       const contentHeight = await page.evaluate(() => {
         return document.body.scrollHeight;
@@ -414,7 +481,7 @@ export class PDFService {
             // For demande de prix, only show description and quantity
             return `
               <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
-                <td style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
+                <td dir="ltr" style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
                 <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
               </tr>
             `;
@@ -422,7 +489,7 @@ export class PDFService {
             // Normal quote/invoice with prices
             return `
               <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
-                <td style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
+                <td dir="ltr" style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
                 <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
                 <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.unitPrice)}</td>
                 <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.discount)}</td>
@@ -436,7 +503,7 @@ export class PDFService {
       .join('');
 
     // Calculate total quantity for demande de prix (only for quotes with supplier)
-    const totalQuantity = hidePrices 
+    const totalQuantity = hidePrices
       ? data.items.reduce((sum, item) => sum + item.quantity, 0)
       : 0;
 
@@ -470,13 +537,13 @@ export class PDFService {
   private renderReceiptHTML(data: DocumentData, company: CompanyConfigData): string {
     const hideVAT = data.fromPortal || false;
     const companyLines = this.buildCompanyLines(company);
-    
+
     // Generate items HTML
     const itemsHtml = data.items
       .map(
         (item) => `
           <div class="item">
-            <div style="font-weight: bold;">${item.description}</div>
+            <div dir="ltr" style="font-weight: bold; text-align: left;">${item.description}</div>
             <div style="display: flex; justify-content: space-between;">
               <span>${item.quantity} x ${this.formatCurrency(item.unitPrice)}</span>
               <span>${this.formatCurrency(item.total)} DH</span>

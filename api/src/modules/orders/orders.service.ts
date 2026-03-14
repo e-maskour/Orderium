@@ -19,6 +19,9 @@ import { PartnersService } from '../partners/partners.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { OrderNotificationService } from '../notifications/order-notification.service';
+import { PDFService } from '../pdf/pdf.service';
+import { StockService } from '../inventory/stock.service';
+import { MovementType } from '../inventory/entities/stock-movement.entity';
 
 // Removed composite response interface; service now returns `Order` directly.
 
@@ -38,6 +41,8 @@ export class OrdersService {
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly pdfService: PDFService,
+    private readonly stockService: StockService,
   ) { }
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<any> {
@@ -1395,6 +1400,11 @@ export class OrdersService {
     }
 
     await this.invalidateOrderCache(id);
+    // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
+    const pdfUrl = await this.pdfService.generateAndUploadPDF('delivery-note', id);
+    if (pdfUrl) {
+      await this.orderRepository.update(id, { pdfUrl });
+    }
     return await this.getOrderById(id);
   }
 
@@ -1482,11 +1492,13 @@ export class OrdersService {
     }
 
     // Update order back to draft status with new provisional number
+    await this.pdfService.deletePDF(order.pdfUrl);
     await this.orderRepository.update(id, {
       documentNumber: nextProvNumber,
       isValidated: false,
       validationDate: null,
       status: OrderStatus.DRAFT,
+      pdfUrl: null,
     });
 
     await this.invalidateOrderCache(id);
@@ -1723,6 +1735,7 @@ export class OrdersService {
     await this.orderItemRepository.delete({ orderId: id });
 
     // Delete the order
+    await this.pdfService.deletePDF(order.pdfUrl);
     await this.orderRepository.delete(id);
     await this.invalidateOrderCache(id);
   }

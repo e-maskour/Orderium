@@ -39,6 +39,7 @@ const PaymentTerms = lazy(() => import('./pages/configurations/PaymentTerms'));
 const Sequences = lazy(() => import('./pages/configurations/Sequences'));
 const UnitsOfMeasure = lazy(() => import('./pages/configurations/UnitsOfMeasure'));
 const CompanySettings = lazy(() => import('./pages/configurations/CompanySettings'));
+const InventorySettings = lazy(() => import('./pages/configurations/InventorySettings'));
 const Warehouses = lazy(() => import('./pages/Warehouses'));
 const StockMovements = lazy(() => import('./pages/StockMovements'));
 const InventoryAdjustments = lazy(() => import('./pages/InventoryAdjustments'));
@@ -47,6 +48,7 @@ const POS = lazy(() => import('./pages/POS'));
 const Products = lazy(() => import('./pages/Products'));
 const Orders = lazy(() => import('./pages/Orders'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const DrivePage = lazy(() => import('./pages/drive/DrivePage'));
 
 // Document pages
 const FactureVenteList = lazy(() => import('./pages/documents/FactureVenteList'));
@@ -475,6 +477,14 @@ function App() {
                     }
                   />
                   <Route
+                    path="/configurations/inventory"
+                    element={
+                      <ProtectedRoute>
+                        <InventorySettings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/warehouses"
                     element={
                       <ProtectedRoute>
@@ -503,6 +513,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Notifications />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/drive"
+                    element={
+                      <ProtectedRoute>
+                        <DrivePage />
                       </ProtectedRoute>
                     }
                   />

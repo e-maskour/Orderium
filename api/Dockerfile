@@ -3,17 +3,18 @@
 # ==================================
 
 # ==================================
-# Base image with Playwright installed ONCE
+# Base image with system dependencies for Playwright
 # ==================================
 FROM node:20-bookworm-slim AS playwright-base
 
 WORKDIR /app
 
-# Install system dependencies required by Playwright
+# Install system dependencies required by Playwright/Chromium
 RUN apt-get update && apt-get install -y \
     wget \
     ca-certificates \
     fonts-liberation \
+    fonts-noto \
     libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
@@ -32,9 +33,19 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Playwright browsers once (cached layer)
+# ==================================
+# Browser installer — uses the project's exact playwright version
+# so the browser path hash matches what the app expects at runtime
+# ==================================
+FROM playwright-base AS browser-installer
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN npx playwright install chromium
+RUN pnpm exec playwright install chromium
 
 # ==================================
 # Dependencies Stage
@@ -70,7 +81,10 @@ RUN pnpm prune --prod
 # ==================================
 FROM playwright-base AS development
 
-WORKDIR /app
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# Copy the pre-installed Chromium browser (built with project's exact playwright version)
+COPY --from=browser-installer /ms-playwright /ms-playwright
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -88,6 +102,10 @@ CMD ["pnpm", "run", "start:dev"]
 FROM playwright-base AS production
 
 ENV NODE_ENV=production
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# Copy the pre-installed Chromium browser (built with project's exact playwright version)
+COPY --from=browser-installer /ms-playwright /ms-playwright
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

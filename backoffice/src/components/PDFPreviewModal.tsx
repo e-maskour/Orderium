@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { ProgressSpinner } from 'primereact/progressspinner';
 
@@ -11,12 +11,52 @@ interface PDFPreviewModalProps {
 
 export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewModalProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const prevBlobUrl = useRef<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-    }
+    if (!isOpen || !pdfUrl) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    setBlobUrl(null);
+
+    const token = localStorage.getItem('adminToken');
+    fetch(pdfUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        const url = URL.createObjectURL(blob);
+        // Revoke previous blob URL to free memory
+        if (prevBlobUrl.current) URL.revokeObjectURL(prevBlobUrl.current);
+        prevBlobUrl.current = url;
+        setBlobUrl(url);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message);
+        setIsLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, [isOpen, pdfUrl]);
+
+  // Cleanup blob URL when modal closes
+  useEffect(() => {
+    if (!isOpen && prevBlobUrl.current) {
+      URL.revokeObjectURL(prevBlobUrl.current);
+      prevBlobUrl.current = null;
+      setBlobUrl(null);
+    }
+  }, [isOpen]);
 
   return (
     <Dialog
@@ -39,12 +79,19 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
         </div>
       )}
 
-      <iframe
-        src={pdfUrl}
-        style={{ width: '100%', height: '100%', border: 'none' }}
-        title={title}
-        onLoad={() => setIsLoading(false)}
-      />
+      {error && (
+        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: '#f1f5f9', zIndex: 1 }}>
+          <p style={{ color: '#ef4444', fontWeight: 600 }}>Erreur: {error}</p>
+        </div>
+      )}
+
+      {blobUrl && (
+        <iframe
+          src={blobUrl}
+          style={{ width: '100%', height: '100%', border: 'none' }}
+          title={title}
+        />
+      )}
     </Dialog>
   );
 }

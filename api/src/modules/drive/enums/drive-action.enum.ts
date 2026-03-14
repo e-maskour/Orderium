@@ -1,0 +1,17 @@
+export enum DriveAction {
+    UPLOAD = 'upload',
+    REPLACE = 'replace',
+    DOWNLOAD = 'download',
+    DELETE = 'delete',
+    RESTORE = 'restore',
+    CREATE_FOLDER = 'create_folder',
+    RENAME = 'rename',
+    MOVE = 'move',
+    COPY = 'copy',
+    SHARE = 'share',
+    UNSHARE = 'unshare',
+    PREVIEW = 'preview',
+    VERSION_RESTORE = 'version_restore',
+    TRASH = 'trash',
+    PERMANENT_DELETE = 'permanent_delete',
+}

@@ -7,7 +7,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { uomService, IUnitOfMeasure, CreateUomDTO, UpdateUomDTO, UOM_CATEGORIES } from '../../modules/uom';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
@@ -17,6 +17,7 @@ import { toastConfirm } from '../../services/toast.service';
 
 export default function UnitsOfMeasure() {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [showModal, setShowModal] = useState(false);
     const [editingUom, setEditingUom] = useState<IUnitOfMeasure | null>(null);
@@ -184,71 +185,26 @@ export default function UnitsOfMeasure() {
                 title={t('unitsOfMeasure') || 'Units of Measure'}
                 subtitle={t('manageUomDescription') || 'Manage units of measure for your inventory'}
                 actions={
-                    <Link
-                        to="/configurations"
-                        style={{ padding: '0.5rem 1rem', background: '#f1f5f9', color: '#334155', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
-                    >
-                        <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
-                        {t('retour')}
-                    </Link>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Button
+                            onClick={() => navigate('/configurations')}
+                            icon={<ArrowLeft style={{ width: 16, height: 16 }} />}
+                            label={t('retour')}
+                            severity="secondary"
+                            outlined
+                            size="small"
+                        />
+                        <Button
+                            onClick={openCreateModal}
+                            icon={<Plus style={{ width: 16, height: 16 }} />}
+                            label={t('addUom') || 'Add UOM'}
+                            size="small"
+                        />
+                    </div>
                 }
             />
 
             <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-                        <div style={{ position: 'relative', flex: 1, maxWidth: '28rem' }}>
-                            <span style={{ position: 'relative', display: 'block', width: '100%' }}>
-                                <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                                <InputText
-                                    type="text"
-                                    placeholder={t('searchUom') || 'Search by name or code...'}
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    style={{ width: '100%', paddingLeft: '2.5rem' }}
-                                />
-                            </span>
-                        </div>
-
-                        <div style={{ position: 'relative' }} ref={categoryRef}>
-                            <Button
-                                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                icon={<Filter style={{ width: '1rem', height: '1rem' }} />}
-                                iconPos="left"
-                                label={filterCategory || t('allCategories') || 'All Categories'}
-                                outlined
-                            />
-                            {showCategoryDropdown && (
-                                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '0.25rem', width: '12rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 10, maxHeight: '16rem', overflowY: 'auto' }}>
-                                    <Button
-                                        onClick={() => {
-                                            setFilterCategory('');
-                                            setShowCategoryDropdown(false);
-                                        }}
-                                        label={t('allCategories') || 'All Categories'}
-                                        text
-                                        style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem' }}
-                                    />
-                                    {UOM_CATEGORIES.map((cat) => (
-                                        <Button
-                                            key={cat}
-                                            onClick={() => {
-                                                setFilterCategory(cat);
-                                                setShowCategoryDropdown(false);
-                                            }}
-                                            label={cat}
-                                            text
-                                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem' }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('addUom') || 'Add UOM'} onClick={openCreateModal} />
-                </div>
-
                 <style>{`
                     .uom-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
                     .uom-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
@@ -275,7 +231,7 @@ export default function UnitsOfMeasure() {
                     rowGroupHeaderTemplate={(row: IUnitOfMeasure) => <span>{row.category}</span>}
                     emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noUomFound') || 'No units of measure found'}</div>}
                     paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                     <Column field="name" header={t('name')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
