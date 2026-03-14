@@ -36,6 +36,7 @@ const DIT_STYLES = `
     transition: background 0.15s, color 0.15s;
   }
   .dit-tbody-row:hover .dit-row-num { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+  .dit-wrap table, .dit-wrap td, .dit-wrap th, .dit-wrap input, .dit-wrap .p-dropdown, .dit-wrap .p-inputtext { font-family: inherit !important; font-size: 0.875rem !important; }
   .dit-dg .p-dropdown {
     border: 1.5px solid transparent !important; background: transparent !important;
     transition: border-color 0.15s, box-shadow 0.15s; border-radius: 6px !important;
@@ -45,7 +46,7 @@ const DIT_STYLES = `
   .dit-ig .p-inputtext {
     border: 1.5px solid transparent !important; background: transparent !important;
     padding: 0.4rem 0.5rem !important; font-size: 0.875rem !important;
-    height: 2.5rem !important; text-align: center !important;
+    height: 2.5rem !important; text-align: center !important; color: #1e293b !important; font-weight: 600 !important;
     transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; border-radius: 6px !important;
   }
   .dit-ig .p-inputtext:hover:not([disabled]) { border-color: #e2e8f0 !important; background: #fff !important; }
@@ -54,6 +55,7 @@ const DIT_STYLES = `
   .dit-ig .p-inputtext[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .dit-ig .p-inputtext[type=number] { -moz-appearance: textfield; }
   .dit-dg .p-dropdown { height: 2.5rem !important; }
+  .dit-dg .p-dropdown .p-dropdown-label { display: flex !important; align-items: center !important; text-align: center !important; justify-content: center !important; color: #1e293b !important; font-weight: 600 !important; font-size: 0.875rem !important; }
   .dit-dsc {
     display: inline-flex; align-items: center; overflow: hidden;
     border: 1.5px solid transparent; border-radius: 6px; background: transparent;
@@ -284,7 +286,7 @@ export function DocumentItemsTable({
                   {t('invoice.quantityHeader')}
                 </th>
                 {showPriceColumn && (
-                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('invoice.unitPriceHeader')}
                   </th>
                 )}
@@ -299,7 +301,7 @@ export function DocumentItemsTable({
                   </th>
                 )}
                 {showTotalColumn && (
-                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('invoice.totalHeader')}
                   </th>
                 )}
@@ -322,83 +324,102 @@ export function DocumentItemsTable({
 
                   {/* Description */}
                   <td className="dit-dg" style={{ padding: '0.5rem 0.75rem', overflowY: 'visible' }}>
-                    <PrDropdown
-                      value={item.productId ? String(item.productId) : null}
-                      options={products.map(p => ({ value: String(p.id), label: p.name }))}
-                      onChange={(e) => handleSelectProduct(item.id, e.value)}
-                      optionLabel="label" optionValue="value"
-                      placeholder={t('invoice.itemDescriptionPlaceholder')}
-                      emptyFilterMessage={t('invoice.noProductsFound')}
-                      disabled={readOnly} filter showClear
-                      style={{ width: '100%', fontSize: '0.875rem' }}
-                    />
+                    {readOnly ? (
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                        {item.productId ? (products.find(p => p.id === item.productId)?.name ?? item.description) : (item.description || '—')}
+                      </span>
+                    ) : (
+                      <PrDropdown
+                        value={item.productId ? String(item.productId) : null}
+                        options={products.map(p => ({ value: String(p.id), label: p.name }))}
+                        onChange={(e) => handleSelectProduct(item.id, e.value)}
+                        optionLabel="label" optionValue="value"
+                        placeholder={t('invoice.itemDescriptionPlaceholder')}
+                        emptyFilterMessage={t('invoice.noProductsFound')}
+                        filter showClear
+                        style={{ width: '100%', fontSize: '0.875rem' }}
+                      />
+                    )}
                   </td>
 
                   {/* Quantity */}
                   <td className="dit-ig" style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
-                    <InputText
-                      type="number" min={0.1} step={0.1}
-                      value={String(item.quantity)}
-                      onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                      readOnly={readOnly}
-                      style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem' }}
-                    />
+                    {readOnly ? (
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{item.quantity}</span>
+                    ) : (
+                      <InputText
+                        type="number" min={0.1} step={0.1}
+                        value={String(item.quantity)}
+                        onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                        style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem', color: '#1e293b', fontWeight: 600 }}
+                      />
+                    )}
                   </td>
 
                   {/* Unit Price */}
                   {showPriceColumn && (
-                    <td className="dit-ig" style={{ padding: '0.5rem 0.75rem' }}>
-                      <InputText
-                        type="number" min={0} step={0.01}
-                        value={String(item.unitPrice)}
-                        onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        readOnly={readOnly}
-                        style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem' }}
-                      />
+                    <td className="dit-ig" style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
+                      {readOnly ? (
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{fmt(item.unitPrice)}</span>
+                      ) : (
+                        <InputText
+                          type="number" min={0} step={0.01}
+                          value={String(item.unitPrice)}
+                          onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                          style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem', color: '#1e293b', fontWeight: 600 }}
+                        />
+                      )}
                     </td>
                   )}
 
                   {/* Discount */}
                   {showDiscountColumn && (
                     <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                      <div className="dit-dsc">
-                        <InputNumber
-                          min={0} step={0.1} value={item.discount}
-                          onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
-                          inputStyle={{ width: '3.5rem', border: 'none', background: 'transparent', padding: '0.4rem 0.25rem', fontSize: '0.875rem', textAlign: 'center', boxShadow: 'none' }}
-                          readOnly={readOnly}
-                          pt={{ root: { style: { border: 'none', background: 'transparent' } } }}
-                        />
-                        <button
-                          type="button" className="dit-dtb"
-                          onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
-                          disabled={readOnly}
-                        >
-                          {item.discountType === 0 ? currency : '%'}
-                        </button>
-                      </div>
+                      {readOnly ? (
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                          {item.discount}{item.discountType === 0 ? ` ${currency}` : '%'}
+                        </span>
+                      ) : (
+                        <div className="dit-dsc">
+                          <InputNumber
+                            min={0} step={0.1} value={item.discount}
+                            onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
+                            inputStyle={{ width: '3.5rem', border: 'none', background: 'transparent', padding: '0.4rem 0.25rem', fontSize: '0.875rem', textAlign: 'center', boxShadow: 'none', color: '#1e293b', fontWeight: 600 }}
+                            pt={{ root: { style: { border: 'none', background: 'transparent' } } }}
+                          />
+                          <button
+                            type="button" className="dit-dtb"
+                            onClick={() => handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
+                          >
+                            {item.discountType === 0 ? currency : '%'}
+                          </button>
+                        </div>
+                      )}
                     </td>
                   )}
 
                   {/* Tax */}
                   {showTaxColumn && (
                     <td className="dit-dg" style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
-                      <PrDropdown
-                        value={item.tax}
-                        options={[{ label: '0%', value: 0 }, { label: '10%', value: 10 }, { label: '20%', value: 20 }]}
-                        onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
-                        optionLabel="label" optionValue="value"
-                        disabled={readOnly}
-                        style={{ width: '100%', fontSize: '0.875rem' }}
-                      />
+                      {readOnly ? (
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{item.tax}%</span>
+                      ) : (
+                        <PrDropdown
+                          value={item.tax}
+                          options={[{ label: '0%', value: 0 }, { label: '10%', value: 10 }, { label: '20%', value: 20 }]}
+                          onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
+                          optionLabel="label" optionValue="value"
+                          style={{ width: '100%', fontSize: '0.875rem' }}
+                        />
+                      )}
                     </td>
                   )}
 
                   {/* Total */}
                   {showTotalColumn && (
                     <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                        {fmt(calculateItemTotal(item))} <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>{currency}</span>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                        {fmt(calculateItemTotal(item))} <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 500 }}>{currency}</span>
                       </span>
                     </td>
                   )}
