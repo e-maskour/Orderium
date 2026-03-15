@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Tooltip } from 'primereact/tooltip';
 import { Badge } from 'primereact/badge';
 import { Ripple } from 'primereact/ripple';
+import { Button } from 'primereact/button';
 import {
     LayoutDashboard,
     Package,
@@ -108,32 +109,31 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
             </div>
 
             {/* Collapse Toggle */}
-            <button
+            <Button
                 onClick={() => setIsCollapsed(!isCollapsed)}
+                text
+                rounded
                 className="hidden lg:flex"
+                icon={(isRtl ? !isCollapsed : isCollapsed)
+                    ? <ChevronRight style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.7)' }} />
+                    : <ChevronLeft style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.7)' }} />}
                 style={{
                     position: 'absolute',
                     [isRtl ? 'left' : 'right']: '-0.75rem',
                     top: '5.25rem',
                     width: '1.5rem',
                     height: '1.5rem',
+                    padding: 0,
                     borderRadius: '50%',
                     background: '#1e1e2d',
                     border: '2px solid rgba(255,255,255,0.1)',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    cursor: 'pointer',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
                     zIndex: 21,
                     transition: 'all 0.2s ease',
                 }}
-            >
-                {(isRtl ? !isCollapsed : isCollapsed) ? (
-                    <ChevronRight style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.7)' }} />
-                ) : (
-                    <ChevronLeft style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.7)' }} />
-                )}
-            </button>
+            />
 
             {/* Section Label */}
             {!isCollapsed && (

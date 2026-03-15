@@ -83,6 +83,30 @@
     --sidebar-label-font-size: 0.8125rem;
     --sidebar-label-letter-spacing: 0.005em;
     --sidebar-brand-font-weight: 700;
+
+    /* Typography scale — consistent across all portals */
+    --font-size-xs: 0.75rem;
+    /* 10.5px at 14px base */
+    --font-size-sm: 0.8125rem;
+    /* 11.375px */
+    --font-size-base: 0.875rem;
+    /* 12.25px  — labels, body, inputs */
+    --font-size-md: 1rem;
+    /* 14px */
+    --font-size-lg: 1.125rem;
+    /* 15.75px  — card titles */
+    --font-size-xl: 1.25rem;
+    /* 17.5px */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Form input border states — referenced by component overrides below */
+    --form-input-border: #d1c7bd;
+    --form-input-border-hover: #b8a99a;
+    --form-input-border-focus: #df7817;
+    --form-input-shadow-focus: 0 0 0 3px rgba(223, 120, 23, 0.15);
 }
 
 /* ============================================================

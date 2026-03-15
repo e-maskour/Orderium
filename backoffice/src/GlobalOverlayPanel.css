@@ -1,3 +1,16 @@
+/* ─── Calendar focus: ensure focus border matches other form inputs ─── */
+.p-calendar.p-inputwrapper-focus .p-inputtext,
+.p-calendar:focus-within .p-inputtext {
+  border-color: var(--form-input-border-focus) !important;
+  box-shadow: var(--form-input-shadow-focus) !important;
+}
+
+/* ─── Single-input AutoComplete focus ─── */
+.p-autocomplete .p-inputtext:enabled:focus {
+  border-color: var(--form-input-border-focus) !important;
+  box-shadow: var(--form-input-shadow-focus) !important;
+}
+
 /* ─── Form field labels used in product forms ─── */
 .p-label {
   display: block;

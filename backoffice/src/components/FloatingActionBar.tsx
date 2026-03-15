@@ -1,6 +1,7 @@
 import { X, CheckSquare } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { CSSProperties, ReactNode } from 'react';
+import { Button } from 'primereact/button';
 
 export interface FloatingAction {
   id: string;
@@ -245,7 +246,8 @@ export function FloatingActionBar({
 
               {/* Select-all toggle */}
               {onSelectAll && totalCount != null && (
-                <button
+                <Button
+                  text
                   className="_fab_ghost"
                   onClick={onSelectAll}
                   style={{
@@ -261,7 +263,7 @@ export function FloatingActionBar({
                   <span className="_fab_label">
                     {isAllSelected ? t('deselectAll') : t('selectAll')}
                   </span>
-                </button>
+                </Button>
               )}
             </div>
 
@@ -273,8 +275,9 @@ export function FloatingActionBar({
               {children}
 
               {visibleActions.map((action) => (
-                <button
+                <Button
                   key={action.id}
+                  text
                   className="_fab_btn"
                   onClick={action.onClick}
                   title={action.label}
@@ -282,12 +285,13 @@ export function FloatingActionBar({
                 >
                   {action.icon}
                   <span className="_fab_label">{action.label}</span>
-                </button>
+                </Button>
               ))}
 
               {visibleActions.length > 0 && <div className="_fab_sep" />}
 
-              <button
+              <Button
+                text
                 className="_fab_close"
                 onClick={onClearSelection}
                 title={t('close')}
@@ -298,10 +302,11 @@ export function FloatingActionBar({
                   background: 'rgba(255,255,255,0.06)',
                   color: 'rgba(255,255,255,0.5)',
                   boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                  padding: 0,
                 }}
               >
                 <X style={{ width: '0.9rem', height: '0.9rem' }} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

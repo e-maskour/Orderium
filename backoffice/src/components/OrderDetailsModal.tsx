@@ -2,6 +2,8 @@ import { Package, Phone, MapPin, Calendar } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 
 interface OrderDetailsModalProps {
   order: any;
@@ -155,53 +157,68 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
           </div>
 
           <div style={{ maxHeight: '16rem', overflowY: 'auto' }}>
-            {(!order.items || order.items.length === 0) ? (
-              <div className="flex flex-column align-items-center" style={{ padding: '2rem 0', color: '#64748b' }}>
-                <Package style={{ width: 48, height: 48, color: '#cbd5e1', marginBottom: '0.75rem' }} />
-                <span>{t('noItems') || 'No items found'}</span>
-              </div>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('product')}</th>
-                    <th style={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('quantity')}</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('unitPrice')}</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('discount')}</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('total')}</th>
-                  </tr>
-                </thead>
-                <tbody style={{ background: '#fff' }}>
-                  {(order.items || []).map((item: any, index: number) => (
-                    <tr key={item.id || index} style={index !== (order.items || []).length - 1 ? { borderBottom: '1px solid #f1f5f9' } : undefined}>
-                      <td style={{ padding: '0.5rem 0.75rem' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.75rem', color: '#1e293b' }}>{item.description || item.product?.name || `Product #${item.productId}`}</span>
-                      </td>
-                      <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem' }}>
-                          {parseFloat(item.quantity || 0).toFixed(2)}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 600, fontSize: '0.75rem', color: '#334155' }}>
-                        {parseFloat(item.unitPrice || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                      </td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>
-                        {parseFloat(item.discount || 0) > 0 ? (
-                          <span style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.75rem' }}>
-                            -{parseFloat(item.discount || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                          </span>
-                        ) : (
-                          <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>-</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', fontWeight: 700, fontSize: '0.75rem', color: '#1e293b' }}>
-                        {parseFloat(item.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <DataTable
+              value={order.items || []}
+              size="small"
+              emptyMessage={
+                <div className="flex flex-column align-items-center" style={{ padding: '2rem 0', color: '#64748b' }}>
+                  <Package style={{ width: 48, height: 48, color: '#cbd5e1', marginBottom: '0.75rem' }} />
+                  <span>{t('noItems') || 'No items found'}</span>
+                </div>
+              }
+              tableStyle={{ width: '100%' }}
+              pt={{ tbody: { style: { background: '#fff' } } }}
+            >
+              <Column
+                field="description"
+                header={t('product')}
+                headerStyle={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.5rem 0.75rem' }}
+                body={(item: any) => (
+                  <span style={{ fontWeight: 600, fontSize: '0.75rem', color: '#1e293b' }}>
+                    {item.description || item.product?.name || `Product #${item.productId}`}
+                  </span>
+                )}
+              />
+              <Column
+                field="quantity"
+                header={t('quantity')}
+                headerStyle={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'center', padding: '0.5rem' }}
+                body={(item: any) => (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem' }}>
+                    {parseFloat(item.quantity || 0).toFixed(2)}
+                  </span>
+                )}
+              />
+              <Column
+                field="unitPrice"
+                header={t('unitPrice')}
+                headerStyle={{ textAlign: 'right', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'right', padding: '0.5rem', fontWeight: 600, fontSize: '0.75rem', color: '#334155' }}
+                body={(item: any) => `${parseFloat(item.unitPrice || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('currency')}`}
+              />
+              <Column
+                field="discount"
+                header={t('discount')}
+                headerStyle={{ textAlign: 'right', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'right', padding: '0.5rem' }}
+                body={(item: any) => parseFloat(item.discount || 0) > 0 ? (
+                  <span style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.75rem' }}>
+                    -{parseFloat(item.discount || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                  </span>
+                ) : (
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>-</span>
+                )}
+              />
+              <Column
+                field="total"
+                header={t('total')}
+                headerStyle={{ textAlign: 'right', padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'right', padding: '0.5rem 0.75rem', fontWeight: 700, fontSize: '0.75rem', color: '#1e293b' }}
+                body={(item: any) => `${parseFloat(item.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('currency')}`}
+              />
+            </DataTable>
           </div>
 
           {/* Order Totals */}

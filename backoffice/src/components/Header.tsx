@@ -383,8 +383,9 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                 const ItemIcon = item.Icon;
                                 const active = isSubItemActive(item.path);
                                 return (
-                                    <button
+                                    <Button
                                         key={item.path}
+                                        text
                                         onClick={() => navigate(item.path)}
                                         className="hidden lg:flex"
                                         style={{
@@ -396,9 +397,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                             fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)',
                                             color: active ? '#d97706' : '#374151',
                                             background: 'transparent',
-                                            border: 'none',
                                             boxShadow: active ? 'inset 0 -2px 0 #d97706' : 'none',
-                                            cursor: 'pointer',
                                             whiteSpace: 'nowrap',
                                             transition: 'all 0.15s ease',
                                             flexShrink: 0,
@@ -408,7 +407,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                     >
                                         <ItemIcon style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0, opacity: active ? 1 : 0.6 }} strokeWidth={1.75} />
                                         {item.label}
-                                    </button>
+                                    </Button>
                                 );
                             });
                         })()}
@@ -424,7 +423,8 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                         )}
 
                         {/* Search trigger — pill style */}
-                        <button
+                        <Button
+                            text
                             onClick={openSearch}
                             aria-label="Search"
                             className="hidden sm:flex"
@@ -434,7 +434,6 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                 background: '#f8fafc',
                                 border: '1px solid #e2e8f0',
                                 borderRadius: '0.5rem',
-                                cursor: 'pointer',
                                 color: '#94a3b8',
                                 fontSize: '0.8125rem',
                                 fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-latin)',
@@ -451,18 +450,19 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                             <kbd style={{ display: 'inline-flex', alignItems: 'center', gap: '0.1rem', padding: '0.125rem 0.375rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.3125rem', fontSize: '0.625rem', color: '#94a3b8', flexShrink: 0 }}>
                                 ⌘K
                             </kbd>
-                        </button>
+                        </Button>
                         {/* Mobile: icon only */}
-                        <button
+                        <Button
+                            text
                             onClick={openSearch}
                             title="Search (⌘K)"
                             className="flex sm:hidden"
-                            style={{ alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', border: 'none', background: 'transparent', borderRadius: '0.5rem', cursor: 'pointer', color: '#6b7280', transition: 'all 0.15s ease' }}
+                            style={{ alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', background: 'transparent', borderRadius: '0.5rem', color: '#6b7280', transition: 'all 0.15s ease', padding: 0 }}
                             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f3f4f6'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
                         >
                             <Search style={{ width: '1.125rem', height: '1.125rem' }} strokeWidth={1.75} />
-                        </button>
+                        </Button>
 
                         <NotificationBellPro />
                         <LanguageToggle />
@@ -524,9 +524,13 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                     style={{ flex: 1, border: 'none', outline: 'none', fontSize: '1.125rem', fontWeight: 400, color: '#111827', background: 'transparent', fontFamily: 'inherit', textAlign: isRTL ? 'right' : 'left', boxShadow: 'none', padding: '0.5rem 0.75rem', lineHeight: 1.5 }}
                                 />
                                 {searchQuery ? (
-                                    <button onClick={() => setSearchQuery('')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', border: 'none', background: '#f1f5f9', borderRadius: '0.375rem', cursor: 'pointer', color: '#64748b', flexShrink: 0 }}>
+                                    <Button
+                                        text
+                                        onClick={() => setSearchQuery('')}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: '#f1f5f9', borderRadius: '0.375rem', color: '#64748b', flexShrink: 0, padding: 0 }}
+                                    >
                                         <X style={{ width: '1rem', height: '1rem' }} />
-                                    </button>
+                                    </Button>
                                 ) : (
                                     <kbd style={{ display: 'inline-flex', alignItems: 'center', padding: '0.25rem 0.625rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#94a3b8', flexShrink: 0 }}>
                                         Esc
@@ -541,13 +545,14 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                     const gc = g ? GROUP_CONFIG[g] : null;
                                     const isActive = activeGroupFilter === g;
                                     return (
-                                        <button
+                                        <Button
                                             key={g ?? '__all'}
+                                            text
                                             onClick={() => { setActiveGroupFilter(g); setActiveIndex(-1); }}
                                             style={{
                                                 display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
                                                 padding: '0.25rem 0.625rem',
-                                                border: 'none', borderRadius: '1rem', cursor: 'pointer',
+                                                borderRadius: '1rem',
                                                 fontSize: '0.75rem', fontWeight: isActive ? 600 : 500,
                                                 whiteSpace: 'nowrap',
                                                 background: isActive ? (gc ? gc.bg : '#e0e7ff') : 'transparent',
@@ -557,7 +562,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                         >
                                             {g && isActive && <div style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', background: gc?.color, flexShrink: 0 }} />}
                                             {label}
-                                        </button>
+                                        </Button>
                                     );
                                 })}
                             </div>
@@ -606,15 +611,15 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                                         : (GROUP_CONFIG[route.group] || gc);
 
                                                     return (
-                                                        <button
+                                                        <Button
                                                             key={route.path}
+                                                            text
                                                             data-idx={idx}
                                                             onClick={() => goTo(route.path)}
                                                             onMouseEnter={() => setActiveIndex(idx)}
                                                             style={{
                                                                 display: 'flex', alignItems: 'center', gap: '0.75rem',
                                                                 width: '100%', padding: '0.5rem 1.25rem',
-                                                                border: 'none', cursor: 'pointer',
                                                                 textAlign: isRTL ? 'right' : 'left',
                                                                 flexDirection: isRTL ? 'row-reverse' : 'row',
                                                                 background: isItemActive ? rowGc.bg : 'transparent',
@@ -664,7 +669,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                                                     </div>
                                                                 </div>
                                                             )}
-                                                        </button>
+                                                        </Button>
                                                     );
                                                 })}
                                             </div>
@@ -694,15 +699,16 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                         <span style={{ fontSize: '0.625rem', color: '#cbd5e1', fontWeight: 500 }}>{ui.results(allFlat.length)}</span>
                                     )}
                                     {recentPaths.length > 0 && !searchQuery && (
-                                        <button
+                                        <Button
+                                            text
                                             onClick={() => { setRecentPaths([]); localStorage.removeItem(RECENT_KEY); }}
-                                            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '0.625rem', color: '#cbd5e1', padding: '0.125rem 0.25rem', borderRadius: '0.25rem' }}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'transparent', fontSize: '0.625rem', color: '#cbd5e1', padding: '0.125rem 0.25rem', borderRadius: '0.25rem' }}
                                             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8'; }}
                                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#cbd5e1'; }}
                                         >
                                             <Clock style={{ width: '0.625rem', height: '0.625rem' }} strokeWidth={2} />
                                             {lang === 'ar' ? 'مسح السجل' : lang === 'fr' ? 'Effacer l\'historique' : 'Clear history'}
-                                        </button>
+                                        </Button>
                                     )}
                                 </div>
                             </div>

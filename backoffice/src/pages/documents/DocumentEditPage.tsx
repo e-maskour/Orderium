@@ -19,6 +19,7 @@ import PaymentHistoryModal from '../../components/PaymentHistoryModal';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
+import { Calendar } from 'primereact/calendar';
 
 interface DocumentEditPageProps {
   documentType: DocumentType;
@@ -859,6 +860,10 @@ export default function DocumentEditPage({
         .doc-edit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
         .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-top: 1.5px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 40; }
         .doc-field-label { display: block; font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.375rem; }
+        .doc-cal { position: relative !important; display: block !important; }
+        .doc-cal .p-inputtext { padding-right: 2.5rem !important; width: 100% !important; border-top-right-radius: var(--orderium-radius-md, 6px) !important; border-bottom-right-radius: var(--orderium-radius-md, 6px) !important; }
+        .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
+        .doc-cal .p-datepicker-trigger:hover { color: var(--form-input-border-focus) !important; background: transparent !important; }
         @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } }
       `}</style>
       <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
@@ -1042,36 +1047,48 @@ export default function DocumentEditPage({
                 <div style={{ padding: '1rem 1.125rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                   <div>
                     <label className="doc-field-label">{documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}</label>
-                    <InputText
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                    <Calendar
+                      value={date ? new Date(date) : null}
+                      onChange={(e) => setDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                      readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                      disabled={false}
+                      dateFormat="dd/mm/yy"
+                      showIcon
+                      className="doc-cal"
                       style={{ width: '100%' }}
+                      inputStyle={{ height: '2.5rem', width: '100%' }}
                     />
                   </div>
 
                   {config.features.expirationDate && (
                     <div>
                       <label className="doc-field-label">{t('expirationDate')}</label>
-                      <InputText
-                        type="date"
-                        value={expirationDate}
-                        onChange={(e) => setExpirationDate(e.target.value)}
-                        disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                      <Calendar
+                        value={expirationDate ? new Date(expirationDate) : null}
+                        onChange={(e) => setExpirationDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                        readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                        disabled={false}
+                        dateFormat="dd/mm/yy"
+                        showIcon
+                        className="doc-cal"
                         style={{ width: '100%' }}
+                        inputStyle={{ height: '2.5rem', width: '100%' }}
                       />
                     </div>
                   )}
 
                   <div>
                     <label className="doc-field-label">{t('dueDate')}</label>
-                    <InputText
-                      type="date"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
-                      disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                    <Calendar
+                      value={dueDate ? new Date(dueDate) : null}
+                      onChange={(e) => setDueDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                      readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                      disabled={false}
+                      dateFormat="dd/mm/yy"
+                      showIcon
+                      className="doc-cal"
                       style={{ width: '100%' }}
+                      inputStyle={{ height: '2.5rem', width: '100%' }}
                     />
                   </div>
                 </div>

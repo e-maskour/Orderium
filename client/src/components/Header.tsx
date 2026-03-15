@@ -177,16 +177,18 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
           {/* Track Order Button */}
           {hasActiveOrders && (
-            <button
+            <Button
+              text
+              rounded
               onClick={() => setShowTracking(true)}
-              className="relative flex align-items-center justify-content-center border-circle cursor-pointer border-none"
-              style={{ width: '2.5rem', height: '2.5rem', background: 'transparent', transition: 'background 0.2s' }}
+              className="relative flex align-items-center justify-content-center border-circle"
+              style={{ width: '2.5rem', height: '2.5rem', background: 'transparent', transition: 'background 0.2s', padding: 0 }}
               title={t('trackOrder')}
               aria-label={t('trackOrder')}
             >
               <Package style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
               <span className="absolute animate-pulse border-circle" style={{ top: '0.25rem', right: '0.25rem', width: '0.5rem', height: '0.5rem', background: '#3b82f6' }} />
-            </button>
+            </Button>
           )}
 
           {/* User Menu */}
@@ -200,10 +202,12 @@ export const Header = ({ onCartClick }: HeaderProps) => {
           />
 
           {/* Mobile Cart Button */}
-          <button
+          <Button
+            text
+            rounded
             onClick={onCartClick}
-            className="relative flex align-items-center justify-content-center border-circle cursor-pointer border-none lg:hidden"
-            style={{ width: '2.5rem', height: '2.5rem', background: 'transparent' }}
+            className="relative flex align-items-center justify-content-center border-circle lg:hidden"
+            style={{ width: '2.5rem', height: '2.5rem', background: 'transparent', padding: 0 }}
             aria-label={t('cart')}
           >
             <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color)' }} />
@@ -224,7 +228,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
                 {itemCount}
               </span>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 

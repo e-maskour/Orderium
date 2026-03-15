@@ -117,12 +117,13 @@ function NodeCard({ node, viewMode, isSelected, onSelect, onOpen, onMenuOpen, fo
                 </span>
 
                 {/* Actions */}
-                <button
+                <Button
+                    text
                     onClick={(e) => { e.stopPropagation(); onMenuOpen(e, node); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.375rem', color: '#94a3b8', display: hovered || isSelected ? 'flex' : 'none', alignItems: 'center' }}
+                    style={{ background: 'none', padding: '0.25rem', borderRadius: '0.375rem', color: '#94a3b8', display: hovered || isSelected ? 'flex' : 'none', alignItems: 'center' }}
                 >
                     <MoreVertical size={16} />
-                </button>
+                </Button>
             </div>
         );
     }
@@ -153,17 +154,17 @@ function NodeCard({ node, viewMode, isSelected, onSelect, onOpen, onMenuOpen, fo
         >
             {/* Actions button */}
             {(hovered || isSelected) && (
-                <button
+                <Button
+                    text
                     onClick={(e) => { e.stopPropagation(); onMenuOpen(e, node); }}
                     style={{
                         position: 'absolute', top: '0.5rem', right: '0.5rem',
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        padding: '0.25rem', borderRadius: '0.375rem', color: '#64748b',
+                        background: 'none', padding: '0.25rem', borderRadius: '0.375rem', color: '#64748b',
                         display: 'flex', alignItems: 'center',
                     }}
                 >
                     <MoreVertical size={15} />
-                </button>
+                </Button>
             )}
 
             {/* Icon */}
@@ -552,22 +553,23 @@ export default function DrivePage() {
                     {navItems.map(({ key, icon: Icon, label }) => {
                         const active = activeView === key && !searchQuery;
                         return (
-                            <button
+                            <Button
                                 key={key}
+                                text={!active}
                                 onClick={() => changeView(key)}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '0.625rem',
                                     padding: '0.625rem 0.875rem', borderRadius: '0.625rem',
                                     background: active ? 'rgba(245,158,11,0.1)' : 'transparent',
                                     border: `1px solid ${active ? 'rgba(245,158,11,0.25)' : 'transparent'}`,
-                                    cursor: 'pointer', width: '100%', textAlign: 'left',
+                                    width: '100%', textAlign: 'left',
                                     transition: 'all 0.15s', color: active ? '#d97706' : '#475569',
                                     fontWeight: active ? 600 : 500, fontSize: '0.875rem',
                                 }}
                             >
                                 <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
                                 {label}
-                            </button>
+                            </Button>
                         );
                     })}
 
@@ -619,18 +621,19 @@ export default function DrivePage() {
                             {breadcrumb.map((entry, idx) => (
                                 <span key={entry.id ?? 'root'} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                     {idx > 0 && <ChevronRight size={14} color="#cbd5e1" />}
-                                    <button
+                                    <Button
+                                        text
                                         onClick={() => idx < breadcrumb.length - 1 ? navigateBreadcrumb(entry) : undefined}
                                         style={{
-                                            background: 'none', border: 'none', cursor: idx < breadcrumb.length - 1 ? 'pointer' : 'default',
-                                            padding: '0.125rem 0.25rem', borderRadius: '0.25rem',
+                                            background: 'none', padding: '0.125rem 0.25rem', borderRadius: '0.25rem',
                                             fontSize: '0.875rem',
                                             fontWeight: idx === breadcrumb.length - 1 ? 600 : 400,
                                             color: idx === breadcrumb.length - 1 ? '#1e293b' : '#64748b',
+                                            cursor: idx < breadcrumb.length - 1 ? 'pointer' : 'default',
                                         }}
                                     >
                                         {idx === 0 ? <Home size={15} strokeWidth={2} /> : entry.name}
-                                    </button>
+                                    </Button>
                                 </span>
                             ))}
                         </div>
@@ -650,64 +653,68 @@ export default function DrivePage() {
                                 }}
                             />
                             {searchQuery && (
-                                <button
+                                <Button
+                                    text
                                     onClick={() => setSearchQuery('')}
-                                    style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '0.125rem' }}
+                                    style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', padding: '0.125rem', color: '#9ca3af' }}
                                 >
                                     <X size={13} />
-                                </button>
+                                </Button>
                             )}
                         </div>
 
                         {/* Sort */}
                         <div style={{ display: 'flex', gap: '0.25rem' }}>
                             {(['name', 'date', 'size', 'type'] as SortKey[]).map((key) => (
-                                <button
+                                <Button
                                     key={key}
+                                    text={sortKey !== key}
                                     onClick={() => { if (sortKey === key) setSortAsc(!sortAsc); else { setSortKey(key); setSortAsc(true); } }}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '0.25rem',
                                         padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
                                         background: sortKey === key ? 'rgba(245,158,11,0.1)' : 'transparent',
                                         border: `1px solid ${sortKey === key ? 'rgba(245,158,11,0.3)' : 'rgba(226,232,240,0.6)'}`,
-                                        cursor: 'pointer', fontSize: '0.75rem', fontWeight: sortKey === key ? 600 : 400,
+                                        fontSize: '0.75rem', fontWeight: sortKey === key ? 600 : 400,
                                         color: sortKey === key ? '#d97706' : '#64748b',
                                     }}
                                 >
                                     {sortLabels[key]}
                                     {sortKey === key && (sortAsc ? <SortAsc size={11} /> : <SortDesc size={11} />)}
-                                </button>
+                                </Button>
                             ))}
                         </div>
 
                         {/* View toggle */}
                         <div style={{ display: 'flex', background: 'rgba(241,245,249,0.8)', borderRadius: '0.5rem', padding: '0.125rem' }}>
                             {(['grid', 'list'] as ViewMode[]).map((mode) => (
-                                <button
+                                <Button
                                     key={mode}
+                                    text={viewMode !== mode}
                                     onClick={() => setViewMode(mode)}
                                     style={{
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        width: '2rem', height: '1.75rem', borderRadius: '0.375rem',
+                                        width: '2rem', height: '1.75rem', borderRadius: '0.375rem', padding: 0,
                                         background: viewMode === mode ? 'white' : 'transparent',
-                                        border: 'none', cursor: 'pointer', color: viewMode === mode ? '#1e293b' : '#9ca3af',
+                                        color: viewMode === mode ? '#1e293b' : '#9ca3af',
                                         boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                                         transition: 'all 0.15s',
                                     }}
                                 >
                                     {mode === 'grid' ? <Grid3x3 size={15} /> : <List size={15} />}
-                                </button>
+                                </Button>
                             ))}
                         </div>
 
                         {/* Refresh */}
-                        <button
+                        <Button
+                            text
                             onClick={() => queryClient.invalidateQueries({ queryKey: ['drive-nodes'] })}
-                            style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '0.25rem' }}
+                            style={{ display: 'flex', alignItems: 'center', background: 'none', color: '#94a3b8', padding: '0.25rem' }}
                             title={t('loading')}
                         >
                             <RefreshCw size={15} className={isLoading ? 'pi-spin' : ''} />
-                        </button>
+                        </Button>
                     </div>
 
                     {/* List header in list mode */}

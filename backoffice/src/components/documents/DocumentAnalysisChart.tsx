@@ -6,6 +6,7 @@ import { DocumentItem } from '../../modules/documents/services/documents.service
 import { useLanguage } from '../../context/LanguageContext';
 import { TrendingUp, Calendar, BarChart3, LineChart } from 'lucide-react';
 import { Dropdown } from 'primereact/dropdown';
+import { Button } from 'primereact/button';
 
 interface DocumentAnalysisChartProps {
   documents: DocumentItem[];
@@ -379,44 +380,36 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
 
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
             {/* Chart type buttons */}
-            <button
+            <Button
               onClick={() => setChartType('bar')}
+              icon={<BarChart3 style={{ width: '1rem', height: '1rem' }} />}
+              title="Bar Chart"
+              text={chartType !== 'bar'}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.375rem',
                 padding: '0.5rem 0.75rem',
                 borderRadius: '0.5rem',
                 border: chartType === 'bar' ? '1px solid #fcd34d' : '1px solid #e2e8f0',
                 backgroundColor: chartType === 'bar' ? '#fef3c7' : '#f8fafc',
                 color: chartType === 'bar' ? '#b45309' : '#475569',
-                cursor: 'pointer',
                 fontSize: '0.75rem',
                 fontWeight: 500,
               }}
-              title="Bar Chart"
-            >
-              <BarChart3 style={{ width: '1rem', height: '1rem' }} />
-            </button>
-            <button
+            />
+            <Button
               onClick={() => setChartType('line')}
+              icon={<LineChart style={{ width: '1rem', height: '1rem' }} />}
+              title="Line Chart"
+              text={chartType !== 'line'}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.375rem',
                 padding: '0.5rem 0.75rem',
                 borderRadius: '0.5rem',
                 border: chartType === 'line' ? '1px solid #fcd34d' : '1px solid #e2e8f0',
                 backgroundColor: chartType === 'line' ? '#fef3c7' : '#f8fafc',
                 color: chartType === 'line' ? '#b45309' : '#475569',
-                cursor: 'pointer',
                 fontSize: '0.75rem',
                 fontWeight: 500,
               }}
-              title="Line Chart"
-            >
-              <LineChart style={{ width: '1rem', height: '1rem' }} />
-            </button>
+            />
 
             {/* Measure selector */}
             <Dropdown

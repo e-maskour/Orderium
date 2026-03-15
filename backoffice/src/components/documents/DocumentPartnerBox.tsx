@@ -60,7 +60,7 @@ export function DocumentPartnerBox({
   };
 
   return (
-    <div style={{
+    <div className="doc-pbox" style={{
       backgroundColor: '#ffffff',
       borderRadius: '0.875rem',
       border: '1.5px solid #e2e8f0',
@@ -68,6 +68,15 @@ export function DocumentPartnerBox({
       boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
       transition: 'border-color 0.2s, box-shadow 0.2s'
     }}>
+      <style>{`
+        .doc-pbox .p-dropdown { height: 2.5rem !important; }
+        .doc-pbox .p-dropdown .p-dropdown-label { display: flex !important; align-items: center !important; }
+        .doc-pbox .p-dropdown:not(.p-disabled).p-focus,
+        .doc-pbox .p-dropdown:not(.p-disabled).p-inputwrapper-focus {
+          border-color: var(--form-input-border-focus) !important;
+          box-shadow: var(--form-input-shadow-focus) !important;
+        }
+      `}</style>
       {/* Card Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '0.625rem',
@@ -100,22 +109,33 @@ export function DocumentPartnerBox({
           <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.375rem' }}>
             {partnerLabel} <span style={{ color: '#ef4444' }}>*</span>
           </label>
-          <Dropdown
-            value={partnerId ? String(partnerId) : null}
-            options={partners.map(partner => ({
-              value: String(partner.id),
-              label: partner.name
-            }))}
-            onChange={(e) => handlePartnerSelect(e.value)}
-            optionLabel="label"
-            optionValue="value"
-            placeholder={t('invoice.partnerNamePlaceholder').replace('{partner}', partnerLabel.toLowerCase())}
-            emptyFilterMessage={t('invoice.noPartnerFound').replace('{partner}', partnerLabel.toLowerCase())}
-            disabled={readOnly}
-            filter
-            showClear
-            style={{ width: '100%' }}
-          />
+          {readOnly ? (
+            <div style={{
+              padding: '0.5rem 0.75rem',
+              fontSize: '0.875rem', fontWeight: 600, color: '#1e293b',
+              background: '#f8fafc', border: '1.5px solid #e2e8f0',
+              borderRadius: '6px', minHeight: '2.5rem',
+              display: 'flex', alignItems: 'center'
+            }}>
+              {partnerName || <span style={{ color: '#94a3b8' }}>—</span>}
+            </div>
+          ) : (
+            <Dropdown
+              value={partnerId ? String(partnerId) : null}
+              options={partners.map(partner => ({
+                value: String(partner.id),
+                label: partner.name
+              }))}
+              onChange={(e) => handlePartnerSelect(e.value)}
+              optionLabel="label"
+              optionValue="value"
+              placeholder={t('invoice.partnerNamePlaceholder').replace('{partner}', partnerLabel.toLowerCase())}
+              emptyFilterMessage={t('invoice.noPartnerFound').replace('{partner}', partnerLabel.toLowerCase())}
+              filter
+              showClear
+              style={{ width: '100%', height: '2.5rem' }}
+            />
+          )}
         </div>
 
         {(partnerPhone || partnerAddress) && (
@@ -154,7 +174,7 @@ export function DocumentPartnerBox({
             <InputText
               value={partnerIce}
               readOnly
-              style={{ width: '100%', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.875rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}
+              style={{ width: '100%', height: '2.5rem', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.875rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}
             />
           </div>
         )}
@@ -168,7 +188,7 @@ export function DocumentPartnerBox({
             <InputText
               value={deliveryAddress}
               readOnly
-              style={{ width: '100%', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.875rem' }}
+              style={{ width: '100%', height: '2.5rem', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.875rem' }}
             />
           </div>
         )}

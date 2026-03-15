@@ -115,11 +115,11 @@ export const ProductGrid = ({
       <div className="flex flex-column sm:flex-row align-items-center justify-content-center gap-2 pt-4 border-top-1 surface-border pb-2">
         {totalPages > 1 && (
           <>
-            <button
+            <Button
+              text
               onClick={handlePrevPage}
               disabled={currentPage === 1}
-              type="button"
-              className="flex align-items-center gap-2 px-3 border-round-lg font-medium surface-card border-2 surface-border text-color cursor-pointer"
+              className="flex align-items-center gap-2 px-3 border-round-lg font-medium surface-card border-2 surface-border text-color"
               style={{ height: '2.5rem', opacity: currentPage === 1 ? 0.4 : 1, transition: 'all 0.2s' }}
             >
               {dir === 'rtl' ? (
@@ -128,7 +128,7 @@ export const ProductGrid = ({
                 <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
               )}
               <span className="hidden sm:inline text-sm">{t('previous')}</span>
-            </button>
+            </Button>
 
             <div className="flex align-items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -144,17 +144,18 @@ export const ProductGrid = ({
                 }
 
                 return (
-                  <button
+                  <Button
                     key={pageNum}
-                    type="button"
+                    text={currentPage !== pageNum}
                     onClick={() => {
                       onPageChange(pageNum);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="flex align-items-center justify-content-center border-round-lg font-semibold text-sm cursor-pointer"
+                    className="flex align-items-center justify-content-center border-round-lg font-semibold text-sm"
                     style={{
                       width: '2.25rem',
                       height: '2.25rem',
+                      padding: 0,
                       background: currentPage === pageNum ? 'var(--primary-color)' : 'var(--surface-card)',
                       color: currentPage === pageNum ? 'white' : 'var(--text-color)',
                       border: currentPage === pageNum ? 'none' : '1px solid var(--surface-border)',
@@ -163,16 +164,16 @@ export const ProductGrid = ({
                     }}
                   >
                     {pageNum}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
 
-            <button
+            <Button
+              text
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              type="button"
-              className="flex align-items-center gap-2 px-3 border-round-lg font-medium surface-card border-2 surface-border text-color cursor-pointer"
+              className="flex align-items-center gap-2 px-3 border-round-lg font-medium surface-card border-2 surface-border text-color"
               style={{ height: '2.5rem', opacity: currentPage === totalPages ? 0.4 : 1, transition: 'all 0.2s' }}
             >
               <span className="hidden sm:inline text-sm">{t('next')}</span>
@@ -181,7 +182,7 @@ export const ProductGrid = ({
               ) : (
                 <ChevronRight style={{ width: '1rem', height: '1rem' }} />
               )}
-            </button>
+            </Button>
           </>
         )}
 

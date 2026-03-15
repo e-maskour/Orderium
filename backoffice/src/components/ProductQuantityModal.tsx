@@ -212,8 +212,9 @@ export const ProductQuantityModal = ({
         {/* Keypad */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
           {numbers.map((num) => (
-            <button
+            <Button
               key={num}
+              text
               onClick={() => handleNumberClick(num)}
               className="pos-keypad-num"
               style={{
@@ -221,19 +222,17 @@ export const ProductQuantityModal = ({
                 fontSize: num === 'C' ? '0.8125rem' : '1.25rem',
                 fontWeight: 700,
                 borderRadius: '0.625rem',
-                border: 'none',
                 background: num === 'C'
                   ? 'linear-gradient(135deg, #ef4444, #dc2626)'
                   : num === '.'
                     ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
                     : '#f3f4f6',
                 color: num === 'C' || num === '.' ? '#fff' : '#111827',
-                cursor: 'pointer',
                 boxShadow: num === 'C' ? '0 3px 8px rgba(239,68,68,0.3)' : num === '.' ? '0 3px 8px rgba(59,130,246,0.3)' : '0 1px 3px rgba(0,0,0,0.06)',
               }}
             >
               {num === 'C' ? t('clear') : num}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

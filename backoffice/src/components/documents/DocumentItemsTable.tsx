@@ -3,6 +3,10 @@ import { Plus, Trash2, BookOpen, Hash, Package2 } from 'lucide-react';
 import { Dropdown as PrDropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
+import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import type { ColumnBodyOptions } from 'primereact/column';
 import { DocumentItem } from '../../modules/documents/types';
 import { calculateItemTotal } from '../../modules/documents/hooks';
 import { IProduct } from '../../modules/products/products.interface';
@@ -36,13 +40,17 @@ const DIT_STYLES = `
     transition: background 0.15s, color 0.15s;
   }
   .dit-tbody-row:hover .dit-row-num { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
-  .dit-wrap table, .dit-wrap td, .dit-wrap th, .dit-wrap input, .dit-wrap .p-dropdown, .dit-wrap .p-inputtext { font-family: inherit !important; font-size: 0.875rem !important; }
+  .dit-wrap .p-datatable .p-datatable-thead > tr > th { background: transparent !important; }
+  .dit-wrap .p-datatable .p-datatable-tbody > tr { transition: background 0.12s; border-bottom: 1px solid #f0f4f8; }
+  .dit-wrap .p-datatable-wrapper { overflow: visible !important; }
+  .dit-wrap .p-datatable table, .dit-wrap .p-datatable td, .dit-wrap .p-datatable th { font-family: inherit !important; font-size: 0.875rem !important; }
+  .dit-wrap table, .dit-wrap .p-datatable table, .dit-wrap td, .dit-wrap th, .dit-wrap input, .dit-wrap .p-dropdown, .dit-wrap .p-inputtext { font-family: inherit !important; font-size: 0.875rem !important; }
   .dit-dg .p-dropdown {
     border: 1.5px solid transparent !important; background: transparent !important;
     transition: border-color 0.15s, box-shadow 0.15s; border-radius: 6px !important;
   }
   .dit-dg .p-dropdown:hover:not(.p-disabled) { border-color: #e2e8f0 !important; background: #fff !important; }
-  .dit-dg .p-dropdown.p-focus, .dit-dg .p-dropdown:focus-within { border-color: #f59e0b !important; background: #fff !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important; }
+  .dit-dg .p-dropdown.p-focus, .dit-dg .p-dropdown:focus-within { border-color: var(--form-input-border-focus) !important; background: #fff !important; box-shadow: var(--form-input-shadow-focus) !important; }
   .dit-ig .p-inputtext {
     border: 1.5px solid transparent !important; background: transparent !important;
     padding: 0.4rem 0.5rem !important; font-size: 0.875rem !important;
@@ -50,7 +58,7 @@ const DIT_STYLES = `
     transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; border-radius: 6px !important;
   }
   .dit-ig .p-inputtext:hover:not([disabled]) { border-color: #e2e8f0 !important; background: #fff !important; }
-  .dit-ig .p-inputtext:focus { border-color: #f59e0b !important; background: #fff !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important; }
+  .dit-ig .p-inputtext:focus { border-color: var(--form-input-border-focus) !important; background: #fff !important; box-shadow: var(--form-input-shadow-focus) !important; }
   .dit-ig .p-inputtext[type=number]::-webkit-inner-spin-button,
   .dit-ig .p-inputtext[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .dit-ig .p-inputtext[type=number] { -moz-appearance: textfield; }
@@ -63,7 +71,7 @@ const DIT_STYLES = `
     transition: border-color 0.15s, background 0.15s;
   }
   .dit-dsc:hover { border-color: #e2e8f0 !important; background: #fff !important; }
-  .dit-dsc:focus-within { border-color: #f59e0b !important; background: #fff !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important; }
+  .dit-dsc:focus-within { border-color: var(--form-input-border-focus) !important; background: #fff !important; box-shadow: var(--form-input-shadow-focus) !important; }
   .dit-dsc .p-inputnumber-input { width: 3.5rem !important; border: none !important; background: transparent !important; padding: 0.4rem 0.25rem !important; font-size: 0.875rem !important; text-align: center !important; box-shadow: none !important; }
   .dit-dsc .p-inputnumber-input::-webkit-inner-spin-button,
   .dit-dsc .p-inputnumber-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -120,7 +128,6 @@ export function DocumentItemsTable({
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [showCatalogueModal, setShowCatalogueModal] = useState(false);
-  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   // Load products
   useEffect(() => {
@@ -249,193 +256,196 @@ export function DocumentItemsTable({
           </div>
           {!readOnly && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button type="button" className="dit-btn-add" onClick={handleAddItem}>
+              <Button text className="dit-btn-add" onClick={handleAddItem}>
                 <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
                 {t('invoice.addLine')}
-              </button>
-              <button type="button" className="dit-btn-cat" onClick={() => setShowCatalogueModal(true)}>
+              </Button>
+              <Button text className="dit-btn-cat" onClick={() => setShowCatalogueModal(true)}>
                 <Package2 style={{ width: '0.875rem', height: '0.875rem' }} />
                 {t('invoice.productCatalogue')}
-              </button>
+              </Button>
             </div>
           )}
         </div>
 
         {/* ── Desktop Table ── */}
         <div className="dit-desktop" style={{ overflowX: 'auto', overflowY: 'visible' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', overflowY: 'visible' }}>
-            <colgroup>
-              <col style={{ width: '3rem' }} />
-              <col style={{ width: '22%' }} />
-              <col style={{ width: '7rem' }} />
-              {showPriceColumn && <col style={{ width: '9.5rem' }} />}
-              {showDiscountColumn && <col style={{ width: '9rem' }} />}
-              {showTaxColumn && <col style={{ width: '7.5rem' }} />}
-              {showTotalColumn && <col style={{ width: '12rem' }} />}
-              <col style={{ width: '3rem' }} />
-            </colgroup>
-            <thead>
-              <tr className="dit-thead-row">
-                <th style={{ padding: '0.625rem 0.5rem', textAlign: 'center' }}>
-                  <Hash style={{ width: '0.75rem', height: '0.75rem', color: '#94a3b8', display: 'inline-block' }} />
-                </th>
-                <th style={{ padding: '0.625rem 0.75rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  {t('invoice.descriptionHeader')}
-                </th>
-                <th style={{ padding: '0.625rem 0.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  {t('invoice.quantityHeader')}
-                </th>
-                {showPriceColumn && (
-                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {t('invoice.unitPriceHeader')}
-                  </th>
+          <DataTable
+            value={items}
+            dataKey="id"
+            size="small"
+            rowClassName={(item: DocumentItem) => {
+              const idx = items.indexOf(item);
+              return `dit-tbody-row ${idx % 2 === 0 ? 'row-odd' : 'row-even'}`;
+            }}
+            tableStyle={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}
+            pt={{
+              wrapper: { style: { overflow: 'visible' } },
+              table: { style: { overflow: 'visible' } },
+            }}
+          >
+            {/* # */}
+            <Column
+              style={{ width: '3rem' }}
+              headerStyle={{ padding: '0.625rem 0.5rem', textAlign: 'center', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+              bodyStyle={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}
+              header={<Hash style={{ width: '0.75rem', height: '0.75rem', color: '#94a3b8', display: 'inline-block' }} />}
+              body={(_item: DocumentItem, options: ColumnBodyOptions) => (
+                <span className="dit-row-num">{options.rowIndex + 1}</span>
+              )}
+            />
+
+            {/* Description */}
+            <Column
+              field="description"
+              style={{ width: '22%' }}
+              headerStyle={{ padding: '0.625rem 0.75rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+              bodyStyle={{ padding: '0.5rem 0.75rem', overflow: 'visible' }}
+              bodyClassName="dit-dg"
+              header={t('invoice.descriptionHeader')}
+              body={(item: DocumentItem) => readOnly ? (
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                  {item.productId ? (products.find(p => p.id === item.productId)?.name ?? item.description) : (item.description || '—')}
+                </span>
+              ) : (
+                <PrDropdown
+                  value={item.productId ? String(item.productId) : null}
+                  options={products.map(p => ({ value: String(p.id), label: p.name }))}
+                  onChange={(e) => handleSelectProduct(item.id, e.value)}
+                  optionLabel="label" optionValue="value"
+                  placeholder={t('invoice.itemDescriptionPlaceholder')}
+                  emptyFilterMessage={t('invoice.noProductsFound')}
+                  filter showClear
+                  style={{ width: '100%', fontSize: '0.875rem' }}
+                />
+              )}
+            />
+
+            {/* Quantity */}
+            <Column
+              field="quantity"
+              style={{ width: '7rem' }}
+              headerStyle={{ padding: '0.625rem 0.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+              bodyStyle={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}
+              bodyClassName="dit-ig"
+              header={t('invoice.quantityHeader')}
+              body={(item: DocumentItem) => readOnly ? (
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{item.quantity}</span>
+              ) : (
+                <InputText
+                  type="number" min={0.1} step={0.1}
+                  value={String(item.quantity)}
+                  onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                  style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem', color: '#1e293b', fontWeight: 600 }}
+                />
+              )}
+            />
+
+            {/* Unit Price */}
+            {showPriceColumn && (
+              <Column
+                field="unitPrice"
+                style={{ width: '9.5rem' }}
+                headerStyle={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}
+                bodyClassName="dit-ig"
+                header={t('invoice.unitPriceHeader')}
+                body={(item: DocumentItem) => readOnly ? (
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{fmt(item.unitPrice)}</span>
+                ) : (
+                  <InputText
+                    type="number" min={0} step={0.01}
+                    value={String(item.unitPrice)}
+                    onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                    style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem', color: '#1e293b', fontWeight: 600 }}
+                  />
                 )}
-                {showDiscountColumn && (
-                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {t('invoice.discountHeader')}
-                  </th>
+              />
+            )}
+
+            {/* Discount */}
+            {showDiscountColumn && (
+              <Column
+                field="discount"
+                style={{ width: '9rem' }}
+                headerStyle={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}
+                header={t('invoice.discountHeader')}
+                body={(item: DocumentItem) => readOnly ? (
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                    {item.discount}{item.discountType === 0 ? ` ${currency}` : '%'}
+                  </span>
+                ) : (
+                  <div className="dit-dsc">
+                    <InputNumber
+                      min={0} step={0.1} value={item.discount}
+                      onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
+                      inputStyle={{ width: '3.5rem', border: 'none', background: 'transparent', padding: '0.4rem 0.25rem', fontSize: '0.875rem', textAlign: 'center', boxShadow: 'none', color: '#1e293b', fontWeight: 600 }}
+                      pt={{ root: { style: { border: 'none', background: 'transparent' } } }}
+                    />
+                    <Button
+                      text
+                      type="button" className="dit-dtb"
+                      onClick={() => handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
+                    >
+                      {item.discountType === 0 ? currency : '%'}
+                    </Button>
+                  </div>
                 )}
-                {showTaxColumn && (
-                  <th style={{ padding: '0.625rem 0.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {t('invoice.tax')}
-                  </th>
+              />
+            )}
+
+            {/* Tax */}
+            {showTaxColumn && (
+              <Column
+                field="tax"
+                style={{ width: '7.5rem' }}
+                headerStyle={{ padding: '0.625rem 0.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}
+                bodyClassName="dit-dg"
+                header={t('invoice.tax')}
+                body={(item: DocumentItem) => readOnly ? (
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{item.tax}%</span>
+                ) : (
+                  <PrDropdown
+                    value={item.tax}
+                    options={[{ label: '0%', value: 0 }, { label: '10%', value: 10 }, { label: '20%', value: 20 }]}
+                    onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
+                    optionLabel="label" optionValue="value"
+                    style={{ width: '100%', fontSize: '0.875rem' }}
+                  />
                 )}
-                {showTotalColumn && (
-                  <th style={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {t('invoice.totalHeader')}
-                  </th>
+              />
+            )}
+
+            {/* Total */}
+            {showTotalColumn && (
+              <Column
+                field="total"
+                style={{ width: '12rem' }}
+                headerStyle={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.5rem 0.75rem', textAlign: 'right' }}
+                header={t('invoice.totalHeader')}
+                body={(item: DocumentItem) => (
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                    {fmt(calculateItemTotal(item))} <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 500 }}>{currency}</span>
+                  </span>
                 )}
-                <th style={{ padding: '0.5rem' }} />
-              </tr>
-            </thead>
-            <tbody style={{ overflowY: 'visible' }}>
-              {items.map((item, index) => (
-                <tr
-                  key={item.id}
-                  className={`dit-tbody-row ${index % 2 === 0 ? 'row-odd' : 'row-even'}`}
-                  onMouseEnter={() => setHoveredRow(item.id)}
-                  onMouseLeave={() => setHoveredRow(null)}
-                  style={{ overflowY: 'visible' }}
-                >
-                  {/* # */}
-                  <td style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
-                    <span className="dit-row-num">{index + 1}</span>
-                  </td>
+              />
+            )}
 
-                  {/* Description */}
-                  <td className="dit-dg" style={{ padding: '0.5rem 0.75rem', overflowY: 'visible' }}>
-                    {readOnly ? (
-                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                        {item.productId ? (products.find(p => p.id === item.productId)?.name ?? item.description) : (item.description || '—')}
-                      </span>
-                    ) : (
-                      <PrDropdown
-                        value={item.productId ? String(item.productId) : null}
-                        options={products.map(p => ({ value: String(p.id), label: p.name }))}
-                        onChange={(e) => handleSelectProduct(item.id, e.value)}
-                        optionLabel="label" optionValue="value"
-                        placeholder={t('invoice.itemDescriptionPlaceholder')}
-                        emptyFilterMessage={t('invoice.noProductsFound')}
-                        filter showClear
-                        style={{ width: '100%', fontSize: '0.875rem' }}
-                      />
-                    )}
-                  </td>
-
-                  {/* Quantity */}
-                  <td className="dit-ig" style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
-                    {readOnly ? (
-                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{item.quantity}</span>
-                    ) : (
-                      <InputText
-                        type="number" min={0.1} step={0.1}
-                        value={String(item.quantity)}
-                        onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                        style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem', color: '#1e293b', fontWeight: 600 }}
-                      />
-                    )}
-                  </td>
-
-                  {/* Unit Price */}
-                  {showPriceColumn && (
-                    <td className="dit-ig" style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                      {readOnly ? (
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{fmt(item.unitPrice)}</span>
-                      ) : (
-                        <InputText
-                          type="number" min={0} step={0.01}
-                          value={String(item.unitPrice)}
-                          onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                          style={{ width: '100%', textAlign: 'center', fontSize: '0.875rem', color: '#1e293b', fontWeight: 600 }}
-                        />
-                      )}
-                    </td>
-                  )}
-
-                  {/* Discount */}
-                  {showDiscountColumn && (
-                    <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                      {readOnly ? (
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
-                          {item.discount}{item.discountType === 0 ? ` ${currency}` : '%'}
-                        </span>
-                      ) : (
-                        <div className="dit-dsc">
-                          <InputNumber
-                            min={0} step={0.1} value={item.discount}
-                            onValueChange={(e) => handleItemChange(item.id, 'discount', e.value ?? 0)}
-                            inputStyle={{ width: '3.5rem', border: 'none', background: 'transparent', padding: '0.4rem 0.25rem', fontSize: '0.875rem', textAlign: 'center', boxShadow: 'none', color: '#1e293b', fontWeight: 600 }}
-                            pt={{ root: { style: { border: 'none', background: 'transparent' } } }}
-                          />
-                          <button
-                            type="button" className="dit-dtb"
-                            onClick={() => handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
-                          >
-                            {item.discountType === 0 ? currency : '%'}
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  )}
-
-                  {/* Tax */}
-                  {showTaxColumn && (
-                    <td className="dit-dg" style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
-                      {readOnly ? (
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{item.tax}%</span>
-                      ) : (
-                        <PrDropdown
-                          value={item.tax}
-                          options={[{ label: '0%', value: 0 }, { label: '10%', value: 10 }, { label: '20%', value: 20 }]}
-                          onChange={(e) => handleItemChange(item.id, 'tax', e.value)}
-                          optionLabel="label" optionValue="value"
-                          style={{ width: '100%', fontSize: '0.875rem' }}
-                        />
-                      )}
-                    </td>
-                  )}
-
-                  {/* Total */}
-                  {showTotalColumn && (
-                    <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                        {fmt(calculateItemTotal(item))} <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 500 }}>{currency}</span>
-                      </span>
-                    </td>
-                  )}
-
-                  {/* Delete */}
-                  <td style={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}>
-                    {!readOnly && items.length > 1 && (
-                      <button type="button" className="dit-del" onClick={() => handleRemoveItem(item.id)}>
-                        <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            {/* Delete */}
+            <Column
+              style={{ width: '3rem' }}
+              headerStyle={{ padding: '0.5rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+              bodyStyle={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}
+              body={(item: DocumentItem) => !readOnly && items.length > 1 ? (
+                <Button text className="dit-del" onClick={() => handleRemoveItem(item.id)}>
+                  <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
+                </Button>
+              ) : null}
+            />
+          </DataTable>
 
           {/* Summary Footer Bar */}
           {showTotalColumn && (
@@ -482,13 +492,16 @@ export function DocumentItemsTable({
                   </span>
                 </div>
                 {!readOnly && items.length > 1 && (
-                  <button type="button" onClick={() => handleRemoveItem(item.id)} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: '1.75rem', height: '1.75rem', flexShrink: 0,
-                    borderRadius: '6px', border: '1.5px solid #fecaca', background: '#fff5f5', color: '#dc2626', cursor: 'pointer'
-                  }}>
+                  <Button
+                    text
+                    onClick={() => handleRemoveItem(item.id)}
+                    style={{
+                      width: '1.75rem', height: '1.75rem', flexShrink: 0, padding: 0,
+                      borderRadius: '6px', border: '1.5px solid #fecaca', background: '#fff5f5', color: '#dc2626'
+                    }}
+                  >
                     <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
-                  </button>
+                  </Button>
                 )}
               </div>
               <div className="dit-mob-body">
@@ -543,11 +556,11 @@ export function DocumentItemsTable({
                             readOnly={readOnly}
                             pt={{ root: { style: { border: 'none', background: 'transparent', flex: 1 } } }}
                           />
-                          <button type="button" className="dit-dtb"
+                          <Button text className="dit-dtb"
                             onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
                             disabled={readOnly}>
                             {item.discountType === 0 ? currency : '%'}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -582,22 +595,23 @@ export function DocumentItemsTable({
           {/* Mobile action buttons */}
           {!readOnly && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
-              <button type="button" className="dit-btn-add" onClick={handleAddItem}>
+              <Button text className="dit-btn-add" onClick={handleAddItem}>
                 <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
                 {t('invoice.addLine')}
-              </button>
-              <button type="button"
+              </Button>
+              <Button
+                text
                 onClick={() => setShowCatalogueModal(true)}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
                   padding: '0.5rem 1rem', background: '#fff', color: '#475569',
                   border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '0.8125rem',
-                  fontWeight: 600, cursor: 'pointer'
+                  fontWeight: 600
                 }}
               >
                 <Package2 style={{ width: '0.875rem', height: '0.875rem' }} />
                 {t('invoice.productCatalogue')}
-              </button>
+              </Button>
             </div>
           )}
         </div>

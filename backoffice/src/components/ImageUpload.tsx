@@ -3,6 +3,7 @@ import { Upload, X, Loader, CheckCircle, AlertCircle, Image as ImageIcon } from 
 import { useLanguage } from '../context/LanguageContext';
 import { productsService } from '../modules/products';
 import { imagesService } from '../modules/images';
+import { Button } from 'primereact/button';
 
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, imagePublicId?: string) => void;
@@ -209,13 +210,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
             {/* Remove button overlay */}
             {!isLoading && (
-              <button
+              <Button
+                text
                 onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
-                style={{ position: 'absolute', top: 8, right: 8, padding: '0.375rem', background: '#ef4444', color: '#fff', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', zIndex: 50, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}
+                style={{ position: 'absolute', top: 8, right: 8, padding: '0.375rem', background: '#ef4444', color: '#fff', borderRadius: '0.5rem', zIndex: 50, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}
                 title={t('removeImage')}
               >
                 <X style={{ width: 16, height: 16 }} />
-              </button>
+              </Button>
             )}
 
             {/* Image info overlay */}

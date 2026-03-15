@@ -9,6 +9,7 @@ import { Button } from 'primereact/button';
 import { Sidebar } from 'primereact/sidebar';
 import { Calendar } from 'primereact/calendar';
 import { InputText } from 'primereact/inputtext';
+import { Dropdown } from 'primereact/dropdown';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
@@ -224,9 +225,10 @@ export default function MyOrders() {
 
           {/* Filter Button */}
           <div className="flex justify-content-end">
-            <button
+            <Button
+              text={!filtersExpanded}
               onClick={() => setFiltersExpanded(!filtersExpanded)}
-              className="flex align-items-center gap-2 px-3 py-2 border-round-lg font-medium text-sm cursor-pointer border-none"
+              className="flex align-items-center gap-2 px-3 py-2 border-round-lg font-medium text-sm"
               style={{
                 background: filtersExpanded ? 'var(--primary-color)' : 'var(--surface-card)',
                 color: filtersExpanded ? 'white' : 'var(--text-color)',
@@ -247,7 +249,7 @@ export default function MyOrders() {
                   {[Boolean(appliedFilters.orderNumber), Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end)].filter(Boolean).length}
                 </span>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -265,10 +267,11 @@ export default function MyOrders() {
               { key: 'delivered', label: t('statusDelivered'), icon: '✅' },
               { key: 'canceled', label: t('statusCanceled'), icon: '❌' }
             ].map((filter) => (
-              <button
+              <Button
                 key={filter.key}
+                text={statusFilter !== filter.key}
                 onClick={() => setStatusFilter(filter.key as typeof statusFilter)}
-                className="flex align-items-center gap-1 px-2 sm:px-3 py-1 border-round-md text-xs sm:text-sm font-medium white-space-nowrap cursor-pointer border-none"
+                className="flex align-items-center gap-1 px-2 sm:px-3 py-1 border-round-md text-xs sm:text-sm font-medium white-space-nowrap"
                 style={{
                   background: statusFilter === filter.key ? '#f59e0b' : 'var(--surface-50)',
                   color: statusFilter === filter.key ? 'white' : 'var(--text-color)',
@@ -288,7 +291,7 @@ export default function MyOrders() {
                 >
                   {statusCounts[filter.key as keyof typeof statusCounts]}
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -409,20 +412,22 @@ export default function MyOrders() {
 
                 <div className="flex align-items-center gap-2">
                   <label className="text-xs font-medium text-color-secondary hidden lg:inline">{t('perPage')}</label>
-                  <select
+                  <Dropdown
                     value={pageSize}
                     onChange={(e) => {
-                      setPageSize(Number(e.target.value));
+                      setPageSize(e.value);
                       setCurrentPage(1);
                     }}
-                    className="px-2 py-1 border-round-md text-sm font-medium border-1 surface-border"
-                    style={{ background: 'var(--surface-card)', color: 'var(--text-color)' }}
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                    options={[
+                      { label: '10', value: 10 },
+                      { label: '20', value: 20 },
+                      { label: '50', value: 50 },
+                      { label: '100', value: 100 },
+                    ]}
+                    optionLabel="label"
+                    optionValue="value"
+                    style={{ height: '2rem' }}
+                  />
                 </div>
 
                 <div className="flex align-items-center gap-1 ml-auto">

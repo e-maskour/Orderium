@@ -5,6 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
 import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
 import { ShoppingCart, X } from 'lucide-react';
 
 const backdropAnimation = `
@@ -149,15 +150,17 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
         style={{ maxWidth: '32rem', width: '95vw', margin: '0 1rem', zIndex: 10, pointerEvents: 'auto', animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
       >
         <div className="relative p-3 border-bottom-1 surface-border" style={{ background: 'linear-gradient(to bottom right, rgba(var(--primary-color-rgb, 16,185,129), 0.1), rgba(var(--primary-color-rgb, 16,185,129), 0.05))' }}>
-          <button
+          <Button
+            text
+            rounded
             type="button"
             onClick={handleClose}
-            className="absolute flex align-items-center justify-content-center border-circle surface-card shadow-1 cursor-pointer border-none"
-            style={{ top: '0.75rem', [dir === 'rtl' ? 'left' : 'right']: '0.75rem', width: '2rem', height: '2rem', transition: 'transform 0.2s' }}
+            className="absolute flex align-items-center justify-content-center border-circle surface-card shadow-1"
+            style={{ top: '0.75rem', [dir === 'rtl' ? 'left' : 'right']: '0.75rem', width: '2rem', height: '2rem', transition: 'transform 0.2s', padding: 0 }}
             aria-label="Close"
           >
             <X style={{ width: '1rem', height: '1rem', color: 'var(--text-color)' }} />
-          </button>
+          </Button>
           <div style={{ [dir === 'rtl' ? 'paddingLeft' : 'paddingRight']: '2.5rem' }}>
             <h2 className="text-base font-bold text-color mb-1" style={{ lineHeight: '1.25' }}>{displayName}</h2>
             <div className="flex align-items-baseline gap-2">
@@ -170,7 +173,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
         <div className="p-3 flex flex-column gap-3" style={{ animation: 'contentStagger 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards' }}>
           <div className="flex flex-column gap-2">
             <label className="text-xs font-semibold text-color-secondary">{t('quantity')}</label>
-            <input
+            <InputText
               ref={inputRef}
               type="text"
               inputMode="decimal"
@@ -183,10 +186,11 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
           <div className="grid" style={{ gap: '0.375rem' }}>
             {numbers.map((num) => (
               <div key={num} className="col-4">
-                <button
+                <Button
+                  text
                   type="button"
                   onClick={() => handleNumberClick(num)}
-                  className="w-full flex align-items-center justify-content-center border-round-lg font-semibold cursor-pointer border-none"
+                  className="w-full flex align-items-center justify-content-center border-round-lg font-semibold"
                   style={{
                     height: '2.75rem',
                     fontSize: '1rem',
@@ -199,7 +203,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
                   }}
                 >
                   {num === 'C' ? <span className="text-xs">{t('clear')}</span> : num}
-                </button>
+                </Button>
               </div>
             ))}
           </div>

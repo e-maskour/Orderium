@@ -152,30 +152,34 @@ const Index = () => {
 
               {/* View Mode Toggle */}
               <div className="flex align-items-center gap-2 border-round-lg p-1" style={{ background: 'var(--surface-100)' }}>
-                <button
+                <Button
+                  text
                   onClick={() => setViewMode('grid')}
-                  className="border-none cursor-pointer border-round-md px-3 py-1 text-sm font-medium"
+                  className="border-round-md px-3 py-1 text-sm font-medium"
                   style={{
                     background: viewMode === 'grid' ? 'var(--surface-card)' : 'transparent',
                     color: viewMode === 'grid' ? 'var(--text-color)' : 'var(--text-color-secondary)',
                     boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                     transition: 'all 0.2s',
+                    padding: '0.25rem 0.75rem',
                   }}
                 >
                   <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  text
                   onClick={() => setViewMode('list')}
-                  className="border-none cursor-pointer border-round-md px-3 py-1 text-sm font-medium"
+                  className="border-round-md px-3 py-1 text-sm font-medium"
                   style={{
                     background: viewMode === 'list' ? 'var(--surface-card)' : 'transparent',
                     color: viewMode === 'list' ? 'var(--text-color)' : 'var(--text-color-secondary)',
                     boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                     transition: 'all 0.2s',
+                    padding: '0.25rem 0.75rem',
                   }}
                 >
                   <List style={{ width: '1rem', height: '1rem' }} />
-                </button>
+                </Button>
               </div>
             </div>
           </div>

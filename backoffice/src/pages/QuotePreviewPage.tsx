@@ -4,6 +4,8 @@ import { FileText, Calendar, User, Phone, MapPin, CreditCard, CheckCircle, XCirc
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { quotesService } from '../modules/quotes/quotes.service';
 import { QuoteWithDetails } from '../modules/quotes/quotes.model';
 import { toastError, toastConfirm } from '../services/toast.service';
@@ -193,30 +195,34 @@ export default function QuotePreviewPage() {
         <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Articles</h3>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>Description</th>
-                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>Quantité</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>Prix unitaire</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {quote.items.map((item, index) => (
-                  <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#0f172a' }}>{item.description}</td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155', textAlign: 'right' }}>
-                      {item.unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#0f172a', textAlign: 'right' }}>
-                      {item.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable value={quote.items} size="small" tableStyle={{ width: '100%' }}>
+              <Column
+                field="description"
+                header="Description"
+                headerStyle={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#0f172a' }}
+              />
+              <Column
+                field="quantity"
+                header="Quantité"
+                headerStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155' }}
+              />
+              <Column
+                field="unitPrice"
+                header="Prix unitaire"
+                headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155' }}
+                body={(item: any) => `${item.unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH`}
+              />
+              <Column
+                field="total"
+                header="Total"
+                headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}
+                body={(item: any) => `${item.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH`}
+              />
+            </DataTable>
           </div>
 
           {/* Signature Details and Totals Side by Side */}

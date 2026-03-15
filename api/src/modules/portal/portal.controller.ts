@@ -35,9 +35,7 @@ export class PortalController {
   @Throttle({ short: { limit: 5, ttl: 60000 } })
   @Post('login')
   @ApiOperation({ summary: 'Portal login' })
-  async login(
-    @Body() body: LoginDto,
-  ) {
+  async login(@Body() body: LoginDto) {
     const emailOrPhone = body.email || body.phoneNumber;
     if (!emailOrPhone) {
       throw new BadRequestException('Email or phone number required');
@@ -77,9 +75,7 @@ export class PortalController {
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Portal registration' })
-  async register(
-    @Body() body: RegisterDto,
-  ) {
+  async register(@Body() body: RegisterDto) {
     const existingUser = await this.portalService.findByPhoneNumber(
       body.phoneNumber,
     );
@@ -148,9 +144,7 @@ export class PortalController {
 
   @Get('me/data-export')
   @ApiOperation({ summary: 'Export own personal data (GDPR)' })
-  async exportMyData(
-    @Request() req: { user: { id: number; sub: number } },
-  ) {
+  async exportMyData(@Request() req: { user: { id: number; sub: number } }) {
     const userId = req.user.sub ?? req.user.id;
     const data = await this.portalService.exportUserData(userId);
     if (!data) {
@@ -161,9 +155,7 @@ export class PortalController {
 
   @Delete('me/account')
   @ApiOperation({ summary: 'Delete own account and personal data (GDPR)' })
-  async deleteMyAccount(
-    @Request() req: { user: { id: number; sub: number } },
-  ) {
+  async deleteMyAccount(@Request() req: { user: { id: number; sub: number } }) {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
     if (!user) {

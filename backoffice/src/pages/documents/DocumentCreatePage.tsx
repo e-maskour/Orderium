@@ -5,6 +5,7 @@ import { Save, X, ArrowLeft, FileText } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
+import { Calendar } from 'primereact/calendar';
 import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
 import { Partner, IPartner } from '../../modules/partners';
 import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
@@ -225,6 +226,10 @@ export default function DocumentCreatePage({
         .doc-section-card { background: #ffffff; border-radius: 0.75rem; border: 1.5px solid #e2e8f0; padding: 1.25rem; }
         .doc-section-title { font-size: 0.875rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
         .doc-section-accent { width: 0.25rem; height: 1.25rem; background: linear-gradient(to bottom, #f59e0b, #d97706); border-radius: 2px; flex-shrink: 0; }
+        .doc-cal { position: relative !important; display: block !important; }
+        .doc-cal .p-inputtext { padding-right: 2.5rem !important; width: 100% !important; border-top-right-radius: var(--orderium-radius-md, 6px) !important; border-bottom-right-radius: var(--orderium-radius-md, 6px) !important; }
+        .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
+        .doc-cal .p-datepicker-trigger:hover { color: var(--form-input-border-focus) !important; background: transparent !important; }
         @media (max-width: 768px) {
           .doc-create-grid { grid-template-columns: 1fr !important; }
           .doc-sticky-bar { left: 0 !important; }
@@ -339,34 +344,42 @@ export default function DocumentCreatePage({
                     <label className="doc-field-label">
                       {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')} <span style={{ color: '#ef4444' }}>*</span>
                     </label>
-                    <InputText
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
+                    <Calendar
+                      value={date ? new Date(date) : null}
+                      onChange={(e) => setDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                      dateFormat="dd/mm/yy"
+                      showIcon
+                      className="doc-cal"
                       style={{ width: '100%' }}
-                      required
+                      inputStyle={{ height: '2.5rem', width: '100%' }}
                     />
                   </div>
 
                   {config.features.expirationDate && (
                     <div>
                       <label className="doc-field-label">{t('expirationDate')}</label>
-                      <InputText
-                        type="date"
-                        value={expirationDate}
-                        onChange={(e) => setExpirationDate(e.target.value)}
+                      <Calendar
+                        value={expirationDate ? new Date(expirationDate) : null}
+                        onChange={(e) => setExpirationDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                        dateFormat="dd/mm/yy"
+                        showIcon
+                        className="doc-cal"
                         style={{ width: '100%' }}
+                        inputStyle={{ height: '2.5rem', width: '100%' }}
                       />
                     </div>
                   )}
 
                   <div>
                     <label className="doc-field-label">{t('dueDate')}</label>
-                    <InputText
-                      type="date"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
+                    <Calendar
+                      value={dueDate ? new Date(dueDate) : null}
+                      onChange={(e) => setDueDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                      dateFormat="dd/mm/yy"
+                      showIcon
+                      className="doc-cal"
                       style={{ width: '100%' }}
+                      inputStyle={{ height: '2.5rem', width: '100%' }}
                     />
                   </div>
                 </div>

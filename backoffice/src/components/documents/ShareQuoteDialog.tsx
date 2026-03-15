@@ -73,12 +73,12 @@ export function ShareQuoteDialog({
 
   const footerContent = (
     <div className="flex justify-content-end">
-      <button
+      <Button
         onClick={onClose}
-        style={{ padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '0.5rem', background: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
-      >
-        {t('close')}
-      </button>
+        label={t('close')}
+        outlined
+        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+      />
     </div>
   );
 

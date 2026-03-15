@@ -165,7 +165,8 @@ export const DiscountModal = ({
             {t('discountType') || 'Discount Type'}
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            <button
+            <Button
+              text={discountType !== 0}
               onClick={() => { setDiscountType(0); setDiscount(''); }}
               className="disc-type-btn"
               style={{
@@ -174,14 +175,14 @@ export const DiscountModal = ({
                 border: discountType === 0 ? 'none' : '1.5px solid #e5e7eb',
                 background: discountType === 0 ? 'linear-gradient(135deg, #f97316, #ea580c)' : '#f9fafb',
                 color: discountType === 0 ? '#fff' : '#6b7280',
-                cursor: 'pointer',
                 boxShadow: discountType === 0 ? '0 4px 12px rgba(249,115,22,0.35)' : 'none',
               }}
             >
               <DollarSign style={{ width: '1rem', height: '1rem' }} />
               {t('amount') || 'Amount'}
-            </button>
-            <button
+            </Button>
+            <Button
+              text={discountType !== 1}
               onClick={() => { setDiscountType(1); setDiscount(''); }}
               className="disc-type-btn"
               style={{
@@ -190,13 +191,12 @@ export const DiscountModal = ({
                 border: discountType === 1 ? 'none' : '1.5px solid #e5e7eb',
                 background: discountType === 1 ? 'linear-gradient(135deg, #f97316, #ea580c)' : '#f9fafb',
                 color: discountType === 1 ? '#fff' : '#6b7280',
-                cursor: 'pointer',
                 boxShadow: discountType === 1 ? '0 4px 12px rgba(249,115,22,0.35)' : 'none',
               }}
             >
               <Percent style={{ width: '1rem', height: '1rem' }} />
               {t('percentage') || 'Percentage'}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -224,8 +224,9 @@ export const DiscountModal = ({
         {/* Keypad */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
           {numbers.map((num) => (
-            <button
+            <Button
               key={num}
+              text
               onClick={() => handleNumberClick(num)}
               className="pos-keypad-num"
               style={{
@@ -233,14 +234,12 @@ export const DiscountModal = ({
                 fontSize: num === 'C' ? '0.8125rem' : num === '.' ? '1.5rem' : '1.25rem',
                 fontWeight: 700,
                 borderRadius: '0.625rem',
-                border: 'none',
                 background: num === 'C'
                   ? 'linear-gradient(135deg, #ef4444, #dc2626)'
                   : num === '.'
                     ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
                     : '#f3f4f6',
                 color: num === 'C' || num === '.' ? '#fff' : '#111827',
-                cursor: 'pointer',
                 boxShadow: num === 'C'
                   ? '0 3px 8px rgba(239,68,68,0.3)'
                   : num === '.'
@@ -249,7 +248,7 @@ export const DiscountModal = ({
               }}
             >
               {num === 'C' ? t('clear') : num}
-            </button>
+            </Button>
           ))}
         </div>
 
