@@ -1,17 +1,10 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  Res,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { PDFService } from './pdf.service';
 
 @Controller('pdf')
 export class PDFController {
-  constructor(private readonly pdfService: PDFService) {}
+  constructor(private readonly pdfService: PDFService) { }
 
   /**
    * Generate PDF for invoice

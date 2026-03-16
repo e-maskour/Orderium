@@ -26,7 +26,7 @@ export class DeliveryController {
   constructor(
     private readonly deliveryService: DeliveryService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   @Public()
   @Post('login')
@@ -38,6 +38,7 @@ export class DeliveryController {
     );
 
     // Return without password
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...personData } = deliveryPerson;
 
     const token = this.jwtService.sign({

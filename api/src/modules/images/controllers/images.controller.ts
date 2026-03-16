@@ -3,7 +3,6 @@ import {
   Post,
   Delete,
   Get,
-  Param,
   UploadedFile,
   UseInterceptors,
   Query,
@@ -27,7 +26,7 @@ import { IMG } from '../../../common/response-codes';
 @ApiTags('Images')
 @Controller('images')
 export class ImagesController {
-  constructor(private readonly imageService: ImageService) {}
+  constructor(private readonly imageService: ImageService) { }
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('image'))
