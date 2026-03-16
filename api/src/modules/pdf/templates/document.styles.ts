@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-
 export function getDocumentStyles(): string {
   return `
     <style>

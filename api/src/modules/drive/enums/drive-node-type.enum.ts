@@ -1,4 +1,4 @@
 export enum DriveNodeType {
-    FOLDER = 'folder',
-    FILE = 'file',
+  FOLDER = 'folder',
+  FILE = 'file',
 }

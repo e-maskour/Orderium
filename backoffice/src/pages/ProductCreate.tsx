@@ -141,6 +141,8 @@ export default function ProductCreate() {
       price: formData.price?.toString() ?? '',
       cost: formData.cost?.toString() ?? '',
       minPrice: formData.minPrice?.toString() ?? '',
+      saleUnit: formData.saleUnitId?.toString() ?? '',
+      purchaseUnit: formData.purchaseUnitId?.toString() ?? '',
       warehouseId: formData.warehouseId?.toString() ?? '',
       categoryIds: formData.categoryIds,
     };

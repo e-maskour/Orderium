@@ -7,7 +7,15 @@ export class AddDeliveryStatusToOrders1770000000000 implements MigrationInterfac
       new TableColumn({
         name: 'deliveryStatus',
         type: 'enum',
-        enum: ['assigned', 'confirmed', 'picked_up', 'to_delivery', 'in_delivery', 'delivered', 'canceled'],
+        enum: [
+          'assigned',
+          'confirmed',
+          'picked_up',
+          'to_delivery',
+          'in_delivery',
+          'delivered',
+          'canceled',
+        ],
         isNullable: true,
         default: null,
       }),

@@ -18,7 +18,7 @@ import { WRH } from '../../common/response-codes';
 @ApiTags('Inventory - Warehouses')
 @Controller('inventory/warehouses')
 export class WarehouseController {
-  constructor(private readonly warehouseService: WarehouseService) { }
+  constructor(private readonly warehouseService: WarehouseService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new warehouse' })

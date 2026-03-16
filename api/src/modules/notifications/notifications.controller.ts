@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   Controller,
   Get,
@@ -15,8 +14,10 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { PushNotificationService } from './push-notification.service';
 import { Notification } from './entities/notification.entity';
-import { DeviceToken } from './entities/device-token.entity';
-import { RegisterDeviceTokenDto, UnregisterDeviceTokenDto } from './dto/device-token.dto';
+import {
+  RegisterDeviceTokenDto,
+  UnregisterDeviceTokenDto,
+} from './dto/device-token.dto';
 import { ApiRes } from '../../common/api-response';
 import { NOT } from '../../common/response-codes';
 
@@ -46,7 +47,11 @@ export class NotificationsController {
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
   ) {
-    const userIdNum = userId ? Number(userId) : customerId ? Number(customerId) : undefined;
+    const userIdNum = userId
+      ? Number(userId)
+      : customerId
+        ? Number(customerId)
+        : undefined;
 
     const result = await this.notificationsService.findAll({
       userId: userIdNum,
@@ -81,7 +86,11 @@ export class NotificationsController {
     @Query('userId') userId?: string,
     @Query('customerId') customerId?: string,
   ) {
-    const userIdNum = userId ? Number(userId) : customerId ? Number(customerId) : undefined;
+    const userIdNum = userId
+      ? Number(userId)
+      : customerId
+        ? Number(customerId)
+        : undefined;
     const stats = await this.notificationsService.getStats(userIdNum);
     return ApiRes(NOT.STATS, stats);
   }
@@ -99,9 +108,8 @@ export class NotificationsController {
         ? Number(customerId)
         : 0;
 
-    const count: number = await this.notificationsService.getUnreadCount(
-      userIdNum,
-    );
+    const count: number =
+      await this.notificationsService.getUnreadCount(userIdNum);
     return ApiRes(NOT.UNREAD_COUNT, { count });
   }
 
@@ -121,9 +129,7 @@ export class NotificationsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get notification by ID' })
-  async getNotification(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  async getNotification(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.findOne(id);
     if (!notification) {
       throw new NotFoundException('Notification not found');
@@ -151,7 +157,11 @@ export class NotificationsController {
     @Query('userId') userId?: string,
     @Query('customerId') customerId?: string,
   ) {
-    const userIdNum = userId ? Number(userId) : customerId ? Number(customerId) : 0;
+    const userIdNum = userId
+      ? Number(userId)
+      : customerId
+        ? Number(customerId)
+        : 0;
     const updated = await this.notificationsService.markAllAsRead(userIdNum);
     return ApiRes(NOT.MARKED_ALL_READ, { updated });
   }
@@ -186,7 +196,7 @@ export class NotificationsController {
 
   @Get('preferences')
   @ApiOperation({ summary: 'Get notification preferences' })
-  async getPreferences() {
+  getPreferences() {
     // Placeholder - implement user preferences later
     return ApiRes(NOT.PREFS_DETAIL, {
       emailNotifications: true,
@@ -206,7 +216,7 @@ export class NotificationsController {
 
   @Patch('preferences')
   @ApiOperation({ summary: 'Update notification preferences' })
-  async updatePreferences(@Body() preferences: Record<string, boolean>) {
+  updatePreferences(@Body() preferences: Record<string, boolean>) {
     // Placeholder - implement user preferences later
     return ApiRes(NOT.PREFS_UPDATED, preferences);
   }
@@ -234,33 +244,30 @@ export class NotificationsController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: RegisterDeviceTokenDto,
   ) {
-    const deviceToken = await this.pushNotificationService.registerDeviceToken(userId, dto);
+    const deviceToken = await this.pushNotificationService.registerDeviceToken(
+      userId,
+      dto,
+    );
     return ApiRes(NOT.TOKEN_REGISTERED, deviceToken);
   }
 
   @Delete('device-token')
   @ApiOperation({ summary: 'Unregister device token' })
-  async unregisterDeviceToken(
-    @Body() dto: UnregisterDeviceTokenDto,
-  ) {
+  async unregisterDeviceToken(@Body() dto: UnregisterDeviceTokenDto) {
     await this.pushNotificationService.unregisterDeviceToken(dto.token);
     return ApiRes(NOT.TOKEN_UNREGISTERED, null);
   }
 
   @Get('device-token/:userId')
   @ApiOperation({ summary: 'Get user registered devices' })
-  async getUserDevices(
-    @Param('userId', ParseIntPipe) userId: number,
-  ) {
+  async getUserDevices(@Param('userId', ParseIntPipe) userId: number) {
     const devices = await this.pushNotificationService.getUserDevices(userId);
     return ApiRes(NOT.TOKEN_LIST, devices);
   }
 
   @Patch('device-token/:token/refresh')
   @ApiOperation({ summary: 'Refresh device token last used timestamp' })
-  async refreshDeviceToken(
-    @Param('token') token: string,
-  ) {
+  async refreshDeviceToken(@Param('token') token: string) {
     await this.pushNotificationService.updateLastUsed(token);
     return ApiRes(NOT.TOKEN_REFRESHED, null);
   }

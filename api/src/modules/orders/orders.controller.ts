@@ -24,7 +24,7 @@ import { ORD } from '../../common/response-codes';
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) { }
+  constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new order' })
@@ -112,7 +112,10 @@ export class OrdersController {
     @Query('endDate') endDate?: string,
     @Query('direction') direction?: string,
   ) {
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit ?? '50', 10) || 50),
+    );
     const fromPortalBool =
       fromPortal !== undefined ? fromPortal === 'true' : undefined;
     const fromClientBool =
@@ -163,10 +166,13 @@ export class OrdersController {
       limitNum,
     );
 
-    return ApiRes(ORD.SEARCH_NUMBERS, orderNumbers.map((num: string) => ({
-      value: num,
-      label: num,
-    })));
+    return ApiRes(
+      ORD.SEARCH_NUMBERS,
+      orderNumbers.map((num: string) => ({
+        value: num,
+        label: num,
+      })),
+    );
   }
 
   @Get('number/:orderNumber')
@@ -220,7 +226,10 @@ export class OrdersController {
     @Query('endDate') endDate?: string,
   ) {
     const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
-    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize ?? '10', 10) || 10));
+    const pageSizeNum = Math.min(
+      100,
+      Math.max(1, parseInt(pageSize ?? '10', 10) || 10),
+    );
 
     const result = await this.ordersService.getCustomerOrders(
       customerId,
@@ -345,8 +354,13 @@ export class OrdersController {
   }
 
   @Get('export/xlsx')
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  @ApiOperation({ summary: 'Export orders (bon de livraison / bon d\'achat) to XLSX file' })
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
+  @ApiOperation({
+    summary: "Export orders (bon de livraison / bon d'achat) to XLSX file",
+  })
   async exportToXlsx(
     @Query('supplierId') supplierId?: string,
     @Res() res?: Response,
@@ -354,9 +368,12 @@ export class OrdersController {
     const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
     const buffer = await this.ordersService.exportToXlsx(supplierIdNum);
 
-    const filename = supplierIdNum !== undefined
-      ? (supplierIdNum ? 'bons-achat.xlsx' : 'bons-livraison.xlsx')
-      : 'bons.xlsx';
+    const filename =
+      supplierIdNum !== undefined
+        ? supplierIdNum
+          ? 'bons-achat.xlsx'
+          : 'bons-livraison.xlsx'
+        : 'bons.xlsx';
 
     if (res) {
       res.setHeader('Content-Disposition', `attachment; filename=${filename}`);

@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   Injectable,
   NotFoundException,
@@ -12,7 +11,12 @@ import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
-import { Order, OrderItem, OrderStatus, DeliveryStatus } from './entities/order.entity';
+import {
+  Order,
+  OrderItem,
+  OrderStatus,
+  DeliveryStatus,
+} from './entities/order.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
@@ -21,7 +25,6 @@ import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { OrderNotificationService } from '../notifications/order-notification.service';
 import { PDFService } from '../pdf/pdf.service';
 import { StockService } from '../inventory/stock.service';
-import { MovementType } from '../inventory/entities/stock-movement.entity';
 
 // Removed composite response interface; service now returns `Order` directly.
 
@@ -53,7 +56,7 @@ export class OrdersService {
     const result = await this.dataSource.transaction(async (manager) => {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const year = now.getFullYear();
+      const _year = now.getFullYear();
 
       // Get customer ID
       let customerId = createOrderDto.customerId;
@@ -69,12 +72,24 @@ export class OrdersService {
       let receiptNumber: string | null = null;
       if (createOrderDto.fromPortal) {
         // Portal orders get immediate sequence number
-        const sequence = await this.getOrCreateSequence('delivery_note', createOrderDto.date);
-        documentNumber = this.generateSequenceNumber(sequence, createOrderDto.date);
+        const sequence = await this.getOrCreateSequence(
+          'delivery_note',
+          createOrderDto.date,
+        );
+        documentNumber = this.generateSequenceNumber(
+          sequence,
+          createOrderDto.date,
+        );
 
         // Portal orders also get receipt number
-        const receiptSequence = await this.getOrCreateSequence('receipt', createOrderDto.date);
-        receiptNumber = this.generateSequenceNumber(receiptSequence, createOrderDto.date);
+        const receiptSequence = await this.getOrCreateSequence(
+          'receipt',
+          createOrderDto.date,
+        );
+        receiptNumber = this.generateSequenceNumber(
+          receiptSequence,
+          createOrderDto.date,
+        );
       } else {
         // Regular orders get PROV provisional number until validated
         const lastProvisional = await this.orderRepository
@@ -117,7 +132,9 @@ export class OrdersService {
       order.customerPhone = createOrderDto.customerPhone ?? '';
       order.customerAddress = createOrderDto.customerAddress ?? '';
       order.date = today;
-      order.dueDate = createOrderDto.dueDate ? new Date(createOrderDto.dueDate) : null;
+      order.dueDate = createOrderDto.dueDate
+        ? new Date(createOrderDto.dueDate)
+        : null;
       order.subtotal = createOrderDto.subtotal || 0;
       order.tax = createOrderDto.tax || 0;
       order.total = createOrderDto.total || 0;
@@ -173,10 +190,16 @@ export class OrdersService {
 
       // Update sequence number only for portal orders (those with immediate sequence)
       if (createOrderDto.fromPortal) {
-        const sequence = await this.getOrCreateSequence('delivery_note', createOrderDto.date);
+        const sequence = await this.getOrCreateSequence(
+          'delivery_note',
+          createOrderDto.date,
+        );
         await this.updateSequenceNextNumber('delivery_note', sequence);
 
-        const receiptSequence = await this.getOrCreateSequence('receipt', createOrderDto.date);
+        const receiptSequence = await this.getOrCreateSequence(
+          'receipt',
+          createOrderDto.date,
+        );
         await this.updateSequenceNextNumber('receipt', receiptSequence);
       }
 
@@ -320,9 +343,14 @@ export class OrdersService {
         relations: ['customer'],
       });
       if (fullOrder) {
-        this.orderNotificationService.notifyNewOrderFromClient(fullOrder).catch((err) => {
-          this.logger.error('Failed to send new order notification', (err as Error)?.stack);
-        });
+        this.orderNotificationService
+          .notifyNewOrderFromClient(fullOrder)
+          .catch((err) => {
+            this.logger.error(
+              'Failed to send new order notification',
+              (err as Error)?.stack,
+            );
+          });
       }
     }
 
@@ -421,8 +449,10 @@ export class OrdersService {
     const orders = await queryBuilder.getMany();
 
     // Get count of each delivery status (for all orders, not just filtered)
-    const countQueryBuilder = this.dataSource
-      .createQueryBuilder(Order, 'order');
+    const countQueryBuilder = this.dataSource.createQueryBuilder(
+      Order,
+      'order',
+    );
 
     // Apply same filters for counting
     if (fromPortal !== undefined) {
@@ -524,7 +554,12 @@ export class OrdersService {
     pageSize: number = 50,
     supplierId?: number,
     direction?: 'ACHAT' | 'VENTE',
-  ): Promise<{ orders: any[]; count: number; totalCount: number; statusCounts: any }> {
+  ): Promise<{
+    orders: any[];
+    count: number;
+    totalCount: number;
+    statusCounts: any;
+  }> {
     const offset = (page - 1) * pageSize;
 
     // Build main query with filters
@@ -587,14 +622,21 @@ export class OrdersService {
     }
 
     if (orderNumber) {
-      queryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
+      queryBuilder.andWhere('order.documentNumber = :orderNumber', {
+        orderNumber,
+      });
     }
 
     if (deliveryStatus && deliveryStatus.length > 0) {
       if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
-        queryBuilder.andWhere('order.deliveryStatus IN (:...deliveryStatuses)', { deliveryStatuses: deliveryStatus });
+        queryBuilder.andWhere(
+          'order.deliveryStatus IN (:...deliveryStatuses)',
+          { deliveryStatuses: deliveryStatus },
+        );
       } else {
-        queryBuilder.where('order.deliveryStatus IN (:...deliveryStatuses)', { deliveryStatuses: deliveryStatus });
+        queryBuilder.where('order.deliveryStatus IN (:...deliveryStatuses)', {
+          deliveryStatuses: deliveryStatus,
+        });
       }
     }
 
@@ -638,13 +680,19 @@ export class OrdersService {
     }
     if (fromClient !== undefined) {
       if (Object.keys(countQueryBuilder.expressionMap.wheres).length > 0) {
-        countQueryBuilder.andWhere('order.fromClient = :fromClient', { fromClient });
+        countQueryBuilder.andWhere('order.fromClient = :fromClient', {
+          fromClient,
+        });
       } else {
-        countQueryBuilder.where('order.fromClient = :fromClient', { fromClient });
+        countQueryBuilder.where('order.fromClient = :fromClient', {
+          fromClient,
+        });
       }
     }
     if (orderNumber) {
-      countQueryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
+      countQueryBuilder.andWhere('order.documentNumber = :orderNumber', {
+        orderNumber,
+      });
     }
     if (startDate && endDate) {
       countQueryBuilder.andWhere('order.dateCreated >= :startDate', {
@@ -660,9 +708,12 @@ export class OrdersService {
       });
     }
     if (deliveryPersonId) {
-      countQueryBuilder.andWhere('delivery.deliveryPersonId = :deliveryPersonId', {
-        deliveryPersonId,
-      });
+      countQueryBuilder.andWhere(
+        'delivery.deliveryPersonId = :deliveryPersonId',
+        {
+          deliveryPersonId,
+        },
+      );
     }
     if (direction) {
       countQueryBuilder.andWhere('order.direction = :direction', { direction });
@@ -747,7 +798,8 @@ export class OrdersService {
 
   async getOrderById(id: number): Promise<Record<string, unknown>> {
     const cacheKey = `order:${id}`;
-    const cached = await this.cacheManager.get<Record<string, unknown>>(cacheKey);
+    const cached =
+      await this.cacheManager.get<Record<string, unknown>>(cacheKey);
     if (cached) return cached;
 
     const order = await this.dataSource
@@ -868,7 +920,9 @@ export class OrdersService {
     return result;
   }
 
-  async getOrderByNumber(orderNumber: string): Promise<Record<string, unknown> | null> {
+  async getOrderByNumber(
+    orderNumber: string,
+  ): Promise<Record<string, unknown> | null> {
     const order = await this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
@@ -993,7 +1047,13 @@ export class OrdersService {
     deliveryStatus?: string,
     startDate?: Date,
     endDate?: Date,
-  ): Promise<{ orders: any[]; total: number; page: number; pageSize: number; totalPages: number }> {
+  ): Promise<{
+    orders: any[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
     let query = this.dataSource
       .createQueryBuilder(Order, 'order')
       .leftJoin('order.customer', 'customer')
@@ -1040,7 +1100,9 @@ export class OrdersService {
 
     // Apply delivery status filter
     if (deliveryStatus && deliveryStatus !== 'all') {
-      query = query.andWhere('order.deliveryStatus = :deliveryStatus', { deliveryStatus });
+      query = query.andWhere('order.deliveryStatus = :deliveryStatus', {
+        deliveryStatus,
+      });
     }
 
     // Apply date range filter
@@ -1050,7 +1112,9 @@ export class OrdersService {
     if (endDate) {
       const endOfDay = new Date(endDate);
       endOfDay.setHours(23, 59, 59, 999);
-      query = query.andWhere('order.dateCreated <= :endDate', { endDate: endOfDay });
+      query = query.andWhere('order.dateCreated <= :endDate', {
+        endDate: endOfDay,
+      });
     }
 
     // Get total count before pagination
@@ -1105,7 +1169,10 @@ export class OrdersService {
     };
   }
 
-  private async getOrCreateSequence(entityType: string, documentDate?: string | Date): Promise<SequenceConfig> {
+  private async getOrCreateSequence(
+    entityType: string,
+    documentDate?: string | Date,
+  ): Promise<SequenceConfig> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
       const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
@@ -1155,7 +1222,7 @@ export class OrdersService {
       await this.syncSequenceWithDatabase(sequence, documentDate);
 
       return sequence;
-    } catch (error) {
+    } catch {
       // Fallback to default if configurations service fails
       let prefix = 'CMD'; // Default
       if (entityType === 'delivery_note') {
@@ -1187,7 +1254,10 @@ export class OrdersService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
-  private async syncSequenceWithDatabase(sequence: SequenceConfig, documentDate?: string | Date): Promise<void> {
+  private async syncSequenceWithDatabase(
+    sequence: SequenceConfig,
+    documentDate?: string | Date,
+  ): Promise<void> {
     try {
       // Build the current pattern for this sequence using document date (e.g., "BL 2026-02-")
       const pattern = this.buildSequencePattern(sequence, documentDate);
@@ -1196,10 +1266,10 @@ export class OrdersService {
       const orders = await this.orderRepository
         .createQueryBuilder('order')
         .where('order.documentNumber LIKE :pattern', {
-          pattern: `${pattern}%`
+          pattern: `${pattern}%`,
         })
         .andWhere('order.documentNumber NOT LIKE :provisional', {
-          provisional: 'PROV%'
+          provisional: 'PROV%',
         })
         .getMany();
 
@@ -1211,14 +1281,14 @@ export class OrdersService {
 
       // Extract all sequence numbers from the orders
       const numbers = orders
-        .map(order => {
+        .map((order) => {
           // Remove the pattern prefix to get just the number part
           const numberPart = order.documentNumber.replace(pattern, '');
           // Remove any suffix
           const cleanNumber = numberPart.replace(sequence.suffix || '', '');
           return parseInt(cleanNumber, 10);
         })
-        .filter(num => !isNaN(num));
+        .filter((num) => !isNaN(num));
 
       if (numbers.length === 0) {
         sequence.nextNumber = 1;
@@ -1229,12 +1299,18 @@ export class OrdersService {
       const maxNumber = Math.max(...numbers);
       sequence.nextNumber = maxNumber + 1;
     } catch (error) {
-      this.logger.error('Failed to sync sequence with database', (error as Error)?.stack);
+      this.logger.error(
+        'Failed to sync sequence with database',
+        (error as Error)?.stack,
+      );
       // Keep existing nextNumber if sync fails
     }
   }
 
-  private buildSequencePattern(sequence: SequenceConfig, documentDate?: string | Date): string {
+  private buildSequencePattern(
+    sequence: SequenceConfig,
+    documentDate?: string | Date,
+  ): string {
     // Use document date if provided, otherwise fallback to current date
     const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
@@ -1252,7 +1328,7 @@ export class OrdersService {
             : '04';
 
     let pattern = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push(year.toString());
@@ -1281,7 +1357,10 @@ export class OrdersService {
     return pattern;
   }
 
-  private generateSequenceNumber(sequence: SequenceConfig, documentDate?: string | Date): string {
+  private generateSequenceNumber(
+    sequence: SequenceConfig,
+    documentDate?: string | Date,
+  ): string {
     // Use document date if provided, otherwise fallback to current date
     const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
@@ -1299,7 +1378,7 @@ export class OrdersService {
             : '04';
 
     let result = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push(year.toString());
@@ -1354,7 +1433,10 @@ export class OrdersService {
         });
       }
     } catch (error) {
-      this.logger.error('Failed to update sequence next number', (error as Error)?.stack);
+      this.logger.error(
+        'Failed to update sequence next number',
+        (error as Error)?.stack,
+      );
     }
   }
 
@@ -1375,10 +1457,15 @@ export class OrdersService {
     // Only convert PROV numbers to permanent sequence numbers
     if (order.documentNumber.startsWith('PROV')) {
       // Determine sequence type based on order direction
-      const sequenceType = order.supplierId ? 'purchase_order' : 'delivery_note';
+      const sequenceType = order.supplierId
+        ? 'purchase_order'
+        : 'delivery_note';
 
       const sequence = await this.getOrCreateSequence(sequenceType, order.date);
-      const finalOrderNumber = this.generateSequenceNumber(sequence, order.date);
+      const finalOrderNumber = this.generateSequenceNumber(
+        sequence,
+        order.date,
+      );
 
       // Update order with permanent number, validated status, and in progress
       await this.orderRepository.update(id, {
@@ -1401,7 +1488,10 @@ export class OrdersService {
 
     await this.invalidateOrderCache(id);
     // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
-    const pdfUrl = await this.pdfService.generateAndUploadPDF('delivery-note', id);
+    const pdfUrl = await this.pdfService.generateAndUploadPDF(
+      'delivery-note',
+      id,
+    );
     if (pdfUrl) {
       await this.orderRepository.update(id, { pdfUrl });
     }
@@ -1425,21 +1515,30 @@ export class OrdersService {
     // Update sequence nextNumber to match the last document in database
     try {
       // Determine sequence type based on order direction
-      const sequenceType = order.supplierId ? 'purchase_order' : 'delivery_note';
+      const sequenceType = order.supplierId
+        ? 'purchase_order'
+        : 'delivery_note';
 
       const sequence = await this.getOrCreateSequence(sequenceType, order.date);
       const config = await this.configurationsService.findByEntity('sequences');
       const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      const sequenceIndex = sequences.findIndex((seq) => seq.id === sequence.id);
+      const sequenceIndex = sequences.findIndex(
+        (seq) => seq.id === sequence.id,
+      );
 
       if (sequenceIndex !== -1) {
         // Find the highest document number in database with this sequence pattern
         const pattern = this.buildSequencePattern(sequence, order.date);
         const lastOrder = await this.orderRepository
           .createQueryBuilder('order')
-          .where('order.documentNumber LIKE :pattern', { pattern: pattern + '%' })
+          .where('order.documentNumber LIKE :pattern', {
+            pattern: pattern + '%',
+          })
           .andWhere('order.isValidated = :validated', { validated: true })
-          .orderBy('CAST(SUBSTRING(order.documentNumber FROM \'[0-9]+$\') AS INTEGER)', 'DESC')
+          .orderBy(
+            "CAST(SUBSTRING(order.documentNumber FROM '[0-9]+$') AS INTEGER)",
+            'DESC',
+          )
           .limit(1)
           .getOne();
 
@@ -1459,7 +1558,10 @@ export class OrdersService {
         });
       }
     } catch (error) {
-      this.logger.error('Error updating sequence during devalidation', (error as Error)?.stack);
+      this.logger.error(
+        'Error updating sequence during devalidation',
+        (error as Error)?.stack,
+      );
       // Continue with devalidation even if sequence update fails
     }
 
@@ -1505,7 +1607,10 @@ export class OrdersService {
     return await this.getOrderById(id);
   }
 
-  async updateOrder(id: number, updateOrderDto: Partial<CreateOrderDto>): Promise<any> {
+  async updateOrder(
+    id: number,
+    updateOrderDto: Partial<CreateOrderDto>,
+  ): Promise<any> {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer', 'items'],
@@ -1517,7 +1622,9 @@ export class OrdersService {
 
     // Prevent updates to validated orders
     if (order.isValidated) {
-      throw new BadRequestException('Cannot update a validated order. Devalidate first if changes are needed.');
+      throw new BadRequestException(
+        'Cannot update a validated order. Devalidate first if changes are needed.',
+      );
     }
 
     return this.dataSource.transaction(async (manager) => {
@@ -1544,7 +1651,9 @@ export class OrdersService {
         order.date = new Date(updateOrderDto.date);
       }
       if (updateOrderDto.dueDate !== undefined) {
-        order.dueDate = updateOrderDto.dueDate ? new Date(updateOrderDto.dueDate) : null;
+        order.dueDate = updateOrderDto.dueDate
+          ? new Date(updateOrderDto.dueDate)
+          : null;
       }
       if (updateOrderDto.customerId !== undefined) {
         order.customerId = updateOrderDto.customerId;
@@ -1582,11 +1691,19 @@ export class OrdersService {
       // Update deliveryStatus and corresponding timestamp
       if (updateOrderDto.deliveryStatus !== undefined) {
         // Validate cancellation - only allow if current status is pending, assigned, or confirmed
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         if (updateOrderDto.deliveryStatus === 'canceled') {
-          const allowedStatuses = [DeliveryStatus.PENDING, DeliveryStatus.ASSIGNED, DeliveryStatus.CONFIRMED];
-          if (order.deliveryStatus && !allowedStatuses.includes(order.deliveryStatus as DeliveryStatus)) {
+          const allowedStatuses = [
+            DeliveryStatus.PENDING,
+            DeliveryStatus.ASSIGNED,
+            DeliveryStatus.CONFIRMED,
+          ];
+          if (
+            order.deliveryStatus &&
+            !allowedStatuses.includes(order.deliveryStatus)
+          ) {
             throw new BadRequestException(
-              `Cannot cancel delivery. Order status is '${order.deliveryStatus}'. Cancellation is only allowed for pending, assigned, or confirmed orders.`
+              `Cannot cancel delivery. Order status is '${order.deliveryStatus}'. Cancellation is only allowed for pending, assigned, or confirmed orders.`,
             );
           }
         }
@@ -1740,7 +1857,10 @@ export class OrdersService {
     await this.invalidateOrderCache(id);
   }
 
-  async getOrderNumbers(search?: string, limit: number = 50): Promise<string[]> {
+  async getOrderNumbers(
+    search?: string,
+    limit: number = 50,
+  ): Promise<string[]> {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .select('DISTINCT order.documentNumber', 'documentNumber')
@@ -1762,7 +1882,10 @@ export class OrdersService {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .where('order.fromPortal = :fromPortal', { fromPortal: false })
-      .andWhere('EXTRACT(YEAR FROM COALESCE(order.date, order.dateCreated)) = :year', { year });
+      .andWhere(
+        'EXTRACT(YEAR FROM COALESCE(order.date, order.dateCreated)) = :year',
+        { year },
+      );
 
     // Filter by direction (vente: customer orders, achat: supplier orders)
     if (direction === 'vente') {
@@ -1783,7 +1906,10 @@ export class OrdersService {
       return {
         month: monthIndex + 1,
         count: monthOrders.length,
-        amount: monthOrders.reduce((sum, order) => sum + Number(order.total || 0), 0),
+        amount: monthOrders.reduce(
+          (sum, order) => sum + Number(order.total || 0),
+          0,
+        ),
       };
     });
 
@@ -1847,36 +1973,49 @@ export class OrdersService {
     orders.forEach((order) => {
       const isBonAchat = !!order.supplierId;
       const baseData = {
-        'Numéro': order.documentNumber,
-        'Date': order.date ? new Date(order.date).toLocaleDateString('fr-FR') : '',
-        'Date échéance': order.dueDate ? new Date(order.dueDate).toLocaleDateString('fr-FR') : '',
-        'Type': isBonAchat ? 'Bon d\'achat' : 'Bon de livraison',
-        'Client/Fournisseur': isBonAchat ? (order.supplierName || order.supplier?.name || '') : (order.customerName || order.customer?.name || ''),
-        'Téléphone': isBonAchat ? order.supplierPhone || '' : order.customerPhone || '',
-        'Adresse': isBonAchat ? (order.supplierAddress || order.supplier?.address || '') : (order.customerAddress || order.customer?.address || ''),
-        'Statut': this.getOrderStatusLabel(order.status),
-        'Statut livraison': order.deliveryStatus ? this.getDeliveryStatusLabel(order.deliveryStatus) : '',
+        Numéro: order.documentNumber,
+        Date: order.date
+          ? new Date(order.date).toLocaleDateString('fr-FR')
+          : '',
+        'Date échéance': order.dueDate
+          ? new Date(order.dueDate).toLocaleDateString('fr-FR')
+          : '',
+        Type: isBonAchat ? "Bon d'achat" : 'Bon de livraison',
+        'Client/Fournisseur': isBonAchat
+          ? order.supplierName || order.supplier?.name || ''
+          : order.customerName || order.customer?.name || '',
+        Téléphone: isBonAchat
+          ? order.supplierPhone || ''
+          : order.customerPhone || '',
+        Adresse: isBonAchat
+          ? order.supplierAddress || order.supplier?.address || ''
+          : order.customerAddress || order.customer?.address || '',
+        Statut: this.getOrderStatusLabel(order.status),
+        'Statut livraison': order.deliveryStatus
+          ? this.getDeliveryStatusLabel(order.deliveryStatus)
+          : '',
         'Sous-total': Number(order.subtotal),
-        'Remise': Number(order.discount),
+        Remise: Number(order.discount),
         'Type remise': order.discountType === 0 ? 'Montant' : 'Pourcentage',
-        'Taxe': Number(order.tax),
-        'Total': Number(order.total),
+        Taxe: Number(order.tax),
+        Total: Number(order.total),
         'Du portail': order.fromPortal ? 'Oui' : 'Non',
         'Du client': order.fromClient ? 'Oui' : 'Non',
-        'Notes': order.notes || '',
+        Notes: order.notes || '',
       };
 
       if (order.items && order.items.length > 0) {
         order.items.forEach((item, index) => {
           exportData.push({
             ...baseData,
-            'Ligne': index + 1,
+            Ligne: index + 1,
             'Code produit': item.product?.code || '',
             'Produit/Service': item.description,
-            'Quantité': Number(item.quantity),
+            Quantité: Number(item.quantity),
             'Prix unitaire': Number(item.unitPrice),
             'Remise ligne': Number(item.discount),
-            'Type remise ligne': item.discountType === 0 ? 'Montant' : 'Pourcentage',
+            'Type remise ligne':
+              item.discountType === 0 ? 'Montant' : 'Pourcentage',
             'Taxe ligne (%)': Number(item.tax),
             'Total ligne': Number(item.total),
           });
@@ -1884,10 +2023,10 @@ export class OrdersService {
       } else {
         exportData.push({
           ...baseData,
-          'Ligne': '',
+          Ligne: '',
           'Code produit': '',
           'Produit/Service': '',
-          'Quantité': '',
+          Quantité: '',
           'Prix unitaire': '',
           'Remise ligne': '',
           'Type remise ligne': '',
@@ -1902,18 +2041,46 @@ export class OrdersService {
 
     // Set column widths
     ws['!cols'] = [
-      { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 25 },
-      { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 18 }, { wch: 12 },
-      { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
-      { wch: 12 }, { wch: 30 }, { wch: 8 }, { wch: 15 }, { wch: 25 },
-      { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 12 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 30 },
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 12 },
       { wch: 12 },
     ];
 
-    const sheetName = supplierId !== undefined ? (supplierId ? 'Bons d\'achat' : 'Bons de livraison') : 'Bons';
+    const sheetName =
+      supplierId !== undefined
+        ? supplierId
+          ? "Bons d'achat"
+          : 'Bons de livraison'
+        : 'Bons';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    const buffer = XLSX.write(wb, {
+      type: 'buffer',
+      bookType: 'xlsx',
+    }) as Buffer;
     return buffer;
   }
 

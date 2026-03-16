@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class AddValidationDateAndPaidAmountToInvoices1769452089000
-  implements MigrationInterface
-{
+export class AddValidationDateAndPaidAmountToInvoices1769452089000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add validationDate column
     await queryRunner.addColumn(

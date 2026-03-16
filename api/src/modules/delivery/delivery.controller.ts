@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   Controller,
   Get,
@@ -27,7 +26,7 @@ export class DeliveryController {
   constructor(
     private readonly deliveryService: DeliveryService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @Public()
   @Post('login')
@@ -63,8 +62,7 @@ export class DeliveryController {
   @Get('persons')
   @ApiOperation({ summary: 'Get all delivery persons' })
   async getAllDeliveryPersons() {
-    const deliveryPersons =
-      await this.deliveryService.getAllDeliveryPersons();
+    const deliveryPersons = await this.deliveryService.getAllDeliveryPersons();
     return ApiRes(DLV.PERSONS_LIST, deliveryPersons);
   }
 
@@ -106,7 +104,10 @@ export class DeliveryController {
   @Get('orders')
   @ApiOperation({ summary: 'Get all delivery orders' })
   async getOrderDeliveries(@Query('limit') limit?: string) {
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit ?? '100', 10) || 100),
+    );
     const orders = await this.deliveryService.getOrderDeliveries(limitNum);
     return ApiRes(DLV.ORDERS_LIST, orders);
   }
@@ -119,7 +120,8 @@ export class DeliveryController {
     @Param('id', ParseIntPipe) id: number,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
-    @Body() filters?: {
+    @Body()
+    filters?: {
       orderNumber?: string;
       customerName?: string;
       startDate?: string;
@@ -127,7 +129,10 @@ export class DeliveryController {
     },
   ) {
     const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
-    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize ?? '50', 10) || 50));
+    const pageSizeNum = Math.min(
+      100,
+      Math.max(1, parseInt(pageSize ?? '50', 10) || 50),
+    );
 
     const result = await this.deliveryService.getDeliveryPersonOrders(
       id,
@@ -140,20 +145,21 @@ export class DeliveryController {
     );
 
     // Transform OrderDelivery to match frontend Order interface
-    const orders = result.orderDeliveries.map(od => ({
+    const orders = result.orderDeliveries.map((od) => ({
       orderId: od.order.id,
       orderNumber: od.order.orderNumber,
       customerName: od.order.customer?.name || 'N/A',
       customerPhone: od.order.customer?.phoneNumber || 'N/A',
-      customerAddress: od.order.customer?.deliveryAddress || od.order.customer?.address,
+      customerAddress:
+        od.order.customer?.deliveryAddress || od.order.customer?.address,
       latitude: od.order.customer?.latitude,
       longitude: od.order.customer?.longitude,
       googleMapsUrl: od.order.customer?.googleMapsUrl,
-      wazeUrl: od.order.customer?.wazeUrl || (
-        od.order.customer?.latitude && od.order.customer?.longitude
+      wazeUrl:
+        od.order.customer?.wazeUrl ||
+        (od.order.customer?.latitude && od.order.customer?.longitude
           ? `https://waze.com/ul?ll=${od.order.customer.latitude},${od.order.customer.longitude}&navigate=yes`
-          : undefined
-      ),
+          : undefined),
       totalAmount: Number(od.order.total),
       status: od.status,
       pendingAt: od.pendingAt?.toISOString(),
@@ -165,7 +171,7 @@ export class DeliveryController {
       deliveredAt: od.deliveredAt?.toISOString(),
       canceledAt: od.canceledAt?.toISOString(),
       createdAt: od.order.dateCreated.toISOString(),
-      items: od.order.items?.map(item => ({
+      items: od.order.items?.map((item) => ({
         productName: item.product?.name || 'Unknown Product',
         quantity: Number(item.quantity),
         price: Number(item.unitPrice),

@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class AddRemainingAmountToInvoices1769453126000
-  implements MigrationInterface
-{
+export class AddRemainingAmountToInvoices1769453126000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add remainingAmount column
     await queryRunner.addColumn(
@@ -26,7 +24,7 @@ export class AddRemainingAmountToInvoices1769453126000
     await queryRunner.query(`
       DROP TRIGGER IF EXISTS update_invoice_paid_amount_trigger ON payments;
     `);
-    
+
     await queryRunner.query(`
       DROP FUNCTION IF EXISTS update_invoice_paid_amount();
     `);

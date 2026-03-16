@@ -17,18 +17,25 @@ async function bootstrap() {
   const corsOrigin = configService.get<string[]>('app.corsOrigin') ?? [];
 
   // Root path handler - redirect to API documentation or health check
-  app.use('/', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if (req.path === '/') {
-      res.json({
-        message: 'Orderium API',
-        version: '1.0.0',
-        docs: '/api/docs',
-        health: '/api/health',
-      });
-      return;
-    }
-    next();
-  });
+  app.use(
+    '/',
+    (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      if (req.path === '/') {
+        res.json({
+          message: 'Orderium API',
+          version: '1.0.0',
+          docs: '/api/docs',
+          health: '/api/health',
+        });
+        return;
+      }
+      next();
+    },
+  );
 
   // Global prefix
   app.setGlobalPrefix('api');
@@ -41,7 +48,12 @@ async function bootstrap() {
           defaultSrc: ["'self'"],
           scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', 'http://localhost:9000', 'https://*.amazonaws.com'],
+          imgSrc: [
+            "'self'",
+            'data:',
+            'http://localhost:9000',
+            'https://*.amazonaws.com',
+          ],
           connectSrc: ["'self'"],
           fontSrc: ["'self'"],
           frameAncestors: ["'none'"],
@@ -73,7 +85,10 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   // Global interceptors
-  app.useGlobalInterceptors(new LoggingInterceptor(), new ApiResponseInterceptor());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new ApiResponseInterceptor(),
+  );
 
   // Enable graceful shutdown hooks
   app.enableShutdownHooks();

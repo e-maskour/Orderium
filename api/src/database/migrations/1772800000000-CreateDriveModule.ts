@@ -1,26 +1,26 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateDriveModule1772800000000 implements MigrationInterface {
-    name = 'CreateDriveModule1772800000000';
+  name = 'CreateDriveModule1772800000000';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        // ── ENUM TYPES ──────────────────────────────────────────────────────────
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // ── ENUM TYPES ──────────────────────────────────────────────────────────
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       DO $$ BEGIN
         CREATE TYPE drive_permission AS ENUM ('viewer', 'editor', 'owner');
       EXCEPTION WHEN duplicate_object THEN NULL;
       END $$;
     `);
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       DO $$ BEGIN
         CREATE TYPE drive_share_target AS ENUM ('user', 'everyone');
       EXCEPTION WHEN duplicate_object THEN NULL;
       END $$;
     `);
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       DO $$ BEGIN
         CREATE TYPE drive_action AS ENUM (
           'upload', 'replace', 'download', 'delete', 'restore',
@@ -32,9 +32,9 @@ export class CreateDriveModule1772800000000 implements MigrationInterface {
       END $$;
     `);
 
-        // ── drive_nodes ─────────────────────────────────────────────────────────
+    // ── drive_nodes ─────────────────────────────────────────────────────────
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "drive_nodes" (
         "id"                UUID          NOT NULL DEFAULT gen_random_uuid(),
         "type"              VARCHAR(6)    NOT NULL,
@@ -65,15 +65,25 @@ export class CreateDriveModule1772800000000 implements MigrationInterface {
       );
     `);
 
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_nodes_parent"  ON "drive_nodes"("parent_id")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_nodes_owner"   ON "drive_nodes"("owner_id")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_nodes_type"    ON "drive_nodes"("type")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_nodes_trashed" ON "drive_nodes"("is_trashed")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_nodes_fts"     ON "drive_nodes" USING gin(to_tsvector('english', "name"))`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_nodes_parent"  ON "drive_nodes"("parent_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_nodes_owner"   ON "drive_nodes"("owner_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_nodes_type"    ON "drive_nodes"("type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_nodes_trashed" ON "drive_nodes"("is_trashed")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_nodes_fts"     ON "drive_nodes" USING gin(to_tsvector('english', "name"))`,
+    );
 
-        // ── drive_versions ──────────────────────────────────────────────────────
+    // ── drive_versions ──────────────────────────────────────────────────────
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "drive_versions" (
         "id"               UUID          NOT NULL DEFAULT gen_random_uuid(),
         "node_id"          UUID          NOT NULL,
@@ -95,10 +105,12 @@ export class CreateDriveModule1772800000000 implements MigrationInterface {
       );
     `);
 
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_versions_node" ON "drive_versions"("node_id")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_versions_node" ON "drive_versions"("node_id")`,
+    );
 
-        // Deferred FK from drive_nodes.active_version_id → drive_versions.id
-        await queryRunner.query(`
+    // Deferred FK from drive_nodes.active_version_id → drive_versions.id
+    await queryRunner.query(`
       ALTER TABLE "drive_nodes"
         ADD CONSTRAINT "fk_drive_nodes_active_version"
         FOREIGN KEY ("active_version_id") REFERENCES "drive_versions"("id")
@@ -106,9 +118,9 @@ export class CreateDriveModule1772800000000 implements MigrationInterface {
         DEFERRABLE INITIALLY DEFERRED;
     `);
 
-        // ── drive_shares ────────────────────────────────────────────────────────
+    // ── drive_shares ────────────────────────────────────────────────────────
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "drive_shares" (
         "id"             UUID              NOT NULL DEFAULT gen_random_uuid(),
         "node_id"        UUID              NOT NULL,
@@ -127,13 +139,19 @@ export class CreateDriveModule1772800000000 implements MigrationInterface {
       );
     `);
 
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_shares_node"        ON "drive_shares"("node_id")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_shares_target_user" ON "drive_shares"("target_user_id")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_shares_everyone"    ON "drive_shares"("node_id") WHERE "target_type" = 'everyone'`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_shares_node"        ON "drive_shares"("node_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_shares_target_user" ON "drive_shares"("target_user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_shares_everyone"    ON "drive_shares"("node_id") WHERE "target_type" = 'everyone'`,
+    );
 
-        // ── drive_activity ──────────────────────────────────────────────────────
+    // ── drive_activity ──────────────────────────────────────────────────────
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "drive_activity" (
         "id"             UUID          NOT NULL DEFAULT gen_random_uuid(),
         "action"         drive_action  NOT NULL,
@@ -150,13 +168,19 @@ export class CreateDriveModule1772800000000 implements MigrationInterface {
       );
     `);
 
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_activity_node"  ON "drive_activity"("node_id")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_activity_actor" ON "drive_activity"("actor_id")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_activity_time"  ON "drive_activity"("created_at" DESC)`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_activity_node"  ON "drive_activity"("node_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_activity_actor" ON "drive_activity"("actor_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_activity_time"  ON "drive_activity"("created_at" DESC)`,
+    );
 
-        // ── drive_tags ──────────────────────────────────────────────────────────
+    // ── drive_tags ──────────────────────────────────────────────────────────
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "drive_tags" (
         "id"         SERIAL        NOT NULL,
         "name"       VARCHAR(100)  NOT NULL,
@@ -167,9 +191,9 @@ export class CreateDriveModule1772800000000 implements MigrationInterface {
       );
     `);
 
-        // ── drive_node_tags ─────────────────────────────────────────────────────
+    // ── drive_node_tags ─────────────────────────────────────────────────────
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "drive_node_tags" (
         "node_id" UUID    NOT NULL,
         "tag_id"  INTEGER NOT NULL,
@@ -181,24 +205,26 @@ export class CreateDriveModule1772800000000 implements MigrationInterface {
       );
     `);
 
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_drive_node_tags_tag" ON "drive_node_tags"("tag_id")`);
-    }
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_drive_node_tags_tag" ON "drive_node_tags"("tag_id")`,
+    );
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP TABLE IF EXISTS "drive_node_tags" CASCADE`);
-        await queryRunner.query(`DROP TABLE IF EXISTS "drive_tags" CASCADE`);
-        await queryRunner.query(`DROP TABLE IF EXISTS "drive_activity" CASCADE`);
-        await queryRunner.query(`DROP TABLE IF EXISTS "drive_shares" CASCADE`);
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP TABLE IF EXISTS "drive_node_tags" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "drive_tags" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "drive_activity" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "drive_shares" CASCADE`);
 
-        // Drop the deferred FK before dropping drive_versions
-        await queryRunner.query(`
+    // Drop the deferred FK before dropping drive_versions
+    await queryRunner.query(`
       ALTER TABLE "drive_nodes" DROP CONSTRAINT IF EXISTS "fk_drive_nodes_active_version"
     `);
-        await queryRunner.query(`DROP TABLE IF EXISTS "drive_versions" CASCADE`);
-        await queryRunner.query(`DROP TABLE IF EXISTS "drive_nodes" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "drive_versions" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "drive_nodes" CASCADE`);
 
-        await queryRunner.query(`DROP TYPE IF EXISTS "drive_action"`);
-        await queryRunner.query(`DROP TYPE IF EXISTS "drive_share_target"`);
-        await queryRunner.query(`DROP TYPE IF EXISTS "drive_permission"`);
-    }
+    await queryRunner.query(`DROP TYPE IF EXISTS "drive_action"`);
+    await queryRunner.query(`DROP TYPE IF EXISTS "drive_share_target"`);
+    await queryRunner.query(`DROP TYPE IF EXISTS "drive_permission"`);
+  }
 }

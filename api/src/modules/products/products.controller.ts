@@ -78,7 +78,7 @@ export class ProductsController {
       Math.max(1, parseInt(perPage ?? '50', 10) || 50),
     );
 
-    const { products, count, totalCount } = await this.productsService.findAll(
+    const { products, totalCount } = await this.productsService.findAll(
       pageNum,
       perPageNum,
       filterDto.search,
@@ -219,13 +219,17 @@ export class ProductsController {
     // Delete old image from MinIO before uploading the new one.
     // Prefer the stored publicId; fall back to extracting the key from the URL
     // for legacy products where imagePublicId was never persisted.
-    const oldPublicId = existingProduct.imagePublicId ?? (() => {
-      if (!existingProduct.imageUrl) return null;
-      try {
-        const parsed = new URL(existingProduct.imageUrl);
-        return parsed.pathname.replace(/^\/[^/]+\//, '') || null;
-      } catch { return null; }
-    })();
+    const oldPublicId =
+      existingProduct.imagePublicId ??
+      (() => {
+        if (!existingProduct.imageUrl) return null;
+        try {
+          const parsed = new URL(existingProduct.imageUrl);
+          return parsed.pathname.replace(/^\/[^/]+\//, '') || null;
+        } catch {
+          return null;
+        }
+      })();
     if (oldPublicId) {
       try {
         await this.imageService.deleteImage(oldPublicId);

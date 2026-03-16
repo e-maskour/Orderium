@@ -448,12 +448,14 @@ export class PartnersService {
       (sum, inv) => sum + Number(inv.total),
       0,
     );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     const paidInvoices = invoices.filter((inv) => inv.status === 'paid');
     const paidAmount = paidInvoices.reduce(
       (sum, inv) => sum + Number(inv.total),
       0,
     );
     const unpaidInvoices = invoices.filter(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       (inv) => inv.status === 'unpaid' || inv.status === 'partial',
     );
     const unpaidAmount = unpaidInvoices.reduce(
@@ -512,12 +514,14 @@ export class PartnersService {
       (sum, inv) => sum + Number(inv.total),
       0,
     );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     const paidInvoices = invoices.filter((inv) => inv.status === 'paid');
     const paidAmount = paidInvoices.reduce(
       (sum, inv) => sum + Number(inv.total),
       0,
     );
     const unpaidInvoices = invoices.filter(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       (inv) => inv.status === 'unpaid' || inv.status === 'partial',
     );
     const unpaidAmount = unpaidInvoices.reduce(

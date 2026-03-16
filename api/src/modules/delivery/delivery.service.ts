@@ -9,7 +9,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
-import { Order, DeliveryStatus, OrderStatus } from '../orders/entities/order.entity';
+import {
+  Order,
+  DeliveryStatus,
+  OrderStatus,
+} from '../orders/entities/order.entity';
 import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
 import { OrderNotificationService } from '../notifications/order-notification.service';
@@ -28,7 +32,7 @@ export class DeliveryService {
     private readonly orderRepository: Repository<Order>,
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
-  ) { }
+  ) {}
 
   async getAllDeliveryPersons(): Promise<DeliveryPerson[]> {
     return this.deliveryPersonRepository.find({
@@ -146,7 +150,9 @@ export class DeliveryService {
       .leftJoinAndSelect('ord.items', 'items')
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('ord.customer', 'customer')
-      .where('orderDelivery.deliveryPersonId = :deliveryPersonId', { deliveryPersonId })
+      .where('orderDelivery.deliveryPersonId = :deliveryPersonId', {
+        deliveryPersonId,
+      })
       .andWhere('ord.fromClient = :fromClient', { fromClient: true }); // Only fromClient orders
 
     // Apply filters
@@ -169,7 +175,9 @@ export class DeliveryService {
     if (endDate) {
       const endOfDay = new Date(endDate);
       endOfDay.setHours(23, 59, 59, 999);
-      queryBuilder.andWhere('ord.dateCreated <= :endDate', { endDate: endOfDay });
+      queryBuilder.andWhere('ord.dateCreated <= :endDate', {
+        endDate: endOfDay,
+      });
     }
 
     const total = await queryBuilder.getCount();
@@ -218,7 +226,8 @@ export class DeliveryService {
       await this.orderRepository.save(order);
     }
 
-    const savedDelivery = await this.orderDeliveryRepository.save(orderDelivery);
+    const savedDelivery =
+      await this.orderDeliveryRepository.save(orderDelivery);
 
     // RULE 2: When admin assigns order, notify customer and delivery person
     if (order) {
@@ -226,13 +235,14 @@ export class DeliveryService {
         where: { id: deliveryPersonId },
       });
       if (deliveryPerson) {
-        this.orderNotificationService.notifyOrderAssigned(
-          order,
-          deliveryPersonId,
-          deliveryPerson.name,
-        ).catch((err) => {
-          this.logger.error('Failed to send order assignment notification', (err as Error)?.stack);
-        });
+        this.orderNotificationService
+          .notifyOrderAssigned(order, deliveryPersonId, deliveryPerson.name)
+          .catch((err) => {
+            this.logger.error(
+              'Failed to send order assignment notification',
+              (err as Error)?.stack,
+            );
+          });
       }
     }
 
@@ -374,13 +384,14 @@ export class DeliveryService {
       await this.orderRepository.save(order);
 
       // RULE 3: When delivery status changes, notify customer
-      this.orderNotificationService.notifyDeliveryStatusChanged(
-        order,
-        oldStatus,
-        status,
-      ).catch((err) => {
-        this.logger.error('Failed to send delivery status notification', (err as Error)?.stack);
-      });
+      this.orderNotificationService
+        .notifyDeliveryStatusChanged(order, oldStatus, status)
+        .catch((err) => {
+          this.logger.error(
+            'Failed to send delivery status notification',
+            (err as Error)?.stack,
+          );
+        });
     }
   }
 }

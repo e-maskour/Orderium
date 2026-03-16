@@ -17,4 +17,4 @@ import { AuthModule } from '../auth/auth.module';
   providers: [DeliveryService],
   exports: [DeliveryService],
 })
-export class DeliveryModule { }
+export class DeliveryModule {}

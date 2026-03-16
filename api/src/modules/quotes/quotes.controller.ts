@@ -22,7 +22,7 @@ import { QUO } from '../../common/response-codes';
 @ApiTags('Quotes')
 @Controller('quotes')
 export class QuotesController {
-  constructor(private readonly quotesService: QuotesService) { }
+  constructor(private readonly quotesService: QuotesService) {}
 
   @Post('list')
   @ApiOperation({ summary: 'Get all quotes with filters (POST method)' })
@@ -32,8 +32,10 @@ export class QuotesController {
     @Query('pageSize') pageSize?: string,
     @Query('direction') direction?: string,
   ) {
-    const pageNum = page ? (parseInt(page, 10) || undefined) : undefined;
-    const pageSizeNum = pageSize ? Math.min(100, Math.max(1, parseInt(pageSize, 10) || 50)) : undefined;
+    const pageNum = page ? parseInt(page, 10) || undefined : undefined;
+    const pageSizeNum = pageSize
+      ? Math.min(100, Math.max(1, parseInt(pageSize, 10) || 50))
+      : undefined;
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
@@ -70,7 +72,10 @@ export class QuotesController {
     @Query('limit') limit?: string,
     @Query('direction') direction?: string,
   ) {
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit ?? '100', 10) || 100),
+    );
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'

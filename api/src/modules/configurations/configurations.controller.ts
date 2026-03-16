@@ -18,8 +18,12 @@ import { DataSource } from 'typeorm';
 import { ConfigurationsService } from './configurations.service';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
-import { CompanyDto, UpdateCompanyDto } from './dto/company.dto';
-import { CreateSequenceDto, UpdateSequenceDto, SequencePreviewDto } from './dto/sequence.dto';
+import { CompanyDto } from './dto/company.dto';
+import {
+  CreateSequenceDto,
+  UpdateSequenceDto,
+  SequencePreviewDto,
+} from './dto/sequence.dto';
 import { ApiRes } from '../../common/api-response';
 import { CFG } from '../../common/response-codes';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
@@ -143,8 +147,11 @@ export class ConfigurationsController {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      const sequences = [...((newConfig.values.sequences as SequenceConfig[]) || []), newSequence];
-      const updated = await this.configurationsService.update(newConfig.id, {
+      const sequences = [
+        ...((newConfig.values.sequences as SequenceConfig[]) || []),
+        newSequence,
+      ];
+      await this.configurationsService.update(newConfig.id, {
         values: { sequences },
       });
       const enrichedSequence = {
@@ -162,8 +169,11 @@ export class ConfigurationsController {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    const sequences = [...((config.values.sequences as SequenceConfig[]) || []), newSequence];
-    const updated = await this.configurationsService.update(config.id, {
+    const sequences = [
+      ...((config.values.sequences as SequenceConfig[]) || []),
+      newSequence,
+    ];
+    await this.configurationsService.update(config.id, {
       values: { sequences },
     });
     const enrichedSequence = {
@@ -204,7 +214,7 @@ export class ConfigurationsController {
       updatedAt: new Date().toISOString(),
     };
     sequences[index] = updatedSequence;
-    const updated = await this.configurationsService.update(config.id, {
+    await this.configurationsService.update(config.id, {
       values: { sequences },
     });
     const enrichedSequence = {
@@ -237,7 +247,7 @@ export class ConfigurationsController {
 
   @Post('entity/sequences/preview')
   @ApiOperation({ summary: 'Generate sequence preview' })
-  async generateSequencePreview(@Body() sequenceData: SequencePreviewDto) {
+  generateSequencePreview(@Body() sequenceData: SequencePreviewDto) {
     const config = sequenceData as unknown as SequenceConfig;
     const example = this.generateSequenceExample(config);
     const nextSequence = this.generateNextSequence(config);
@@ -361,7 +371,7 @@ export class ConfigurationsController {
             : '10';
 
     let pattern = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     // Build date components in order: year-trimester/month-day
     if (sequence.yearInPrefix) {
@@ -416,7 +426,10 @@ export class ConfigurationsController {
     return isNaN(number) ? 0 : number;
   }
 
-  private generateSequenceWithNumber(sequence: SequenceConfig, number: number): string {
+  private generateSequenceWithNumber(
+    sequence: SequenceConfig,
+    number: number,
+  ): string {
     const now = new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -434,7 +447,7 @@ export class ConfigurationsController {
             : '10';
 
     let result = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     // Build date components in order: year-trimester/month-day
     if (sequence.yearInPrefix) {
@@ -510,14 +523,14 @@ export class ConfigurationsController {
 
   private buildFormatPattern(sequence: SequenceConfig): string {
     let result = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) dateComponents.push('YYYY');
     if (sequence.trimesterInPrefix) dateComponents.push('TRIM');
     if (sequence.monthInPrefix) dateComponents.push('MM');
     if (sequence.dayInPrefix) dateComponents.push('DD');
 
-    let numberPart = 'X'.repeat(sequence.numberLength || 4);
+    const numberPart = 'X'.repeat(sequence.numberLength || 4);
 
     // Build the pattern string
     if (result && dateComponents.length > 0) {
@@ -553,7 +566,7 @@ export class ConfigurationsController {
             : '10';
 
     let result = sequenceData.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     // Build date components in order: year-trimester/month-day
     if (sequenceData.yearInPrefix) {

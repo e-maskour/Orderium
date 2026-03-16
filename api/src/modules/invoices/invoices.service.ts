@@ -99,14 +99,18 @@ export class InvoicesService {
 
   private async getTotalPaid(invoiceId: number): Promise<number> {
     // This will need to be injected from payments service or calculated via raw query
-    const result: { total: string }[] = await this.invoiceRepository.manager.query(
-      `SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE "invoiceId" = $1`,
-      [invoiceId],
-    );
+    const result: { total: string }[] =
+      await this.invoiceRepository.manager.query(
+        `SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE "invoiceId" = $1`,
+        [invoiceId],
+      );
     return parseFloat(result[0]?.total || '0');
   }
 
-  private async getOrCreateSequence(entityType: string, documentDate?: string | Date): Promise<SequenceConfig> {
+  private async getOrCreateSequence(
+    entityType: string,
+    documentDate?: string | Date,
+  ): Promise<SequenceConfig> {
     try {
       const config = await this.configurationsService.findByEntity('sequences');
 
@@ -152,9 +156,8 @@ export class InvoicesService {
       await this.syncSequenceWithDatabase(sequence, documentDate);
 
       return sequence;
-    } catch (error) {
+    } catch {
       // Fallback to default if configurations service fails
-      const now = new Date();
       let prefix = 'FA'; // Default for invoice_sale
       if (entityType === 'invoice_purchase') {
         prefix = 'FB';
@@ -181,7 +184,10 @@ export class InvoicesService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
-  private async syncSequenceWithDatabase(sequence: SequenceConfig, documentDate?: string | Date): Promise<void> {
+  private async syncSequenceWithDatabase(
+    sequence: SequenceConfig,
+    documentDate?: string | Date,
+  ): Promise<void> {
     try {
       // Build the current pattern for this sequence using document date (e.g., "FA 2026-02-")
       const pattern = this.buildSequencePattern(sequence, documentDate);
@@ -190,10 +196,10 @@ export class InvoicesService {
       const invoices = await this.invoiceRepository
         .createQueryBuilder('invoice')
         .where('invoice.documentNumber LIKE :pattern', {
-          pattern: `${pattern}%`
+          pattern: `${pattern}%`,
         })
         .andWhere('invoice.documentNumber NOT LIKE :provisional', {
-          provisional: 'PROV%'
+          provisional: 'PROV%',
         })
         .getMany();
 
@@ -205,14 +211,14 @@ export class InvoicesService {
 
       // Extract all sequence numbers from the invoices
       const numbers = invoices
-        .map(invoice => {
+        .map((invoice) => {
           // Remove the pattern prefix to get just the number part
           const numberPart = invoice.documentNumber.replace(pattern, '');
           // Remove any suffix
           const cleanNumber = numberPart.replace(sequence.suffix || '', '');
           return parseInt(cleanNumber, 10);
         })
-        .filter(num => !isNaN(num));
+        .filter((num) => !isNaN(num));
 
       if (numbers.length === 0) {
         sequence.nextNumber = 1;
@@ -223,12 +229,18 @@ export class InvoicesService {
       const maxNumber = Math.max(...numbers);
       sequence.nextNumber = maxNumber + 1;
     } catch (error) {
-      this.logger.error('Failed to sync sequence with database', (error as Error)?.stack);
+      this.logger.error(
+        'Failed to sync sequence with database',
+        (error as Error)?.stack,
+      );
       // Keep existing nextNumber if sync fails
     }
   }
 
-  private buildSequencePattern(sequence: SequenceConfig, documentDate?: string | Date): string {
+  private buildSequencePattern(
+    sequence: SequenceConfig,
+    documentDate?: string | Date,
+  ): string {
     // Use document date if provided, otherwise fallback to current date
     const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
@@ -246,7 +258,7 @@ export class InvoicesService {
             : '10';
 
     let pattern = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push(year.toString());
@@ -275,7 +287,10 @@ export class InvoicesService {
     return pattern;
   }
 
-  private generateSequenceNumber(sequence: SequenceConfig, documentDate?: string | Date): string {
+  private generateSequenceNumber(
+    sequence: SequenceConfig,
+    documentDate?: string | Date,
+  ): string {
     // Use document date if provided, otherwise fallback to current date
     const now = documentDate ? new Date(documentDate) : new Date();
     const year = now.getFullYear();
@@ -294,7 +309,7 @@ export class InvoicesService {
             : '10';
 
     let result = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push(year.toString());
@@ -349,7 +364,10 @@ export class InvoicesService {
         });
       }
     } catch (error) {
-      this.logger.error('Failed to update sequence next number', (error as Error)?.stack);
+      this.logger.error(
+        'Failed to update sequence next number',
+        (error as Error)?.stack,
+      );
       // Continue execution even if sequence update fails
     }
   }
@@ -507,6 +525,7 @@ export class InvoicesService {
       discount: createInvoiceDto.discount,
       discountType: createInvoiceDto.discountType,
       total: createInvoiceDto.total,
+      remainingAmount: createInvoiceDto.total || 0,
       notes: createInvoiceDto.notes,
       status: InvoiceStatus.DRAFT,
       isValidated: false,
@@ -629,11 +648,11 @@ export class InvoicesService {
           where: { invoiceId: id },
         });
 
-        const existingItemIds = new Set(existingItems.map(item => item.id));
+        const existingItemIds = new Set(existingItems.map((item) => item.id));
         const newItemIds = new Set(
           items
-            .filter(item => item.id && typeof item.id === 'number')
-            .map(item => item.id)
+            .filter((item) => item.id && typeof item.id === 'number')
+            .map((item) => item.id),
         );
 
         // Update or create items
@@ -673,17 +692,22 @@ export class InvoicesService {
 
         // Delete items that are no longer in the new items list
         const itemsToDelete = existingItems.filter(
-          existing => !newItemIds.has(existing.id)
+          (existing) => !newItemIds.has(existing.id),
         );
         if (itemsToDelete.length > 0) {
           await this.invoiceItemRepository.remove(itemsToDelete);
-          this.logger.debug(`Deleted ${itemsToDelete.length} removed items for invoice ${id}`);
+          this.logger.debug(
+            `Deleted ${itemsToDelete.length} removed items for invoice ${id}`,
+          );
         }
 
-        this.logger.debug(`Updated/created ${itemsToSave.length} items for invoice ${id}`);
+        this.logger.debug(
+          `Updated/created ${itemsToSave.length} items for invoice ${id}`,
+        );
 
         // Prepare invoice update data (exclude items)
-        const { items: _, ...invoiceUpdateData } = updateInvoiceDto;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { items: _items, ...invoiceUpdateData } = updateInvoiceDto;
 
         // Update invoice with values from frontend
         await this.invoiceRepository.update(id, {
@@ -711,15 +735,17 @@ export class InvoicesService {
       }
 
       // Return the updated invoice
+      await this.invalidateInvoiceCache(id);
       const result = await this.findOne(id);
       if (!result) {
         throw new NotFoundException('Invoice not found after update');
       }
-
-      await this.invalidateInvoiceCache(id);
       return result;
     } catch (error) {
-      this.logger.error(`Error updating invoice ${id}`, (error as Error)?.stack);
+      this.logger.error(
+        `Error updating invoice ${id}`,
+        (error as Error)?.stack,
+      );
       throw error;
     }
   }
@@ -753,10 +779,15 @@ export class InvoicesService {
     // Only generate a new number if this is the first validation (provisional number)
     if (invoice.documentNumber.startsWith('PROV')) {
       // Determine sequence type based on invoice direction
-      const sequenceType = invoice.supplierId ? 'invoice_purchase' : 'invoice_sale';
+      const sequenceType = invoice.supplierId
+        ? 'invoice_purchase'
+        : 'invoice_sale';
 
       // Get sequence for appropriate invoice type
-      const sequence = await this.getOrCreateSequence(sequenceType, invoice.date);
+      const sequence = await this.getOrCreateSequence(
+        sequenceType,
+        invoice.date,
+      );
 
       // Use the sequence's next document number directly with invoice date
       finalInvoiceNumber = this.generateSequenceNumber(sequence, invoice.date);
@@ -771,18 +802,27 @@ export class InvoicesService {
       isValidated: true,
       validationDate: new Date(),
       status: InvoiceStatus.UNPAID,
+      remainingAmount: invoice.total,
     });
 
     // Auto-create stock movements based on inventory configuration
     try {
-      const inventoryConfig = await this.configurationsService.findByEntity('inventory');
-      const inventoryValues = inventoryConfig?.values as Record<string, unknown> | null;
-      const defaultWarehouseId = inventoryValues?.defaultWarehouseId as number | null;
+      const inventoryConfig =
+        await this.configurationsService.findByEntity('inventory');
+      const inventoryValues = inventoryConfig?.values as Record<
+        string,
+        unknown
+      > | null;
+      const defaultWarehouseId = inventoryValues?.defaultWarehouseId as
+        | number
+        | null;
 
       if (defaultWarehouseId) {
         const shouldCreateMovement =
-          (invoice.direction === DocumentDirection.ACHAT && inventoryValues?.incrementStockOnInvoiceAchat) ||
-          (invoice.direction === DocumentDirection.VENTE && inventoryValues?.decrementStockOnInvoiceVente);
+          (invoice.direction === DocumentDirection.ACHAT &&
+            inventoryValues?.incrementStockOnInvoiceAchat) ||
+          (invoice.direction === DocumentDirection.VENTE &&
+            inventoryValues?.decrementStockOnInvoiceVente);
 
         if (shouldCreateMovement) {
           const invoiceWithItems = await this.invoiceRepository.findOne({
@@ -792,8 +832,12 @@ export class InvoicesService {
 
           if (invoiceWithItems?.items?.length) {
             const isAchat = invoice.direction === DocumentDirection.ACHAT;
-            const movementType = isAchat ? MovementType.RECEIPT : MovementType.DELIVERY;
-            const partnerName = isAchat ? invoice.supplierName : invoice.customerName;
+            const movementType = isAchat
+              ? MovementType.RECEIPT
+              : MovementType.DELIVERY;
+            const partnerName = isAchat
+              ? invoice.supplierName
+              : invoice.customerName;
 
             for (const item of invoiceWithItems.items) {
               if (!item.productId || item.quantity <= 0) continue;
@@ -802,11 +846,15 @@ export class InvoicesService {
                   movementType,
                   productId: item.productId,
                   quantity: item.quantity,
-                  ...(isAchat ? { destWarehouseId: defaultWarehouseId } : { sourceWarehouseId: defaultWarehouseId }),
+                  ...(isAchat
+                    ? { destWarehouseId: defaultWarehouseId }
+                    : { sourceWarehouseId: defaultWarehouseId }),
                   origin: finalInvoiceNumber,
                   partnerName: partnerName ?? undefined,
                 });
-                await this.stockService.validateMovement({ movementId: movement.id });
+                await this.stockService.validateMovement({
+                  movementId: movement.id,
+                });
               } catch (itemError) {
                 this.logger.warn(
                   `Failed to create stock movement for invoice ${id}, product ${item.productId}: ${(itemError as Error)?.message}`,
@@ -823,7 +871,12 @@ export class InvoicesService {
     }
 
     // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
-    const documentType = (await this.invoiceRepository.findOne({ where: { id }, select: ['supplierId'] }))?.supplierId
+    const documentType = (
+      await this.invoiceRepository.findOne({
+        where: { id },
+        select: ['supplierId'],
+      })
+    )?.supplierId
       ? 'invoice' // facture achat
       : 'invoice'; // facture vente
     const pdfUrl = await this.pdfService.generateAndUploadPDF(documentType, id);
@@ -831,11 +884,11 @@ export class InvoicesService {
       await this.invoiceRepository.update(id, { pdfUrl });
     }
 
+    await this.invalidateInvoiceCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new NotFoundException('Invoice not found after validation');
     }
-    await this.invalidateInvoiceCache(id);
     return result;
   }
 
@@ -854,21 +907,33 @@ export class InvoicesService {
     // Update sequence nextNumber to match the last document in database
     try {
       // Determine sequence type based on invoice direction
-      const sequenceType = invoice.supplierId ? 'invoice_purchase' : 'invoice_sale';
+      const sequenceType = invoice.supplierId
+        ? 'invoice_purchase'
+        : 'invoice_sale';
 
-      const sequence = await this.getOrCreateSequence(sequenceType, invoice.date);
+      const sequence = await this.getOrCreateSequence(
+        sequenceType,
+        invoice.date,
+      );
       const config = await this.configurationsService.findByEntity('sequences');
       const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      const sequenceIndex = sequences.findIndex((seq) => seq.id === sequence.id);
+      const sequenceIndex = sequences.findIndex(
+        (seq) => seq.id === sequence.id,
+      );
 
       if (sequenceIndex !== -1) {
         // Find the highest document number in database with this sequence pattern
         const pattern = this.buildSequencePattern(sequence, invoice.date);
         const lastInvoice = await this.invoiceRepository
           .createQueryBuilder('invoice')
-          .where('invoice.documentNumber LIKE :pattern', { pattern: pattern + '%' })
+          .where('invoice.documentNumber LIKE :pattern', {
+            pattern: pattern + '%',
+          })
           .andWhere('invoice.isValidated = :validated', { validated: true })
-          .orderBy('CAST(SUBSTRING(invoice.documentNumber FROM \'[0-9]+$\') AS INTEGER)', 'DESC')
+          .orderBy(
+            "CAST(SUBSTRING(invoice.documentNumber FROM '[0-9]+$') AS INTEGER)",
+            'DESC',
+          )
           .limit(1)
           .getOne();
 
@@ -888,7 +953,10 @@ export class InvoicesService {
         });
       }
     } catch (error) {
-      this.logger.error('Error updating sequence during devalidation', (error as Error)?.stack);
+      this.logger.error(
+        'Error updating sequence during devalidation',
+        (error as Error)?.stack,
+      );
       // Continue with devalidation even if sequence update fails
     }
 
@@ -973,11 +1041,15 @@ export class InvoicesService {
       (sum, inv) => sum + Number(inv.total),
       0,
     );
-    const draftCount = invoices.filter((inv) => inv.status === InvoiceStatus.DRAFT).length;
+    const draftCount = invoices.filter(
+      (inv) => inv.status === InvoiceStatus.DRAFT,
+    ).length;
     const unpaidCount = invoices.filter(
       (inv) => inv.status === InvoiceStatus.UNPAID,
     ).length;
-    const paidCount = invoices.filter((inv) => inv.status === InvoiceStatus.PAID).length;
+    const paidCount = invoices.filter(
+      (inv) => inv.status === InvoiceStatus.PAID,
+    ).length;
     const unpaidAmount = invoices
       .filter(
         (inv) =>
@@ -1028,35 +1100,46 @@ export class InvoicesService {
     invoices.forEach((invoice) => {
       const isFactureAchat = !!invoice.supplierId;
       const baseData = {
-        'Numéro': invoice.documentNumber,
-        'Date': invoice.date ? new Date(invoice.date).toLocaleDateString('fr-FR') : '',
-        'Date échéance': invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('fr-FR') : '',
-        'Type': isFactureAchat ? 'Facture achat' : 'Facture vente',
-        'Client/Fournisseur': isFactureAchat ? (invoice.supplierName || invoice.supplier?.name || '') : (invoice.customerName || invoice.customer?.name || ''),
-        'Téléphone': isFactureAchat ? invoice.supplierPhone || '' : invoice.customerPhone || '',
-        'Adresse': isFactureAchat ? (invoice.supplierAddress || invoice.supplier?.address || '') : (invoice.customerAddress || invoice.customer?.address || ''),
-        'Statut': this.getInvoiceStatusLabel(invoice.status),
+        Numéro: invoice.documentNumber,
+        Date: invoice.date
+          ? new Date(invoice.date).toLocaleDateString('fr-FR')
+          : '',
+        'Date échéance': invoice.dueDate
+          ? new Date(invoice.dueDate).toLocaleDateString('fr-FR')
+          : '',
+        Type: isFactureAchat ? 'Facture achat' : 'Facture vente',
+        'Client/Fournisseur': isFactureAchat
+          ? invoice.supplierName || invoice.supplier?.name || ''
+          : invoice.customerName || invoice.customer?.name || '',
+        Téléphone: isFactureAchat
+          ? invoice.supplierPhone || ''
+          : invoice.customerPhone || '',
+        Adresse: isFactureAchat
+          ? invoice.supplierAddress || invoice.supplier?.address || ''
+          : invoice.customerAddress || invoice.customer?.address || '',
+        Statut: this.getInvoiceStatusLabel(invoice.status),
         'Sous-total': Number(invoice.subtotal),
-        'Remise': Number(invoice.discount),
+        Remise: Number(invoice.discount),
         'Type remise': invoice.discountType === 0 ? 'Montant' : 'Pourcentage',
-        'Taxe': Number(invoice.tax),
-        'Total': Number(invoice.total),
+        Taxe: Number(invoice.tax),
+        Total: Number(invoice.total),
         'Montant payé': Number(invoice.paidAmount),
         'Montant restant': Number(invoice.remainingAmount),
-        'Notes': invoice.notes || '',
+        Notes: invoice.notes || '',
       };
 
       if (invoice.items && invoice.items.length > 0) {
         invoice.items.forEach((item, index) => {
           exportData.push({
             ...baseData,
-            'Ligne': index + 1,
+            Ligne: index + 1,
             'Code produit': item.product?.code || '',
             'Produit/Service': item.description,
-            'Quantité': Number(item.quantity),
+            Quantité: Number(item.quantity),
             'Prix unitaire': Number(item.unitPrice),
             'Remise ligne': Number(item.discount),
-            'Type remise ligne': item.discountType === 0 ? 'Montant' : 'Pourcentage',
+            'Type remise ligne':
+              item.discountType === 0 ? 'Montant' : 'Pourcentage',
             'Taxe ligne (%)': Number(item.tax),
             'Total ligne': Number(item.total),
           });
@@ -1064,10 +1147,10 @@ export class InvoicesService {
       } else {
         exportData.push({
           ...baseData,
-          'Ligne': '',
+          Ligne: '',
           'Code produit': '',
           'Produit/Service': '',
-          'Quantité': '',
+          Quantité: '',
           'Prix unitaire': '',
           'Remise ligne': '',
           'Type remise ligne': '',
@@ -1082,17 +1165,45 @@ export class InvoicesService {
 
     // Set column widths
     ws['!cols'] = [
-      { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 25 },
-      { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 12 }, { wch: 10 },
-      { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 15 },
-      { wch: 30 }, { wch: 8 }, { wch: 15 }, { wch: 25 }, { wch: 10 },
-      { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 12 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 12 },
+      { wch: 12 },
     ];
 
-    const sheetName = supplierId !== undefined ? (supplierId ? 'Factures achat' : 'Factures vente') : 'Factures';
+    const sheetName =
+      supplierId !== undefined
+        ? supplierId
+          ? 'Factures achat'
+          : 'Factures vente'
+        : 'Factures';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    const buffer = XLSX.write(wb, {
+      type: 'buffer',
+      bookType: 'xlsx',
+    }) as Buffer;
     return buffer;
   }
 

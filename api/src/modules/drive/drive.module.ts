@@ -11,18 +11,18 @@ import { DriveService } from './drive.service';
 import { DriveStorageService } from './drive-storage.service';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([
-            DriveNode,
-            DriveVersion,
-            DriveShare,
-            DriveActivity,
-            DriveTag,
-            DriveNodeTag,
-        ]),
-    ],
-    controllers: [DriveController],
-    providers: [DriveService, DriveStorageService],
-    exports: [DriveService],
+  imports: [
+    TypeOrmModule.forFeature([
+      DriveNode,
+      DriveVersion,
+      DriveShare,
+      DriveActivity,
+      DriveTag,
+      DriveNodeTag,
+    ]),
+  ],
+  controllers: [DriveController],
+  providers: [DriveService, DriveStorageService],
+  exports: [DriveService],
 })
-export class DriveModule { }
+export class DriveModule {}

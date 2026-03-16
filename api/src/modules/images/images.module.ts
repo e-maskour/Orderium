@@ -10,4 +10,4 @@ import { MinioProvider } from './providers/minio.provider';
   controllers: [ImagesController],
   exports: [ImageService, MinioProvider],
 })
-export class ImagesModule { }
+export class ImagesModule {}

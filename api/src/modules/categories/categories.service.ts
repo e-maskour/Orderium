@@ -11,7 +11,7 @@ export class CategoriesService {
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async findAll(type?: string): Promise<Category[]> {
     const query = this.categoryRepository

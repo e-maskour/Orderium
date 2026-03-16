@@ -92,4 +92,4 @@ import { DriveModule } from './modules/drive/drive.module';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })
-export class AppModule { }
+export class AppModule {}

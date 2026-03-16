@@ -1,5 +1,5 @@
 export enum DrivePermission {
-    VIEWER = 'viewer',
-    EDITOR = 'editor',
-    OWNER = 'owner',
+  VIEWER = 'viewer',
+  EDITOR = 'editor',
+  OWNER = 'owner',
 }

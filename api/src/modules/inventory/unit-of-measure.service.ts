@@ -1,15 +1,22 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UnitOfMeasure } from './entities/unit-of-measure.entity';
-import { CreateUnitOfMeasureDto, UpdateUnitOfMeasureDto } from './dto/unit-of-measure.dto';
+import {
+  CreateUnitOfMeasureDto,
+  UpdateUnitOfMeasureDto,
+} from './dto/unit-of-measure.dto';
 
 @Injectable()
 export class UnitOfMeasureService {
   constructor(
     @InjectRepository(UnitOfMeasure)
     private readonly uomRepository: Repository<UnitOfMeasure>,
-  ) { }
+  ) {}
 
   async create(createDto: CreateUnitOfMeasureDto): Promise<UnitOfMeasure> {
     // Check if code already exists
@@ -18,7 +25,9 @@ export class UnitOfMeasureService {
     });
 
     if (existing) {
-      throw new BadRequestException(`Unit of measure with code '${createDto.code}' already exists`);
+      throw new BadRequestException(
+        `Unit of measure with code '${createDto.code}' already exists`,
+      );
     }
 
     // If this is set as base unit, unset other base units in the same category
@@ -35,7 +44,9 @@ export class UnitOfMeasureService {
         where: { id: createDto.baseUnitId },
       });
       if (!baseUnit) {
-        throw new NotFoundException(`Base unit with ID ${createDto.baseUnitId} not found`);
+        throw new NotFoundException(
+          `Base unit with ID ${createDto.baseUnitId} not found`,
+        );
       }
       if (baseUnit.category !== createDto.category) {
         throw new BadRequestException('Base unit must be in the same category');
@@ -47,7 +58,8 @@ export class UnitOfMeasureService {
   }
 
   async findAll(category?: string): Promise<UnitOfMeasure[]> {
-    const query = this.uomRepository.createQueryBuilder('uom')
+    const query = this.uomRepository
+      .createQueryBuilder('uom')
       .leftJoinAndSelect('uom.baseUnit', 'baseUnit')
       .where('uom.isActive = :isActive', { isActive: true });
 
@@ -73,7 +85,10 @@ export class UnitOfMeasureService {
     return uom;
   }
 
-  async update(id: number, updateDto: UpdateUnitOfMeasureDto): Promise<UnitOfMeasure> {
+  async update(
+    id: number,
+    updateDto: UpdateUnitOfMeasureDto,
+  ): Promise<UnitOfMeasure> {
     const uom = await this.findOne(id);
 
     // Check if code is being changed and already exists
@@ -82,7 +97,9 @@ export class UnitOfMeasureService {
         where: { code: updateDto.code },
       });
       if (existing) {
-        throw new BadRequestException(`Unit of measure with code '${updateDto.code}' already exists`);
+        throw new BadRequestException(
+          `Unit of measure with code '${updateDto.code}' already exists`,
+        );
       }
     }
 
@@ -120,7 +137,7 @@ export class UnitOfMeasureService {
       .orderBy('uom.category', 'ASC')
       .getRawMany<{ category: string }>();
 
-    return result.map(r => r.category);
+    return result.map((r) => r.category);
   }
 
   /**
@@ -135,7 +152,9 @@ export class UnitOfMeasureService {
     const toUom = await this.findOne(toUomId);
 
     if (fromUom.category !== toUom.category) {
-      throw new BadRequestException('Cannot convert between different categories');
+      throw new BadRequestException(
+        'Cannot convert between different categories',
+      );
     }
 
     // Convert to base unit first, then to target unit

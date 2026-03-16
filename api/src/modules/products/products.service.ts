@@ -184,7 +184,7 @@ export class ProductsService {
           'Cannot delete product that is used in orders. Please remove from all orders first.',
         );
       }
-    } catch (error) {
+    } catch {
       // Order items table might not exist, ignore this check
     }
 
@@ -194,7 +194,7 @@ export class ProductsService {
   }
 
   async hardDelete(id: number): Promise<void> {
-    const product = await this.findOne(id);
+    await this.findOne(id);
 
     // Check if product is used in invoice items
     const invoiceItemCount = await this.productRepository.manager.query(
@@ -220,7 +220,7 @@ export class ProductsService {
           'Cannot delete product that is used in orders. Please remove from all orders first.',
         );
       }
-    } catch (error) {
+    } catch {
       // Order items table might not exist, ignore this check
     }
 
@@ -237,7 +237,12 @@ export class ProductsService {
   async exportToXlsx(): Promise<Buffer> {
     const products = await this.productRepository.find({
       where: { isEnabled: true },
-      relations: ['categories', 'saleUnitOfMeasure', 'purchaseUnitOfMeasure', 'warehouse'],
+      relations: [
+        'categories',
+        'saleUnitOfMeasure',
+        'purchaseUnitOfMeasure',
+        'warehouse',
+      ],
       order: { name: 'ASC' },
     });
 
@@ -247,7 +252,7 @@ export class ProductsService {
       Nom: product.name,
       Description: product.description || '',
       'Prix de vente': Number(product.price),
-      'Prix d\'achat': Number(product.cost),
+      "Prix d'achat": Number(product.cost),
       'Prix minimum': Number(product.minPrice),
       Stock: product.stock || 0,
       'Taxe vente (%)': Number(product.saleTax),
@@ -287,7 +292,10 @@ export class ProductsService {
     XLSX.utils.book_append_sheet(wb, ws, 'Produits');
 
     // Generate buffer
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    const buffer = XLSX.write(wb, {
+      type: 'buffer',
+      bookType: 'xlsx',
+    }) as Buffer;
     return buffer;
   }
 
@@ -360,13 +368,16 @@ export class ProductsService {
           product.code = row['Code'] || null;
           product.description = row['Description'] || null;
           product.price = this.parseNumber(row['Prix de vente'], 0);
-          product.cost = this.parseNumber(row['Prix d\'achat'], 0);
+          product.cost = this.parseNumber(row["Prix d'achat"], 0);
           product.minPrice = this.parseNumber(row['Prix minimum'], 0);
           product.stock = this.parseNumber(row['Stock'], 0);
           product.saleTax = this.parseNumber(row['Taxe vente (%)'], 0);
           product.purchaseTax = this.parseNumber(row['Taxe achat (%)'], 0);
           product.isService = this.parseBoolean(row['Est service']);
-          product.isPriceChangeAllowed = this.parseBoolean(row['Prix modifiable'], true);
+          product.isPriceChangeAllowed = this.parseBoolean(
+            row['Prix modifiable'],
+            true,
+          );
 
           // Map unit of measure
           if (row['Unité vente']) {
@@ -443,14 +454,14 @@ export class ProductsService {
   /**
    * Get XLSX template for import
    */
-  async getImportTemplate(): Promise<Buffer> {
+  getImportTemplate(): Buffer {
     const templateData = [
       {
         Code: 'PROD001',
         Nom: 'Exemple de produit',
         Description: 'Description du produit',
         'Prix de vente': 100,
-        'Prix d\'achat': 50,
+        "Prix d'achat": 50,
         'Prix minimum': 80,
         Stock: 10,
         'Taxe vente (%)': 19,
@@ -469,15 +480,30 @@ export class ProductsService {
 
     // Set column widths
     const colWidths = [
-      { wch: 15 }, { wch: 30 }, { wch: 40 }, { wch: 15 }, { wch: 15 },
-      { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 12 },
-      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 30 },
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 40 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 30 },
     ];
     ws['!cols'] = colWidths;
 
     XLSX.utils.book_append_sheet(wb, ws, 'Produits');
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    const buffer = XLSX.write(wb, {
+      type: 'buffer',
+      bookType: 'xlsx',
+    }) as Buffer;
     return buffer;
   }
 

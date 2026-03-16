@@ -36,7 +36,12 @@ export class NotificationsService {
     limit?: number;
     sortBy?: string;
     sortOrder?: 'ASC' | 'DESC';
-  }): Promise<{ data: Notification[]; total: number; page: number; limit: number }> {
+  }): Promise<{
+    data: Notification[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const {
       userId,
       type,
@@ -64,26 +69,33 @@ export class NotificationsService {
       where.priority = Array.isArray(priority) ? In(priority) : priority;
     }
 
-    const queryBuilder = this.notificationRepository.createQueryBuilder('notification');
-    
+    const queryBuilder =
+      this.notificationRepository.createQueryBuilder('notification');
+
     Object.entries(where).forEach(([key, value]) => {
       if (value && typeof value === 'object' && '_type' in value) {
         // Handle In() operator
-        queryBuilder.andWhere(`notification.${key} IN (:...${key})`, { [key]: (value as any).value });
+        queryBuilder.andWhere(`notification.${key} IN (:...${key})`, {
+          [key]: (value as any).value,
+        });
       } else {
-        queryBuilder.andWhere(`notification.${key} = :${key}`, { [key]: value });
+        queryBuilder.andWhere(`notification.${key} = :${key}`, {
+          [key]: value,
+        });
       }
     });
 
     if (search) {
       queryBuilder.andWhere(
         '(notification.title ILIKE :search OR notification.message ILIKE :search)',
-        { search: `%${search}%` }
+        { search: `%${search}%` },
       );
     }
 
     if (dateFrom) {
-      queryBuilder.andWhere('notification.dateCreated >= :dateFrom', { dateFrom });
+      queryBuilder.andWhere('notification.dateCreated >= :dateFrom', {
+        dateFrom,
+      });
     }
 
     if (dateTo) {
@@ -112,7 +124,7 @@ export class NotificationsService {
     thisWeek: number;
   }> {
     const where: FindOptionsWhere<Notification> = userId ? { userId } : {};
-    
+
     const total = await this.notificationRepository.count({ where });
     const unread = await this.notificationRepository.count({
       where: { ...where, isRead: false, isArchived: false },
@@ -120,7 +132,7 @@ export class NotificationsService {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const todayCount = await this.notificationRepository
       .createQueryBuilder('notification')
       .where(userId ? 'notification.userId = :userId' : '1=1', { userId })
@@ -130,7 +142,7 @@ export class NotificationsService {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     weekAgo.setHours(0, 0, 0, 0);
-    
+
     const thisWeekCount = await this.notificationRepository
       .createQueryBuilder('notification')
       .where(userId ? 'notification.userId = :userId' : '1=1', { userId })
@@ -157,7 +169,7 @@ export class NotificationsService {
   async markManyAsRead(ids: number[]): Promise<number> {
     const result = await this.notificationRepository.update(
       { id: In(ids) },
-      { isRead: true }
+      { isRead: true },
     );
     return result.affected || 0;
   }
@@ -165,7 +177,7 @@ export class NotificationsService {
   async markAllAsRead(userId: number): Promise<number> {
     const result = await this.notificationRepository.update(
       { userId, isRead: false },
-      { isRead: true }
+      { isRead: true },
     );
     return result.affected || 0;
   }
@@ -182,7 +194,7 @@ export class NotificationsService {
   async archiveMany(ids: number[]): Promise<number> {
     const result = await this.notificationRepository.update(
       { id: In(ids) },
-      { isArchived: true }
+      { isArchived: true },
     );
     return result.affected || 0;
   }

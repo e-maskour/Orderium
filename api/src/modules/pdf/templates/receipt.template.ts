@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-
 interface ReceiptTemplateData {
   documentNumber: string;
   date: string;
@@ -18,12 +16,13 @@ interface ReceiptTemplateData {
 
 export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   // Build discount row if it exists
-  const discountRowHtml = data.discount && data.discount !== '0.00'
-    ? `<div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
+  const discountRowHtml =
+    data.discount && data.discount !== '0.00'
+      ? `<div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
          <span>Remise${data.discountType === 1 ? ' (%)' : ''}:</span>
          <span>-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</span>
        </div>`
-    : '';
+      : '';
 
   return `
 <!DOCTYPE html>
@@ -80,7 +79,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     <!-- Header -->
     <div class="header">
       <div dir="auto" style="font-size: 12pt;">${data.companyName}</div>
-      ${data.companyLines.map(line => `<div dir="auto" style="font-size: 7pt;">${line}</div>`).join('')}
+      ${data.companyLines.map((line) => `<div dir="auto" style="font-size: 7pt;">${line}</div>`).join('')}
     </div>
     
     <div class="divider"></div>
@@ -104,7 +103,9 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     
     <!-- Totals -->
     <div class="totals">
-      ${!data.hideVAT ? `
+      ${
+        !data.hideVAT
+          ? `
       <div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
         <span>Sous-total:</span>
         <span>${data.subtotal} DH</span>
@@ -114,9 +115,11 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
         <span>TVA (20%):</span>
         <span>${data.tax} DH</span>
       </div>
-      ` : `
+      `
+          : `
       ${discountRowHtml}
-      `}
+      `
+      }
       <div style="display: flex; justify-content: space-between; font-weight: bold; ${!data.hideVAT ? 'border-top: 1px solid #000; padding-top: 1mm; margin-top: 1mm;' : ''}">
         <span>Total:</span>
         <span>${data.total} DH</span>

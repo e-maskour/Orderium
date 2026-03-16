@@ -10,12 +10,19 @@ import { ImagesModule } from '../images/images.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Invoice, InvoiceItem, Quote, QuoteItem, Order, OrderItem]),
+    TypeOrmModule.forFeature([
+      Invoice,
+      InvoiceItem,
+      Quote,
+      QuoteItem,
+      Order,
+      OrderItem,
+    ]),
     ConfigurationsModule,
     ImagesModule,
   ],
   controllers: [PDFController],
   providers: [PDFService],
-  exports: [PDFService]
+  exports: [PDFService],
 })
-export class PDFModule { }
+export class PDFModule {}

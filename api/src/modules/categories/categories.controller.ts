@@ -15,7 +15,7 @@ import { CAT } from '../../common/response-codes';
 
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) { }
+  constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
   async findAll(@Query('type') type?: string) {
@@ -52,7 +52,10 @@ export class CategoriesController {
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    const category = await this.categoriesService.update(+id, updateCategoryDto);
+    const category = await this.categoriesService.update(
+      +id,
+      updateCategoryDto,
+    );
     return ApiRes(CAT.UPDATED, category);
   }
 

@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class RenameCustomersToPartnersAndAddIsSupplier1737008000000
-  implements MigrationInterface
-{
+export class RenameCustomersToPartnersAndAddIsSupplier1737008000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Rename the customers table to partners
     await queryRunner.query(`ALTER TABLE "customers" RENAME TO "partners"`);

@@ -1,31 +1,31 @@
 import {
-    IsEnum,
-    IsInt,
-    IsOptional,
-    IsString,
-    MaxLength,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DrivePermission } from '../enums/drive-permission.enum';
 import { DriveShareTarget } from '../enums/drive-share-target.enum';
 
 export class CreateShareDto {
-    @IsEnum(DriveShareTarget)
-    targetType: DriveShareTarget;
+  @IsEnum(DriveShareTarget)
+  targetType: DriveShareTarget;
 
-    @IsOptional()
-    @IsInt()
-    @Type(() => Number)
-    targetUserId?: number;
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  targetUserId?: number;
 
-    @IsEnum(DrivePermission)
-    permission: DrivePermission;
+  @IsEnum(DrivePermission)
+  permission: DrivePermission;
 
-    @IsOptional()
-    @IsString()
-    @MaxLength(500)
-    message?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  message?: string;
 
-    @IsOptional()
-    expiresAt?: Date;
+  @IsOptional()
+  expiresAt?: Date;
 }

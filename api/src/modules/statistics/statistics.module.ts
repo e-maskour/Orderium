@@ -8,7 +8,9 @@ import { DeliveryPerson } from '../delivery/entities/delivery.entity';
 import { Product } from '../products/entities/product.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, Partner, DeliveryPerson, Product])],
+  imports: [
+    TypeOrmModule.forFeature([Order, Partner, DeliveryPerson, Product]),
+  ],
   controllers: [StatisticsController],
   providers: [StatisticsService],
 })

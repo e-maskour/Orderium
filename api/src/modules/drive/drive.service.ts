@@ -41,7 +41,7 @@ export class DriveService {
     @InjectRepository(DriveNodeTag)
     private readonly nodeTagRepo: Repository<DriveNodeTag>,
     private readonly storage: DriveStorageService,
-  ) {}
+  ) { }
 
   // ──────────────────────────────────────────────────────────────────────────
   //  Access guards helpers
@@ -131,7 +131,7 @@ export class DriveService {
     const where = isAdmin
       ? { parentId: IsNull(), isTrashed: false }
       : { parentId: IsNull(), isTrashed: false, ownerId: userId };
-    const [nodes, total] = await this.nodeRepo.findAndCount({
+    const [nodes] = await this.nodeRepo.findAndCount({
       where,
       order: { type: 'ASC', name: 'ASC' },
     });

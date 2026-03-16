@@ -17,7 +17,7 @@ export class ConfigurationsService {
     @InjectRepository(Configuration)
     private readonly configRepository: Repository<Configuration>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async findAll(): Promise<Configuration[]> {
     const cacheKey = 'configurations:all';

@@ -21,7 +21,7 @@ import { PTR } from '../../common/response-codes';
 @ApiTags('Partners')
 @Controller('partners')
 export class PartnersController {
-  constructor(private readonly partnersService: PartnersService) { }
+  constructor(private readonly partnersService: PartnersService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new partner' })
@@ -58,7 +58,10 @@ export class PartnersController {
     @Query('offset') offset?: string,
     @Query('search') search?: string,
   ) {
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit ?? '100', 10) || 100),
+    );
     const offsetNum = Math.max(0, parseInt(offset ?? '0', 10) || 0);
 
     const { partners, total } = await this.partnersService.findAll(

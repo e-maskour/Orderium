@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddPaymentTriggerToUpdateInvoicePaidAmount1769452970000
-  implements MigrationInterface
-{
+export class AddPaymentTriggerToUpdateInvoicePaidAmount1769452970000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create function to update invoice paidAmount and status
     await queryRunner.query(`

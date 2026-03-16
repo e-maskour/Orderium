@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { 
-  InventoryAdjustment, 
-  AdjustmentLine, 
-  AdjustmentStatus 
+import {
+  InventoryAdjustment,
+  AdjustmentLine,
+  AdjustmentStatus,
 } from './entities/inventory-adjustment.entity';
 import { Warehouse } from './entities/warehouse.entity';
 import { Product } from '../products/entities/product.entity';
@@ -36,13 +40,17 @@ export class InventoryAdjustmentService {
   /**
    * Create a new inventory adjustment
    */
-  async create(createDto: CreateInventoryAdjustmentDto): Promise<InventoryAdjustment> {
+  async create(
+    createDto: CreateInventoryAdjustmentDto,
+  ): Promise<InventoryAdjustment> {
     // Validate warehouse
     const warehouse = await this.warehouseRepository.findOne({
       where: { id: createDto.warehouseId },
     });
     if (!warehouse) {
-      throw new NotFoundException(`Warehouse with ID ${createDto.warehouseId} not found`);
+      throw new NotFoundException(
+        `Warehouse with ID ${createDto.warehouseId} not found`,
+      );
     }
 
     // Generate reference
@@ -64,11 +72,14 @@ export class InventoryAdjustmentService {
           where: { id: lineDto.productId },
         });
         if (!product) {
-          throw new NotFoundException(`Product with ID ${lineDto.productId} not found`);
+          throw new NotFoundException(
+            `Product with ID ${lineDto.productId} not found`,
+          );
         }
 
         // Calculate difference
-        const difference = lineDto.countedQuantity - lineDto.theoreticalQuantity;
+        const difference =
+          lineDto.countedQuantity - lineDto.theoreticalQuantity;
 
         const line = this.adjustmentLineRepository.create({
           ...lineDto,
@@ -93,7 +104,9 @@ export class InventoryAdjustmentService {
     });
 
     if (!adjustment) {
-      throw new NotFoundException(`Inventory adjustment with ID ${id} not found`);
+      throw new NotFoundException(
+        `Inventory adjustment with ID ${id} not found`,
+      );
     }
 
     return adjustment;
@@ -108,12 +121,15 @@ export class InventoryAdjustmentService {
     startDate?: Date;
     endDate?: Date;
   }): Promise<InventoryAdjustment[]> {
-    const query = this.adjustmentRepository.createQueryBuilder('adjustment')
+    const query = this.adjustmentRepository
+      .createQueryBuilder('adjustment')
       .leftJoinAndSelect('adjustment.warehouse', 'warehouse')
       .leftJoinAndSelect('adjustment.lines', 'lines');
 
     if (filters?.warehouseId) {
-      query.andWhere('adjustment.warehouseId = :warehouseId', { warehouseId: filters.warehouseId });
+      query.andWhere('adjustment.warehouseId = :warehouseId', {
+        warehouseId: filters.warehouseId,
+      });
     }
 
     if (filters?.status) {
@@ -121,11 +137,15 @@ export class InventoryAdjustmentService {
     }
 
     if (filters?.startDate) {
-      query.andWhere('adjustment.dateCreated >= :startDate', { startDate: filters.startDate });
+      query.andWhere('adjustment.dateCreated >= :startDate', {
+        startDate: filters.startDate,
+      });
     }
 
     if (filters?.endDate) {
-      query.andWhere('adjustment.dateCreated <= :endDate', { endDate: filters.endDate });
+      query.andWhere('adjustment.dateCreated <= :endDate', {
+        endDate: filters.endDate,
+      });
     }
 
     query.orderBy('adjustment.dateCreated', 'DESC');
@@ -136,7 +156,10 @@ export class InventoryAdjustmentService {
   /**
    * Update adjustment (only if not validated)
    */
-  async update(id: number, updateDto: UpdateInventoryAdjustmentDto): Promise<InventoryAdjustment> {
+  async update(
+    id: number,
+    updateDto: UpdateInventoryAdjustmentDto,
+  ): Promise<InventoryAdjustment> {
     const adjustment = await this.findOne(id);
 
     if (adjustment.status === AdjustmentStatus.DONE) {
@@ -160,10 +183,13 @@ export class InventoryAdjustmentService {
           where: { id: lineDto.productId },
         });
         if (!product) {
-          throw new NotFoundException(`Product with ID ${lineDto.productId} not found`);
+          throw new NotFoundException(
+            `Product with ID ${lineDto.productId} not found`,
+          );
         }
 
-        const difference = lineDto.countedQuantity - lineDto.theoreticalQuantity;
+        const difference =
+          lineDto.countedQuantity - lineDto.theoreticalQuantity;
 
         const line = this.adjustmentLineRepository.create({
           ...lineDto,
@@ -187,7 +213,9 @@ export class InventoryAdjustmentService {
     const adjustment = await this.findOne(id);
 
     if (adjustment.status !== AdjustmentStatus.DRAFT) {
-      throw new BadRequestException('Can only start counting for draft adjustments');
+      throw new BadRequestException(
+        'Can only start counting for draft adjustments',
+      );
     }
 
     adjustment.status = AdjustmentStatus.IN_PROGRESS;
@@ -199,7 +227,9 @@ export class InventoryAdjustmentService {
   /**
    * Validate adjustment and create stock movements
    */
-  async validate(validateDto: ValidateAdjustmentDto): Promise<InventoryAdjustment> {
+  async validate(
+    validateDto: ValidateAdjustmentDto,
+  ): Promise<InventoryAdjustment> {
     const adjustment = await this.findOne(validateDto.adjustmentId);
 
     if (adjustment.status === AdjustmentStatus.DONE) {

@@ -37,13 +37,13 @@ export class PushNotificationService implements OnModuleInit {
     @InjectRepository(Portal)
     private readonly portalRepository: Repository<Portal>,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
-  async onModuleInit() {
-    await this.initializeFirebase();
+  onModuleInit() {
+    this.initializeFirebase();
   }
 
-  private async initializeFirebase() {
+  private initializeFirebase() {
     try {
       const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
       const clientEmail = this.configService.get<string>(
@@ -228,67 +228,67 @@ export class PushNotificationService implements OnModuleInit {
 
     const message: admin.messaging.MulticastMessage = options?.dataOnlyWeb
       ? {
-          tokens,
-          data: {
-            ...(payload.data || {}),
-            title: payload.title,
-            body: payload.body,
-            clickAction: payload.clickAction || '/',
+        tokens,
+        data: {
+          ...(payload.data || {}),
+          title: payload.title,
+          body: payload.body,
+          clickAction: payload.clickAction || '/',
+        },
+        webpush: {
+          fcmOptions: {
+            link: payload.clickAction || '/',
           },
-          webpush: {
-            fcmOptions: {
-              link: payload.clickAction || '/',
-            },
-          },
-        }
+        },
+      }
       : {
-          tokens,
+        tokens,
+        notification: {
+          title: payload.title,
+          body: payload.body,
+          ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+        },
+        data: payload.data || {},
+        webpush: {
           notification: {
             title: payload.title,
             body: payload.body,
+            icon: '/Eo_circle_deep-orange_white_letter-o.svg',
+            badge: '/Eo_circle_deep-orange_white_letter-o.svg',
+            ...(payload.imageUrl && { image: payload.imageUrl }),
+          },
+          fcmOptions: {
+            link: payload.clickAction || '/',
+          },
+        },
+        android: {
+          notification: {
+            title: payload.title,
+            body: payload.body,
+            icon: 'notification_icon',
+            color: '#FF6B00',
+            channelId: 'orderium_notifications',
+            clickAction: payload.clickAction || 'OPEN_APP',
             ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
           },
-          data: payload.data || {},
-          webpush: {
-            notification: {
-              title: payload.title,
-              body: payload.body,
-              icon: '/Eo_circle_deep-orange_white_letter-o.svg',
-              badge: '/Eo_circle_deep-orange_white_letter-o.svg',
-              ...(payload.imageUrl && { image: payload.imageUrl }),
-            },
-            fcmOptions: {
-              link: payload.clickAction || '/',
-            },
-          },
-          android: {
-            notification: {
-              title: payload.title,
-              body: payload.body,
-              icon: 'notification_icon',
-              color: '#FF6B00',
-              channelId: 'orderium_notifications',
-              clickAction: payload.clickAction || 'OPEN_APP',
-              ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
-            },
-            priority: 'high',
-          },
-          apns: {
-            payload: {
-              aps: {
-                alert: {
-                  title: payload.title,
-                  body: payload.body,
-                },
-                badge: 1,
-                sound: 'default',
+          priority: 'high',
+        },
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                title: payload.title,
+                body: payload.body,
               },
-            },
-            fcmOptions: {
-              ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+              badge: 1,
+              sound: 'default',
             },
           },
-        };
+          fcmOptions: {
+            ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+          },
+        },
+      };
 
     try {
       const response = await admin.messaging().sendEachForMulticast(message);
@@ -353,7 +353,8 @@ export class PushNotificationService implements OnModuleInit {
 
     const tokens = deviceTokens.map((dt) => dt.token);
     const isBackofficeOnly =
-      options.appTypes?.length === 1 && options.appTypes[0] === AppType.BACKOFFICE;
+      options.appTypes?.length === 1 &&
+      options.appTypes[0] === AppType.BACKOFFICE;
     const result = await this.sendToTokens(tokens, payload, {
       dataOnlyWeb: isBackofficeOnly,
     });

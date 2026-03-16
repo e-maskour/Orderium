@@ -2,7 +2,10 @@ import { IsOptional, IsString, IsDateString, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class FilterQuotesDto {
-  @ApiProperty({ required: false, description: 'Search term for quote number or customer name' })
+  @ApiProperty({
+    required: false,
+    description: 'Search term for quote number or customer name',
+  })
   @IsOptional()
   @IsString()
   search?: string;
@@ -22,12 +25,18 @@ export class FilterQuotesDto {
   @IsNumber()
   supplierId?: number;
 
-  @ApiProperty({ required: false, description: 'Start date for filtering quotes' })
+  @ApiProperty({
+    required: false,
+    description: 'Start date for filtering quotes',
+  })
   @IsOptional()
   @IsDateString()
   dateFrom?: string;
 
-  @ApiProperty({ required: false, description: 'End date for filtering quotes' })
+  @ApiProperty({
+    required: false,
+    description: 'End date for filtering quotes',
+  })
   @IsOptional()
   @IsDateString()
   dateTo?: string;

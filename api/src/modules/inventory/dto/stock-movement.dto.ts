@@ -1,6 +1,16 @@
-import { IsString, IsOptional, IsNumber, IsEnum, IsDateString, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsEnum,
+  IsDateString,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MovementType, MovementStatus } from '../entities/stock-movement.entity';
+import {
+  MovementType,
+  MovementStatus,
+} from '../entities/stock-movement.entity';
 
 export class CreateStockMovementDto {
   @ApiProperty({ description: 'Movement type', enum: MovementType })
@@ -35,7 +45,9 @@ export class CreateStockMovementDto {
   @IsDateString()
   dateScheduled?: Date;
 
-  @ApiPropertyOptional({ description: 'Origin reference (invoice, order, etc.)' })
+  @ApiPropertyOptional({
+    description: 'Origin reference (invoice, order, etc.)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(255)

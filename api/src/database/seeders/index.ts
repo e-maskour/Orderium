@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { DataSource } from 'typeorm';
 import { seedConfigurations } from './configurations.seeder';
 import { seedWarehouses } from './warehouse.seeder';
@@ -15,7 +14,7 @@ export async function runSeeders(dataSource: DataSource) {
     await seedPartners(dataSource);
     await seedPortal(dataSource);
     await seedConfigurations(dataSource);
-    
+
     console.log('\n✅ All seeders completed successfully');
   } catch (error) {
     console.error('\n❌ Error running seeders:', error);

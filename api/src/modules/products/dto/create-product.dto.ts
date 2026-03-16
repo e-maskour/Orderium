@@ -56,7 +56,9 @@ export class CreateProductDto {
   @IsString()
   imageUrl?: string | null;
 
-  @ApiPropertyOptional({ description: 'Product image public ID from CDN provider' })
+  @ApiPropertyOptional({
+    description: 'Product image public ID from CDN provider',
+  })
   @IsOptional()
   @IsString()
   imagePublicId?: string | null;
@@ -67,7 +69,12 @@ export class CreateProductDto {
   @Min(0)
   stock?: number;
 
-  @ApiPropertyOptional({ description: 'Default tax percentage', minimum: 0, maximum: 100, default: 0 })
+  @ApiPropertyOptional({
+    description: 'Default tax percentage',
+    minimum: 0,
+    maximum: 100,
+    default: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -79,13 +86,23 @@ export class CreateProductDto {
   @Min(0)
   minPrice?: number;
 
-  @ApiPropertyOptional({ description: 'Sale tax percentage', minimum: 0, maximum: 100, default: 0 })
+  @ApiPropertyOptional({
+    description: 'Sale tax percentage',
+    minimum: 0,
+    maximum: 100,
+    default: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
   saleTax?: number;
 
-  @ApiPropertyOptional({ description: 'Purchase tax percentage', minimum: 0, maximum: 100, default: 0 })
+  @ApiPropertyOptional({
+    description: 'Purchase tax percentage',
+    minimum: 0,
+    maximum: 100,
+    default: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

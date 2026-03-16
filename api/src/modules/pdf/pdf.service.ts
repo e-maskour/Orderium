@@ -1,11 +1,14 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { chromium } from 'playwright';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { Quote } from '../quotes/entities/quote.entity';
-import { renderDocumentTemplate, renderHeaderTemplate, renderFooterTemplate } from './templates/document.template';
+import {
+  renderDocumentTemplate,
+  renderHeaderTemplate,
+  renderFooterTemplate,
+} from './templates/document.template';
 import { renderReceiptTemplate } from './templates/receipt.template';
 import { getDocumentStyles } from './templates/document.styles';
 import { ConfigurationsService } from '../configurations/configurations.service';
@@ -173,7 +176,7 @@ export class PDFService {
       case 'receipt':
         return this.fetchOrderData(documentId, documentType);
       default:
-        throw new Error(`Unsupported document type: ${documentType}`);
+        throw new Error(`Unsupported document type: ${documentType as string}`);
     }
   }
 
@@ -196,14 +199,14 @@ export class PDFService {
       date: invoice.date,
       dueDate: invoice.dueDate || undefined,
       customerName: isDemandePrix
-        ? (invoice.supplierName || invoice.supplier?.name || 'Fournisseur')
-        : (invoice.customerName || invoice.customer?.name || 'Client'),
+        ? invoice.supplierName || invoice.supplier?.name || 'Fournisseur'
+        : invoice.customerName || invoice.customer?.name || 'Client',
       customerPhone: isDemandePrix
-        ? (invoice.supplierPhone || invoice.supplier?.phoneNumber)
-        : (invoice.customerPhone || invoice.customer?.phoneNumber),
+        ? invoice.supplierPhone || invoice.supplier?.phoneNumber
+        : invoice.customerPhone || invoice.customer?.phoneNumber,
       customerAddress: isDemandePrix
-        ? (invoice.supplierAddress || invoice.supplier?.address)
-        : (invoice.customerAddress || invoice.customer?.address),
+        ? invoice.supplierAddress || invoice.supplier?.address
+        : invoice.customerAddress || invoice.customer?.address,
       subtotal: Number(invoice.subtotal) || 0,
       discount: Number(invoice.discount) || 0,
       discountType: Number(invoice.discountType) || 0,
@@ -212,7 +215,9 @@ export class PDFService {
       notes: invoice.notes || undefined,
       status: invoice.status,
       isDemandePrix,
-      supplierName: isDemandePrix ? (invoice.supplierName || invoice.supplier?.name) : undefined,
+      supplierName: isDemandePrix
+        ? invoice.supplierName || invoice.supplier?.name
+        : undefined,
       items: invoice.items.map((item) => ({
         description: item.description || item.product?.name || 'Article',
         quantity: Number(item.quantity) || 0,
@@ -243,14 +248,14 @@ export class PDFService {
       date: quote.date,
       expirationDate: quote.expirationDate || undefined,
       customerName: isDemandePrix
-        ? (quote.supplierName || quote.supplier?.name || 'Fournisseur')
-        : (quote.customerName || quote.customer?.name || 'Client'),
+        ? quote.supplierName || quote.supplier?.name || 'Fournisseur'
+        : quote.customerName || quote.customer?.name || 'Client',
       customerPhone: isDemandePrix
-        ? (quote.supplierPhone || quote.supplier?.phoneNumber)
-        : (quote.customerPhone || quote.customer?.phoneNumber),
+        ? quote.supplierPhone || quote.supplier?.phoneNumber
+        : quote.customerPhone || quote.customer?.phoneNumber,
       customerAddress: isDemandePrix
-        ? (quote.supplierAddress || quote.supplier?.address)
-        : (quote.customerAddress || quote.customer?.address),
+        ? quote.supplierAddress || quote.supplier?.address
+        : quote.customerAddress || quote.customer?.address,
       subtotal: Number(quote.subtotal) || 0,
       discount: Number(quote.discount) || 0,
       discountType: Number(quote.discountType) || 0,
@@ -260,7 +265,9 @@ export class PDFService {
       signedBy: quote.signedBy || undefined,
       signedDate: quote.signedDate || undefined,
       isDemandePrix,
-      supplierName: isDemandePrix ? (quote.supplierName || quote.supplier?.name) : undefined,
+      supplierName: isDemandePrix
+        ? quote.supplierName || quote.supplier?.name
+        : undefined,
       items: quote.items.map((item) => ({
         description: item.description || item.product?.name || 'Article',
         quantity: Number(item.quantity) || 0,
@@ -298,14 +305,14 @@ export class PDFService {
       orderNumber: order.orderNumber,
       date: order.dateCreated,
       customerName: isDemandePrix
-        ? (order.supplierName || order.supplier?.name || 'Fournisseur')
-        : (order.customerName || order.customer?.name || 'Client'),
+        ? order.supplierName || order.supplier?.name || 'Fournisseur'
+        : order.customerName || order.customer?.name || 'Client',
       customerPhone: isDemandePrix
-        ? (order.supplierPhone || order.supplier?.phoneNumber)
-        : (order.customerPhone || order.customer?.phoneNumber),
+        ? order.supplierPhone || order.supplier?.phoneNumber
+        : order.customerPhone || order.customer?.phoneNumber,
       customerAddress: isDemandePrix
-        ? (order.supplierAddress || order.supplier?.address)
-        : (order.customerAddress || order.customer?.address),
+        ? order.supplierAddress || order.supplier?.address
+        : order.customerAddress || order.customer?.address,
       subtotal: Number(order.subtotal) || 0,
       discount: Number(order.discount) || 0,
       discountType: Number(order.discountType) || 0,
@@ -313,7 +320,9 @@ export class PDFService {
       total: Number(order.total) || 0,
       fromPortal: order.fromPortal || false,
       isDemandePrix,
-      supplierName: isDemandePrix ? (order.supplierName || order.supplier?.name) : undefined,
+      supplierName: isDemandePrix
+        ? order.supplierName || order.supplier?.name
+        : undefined,
       items: order.items.map((item) => ({
         description: item.description || item.product?.name || 'Article',
         quantity: Number(item.quantity) || 0,
@@ -336,10 +345,10 @@ export class PDFService {
       }
     }
     const typeMap = {
-      'invoice': 'Facture',
-      'quote': 'Devis',
+      invoice: 'Facture',
+      quote: 'Devis',
       'delivery-note': 'BonDeLivraison',
-      'receipt': 'Recu',
+      receipt: 'Recu',
     };
     return `${typeMap[documentType]}_${data.documentNumber}.pdf`;
   }
@@ -375,6 +384,7 @@ export class PDFService {
         timeout: 30000,
       });
       // Ensure web fonts (Noto Sans Arabic) are fully loaded before rendering
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       await page.evaluate(() => (document as any).fonts.ready);
 
       const companyConfig = await this.getCompanyConfig();
@@ -388,8 +398,12 @@ export class PDFService {
         documentLabel: this.getDocumentLabel(documentType, data.isDemandePrix),
         documentNumber: data.documentNumber,
         date: new Date(data.date).toLocaleDateString('fr-FR'),
-        dueDate: data.dueDate ? new Date(data.dueDate).toLocaleDateString('fr-FR') : undefined,
-        expirationDate: data.expirationDate ? new Date(data.expirationDate).toLocaleDateString('fr-FR') : undefined,
+        dueDate: data.dueDate
+          ? new Date(data.dueDate).toLocaleDateString('fr-FR')
+          : undefined,
+        expirationDate: data.expirationDate
+          ? new Date(data.expirationDate).toLocaleDateString('fr-FR')
+          : undefined,
       });
 
       const footerTemplate = renderFooterTemplate({
@@ -445,6 +459,7 @@ export class PDFService {
         timeout: 30000,
       });
       // Ensure web fonts (Noto Sans Arabic) are fully loaded before rendering
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       await page.evaluate(() => (document as any).fonts.ready);
 
       const contentHeight = await page.evaluate(() => {
@@ -466,28 +481,37 @@ export class PDFService {
     }
   }
 
-  private renderDocumentHTML(documentType: DocumentType, data: DocumentData): string {
-    const documentTitle = this.getDocumentTitle(documentType, data.isDemandePrix);
-    const documentLabel = this.getDocumentLabel(documentType, data.isDemandePrix);
+  private renderDocumentHTML(
+    documentType: DocumentType,
+    data: DocumentData,
+  ): string {
+    const documentTitle = this.getDocumentTitle(
+      documentType,
+      data.isDemandePrix,
+    );
+    const documentLabel = this.getDocumentLabel(
+      documentType,
+      data.isDemandePrix,
+    );
     const hideVAT = data.fromPortal || false;
     // Only hide prices for demande de prix (quotes with supplier), not for facture achat or bon d'achat
-    const hidePrices = (documentType === 'quote' && data.isDemandePrix) || false;
+    const hidePrices =
+      (documentType === 'quote' && data.isDemandePrix) || false;
 
     // Generate items HTML
     const itemsHtml = data.items
-      .map(
-        (item, index) => {
-          if (hidePrices) {
-            // For demande de prix, only show description and quantity
-            return `
+      .map((item, index) => {
+        if (hidePrices) {
+          // For demande de prix, only show description and quantity
+          return `
               <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
                 <td dir="ltr" style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
                 <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
               </tr>
             `;
-          } else {
-            // Normal quote/invoice with prices
-            return `
+        } else {
+          // Normal quote/invoice with prices
+          return `
               <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
                 <td dir="ltr" style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
                 <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
@@ -497,9 +521,8 @@ export class PDFService {
                 <td style="text-align: right; font-weight: bold; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.total)}</td>
               </tr>
             `;
-          }
-        },
-      )
+        }
+      })
       .join('');
 
     // Calculate total quantity for demande de prix (only for quotes with supplier)
@@ -512,8 +535,12 @@ export class PDFService {
       documentLabel,
       documentNumber: data.documentNumber,
       date: new Date(data.date).toLocaleDateString('fr-FR'),
-      dueDate: data.dueDate ? new Date(data.dueDate).toLocaleDateString('fr-FR') : undefined,
-      expirationDate: data.expirationDate ? new Date(data.expirationDate).toLocaleDateString('fr-FR') : undefined,
+      dueDate: data.dueDate
+        ? new Date(data.dueDate).toLocaleDateString('fr-FR')
+        : undefined,
+      expirationDate: data.expirationDate
+        ? new Date(data.expirationDate).toLocaleDateString('fr-FR')
+        : undefined,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       customerAddress: data.customerAddress,
@@ -534,7 +561,10 @@ export class PDFService {
     });
   }
 
-  private renderReceiptHTML(data: DocumentData, company: CompanyConfigData): string {
+  private renderReceiptHTML(
+    data: DocumentData,
+    company: CompanyConfigData,
+  ): string {
     const hideVAT = data.fromPortal || false;
     const companyLines = this.buildCompanyLines(company);
 
@@ -562,7 +592,10 @@ export class PDFService {
       customerPhone: data.customerPhone,
       itemsHtml,
       subtotal: this.formatCurrency(data.subtotal),
-      discount: data.discount && data.discount > 0 ? this.formatCurrency(data.discount) : undefined,
+      discount:
+        data.discount && data.discount > 0
+          ? this.formatCurrency(data.discount)
+          : undefined,
       discountType: data.discountType,
       tax: this.formatCurrency(data.tax),
       total: this.formatCurrency(data.total),
@@ -576,7 +609,10 @@ export class PDFService {
     return getDocumentStyles();
   }
 
-  private getDocumentTitle(documentType: DocumentType, isDemandePrix?: boolean): string {
+  private getDocumentTitle(
+    documentType: DocumentType,
+    isDemandePrix?: boolean,
+  ): string {
     if (isDemandePrix) {
       if (documentType === 'quote') {
         return 'Demande de Prix';
@@ -587,15 +623,18 @@ export class PDFService {
       }
     }
     const titles = {
-      'invoice': 'Facture',
-      'quote': 'Devis',
+      invoice: 'Facture',
+      quote: 'Devis',
       'delivery-note': 'Bon de Livraison',
-      'receipt': 'Reçu',
+      receipt: 'Reçu',
     };
     return titles[documentType];
   }
 
-  private getDocumentLabel(documentType: DocumentType, isDemandePrix?: boolean): string {
+  private getDocumentLabel(
+    documentType: DocumentType,
+    isDemandePrix?: boolean,
+  ): string {
     if (isDemandePrix) {
       if (documentType === 'quote') {
         return 'DEMANDE DE PRIX';
@@ -606,10 +645,10 @@ export class PDFService {
       }
     }
     const labels = {
-      'invoice': 'FACTURE',
-      'quote': 'DEVIS',
+      invoice: 'FACTURE',
+      quote: 'DEVIS',
       'delivery-note': 'BON DE LIVRAISON',
-      'receipt': 'REÇU',
+      receipt: 'REÇU',
     };
     return labels[documentType];
   }
@@ -618,16 +657,17 @@ export class PDFService {
     try {
       const numValue = Number(value);
       return isNaN(numValue) ? '0.00' : numValue.toFixed(2);
-    } catch (error) {
+    } catch {
       return '0.00';
     }
   }
 
   private async getCompanyConfig(): Promise<CompanyConfigData> {
     try {
-      const config = await this.configurationsService.findByEntity('my_company');
+      const config =
+        await this.configurationsService.findByEntity('my_company');
       return (config?.values || {}) as CompanyConfigData;
-    } catch (error) {
+    } catch {
       return {};
     }
   }

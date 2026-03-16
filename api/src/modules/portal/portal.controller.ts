@@ -6,7 +6,6 @@ import {
   Delete,
   Param,
   Request,
-  UseGuards,
   BadRequestException,
   UnauthorizedException,
   ConflictException,
@@ -19,7 +18,6 @@ import { JwtService } from '@nestjs/jwt';
 import { PortalService } from './portal.service';
 import { LoginDto, RegisterDto } from './dto/portal.dto';
 import { Public } from '../auth/decorators/public.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiRes } from '../../common/api-response';
 import { PRT } from '../../common/response-codes';
 

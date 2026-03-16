@@ -9,7 +9,7 @@ export class PortalService {
   constructor(
     @InjectRepository(Portal)
     private readonly portalRepository: Repository<Portal>,
-  ) { }
+  ) {}
 
   async findByEmail(email: string): Promise<Portal | null> {
     return this.portalRepository.findOne({ where: { email } });
@@ -66,7 +66,9 @@ export class PortalService {
     return this.portalRepository.findOne({ where: { id } });
   }
 
-  async exportUserData(userId: number): Promise<Record<string, unknown> | null> {
+  async exportUserData(
+    userId: number,
+  ): Promise<Record<string, unknown> | null> {
     const user = await this.portalRepository.findOne({
       where: { id: userId },
       relations: ['customer', 'deliveryPerson'],

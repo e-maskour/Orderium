@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Query,
+  Body,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Res, Header } from '@nestjs/common';
@@ -11,7 +21,7 @@ import { INV } from '../../common/response-codes';
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) { }
+  constructor(private readonly invoicesService: InvoicesService) {}
 
   @Post('list')
   @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
@@ -21,8 +31,10 @@ export class InvoicesController {
     @Query('pageSize') pageSize?: string,
     @Query('direction') direction?: string,
   ) {
-    const pageNum = page ? (parseInt(page, 10) || undefined) : undefined;
-    const pageSizeNum = pageSize ? Math.min(100, Math.max(1, parseInt(pageSize, 10) || 50)) : undefined;
+    const pageNum = page ? parseInt(page, 10) || undefined : undefined;
+    const pageSizeNum = pageSize
+      ? Math.min(100, Math.max(1, parseInt(pageSize, 10) || 50))
+      : undefined;
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
@@ -54,12 +66,17 @@ export class InvoicesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all invoices (legacy - use POST /list instead)' })
+  @ApiOperation({
+    summary: 'Get all invoices (legacy - use POST /list instead)',
+  })
   async findAllLegacy(
     @Query('limit') limit?: string,
     @Query('direction') direction?: string,
   ) {
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit ?? '100', 10) || 100),
+    );
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
@@ -93,7 +110,10 @@ export class InvoicesController {
     @Query('year') year?: string,
   ) {
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
-    const analytics = await this.invoicesService.getAnalytics(direction, yearNum);
+    const analytics = await this.invoicesService.getAnalytics(
+      direction,
+      yearNum,
+    );
     return ApiRes(INV.ANALYTICS, analytics);
   }
 
@@ -113,8 +133,14 @@ export class InvoicesController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update an invoice' })
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateInvoiceDto: UpdateInvoiceDto) {
-    const invoice = await this.invoicesService.update(id, updateInvoiceDto as any);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateInvoiceDto: UpdateInvoiceDto,
+  ) {
+    const invoice = await this.invoicesService.update(
+      id,
+      updateInvoiceDto as any,
+    );
     return ApiRes(INV.UPDATED, invoice);
   }
 
@@ -126,7 +152,9 @@ export class InvoicesController {
   }
 
   @Put(':id/validate')
-  @ApiOperation({ summary: 'Validate an invoice (change from draft to unpaid)' })
+  @ApiOperation({
+    summary: 'Validate an invoice (change from draft to unpaid)',
+  })
   async validate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.validate(id);
     return ApiRes(INV.VALIDATED, invoice);
@@ -140,7 +168,10 @@ export class InvoicesController {
   }
 
   @Get('export/xlsx')
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
   @ApiOperation({ summary: 'Export invoices to XLSX file' })
   async exportToXlsx(
     @Res() res: Response,
@@ -149,9 +180,12 @@ export class InvoicesController {
     const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
     const buffer = await this.invoicesService.exportToXlsx(supplierIdNum);
 
-    const filename = supplierIdNum !== undefined
-      ? (supplierIdNum ? 'factures-achat.xlsx' : 'factures-vente.xlsx')
-      : 'factures.xlsx';
+    const filename =
+      supplierIdNum !== undefined
+        ? supplierIdNum
+          ? 'factures-achat.xlsx'
+          : 'factures-vente.xlsx'
+        : 'factures.xlsx';
 
     res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
     res.send(buffer);

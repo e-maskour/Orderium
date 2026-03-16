@@ -19,4 +19,4 @@ import { InventoryModule } from '../inventory/inventory.module';
   providers: [InvoicesService],
   exports: [InvoicesService],
 })
-export class InvoicesModule { }
+export class InvoicesModule {}

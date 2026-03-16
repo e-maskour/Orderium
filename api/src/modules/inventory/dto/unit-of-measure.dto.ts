@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsNumber,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateUnitOfMeasureDto {
@@ -12,12 +18,18 @@ export class CreateUnitOfMeasureDto {
   @MaxLength(50)
   code: string;
 
-  @ApiProperty({ description: 'Category (Weight, Volume, Length, Unit)', maxLength: 100 })
+  @ApiProperty({
+    description: 'Category (Weight, Volume, Length, Unit)',
+    maxLength: 100,
+  })
   @IsString()
   @MaxLength(100)
   category: string;
 
-  @ApiPropertyOptional({ description: 'Conversion ratio to base unit', default: 1 })
+  @ApiPropertyOptional({
+    description: 'Conversion ratio to base unit',
+    default: 1,
+  })
   @IsOptional()
   @IsNumber()
   ratio?: number;
@@ -28,7 +40,10 @@ export class CreateUnitOfMeasureDto {
   @MaxLength(10)
   roundingPrecision?: string;
 
-  @ApiPropertyOptional({ description: 'Is base unit for category', default: false })
+  @ApiPropertyOptional({
+    description: 'Is base unit for category',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isBaseUnit?: boolean;

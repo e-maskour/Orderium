@@ -113,7 +113,7 @@ export class QuotesService {
       await this.syncSequenceWithDatabase(sequence, documentDate);
 
       return sequence;
-    } catch (error) {
+    } catch {
       // Fallback to default if configurations service fails
       let prefix = 'DV'; // Default for quote
       if (entityType === 'price_request') {
@@ -186,7 +186,10 @@ export class QuotesService {
       const maxNumber = Math.max(...numbers);
       sequence.nextNumber = maxNumber + 1;
     } catch (error) {
-      this.logger.error('Failed to sync sequence with database', (error as Error)?.stack);
+      this.logger.error(
+        'Failed to sync sequence with database',
+        (error as Error)?.stack,
+      );
       // Keep existing nextNumber if sync fails
     }
   }
@@ -212,7 +215,7 @@ export class QuotesService {
             : '10';
 
     let pattern = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push(year.toString());
@@ -243,7 +246,7 @@ export class QuotesService {
 
   private buildFormatPattern(sequence: SequenceConfig): string {
     let result = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push('YYYY');
@@ -276,7 +279,9 @@ export class QuotesService {
     return result;
   }
 
-  private enrichSequenceForResponse(sequence: SequenceConfig): SequenceConfig & { format: string; nextDocumentNumber: string } {
+  private enrichSequenceForResponse(
+    sequence: SequenceConfig,
+  ): SequenceConfig & { format: string; nextDocumentNumber: string } {
     return {
       ...sequence,
       format: this.buildFormatPattern(sequence),
@@ -305,7 +310,7 @@ export class QuotesService {
             : '10';
 
     let result = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push(year.toString());
@@ -360,7 +365,10 @@ export class QuotesService {
         });
       }
     } catch (error) {
-      this.logger.error('Failed to update sequence next number', (error as Error)?.stack);
+      this.logger.error(
+        'Failed to update sequence next number',
+        (error as Error)?.stack,
+      );
     }
   }
 
@@ -662,7 +670,8 @@ export class QuotesService {
         await this.quoteItemRepository.save(quoteItems);
 
         // Prepare quote update data (exclude items)
-        const { items: _, ...quoteUpdateData } = updateQuoteDto;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { items: _items, ...quoteUpdateData } = updateQuoteDto;
 
         // Update quote with values from frontend
         await this.quoteRepository.update(id, {
@@ -680,7 +689,8 @@ export class QuotesService {
         });
       } else {
         // Update quote without items - exclude items from the update
-        const { items: _, ...quoteUpdateData } = updateQuoteDto;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { items: _items, ...quoteUpdateData } = updateQuoteDto;
         await this.quoteRepository.update(id, {
           ...quoteUpdateData,
           direction,
@@ -695,12 +705,11 @@ export class QuotesService {
       }
 
       // Return the updated quote
+      await this.invalidateQuoteCache(id);
       const result = await this.findOne(id);
       if (!result) {
         throw new NotFoundException('Quote not found after update');
       }
-
-      await this.invalidateQuoteCache(id);
       return result;
     } catch (error) {
       this.logger.error(`Error updating quote ${id}`, (error as Error)?.stack);
@@ -767,11 +776,11 @@ export class QuotesService {
       await this.quoteRepository.update(id, { pdfUrl });
     }
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after validation');
     }
-    await this.invalidateQuoteCache(id);
     return result;
   }
 
@@ -835,7 +844,10 @@ export class QuotesService {
         });
       }
     } catch (error) {
-      this.logger.error('Error updating sequence during devalidation', (error as Error)?.stack);
+      this.logger.error(
+        'Error updating sequence during devalidation',
+        (error as Error)?.stack,
+      );
       // Continue with devalidation even if sequence update fails
     }
 
@@ -877,11 +889,11 @@ export class QuotesService {
       pdfUrl: null,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after devalidation');
     }
-    await this.invalidateQuoteCache(id);
     return result;
   }
 
@@ -899,6 +911,7 @@ export class QuotesService {
       status: QuoteStatus.SIGNED,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after acceptance');
@@ -920,6 +933,7 @@ export class QuotesService {
       status: QuoteStatus.CLOSED,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after rejection');
@@ -1057,6 +1071,7 @@ export class QuotesService {
       status: newStatus,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after conversion');
@@ -1083,6 +1098,7 @@ export class QuotesService {
       status: QuoteStatus.INVOICED,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after conversion');
@@ -1287,7 +1303,10 @@ export class QuotesService {
         : 'Devis et Demandes';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    const buffer = XLSX.write(wb, {
+      type: 'buffer',
+      bookType: 'xlsx',
+    }) as Buffer;
     return buffer;
   }
 

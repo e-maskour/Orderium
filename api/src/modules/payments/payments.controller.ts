@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
 import { ApiRes } from '../../common/api-response';
@@ -6,7 +16,7 @@ import { PAY } from '../../common/response-codes';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) { }
+  constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
   async create(@Body() createPaymentDto: CreatePaymentDto) {
@@ -15,7 +25,10 @@ export class PaymentsController {
   }
 
   @Get()
-  async findAll(@Query('invoiceId', new ParseIntPipe({ optional: true })) invoiceId?: number) {
+  async findAll(
+    @Query('invoiceId', new ParseIntPipe({ optional: true }))
+    invoiceId?: number,
+  ) {
     const payments = invoiceId
       ? await this.paymentsService.findByInvoice(invoiceId)
       : await this.paymentsService.findAll();
@@ -35,7 +48,10 @@ export class PaymentsController {
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updatePaymentDto: UpdatePaymentDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePaymentDto: UpdatePaymentDto,
+  ) {
     const payment = await this.paymentsService.update(id, updatePaymentDto);
     return ApiRes(PAY.UPDATED, payment);
   }

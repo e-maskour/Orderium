@@ -17,4 +17,4 @@ import { PDFModule } from '../pdf/pdf.module';
   providers: [QuotesService],
   exports: [QuotesService],
 })
-export class QuotesModule { }
+export class QuotesModule {}

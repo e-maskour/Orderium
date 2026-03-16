@@ -4,9 +4,9 @@ import * as Minio from 'minio';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 import {
-    IImageStorageProvider,
-    ImageUploadResult,
-    ImageTransformOptions,
+  IImageStorageProvider,
+  ImageUploadResult,
+  ImageTransformOptions,
 } from '../interfaces/image-storage.interface';
 
 /**
@@ -26,225 +26,228 @@ import {
  */
 @Injectable()
 export class MinioProvider implements IImageStorageProvider, OnModuleInit {
-    private readonly logger = new Logger(MinioProvider.name);
+  private readonly logger = new Logger(MinioProvider.name);
 
-    private client: Minio.Client;
-    private bucket: string;
-    /** Public base URL reachable by browsers (e.g. http://localhost:9000) */
-    private publicUrl: string;
-    private ready = false;
+  private client: Minio.Client;
+  private bucket: string;
+  /** Public base URL reachable by browsers (e.g. http://localhost:9000) */
+  private publicUrl: string;
+  private ready = false;
 
-    constructor(private readonly config: ConfigService) { }
+  constructor(private readonly config: ConfigService) { }
 
-    // ─── Lifecycle ────────────────────────────────────────────────────────────
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
 
-    async onModuleInit(): Promise<void> {
-        const endpoint = this.config.get<string>('MINIO_ENDPOINT', 'localhost');
-        const port = parseInt(this.config.get<string>('MINIO_PORT', '9000'), 10);
-        const useSSL =
-            this.config.get<string>('MINIO_USE_SSL', 'false').toLowerCase() === 'true';
-        const accessKey = this.config.get<string>('MINIO_ACCESS_KEY', '');
-        const secretKey = this.config.get<string>('MINIO_SECRET_KEY', '');
+  async onModuleInit(): Promise<void> {
+    const endpoint = this.config.get<string>('MINIO_ENDPOINT', 'localhost');
+    const port = parseInt(this.config.get<string>('MINIO_PORT', '9000'), 10);
+    const useSSL =
+      this.config.get<string>('MINIO_USE_SSL', 'false').toLowerCase() ===
+      'true';
+    const accessKey = this.config.get<string>('MINIO_ACCESS_KEY', '');
+    const secretKey = this.config.get<string>('MINIO_SECRET_KEY', '');
 
-        this.bucket = this.config.get<string>('MINIO_BUCKET', 'orderium-media');
-        this.publicUrl = this.config.get<string>(
-            'MINIO_PUBLIC_URL',
-            'http://localhost:9000',
-        );
+    this.bucket = this.config.get<string>('MINIO_BUCKET', 'orderium-media');
+    this.publicUrl = this.config.get<string>(
+      'MINIO_PUBLIC_URL',
+      'http://localhost:9000',
+    );
 
-        if (!accessKey || !secretKey) {
-            this.logger.error(
-                '❌ MINIO_ACCESS_KEY and MINIO_SECRET_KEY must be set.  ' +
-                'MinIO provider will not be available.',
-            );
-            return;
-        }
-
-        try {
-            this.client = new Minio.Client({
-                endPoint: endpoint,
-                port,
-                useSSL,
-                accessKey,
-                secretKey,
-            });
-
-            await this.ensureBucketReady();
-            this.ready = true;
-            this.logger.log(
-                `✅ MinIO provider ready — endpoint: ${endpoint}:${port}, ` +
-                `bucket: ${this.bucket}, public: ${this.publicUrl}`,
-            );
-        } catch (error) {
-            this.logger.error('❌ MinIO provider initialisation failed', error);
-        }
+    if (!accessKey || !secretKey) {
+      this.logger.error(
+        '❌ MINIO_ACCESS_KEY and MINIO_SECRET_KEY must be set.  ' +
+        'MinIO provider will not be available.',
+      );
+      return;
     }
 
-    // ─── Private helpers ──────────────────────────────────────────────────────
+    try {
+      this.client = new Minio.Client({
+        endPoint: endpoint,
+        port,
+        useSSL,
+        accessKey,
+        secretKey,
+      });
 
-    /**
-     * Create the bucket if it does not exist, then apply a public-read policy
-     * so that stored objects are accessible by URL without signed tokens.
-     */
-    private async ensureBucketReady(): Promise<void> {
-        const exists = await this.client.bucketExists(this.bucket);
+      await this.ensureBucketReady();
+      this.ready = true;
+      this.logger.log(
+        `✅ MinIO provider ready — endpoint: ${endpoint}:${port}, ` +
+        `bucket: ${this.bucket}, public: ${this.publicUrl}`,
+      );
+    } catch (error) {
+      this.logger.error('❌ MinIO provider initialisation failed', error);
+    }
+  }
 
-        if (!exists) {
-            await this.client.makeBucket(this.bucket, 'us-east-1');
-            this.logger.log(`🪣  Created bucket: ${this.bucket}`);
-        }
+  // ─── Private helpers ──────────────────────────────────────────────────────
 
-        // Allow unauthenticated GET on all objects (public media).
-        // No s3:ListBucket is granted — directory listing remains blocked.
-        const policy = JSON.stringify({
-            Version: '2012-10-17',
-            Statement: [
-                {
-                    Effect: 'Allow',
-                    Principal: { AWS: ['*'] },
-                    Action: ['s3:GetObject'],
-                    Resource: [`arn:aws:s3:::${this.bucket}/*`],
-                },
-            ],
-        });
+  /**
+   * Create the bucket if it does not exist, then apply a public-read policy
+   * so that stored objects are accessible by URL without signed tokens.
+   */
+  private async ensureBucketReady(): Promise<void> {
+    const exists = await this.client.bucketExists(this.bucket);
 
-        await this.client.setBucketPolicy(this.bucket, policy);
-        this.logger.log(`🔓  Public-read policy applied to bucket: ${this.bucket}`);
+    if (!exists) {
+      await this.client.makeBucket(this.bucket, 'us-east-1');
+      this.logger.log(`🪣  Created bucket: ${this.bucket}`);
     }
 
-    /** Construct the public URL for a stored object key. */
-    private objectUrl(objectName: string): string {
-        return `${this.publicUrl}/${this.bucket}/${objectName}`;
+    // Allow unauthenticated GET on all objects (public media).
+    // No s3:ListBucket is granted — directory listing remains blocked.
+    const policy = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Effect: 'Allow',
+          Principal: { AWS: ['*'] },
+          Action: ['s3:GetObject'],
+          Resource: [`arn:aws:s3:::${this.bucket}/*`],
+        },
+      ],
+    });
+
+    await this.client.setBucketPolicy(this.bucket, policy);
+    this.logger.log(`🔓  Public-read policy applied to bucket: ${this.bucket}`);
+  }
+
+  /** Construct the public URL for a stored object key. */
+  private objectUrl(objectName: string): string {
+    return `${this.publicUrl}/${this.bucket}/${objectName}`;
+  }
+
+  // ─── IImageStorageProvider ────────────────────────────────────────────────
+
+  /**
+   * Upload a file to MinIO.
+   *
+   * The image is optimised before storage:
+   *  - resized to at most 1 200 × 1 200 px (preserving aspect ratio)
+   *  - converted to WebP at 85 % quality
+   *
+   * The returned `url` is the full public URL; `publicId` is the object key
+   * used by {@link delete}.
+   */
+  async upload(
+    file: Express.Multer.File,
+    folder: string = 'general',
+  ): Promise<ImageUploadResult> {
+    if (!this.ready) {
+      throw new Error('MinIO provider is not initialised');
     }
 
-    // ─── IImageStorageProvider ────────────────────────────────────────────────
+    // Sanitise folder to prevent path traversal
+    const safeFolder = folder.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
+    const objectName = `${safeFolder}/${uuidv4()}.webp`;
 
-    /**
-     * Upload a file to MinIO.
-     *
-     * The image is optimised before storage:
-     *  - resized to at most 1 200 × 1 200 px (preserving aspect ratio)
-     *  - converted to WebP at 85 % quality
-     *
-     * The returned `url` is the full public URL; `publicId` is the object key
-     * used by {@link delete}.
-     */
-    async upload(
-        file: Express.Multer.File,
-        folder: string = 'general',
-    ): Promise<ImageUploadResult> {
-        if (!this.ready) {
-            throw new Error('MinIO provider is not initialised');
-        }
+    // Optimise: cap dimensions, transcode to WebP
+    const optimised = await sharp(file.buffer)
+      .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 85 })
+      .toBuffer();
 
-        // Sanitise folder to prevent path traversal
-        const safeFolder = folder.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
-        const objectName = `${safeFolder}/${uuidv4()}.webp`;
+    await this.client.putObject(
+      this.bucket,
+      objectName,
+      optimised,
+      optimised.length,
+      {
+        'Content-Type': 'image/webp',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    );
 
-        // Optimise: cap dimensions, transcode to WebP
-        const optimised = await sharp(file.buffer)
-            .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
-            .webp({ quality: 85 })
-            .toBuffer();
+    this.logger.log(
+      `📤  ${objectName}  (${file.size} B → ${optimised.length} B)`,
+    );
 
-        await this.client.putObject(
-            this.bucket,
-            objectName,
-            optimised,
-            optimised.length,
-            {
-                'Content-Type': 'image/webp',
-                'Cache-Control': 'public, max-age=31536000, immutable',
-            },
-        );
+    return {
+      url: this.objectUrl(objectName),
+      publicId: objectName,
+      size: optimised.length,
+      format: 'webp',
+    };
+  }
 
-        this.logger.log(
-            `📤  ${objectName}  (${file.size} B → ${optimised.length} B)`,
-        );
-
-        return {
-            url: this.objectUrl(objectName),
-            publicId: objectName,
-            size: optimised.length,
-            format: 'webp',
-        };
+  /**
+   * Delete an object from MinIO by its key (publicId).
+   */
+  async delete(publicId: string): Promise<void> {
+    if (!this.ready) {
+      throw new Error('MinIO provider is not initialised');
     }
 
-    /**
-     * Delete an object from MinIO by its key (publicId).
-     */
-    async delete(publicId: string): Promise<void> {
-        if (!this.ready) {
-            throw new Error('MinIO provider is not initialised');
-        }
-
-        // Guard against path traversal in the public ID
-        if (publicId.includes('..') || publicId.startsWith('/')) {
-            throw new Error(`Invalid publicId: ${publicId}`);
-        }
-
-        await this.client.removeObject(this.bucket, publicId);
-        this.logger.log(`🗑️  Deleted: ${publicId}`);
+    // Guard against path traversal in the public ID
+    if (publicId.includes('..') || publicId.startsWith('/')) {
+      throw new Error(`Invalid publicId: ${publicId}`);
     }
 
-    /**
-     * MinIO does not support real-time image transformations.
-     * The original URL is returned unchanged.
-     */
-    transformUrl(url: string, _options: ImageTransformOptions): string {
-        return url;
+    await this.client.removeObject(this.bucket, publicId);
+    this.logger.log(`🗑️  Deleted: ${publicId}`);
+  }
+
+  /**
+   * MinIO does not support real-time image transformations.
+   * The original URL is returned unchanged.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  transformUrl(url: string, _options: ImageTransformOptions): string {
+    return url;
+  }
+
+  /**
+   * MinIO does not support dynamic resizing.
+   * The original URL is returned unchanged.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getOptimizedUrl(url: string, _width?: number, _height?: number): string {
+    return url;
+  }
+
+  /**
+   * Upload a raw buffer to MinIO (e.g. a PDF file).
+   *
+   * @param buffer      - The raw file content
+   * @param folder      - Destination folder within the bucket (e.g. 'pdfs')
+   * @param filename    - Object filename including extension (e.g. 'Facture_F001.pdf')
+   * @param contentType - MIME type (e.g. 'application/pdf')
+   * @returns The full public URL of the stored object
+   */
+  async uploadBuffer(
+    buffer: Buffer,
+    folder: string,
+    filename: string,
+    contentType: string,
+  ): Promise<string> {
+    if (!this.ready) {
+      throw new Error('MinIO provider is not initialised');
     }
 
-    /**
-     * MinIO does not support dynamic resizing.
-     * The original URL is returned unchanged.
-     */
-    getOptimizedUrl(url: string, _width?: number, _height?: number): string {
-        return url;
-    }
+    // Sanitise inputs to prevent path traversal
+    const safeFolder = folder.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
+    const safeFilename = filename.replace(/[^a-z0-9._-]/gi, '_');
+    const objectName = `${safeFolder}/${safeFilename}`;
 
-    /**
-     * Upload a raw buffer to MinIO (e.g. a PDF file).
-     *
-     * @param buffer      - The raw file content
-     * @param folder      - Destination folder within the bucket (e.g. 'pdfs')
-     * @param filename    - Object filename including extension (e.g. 'Facture_F001.pdf')
-     * @param contentType - MIME type (e.g. 'application/pdf')
-     * @returns The full public URL of the stored object
-     */
-    async uploadBuffer(
-        buffer: Buffer,
-        folder: string,
-        filename: string,
-        contentType: string,
-    ): Promise<string> {
-        if (!this.ready) {
-            throw new Error('MinIO provider is not initialised');
-        }
+    await this.client.putObject(
+      this.bucket,
+      objectName,
+      buffer,
+      buffer.length,
+      { 'Content-Type': contentType },
+    );
 
-        // Sanitise inputs to prevent path traversal
-        const safeFolder = folder.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
-        const safeFilename = filename.replace(/[^a-z0-9._-]/gi, '_');
-        const objectName = `${safeFolder}/${safeFilename}`;
+    this.logger.log(`📤  ${objectName}  (${buffer.length} B)`);
 
-        await this.client.putObject(
-            this.bucket,
-            objectName,
-            buffer,
-            buffer.length,
-            { 'Content-Type': contentType },
-        );
+    return this.objectUrl(objectName);
+  }
 
-        this.logger.log(`📤  ${objectName}  (${buffer.length} B)`);
+  isConfigured(): boolean {
+    return this.ready;
+  }
 
-        return this.objectUrl(objectName);
-    }
-
-    isConfigured(): boolean {
-        return this.ready;
-    }
-
-    getProviderName(): string {
-        return 'MinIO';
-    }
+  getProviderName(): string {
+    return 'MinIO';
+  }
 }

@@ -1,4 +1,12 @@
-import { IsString, IsOptional, IsNumber, IsEnum, IsArray, ValidateNested, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsEnum,
+  IsArray,
+  ValidateNested,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { AdjustmentStatus } from '../entities/inventory-adjustment.entity';
@@ -54,7 +62,10 @@ export class CreateInventoryAdjustmentDto {
   @IsString()
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Adjustment lines', type: [AdjustmentLineDto] })
+  @ApiPropertyOptional({
+    description: 'Adjustment lines',
+    type: [AdjustmentLineDto],
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -79,7 +90,10 @@ export class UpdateInventoryAdjustmentDto {
   @IsString()
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Adjustment lines', type: [AdjustmentLineDto] })
+  @ApiPropertyOptional({
+    description: 'Adjustment lines',
+    type: [AdjustmentLineDto],
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
