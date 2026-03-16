@@ -13,7 +13,7 @@ export class ImageService {
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-  constructor(private readonly minioProvider: MinioProvider) { }
+  constructor(private readonly minioProvider: MinioProvider) {}
 
   /**
    * Validate an uploaded file by checking MIME type, magic bytes, and size.

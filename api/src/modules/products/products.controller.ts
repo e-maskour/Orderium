@@ -43,7 +43,7 @@ export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly imageService: ImageService,
-  ) { }
+  ) {}
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new product' })
@@ -400,8 +400,8 @@ export class ProductsController {
     status: 200,
     description: 'Template downloaded successfully',
   })
-  async getImportTemplate(@Res() res: Response) {
-    const buffer = await this.productsService.getImportTemplate();
+  getImportTemplate(@Res() res: Response) {
+    const buffer = this.productsService.getImportTemplate();
     res.send(buffer);
   }
 }

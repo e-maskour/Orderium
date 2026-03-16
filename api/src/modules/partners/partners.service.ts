@@ -23,7 +23,7 @@ export class PartnersService {
     @InjectRepository(Invoice)
     private readonly invoiceRepository: Repository<Invoice>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async upsert(
     createPartnerDto: CreatePartnerDto,

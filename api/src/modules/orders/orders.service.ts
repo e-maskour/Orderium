@@ -46,7 +46,7 @@ export class OrdersService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly stockService: StockService,
-  ) { }
+  ) {}
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<any> {
     if (!createOrderDto.items || createOrderDto.items.length === 0) {
@@ -56,7 +56,6 @@ export class OrdersService {
     const result = await this.dataSource.transaction(async (manager) => {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const _year = now.getFullYear();
 
       // Get customer ID
       let customerId = createOrderDto.customerId;

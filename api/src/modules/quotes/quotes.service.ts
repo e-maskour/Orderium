@@ -62,7 +62,7 @@ export class QuotesService {
     private readonly configurationsService: ConfigurationsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
-  ) { }
+  ) {}
 
   private async getOrCreateSequence(
     entityType: string,

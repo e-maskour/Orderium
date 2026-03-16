@@ -7,7 +7,7 @@ import { STT } from '../../common/response-codes';
 @ApiTags('Statistics')
 @Controller('statistics')
 export class StatisticsController {
-  constructor(private readonly statisticsService: StatisticsService) { }
+  constructor(private readonly statisticsService: StatisticsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all statistics' })

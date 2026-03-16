@@ -41,7 +41,7 @@ export class DriveService {
     @InjectRepository(DriveNodeTag)
     private readonly nodeTagRepo: Repository<DriveNodeTag>,
     private readonly storage: DriveStorageService,
-  ) { }
+  ) {}
 
   // ──────────────────────────────────────────────────────────────────────────
   //  Access guards helpers

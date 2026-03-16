@@ -14,7 +14,7 @@ export class WarehouseService {
     @InjectRepository(Warehouse)
     private readonly warehouseRepository: Repository<Warehouse>,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   async create(createDto: CreateWarehouseDto): Promise<Warehouse> {
     // Check if code already exists

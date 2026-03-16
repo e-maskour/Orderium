@@ -85,7 +85,7 @@ export class PDFService {
     private readonly orderRepository: Repository<Order>,
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
-  ) { }
+  ) {}
 
   async generateDocumentPDF(
     documentType: DocumentType,

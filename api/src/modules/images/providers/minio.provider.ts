@@ -34,7 +34,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
   private publicUrl: string;
   private ready = false;
 
-  constructor(private readonly config: ConfigService) { }
+  constructor(private readonly config: ConfigService) {}
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -56,7 +56,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     if (!accessKey || !secretKey) {
       this.logger.error(
         '❌ MINIO_ACCESS_KEY and MINIO_SECRET_KEY must be set.  ' +
-        'MinIO provider will not be available.',
+          'MinIO provider will not be available.',
       );
       return;
     }
@@ -74,7 +74,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
       this.ready = true;
       this.logger.log(
         `✅ MinIO provider ready — endpoint: ${endpoint}:${port}, ` +
-        `bucket: ${this.bucket}, public: ${this.publicUrl}`,
+          `bucket: ${this.bucket}, public: ${this.publicUrl}`,
       );
     } catch (error) {
       this.logger.error('❌ MinIO provider initialisation failed', error);

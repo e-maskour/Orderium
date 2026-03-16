@@ -27,7 +27,7 @@ export class PortalController {
   constructor(
     private readonly portalService: PortalService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @Public()
   @Throttle({ short: { limit: 5, ttl: 60000 } })

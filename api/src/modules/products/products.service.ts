@@ -29,7 +29,7 @@ export class ProductsService {
     @InjectRepository(Warehouse)
     private readonly warehouseRepository: Repository<Warehouse>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const { categoryIds, ...productData } = createProductDto;
