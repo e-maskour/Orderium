@@ -1,31 +1,34 @@
 import { useLanguage } from '@/context/LanguageContext';
-import { ProductCategory } from '@/types/database';
-import { Package, Wrench, LayoutGrid } from 'lucide-react';
+import { LayoutGrid } from 'lucide-react';
+import type { Category } from '@/hooks/useCategories';
 
 interface CategoryChipsProps {
-  activeCategory: ProductCategory;
-  onCategoryChange: (category: ProductCategory) => void;
+  categories: Category[];
+  activeCategoryId: number | null;
+  onCategoryChange: (id: number | null) => void;
 }
 
-export const CategoryChips = ({ activeCategory, onCategoryChange }: CategoryChipsProps) => {
+export const CategoryChips = ({ categories, activeCategoryId, onCategoryChange }: CategoryChipsProps) => {
   const { t, dir } = useLanguage();
-
-  const categories: { id: ProductCategory; label: string; icon: React.ReactNode }[] = [
-    { id: 'all', label: t('all'), icon: <LayoutGrid style={{ width: '1rem', height: '1rem' }} /> },
-    { id: 'products', label: t('products'), icon: <Package style={{ width: '1rem', height: '1rem' }} /> },
-    { id: 'services', label: t('services'), icon: <Wrench style={{ width: '1rem', height: '1rem' }} /> },
-  ];
 
   return (
     <div className="cl-filter-row" dir={dir}>
-      {categories.map((category) => (
+      {/* "All" chip */}
+      <button
+        onClick={() => onCategoryChange(null)}
+        className={`cl-chip${activeCategoryId === null ? ' active' : ''}`}
+      >
+        <LayoutGrid style={{ width: '1rem', height: '1rem' }} />
+        <span>{t('all')}</span>
+      </button>
+
+      {categories.map((cat) => (
         <button
-          key={category.id}
-          onClick={() => onCategoryChange(category.id)}
-          className={`cl-chip${activeCategory === category.id ? ' active' : ''}`}
+          key={cat.id}
+          onClick={() => onCategoryChange(cat.id)}
+          className={`cl-chip${activeCategoryId === cat.id ? ' active' : ''}`}
         >
-          {category.icon}
-          <span>{category.label}</span>
+          <span>{cat.name}</span>
         </button>
       ))}
     </div>

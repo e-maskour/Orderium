@@ -408,6 +408,8 @@ export const PRT = {
   USER_APPROVED: { code: 'PRT200_12', status: 200, message: 'User Account Approved' },
   /** PATCH /portal/admin/users/:id/reject     → data: { id, status }   | metadata: null */
   USER_REJECTED: { code: 'PRT200_13', status: 200, message: 'User Account Rejected' },
+  /** GET /portal/categories                   → data: Category[]       | metadata: null */
+  CATEGORIES_LIST: { code: 'PRT200_14', status: 200, message: 'Categories Retrieved' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────

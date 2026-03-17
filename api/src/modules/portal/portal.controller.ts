@@ -32,6 +32,7 @@ import { InvoicesService } from '../invoices/invoices.service';
 import { QuotesService } from '../quotes/quotes.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { PartnersService } from '../partners/partners.service';
+import { CategoriesService } from '../categories/categories.service';
 
 @ApiTags('Portal')
 @Controller('portal')
@@ -45,6 +46,7 @@ export class PortalController {
     private readonly quotesService: QuotesService,
     private readonly configurationsService: ConfigurationsService,
     private readonly partnersService: PartnersService,
+    private readonly categoriesService: CategoriesService,
   ) { }
 
   @Public()
@@ -457,5 +459,14 @@ export class PortalController {
     }
     const config = await this.configurationsService.findByEntity(entity);
     return ApiRes(PRT.CONFIG_ENTITY, config);
+  }
+
+  // ─── Catalogue ────────────────────────────────────────────────────────────
+
+  @Get('categories')
+  @ApiOperation({ summary: 'List product categories (portal)' })
+  async getCategories() {
+    const categories = await this.categoriesService.findAll('product');
+    return ApiRes(PRT.CATEGORIES_LIST, categories);
   }
 }

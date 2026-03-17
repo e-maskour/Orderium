@@ -20,7 +20,8 @@ export class Product implements IProduct {
       name: string;
       code: string;
       category: string;
-    }
+    },
+    public categories?: { id: number; name: string }[]
   ) { }
 
   get displayPrice(): string {
@@ -111,7 +112,10 @@ export class Product implements IProduct {
         name: uom.name as string,
         code: uom.code as string,
         category: uom.category as string
-      } : undefined
+      } : undefined,
+      Array.isArray(data.categories)
+        ? (data.categories as Record<string, unknown>[]).map((c) => ({ id: c.id as number, name: c.name as string }))
+        : undefined
     );
   }
 
@@ -131,6 +135,7 @@ export class Product implements IProduct {
       isPriceChangeAllowed: this.isPriceChangeAllowed,
       imageUrl: this.imageUrl,
       saleUnitOfMeasure: this.saleUnitOfMeasure,
+      categories: this.categories,
     };
   }
 }

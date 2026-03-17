@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { ProductFilters, ProductCategory } from '@/types/database';
+import { ProductFilters } from '@/types/database';
 import { useProducts } from "@/hooks/useProducts";
+import { useCategories } from '@/hooks/useCategories';
 import { Header } from '@/components/Header';
 import { SearchBar } from '@/components/SearchBar';
 import { CategoryChips } from '@/components/CategoryChips';
@@ -18,11 +19,11 @@ const Index = () => {
   const { isCartOpen, closeCart, itemCount } = useCart();
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
-  const [filters, setFilters] = useState<ProductFilters>({ category: 'all', search: '' });
+  const [filters, setFilters] = useState<ProductFilters>({ categoryId: null, search: '' });
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleCategoryChange = (category: ProductCategory) => {
-    setFilters(prev => ({ ...prev, category }));
+  const handleCategoryChange = (categoryId: number | null) => {
+    setFilters(prev => ({ ...prev, categoryId }));
     setCurrentPage(1);
   };
 
@@ -55,17 +56,19 @@ const Index = () => {
     };
   }, [isResizing, dir]);
 
+  const { categories } = useCategories();
+
   const { products, loading, error, totalCount, totalPages } = useProducts({
     page: currentPage,
     pageSize: 24,
     search: filters.search,
   });
 
-  const filteredProducts = products.filter(p => {
-    if (filters.category === 'products' && p.isService) return false;
-    if (filters.category === 'services' && !p.isService) return false;
-    return true;
-  });
+  const filteredProducts = filters.categoryId === null
+    ? products
+    : products.filter(p =>
+        Array.isArray(p.categories) && p.categories.some(c => c.id === filters.categoryId)
+      );
 
   const greeting = user?.customerName
     ? `${t('hello') || 'Bonjour'}, ${user.customerName.split(' ')[0]}! 👋`
@@ -137,7 +140,7 @@ const Index = () => {
 
           {/* Category strip */}
           <div style={{ background: 'white', borderBottom: '1px solid #f3f4f6', padding: '0.5rem 1rem', flexShrink: 0 }}>
-            <CategoryChips activeCategory={filters.category} onCategoryChange={handleCategoryChange} />
+            <CategoryChips categories={categories} activeCategoryId={filters.categoryId} onCategoryChange={handleCategoryChange} />
           </div>
 
           {/* Product area */}

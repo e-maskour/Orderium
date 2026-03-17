@@ -8,9 +8,10 @@ import { InvoicesModule } from '../invoices/invoices.module';
 import { QuotesModule } from '../quotes/quotes.module';
 import { ConfigurationsModule } from '../configurations/configurations.module';
 import { PartnersModule } from '../partners/partners.module';
+import { CategoriesModule } from '../categories/categories.module';
 
 @Module({
-  imports: [TenantModule, AuthModule, OrdersModule, InvoicesModule, QuotesModule, ConfigurationsModule, PartnersModule],
+  imports: [TenantModule, AuthModule, OrdersModule, InvoicesModule, QuotesModule, ConfigurationsModule, PartnersModule, CategoriesModule],
   controllers: [PortalController],
   providers: [PortalService],
   exports: [PortalService],
