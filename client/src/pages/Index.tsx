@@ -7,21 +7,19 @@ import { SearchBar } from '@/components/SearchBar';
 import { CategoryChips } from '@/components/CategoryChips';
 import { ProductGrid } from '@/components/ProductGrid';
 import { CartDrawer } from '@/components/CartDrawer';
-import { FloatingCartButton } from '@/components/FloatingCartButton';
+import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { Grid3x3, List, Home, ShoppingBag, ClipboardList, User } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
 
 const Index = () => {
   const { t, dir } = useLanguage();
-  const location = useLocation();
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const { user } = useAuth();
+  const { isCartOpen, closeCart, itemCount } = useCart();
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filters, setFilters] = useState<ProductFilters>({ category: 'all', search: '' });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleCategoryChange = (category: ProductCategory) => {
     setFilters(prev => ({ ...prev, category }));
@@ -69,28 +67,30 @@ const Index = () => {
     return true;
   });
 
-  const { itemCount } = useCart();
+  const greeting = user?.customerName
+    ? `${t('hello') || 'Bonjour'}, ${user.customerName.split(' ')[0]}! 👋`
+    : `${t('hello') || 'Bonjour'} 👋`;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--surface-ground)' }} dir={dir}>
-      <Header onCartClick={() => setIsCartOpen(true)} />
+    <div style={{ minHeight: '100vh', background: '#f3f4f6', fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif" }} dir={dir}>
+      <Header />
 
       <div className="flex" style={{ minHeight: 'calc(100vh - 3.75rem)' }}>
         {/* ── Desktop Cart Panel ── */}
         <aside
-          className="hidden lg:flex flex-column surface-card"
+          className="hidden lg:flex flex-column"
           style={{
             width: `${sidebarWidth}px`,
             position: 'sticky',
             top: '3.75rem',
             height: 'calc(100vh - 3.75rem)',
             flexShrink: 0,
-            [dir === 'rtl' ? 'borderInlineStart' : 'borderInlineEnd']: '1px solid var(--surface-border)',
+            background: 'white',
+            borderInlineEnd: '1px solid #e5e7eb',
             boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
           }}
         >
           <CartDrawer isOpen={true} onClose={() => {}} isPanelMode={true} />
-          {/* Resize handle */}
           <div
             onMouseDown={startResizing}
             style={{
@@ -98,7 +98,7 @@ const Index = () => {
               [dir === 'rtl' ? 'left' : 'right']: 0,
               top: 0, bottom: 0, width: '6px',
               cursor: 'col-resize', zIndex: 50,
-              background: isResizing ? 'rgba(5,150,105,0.15)' : 'transparent',
+              background: isResizing ? 'rgba(5,150,105,0.12)' : 'transparent',
               transition: 'background 0.2s',
             }}
           />
@@ -106,26 +106,38 @@ const Index = () => {
 
         {/* ── Main Content ── */}
         <main className="flex-1 flex flex-column" style={{ minWidth: 0, overflow: 'hidden' }}>
-          {/* Search strip */}
-          <div style={{ background: 'var(--surface-card)', borderBottom: '1px solid var(--surface-border)', padding: '0.75rem 1rem', flexShrink: 0 }}>
+          {/* Greeting strip — visible on mobile only */}
+          <div
+            className="lg:hidden"
+            style={{
+              background: 'linear-gradient(135deg, #047857 0%, #059669 60%, #10b981 100%)',
+              padding: '0.75rem 1.25rem 1.75rem',
+              flexShrink: 0,
+            }}
+          >
+            <p style={{ margin: '0 0 0.75rem', fontWeight: 900, fontSize: '1.4rem', color: 'white', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+              {greeting}
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {itemCount > 0 && (
+                <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, borderRadius: '999px', padding: '0.3rem 0.75rem' }}>
+                  🛒 {itemCount}
+                </span>
+              )}
+              <span style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', color: 'rgba(255,255,255,0.9)', fontSize: '0.8rem', fontWeight: 600, borderRadius: '999px', padding: '0.3rem 0.75rem' }}>
+                {t('chooseProducts') || '🛍️ Commandez maintenant'}
+              </span>
+            </div>
+          </div>
+
+          {/* Search strip — white card lifts over gradient on mobile */}
+          <div className="cl-search-strip" style={{ background: 'white', borderBottom: '1px solid #f3f4f6', padding: '0.75rem 1rem', flexShrink: 0, borderRadius: '18px 18px 0 0', position: 'relative', zIndex: 1, marginTop: '-1.25rem' }}>
             <SearchBar value={filters.search} onChange={handleSearchChange} />
           </div>
 
-          {/* Category + view-mode strip */}
-          <div style={{ background: 'var(--surface-card)', borderBottom: '1px solid var(--surface-border)', padding: '0.5rem 1rem', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-              <CategoryChips activeCategory={filters.category} onCategoryChange={handleCategoryChange} />
-
-              {/* View mode toggle */}
-              <div className="cl-view-toggle" style={{ flexShrink: 0 }}>
-                <button className={`cl-view-btn${viewMode === 'grid' ? ' active' : ''}`} onClick={() => setViewMode('grid')} aria-label="Grid view">
-                  <Grid3x3 style={{ width: '1rem', height: '1rem' }} />
-                </button>
-                <button className={`cl-view-btn${viewMode === 'list' ? ' active' : ''}`} onClick={() => setViewMode('list')} aria-label="List view">
-                  <List style={{ width: '1rem', height: '1rem' }} />
-                </button>
-              </div>
-            </div>
+          {/* Category strip */}
+          <div style={{ background: 'white', borderBottom: '1px solid #f3f4f6', padding: '0.5rem 1rem', flexShrink: 0 }}>
+            <CategoryChips activeCategory={filters.category} onCategoryChange={handleCategoryChange} />
           </div>
 
           {/* Product area */}
@@ -133,14 +145,17 @@ const Index = () => {
             {loading && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 0', gap: '1rem' }}>
                 <ProgressSpinner style={{ width: '2rem', height: '2rem' }} strokeWidth="4" />
-                <p style={{ color: 'var(--text-color-secondary)', margin: 0 }}>{t('loading')}</p>
+                <p style={{ color: '#6b7280', margin: 0 }}>{t('loading')}</p>
               </div>
             )}
 
             {error && !loading && (
               <div style={{ textAlign: 'center', padding: '4rem 0' }}>
                 <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error}</p>
-                <button onClick={() => window.location.reload()} style={{ color: 'var(--primary-color)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{ color: '#059669', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9375rem' }}
+                >
                   {t('retry')}
                 </button>
               </div>
@@ -154,8 +169,6 @@ const Index = () => {
                 totalPages={totalPages}
                 totalCount={totalCount}
                 onPageChange={setCurrentPage}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
               />
             )}
           </div>
@@ -164,39 +177,15 @@ const Index = () => {
 
       {/* ── Mobile Cart Drawer ── */}
       <div className="lg:hidden">
-        <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} isPanelMode={false} />
+        <CartDrawer isOpen={isCartOpen} onClose={closeCart} isPanelMode={false} />
       </div>
 
       {/* ── Mobile Bottom Tab Bar ── */}
-      <nav className="cl-bottom-nav lg:hidden" dir={dir}>
-        <Link to="/" className={`cl-bottom-nav-item${location.pathname === '/' ? ' active' : ''}`}>
-          <Home style={{ width: '1.375rem', height: '1.375rem' }} />
-          <span>{t('home') || 'Accueil'}</span>
-        </Link>
-
-        <Link to="/my-orders" className={`cl-bottom-nav-item${location.pathname === '/my-orders' ? ' active' : ''}`}>
-          <ClipboardList style={{ width: '1.375rem', height: '1.375rem' }} />
-          <span>{t('orders') || 'Commandes'}</span>
-        </Link>
-
-        {/* Cart FAB in the middle */}
-        <button className="cl-bottom-cart-btn" onClick={() => setIsCartOpen(true)} aria-label={t('cart') || 'Panier'}>
-          <ShoppingBag style={{ width: '1.5rem', height: '1.5rem' }} />
-          {itemCount > 0 && <span className="cl-bottom-cart-badge">{itemCount}</span>}
-        </button>
-
-        <Link to="/profile" className={`cl-bottom-nav-item${location.pathname === '/profile' ? ' active' : ''}`}>
-          <User style={{ width: '1.375rem', height: '1.375rem' }} />
-          <span>{t('profile') || 'Profil'}</span>
-        </Link>
-
-        <div style={{ flex: 1 }} /> {/* spacer */}
-      </nav>
-
-      {/* Floating cart fallback for non-bottom-nav screens */}
-      <FloatingCartButton onClick={() => setIsCartOpen(true)} />
+      <BottomNav />
     </div>
   );
 };
 
 export default Index;
+
+

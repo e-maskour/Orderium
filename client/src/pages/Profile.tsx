@@ -4,14 +4,19 @@ import { useLanguage } from '@/context/LanguageContext';
 import { partnersService } from '@/modules';
 import { InputText } from 'primereact/inputtext';
 import { toastSuccess, toastError } from '@/services/toast.service';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AddressInput } from '@/components/AddressInput';
-import { LogOut, Save, User, Phone, MapPin } from 'lucide-react';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { CartDrawer } from '@/components/CartDrawer';
+import { BottomNav } from '@/components/BottomNav';
+import { useCart } from '@/context/CartContext';
+import { LogOut, Save, User, Phone, MapPin, ArrowLeft } from 'lucide-react';
 
 export default function Profile() {
   const { user, logout, refreshUser } = useAuth();
-  const { language: _lang, dir, t } = useLanguage();
+  const { dir, t } = useLanguage();
   const navigate = useNavigate();
+  const { isCartOpen, closeCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [mapsLink, setMapsLink] = useState<string | null>(null);
   const [wazeLink, setWazeLink] = useState<string | null>(null);
@@ -71,83 +76,178 @@ export default function Profile() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--surface-ground)' }} dir={dir}>
-      {/* Header */}
-      <header style={{ background: 'linear-gradient(135deg, #1e1e2d, #16213e)', padding: '1.25rem 1rem' }}>
-        <div style={{ maxWidth: '40rem', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-          <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '50%', background: 'rgba(52,211,153,0.15)', border: '2px solid rgba(52,211,153,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <User style={{ width: '1.25rem', height: '1.25rem', color: '#34d399' }} />
-          </div>
+    <div style={{ minHeight: '100vh', background: '#f3f4f6', fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif", paddingBottom: '5rem' }} dir={dir}>
+
+      {/* Gradient header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #15803d 0%, #059669 100%)',
+        padding: '1rem 1.25rem 3.5rem',
+        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: 'white', flexShrink: 0, WebkitTapHighlightColor: 'transparent' as const }}>
+            <ArrowLeft size={18} />
+          </Link>
           <div>
-            <h1 style={{ margin: 0, color: 'white', fontWeight: 700, fontSize: '1.0625rem' }}>{t('profile')}</h1>
-            {user?.phoneNumber && <p style={{ margin: 0, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.55)' }}>{user.phoneNumber}</p>}
+            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: 0 }}>
+              👤 {t('profile')}
+            </p>
+            <h1 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>
+              {t('myProfile')}
+            </h1>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div style={{ maxWidth: '40rem', margin: '1.5rem auto', padding: '0 1rem 6rem' }}>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Phone (readonly) */}
-          <div style={{ background: 'var(--surface-card)', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
-              <Phone style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)', flexShrink: 0 }} />
-              <label style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{t('phoneNumber')}</label>
+      <div style={{ padding: '0 1rem', marginTop: '-2.25rem', maxWidth: '40rem', marginLeft: 'auto', marginRight: 'auto' }}>
+        {/* Avatar card — overlaps header */}
+        <div style={{
+          background: '#fff', borderRadius: '22px',
+          padding: '1.5rem 1.25rem',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+          display: 'flex', alignItems: 'center', gap: '1.125rem',
+          marginBottom: '0.875rem',
+        }}>
+          <div style={{
+            width: '68px', height: '68px', borderRadius: '20px',
+            background: 'linear-gradient(135deg, #059669, #047857)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, boxShadow: '0 4px 14px rgba(5,150,105,0.35)',
+          }}>
+            <span style={{ fontSize: '2rem', fontWeight: 900, color: '#fff' }}>
+              {(formData.name || user?.customerName || '?').charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <p style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: '0 0 0.25rem' }}>
+              {formData.name || user?.customerName || t('myProfile')}
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#6b7280' }}>
+              <Phone size={14} />
+              <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{user?.phoneNumber}</span>
             </div>
-            <InputText value={user?.phoneNumber || ''} disabled className="w-full surface-100" style={{ height: '3rem' }} />
-            <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('phoneCannotBeChanged')}</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+
+          {/* Phone (readonly) */}
+          <div style={{
+            background: 'white', borderRadius: '18px',
+            overflow: 'hidden',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '1rem 1.125rem', borderBottom: '1px solid #f3f4f6' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Phone size={18} color="#059669" />
+              </div>
+              <div>
+                <p style={{ margin: '0 0 0.1rem', fontSize: '0.72rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('phoneNumber')}</p>
+                <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: '#111827' }}>{user?.phoneNumber}</p>
+              </div>
+            </div>
+            <p style={{ margin: 0, padding: '0.5rem 1.125rem', fontSize: '0.75rem', color: '#9ca3af' }}>{t('phoneCannotBeChanged')}</p>
           </div>
 
           {/* Name */}
-          <div style={{ background: 'var(--surface-card)', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
-              <User style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)', flexShrink: 0 }} />
-              <label htmlFor="name" style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{t('name')} *</label>
+          <div style={{
+            background: 'white', borderRadius: '18px',
+            padding: '1.125rem 1.25rem',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.625rem' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <User size={18} color="#059669" />
+              </div>
+              <label htmlFor="name" style={{ fontSize: '0.72rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>
+                {t('name')} <span style={{ color: '#ef4444' }}>*</span>
+              </label>
             </div>
-            <InputText id="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder={t('enterYourName')} className="w-full" style={{ height: '3rem' }} required />
+            <InputText
+              id="name"
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              placeholder={t('enterYourName')}
+              className="w-full"
+              style={{ height: '3rem', fontSize: '1rem' }}
+              required
+            />
           </div>
 
           {/* Address */}
-          <div style={{ background: 'var(--surface-card)', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
-              <MapPin style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)', flexShrink: 0 }} />
-              <label htmlFor="address" style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{t('address')}</label>
+          <div style={{
+            background: 'white', borderRadius: '18px',
+            padding: '1.125rem 1.25rem',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.625rem' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <MapPin size={18} color="#059669" />
+              </div>
+              <label htmlFor="address" style={{ fontSize: '0.72rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('address')}</label>
             </div>
-            <AddressInput value={formData.address} onChange={handleAddressChange} onMapsLinksChange={handleMapsLinksChange} googleMapsUrl={mapsLink} wazeUrl={wazeLink} />
+            <AddressInput
+              value={formData.address}
+              onChange={handleAddressChange}
+              onMapsLinksChange={handleMapsLinksChange}
+              googleMapsUrl={mapsLink}
+              wazeUrl={wazeLink}
+            />
           </div>
 
-          {/* Save */}
+          {/* Save button */}
           <button
             type="submit"
-            className="cl-btn-primary"
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.9375rem', opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
             disabled={isLoading}
+            style={{
+              width: '100%', padding: '1rem',
+              borderRadius: '14px', border: 'none',
+              background: isLoading ? '#9ca3af' : 'linear-gradient(135deg, #059669, #047857)',
+              color: 'white', fontWeight: 800, fontSize: '1rem',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              boxShadow: isLoading ? 'none' : '0 4px 16px rgba(5,150,105,0.35)',
+            }}
           >
             {isLoading ? (
               <span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
             ) : (
-              <Save style={{ width: '1.125rem', height: '1.125rem' }} />
+              <Save size={18} />
             )}
             {isLoading ? t('saving') : t('saveChanges')}
           </button>
-
-          {/* Logout */}
-          <button
-            type="button"
-            onClick={() => { logout(); navigate('/login'); }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-              padding: '0.875rem', borderRadius: '1rem', border: '1px solid #fca5a5',
-              background: 'transparent', color: '#ef4444', fontWeight: 600, fontSize: '0.9375rem',
-              cursor: 'pointer', transition: 'background 0.2s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            <LogOut style={{ width: '1.125rem', height: '1.125rem' }} />
-            {t('logout')}
-          </button>
         </form>
+
+        {/* Settings card — language + logout */}
+        <div style={{ background: '#fff', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.07)', marginTop: '0.875rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.125rem', borderBottom: '1px solid #f3f4f6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0f7ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '1.1rem' }}>🌐</span>
+              </div>
+              <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111827' }}>{t('language') || 'Langue'}</span>
+            </div>
+            <LanguageToggle />
+          </div>
+          <button
+            onClick={() => { logout(); navigate('/login'); }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 1.125rem', background: 'none', border: 'none', cursor: 'pointer', WebkitTapHighlightColor: 'transparent', textAlign: 'left' as const }}
+          >
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <LogOut size={18} color="#dc2626" />
+            </div>
+            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#dc2626' }}>{t('logout')}</span>
+          </button>
+        </div>
+
+        <p style={{ textAlign: 'center', color: '#d1d5db', fontSize: '0.8rem', fontWeight: 500, marginTop: '0.75rem', paddingBottom: '0.5rem' }}>
+          Orderium · v1.0
+        </p>
       </div>
+
+      <CartDrawer isOpen={isCartOpen} onClose={closeCart} isPanelMode={false} />
+      <BottomNav />
     </div>
   );
 }
+

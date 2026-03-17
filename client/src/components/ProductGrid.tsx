@@ -11,8 +11,6 @@ interface ProductGridProps {
   totalPages: number;
   totalCount: number;
   onPageChange: (page: number) => void;
-  viewMode?: 'grid' | 'list';
-  onViewModeChange?: (mode: 'grid' | 'list') => void;
 }
 
 export const ProductGrid = ({
@@ -22,7 +20,6 @@ export const ProductGrid = ({
   currentPage,
   totalPages,
   onPageChange,
-  viewMode = 'grid',
 }: ProductGridProps) => {
   const { t, dir } = useLanguage();
 
@@ -82,16 +79,10 @@ export const ProductGrid = ({
 
   return (
     <div dir={dir} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* Grid or list */}
-      {viewMode === 'grid' ? (
-        <div className="cl-product-grid">
-          {products.map((p, i) => <ProductCard key={`${p.id}-${i}`} product={p} />)}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {products.map((p, i) => <ProductCard key={`${p.id}-${i}`} product={p} viewMode="list" />)}
-        </div>
-      )}
+      {/* Grid */}
+      <div className="cl-product-grid">
+        {products.map((p, i) => <ProductCard key={`${p.id}-${i}`} product={p} />)}
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (

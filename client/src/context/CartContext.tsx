@@ -55,6 +55,9 @@ interface CartContextType {
   getItemQuantity: (productId: number) => number;
   subtotal: number;
   itemCount: number;
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -64,6 +67,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // Initialize from localStorage on mount
     return loadCartFromStorage();
   });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
   // Save to localStorage whenever items change
   useEffect(() => {
@@ -134,6 +141,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         getItemQuantity,
         subtotal,
         itemCount,
+        isCartOpen,
+        openCart,
+        closeCart,
       }}
     >
       {children}

@@ -2,7 +2,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useCart, CartItem } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
 import { Sidebar } from 'primereact/sidebar';
-import { ShoppingBag, Trash2, ArrowRight, ArrowLeft, Package } from 'lucide-react';
+import { ShoppingBag, Trash2, ArrowRight, ArrowLeft, Package, Minus, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { ProductQuantityModal } from './ProductQuantityModal';
@@ -14,8 +14,6 @@ interface CartDrawerProps {
   isPanelMode?: boolean;
 }
 
-// Resolve an image URL.  MinIO provider stores full public URLs; this function
-// also handles legacy relative paths stored before the MinIO migration.
 const getImageUrl = (imageUrl?: string): string | undefined => {
   if (!imageUrl) return undefined;
   if (imageUrl.startsWith('http')) return imageUrl;
@@ -25,79 +23,108 @@ const getImageUrl = (imageUrl?: string): string | undefined => {
 
 const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item: CartItem) => void }) => {
   const { t } = useLanguage();
-  const { removeItem } = useCart();
+  const { removeItem, updateQuantity } = useCart();
   const displayName = item.product.name;
 
   return (
-    <div
-      onClick={() => onItemClick(item)}
-      style={{
-        display: 'flex', gap: '0.75rem', padding: '0.75rem',
-        borderBottom: '1px solid var(--surface-border)',
-        cursor: 'pointer', transition: 'background 0.15s',
-      }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-50)')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-    >
+    <div style={{ padding: '0.4rem 0.75rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.625rem',
+          padding: '0.5rem 0.625rem',
+          alignItems: 'center',
+          background: 'white',
+          borderRadius: '12px',
+          border: '1px solid #f0f0f0',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        {/* Left accent stripe */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#059669', borderRadius: '12px 0 0 12px' }} />
+        <div style={{ width: '3px', flexShrink: 0 }} />{/* spacer for stripe */}
       {/* Thumbnail */}
-      <div style={{
-        flexShrink: 0, width: '3.5rem', height: '3.5rem',
-        borderRadius: '0.625rem', overflow: 'hidden',
-        background: 'var(--surface-100)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
+      <div
+        onClick={() => onItemClick(item)}
+        style={{
+          flexShrink: 0, width: '3rem', height: '3rem',
+          borderRadius: '0.625rem', overflow: 'hidden',
+          background: '#f8fafc',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
         {item.product.imageUrl ? (
           <img src={getImageUrl(item.product.imageUrl)} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         ) : (
-          <Package style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color-secondary)', opacity: 0.4 }} />
+          <Package size={18} color="#d1d5db" />
         )}
       </div>
 
-      {/* Info */}
+      {/* Info + controls */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.25rem' }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.8rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
             {displayName}
           </p>
           <button
-            onClick={e => { e.stopPropagation(); removeItem(item.product.id); }}
+            onClick={() => removeItem(item.product.id)}
             aria-label={t('removeFromCart')}
             style={{
-              flexShrink: 0, width: '1.75rem', height: '1.75rem', borderRadius: '50%',
-              border: 'none', background: 'transparent', cursor: 'pointer',
+              flexShrink: 0, width: '1.625rem', height: '1.625rem', borderRadius: '50%',
+              border: 'none', background: '#fee2e2', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#ef4444', transition: 'background 0.15s',
+              color: '#ef4444',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#fee2e2')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
+            <Trash2 size={11} />
           </button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.375rem' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-color-secondary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            <span style={{
-              minWidth: '1.25rem', height: '1.25rem', padding: '0 0.25rem',
-              borderRadius: '0.625rem', background: 'var(--primary-color)',
-              color: 'white', fontSize: '0.7rem', fontWeight: 700,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.35rem' }}>
+          {/* Qty stepper */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <button
+              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+              style={{
+                width: '1.5rem', height: '1.5rem', borderRadius: '50%',
+                border: '1.5px solid #e5e7eb', background: 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: '#374151',
+              }}
+            >
+              <Minus size={10} />
+            </button>
+            <span style={{ fontWeight: 800, fontSize: '0.875rem', color: '#059669', minWidth: '1.25rem', textAlign: 'center' }}>
               {item.quantity}
             </span>
-            × {formatCurrency(item.product.price, 'fr')}
-          </span>
-          <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-color)' }}>
+            <button
+              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+              style={{
+                width: '1.5rem', height: '1.5rem', borderRadius: '50%',
+                border: 'none', background: '#059669',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'white',
+              }}
+            >
+              <Plus size={10} />
+            </button>
+          </div>
+          <span style={{ fontWeight: 800, fontSize: '0.875rem', color: '#0f172a' }}>
             {formatCurrency(item.product.price * item.quantity, 'fr')}
           </span>
         </div>
       </div>
+    </div>
     </div>
   );
 };
 
 export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerProps) => {
   const { language, t, dir } = useLanguage();
-  const { items, subtotal, itemCount, clearCart } = useCart();
+  const { items, subtotal, itemCount, clearCart, closeCart } = useCart();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [initialQuantity, setInitialQuantity] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -110,36 +137,42 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
     setIsModalOpen(true);
   };
 
+  const handleClose = () => {
+    onClose();
+    closeCart();
+  };
+
   const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
   const cartContent = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }} dir={dir}>
-      {/* Panel header (desktop sidebar only) */}
+      {/* Panel header — desktop only */}
       {isPanelMode && (
-        <div style={{ background: 'linear-gradient(135deg, #1e1e2d, #16213e)', padding: '1rem', flexShrink: 0 }}>
+        <div style={{ background: 'linear-gradient(135deg, #059669, #047857)', padding: '1rem 1.25rem', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0, color: 'white', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ShoppingBag style={{ width: '1.125rem', height: '1.125rem', color: '#34d399' }} />
-              {t('yourCart')}
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShoppingBag size={18} color="white" />
+              <h2 style={{ margin: 0, color: 'white', fontWeight: 700, fontSize: '1rem' }}>
+                {t('yourCart')}
+              </h2>
+            </div>
             {items.length > 0 && (
               <button
                 onClick={clearCart}
                 aria-label={t('clearCart')}
-                title={t('clearCart')}
                 style={{
-                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: '0.5rem', cursor: 'pointer', color: '#f87171',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  borderRadius: '0.5rem', cursor: 'pointer', color: 'white',
                   width: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'background 0.15s',
                 }}
               >
-                <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
+                <Trash2 size={13} />
               </button>
             )}
           </div>
           {itemCount > 0 && (
-            <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
+            <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.75)' }}>
               {uniqueProductCount} {t(uniqueProductCount === 1 ? 'cartProduct' : 'cartProducts')} · {itemCount} {t(itemCount === 1 ? 'piece' : 'pieces')}
             </p>
           )}
@@ -149,20 +182,27 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
       {/* Items list */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {items.length === 0 ? (
-          <div className="cl-empty" style={{ height: '100%' }}>
-            <div className="cl-empty-icon">
-              <ShoppingBag style={{ width: '2rem', height: '2rem', color: '#d1d5db' }} />
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 1.5rem', textAlign: 'center' }}>
+            <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+              <ShoppingBag size={28} color="#d1d5db" />
             </div>
-            <h3 style={{ fontWeight: 600, color: 'var(--text-color)', margin: '0 0 0.5rem' }}>{t('emptyCart')}</h3>
-            <p style={{ color: 'var(--text-color-secondary)', fontSize: '0.875rem', margin: 0 }}>{t('emptyCartMessage')}</p>
+            <h3 style={{ fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem', fontSize: '1.0625rem' }}>{t('emptyCart')}</h3>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 1.5rem' }}>{t('emptyCartMessage')}</p>
             {!isPanelMode && (
-              <button onClick={onClose} className="cl-btn-primary" style={{ marginTop: '1.25rem', padding: '0.75rem 2rem' }}>
+              <button
+                onClick={handleClose}
+                style={{
+                  padding: '0.75rem 2rem', borderRadius: '0.875rem', border: 'none',
+                  background: 'linear-gradient(135deg, #059669, #047857)',
+                  color: 'white', fontWeight: 700, fontSize: '0.9375rem', cursor: 'pointer',
+                }}
+              >
                 {t('continueShopping')}
               </button>
             )}
           </div>
         ) : (
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem', padding: '0.375rem 0' }}>
             {items.map(item => (
               <CartItemRow key={item.product.id} item={item} onItemClick={handleItemClick} />
             ))}
@@ -172,17 +212,26 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
 
       {/* Footer */}
       {items.length > 0 && (
-        <div style={{ flexShrink: 0, borderTop: '1px solid var(--surface-border)', padding: '1rem', background: 'var(--surface-card)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
-            <span style={{ color: 'var(--text-color-secondary)', fontWeight: 500 }}>{t('totalAmount')}</span>
-            <span style={{ fontWeight: 800, fontSize: '1.375rem', color: 'var(--primary-color)' }}>
+        <div style={{ flexShrink: 0, background: 'white', padding: '1rem 1.25rem', borderTop: '1px solid #f3f4f6' }}>
+          {/* Subtotal row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem', padding: '0.75rem 1rem', background: '#f0fdf4', borderRadius: '0.875rem' }}>
+            <span style={{ color: '#374151', fontWeight: 600, fontSize: '0.9375rem' }}>{t('totalAmount')}</span>
+            <span style={{ fontWeight: 900, fontSize: '1.5rem', color: '#059669', letterSpacing: '-0.02em' }}>
               {formatCurrency(subtotal, language)}
             </span>
           </div>
-          <Link to="/checkout" onClick={isPanelMode ? undefined : onClose} style={{ textDecoration: 'none', display: 'block' }}>
-            <button className="cl-btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+          <Link to="/checkout" onClick={isPanelMode ? undefined : handleClose} style={{ textDecoration: 'none', display: 'block' }}>
+            <button style={{
+              width: '100%', padding: '1rem', border: 'none',
+              borderRadius: '0.875rem',
+              background: 'linear-gradient(135deg, #059669, #047857)',
+              color: 'white', fontWeight: 800, fontSize: '1rem',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              boxShadow: '0 4px 16px rgba(5,150,105,0.4)',
+              letterSpacing: '0.01em',
+            }}>
               {t('checkout')}
-              <ArrowIcon style={{ width: '1.125rem', height: '1.125rem' }} />
+              <ArrowIcon size={18} />
             </button>
           </Link>
         </div>
@@ -190,7 +239,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
     </div>
   );
 
-  // Panel Mode (Desktop - always visible)
+  // Panel Mode (Desktop — always visible)
   if (isPanelMode) {
     return (
       <>
@@ -205,7 +254,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
     );
   }
 
-  // Drawer Mode (Mobile) — PrimeReact Sidebar
+  // Drawer Mode (Mobile — PrimeReact Sidebar)
   return (
     <>
       <ProductQuantityModal
@@ -217,17 +266,17 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
 
       <Sidebar
         visible={isOpen}
-        onHide={onClose}
+        onHide={handleClose}
         position={dir === 'rtl' ? 'left' : 'right'}
         modal
         header={
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }} dir={dir}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-color)' }}>
-              <ShoppingBag style={{ width: '1.125rem', height: '1.125rem', color: 'var(--primary-color)' }} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>
+              <ShoppingBag size={18} color="#059669" />
               {t('yourCart')}
               {itemCount > 0 && (
-                <span style={{ fontWeight: 400, fontSize: '0.8rem', color: 'var(--text-color-secondary)' }}>
-                  ({uniqueProductCount} {t(uniqueProductCount === 1 ? 'cartProduct' : 'cartProducts')} · {itemCount} {t(itemCount === 1 ? 'piece' : 'pieces')})
+                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#059669', background: '#d1fae5', borderRadius: '9999px', padding: '0.125rem 0.5rem' }}>
+                  {itemCount}
                 </span>
               )}
             </span>
@@ -238,11 +287,10 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
                 style={{
                   background: '#fee2e2', border: 'none', borderRadius: '50%',
                   width: '2rem', height: '2rem', cursor: 'pointer', color: '#ef4444',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
               >
-                <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
+                <Trash2 size={13} />
               </button>
             )}
           </div>
@@ -255,3 +303,4 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
     </>
   );
 };
+

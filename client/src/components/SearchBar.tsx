@@ -15,10 +15,6 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
   const barcodeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();

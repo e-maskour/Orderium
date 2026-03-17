@@ -5,20 +5,32 @@ import { formatCurrency } from '@/lib/i18n';
 import { ordersService } from '@/modules/orders';
 import { Order, OrderItem } from '@/modules/orders/orders.interface';
 import { Dialog } from 'primereact/dialog';
-import { Sidebar } from 'primereact/sidebar';
-import { Calendar } from 'primereact/calendar';
-import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
 import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
-import { Package, MapPin, Calendar as CalendarIcon, ShoppingBag, Eye, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CartDrawer } from '@/components/CartDrawer';
+import { BottomNav } from '@/components/BottomNav';
+import { useCart } from '@/context/CartContext';
+import { Package, MapPin, Calendar as CalendarIcon, FileText, ReceiptText, ChevronLeft, ChevronRight, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { toastError } from '@/services/toast.service';
+
+const STATUS_CONFIG: Record<string, { label_fr: string; label_ar: string; color: string; bg: string; stripe: string }> = {
+  pending:     { label_fr: 'En attente',   label_ar: 'قيد الانتظار',  color: '#1d4ed8', bg: '#eff6ff', stripe: '#3b82f6' },
+  assigned:    { label_fr: 'Assignée',      label_ar: 'مُعيَّنة',       color: '#7c3aed', bg: '#f5f3ff', stripe: '#8b5cf6' },
+  confirmed:   { label_fr: 'Confirmée',     label_ar: 'مؤكدة',          color: '#0369a1', bg: '#e0f2fe', stripe: '#0ea5e9' },
+  picked_up:   { label_fr: 'Récupérée',     label_ar: 'تم الاستلام',    color: '#0e7490', bg: '#cffafe', stripe: '#06b6d4' },
+  to_delivery: { label_fr: 'En préparation',label_ar: 'جاهز للتسليم',  color: '#c2410c', bg: '#fff7ed', stripe: '#f97316' },
+  in_delivery: { label_fr: 'En livraison',  label_ar: 'في الطريق',      color: '#a16207', bg: '#fefce8', stripe: '#eab308' },
+  delivered:   { label_fr: 'Livrée',        label_ar: 'تم التسليم',     color: '#15803d', bg: '#f0fdf4', stripe: '#22c55e' },
+  canceled:    { label_fr: 'Annulée',       label_ar: 'ملغاة',           color: '#b91c1c', bg: '#fef2f2', stripe: '#ef4444' },
+};
 
 export default function MyOrders() {
   const { t, language, dir } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isCartOpen, closeCart } = useCart();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
@@ -26,465 +38,389 @@ export default function MyOrders() {
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled'>('all');
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const [appliedFilters, setAppliedFilters] = useState({
-    orderNumber: '',
-    dateRange: { start: undefined as Date | undefined, end: undefined as Date | undefined },
-  });
-
-  const [orderNumberSearch, setOrderNumberSearch] = useState('');
-  const [dateRange, setDateRange] = useState<Date[] | undefined>(undefined);
-
+  const pageSize = 20;
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user?.customerId) {
-        setIsLoading(false);
-        return;
-      }
-
+      if (!user?.customerId) { setIsLoading(false); return; }
       setIsLoading(true);
       try {
         const response = await ordersService.getCustomerOrders(
-          user.customerId,
-          currentPage,
-          pageSize,
-          appliedFilters.orderNumber || undefined,
-          statusFilter !== 'all' ? statusFilter : undefined,
-          appliedFilters.dateRange.start,
-          appliedFilters.dateRange.end,
+          user.customerId, currentPage, pageSize,
+          undefined,
+          statusFilter !== 'all' ? statusFilter as any : undefined,
         );
-
         if (response.success) {
           setOrders(response.orders);
           setTotalCount(response.total);
           setTotalPages(response.totalPages);
         }
-      } catch (error) {
-        console.error('Failed to fetch orders:', error);
+      } catch {
         toastError(t('error'));
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchOrders();
-  }, [user, currentPage, pageSize, appliedFilters.orderNumber, statusFilter, appliedFilters.dateRange, t]);
-
-  useEffect(() => {
-    if (filtersExpanded) {
-      setOrderNumberSearch(appliedFilters.orderNumber);
-      const range: Date[] = [];
-      if (appliedFilters.dateRange.start) range.push(appliedFilters.dateRange.start);
-      if (appliedFilters.dateRange.end) range.push(appliedFilters.dateRange.end);
-      setDateRange(range.length > 0 ? range : undefined);
-    }
-  }, [filtersExpanded, appliedFilters]);
+  }, [user, currentPage, pageSize, statusFilter, t]);
 
   const statusCounts = useMemo(() => {
-    const counts = {
-      all: totalCount,
-      pending: 0,
-      assigned: 0,
-      confirmed: 0,
-      picked_up: 0,
-      to_delivery: 0,
-      in_delivery: 0,
-      delivered: 0,
-      canceled: 0,
-    };
-
-    orders.forEach(order => {
-      const status = order.deliveryStatus || 'pending';
-      if (status in counts) {
-        counts[status as keyof typeof counts]++;
-      }
+    const counts: Record<string, number> = { all: totalCount };
+    orders.forEach(o => {
+      const s = o.deliveryStatus || 'pending';
+      counts[s] = (counts[s] || 0) + 1;
     });
-
     return counts;
   }, [orders, totalCount]);
 
-  const startIndex = (currentPage - 1) * pageSize + 1;
-  const endIndex = Math.min(currentPage * pageSize, totalCount);
-
-  const getStatusStyle = (status?: string): { label: string; bg: string; color: string } => {
-    const statusMap: Record<string, { label: string; bg: string; color: string }> = {
-      pending: { label: t('statusPending'), bg: '#dbeafe', color: '#1d4ed8' },
-      assigned: { label: t('statusAssigned'), bg: '#f3e8ff', color: '#7c3aed' },
-      confirmed: { label: t('statusConfirmed'), bg: '#e0e7ff', color: '#4338ca' },
-      picked_up: { label: t('statusPickedUp'), bg: '#cffafe', color: '#0e7490' },
-      to_delivery: { label: t('statusToDelivery'), bg: '#ffedd5', color: '#c2410c' },
-      in_delivery: { label: t('statusInDelivery'), bg: '#fef3c7', color: '#a16207' },
-      delivered: { label: t('statusDelivered'), bg: '#dcfce7', color: '#15803d' },
-      canceled: { label: t('statusCanceled'), bg: '#fee2e2', color: '#b91c1c' },
-    };
-    const normalizedStatus = status || 'pending';
-    return statusMap[normalizedStatus] || statusMap.pending;
+  const getStatusLabel = (status: string) => {
+    const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+    return language === 'ar' ? cfg.label_ar : cfg.label_fr;
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const locale = language === 'ar' ? 'ar-MA' : 'fr-MA';
-    return date.toLocaleString(locale, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-MA', {
+      day: '2-digit', month: 'short', year: 'numeric',
     });
   };
 
   const handleViewItems = async (order: Order) => {
     try {
       const orderDetails = await ordersService.getById(order.id);
-      setSelectedOrderItems({
-        order,
-        items: orderDetails.items || []
-      });
-    } catch (error) {
-      console.error('Failed to fetch order items:', error);
+      setSelectedOrderItems({ order, items: orderDetails.items || [] });
+    } catch {
+      toastError(t('error'));
     }
   };
 
   const handlePreview = (documentType: 'receipt' | 'invoice') => {
     if (!selectedOrderItems) return;
-
     const orderId = selectedOrderItems.order.id;
-    if (!orderId) {
-      toastError(t('orderIdMissing'));
-      return;
-    }
-
+    if (!orderId) { toastError(t('orderIdMissing')); return; }
     const endpoint = documentType === 'receipt'
       ? `/api/pdf/receipt/${orderId}?mode=preview`
       : `/api/pdf/delivery-note/${orderId}?mode=preview`;
-
-    const title = documentType === 'receipt'
-      ? t('receipt')
-      : t('deliveryNote');
-
     setPdfUrl(endpoint);
-    setPdfTitle(`${title} ${selectedOrderItems.order.orderNumber}`);
+    setPdfTitle(`${documentType === 'receipt' ? t('receipt') : t('deliveryNote')} ${selectedOrderItems.order.orderNumber}`);
     setSelectedOrderItems(null);
     setShowPDFPreview(true);
   };
 
-  if (isLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-ground)' }} dir={dir}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '2.5rem', height: '2.5rem', border: '3px solid var(--surface-border)', borderTopColor: 'var(--primary-color)', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
-          <p style={{ color: 'var(--text-color-secondary)', margin: 0 }}>{t('loading')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user?.customerId) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'var(--surface-ground)', padding: '1.5rem 1rem' }} dir={dir}>
-        <div style={{ maxWidth: '40rem', margin: '4rem auto', textAlign: 'center' }}>
-          <div className="cl-empty-icon"><Package style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} /></div>
-          <h3 style={{ color: 'var(--text-color)', fontWeight: 600, marginBottom: '0.5rem' }}>{t('cannotLoadOrders')}</h3>
-          <p style={{ color: 'var(--text-color-secondary)' }}>{t('noCustomerId')}</p>
-        </div>
-      </div>
-    );
-  }
+  const statusTabs = [
+    { key: 'all', label: language === 'ar' ? 'الكل' : 'Tous' },
+    { key: 'pending',     label: language === 'ar' ? 'انتظار' : 'Attente' },
+    { key: 'in_delivery', label: language === 'ar' ? 'الطريق' : 'Livraison' },
+    { key: 'delivered',   label: language === 'ar' ? 'تسليم' : 'Livrée' },
+    { key: 'canceled',    label: language === 'ar' ? 'ملغاة' : 'Annulée' },
+  ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--surface-ground)' }} dir={dir}>
-      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1rem' }}>
+    <div style={{ minHeight: '100vh', background: '#f3f4f6', fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif", paddingBottom: '5rem' }} dir={dir}>
 
-        {/* Page header */}
-        <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-color)' }} />
-            {t('myOrders')}
-          </h1>
-          <button
-            onClick={() => setFiltersExpanded(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.5rem 1rem', borderRadius: '0.75rem',
-              background: (appliedFilters.orderNumber || appliedFilters.dateRange.start) ? 'var(--primary-color)' : 'var(--surface-card)',
-              color: (appliedFilters.orderNumber || appliedFilters.dateRange.start) ? 'white' : 'var(--text-color)',
-              border: '1px solid var(--surface-border)', cursor: 'pointer',
-              fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s',
-            }}
-          >
-            <Filter style={{ width: '0.875rem', height: '0.875rem' }} />
-            {t('filters')}
-            {(appliedFilters.orderNumber || appliedFilters.dateRange.start) && (
-              <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '9999px', padding: '0.1rem 0.4rem', fontSize: '0.75rem', fontWeight: 700 }}>
-                {[Boolean(appliedFilters.orderNumber), Boolean(appliedFilters.dateRange.start)].filter(Boolean).length}
-              </span>
-            )}
-          </button>
+      {/* Gradient header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #15803d 0%, #16a34a 60%, #22c55e 100%)',
+        padding: '1rem 1.25rem 3rem',
+        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: 'white', flexShrink: 0, WebkitTapHighlightColor: 'transparent' as const }}>
+              <ArrowLeft size={18} />
+            </Link>
+            <div>
+              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: 0 }}>
+                {t('orders') || 'Commandes'}
+              </p>
+              <h1 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>{t('myOrders')}</h1>
+            </div>
+          </div>
+          {totalCount > 0 && (
+            <span style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, borderRadius: '999px', padding: '0.3rem 0.75rem' }}>
+              📦 {totalCount}
+            </span>
+          )}
         </div>
 
-        {/* Status filter chips */}
-        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.75rem', marginBottom: '1rem', scrollbarWidth: 'none' }}>
-          {[
-            { key: 'all', label: t('all') },
-            { key: 'pending', label: t('statusPending') },
-            { key: 'assigned', label: t('statusAssigned') },
-            { key: 'confirmed', label: t('statusConfirmed') },
-            { key: 'picked_up', label: t('statusPickedUp') },
-            { key: 'to_delivery', label: t('statusToDelivery') },
-            { key: 'in_delivery', label: t('statusInDelivery') },
-            { key: 'delivered', label: t('statusDelivered') },
-            { key: 'canceled', label: t('statusCanceled') },
-          ].map(f => (
+        {/* Status chips (frosted glass) */}
+        <div style={{ display: 'flex', overflowX: 'auto', gap: '0.5rem', scrollbarWidth: 'none' as const }}>
+          {statusTabs.map(tab => {
+            const isActive = statusFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => { setStatusFilter(tab.key); setCurrentPage(1); }}
+                style={{
+                  flexShrink: 0, padding: '0.3rem 0.75rem',
+                  borderRadius: '999px', border: 'none',
+                  background: isActive ? '#fff' : 'rgba(255,255,255,0.2)',
+                  color: isActive ? '#15803d' : '#fff',
+                  fontWeight: isActive ? 700 : 600,
+                  fontSize: '0.8rem', cursor: 'pointer', whiteSpace: 'nowrap',
+                  WebkitTapHighlightColor: 'transparent',
+                  transition: 'background 0.15s',
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Content — overlaps gradient header */}
+      <div style={{ padding: '0.875rem 1rem', marginTop: '-1.75rem', maxWidth: '48rem', marginLeft: 'auto', marginRight: 'auto' }}>
+
+        {isLoading && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 0', gap: '1rem' }}>
+            <div style={{ width: '2.5rem', height: '2.5rem', border: '3px solid #e5e7eb', borderTopColor: '#059669', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
+            <p style={{ color: '#6b7280', margin: 0 }}>{t('loading')}</p>
+          </div>
+        )}
+
+        {!isLoading && orders.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+            <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+              <Package size={28} color="#d1d5db" />
+            </div>
+            <h3 style={{ fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>{t('noOrdersFound')}</h3>
+            <p style={{ color: '#6b7280', margin: '0 0 1.5rem', fontSize: '0.875rem' }}>{t('noOrdersYet')}</p>
             <button
-              key={f.key}
-              onClick={() => { setStatusFilter(f.key as typeof statusFilter); setCurrentPage(1); }}
+              onClick={() => navigate('/')}
               style={{
-                flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                padding: '0.375rem 0.875rem', borderRadius: '9999px',
-                background: statusFilter === f.key ? 'var(--primary-color)' : 'var(--surface-card)',
-                color: statusFilter === f.key ? 'white' : 'var(--text-color)',
-                border: statusFilter === f.key ? 'none' : '1px solid var(--surface-border)',
-                fontWeight: statusFilter === f.key ? 600 : 400,
-                fontSize: '0.8125rem', cursor: 'pointer', transition: 'all 0.2s',
-                boxShadow: statusFilter === f.key ? '0 2px 8px rgba(5,150,105,0.3)' : 'none',
-                whiteSpace: 'nowrap',
+                padding: '0.875rem 2rem', borderRadius: '0.875rem', border: 'none',
+                background: 'linear-gradient(135deg, #059669, #047857)',
+                color: 'white', fontWeight: 700, cursor: 'pointer',
               }}
             >
-              {f.label}
-              <span style={{
-                background: statusFilter === f.key ? 'rgba(255,255,255,0.25)' : 'var(--surface-100)',
-                color: statusFilter === f.key ? 'white' : 'var(--text-color-secondary)',
-                borderRadius: '9999px', padding: '0.05rem 0.375rem', fontSize: '0.7rem', fontWeight: 600,
-              }}>
-                {statusCounts[f.key as keyof typeof statusCounts]}
-              </span>
+              {t('continueShopping')}
             </button>
-          ))}
-        </div>
-
-        {/* Orders list */}
-        {orders.length === 0 ? (
-          <div className="cl-empty" style={{ padding: '4rem 0' }}>
-            <div className="cl-empty-icon"><Package style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} /></div>
-            <h3 style={{ fontWeight: 600, color: 'var(--text-color)', margin: '0 0 0.5rem' }}>{t('noOrdersFound')}</h3>
-            <p style={{ color: 'var(--text-color-secondary)', margin: 0, fontSize: '0.875rem' }}>
-              {appliedFilters.orderNumber ? t('noResultsMessage') : t('noOrdersYet')}
-            </p>
           </div>
-        ) : (
-          <>
-            {/* Pagination bar */}
-            {totalCount > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-color-secondary)' }}>
-                  {t('showing')} <strong style={{ color: 'var(--text-color)' }}>{startIndex}–{endIndex}</strong> {t('of')} <strong style={{ color: 'var(--text-color)' }}>{totalCount}</strong>
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Dropdown
-                    value={pageSize}
-                    onChange={e => { setPageSize(e.value); setCurrentPage(1); }}
-                    options={[{ label: '10', value: 10 }, { label: '20', value: 20 }, { label: '50', value: 50 }]}
-                    optionLabel="label" optionValue="value"
-                    style={{ height: '2.25rem', fontSize: '0.8125rem' }}
-                  />
-                  <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="cl-page-btn"
-                    style={{ opacity: currentPage === 1 ? 0.4 : 1 }}
-                  >
-                    <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
-                  </button>
-                  <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-color)' }}>{currentPage} / {totalPages}</span>
-                  <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="cl-page-btn"
-                    style={{ opacity: currentPage === totalPages ? 0.4 : 1 }}
-                  >
-                    <ChevronRight style={{ width: '1rem', height: '1rem' }} />
-                  </button>
-                </div>
-              </div>
-            )}
+        )}
 
-            {/* Order cards grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-              {orders.map(order => {
-                const status = getStatusStyle(order.deliveryStatus);
-                return (
-                  <div key={order.id} style={{ background: 'var(--surface-card)', borderRadius: '1rem', border: '1px solid var(--surface-border)', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
-                    {/* Card header */}
-                    <div style={{ padding: '0.875rem', borderBottom: '1px solid var(--surface-border)', background: 'var(--surface-50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Package style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)', flexShrink: 0 }} />
-                        <span style={{ fontWeight: 700, fontSize: '0.9375rem', fontFamily: 'monospace', color: 'var(--text-color)' }}>{order.orderNumber}</span>
+        {!isLoading && orders.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            {orders.map(order => {
+              const status = order.deliveryStatus || 'pending';
+              const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+              const isActive = !['delivered', 'canceled'].includes(status);
+              return (
+                <div
+                  key={order.id}
+                  style={{
+                    background: 'white',
+                    borderRadius: '18px',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+                    display: 'flex',
+                    WebkitTapHighlightColor: 'transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {/* Status stripe (left border) */}
+                  <div style={{ width: '5px', background: cfg.stripe, flexShrink: 0 }} />
+
+                  {/* Card body */}
+                  <div style={{ flex: 1, padding: '1rem' }}>
+                    {/* Top row */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.625rem' }}>
+                      <div>
+                        <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', fontFamily: 'monospace' }}>
+                          #{order.orderNumber}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.25rem' }}>
+                          <CalendarIcon size={12} color="#9ca3af" />
+                          <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{formatDate(order.dateCreated)}</span>
+                        </div>
                       </div>
-                      <span style={{ background: status.bg, color: status.color, padding: '0.2rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                        {status.label}
+                      <span style={{
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '9999px',
+                        background: cfg.bg,
+                        color: cfg.color,
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}>
+                        {getStatusLabel(status)}
                       </span>
                     </div>
 
-                    {/* Card body */}
-                    <div style={{ padding: '0.875rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: 'var(--text-color-secondary)' }}>
-                        <CalendarIcon style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0 }} />
-                        {formatDate(order.dateCreated)}
-                      </div>
+                    {/* Total */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '0.625rem 0.75rem',
+                      background: '#f8fafc', borderRadius: '0.625rem',
+                      marginBottom: '0.75rem',
+                    }}>
+                      <span style={{ fontSize: '0.8125rem', color: '#6b7280', fontWeight: 500 }}>{t('totalAmount')}</span>
+                      <span style={{ fontWeight: 900, fontSize: '1.375rem', color: '#059669', letterSpacing: '-0.02em' }}>
+                        {formatCurrency(order.total || 0, language)}
+                      </span>
+                    </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.625rem', borderTop: '1px solid var(--surface-border)' }}>
-                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-color-secondary)' }}>{t('totalAmount')}</span>
-                        <span style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--primary-color)' }}>{formatCurrency(order.total || 0, language)}</span>
-                      </div>
-
-                      {/* Actions */}
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => handleViewItems(order)}
+                        style={{
+                          flex: 1,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                          padding: '0.75rem',
+                          borderRadius: '0.75rem',
+                          border: '1.5px solid #e5e7eb',
+                          background: 'white',
+                          color: '#374151',
+                          fontWeight: 700,
+                          fontSize: '0.8125rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <FileText size={14} />
+                        {t('viewDetails')}
+                      </button>
+                      {isActive && (
                         <button
-                          onClick={() => handleViewItems(order)}
+                          onClick={() => setSelectedOrder(order.orderNumber)}
                           style={{
-                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
-                            padding: '0.625rem', borderRadius: '0.625rem', border: '1px solid var(--surface-border)',
-                            background: 'var(--surface-50)', color: 'var(--text-color)', cursor: 'pointer',
-                            fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.15s',
+                            flex: 1,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                            padding: '0.75rem',
+                            borderRadius: '0.75rem',
+                            border: 'none',
+                            background: 'linear-gradient(135deg, #059669, #047857)',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '0.8125rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(5,150,105,0.3)',
                           }}
                         >
-                          <Eye style={{ width: '0.875rem', height: '0.875rem' }} />
-                          {t('viewDetails')}
+                          <MapPin size={14} />
+                          {t('track')}
                         </button>
-                        {order.deliveryStatus !== 'delivered' && order.deliveryStatus !== 'canceled' && (
-                          <button
-                            onClick={() => setSelectedOrder(order.orderNumber)}
-                            style={{
-                              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
-                              padding: '0.625rem', borderRadius: '0.625rem', border: 'none',
-                              background: 'var(--primary-color)', color: 'white', cursor: 'pointer',
-                              fontSize: '0.8125rem', fontWeight: 600, transition: 'all 0.15s',
-                            }}
-                          >
-                            <MapPin style={{ width: '0.875rem', height: '0.875rem' }} />
-                            {t('track')}
-                          </button>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
+                </div>
+              );
+            })}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', paddingTop: '0.5rem' }}>
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    width: '2.75rem', height: '2.75rem', borderRadius: '50%',
+                    border: '1.5px solid #e5e7eb', background: 'white', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: currentPage === 1 ? 0.4 : 1,
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#374151' }}>
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    width: '2.75rem', height: '2.75rem', borderRadius: '50%',
+                    border: '1.5px solid #e5e7eb', background: 'white', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: currentPage === totalPages ? 0.4 : 1,
+                  }}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Filters Sidebar */}
-      <Sidebar
-        visible={filtersExpanded}
-        onHide={() => setFiltersExpanded(false)}
-        position={dir === 'rtl' ? 'left' : 'right'}
-        style={{ width: '24rem' }}
-        header={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Filter style={{ width: '1.125rem', height: '1.125rem' }} />
-            <span style={{ fontWeight: 700, fontSize: '1rem' }}>{t('filters')}</span>
-          </div>
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem', height: '100%' }}>
-          <div>
-            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-color-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}>
-              <Search style={{ width: '0.875rem', height: '0.875rem' }} /> {t('orderNumber')}
-            </label>
-            <InputText
-              placeholder={t('enterOrderNumber')}
-              value={orderNumberSearch}
-              onChange={e => setOrderNumberSearch(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-color-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}>
-              <CalendarIcon style={{ width: '0.875rem', height: '0.875rem' }} /> {t('dateRange')}
-            </label>
-            <Calendar
-              value={dateRange}
-              onChange={e => setDateRange(e.value as Date[] | undefined)}
-              selectionMode="range"
-              placeholder={t('selectDate')}
-              className="w-full"
-              showIcon readOnlyInput
-            />
-          </div>
-
-          <div style={{ marginTop: 'auto', display: 'flex', gap: '0.75rem' }}>
-            <button
-              onClick={() => {
-                setOrderNumberSearch(''); setDateRange(undefined); setStatusFilter('all'); setCurrentPage(1);
-                setAppliedFilters({ orderNumber: '', dateRange: { start: undefined, end: undefined } });
-                setFiltersExpanded(false);
-              }}
-              style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', background: 'var(--surface-card)', color: 'var(--text-color)', cursor: 'pointer', fontWeight: 500 }}
-            >
-              {t('reset')}
-            </button>
-            <button
-              onClick={() => {
-                setCurrentPage(1);
-                setAppliedFilters({ orderNumber: orderNumberSearch, dateRange: { start: dateRange?.[0], end: dateRange?.[1] } });
-                setFiltersExpanded(false);
-              }}
-              className="cl-btn-primary"
-              style={{ flex: 1, padding: '0.75rem' }}
-            >
-              {t('apply')}
-            </button>
-          </div>
-        </div>
-      </Sidebar>
+      {/* Cart Drawer (mobile) */}
+      <CartDrawer isOpen={isCartOpen} onClose={closeCart} isPanelMode={false} />
+      <BottomNav />
 
       {/* Tracking Dialog */}
       <Dialog
         visible={!!selectedOrder}
         onHide={() => setSelectedOrder(null)}
-        header={<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPin style={{ width: '1.125rem', height: '1.125rem', color: 'var(--primary-color)' }} /><span>{t('trackOrder')}</span></div>}
+        header={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <MapPin size={18} color="#059669" />
+            <span style={{ fontWeight: 700 }}>{t('trackOrder')}</span>
+          </div>
+        }
         modal style={{ width: '95vw', maxWidth: '42rem' }}
         contentStyle={{ maxHeight: '80vh', overflow: 'auto' }}
       >
         {selectedOrder && user?.customerId && (
           <div style={{ marginTop: '0.75rem' }}>
-            <div style={{ background: 'var(--surface-100)', borderRadius: '0.75rem', padding: '0.875rem', marginBottom: '1rem' }}>
-              <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('orderNumber')}</p>
-              <p style={{ margin: 0, fontWeight: 700, color: 'var(--primary-color)', fontFamily: 'monospace' }}>{selectedOrder}</p>
+            <div style={{ background: '#f0fdf4', borderRadius: '0.75rem', padding: '0.875rem', marginBottom: '1rem', border: '1px solid #a7f3d0' }}>
+              <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>{t('orderNumber')}</p>
+              <p style={{ margin: 0, fontWeight: 800, color: '#059669', fontFamily: 'monospace', fontSize: '1.0625rem' }}>{selectedOrder}</p>
             </div>
             <OrderTracking orderNumber={selectedOrder} customerId={user.customerId} />
           </div>
         )}
       </Dialog>
 
-      {/* Order Items Dialog */}
+      {/* Order Details Dialog */}
       <Dialog
         visible={!!selectedOrderItems}
         onHide={() => setSelectedOrderItems(null)}
-        header={<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShoppingBag style={{ width: '1.125rem', height: '1.125rem', color: 'var(--primary-color)' }} /><span>{t('orderDetails')}</span></div>}
+        header={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ShoppingBag size={18} color="#059669" />
+            <span style={{ fontWeight: 700 }}>{t('orderDetails')}</span>
+          </div>
+        }
         modal style={{ width: '95vw', maxWidth: '48rem' }}
         contentStyle={{ padding: 0 }}
         footer={selectedOrderItems && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{t('total')}</span>
-              <span style={{ fontWeight: 800, fontSize: '1.375rem', color: 'var(--primary-color)' }}>{formatCurrency(selectedOrderItems.order.total || 0, language)}</span>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0.75rem 1rem', background: '#f0fdf4', borderRadius: '0.75rem',
+            }}>
+              <span style={{ fontWeight: 700, color: '#374151' }}>{t('total')}</span>
+              <span style={{ fontWeight: 900, fontSize: '1.5rem', color: '#059669', letterSpacing: '-0.02em' }}>
+                {formatCurrency(selectedOrderItems.order.total || 0, language)}
+              </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <button onClick={() => handlePreview('receipt')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', background: 'var(--surface-card)', cursor: 'pointer', fontWeight: 500 }}>
-                <Eye style={{ width: '0.875rem', height: '0.875rem' }} /> {t('receipt')}
+              <button
+                onClick={() => handlePreview('receipt')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  padding: '0.875rem', borderRadius: '0.875rem',
+                  border: '1.5px solid #e5e7eb', background: 'white',
+                  cursor: 'pointer', fontWeight: 700, fontSize: '0.875rem', color: '#374151',
+                }}
+              >
+                <ReceiptText size={16} /> {t('receipt')}
               </button>
-              <button onClick={() => handlePreview('invoice')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', background: 'var(--surface-card)', cursor: 'pointer', fontWeight: 500 }}>
-                <Eye style={{ width: '0.875rem', height: '0.875rem' }} /> {t('deliveryNote')}
+              <button
+                onClick={() => handlePreview('invoice')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  padding: '0.875rem', borderRadius: '0.875rem',
+                  border: 'none', background: 'linear-gradient(135deg, #059669, #047857)',
+                  cursor: 'pointer', fontWeight: 700, fontSize: '0.875rem', color: 'white',
+                }}
+              >
+                <FileText size={16} /> {t('deliveryNote')}
               </button>
             </div>
           </div>
@@ -492,18 +428,37 @@ export default function MyOrders() {
       >
         {selectedOrderItems && (
           <div style={{ padding: '1rem' }}>
-            <div style={{ background: 'var(--surface-100)', borderRadius: '0.75rem', padding: '0.875rem', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              <div><p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('orderNumber')}</p><p style={{ margin: 0, fontWeight: 700, color: 'var(--primary-color)', fontFamily: 'monospace' }}>{selectedOrderItems.order.orderNumber}</p></div>
-              <div><p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('date')}</p><p style={{ margin: 0, fontWeight: 500 }}>{formatDate(selectedOrderItems.order.dateCreated)}</p></div>
+            <div style={{ background: '#f8fafc', borderRadius: '0.75rem', padding: '0.875rem', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div>
+                <p style={{ margin: '0 0 0.25rem', fontSize: '0.6875rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('orderNumber')}</p>
+                <p style={{ margin: 0, fontWeight: 800, color: '#059669', fontFamily: 'monospace' }}>#{selectedOrderItems.order.orderNumber}</p>
+              </div>
+              <div>
+                <p style={{ margin: '0 0 0.25rem', fontSize: '0.6875rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('date')}</p>
+                <p style={{ margin: 0, fontWeight: 600, color: '#0f172a', fontSize: '0.875rem' }}>{formatDate(selectedOrderItems.order.dateCreated)}</p>
+              </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {selectedOrderItems.items.map(item => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', background: 'var(--surface-card)' }}>
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.875rem', borderRadius: '0.75rem',
+                    border: '1px solid #f0f0f0', background: 'white',
+                  }}
+                >
                   <div>
-                    <p style={{ margin: '0 0 0.25rem', fontWeight: 500, color: 'var(--text-color)' }}>{item.productName || `${t('cartProduct')} ${item.productId}`}</p>
-                    <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-color-secondary)' }}>{item.quantity} × {formatCurrency(item.unitPrice, language)}</p>
+                    <p style={{ margin: '0 0 0.25rem', fontWeight: 600, color: '#0f172a', fontSize: '0.9375rem' }}>
+                      {item.productName || `${t('cartProduct')} ${item.productId}`}
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6b7280' }}>
+                      {item.quantity} × {formatCurrency(item.unitPrice, language)}
+                    </p>
                   </div>
-                  <span style={{ fontWeight: 700, color: 'var(--primary-color)' }}>{formatCurrency(item.total, language)}</span>
+                  <span style={{ fontWeight: 800, fontSize: '1rem', color: '#059669' }}>
+                    {formatCurrency(item.total, language)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -515,3 +470,4 @@ export default function MyOrders() {
     </div>
   );
 }
+

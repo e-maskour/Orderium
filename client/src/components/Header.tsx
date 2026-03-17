@@ -3,266 +3,159 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { LanguageToggle } from './LanguageToggle';
 import { NotificationBell } from './NotificationBell';
-import { Dialog } from 'primereact/dialog';
-import { Menu } from 'primereact/menu';
-import { InputText } from 'primereact/inputtext';
-import { toastInfo } from '@/services/toast.service';
-import { OrderTracking } from './OrderTracking';
-import { ShoppingBag, LogOut, User, Package, MapPin, List } from 'lucide-react';
+import { ShoppingBag, ClipboardList, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
-import { ordersService } from '@/modules/orders';
 
 interface HeaderProps {
-  onCartClick: () => void;
-}
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  onCartClick?: () => void;
 }
 
 export const Header = ({ onCartClick }: HeaderProps) => {
-  const { t, dir, language } = useLanguage();
-  const { itemCount } = useCart();
-  const { user, logout } = useAuth();
-  const [showTracking, setShowTracking] = useState(false);
-  const [trackingOrderNumber, setTrackingOrderNumber] = useState('');
-  const [hasActiveOrders, setHasActiveOrders] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [canInstall, setCanInstall] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const userMenuRef = useRef<Menu>(null);
+  const { t, dir } = useLanguage();
+  const { itemCount, openCart } = useCart();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const checkActiveOrders = async () => {
-      if (!user?.customerId) {
-        setHasActiveOrders(false);
-        return;
-      }
-
-      try {
-        const response = await ordersService.getCustomerOrders(user.customerId, 10);
-        if (response.success && response.orders) {
-          const activeStatuses = ['pending', 'to_delivery', 'in_delivery'];
-          const hasActive = response.orders.some(order =>
-            !order.status || activeStatuses.includes(order.status)
-          );
-          setHasActiveOrders(hasActive);
-        }
-      } catch (error) {
-        console.error('Failed to check active orders:', error);
-        setHasActiveOrders(false);
-      }
-    };
-
-    checkActiveOrders();
-    const interval = setInterval(checkActiveOrders, 30000);
-    return () => clearInterval(interval);
-  }, [user?.customerId]);
-
-  useEffect(() => {
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-
-    const iOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
-    setIsIOS(iOS);
-
-    if (isStandalone) {
-      setCanInstall(false);
-      return;
-    }
-
-    if (iOS) {
-      setCanInstall(true);
-      return;
-    }
-
-    const handleBeforeInstallPrompt = (event: Event) => {
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-      setCanInstall(true);
-    };
-
-    const handleAppInstalled = () => {
-      setCanInstall(false);
-      setInstallPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!installPrompt) {
-      if (isIOS) {
-        toastInfo('To install on iOS, tap Share and choose "Add to Home Screen".');
-      }
-      return;
-    }
-    try {
-      await installPrompt.prompt();
-      const choice = await installPrompt.userChoice;
-      if (choice.outcome === 'accepted') {
-        setCanInstall(false);
-        setInstallPrompt(null);
-      }
-    } catch {
-      setCanInstall(false);
-      setInstallPrompt(null);
-    }
-  };
-
-  const userMenuItems = [
-    {
-      label: user?.customerName || user?.phoneNumber || '',
-      items: [
-        {
-          label: t('myOrders'),
-          icon: 'pi pi-list',
-          command: () => { window.location.href = '/my-orders'; },
-        },
-        {
-          label: t('profile'),
-          icon: 'pi pi-user',
-          command: () => { window.location.href = '/profile'; },
-        },
-        {
-          separator: true,
-        },
-        {
-          label: t('disconnect'),
-          icon: 'pi pi-sign-out',
-          className: 'text-red-600',
-          command: () => logout(),
-        },
-      ],
-    },
-  ];
+  const handleCartClick = onCartClick ?? openCart;
 
   return (
-    <header className="sticky surface-card border-bottom-1 surface-border shadow-1 w-full" style={{ top: 0, zIndex: 40 }}>
-      <div className="px-3 sm:px-4 flex align-items-center justify-content-between" style={{ height: '3.5rem' }}>
+    <header
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+        background: '#ffffff',
+        borderBottom: '1px solid #e5e7eb',
+        boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1rem',
+          height: '3.75rem',
+        }}
+      >
         {/* Logo */}
-        <Link to="/" className="flex align-items-center gap-2 no-underline" style={{ minWidth: 0 }}>
+        <Link
+          to="/"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none' }}
+        >
           <div
-            className="flex align-items-center justify-content-center border-round-xl shadow-1 flex-shrink-0"
-            style={{ width: '2.25rem', height: '2.25rem', background: 'linear-gradient(to bottom right, var(--primary-color), rgba(var(--primary-color-rgb,16,185,129),0.8))' }}
+            style={{
+              width: '2.25rem',
+              height: '2.25rem',
+              borderRadius: '0.625rem',
+              background: 'linear-gradient(135deg, #059669, #047857)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(5,150,105,0.3)',
+            }}
           >
-            <span className="text-white font-bold text-lg">O</span>
+            <span style={{ color: 'white', fontWeight: 800, fontSize: '1rem' }}>O</span>
           </div>
-          <span className="text-lg font-bold text-color hidden sm:block" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              fontWeight: 800,
+              fontSize: '1.125rem',
+              color: '#0f172a',
+              letterSpacing: '-0.02em',
+            }}
+            className="hidden sm:block"
+          >
             {t('appName')}
           </span>
         </Link>
 
+        {/* Desktop nav links */}
+        <div className="hidden lg:flex" style={{ alignItems: 'center', gap: '0.25rem' }}>
+          <Link
+            to="/my-orders"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.45rem 0.875rem', borderRadius: '0.625rem',
+              textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem',
+              color: '#374151', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <ClipboardList size={16} />
+            {t('myOrders')}
+          </Link>
+          <Link
+            to="/profile"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.45rem 0.875rem', borderRadius: '0.625rem',
+              textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem',
+              color: '#374151', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <User size={16} />
+            {t('profile')}
+          </Link>
+        </div>
+
         {/* Right actions */}
-        <div className="flex align-items-center gap-2 flex-shrink-0">
-          {canInstall && (
-            <button
-              onClick={handleInstallClick}
-              style={{ background: '#d97706', border: 'none', color: 'white', borderRadius: '0.5rem', padding: '0.375rem 0.75rem', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer' }}
-            >
-              Install
-            </button>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
           {user?.customerId && <NotificationBell customerId={user.customerId} />}
           <LanguageToggle />
 
-          {/* Track Order Button */}
-          {hasActiveOrders && (
-            <button
-              onClick={() => setShowTracking(true)}
-              className="cl-icon-btn relative"
-              style={{ width: '2.5rem', height: '2.5rem' }}
-              title={t('trackOrder')}
-              aria-label={t('trackOrder')}
-            >
-              <Package style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
-              <span className="absolute animate-pulse border-circle" style={{ top: '0.25rem', right: '0.25rem', width: '0.5rem', height: '0.5rem', background: '#3b82f6' }} />
-            </button>
-          )}
-
-          {/* User Menu */}
-          <Menu model={userMenuItems} popup ref={userMenuRef} />
+          {/* Cart button — desktop only (mobile uses bottom nav FAB) */}
           <button
-            className="cl-icon-btn"
-            style={{ width: '2.25rem', height: '2.25rem' }}
-            onClick={(e) => userMenuRef.current?.toggle(e)}
-            aria-label={t('profile')}
-          >
-            <User style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color)' }} />
-          </button>
-
-          {/* Mobile Cart Button */}
-          <button
-            onClick={onCartClick}
-            className="cl-icon-btn relative lg:hidden"
-            style={{ width: '2.5rem', height: '2.5rem' }}
+            onClick={handleCartClick}
             aria-label={t('cart')}
+            className="lg:hidden"
+            style={{
+              position: 'relative',
+              width: '2.75rem',
+              height: '2.75rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              background: itemCount > 0 ? 'rgba(5,150,105,0.08)' : 'transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              WebkitTapHighlightColor: 'transparent',
+            }}
           >
-            <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color)' }} />
+            <ShoppingBag
+              size={20}
+              color={itemCount > 0 ? '#059669' : '#6b7280'}
+            />
             {itemCount > 0 && (
               <span
-                className="absolute flex align-items-center justify-content-center border-round-xl font-bold"
                 style={{
-                  top: '-0.125rem',
-                  insetInlineEnd: '-0.125rem',
+                  position: 'absolute',
+                  top: '0.25rem',
+                  right: '0.25rem',
                   minWidth: '1.125rem',
                   height: '1.125rem',
-                  padding: '0 0.25rem',
-                  background: 'var(--primary-color)',
+                  padding: '0 0.2rem',
+                  borderRadius: '9999px',
+                  background: '#059669',
                   color: 'white',
-                  fontSize: '0.625rem',
+                  fontSize: '0.5625rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: 1,
                 }}
               >
-                {itemCount}
+                {itemCount > 99 ? '99+' : itemCount}
               </span>
             )}
           </button>
         </div>
       </div>
-
-      {/* Track Order Modal */}
-      <Dialog
-        visible={showTracking}
-        onHide={() => setShowTracking(false)}
-        header={
-          <div className="flex align-items-center gap-2">
-            <MapPin style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-color)' }} />
-            <span>{t('trackOrder')}</span>
-          </div>
-        }
-        modal
-        style={{ width: '95vw', maxWidth: '42rem' }}
-        contentStyle={{ maxHeight: '80vh', overflow: 'auto' }}
-      >
-        <div className="mt-3">
-          <div className="mb-3">
-            <label className="block text-sm font-medium mb-2">{t('orderNumber')}</label>
-            <InputText
-              value={trackingOrderNumber}
-              onChange={(e) => setTrackingOrderNumber(e.target.value)}
-              placeholder={t('enterOrderNumber')}
-              className="w-full"
-            />
-          </div>
-          {trackingOrderNumber && user?.customerId && (
-            <>
-              <div className="border-round-lg p-3 mb-3" style={{ background: 'var(--surface-100)' }}>
-                <p className="text-xs text-color-secondary m-0">{t('orderNumber')}</p>
-                <p className="font-bold text-primary m-0" style={{ fontFamily: 'monospace' }}>{trackingOrderNumber}</p>
-              </div>
-              <OrderTracking orderNumber={trackingOrderNumber} customerId={user.customerId} />
-            </>
-          )}
-        </div>
-      </Dialog>
     </header>
   );
 };

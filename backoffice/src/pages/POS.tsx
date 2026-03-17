@@ -338,6 +338,26 @@ export default function POS() {
                       {item.product.name}
                     </p>
 
+                    {/* Remise */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openDiscountModal(item); }}
+                      className="pos-disc-btn"
+                      style={{
+                        flexShrink: 0,
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.2rem 0.5rem', borderRadius: '0.375rem',
+                        background: hasDiscount ? 'rgba(35,90,228,0.08)' : '#f1f5f9',
+                        border: hasDiscount ? '1px solid rgba(35,90,228,0.2)' : '1px solid #e2e8f0',
+                        color: hasDiscount ? '#235ae4' : '#94a3b8',
+                        fontSize: '0.625rem', fontWeight: 700, cursor: 'pointer',
+                      }}
+                    >
+                      <Tag style={{ width: '0.5625rem', height: '0.5625rem' }} />
+                      {hasDiscount
+                        ? (item.discountType === 1 ? `−${item.discount}%` : `−${formatCurrency(item.discount)}`)
+                        : (t('discount'))}
+                    </button>
+
                     {/* Delete */}
                     <button
                       onClick={(e) => { e.stopPropagation(); removeFromCart(item.product.id); }}
@@ -383,34 +403,6 @@ export default function POS() {
                     </div>
                   </div>
 
-                  {/* Discount bar */}
-                  <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0.3rem 0.625rem 0.5rem',
-                  }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); openDiscountModal(item); }}
-                      className="pos-disc-btn"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                        padding: '0.2rem 0.5rem', borderRadius: '0.375rem',
-                        background: hasDiscount ? 'rgba(35,90,228,0.08)' : '#f1f5f9',
-                        border: hasDiscount ? '1px solid rgba(35,90,228,0.2)' : '1px solid #e2e8f0',
-                        color: hasDiscount ? '#235ae4' : '#94a3b8',
-                        fontSize: '0.625rem', fontWeight: 700, cursor: 'pointer',
-                      }}
-                    >
-                      <Tag style={{ width: '0.5625rem', height: '0.5625rem' }} />
-                      {hasDiscount
-                        ? (item.discountType === 1 ? `−${item.discount}%` : `−${formatCurrency(item.discount)}`)
-                        : (t('discount'))}
-                    </button>
-                    {hasDiscount && (
-                      <span style={{ fontSize: '0.625rem', color: '#22c55e', fontWeight: 600 }}>
-                        −{formatCurrency(itemDiscountAmount)}
-                      </span>
-                    )}
-                  </div>
                 </div>
               );
             })}

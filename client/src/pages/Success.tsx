@@ -3,7 +3,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
 import { Dialog } from 'primereact/dialog';
-import { CheckCircle2, Home, FileText, Receipt as ReceiptIcon, MapPin, Package, User, Phone } from 'lucide-react';
+import { CheckCircle2, Home, FileText, Receipt as ReceiptIcon, MapPin, User, Phone } from 'lucide-react';
 import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { CartItem } from '@/context/CartContext';
@@ -45,136 +45,98 @@ const Success = () => {
     setShowPreview(true);
   };
 
-  const trackingHeader = (
-    <div className="flex align-items-center gap-2">
-      <div className="flex align-items-center justify-content-center border-circle" style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}>
-        <MapPin style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-      </div>
-      <span className="font-bold text-xl">{t('trackOrder')}</span>
-    </div>
-  );
-
   return (
-    <div className="flex align-items-center justify-content-center p-3" dir={dir} style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #ecfdf5, #f0fdfa, #ecfeff)' }}>
-      <div className="w-full" style={{ maxWidth: '56rem' }}>
-        {/* Success icon */}
-        <div className="text-center mb-3" style={{ position: 'relative' }}>
-          <div className="flex align-items-center justify-content-center mx-auto border-circle shadow-4" style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #34d399, #14b8a6, #06b6d4)' }}>
-            <CheckCircle2 style={{ width: '2.5rem', height: '2.5rem', color: 'white' }} />
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #ecfdf5 0%, #f0fdf4 50%, #f8fafc 100%)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '1.5rem 1rem 3rem' }} dir={dir}>
+      <div style={{ width: '100%', maxWidth: '28rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+        {/* Hero check + title */}
+        <div style={{ textAlign: 'center', padding: '1.5rem 1rem 0.5rem' }}>
+          <div style={{ width: '5.5rem', height: '5.5rem', borderRadius: '50%', background: 'linear-gradient(135deg, #059669, #34d399)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', boxShadow: '0 8px 32px rgba(5,150,105,0.35)' }}>
+            <CheckCircle2 size={44} color="white" strokeWidth={2.5} />
+          </div>
+          <h1 style={{ margin: '0 0 0.375rem', fontWeight: 900, fontSize: '1.625rem', color: '#0f172a', letterSpacing: '-0.03em' }}>{t('orderSuccess')}</h1>
+          <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9375rem' }}>{t('thankYou')}, <strong style={{ color: '#0f172a' }}>{state.customerName}</strong>!</p>
+        </div>
+
+        {/* Order summary card */}
+        <div style={{ background: 'white', borderRadius: '1.25rem', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.07)', border: '1px solid #e5e7eb' }}>
+          {/* Order number strip */}
+          <div style={{ background: '#f0fdf4', borderBottom: '1px solid #d1fae5', padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#374151' }}>{t('orderNumber')}</span>
+            <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1.0625rem', color: '#059669', background: '#d1fae5', padding: '0.25rem 0.75rem', borderRadius: '0.5rem' }}>{state.orderNumber}</span>
+          </div>
+
+          {/* Customer info */}
+          <div style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <User size={15} color="#6b7280" />
+              <span style={{ fontSize: '0.875rem', color: '#374151' }}>{state.customerName}</span>
+            </div>
+            {state.customerPhone && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <Phone size={15} color="#6b7280" />
+                <span style={{ fontSize: '0.875rem', color: '#374151', direction: 'ltr' }}>{state.customerPhone}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Total */}
+          <div style={{ margin: '0 1.25rem 1.25rem', background: '#f0fdf4', borderRadius: '0.875rem', padding: '0.875rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontWeight: 700, color: '#374151' }}>{t('total')}</span>
+            <span style={{ fontWeight: 900, fontSize: '1.75rem', color: '#059669', letterSpacing: '-0.04em', lineHeight: 1 }}>{formatCurrency(state.total, language)}</span>
           </div>
         </div>
 
-        {/* Main Card */}
-        <div className="surface-card border-round-2xl shadow-4 overflow-hidden">
-          {/* Header */}
-          <div className="text-center p-3" style={{ background: 'linear-gradient(to right, #10b981, #14b8a6, #06b6d4)' }}>
-            <h1 className="text-xl font-bold text-white mb-1">{t('orderSuccess')}</h1>
-            <p className="text-sm font-medium" style={{ color: '#ecfdf5' }}>{t('thankYou')}, {state.customerName}! 🎉</p>
-          </div>
+        {/* Track Order */}
+        <button
+          onClick={() => setShowTracking(true)}
+          style={{ width: '100%', padding: '1rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'white', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 16px rgba(59,130,246,0.35)' }}
+        >
+          <MapPin size={18} />
+          {t('trackYourOrder')}
+        </button>
 
-          {/* Content */}
-          <div className="p-4 flex flex-column gap-3">
-            {/* Order Summary */}
-            <div className="surface-100 border-round-xl p-3 border-2" style={{ borderColor: '#a7f3d0' }}>
-              <div className="flex align-items-center justify-content-between mb-2 pb-2 border-bottom-1 surface-border">
-                <div className="flex align-items-center gap-2">
-                  <ReceiptIcon style={{ width: '1rem', height: '1rem', color: '#059669' }} />
-                  <span className="text-xs font-semibold text-color-secondary">{t('orderNumber')}</span>
-                </div>
-                <span className="font-bold text-sm" style={{ fontFamily: 'monospace', color: '#059669', background: '#d1fae5', padding: '0.125rem 0.5rem', borderRadius: '0.25rem' }}>{state.orderNumber}</span>
-              </div>
-
-              <div className="grid">
-                <div className="col-6">
-                  <div className="surface-card p-2 border-round-lg flex align-items-center gap-2">
-                    <User style={{ width: '1rem', height: '1rem', color: '#0d9488' }} />
-                    <div>
-                      <p className="text-color-secondary" style={{ fontSize: '0.625rem' }}>{t('customer')}</p>
-                      <p className="text-xs font-semibold text-color overflow-hidden white-space-nowrap" style={{ textOverflow: 'ellipsis' }}>{state.customerName}</p>
-                    </div>
-                  </div>
-                </div>
-                {state.customerPhone && (
-                  <div className="col-6">
-                    <div className="surface-card p-2 border-round-lg flex align-items-center gap-2">
-                      <Phone style={{ width: '1rem', height: '1rem', color: '#0891b2' }} />
-                      <div>
-                        <p className="text-color-secondary" style={{ fontSize: '0.625rem' }}>{t('phone') || 'Phone'}</p>
-                        <p className="text-xs font-semibold text-color">{state.customerPhone}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ borderTop: '1px solid #e5e7eb', margin: '0.75rem 0' }} />
-              <div className="flex align-items-center justify-content-between">
-                <span className="text-sm font-bold text-color-secondary">{t('total')}</span>
-                <span className="text-xl font-bold text-primary">{formatCurrency(state.total, language)}</span>
-              </div>
-            </div>
-
-            {/* Track Order */}
-            <button
-              onClick={() => setShowTracking(true)}
-              className="cl-btn-primary w-full"
-              style={{ background: 'linear-gradient(to right, #2563eb, #4f46e5, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-            >
-              <MapPin style={{ width: '1rem', height: '1rem' }} />
-              {t('trackYourOrder')}
-            </button>
-
-            {/* Document buttons */}
-            <div className="grid">
-              <div className="col-6">
-                <button
-                  onClick={() => handlePreview('receipt')}
-                  className="w-full border-round-xl border-none cursor-pointer py-3 flex flex-column align-items-center gap-2"
-                  style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6)' }}
-                >
-                  <ReceiptIcon style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
-                  <span className="text-xs font-bold text-white">{t('receipt')}</span>
-                </button>
-              </div>
-              <div className="col-6">
-                <button
-                  onClick={() => handlePreview('invoice')}
-                  className="w-full border-round-xl border-none cursor-pointer py-3 flex flex-column align-items-center gap-2"
-                  style={{ background: 'linear-gradient(135deg, #14b8a6, #06b6d4)' }}
-                >
-                  <FileText style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
-                  <span className="text-xs font-bold text-white">{t('deliveryNote')}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Back to Home */}
-            <Link to="/" style={{ textDecoration: 'none', display: 'block' }}>
-              <button
-                className="w-full border-round-xl cursor-pointer py-3 font-semibold flex align-items-center justify-content-center gap-2"
-                style={{ background: 'white', border: '2px solid #d1d5db', color: '#374151' }}
-              >
-                <Home style={{ width: '1rem', height: '1rem' }} />
-                {t('backToHome')}
-              </button>
-            </Link>
-          </div>
+        {/* Document buttons */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <button
+            onClick={() => handlePreview('receipt')}
+            style={{ padding: '1.0625rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #059669, #10b981)', color: 'white', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <ReceiptIcon size={16} />
+            {t('receipt')}
+          </button>
+          <button
+            onClick={() => handlePreview('invoice')}
+            style={{ padding: '1.0625rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #0891b2, #0e7490)', color: 'white', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <FileText size={16} />
+            {t('deliveryNote')}
+          </button>
         </div>
 
-        {/* PDF Preview */}
-        <PDFPreviewModal isOpen={showPreview} onClose={() => setShowPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
-
-        {/* Tracking Dialog */}
-        <Dialog visible={showTracking} onHide={() => setShowTracking(false)} header={trackingHeader} modal className="w-full" style={{ maxWidth: '42rem' }} dir={dir}>
-          <div className="surface-100 border-round-xl p-3 mb-4 border-2" style={{ borderColor: '#bfdbfe' }}>
-            <div className="flex align-items-center justify-content-between">
-              <p className="text-sm font-semibold text-color-secondary">{t('orderNumber')}</p>
-              <p className="font-bold text-lg text-primary surface-card px-3 py-1 border-round shadow-1" style={{ fontFamily: 'monospace' }}>{state.orderNumber}</p>
-            </div>
-          </div>
-          {user?.customerId && <OrderTracking orderNumber={state.orderNumber} customerId={user.customerId} />}
-        </Dialog>
+        {/* Back to Home */}
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <button style={{ width: '100%', padding: '1rem', borderRadius: '0.875rem', border: '2px solid #e5e7eb', background: 'white', color: '#374151', fontWeight: 700, fontSize: '0.9375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            <Home size={17} />
+            {t('backToHome')}
+          </button>
+        </Link>
       </div>
+
+      {/* PDF Preview */}
+      <PDFPreviewModal isOpen={showPreview} onClose={() => setShowPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
+
+      {/* Tracking Dialog */}
+      <Dialog visible={showTracking} onHide={() => setShowTracking(false)}
+        header={<div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}><MapPin size={18} color="#3b82f6" /><span style={{ fontWeight: 700 }}>{t('trackOrder')}</span></div>}
+        modal className="w-full" style={{ maxWidth: '42rem' }} dir={dir}
+      >
+        <div style={{ background: '#eff6ff', borderRadius: '0.875rem', padding: '0.875rem 1.25rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>{t('orderNumber')}</span>
+          <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1.0625rem', color: '#3b82f6' }}>{state.orderNumber}</span>
+        </div>
+        {user?.customerId && <OrderTracking orderNumber={state.orderNumber} customerId={user.customerId} />}
+      </Dialog>
     </div>
   );
 };
