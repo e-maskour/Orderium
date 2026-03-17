@@ -9,7 +9,7 @@ import { DataSource } from 'typeorm';
  * before each trigger).
  */
 export async function applyStockTrigger(dataSource: DataSource): Promise<void> {
-    await dataSource.query(`
+  await dataSource.query(`
     CREATE OR REPLACE FUNCTION update_product_stock()
     RETURNS TRIGGER AS $$
     BEGIN
@@ -26,32 +26,32 @@ export async function applyStockTrigger(dataSource: DataSource): Promise<void> {
     $$ LANGUAGE plpgsql;
   `);
 
-    await dataSource.query(
-        `DROP TRIGGER IF EXISTS trigger_update_product_stock_insert ON stock_quants`,
-    );
-    await dataSource.query(`
+  await dataSource.query(
+    `DROP TRIGGER IF EXISTS trigger_update_product_stock_insert ON stock_quants`,
+  );
+  await dataSource.query(`
     CREATE TRIGGER trigger_update_product_stock_insert
     AFTER INSERT ON stock_quants
     FOR EACH ROW EXECUTE FUNCTION update_product_stock()
   `);
 
-    await dataSource.query(
-        `DROP TRIGGER IF EXISTS trigger_update_product_stock_update ON stock_quants`,
-    );
-    await dataSource.query(`
+  await dataSource.query(
+    `DROP TRIGGER IF EXISTS trigger_update_product_stock_update ON stock_quants`,
+  );
+  await dataSource.query(`
     CREATE TRIGGER trigger_update_product_stock_update
     AFTER UPDATE ON stock_quants
     FOR EACH ROW EXECUTE FUNCTION update_product_stock()
   `);
 
-    await dataSource.query(
-        `DROP TRIGGER IF EXISTS trigger_update_product_stock_delete ON stock_quants`,
-    );
-    await dataSource.query(`
+  await dataSource.query(
+    `DROP TRIGGER IF EXISTS trigger_update_product_stock_delete ON stock_quants`,
+  );
+  await dataSource.query(`
     CREATE TRIGGER trigger_update_product_stock_delete
     AFTER DELETE ON stock_quants
     FOR EACH ROW EXECUTE FUNCTION update_product_stock()
   `);
 
-    console.log('  ✓ Stock trigger applied (update_product_stock)');
+  console.log('  ✓ Stock trigger applied (update_product_stock)');
 }

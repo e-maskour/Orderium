@@ -10,9 +10,9 @@ import { DataSource } from 'typeorm';
  * DROP IF EXISTS before the trigger).
  */
 export async function applyPaymentTrigger(
-    dataSource: DataSource,
+  dataSource: DataSource,
 ): Promise<void> {
-    await dataSource.query(`
+  await dataSource.query(`
     CREATE OR REPLACE FUNCTION update_invoice_paid_amount()
     RETURNS TRIGGER AS $$
     DECLARE
@@ -58,14 +58,14 @@ export async function applyPaymentTrigger(
     $$ LANGUAGE plpgsql;
   `);
 
-    await dataSource.query(
-        `DROP TRIGGER IF EXISTS update_invoice_paid_amount_trigger ON payments`,
-    );
-    await dataSource.query(`
+  await dataSource.query(
+    `DROP TRIGGER IF EXISTS update_invoice_paid_amount_trigger ON payments`,
+  );
+  await dataSource.query(`
     CREATE TRIGGER update_invoice_paid_amount_trigger
     AFTER INSERT OR UPDATE OR DELETE ON payments
     FOR EACH ROW EXECUTE FUNCTION update_invoice_paid_amount()
   `);
 
-    console.log('  ✓ Payment trigger applied (update_invoice_paid_amount)');
+  console.log('  ✓ Payment trigger applied (update_invoice_paid_amount)');
 }
