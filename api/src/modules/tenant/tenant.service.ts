@@ -20,6 +20,7 @@ import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { ListTenantsDto } from './dto/list-tenants.dto';
 import { TenantConnectionService } from './tenant-connection.service';
 import { runTenantSeeders } from '../../database/seeders';
+import { runTenantInitScripts } from '../../database/init-scripts';
 import { Payment } from '../tenant-lifecycle/entities/payment.entity';
 import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-log.entity';
 
@@ -447,6 +448,9 @@ export class TenantService implements OnModuleInit {
 
     await runTenantSeeders(ds);
     this.logger.log(`Seeders applied to: ${databaseName}`);
+
+    await runTenantInitScripts(ds);
+    this.logger.log(`Init scripts applied to: ${databaseName}`);
   }
 
   private async provisionMinioBucket(tenantSlug: string): Promise<void> {
