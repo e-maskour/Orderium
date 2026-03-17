@@ -109,9 +109,9 @@ function actionStyle(variant?: string): CSSProperties {
     fontSize: '0.8125rem',
     fontWeight: 600,
     whiteSpace: 'nowrap',
-    background: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)',
+    background: 'linear-gradient(135deg, #235ae4 0%, #1a47b8 100%)',
     color: '#fff',
-    boxShadow: '0 4px 16px rgba(217,119,6,0.38)',
+    boxShadow: '0 4px 16px rgba(35,90,228,0.38)',
   };
 }
 
@@ -198,8 +198,8 @@ export function FloatingActionBar({
               style={{
                 height: '100%',
                 width: progress !== null ? `${progress}%` : '0%',
-                background: 'linear-gradient(90deg, #b45309, #d97706, #f59e0b)',
-                boxShadow: '0 0 10px rgba(245,158,11,0.6)',
+                background: 'linear-gradient(90deg, #1a3a9c, #235ae4, #4f8ef7)',
+                boxShadow: '0 0 10px rgba(35,90,228,0.6)',
                 transition: 'width 0.45s cubic-bezier(0.4,0,0.2,1)',
                 borderRadius: '0 2px 2px 0',
               }}
@@ -226,8 +226,8 @@ export function FloatingActionBar({
                   gap: '0.45rem',
                   padding: '0.4rem 0.875rem',
                   borderRadius: '0.7rem',
-                  background: 'linear-gradient(135deg, #92400e 0%, #d97706 60%, #f59e0b 100%)',
-                  boxShadow: '0 3px 12px rgba(217,119,6,0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
+                  background: 'linear-gradient(135deg, #1a3a9c 0%, #235ae4 60%, #4f8ef7 100%)',
+                  boxShadow: '0 3px 12px rgba(35,90,228,0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
                 }}
               >
                 <CheckSquare style={{ width: '0.875rem', height: '0.875rem', color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />

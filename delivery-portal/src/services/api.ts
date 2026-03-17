@@ -8,14 +8,15 @@ const getAuthHeaders = (): Record<string, string> => {
 };
 
 interface LoginResponse {
-  success: boolean;
-  deliveryPerson: {
-    Id: number;
-    Name: string;
-    PhoneNumber: string;
-    Email?: string;
+  data: {
+    deliveryPerson: {
+      Id: number;
+      Name: string;
+      PhoneNumber: string;
+      Email?: string;
+    };
+    token: string;
   };
-  token: string;
 }
 
 interface OrdersResponse {
@@ -52,7 +53,7 @@ export const deliveryService = {
     }
 
     const data: LoginResponse = await response.json();
-    return data.deliveryPerson;
+    return data.data.deliveryPerson;
   },
 
   async getMyOrders(deliveryPersonId: number, filters: OrderFilters = {}): Promise<OrdersResponse> {

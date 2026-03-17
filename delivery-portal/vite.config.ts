@@ -13,6 +13,12 @@ export default defineConfig({
   server: {
     port: 3003,
     host: '0.0.0.0',
+    fs: {
+      allow: [
+        path.resolve(__dirname, '.'),
+        path.resolve(__dirname, '../shared/ui'),
+      ],
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000',

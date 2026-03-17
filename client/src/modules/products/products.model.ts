@@ -21,7 +21,7 @@ export class Product implements IProduct {
       code: string;
       category: string;
     }
-  ) {}
+  ) { }
 
   get displayPrice(): string {
     return `$${this.price.toFixed(2)}`;
@@ -90,26 +90,27 @@ export class Product implements IProduct {
     return this.price * (1 - discountPercentage / 100);
   }
 
-  static fromApiResponse(data: any): Product {
+  static fromApiResponse(data: Record<string, unknown>): Product {
+    const uom = data.saleUnitOfMeasure as Record<string, unknown> | undefined;
     return new Product(
-      data.id,
-      data.name,
-      parseFloat(data.price) || 0,
-      parseFloat(data.cost) || 0,
-      data.isService || false,
+      data.id as number,
+      data.name as string,
+      parseFloat(String(data.price)) || 0,
+      parseFloat(String(data.cost)) || 0,
+      (data.isService as boolean) || false,
       data.isEnabled !== false,
-      data.dateCreated,
-      data.dateUpdated,
-      data.code || null,
-      data.description || null,
-      data.stock !== undefined ? (data.stock !== null ? parseInt(data.stock) : null) : undefined,
-      data.isPriceChangeAllowed,
-      data.imageUrl,
-      data.saleUnitOfMeasure ? {
-        id: data.saleUnitOfMeasure.id,
-        name: data.saleUnitOfMeasure.name,
-        code: data.saleUnitOfMeasure.code,
-        category: data.saleUnitOfMeasure.category
+      data.dateCreated as string,
+      data.dateUpdated as string,
+      (data.code as string) || null,
+      (data.description as string) || null,
+      data.stock !== undefined ? (data.stock !== null ? parseInt(String(data.stock)) : null) : undefined,
+      data.isPriceChangeAllowed as boolean | undefined,
+      data.imageUrl as string | undefined,
+      uom ? {
+        id: uom.id as number,
+        name: uom.name as string,
+        code: uom.code as string,
+        category: uom.category as string
       } : undefined
     );
   }

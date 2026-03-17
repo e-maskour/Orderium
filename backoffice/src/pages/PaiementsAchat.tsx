@@ -140,7 +140,7 @@ export default function PaiementsAchat() {
               label={t('thisMonth')}
               value={`${thisMonthAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`}
               icon={Calendar}
-              color="amber"
+              color="purple"
               subtitle={`${thisMonthPayments.length} paiements`}
             />
           </KpiGrid>
@@ -180,7 +180,7 @@ export default function PaiementsAchat() {
             .pa-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
             .pa-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
             .pa-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-            .pa-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+            .pa-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
           `}</style>
 
           <DataTable
@@ -206,7 +206,7 @@ export default function PaiementsAchat() {
               </div>
             }
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+            currentPageReportTemplate="{first}-{last} of {totalRecords}"
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
 

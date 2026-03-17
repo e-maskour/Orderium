@@ -86,8 +86,8 @@ function NodeCard({ node, viewMode, isSelected, onSelect, onOpen, onMenuOpen, fo
                     gap: '0.75rem',
                     padding: '0.625rem 1rem',
                     borderRadius: '0.5rem',
-                    background: isSelected ? 'rgba(245,158,11,0.08)' : hovered ? 'rgba(0,0,0,0.03)' : 'transparent',
-                    border: `1px solid ${isSelected ? 'rgba(245,158,11,0.25)' : 'transparent'}`,
+                    background: isSelected ? 'rgba(35,90,228,0.08)' : hovered ? 'rgba(0,0,0,0.03)' : 'transparent',
+                    border: `1px solid ${isSelected ? 'rgba(35,90,228,0.25)' : 'transparent'}`,
                     cursor: 'pointer',
                     transition: 'all 0.15s',
                     userSelect: 'none',
@@ -143,8 +143,8 @@ function NodeCard({ node, viewMode, isSelected, onSelect, onOpen, onMenuOpen, fo
                 gap: '0.625rem',
                 padding: '1.25rem 1rem',
                 borderRadius: '0.875rem',
-                background: isSelected ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.8)',
-                border: `1.5px solid ${isSelected ? 'rgba(245,158,11,0.4)' : hovered ? 'rgba(226,232,240,1)' : 'rgba(226,232,240,0.7)'}`,
+                background: isSelected ? 'rgba(35,90,228,0.06)' : 'rgba(255,255,255,0.8)',
+                border: `1.5px solid ${isSelected ? 'rgba(35,90,228,0.4)' : hovered ? 'rgba(226,232,240,1)' : 'rgba(226,232,240,0.7)'}`,
                 boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.03)',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
@@ -200,7 +200,7 @@ function NodeCard({ node, viewMode, isSelected, onSelect, onOpen, onMenuOpen, fo
 function EmptyState({ icon: Icon, title, desc, action }: { icon: typeof Folder; title: string; desc: string; action?: React.ReactNode }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', gap: '1rem' }}>
-            <div style={{ width: '5rem', height: '5rem', borderRadius: '1.5rem', background: 'rgba(245,158,11,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '5rem', height: '5rem', borderRadius: '1.5rem', background: 'rgba(35,90,228,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon size={36} color="#f59e0b" strokeWidth={1.5} />
             </div>
             <div style={{ textAlign: 'center' }}>
@@ -504,8 +504,8 @@ export default function DrivePage() {
                                 onClick={() => fileInputRef.current?.click()}
                                 style={{
                                     fontSize: '0.8125rem', height: '2.25rem',
-                                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                                    border: 'none', boxShadow: '0 2px 8px rgba(245,158,11,0.35)',
+                                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                                    border: 'none', boxShadow: '0 2px 8px rgba(35,90,228,0.35)',
                                 }}
                             />
                             <input
@@ -560,10 +560,10 @@ export default function DrivePage() {
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '0.625rem',
                                     padding: '0.625rem 0.875rem', borderRadius: '0.625rem',
-                                    background: active ? 'rgba(245,158,11,0.1)' : 'transparent',
-                                    border: `1px solid ${active ? 'rgba(245,158,11,0.25)' : 'transparent'}`,
+                                    background: active ? 'rgba(35,90,228,0.1)' : 'transparent',
+                                    border: `1px solid ${active ? 'rgba(35,90,228,0.25)' : 'transparent'}`,
                                     width: '100%', textAlign: 'left',
-                                    transition: 'all 0.15s', color: active ? '#d97706' : '#475569',
+                                    transition: 'all 0.15s', color: active ? '#235ae4' : '#475569',
                                     fontWeight: active ? 600 : 500, fontSize: '0.875rem',
                                 }}
                             >
@@ -591,7 +591,7 @@ export default function DrivePage() {
                                     </div>
                                 ))}
                                 <div style={{ marginTop: '0.25rem' }}>
-                                    <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#f59e0b' }}>
+                                    <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#235ae4' }}>
                                         {formatBytes(stats.totalBytes)}
                                     </span>
                                 </div>
@@ -673,10 +673,10 @@ export default function DrivePage() {
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '0.25rem',
                                         padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
-                                        background: sortKey === key ? 'rgba(245,158,11,0.1)' : 'transparent',
-                                        border: `1px solid ${sortKey === key ? 'rgba(245,158,11,0.3)' : 'rgba(226,232,240,0.6)'}`,
+                                        background: sortKey === key ? 'rgba(35,90,228,0.1)' : 'transparent',
+                                        border: `1px solid ${sortKey === key ? 'rgba(35,90,228,0.3)' : 'rgba(226,232,240,0.6)'}`,
                                         fontSize: '0.75rem', fontWeight: sortKey === key ? 600 : 400,
-                                        color: sortKey === key ? '#d97706' : '#64748b',
+                                        color: sortKey === key ? '#235ae4' : '#64748b',
                                     }}
                                 >
                                     {sortLabels[key]}
@@ -737,7 +737,7 @@ export default function DrivePage() {
                         {isLoading ? (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                                 <div style={{ textAlign: 'center' }}>
-                                    <i className="pi pi-spin pi-spinner" style={{ fontSize: '1.5rem', color: '#f59e0b' }} />
+                                    <i className="pi pi-spin pi-spinner" style={{ fontSize: '1.5rem', color: '#235ae4' }} />
                                     <p style={{ marginTop: '0.75rem', color: '#94a3b8', fontSize: '0.875rem' }}>{t('loading')}</p>
                                 </div>
                             </div>
@@ -753,7 +753,7 @@ export default function DrivePage() {
                                             icon={<Upload size={14} style={{ marginRight: '0.375rem' }} />}
                                             size="small"
                                             onClick={() => fileInputRef.current?.click()}
-                                            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}
+                                            style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none' }}
                                         />
                                     ) : undefined
                                 }
@@ -820,7 +820,7 @@ export default function DrivePage() {
             <Dialog
                 header={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', background: 'rgba(35,90,228,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <FolderPlus size={18} color="#f59e0b" />
                         </div>
                         <span style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>{t('newFolder')}</span>
@@ -838,7 +838,7 @@ export default function DrivePage() {
                             disabled={!newFolderName.trim() || createFolderMutation.isPending}
                             loading={createFolderMutation.isPending}
                             onClick={() => newFolderName.trim() && createFolderMutation.mutate(newFolderName.trim())}
-                            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}
+                            style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none' }}
                         />
                     </div>
                 }
@@ -880,7 +880,7 @@ export default function DrivePage() {
                             disabled={!renameValue.trim() || renameMutation.isPending}
                             loading={renameMutation.isPending}
                             onClick={() => renameTarget && renameValue.trim() && renameMutation.mutate({ nodeId: renameTarget.id, name: renameValue.trim() })}
-                            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}
+                            style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none' }}
                         />
                     </div>
                 }
@@ -947,7 +947,7 @@ function DriveDropZone({ enabled, onFiles, dropLabel, orLabel }: {
             style={{
                 position: 'fixed', inset: 0, zIndex: isDragging ? 50 : -1,
                 pointerEvents: isDragging ? 'all' : 'none',
-                background: isDragging ? 'rgba(245,158,11,0.06)' : 'transparent',
+                background: isDragging ? 'rgba(35,90,228,0.06)' : 'transparent',
                 backdropFilter: isDragging ? 'blur(2px)' : 'none',
                 transition: 'all 0.2s',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',

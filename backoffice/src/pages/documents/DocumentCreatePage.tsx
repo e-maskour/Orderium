@@ -225,7 +225,7 @@ export default function DocumentCreatePage({
         .doc-field-label { display: block; font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.375rem; }
         .doc-section-card { background: #ffffff; border-radius: 0.75rem; border: 1.5px solid #e2e8f0; padding: 1.25rem; }
         .doc-section-title { font-size: 0.875rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
-        .doc-section-accent { width: 0.25rem; height: 1.25rem; background: linear-gradient(to bottom, #f59e0b, #d97706); border-radius: 2px; flex-shrink: 0; }
+        .doc-section-accent { width: 0.25rem; height: 1.25rem; background: linear-gradient(to bottom, #235ae4, #1a47b8); border-radius: 2px; flex-shrink: 0; }
         .doc-cal { position: relative !important; display: block !important; }
         .doc-cal .p-inputtext { padding-right: 2.5rem !important; width: 100% !important; border-top-right-radius: var(--orderium-radius-md, 6px) !important; border-bottom-right-radius: var(--orderium-radius-md, 6px) !important; }
         .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
@@ -254,9 +254,9 @@ export default function DocumentCreatePage({
           />
           <div style={{
             width: '2.75rem', height: '2.75rem', flexShrink: 0,
-            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
             borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(245,158,11,0.4)'
+            boxShadow: '0 4px 12px rgba(35,90,228,0.4)'
           }}>
             {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />; })()}
           </div>
@@ -269,10 +269,10 @@ export default function DocumentCreatePage({
           {/* New badge */}
           <div style={{
             padding: '0.375rem 0.875rem', borderRadius: '9999px',
-            background: '#fffbeb',
-            border: '1px solid #fcd34d'
+            background: '#eff6ff',
+            border: '1px solid rgba(35,90,228,0.2)'
           }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#d97706' }}>NOUVEAU</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#235ae4' }}>NOUVEAU</span>
           </div>
         </div>
 
@@ -285,7 +285,7 @@ export default function DocumentCreatePage({
           overflow: 'hidden'
         }}>
           {/* Top accent bar */}
-          <div style={{ height: '3px', background: 'linear-gradient(to right, #f59e0b, #d97706, #f59e0b)' }} />
+          <div style={{ height: '3px', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }} />
 
           <div style={{ padding: '1.5rem' }}>
             {/* Two column layout: Partner on left, Document info on right */}
@@ -323,10 +323,10 @@ export default function DocumentCreatePage({
                 }}>
                   <div style={{
                     width: '2rem', height: '2rem',
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
                     borderRadius: '0.5rem', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(245,158,11,0.4)'
+                    boxShadow: '0 2px 8px rgba(35,90,228,0.4)'
                   }}>
                     <FileText style={{ width: '1rem', height: '1rem', color: '#fff' }} />
                   </div>
@@ -458,7 +458,7 @@ export default function DocumentCreatePage({
                 disabled={saving}
                 loading={saving}
                 icon={<Save style={{ width: '1rem', height: '1rem' }} />}
-                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}
+                style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none', boxShadow: '0 2px 10px rgba(35,90,228,0.35)' }}
               />
             </div>
           </div>

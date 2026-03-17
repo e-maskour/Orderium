@@ -4,27 +4,36 @@ export class AddFromClientToOrders1769984819949 implements MigrationInterface {
   name = 'AddFromClientToOrders1769984819949';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Old columns only exist on databases created via synchronize:true — skip on fresh DBs
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_configurations_module_key"`,
+      `DROP INDEX IF EXISTS "public"."IDX_configurations_module_key"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "configurations" DROP COLUMN "module"`,
-    );
-    await queryRunner.query(`ALTER TABLE "configurations" DROP COLUMN "key"`);
-    await queryRunner.query(`ALTER TABLE "configurations" DROP COLUMN "value"`);
-    await queryRunner.query(`ALTER TABLE "configurations" DROP COLUMN "type"`);
-    await queryRunner.query(`ALTER TABLE "configurations" DROP COLUMN "label"`);
-    await queryRunner.query(
-      `ALTER TABLE "configurations" DROP COLUMN "description"`,
+      `ALTER TABLE "configurations" DROP COLUMN IF EXISTS "module"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "configurations" DROP COLUMN "options"`,
+      `ALTER TABLE "configurations" DROP COLUMN IF EXISTS "key"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "configurations" DROP COLUMN "isActive"`,
+      `ALTER TABLE "configurations" DROP COLUMN IF EXISTS "value"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "orders" ADD "fromClient" boolean NOT NULL DEFAULT false`,
+      `ALTER TABLE "configurations" DROP COLUMN IF EXISTS "type"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "configurations" DROP COLUMN IF EXISTS "label"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "configurations" DROP COLUMN IF EXISTS "description"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "configurations" DROP COLUMN IF EXISTS "options"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "configurations" DROP COLUMN IF EXISTS "isActive"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "orders" ADD IF NOT EXISTS "fromClient" boolean NOT NULL DEFAULT false`,
     );
     await queryRunner.query(
       `COMMENT ON COLUMN "products"."imagePublicId" IS NULL`,
@@ -36,7 +45,7 @@ export class AddFromClientToOrders1769984819949 implements MigrationInterface {
       `ALTER TABLE "configurations" ALTER COLUMN "values" SET NOT NULL`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_083d801197d005a02e4b5fa589" ON "configurations" ("entity") `,
+      `CREATE INDEX IF NOT EXISTS "IDX_083d801197d005a02e4b5fa589" ON "configurations" ("entity") `,
     );
   }
 

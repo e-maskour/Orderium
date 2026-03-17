@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import { Tooltip } from 'primereact/tooltip';
 import { Badge } from 'primereact/badge';
 import { Ripple } from 'primereact/ripple';
-import { Button } from 'primereact/button';
 import {
     LayoutDashboard,
     Package,
@@ -17,6 +16,8 @@ import {
     TrendingDown,
     Settings,
     HardDrive,
+    Shield,
+    UsersRound,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -51,6 +52,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         { path: '/drive', icon: HardDrive, label: t('drive') },
         { path: '/delivery-persons', icon: Users, label: t('deliveryPersons') },
         { path: '/pos', icon: CreditCard, label: t('pointOfSale') },
+        { path: '/users', icon: UsersRound, label: t('usersManagement') },
+        { path: '/roles', icon: Shield, label: t('rolesManagement') },
         { path: '/configurations', icon: Settings, label: t('configurations') },
     ], [t]);
 
@@ -63,7 +66,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                 [isRtl ? 'right' : 'left']: 0,
                 height: '100vh',
                 width: isCollapsed ? '4.5rem' : '16.5rem',
-                background: 'linear-gradient(195deg, #1e1e2d 0%, #1a1a2e 50%, #16213e 100%)',
+                background: 'linear-gradient(195deg, #0f172a 0%, #111827 50%, #0f1e3c 100%)',
                 transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                 zIndex: 20,
                 display: 'flex',
@@ -72,14 +75,15 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                 overflow: 'hidden',
             }}
         >
-            {/* Logo Area */}
             <div
                 className="flex align-items-center flex-shrink-0"
                 style={{
                     height: '4.25rem',
-                    padding: isCollapsed ? '0' : '0 1.25rem',
-                    justifyContent: isCollapsed ? 'center' : 'flex-start',
+                    padding: isCollapsed ? '0 0.75rem' : '0 0.875rem 0 1.25rem',
+                    justifyContent: isCollapsed ? 'center' : 'space-between',
                     borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    display: 'flex',
+                    alignItems: 'center',
                 }}
             >
                 <div className="flex align-items-center gap-3">
@@ -89,8 +93,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                             width: '2.25rem',
                             height: '2.25rem',
                             borderRadius: '0.625rem',
-                            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+                            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                            boxShadow: '0 4px 12px rgba(35, 90, 228, 0.4)',
                         }}
                     >
                         <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>O</span>
@@ -106,34 +110,57 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                         </div>
                     )}
                 </div>
+                {!isCollapsed && (
+                    <button
+                        onClick={() => setIsCollapsed(true)}
+                        className="hidden lg:flex"
+                        title={t('collapse') || 'Collapse'}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '1.75rem',
+                            height: '1.75rem',
+                            borderRadius: '0.4rem',
+                            background: 'transparent',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: 'rgba(255,255,255,0.45)',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            transition: 'background 0.15s, color 0.15s',
+                        }}
+                    >
+                        {isRtl
+                            ? <ChevronRight style={{ width: '0.875rem', height: '0.875rem' }} />
+                            : <ChevronLeft style={{ width: '0.875rem', height: '0.875rem' }} />}
+                    </button>
+                )}
+                {isCollapsed && (
+                    <button
+                        onClick={() => setIsCollapsed(false)}
+                        className="hidden lg:flex"
+                        title={t('expand') || 'Expand'}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '1.75rem',
+                            height: '1.75rem',
+                            borderRadius: '0.4rem',
+                            background: 'transparent',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: 'rgba(255,255,255,0.45)',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            transition: 'background 0.15s, color 0.15s',
+                        }}
+                    >
+                        {isRtl
+                            ? <ChevronLeft style={{ width: '0.875rem', height: '0.875rem' }} />
+                            : <ChevronRight style={{ width: '0.875rem', height: '0.875rem' }} />}
+                    </button>
+                )}
             </div>
-
-            {/* Collapse Toggle */}
-            <Button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                text
-                rounded
-                className="hidden lg:flex"
-                icon={(isRtl ? !isCollapsed : isCollapsed)
-                    ? <ChevronRight style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.7)' }} />
-                    : <ChevronLeft style={{ width: '0.75rem', height: '0.75rem', color: 'rgba(255,255,255,0.7)' }} />}
-                style={{
-                    position: 'absolute',
-                    [isRtl ? 'left' : 'right']: '-0.75rem',
-                    top: '5.25rem',
-                    width: '1.5rem',
-                    height: '1.5rem',
-                    padding: 0,
-                    borderRadius: '50%',
-                    background: '#1e1e2d',
-                    border: '2px solid rgba(255,255,255,0.1)',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-                    zIndex: 21,
-                    transition: 'all 0.2s ease',
-                }}
-            />
 
             {/* Section Label */}
             {!isCollapsed && (
@@ -173,8 +200,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                                         gap: isCollapsed ? 0 : '0.75rem',
                                         justifyContent: isCollapsed ? 'center' : 'flex-start',
                                         padding: isCollapsed ? '0.625rem' : '0.5rem 0.75rem',
-                                        background: isActive ? 'rgba(245, 158, 11, 0.12)' : 'transparent',
-                                        color: isActive ? '#f59e0b' : 'rgba(255,255,255,0.65)',
+                                        background: isActive ? 'rgba(35, 90, 228, 0.14)' : 'transparent',
+                                        color: isActive ? '#ffffff' : 'rgba(255,255,255,0.65)',
                                         fontWeight: isActive ? 600 : 500,
                                         fontSize: '0.8125rem',
                                         borderRadius: '0.5rem',
@@ -191,8 +218,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                                             width: '0.1875rem',
                                             height: '1.25rem',
                                             borderRadius: '0 0.25rem 0.25rem 0',
-                                            background: '#f59e0b',
-                                            boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
+                                            background: '#235ae4',
+                                            boxShadow: '0 0 8px rgba(35, 90, 228, 0.5)',
                                         }} />
                                     )}
                                     <div
@@ -201,7 +228,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                                             width: '2rem',
                                             height: '2rem',
                                             borderRadius: '0.375rem',
-                                            background: isActive ? 'rgba(245, 158, 11, 0.15)' : 'transparent',
+                                            background: isActive ? 'rgba(35, 90, 228, 0.18)' : 'transparent',
                                             transition: 'background 0.15s ease',
                                         }}
                                     >
@@ -215,8 +242,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                                                     width: '0.3125rem',
                                                     height: '0.3125rem',
                                                     borderRadius: '50%',
-                                                    background: '#f59e0b',
-                                                    boxShadow: '0 0 6px rgba(245, 158, 11, 0.5)',
+                                                    background: '#ffffff',
+                                                    boxShadow: '0 0 6px rgba(255, 255, 255, 0.4)',
                                                     flexShrink: 0,
                                                 }} />
                                             )}
@@ -240,34 +267,34 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                         style={{
                             padding: '0.75rem',
                             borderRadius: '0.625rem',
-                            background: 'rgba(245, 158, 11, 0.08)',
-                            border: '1px solid rgba(245, 158, 11, 0.12)',
+                            background: 'rgba(35, 90, 228, 0.08)',
+                            border: '1px solid rgba(35, 90, 228, 0.16)',
                         }}
                     >
                         <div className="flex align-items-center justify-content-between">
                             <div>
-                                <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#f59e0b', marginBottom: '0.125rem' }}>
+                                <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: '0.125rem' }}>
                                     Orderium ERP
                                 </p>
                                 <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)' }}>v2.0.0</p>
                             </div>
-                            <Badge value="PRO" severity="warning" style={{ fontSize: '0.5625rem' }} />
+                            <Badge value="PRO" severity="info" style={{ fontSize: '0.5625rem' }} />
                         </div>
                     </div>
                 ) : (
                     <div className="flex justify-content-center">
-                        <Badge value="P" severity="warning" style={{ fontSize: '0.5625rem' }} />
+                        <Badge value="P" severity="info" style={{ fontSize: '0.5625rem' }} />
                     </div>
                 )}
             </div>
 
             <style>{`
         .sidebar-menu-item:hover {
-          background: rgba(255,255,255,0.05) !important;
+          background: rgba(255,255,255,0.06) !important;
           color: rgba(255,255,255,0.9) !important;
         }
         .sidebar-active-item:hover {
-          background: rgba(245, 158, 11, 0.16) !important;
+          background: rgba(35, 90, 228, 0.20) !important;
         }
         .sidebar-enterprise nav::-webkit-scrollbar {
           width: 3px;

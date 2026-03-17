@@ -1,5 +1,4 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { chromium } from 'playwright';
 import { Invoice } from '../invoices/entities/invoice.entity';
@@ -14,6 +13,7 @@ import { getDocumentStyles } from './templates/document.styles';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { Order } from '../orders/entities/order.entity';
 import { MinioProvider } from '../images/providers/minio.provider';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 type DocumentType = 'invoice' | 'quote' | 'delivery-note' | 'receipt';
 
@@ -77,15 +77,22 @@ export class PDFService {
   private readonly logger = new Logger(PDFService.name);
 
   constructor(
-    @InjectRepository(Invoice)
-    private readonly invoiceRepository: Repository<Invoice>,
-    @InjectRepository(Quote)
-    private readonly quoteRepository: Repository<Quote>,
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
-  ) {}
+  ) { }
+
+  private get invoiceRepository(): Repository<Invoice> {
+    return this.tenantConnService.getRepository(Invoice);
+  }
+
+  private get quoteRepository(): Repository<Quote> {
+    return this.tenantConnService.getRepository(Quote);
+  }
+
+  private get orderRepository(): Repository<Order> {
+    return this.tenantConnService.getRepository(Order);
+  }
 
   async generateDocumentPDF(
     documentType: DocumentType,

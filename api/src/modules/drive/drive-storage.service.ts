@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
+import { tenantStorage } from '../tenant/tenant.context';
 
 export interface DriveUploadResult {
   storageKey: string;
@@ -11,7 +12,7 @@ export interface DriveUploadResult {
   checksumSha256: string;
 }
 
-const DRIVE_BUCKET = 'orderium-drive';
+const DRIVE_BUCKET_FALLBACK = 'orderium-drive';
 const SIGNED_URL_EXPIRY_SECONDS = 3600; // 1 hour
 
 @Injectable()
@@ -20,7 +21,7 @@ export class DriveStorageService implements OnModuleInit {
   private client: Minio.Client;
   private ready = false;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: ConfigService) { }
 
   async onModuleInit(): Promise<void> {
     const endpoint = this.config.get<string>('MINIO_ENDPOINT', 'localhost');
@@ -48,19 +49,29 @@ export class DriveStorageService implements OnModuleInit {
       });
       await this.ensureBucketReady();
       this.ready = true;
-      this.logger.log(`✅ DriveStorage ready — bucket: ${DRIVE_BUCKET}`);
+      this.logger.log(`✅ DriveStorage ready — fallback bucket: ${DRIVE_BUCKET_FALLBACK}`);
     } catch (error) {
       this.logger.error('❌ DriveStorage initialisation failed', error);
     }
   }
 
   private async ensureBucketReady(): Promise<void> {
-    const exists = await this.client.bucketExists(DRIVE_BUCKET);
+    const exists = await this.client.bucketExists(DRIVE_BUCKET_FALLBACK);
     if (!exists) {
-      await this.client.makeBucket(DRIVE_BUCKET, 'us-east-1');
-      this.logger.log(`🪣  Created bucket: ${DRIVE_BUCKET}`);
+      await this.client.makeBucket(DRIVE_BUCKET_FALLBACK, 'us-east-1');
+      this.logger.log(`🪣  Created bucket: ${DRIVE_BUCKET_FALLBACK}`);
     }
     // Drive bucket is PRIVATE — no public-read policy applied
+  }
+
+  /**
+   * Returns the bucket to use for the current request.
+   * Resolves to `orderium-{tenantSlug}` when inside a tenant request,
+   * falling back to the legacy shared bucket.
+   */
+  private getTenantBucket(): string {
+    const ctx = tenantStorage.getStore();
+    return ctx ? `orderium-${ctx.tenantSlug}` : DRIVE_BUCKET_FALLBACK;
   }
 
   async uploadFile(
@@ -72,19 +83,20 @@ export class DriveStorageService implements OnModuleInit {
     const safeFolder = folder.replace(/[^a-z0-9/_-]/gi, '_').toLowerCase();
     const ext = file.originalname.includes('.')
       ? file.originalname
-          .split('.')
-          .pop()!
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, '')
+        .split('.')
+        .pop()!
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
       : 'bin';
     const storageKey = `${safeFolder}/${uuidv4()}.${ext}`;
     const checksumSha256 = crypto
       .createHash('sha256')
       .update(file.buffer)
       .digest('hex');
+    const bucket = this.getTenantBucket();
 
     await this.client.putObject(
-      DRIVE_BUCKET,
+      bucket,
       storageKey,
       file.buffer,
       file.size,
@@ -94,35 +106,40 @@ export class DriveStorageService implements OnModuleInit {
       },
     );
 
-    this.logger.log(`📤  Drive: ${storageKey} (${file.size} B)`);
+    this.logger.log(`📤  Drive: [${bucket}] ${storageKey} (${file.size} B)`);
     return {
       storageKey,
-      storageBucket: DRIVE_BUCKET,
+      storageBucket: bucket,
       sizeBytes: file.size,
       checksumSha256,
     };
   }
 
-  async getPresignedDownloadUrl(storageKey: string): Promise<string> {
+  async getPresignedDownloadUrl(
+    storageKey: string,
+    storageBucket?: string,
+  ): Promise<string> {
     if (!this.ready) throw new Error('DriveStorage is not initialised');
     // Guard against path traversal
     if (storageKey.includes('..') || storageKey.startsWith('/')) {
       throw new Error('Invalid storage key');
     }
+    const bucket = storageBucket ?? this.getTenantBucket();
     return this.client.presignedGetObject(
-      DRIVE_BUCKET,
+      bucket,
       storageKey,
       SIGNED_URL_EXPIRY_SECONDS,
     );
   }
 
-  async deleteFile(storageKey: string): Promise<void> {
+  async deleteFile(storageKey: string, storageBucket?: string): Promise<void> {
     if (!this.ready) return; // If not ready, skip silently (node might have no storage)
     if (storageKey.includes('..') || storageKey.startsWith('/')) {
       throw new Error('Invalid storage key');
     }
-    await this.client.removeObject(DRIVE_BUCKET, storageKey);
-    this.logger.log(`🗑️  Drive deleted: ${storageKey}`);
+    const bucket = storageBucket ?? this.getTenantBucket();
+    await this.client.removeObject(bucket, storageKey);
+    this.logger.log(`🗑️  Drive deleted: [${bucket}] ${storageKey}`);
   }
 
   isReady(): boolean {

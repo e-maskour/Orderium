@@ -11,7 +11,7 @@ import {
     LogOut, Menu, X, Search, TrendingUp, TrendingDown, Package, FileCheck,
     PackageCheck, FileText, Wallet, UserCircle, DollarSign, ShoppingBag, Receipt,
     Truck, FolderTree, Building2, LayoutDashboard, Settings, Bell,
-    Clock, Star, Plus, BarChart2, ShoppingCart, History,
+    Clock, Star, Plus, BarChart2, ShoppingCart, History, HardDrive, Users, CreditCard,
 } from 'lucide-react';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { toastInfo } from '../services/toast.service';
@@ -30,7 +30,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 type Lang = 'en' | 'fr' | 'ar';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 interface SearchRoute { path: string; labels: Record<Lang, string>; descriptions: Record<Lang, string>; icon: React.ComponentType<any>; group: string; type?: 'page' | 'create' | 'settings' | 'report'; keywords?: string[]; }
 
 const APP_ROUTES: SearchRoute[] = [
@@ -67,6 +67,8 @@ const APP_ROUTES: SearchRoute[] = [
     { path: '/warehouses', labels: { en: 'Warehouses', fr: 'Entrepôts', ar: 'المستودعات' }, descriptions: { en: 'Warehouses & storage locations', fr: 'Entrepôts & emplacements de stockage', ar: 'المستودعات ومواقع التخزين' }, icon: Building2, group: 'Inventory', type: 'page', keywords: ['entrepôts', 'dépôt', 'depot', 'المستودعات', 'storage', 'location', 'magasin'] },
     { path: '/stock-movements', labels: { en: 'Stock Movements', fr: 'Mouvements de Stock', ar: 'حركات المخزون' }, descriptions: { en: 'Stock movement history & log', fr: 'Historique des mouvements de stock', ar: 'سجل حركات المخزون' }, icon: TrendingUp, group: 'Inventory', type: 'report', keywords: ['mouvements stock', 'حركات المخزون', 'stock log', 'mouvement'] },
     { path: '/inventory-adjustments', labels: { en: 'Inventory Adjustments', fr: "Ajustements d'Inventaire", ar: 'تعديلات المخزون' }, descriptions: { en: 'Adjust & correct stock levels', fr: 'Ajuster les niveaux de stock', ar: 'تعديل وتصحيح مستويات المخزون' }, icon: BarChart2, group: 'Inventory', type: 'page', keywords: ["ajustements d'inventaire", 'inventaire', 'تعديلات المخزون', 'stock count'] },
+    // ── Drive ──
+    { path: '/drive', labels: { en: 'Drive', fr: 'Drive', ar: 'Drive' }, descriptions: { en: 'Files, documents & cloud storage', fr: 'Fichiers, documents & stockage cloud', ar: 'الملفات والمستندات والتخزين' }, icon: HardDrive, group: 'Drive', type: 'page', keywords: ['fichiers', 'documents', 'ملفات', 'stockage', 'upload', 'télécharger', 'pièces jointes', 'attachments', 'cloud', 'storage', 'file manager', 'gestionnaire'] },
     // ── Settings ──
     { path: '/configurations', labels: { en: 'Configurations', fr: 'Configurations', ar: 'الإعدادات العامة' }, descriptions: { en: 'General app settings', fr: "Paramètres généraux de l'app", ar: 'إعدادات التطبيق العامة' }, icon: Settings, group: 'Settings', type: 'settings', keywords: ['paramètres', 'إعدادات', 'settings', 'config', 'réglages'] },
     { path: '/configurations/taxes', labels: { en: 'Taxes', fr: 'Taxes', ar: 'الضرائب' }, descriptions: { en: 'Tax rates & configuration', fr: 'Configuration des taxes & TVA', ar: 'معدلات الضرائب والإعدادات' }, icon: Settings, group: 'Settings', type: 'settings', keywords: ['taxes', 'tva', 'الضرائب', 'vat', 'impôts', 'fiscal'] },
@@ -81,8 +83,9 @@ const APP_ROUTES: SearchRoute[] = [
 const GROUP_CONFIG: Record<string, { color: string; bg: string }> = {
     Main: { color: '#6366f1', bg: '#eef2ff' },
     Sales: { color: '#10b981', bg: '#ecfdf5' },
-    Purchases: { color: '#f59e0b', bg: '#fffbeb' },
+    Purchases: { color: '#2563eb', bg: '#eff6ff' },
     Inventory: { color: '#3b82f6', bg: '#eff6ff' },
+    Drive: { color: '#0ea5e9', bg: '#f0f9ff' },
     Settings: { color: '#8b5cf6', bg: '#f5f3ff' },
 };
 
@@ -90,17 +93,18 @@ const TYPE_CONFIG: Record<string, { label: Record<Lang, string>; color: string; 
     page: { label: { en: 'Page', fr: 'Page', ar: 'صفحة' }, color: '#475569', bg: '#f1f5f9' },
     create: { label: { en: 'New', fr: 'Nouveau', ar: 'جديد' }, color: '#10b981', bg: '#dcfce7' },
     settings: { label: { en: 'Config', fr: 'Config', ar: 'إعداد' }, color: '#8b5cf6', bg: '#ede9fe' },
-    report: { label: { en: 'Report', fr: 'Rapport', ar: 'تقرير' }, color: '#f59e0b', bg: '#fef3c7' },
+    report: { label: { en: 'Report', fr: 'Rapport', ar: 'تقرير' }, color: '#235ae4', bg: '#eff3ff' },
 };
 
-const QUICK_ACCESS_PATHS = ['/dashboard', '/orders', '/products', '/customers', '/devis', '/factures/vente'];
-const ALL_GROUPS = ['Main', 'Sales', 'Purchases', 'Inventory', 'Settings'];
+const QUICK_ACCESS_PATHS = ['/dashboard', '/orders', '/products', '/customers', '/devis', '/factures/vente', '/drive', '/pos'];
+const ALL_GROUPS = ['Main', 'Sales', 'Purchases', 'Inventory', 'Drive', 'Settings'];
 
 const GROUP_NAMES: Record<string, Record<Lang, string>> = {
     Main: { en: 'Main', fr: 'Principal', ar: 'رئيسي' },
     Sales: { en: 'Sales', fr: 'Ventes', ar: 'المبيعات' },
     Purchases: { en: 'Purchases', fr: 'Achats', ar: 'المشتريات' },
     Inventory: { en: 'Inventory', fr: 'Inventaire', ar: 'المخزون' },
+    Drive: { en: 'Drive', fr: 'Drive', ar: 'Drive' },
     Settings: { en: 'Settings', fr: 'Paramètres', ar: 'الإعدادات' },
 };
 
@@ -322,7 +326,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
         const handler = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
-                isSearchOpen ? closeSearch() : openSearch();
+                if (isSearchOpen) { closeSearch(); } else { openSearch(); }
             }
         };
         window.addEventListener('keydown', handler);
@@ -361,9 +365,9 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
 
     return (
         <>
-            <div style={{ position: 'sticky', top: 0, zIndex: 100, direction: language === 'ar' ? 'rtl' : 'ltr', backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255,255,255,0.97)', borderBottom: '1px solid #e5e7eb' }}>
+            <div style={{ position: 'sticky', top: 0, zIndex: 100, direction: language === 'ar' ? 'rtl' : 'ltr', backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255,255,255,0.97)', borderBottom: '1px solid rgba(35, 90, 228, 0.12)' }}>
                 {/* ── Top Bar ── */}
-                <header className="flex align-items-center justify-content-between" style={{ height: '4.25rem', padding: '0 1.5rem' }}>
+                <header className="flex align-items-center justify-content-between" style={{ height: '3.5rem', padding: '0 1.5rem' }}>
                     {/* Left */}
                     <div className="flex align-items-center" style={{ gap: '0.125rem' }}>
                         <Button
@@ -375,42 +379,6 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                 : <Menu style={{ width: '1.125rem', height: '1.125rem', color: '#374151' }} />}
                             aria-label="Toggle menu"
                         />
-                        {/* ── Inline Menubar ── */}
-                        {(() => {
-                            const activeGroup = subNavGroups.find(g => isGroupActive(g));
-                            if (!activeGroup) return null;
-                            return activeGroup.items.map((item) => {
-                                const ItemIcon = item.Icon;
-                                const active = isSubItemActive(item.path);
-                                return (
-                                    <Button
-                                        key={item.path}
-                                        text
-                                        onClick={() => navigate(item.path)}
-                                        className="hidden lg:flex"
-                                        style={{
-                                            alignItems: 'center', gap: '0.375rem',
-                                            padding: '0 0.625rem',
-                                            height: '4.25rem',
-                                            fontSize: '0.78125rem',
-                                            fontWeight: active ? 600 : 500,
-                                            fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)',
-                                            color: active ? '#d97706' : '#374151',
-                                            background: 'transparent',
-                                            boxShadow: active ? 'inset 0 -2px 0 #d97706' : 'none',
-                                            whiteSpace: 'nowrap',
-                                            transition: 'all 0.15s ease',
-                                            flexShrink: 0,
-                                        }}
-                                        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLButtonElement).style.color = '#111827'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.04)'; } }}
-                                        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLButtonElement).style.color = '#374151'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; } }}
-                                    >
-                                        <ItemIcon style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0, opacity: active ? 1 : 0.6 }} strokeWidth={1.75} />
-                                        {item.label}
-                                    </Button>
-                                );
-                            });
-                        })()}
                     </div>
 
                     {/* Right */}
@@ -418,51 +386,20 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                         {canInstall && (
                             <Button
                                 label={t('install') || 'Install'} size="small" rounded onClick={handleInstallClick}
-                                style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', border: 'none', fontSize: '0.75rem', fontWeight: 600, padding: '0.375rem 0.875rem' }}
+                                style={{ background: 'linear-gradient(135deg,#235ae4,#1a47b8)', border: 'none', fontSize: '0.75rem', fontWeight: 600, padding: '0.375rem 0.875rem' }}
                             />
                         )}
 
-                        {/* Search trigger — pill style */}
-                        <Button
-                            text
+                        {/* Search trigger — animated icon */}
+                        <button
                             onClick={openSearch}
-                            aria-label="Search"
-                            className="hidden sm:flex"
-                            style={{
-                                alignItems: 'center', gap: '0.5rem',
-                                padding: '0.375rem 0.75rem',
-                                background: '#f8fafc',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '0.5rem',
-                                color: '#94a3b8',
-                                fontSize: '0.8125rem',
-                                fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-latin)',
-                                transition: 'all 0.15s ease',
-                                minWidth: '11rem',
-                            }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#cbd5e1'; (e.currentTarget as HTMLButtonElement).style.background = '#f1f5f9'; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLButtonElement).style.background = '#f8fafc'; }}
-                        >
-                            <Search style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0 }} strokeWidth={1.75} />
-                            <span style={{ flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
-                                {SEARCH_UI[lang].placeholder.split('…')[0]}…
-                            </span>
-                            <kbd style={{ display: 'inline-flex', alignItems: 'center', gap: '0.1rem', padding: '0.125rem 0.375rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.3125rem', fontSize: '0.625rem', color: '#94a3b8', flexShrink: 0 }}>
-                                ⌘K
-                            </kbd>
-                        </Button>
-                        {/* Mobile: icon only */}
-                        <Button
-                            text
-                            onClick={openSearch}
+                            aria-label="Search (⌘K)"
                             title="Search (⌘K)"
-                            className="flex sm:hidden"
-                            style={{ alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', background: 'transparent', borderRadius: '0.5rem', color: '#6b7280', transition: 'all 0.15s ease', padding: 0 }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f3f4f6'; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                            className="header-search-icon-btn"
                         >
-                            <Search style={{ width: '1.125rem', height: '1.125rem' }} strokeWidth={1.75} />
-                        </Button>
+                            <span className="header-search-icon-ring" />
+                            <Search style={{ width: '1.0625rem', height: '1.0625rem', position: 'relative', zIndex: 1 }} strokeWidth={1.75} />
+                        </button>
 
                         <NotificationBellPro />
                         <LanguageToggle />
@@ -472,7 +409,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                         <div className="flex align-items-center gap-2">
                             <Avatar
                                 label={getInitials()} shape="circle" size="normal"
-                                style={{ background: 'linear-gradient(135deg,#1e1e2d,#16213e)', color: '#f59e0b', fontWeight: 700, fontSize: '0.8125rem', width: '2.25rem', height: '2.25rem' }}
+                                style={{ background: 'linear-gradient(135deg,#0f172a,#1a2342)', color: '#ffffff', fontWeight: 700, fontSize: '0.8125rem', width: '2.25rem', height: '2.25rem' }}
                             />
                             <div className="hidden sm:flex flex-column" style={{ lineHeight: 1.3 }}>
                                 <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#111827', fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)', letterSpacing: language === 'ar' ? '0' : '-0.01em' }}>
@@ -493,6 +430,85 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                     </div>
                 </header>
 
+                {/* ── Contextual Sub-Navigation ── */}
+                {(() => {
+                    const activeGroup = subNavGroups.find(g => isGroupActive(g));
+                    if (!activeGroup) return null;
+                    const GroupIcon = activeGroup.Icon;
+                    return (
+                        <nav className="header-subnav hidden lg:flex" style={{
+                            alignItems: 'center',
+                            gap: '0.375rem',
+                            padding: '0 1.5rem',
+                            height: '2.625rem',
+                            background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+                            borderTop: '1px solid rgba(0,0,0,0.04)',
+                        }}>
+                            {/* Section indicator */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.375rem',
+                                padding: '0.1875rem 0.625rem 0.1875rem 0.4375rem',
+                                background: '#f1f5f9',
+                                borderRadius: '0.375rem',
+                                [isRTL ? 'marginLeft' : 'marginRight']: '0.375rem',
+                                flexShrink: 0,
+                            }}>
+                                <GroupIcon style={{ width: '0.75rem', height: '0.75rem', color: '#235ae4' }} strokeWidth={2.25} />
+                                <span style={{
+                                    fontSize: '0.6875rem',
+                                    fontWeight: 700,
+                                    color: '#1e3a8a',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.06em',
+                                    fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-latin)',
+                                }}>
+                                    {activeGroup.label}
+                                </span>
+                            </div>
+
+                            {/* Vertical divider */}
+                            <div style={{ width: '1px', height: '1.125rem', background: '#e2e8f0', flexShrink: 0, [isRTL ? 'marginLeft' : 'marginRight']: '0.125rem' }} />
+
+                            {/* Navigation pills */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', overflow: 'hidden' }}>
+                                {activeGroup.items.map((item) => {
+                                    const ItemIcon = item.Icon;
+                                    const active = isSubItemActive(item.path);
+                                    return (
+                                        <button
+                                            key={item.path}
+                                            onClick={() => navigate(item.path)}
+                                            className={active ? 'subnav-pill subnav-pill--active' : 'subnav-pill'}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.375rem',
+                                                padding: '0.3125rem 0.75rem',
+                                                borderRadius: '0.4375rem',
+                                                fontSize: '0.8125rem',
+                                                fontWeight: active ? 650 : 500,
+                                                fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-latin)',
+                                                color: active ? '#ffffff' : '#475569',
+                                                background: active ? 'linear-gradient(135deg, #235ae4, #1a47b8)' : 'transparent',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                whiteSpace: 'nowrap',
+                                                boxShadow: active ? '0 1px 4px rgba(35,90,228,0.28), 0 0 0 0.5px rgba(35,90,228,0.15)' : 'none',
+                                                transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            <ItemIcon style={{ width: '0.8125rem', height: '0.8125rem', flexShrink: 0, opacity: active ? 1 : 0.55 }} strokeWidth={active ? 2 : 1.75} />
+                                            {item.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </nav>
+                    );
+                })()}
 
             </div>
 
@@ -539,7 +555,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                             </div>
 
                             {/* ── Group filter tabs ── */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.5rem 1.25rem', overflowX: 'auto', borderBottom: '1px solid #f1f5f9', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.625rem 1.25rem', overflowX: 'auto', borderBottom: '1px solid #f1f5f9', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                                 {[null, ...ALL_GROUPS].map(g => {
                                     const label = g ? GROUP_NAMES[g]?.[lang] : ui.filterAll;
                                     const gc = g ? GROUP_CONFIG[g] : null;
@@ -550,13 +566,15 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                             text
                                             onClick={() => { setActiveGroupFilter(g); setActiveIndex(-1); }}
                                             style={{
-                                                display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                                                padding: '0.25rem 0.625rem',
-                                                borderRadius: '1rem',
-                                                fontSize: '0.75rem', fontWeight: isActive ? 600 : 500,
+                                                display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                                                padding: '0.4rem 1rem',
+                                                borderRadius: '0.5rem',
+                                                fontSize: '1rem', fontWeight: isActive ? 700 : 500,
                                                 whiteSpace: 'nowrap',
                                                 background: isActive ? (gc ? gc.bg : '#e0e7ff') : 'transparent',
                                                 color: isActive ? (gc ? gc.color : '#6366f1') : '#6b7280',
+                                                letterSpacing: '-0.01em',
+                                                boxShadow: isActive ? `inset 0 0 0 1.5px ${gc ? gc.color : '#6366f1'}33` : 'none',
                                                 transition: 'all 0.12s ease',
                                             }}
                                         >
@@ -568,12 +586,12 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                             </div>
 
                             {/* ── Results ── */}
-                            <div ref={resultsRef} style={{ maxHeight: '25rem', overflowY: 'auto', padding: '0.375rem 0' }}>
+                            <div ref={resultsRef} style={{ maxHeight: '26rem', overflowY: 'auto', padding: '0.375rem 0' }}>
                                 {filteredRoutes.length === 0 ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem 1rem', color: '#94a3b8' }}>
-                                        <Search style={{ width: '2rem', height: '2rem', marginBottom: '0.75rem', opacity: 0.35 }} />
-                                        <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>{ui.noResults}</p>
-                                        <p style={{ fontSize: '0.75rem', margin: '0.375rem 0 0', color: '#cbd5e1' }}>{ui.noResultsHint}</p>
+                                        <Search style={{ width: '2.25rem', height: '2.25rem', marginBottom: '0.875rem', opacity: 0.35 }} />
+                                        <p style={{ fontSize: '1rem', fontWeight: 500, margin: 0 }}>{ui.noResults}</p>
+                                        <p style={{ fontSize: '0.875rem', margin: '0.375rem 0 0', color: '#cbd5e1' }}>{ui.noResultsHint}</p>
                                     </div>
                                 ) : (
                                     Object.entries(groupedResults).map(([groupName, routes]) => {
@@ -590,9 +608,9 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                         return (
                                             <div key={groupName}>
                                                 {/* Group header */}
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem 0.25rem', marginTop: '0.125rem', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                                                    {GroupIcon && <GroupIcon style={{ width: '0.75rem', height: '0.75rem', color: '#94a3b8', flexShrink: 0 }} strokeWidth={1.75} />}
-                                                    <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: isRTL ? '0' : '0.08em', color: gc.color }}>{gLabel}</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem 0.3rem', marginTop: '0.125rem', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                                                    {GroupIcon && <GroupIcon style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', flexShrink: 0 }} strokeWidth={1.75} />}
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: isRTL ? '0' : '0.08em', color: gc.color }}>{gLabel}</span>
                                                     <div style={{ flex: 1, height: '1px', background: '#f1f5f9' }} />
                                                 </div>
 
@@ -618,8 +636,8 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                                             onClick={() => goTo(route.path)}
                                                             onMouseEnter={() => setActiveIndex(idx)}
                                                             style={{
-                                                                display: 'flex', alignItems: 'center', gap: '0.75rem',
-                                                                width: '100%', padding: '0.5rem 1.25rem',
+                                                                display: 'flex', alignItems: 'center', gap: '0.875rem',
+                                                                width: '100%', padding: '0.625rem 1.25rem',
                                                                 textAlign: isRTL ? 'right' : 'left',
                                                                 flexDirection: isRTL ? 'row-reverse' : 'row',
                                                                 background: isItemActive ? rowGc.bg : 'transparent',
@@ -628,42 +646,42 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                                                         >
                                                             {/* Icon */}
                                                             <div style={{
-                                                                width: '2rem', height: '2rem', borderRadius: '0.5rem',
+                                                                width: '2.375rem', height: '2.375rem', borderRadius: '0.625rem',
                                                                 background: isItemActive ? rowGc.color : '#f1f5f9',
                                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                                 flexShrink: 0, transition: 'all 0.1s ease',
                                                             }}>
-                                                                <RouteIcon style={{ width: '0.875rem', height: '0.875rem', color: isItemActive ? 'white' : '#64748b' }} strokeWidth={1.75} />
+                                                                <RouteIcon style={{ width: '1.0625rem', height: '1.0625rem', color: isItemActive ? 'white' : '#64748b' }} strokeWidth={1.75} />
                                                             </div>
 
                                                             {/* Text */}
                                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                                                                    <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: isItemActive ? 600 : 500, color: isItemActive ? '#0f172a' : '#1e293b', lineHeight: 1.3 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                                                                    <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: isItemActive ? 600 : 500, color: isItemActive ? '#0f172a' : '#1e293b', lineHeight: 1.3 }}>
                                                                         {highlightText(displayLabel, searchQuery.trim())}
                                                                     </p>
                                                                     {isCurrentPage && (
-                                                                        <span style={{ fontSize: '0.5625rem', fontWeight: 600, padding: '0.0625rem 0.375rem', borderRadius: '1rem', background: '#ecfdf5', color: '#059669', flexShrink: 0 }}>
+                                                                        <span style={{ fontSize: '0.6875rem', fontWeight: 600, padding: '0.125rem 0.5rem', borderRadius: '1rem', background: '#ecfdf5', color: '#059669', flexShrink: 0 }}>
                                                                             ●
                                                                         </span>
                                                                     )}
                                                                     {typeConf && (
-                                                                        <span style={{ fontSize: '0.5625rem', fontWeight: 700, padding: '0.0625rem 0.375rem', borderRadius: '1rem', background: typeConf.bg, color: typeConf.color, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                                                        <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.125rem 0.5rem', borderRadius: '1rem', background: typeConf.bg, color: typeConf.color, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                                                                             {typeConf.label[lang]}
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <p style={{ margin: 0, fontSize: '0.6875rem', color: isItemActive ? '#64748b' : '#94a3b8', lineHeight: 1.3, marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                <p style={{ margin: 0, fontSize: '0.8125rem', color: isItemActive ? '#64748b' : '#94a3b8', lineHeight: 1.3, marginTop: '0.2rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                     {highlightText(displayDesc, searchQuery.trim())}
                                                                 </p>
                                                             </div>
 
                                                             {/* Path pill */}
                                                             {isItemActive && (
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0 }}>
-                                                                    <span style={{ fontSize: '0.625rem', color: '#94a3b8', fontFamily: 'monospace' }}>{route.path}</span>
-                                                                    <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', background: rowGc.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: isRTL ? 'scaleX(-1)' : undefined }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                                                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'monospace' }}>{route.path}</span>
+                                                                    <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: '0.4375rem', background: rowGc.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                        <svg width="11" height="11" viewBox="0 0 10 10" fill="none" style={{ transform: isRTL ? 'scaleX(-1)' : undefined }}>
                                                                             <path d="M2 5h6M5 2l3 3-3 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                                         </svg>
                                                                     </div>
@@ -679,34 +697,34 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                             </div>
 
                             {/* ── Footer ── */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 1.25rem', borderTop: '1px solid #f1f5f9', background: '#fafafa', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 1.25rem', borderTop: '1px solid #f1f5f9', background: '#fafafa', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                                     {[
                                         { keys: ['↑', '↓'], label: ui.navigate },
                                         { keys: ['↵'], label: ui.go },
                                         { keys: ['Esc'], label: ui.close },
                                     ].map(({ keys, label }) => (
-                                        <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                                        <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                                             {keys.map(k => (
-                                                <kbd key={k} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '1.25rem', height: '1.25rem', padding: '0 0.25rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.3125rem', fontSize: '0.625rem', color: '#64748b', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>{k}</kbd>
+                                                <kbd key={k} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '1.375rem', height: '1.375rem', padding: '0 0.3rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.3125rem', fontSize: '0.75rem', color: '#64748b', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>{k}</kbd>
                                             ))}
-                                            <span style={{ fontSize: '0.625rem', color: '#94a3b8' }}>{label}</span>
+                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{label}</span>
                                         </div>
                                     ))}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     {searchQuery && (
-                                        <span style={{ fontSize: '0.625rem', color: '#cbd5e1', fontWeight: 500 }}>{ui.results(allFlat.length)}</span>
+                                        <span style={{ fontSize: '0.75rem', color: '#cbd5e1', fontWeight: 500 }}>{ui.results(allFlat.length)}</span>
                                     )}
                                     {recentPaths.length > 0 && !searchQuery && (
                                         <Button
                                             text
                                             onClick={() => { setRecentPaths([]); localStorage.removeItem(RECENT_KEY); }}
-                                            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'transparent', fontSize: '0.625rem', color: '#cbd5e1', padding: '0.125rem 0.25rem', borderRadius: '0.25rem' }}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'transparent', fontSize: '0.75rem', color: '#cbd5e1', padding: '0.15rem 0.375rem', borderRadius: '0.25rem' }}
                                             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8'; }}
                                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#cbd5e1'; }}
                                         >
-                                            <Clock style={{ width: '0.625rem', height: '0.625rem' }} strokeWidth={2} />
+                                            <Clock style={{ width: '0.75rem', height: '0.75rem' }} strokeWidth={2} />
                                             {lang === 'ar' ? 'مسح السجل' : lang === 'fr' ? 'Effacer l\'historique' : 'Clear history'}
                                         </Button>
                                     )}
@@ -721,6 +739,68 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                 @keyframes searchModalIn {
                     from { opacity: 0; transform: scale(0.97) translateY(-8px); }
                     to   { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                @keyframes searchIconPulse {
+                    0%   { transform: scale(1); opacity: 0.55; }
+                    50%  { transform: scale(1.75); opacity: 0; }
+                    100% { transform: scale(1.75); opacity: 0; }
+                }
+                @keyframes searchIconBounce {
+                    0%, 100% { transform: translateY(0); }
+                    30%      { transform: translateY(-2px); }
+                    60%      { transform: translateY(1px); }
+                }
+                /* ── Sub-Navigation Pills ── */
+                .subnav-pill {
+                    position: relative;
+                }
+                .subnav-pill:not(.subnav-pill--active):hover {
+                    background: rgba(35, 90, 228, 0.06) !important;
+                    color: #1e3a8a !important;
+                    box-shadow: 0 0 0 0.5px rgba(35, 90, 228, 0.12);
+                }
+                .subnav-pill:not(.subnav-pill--active):hover svg {
+                    opacity: 0.85 !important;
+                }
+                .subnav-pill:active {
+                    transform: scale(0.97);
+                }
+                .subnav-pill--active {
+                    pointer-events: auto;
+                }
+                .header-search-icon-btn {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 2.25rem;
+                    height: 2.25rem;
+                    padding: 0;
+                    border: none;
+                    border-radius: 0.5rem;
+                    background: transparent;
+                    color: #6b7280;
+                    cursor: pointer;
+                    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+                    animation: searchIconBounce 3.5s ease-in-out 2s infinite;
+                }
+                .header-search-icon-btn:hover {
+                    background: #f3f4f6;
+                    color: #235ae4;
+                    transform: scale(1.08);
+                    animation: none;
+                }
+                .header-search-icon-btn:active {
+                    transform: scale(0.93);
+                }
+                .header-search-icon-ring {
+                    position: absolute;
+                    inset: 0;
+                    border-radius: 0.5rem;
+                    border: 1.5px solid #235ae4;
+                    opacity: 0;
+                    animation: searchIconPulse 3.5s ease-out 2s infinite;
+                    pointer-events: none;
                 }
             `}</style>
         </>

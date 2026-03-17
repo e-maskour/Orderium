@@ -158,7 +158,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         label={payment ? t('edit') : t('add')}
         loading={loading}
         onClick={handleSubmit}
-        style={{ borderRadius: '0.5rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}
+        style={{ borderRadius: '0.5rem', background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none' }}
       />
     </div>
   );
@@ -169,7 +169,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       onHide={onClose}
       header={
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: 'linear-gradient(135deg, #235ae4, #1a47b8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CreditCard style={{ width: '1rem', height: '1rem', color: '#fff' }} />
           </div>
           <span>{payment ? t('invoice.editPayment') : t('invoice.addPayment')}</span>
@@ -187,7 +187,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         {/* Payment Progress Card */}
         <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderRadius: '0.875rem', padding: '1.25rem', color: '#fff', position: 'relative', overflow: 'hidden' }}>
           {/* Decorative blob */}
-          <div style={{ position: 'absolute', top: '-1.5rem', right: '-1.5rem', width: '6rem', height: '6rem', borderRadius: '50%', background: 'rgba(245,158,11,0.12)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: '-1.5rem', right: '-1.5rem', width: '6rem', height: '6rem', borderRadius: '50%', background: 'rgba(35,90,228,0.12)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', bottom: '-1rem', left: '30%', width: '4rem', height: '4rem', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
 
           {/* Three stats */}

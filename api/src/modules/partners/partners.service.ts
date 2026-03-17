@@ -4,7 +4,6 @@ import {
   ConflictException,
   Inject,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Partner } from './entities/partner.entity';
@@ -12,18 +11,26 @@ import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { Portal } from '../portal/entities/portal.entity';
 import { Invoice } from '../invoices/entities/invoice.entity';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class PartnersService {
   constructor(
-    @InjectRepository(Partner)
-    private readonly partnerRepository: Repository<Partner>,
-    @InjectRepository(Portal)
-    private readonly portalRepository: Repository<Portal>,
-    @InjectRepository(Invoice)
-    private readonly invoiceRepository: Repository<Invoice>,
+    private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
+
+  private get partnerRepository(): Repository<Partner> {
+    return this.tenantConnService.getRepository(Partner);
+  }
+
+  private get portalRepository(): Repository<Portal> {
+    return this.tenantConnService.getRepository(Portal);
+  }
+
+  private get invoiceRepository(): Repository<Invoice> {
+    return this.tenantConnService.getRepository(Invoice);
+  }
 
   async upsert(
     createPartnerDto: CreatePartnerDto,

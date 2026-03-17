@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   PushNotificationService,
@@ -8,6 +7,7 @@ import {
 import { NotificationsService } from './notifications.service';
 import { Order, DeliveryStatus } from '../orders/entities/order.entity';
 import { OrderDelivery } from '../delivery/entities/delivery.entity';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 /**
  * Service responsible for sending notifications based on order-related events.
@@ -33,13 +33,18 @@ export class OrderNotificationService {
   };
 
   constructor(
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
-    @InjectRepository(OrderDelivery)
-    private readonly orderDeliveryRepository: Repository<OrderDelivery>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly pushNotificationService: PushNotificationService,
     private readonly notificationsService: NotificationsService,
-  ) {}
+  ) { }
+
+  private get orderRepository(): Repository<Order> {
+    return this.tenantConnService.getRepository(Order);
+  }
+
+  private get orderDeliveryRepository(): Repository<OrderDelivery> {
+    return this.tenantConnService.getRepository(OrderDelivery);
+  }
 
   /**
    * RULE 1: When a client creates an order, notify all admins

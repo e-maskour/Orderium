@@ -54,7 +54,7 @@ export default function Configurations() {
       description: t('inventorySettingsSubtitle'),
       icon: Package,
       path: '/configurations/inventory',
-      color: '#f59e0b',
+      color: '#235ae4',
     },
   ];
 

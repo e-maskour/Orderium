@@ -10,7 +10,7 @@ interface RecentActivityProps {
 const iconConfig: Record<string, { bg: string; color: string; shadow: string }> = {
     order: { bg: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', shadow: 'rgba(59,130,246,0.2)' },
     customer: { bg: 'linear-gradient(135deg, #a855f7, #9333ea)', color: '#fff', shadow: 'rgba(168,85,247,0.2)' },
-    product: { bg: 'linear-gradient(135deg, #f97316, #ea580c)', color: '#fff', shadow: 'rgba(249,115,22,0.2)' },
+    product: { bg: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff', shadow: 'rgba(14,165,233,0.2)' },
     revenue: { bg: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', shadow: 'rgba(34,197,94,0.2)' },
     default: { bg: 'linear-gradient(135deg, #64748b, #475569)', color: '#fff', shadow: 'rgba(100,116,139,0.2)' },
 };
@@ -89,9 +89,9 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
                 <div style={{
                     fontSize: '0.6875rem',
                     fontWeight: 600,
-                    color: '#f59e0b',
-                    backgroundColor: '#fffbeb',
-                    border: '1px solid #fef3c7',
+                    color: '#235ae4',
+                    backgroundColor: '#eff3ff',
+                    border: '1px solid rgba(35,90,228,0.2)',
                     padding: '0.25rem 0.625rem',
                     borderRadius: '2rem',
                     textTransform: 'uppercase',

@@ -139,7 +139,7 @@ export default function Customers() {
   const topCustomers = dashboardData?.topCustomers || [];
   const lastUpdatedCustomers = dashboardData?.lastUpdatedCustomers || [];
   const totalPayments = topCustomers.reduce((sum: number, c: any) => sum + c.total, 0);
-  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#6366f1', '#10b981'];
 
   return (
     <AdminLayout>
@@ -166,7 +166,7 @@ export default function Customers() {
                   label={tab.label}
                   text={activeTab !== tab.key}
                   style={activeTab === tab.key
-                    ? { backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }
+                    ? { backgroundColor: '#235ae4', color: 'white', boxShadow: '0 4px 6px -1px rgba(35,90,228,0.25)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }
                     : { backgroundColor: 'transparent', color: '#475569', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }
                   }
                 />
@@ -183,7 +183,7 @@ export default function Customers() {
                   <KpiCard label="Total Clients" value={totalCustomers} icon={Users} color="blue" />
                   <KpiCard label="Avec Factures" value={customersWithInvoices} icon={TrendingUp} color="emerald" />
                   <KpiCard label="Revenu Total" value={formatDH(totalRevenue, 0)} icon={TrendingUp} color="purple" />
-                  <KpiCard label="Total Factures" value={totalInvoices} icon={CheckCircle} color="amber" />
+                  <KpiCard label="Total Factures" value={totalInvoices} icon={CheckCircle} color="indigo" />
                 </KpiGrid>
 
                 {/* Dashboard Grid */}
@@ -196,7 +196,7 @@ export default function Customers() {
                         <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>Classement par chiffre d'affaires</p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#d97706' }}>{formatFrenchNumber(totalPayments, 0)}</p>
+                        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#235ae4' }}>{formatFrenchNumber(totalPayments, 0)}</p>
                         <p style={{ fontSize: '0.75rem', color: '#64748b' }}>DH Total</p>
                       </div>
                     </div>
@@ -215,7 +215,7 @@ export default function Customers() {
                             'linear-gradient(to right, #3b82f6, #2563eb)',
                             'linear-gradient(to right, #8b5cf6, #7c3aed)',
                             'linear-gradient(to right, #ec4899, #db2777)',
-                            'linear-gradient(to right, #f59e0b, #d97706)',
+                            'linear-gradient(to right, #235ae4, #1a47b8)',
                             'linear-gradient(to right, #10b981, #059669)',
                           ];
 
@@ -336,7 +336,7 @@ export default function Customers() {
                         .cust-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
                         .cust-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
                         .cust-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                        .cust-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                        .cust-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
                       `}</style>
                       <DataTable
                         className="cust-datatable"
@@ -352,12 +352,12 @@ export default function Customers() {
                         removableSort
                         emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCustomersFound')}</div>}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
                       >
                         <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                         <Column field="name" header={t('name')} sortable body={(row: Partner) => (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
                             </div>
                             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>

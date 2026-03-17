@@ -11,6 +11,12 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '0.0.0.0',
       port: 3002,
+      fs: {
+        allow: [
+          path.resolve(__dirname, '.'),
+          path.resolve(__dirname, '../shared/ui'),
+        ],
+      },
       proxy: {
         '/api': {
           target: process.env.VITE_API_PROXY_TARGET || apiBaseUrl,

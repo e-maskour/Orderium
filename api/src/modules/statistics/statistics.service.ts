@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order, DeliveryStatus } from '../orders/entities/order.entity';
 import { Partner } from '../partners/entities/partner.entity';
 import { DeliveryPerson } from '../delivery/entities/delivery.entity';
 import { Product } from '../products/entities/product.entity';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 export interface OrderStatistics {
   totalOrders: number;
@@ -54,15 +54,24 @@ export interface RecentActivity {
 @Injectable()
 export class StatisticsService {
   constructor(
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
-    @InjectRepository(Partner)
-    private readonly partnerRepository: Repository<Partner>,
-    @InjectRepository(DeliveryPerson)
-    private readonly deliveryPersonRepository: Repository<DeliveryPerson>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
-  ) {}
+    private readonly tenantConnService: TenantConnectionService,
+  ) { }
+
+  private get orderRepository(): Repository<Order> {
+    return this.tenantConnService.getRepository(Order);
+  }
+
+  private get partnerRepository(): Repository<Partner> {
+    return this.tenantConnService.getRepository(Partner);
+  }
+
+  private get deliveryPersonRepository(): Repository<DeliveryPerson> {
+    return this.tenantConnService.getRepository(DeliveryPerson);
+  }
+
+  private get productRepository(): Repository<Product> {
+    return this.tenantConnService.getRepository(Product);
+  }
 
   async getOrderStatistics(
     startDate?: Date,

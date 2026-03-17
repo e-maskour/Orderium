@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import {
   InventoryAdjustment,
@@ -19,23 +18,38 @@ import {
   ValidateAdjustmentDto,
 } from './dto/inventory-adjustment.dto';
 import { StockService } from './stock.service';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class InventoryAdjustmentService {
   constructor(
-    @InjectRepository(InventoryAdjustment)
-    private readonly adjustmentRepository: Repository<InventoryAdjustment>,
-    @InjectRepository(AdjustmentLine)
-    private readonly adjustmentLineRepository: Repository<AdjustmentLine>,
-    @InjectRepository(Warehouse)
-    private readonly warehouseRepository: Repository<Warehouse>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
-    @InjectRepository(StockMovement)
-    private readonly stockMovementRepository: Repository<StockMovement>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly stockService: StockService,
-    private readonly dataSource: DataSource,
-  ) {}
+  ) { }
+
+  private get adjustmentRepository(): Repository<InventoryAdjustment> {
+    return this.tenantConnService.getRepository(InventoryAdjustment);
+  }
+
+  private get adjustmentLineRepository(): Repository<AdjustmentLine> {
+    return this.tenantConnService.getRepository(AdjustmentLine);
+  }
+
+  private get warehouseRepository(): Repository<Warehouse> {
+    return this.tenantConnService.getRepository(Warehouse);
+  }
+
+  private get productRepository(): Repository<Product> {
+    return this.tenantConnService.getRepository(Product);
+  }
+
+  private get stockMovementRepository(): Repository<StockMovement> {
+    return this.tenantConnService.getRepository(StockMovement);
+  }
+
+  private get dataSource(): DataSource {
+    return this.tenantConnService.getCurrentDataSource();
+  }
 
   /**
    * Create a new inventory adjustment

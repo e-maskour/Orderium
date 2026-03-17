@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ReactNode } from 'react';
+import { TenantStatusGuard } from './TenantStatusGuard';
 
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated, isLoading, admin } = useAuth();
@@ -19,5 +20,5 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return <TenantStatusGuard>{children}</TenantStatusGuard>;
 };

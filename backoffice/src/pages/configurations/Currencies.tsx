@@ -137,7 +137,7 @@ export default function Currencies() {
                     .curr-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
                     .curr-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
                     .curr-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                    .curr-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                    .curr-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
                 `}</style>
                 <DataTable
                     className="curr-datatable"

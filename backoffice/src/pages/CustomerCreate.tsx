@@ -49,8 +49,8 @@ export default function CustomerCreate() {
                 style={{ padding: '0.5rem' }}
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
+                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#235ae4' }} />
                 </div>
                 <div>
                   <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{t('newCustomer')}</h1>

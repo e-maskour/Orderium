@@ -9,6 +9,10 @@ import {
 
 export class AddQuotesAndOrderIdToPayments1769300000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Check existence BEFORE creating tables (to skip indexes/FKs if tables already exist)
+    const quotesExisted = await queryRunner.hasTable('quotes');
+    const quoteItemsExisted = await queryRunner.hasTable('quote_items');
+
     // Create quotes table
     await queryRunner.createTable(
       new Table({
@@ -141,48 +145,50 @@ export class AddQuotesAndOrderIdToPayments1769300000000 implements MigrationInte
     );
 
     // Create indexes for quotes table
-    await queryRunner.createIndex(
-      'quotes',
-      new TableIndex({
-        name: 'IDX_QUOTES_NUMBER',
-        columnNames: ['quoteNumber'],
-      }),
-    );
+    if (!quotesExisted) {
+      await queryRunner.createIndex(
+        'quotes',
+        new TableIndex({
+          name: 'IDX_QUOTES_NUMBER',
+          columnNames: ['quoteNumber'],
+        }),
+      );
 
-    await queryRunner.createIndex(
-      'quotes',
-      new TableIndex({
-        name: 'IDX_QUOTES_CUSTOMER',
-        columnNames: ['customerId'],
-      }),
-    );
+      await queryRunner.createIndex(
+        'quotes',
+        new TableIndex({
+          name: 'IDX_QUOTES_CUSTOMER',
+          columnNames: ['customerId'],
+        }),
+      );
 
-    await queryRunner.createIndex(
-      'quotes',
-      new TableIndex({
-        name: 'IDX_QUOTES_DATE',
-        columnNames: ['date'],
-      }),
-    );
+      await queryRunner.createIndex(
+        'quotes',
+        new TableIndex({
+          name: 'IDX_QUOTES_DATE',
+          columnNames: ['date'],
+        }),
+      );
 
-    await queryRunner.createIndex(
-      'quotes',
-      new TableIndex({
-        name: 'IDX_QUOTES_EXPIRATION_DATE',
-        columnNames: ['expirationDate'],
-      }),
-    );
+      await queryRunner.createIndex(
+        'quotes',
+        new TableIndex({
+          name: 'IDX_QUOTES_EXPIRATION_DATE',
+          columnNames: ['expirationDate'],
+        }),
+      );
 
-    // Create foreign key for customerId
-    await queryRunner.createForeignKey(
-      'quotes',
-      new TableForeignKey({
-        columnNames: ['customerId'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'partners',
-        onDelete: 'SET NULL',
-      }),
-    );
+      // Create foreign key for customerId
+      await queryRunner.createForeignKey(
+        'quotes',
+        new TableForeignKey({
+          columnNames: ['customerId'],
+          referencedColumnNames: ['id'],
+          referencedTableName: 'partners',
+          onDelete: 'SET NULL',
+        }),
+      );
+    } // end !quotesExisted
 
     // Create quote_items table
     await queryRunner.createTable(
@@ -256,42 +262,44 @@ export class AddQuotesAndOrderIdToPayments1769300000000 implements MigrationInte
     );
 
     // Create indexes for quote_items table
-    await queryRunner.createIndex(
-      'quote_items',
-      new TableIndex({
-        name: 'IDX_QUOTE_ITEMS_QUOTE',
-        columnNames: ['quoteId'],
-      }),
-    );
+    if (!quoteItemsExisted) {
+      await queryRunner.createIndex(
+        'quote_items',
+        new TableIndex({
+          name: 'IDX_QUOTE_ITEMS_QUOTE',
+          columnNames: ['quoteId'],
+        }),
+      );
 
-    await queryRunner.createIndex(
-      'quote_items',
-      new TableIndex({
-        name: 'IDX_QUOTE_ITEMS_PRODUCT',
-        columnNames: ['productId'],
-      }),
-    );
+      await queryRunner.createIndex(
+        'quote_items',
+        new TableIndex({
+          name: 'IDX_QUOTE_ITEMS_PRODUCT',
+          columnNames: ['productId'],
+        }),
+      );
 
-    // Create foreign keys for quote_items
-    await queryRunner.createForeignKey(
-      'quote_items',
-      new TableForeignKey({
-        columnNames: ['quoteId'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'quotes',
-        onDelete: 'CASCADE',
-      }),
-    );
+      // Create foreign keys for quote_items
+      await queryRunner.createForeignKey(
+        'quote_items',
+        new TableForeignKey({
+          columnNames: ['quoteId'],
+          referencedColumnNames: ['id'],
+          referencedTableName: 'quotes',
+          onDelete: 'CASCADE',
+        }),
+      );
 
-    await queryRunner.createForeignKey(
-      'quote_items',
-      new TableForeignKey({
-        columnNames: ['productId'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'products',
-        onDelete: 'SET NULL',
-      }),
-    );
+      await queryRunner.createForeignKey(
+        'quote_items',
+        new TableForeignKey({
+          columnNames: ['productId'],
+          referencedColumnNames: ['id'],
+          referencedTableName: 'products',
+          onDelete: 'SET NULL',
+        }),
+      );
+    } // end !quoteItemsExisted
 
     // Add orderId column to payments table
     await queryRunner.addColumn(

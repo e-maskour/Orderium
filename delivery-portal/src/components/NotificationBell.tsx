@@ -32,7 +32,8 @@ export function NotificationBell() {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       const response = await fetch(`/api/notifications?userType=delivery&userId=${deliveryPerson?.id}`, { headers });
       if (!response.ok) throw new Error('Failed to fetch notifications');
-      return response.json();
+      const json = await response.json();
+      return json.data || [];
     },
     enabled: !!deliveryPerson,
     refetchInterval: 30000,
@@ -46,7 +47,8 @@ export function NotificationBell() {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       const response = await fetch(`/api/notifications/unread-count?userId=${deliveryPerson?.id}`, { headers });
       if (!response.ok) throw new Error('Failed to fetch unread count');
-      return response.json();
+      const json = await response.json();
+      return json.data || {};
     },
     enabled: !!deliveryPerson,
     refetchInterval: 10000,
@@ -138,7 +140,7 @@ export function NotificationBell() {
       }
     }
 
-    let message = '';
+    let message: string;
     if (statusKey) {
       const status = t(statusKey as any) || statusKey;
       message = language === 'ar'

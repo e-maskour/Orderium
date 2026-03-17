@@ -136,7 +136,7 @@ export default function Fournisseurs() {
   const topSuppliers = dashboardData?.topSuppliers || [];
   const lastUpdatedSuppliers = dashboardData?.lastUpdatedSuppliers || [];
   const totalPayments = topSuppliers.reduce((sum: number, s: any) => sum + s.total, 0);
-  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#6366f1', '#10b981'];
 
   return (
     <AdminLayout>
@@ -161,7 +161,7 @@ export default function Fournisseurs() {
                   text={activeTab !== tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
                   style={activeTab === tab.key
-                    ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)' }
+                    ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, backgroundColor: '#235ae4', color: 'white', boxShadow: '0 4px 6px -1px rgba(35,90,228,0.25)' }
                     : { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, color: '#475569' }}
                   icon={<Icon style={{ width: '1rem', height: '1rem' }} />}
                   label={tab.label}
@@ -178,7 +178,7 @@ export default function Fournisseurs() {
                   <KpiCard label="Fournisseurs" value={totalSuppliers} icon={Users} color="blue" />
                   <KpiCard label="Avec Factures" value={suppliersWithInvoices} icon={TrendingUp} color="emerald" />
                   <KpiCard label="Dépenses" value={formatDH(totalExpenses, 0)} icon={TrendingUp} color="purple" />
-                  <KpiCard label="Total Factures" value={totalInvoices} icon={CheckCircle} color="amber" />
+                  <KpiCard label="Total Factures" value={totalInvoices} icon={CheckCircle} color="indigo" />
                 </KpiGrid>
 
                 {/* Dashboard Grid */}
@@ -210,7 +210,7 @@ export default function Fournisseurs() {
                             'linear-gradient(to right, #3b82f6, #2563eb)',
                             'linear-gradient(to right, #8b5cf6, #7c3aed)',
                             'linear-gradient(to right, #ec4899, #db2777)',
-                            'linear-gradient(to right, #f59e0b, #d97706)',
+                            'linear-gradient(to right, #235ae4, #1a47b8)',
                             'linear-gradient(to right, #10b981, #059669)',
                           ];
                           return (
@@ -303,7 +303,7 @@ export default function Fournisseurs() {
                         .fourn-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
                         .fourn-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
                         .fourn-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                        .fourn-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                        .fourn-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
                       `}</style>
                       <DataTable
                         className="fourn-datatable"
@@ -319,12 +319,12 @@ export default function Fournisseurs() {
                         removableSort
                         emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Aucun fournisseur trouvé</div>}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
                       >
                         <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                         <Column field="name" header={t('name')} sortable body={(row: Partner) => (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
                             </div>
                             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>

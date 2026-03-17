@@ -45,7 +45,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
           stops: [0, 90, 100],
         },
       },
-      colors: ['#df7817', '#3b82f6'],
+      colors: ['#235ae4', '#a855f7'],
       xaxis: {
         categories: data.dates,
         labels: {

@@ -152,8 +152,8 @@ export default function QuotePreviewPage() {
 
           {/* Expiration Date */}
           {q.expirationDate && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '0.75rem' }}>
-              <Calendar style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', padding: '0.75rem' }}>
+              <Calendar style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
               <span>
                 Valable jusqu'au{' '}
                 {new Date(q.expirationDate).toLocaleDateString('fr-FR', {

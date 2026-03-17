@@ -266,4 +266,43 @@ export const API_ROUTES = {
         // Stats
         STATS: '/api/drive/stats',
     },
+
+    // ─── Onboarding ────────────────────────────────────────────
+    ONBOARDING: {
+        STATUS: '/api/onboarding/status',
+        COMPANY: '/api/onboarding/company',
+        ADMIN: '/api/onboarding/admin',
+        COMPLETE: '/api/onboarding/complete',
+    },
+
+    // ─── Permissions ───────────────────────────────────────────
+    PERMISSIONS: {
+        LIST: '/api/permissions',
+        DETAIL: (id: number) => `/api/permissions/${id}`,
+        CREATE: '/api/permissions',
+        UPDATE: (id: number) => `/api/permissions/${id}`,
+        DELETE: (id: number) => `/api/permissions/${id}`,
+        SEED: '/api/permissions/seed',
+    },
+
+    // ─── Roles ─────────────────────────────────────────────────
+    ROLES: {
+        LIST: '/api/roles',
+        DETAIL: (id: number) => `/api/roles/${id}`,
+        CREATE: '/api/roles',
+        UPDATE: (id: number) => `/api/roles/${id}`,
+        DELETE: (id: number) => `/api/roles/${id}`,
+        SEED: '/api/roles/seed',
+    },
+
+    // ─── Users ─────────────────────────────────────────────────
+    USERS: {
+        LIST: '/api/users',
+        DETAIL: (id: number) => `/api/users/${id}`,
+        CREATE: '/api/users',
+        UPDATE: (id: number) => `/api/users/${id}`,
+        DELETE: (id: number) => `/api/users/${id}`,
+        ACTIVATE: (id: number) => `/api/users/${id}/activate`,
+        DEACTIVATE: (id: number) => `/api/users/${id}/deactivate`,
+    },
 } as const;

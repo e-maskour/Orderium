@@ -155,7 +155,7 @@ export default function Warehouses() {
       {/* Warehouses Grid */}
       {isLoading ? (
         <div style={{ textAlign: 'center', paddingTop: '3rem', paddingBottom: '3rem' }}>
-          <div style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '4px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
+          <div style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
         </div>
       ) : filteredWarehouses.length === 0 ? (
         <div style={{ textAlign: 'center', paddingTop: '3rem', paddingBottom: '3rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
@@ -171,7 +171,7 @@ export default function Warehouses() {
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '3rem', height: '3rem', background: 'linear-gradient(to bottom right, #f59e0b, #f97316)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '3rem', height: '3rem', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Building2 style={{ width: '1.5rem', height: '1.5rem', color: '#ffffff' }} />
                   </div>
                   <div>

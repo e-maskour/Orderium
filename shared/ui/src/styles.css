@@ -17,32 +17,37 @@
    ============================================================ */
 
 :root {
-    /* Primary color overrides for PrimeReact — exact #df7817 orange */
-    --primary-color: #df7817;
+    /* Primary color — fallback only.
+       Each app's theme.css overrides these with its own brand palette.
+       backoffice:      #235ae4 (Blue)
+       client:          #059669 (Emerald)
+       delivery-portal: #df7817 (Orange)
+    */
+    --primary-color: #235ae4;
     --primary-color-text: #ffffff;
-    --primary-50: #fef6ec;
-    --primary-100: #fde8c9;
-    --primary-200: #fbcf97;
-    --primary-300: #f8b360;
-    --primary-400: #f4962d;
-    --primary-500: #df7817;
-    --primary-600: #be6614;
-    --primary-700: #9d5310;
-    --primary-800: #7c420d;
-    --primary-900: #5b3009;
+    --primary-50: #eef1fd;
+    --primary-100: #d4def9;
+    --primary-200: #abc0f4;
+    --primary-300: #829fed;
+    --primary-400: #587de7;
+    --primary-500: #235ae4;
+    --primary-600: #1c4bc4;
+    --primary-700: #163ba0;
+    --primary-800: #0f2d7a;
+    --primary-900: #0a1e52;
 
-    /* Moroccan-inspired palette */
-    --orderium-primary: #df7817;
-    --orderium-primary-light: #e89440;
-    --orderium-primary-dark: #b86314;
+    /* Shared palette tokens — updated by each app's theme.css */
+    --orderium-primary: var(--primary-color);
+    --orderium-primary-light: var(--primary-400);
+    --orderium-primary-dark: var(--primary-600);
     --orderium-secondary: #e8dcc8;
-    --orderium-accent: #d4a017;
-    --orderium-accent-light: #e8b832;
-    --orderium-teal: #df7817;
-    --orderium-teal-light: #e89440;
+    --orderium-accent: var(--primary-600);
+    --orderium-accent-light: var(--primary-500);
+    --orderium-teal: var(--primary-color);
+    --orderium-teal-light: var(--primary-400);
     --orderium-sand: #f5f0e8;
-    --orderium-terracotta: #df7817;
-    --orderium-gold: #d4a017;
+    --orderium-terracotta: var(--primary-color);
+    --orderium-gold: var(--primary-600);
 
     /* Neutral palette */
     --orderium-bg: #faf8f5;
@@ -102,11 +107,12 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
 
-    /* Form input border states — referenced by component overrides below */
+    /* Form input border states — referenced by component overrides below.
+       Each app's theme.css overrides --form-input-border-focus and --form-input-shadow-focus. */
     --form-input-border: #d1c7bd;
     --form-input-border-hover: #b8a99a;
-    --form-input-border-focus: #df7817;
-    --form-input-shadow-focus: 0 0 0 3px rgba(223, 120, 23, 0.15);
+    --form-input-border-focus: var(--primary-color);
+    --form-input-shadow-focus: 0 0 0 2px rgba(35, 90, 228, 0.18);
 }
 
 /* ============================================================
@@ -578,8 +584,8 @@ header .p-inputtext {
 :root {
     --form-input-border: #d1c4b8;
     --form-input-border-hover: #b8a898;
-    --form-input-border-focus: var(--orderium-primary);
-    --form-input-shadow-focus: 0 0 0 2px rgba(223, 120, 23, 0.18);
+    --form-input-border-focus: var(--primary-color);
+    --form-input-shadow-focus: 0 0 0 2px rgba(35, 90, 228, 0.18);
 }
 
 /* ---- MultiSelect ---- */
@@ -710,4 +716,309 @@ textarea.p-inputtextarea:enabled:focus {
     border-color: var(--form-input-border-focus) !important;
     box-shadow: var(--form-input-shadow-focus) !important;
     outline: none;
+}
+
+/* ============================================================
+   Primary Color Component Overrides
+   Override Lara Amber's ~296 hardcoded #f59e0b hex values so
+   every PrimeReact component picks up the per-app primary color
+   defined via CSS custom properties in each app's theme.css.
+   ============================================================ */
+
+/* ── Buttons ── */
+.p-button:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger) {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color-text) !important;
+}
+
+.p-button:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger):not(:disabled):hover {
+    background: var(--primary-600) !important;
+    border-color: var(--primary-600) !important;
+    color: var(--primary-color-text) !important;
+}
+
+.p-button:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger):not(:disabled):active {
+    background: var(--primary-700) !important;
+    border-color: var(--primary-700) !important;
+    color: var(--primary-color-text) !important;
+}
+
+.p-button:focus,
+.p-button:focus-visible {
+    box-shadow: 0 0 0 0.2rem var(--primary-200) !important;
+}
+
+/* Outlined button */
+.p-button.p-button-outlined:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger) {
+    background: transparent !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+.p-button.p-button-outlined:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger):not(:disabled):hover {
+    background: var(--primary-50) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+.p-button.p-button-outlined:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger):not(:disabled):active {
+    background: var(--primary-100) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+/* Text button */
+.p-button.p-button-text:not(.p-button-plain):not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger) {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--primary-color) !important;
+}
+
+.p-button.p-button-text:not(.p-button-plain):not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger):not(:disabled):hover {
+    background: var(--primary-50) !important;
+    color: var(--primary-color) !important;
+}
+
+.p-button.p-button-text:not(.p-button-plain):not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger):not(:disabled):active {
+    background: var(--primary-100) !important;
+    color: var(--primary-color) !important;
+}
+
+/* Link button */
+.p-button.p-button-link {
+    color: var(--primary-color) !important;
+    background: transparent !important;
+    border-color: transparent !important;
+}
+
+.p-button.p-button-link:not(:disabled):hover,
+.p-button.p-button-link:not(:disabled):active {
+    color: var(--primary-700) !important;
+    background: transparent !important;
+}
+
+.p-button.p-button-link:focus {
+    box-shadow: 0 0 0 0.2rem var(--primary-200) !important;
+}
+
+/* ── Focus ring (global override) ── */
+:root {
+    --focus-ring: 0 0 0 0.2rem var(--primary-200);
+}
+
+/* ── Checkbox ── */
+.p-checkbox.p-highlight .p-checkbox-box,
+.p-checkbox.p-variant-filled.p-highlight .p-checkbox-box {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.p-checkbox:not(.p-disabled):has(.p-checkbox-input:hover).p-highlight .p-checkbox-box,
+.p-checkbox.p-variant-filled:not(.p-disabled):has(.p-checkbox-input:hover).p-highlight .p-checkbox-box {
+    background: var(--primary-600) !important;
+    border-color: var(--primary-600) !important;
+}
+
+.p-checkbox:not(.p-disabled):has(.p-checkbox-input:hover) .p-checkbox-box {
+    border-color: var(--primary-color) !important;
+}
+
+.p-checkbox:not(.p-disabled):has(.p-checkbox-input:focus-visible) .p-checkbox-box {
+    box-shadow: 0 0 0 0.2rem var(--primary-200) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* ── RadioButton ── */
+.p-radiobutton.p-highlight .p-radiobutton-box {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.p-radiobutton:not(.p-disabled):has(.p-radiobutton-input:hover).p-highlight .p-radiobutton-box {
+    background: var(--primary-600) !important;
+    border-color: var(--primary-600) !important;
+}
+
+.p-radiobutton:not(.p-disabled):has(.p-radiobutton-input:hover) .p-radiobutton-box {
+    border-color: var(--primary-color) !important;
+}
+
+.p-radiobutton:not(.p-disabled):has(.p-radiobutton-input:focus-visible) .p-radiobutton-box {
+    box-shadow: 0 0 0 0.2rem var(--primary-200) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* ── InputSwitch ── */
+.p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+    background: var(--primary-color) !important;
+}
+
+.p-inputswitch.p-inputswitch-checked:not(.p-disabled):hover .p-inputswitch-slider {
+    background: var(--primary-600) !important;
+}
+
+.p-inputswitch:not(.p-disabled):has(.p-inputswitch-input:focus-visible) .p-inputswitch-slider {
+    box-shadow: 0 0 0 0.2rem var(--primary-200) !important;
+}
+
+/* ── SelectButton ── */
+.p-selectbutton .p-button.p-highlight {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color-text) !important;
+}
+
+.p-selectbutton .p-button.p-highlight:hover {
+    background: var(--primary-600) !important;
+    border-color: var(--primary-600) !important;
+    color: var(--primary-color-text) !important;
+}
+
+/* ── TabView ── */
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+/* ── Paginator selected page ── */
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color-text) !important;
+}
+
+/* ── DataTable highlights ── */
+.p-datatable .p-datatable-tbody>tr.p-highlight,
+.p-datatable .p-datatable-tbody>tr>td.p-highlight {
+    background: var(--primary-50) !important;
+    color: var(--primary-700) !important;
+}
+
+.p-datatable .p-sortable-column.p-highlight {
+    background: var(--primary-50) !important;
+    color: var(--primary-color) !important;
+}
+
+.p-datatable .p-sortable-column.p-highlight .p-sortable-column-icon {
+    color: var(--primary-color) !important;
+}
+
+.p-datatable .p-sortable-column.p-highlight:not(.p-sortable-disabled):hover {
+    background: var(--primary-100) !important;
+    color: var(--primary-color) !important;
+}
+
+.p-datatable .p-sortable-column.p-highlight:not(.p-sortable-disabled):hover .p-sortable-column-icon {
+    color: var(--primary-color) !important;
+}
+
+.p-datatable .p-datatable-tbody>tr.p-highlight .p-row-toggler {
+    color: var(--primary-700) !important;
+}
+
+.p-datatable .p-column-resizer-helper {
+    background: var(--primary-color) !important;
+}
+
+/* ── Dropdown / MultiSelect / AutoComplete / Cascade item highlights ── */
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight,
+.p-multiselect-panel .p-multiselect-items .p-multiselect-item.p-highlight,
+.p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item.p-highlight,
+.p-cascadeselect-panel .p-cascadeselect-items .p-cascadeselect-item.p-highlight {
+    background: var(--primary-50) !important;
+    color: var(--primary-700) !important;
+}
+
+/* ── TreeSelect / Tree highlights ── */
+.p-treeselect-panel .p-treenode-content.p-highlight,
+.p-tree .p-treenode-content.p-highlight {
+    background: var(--primary-50) !important;
+    color: var(--primary-700) !important;
+}
+
+/* ── Listbox highlights ── */
+.p-listbox .p-listbox-list .p-listbox-item.p-highlight {
+    background: var(--primary-50) !important;
+    color: var(--primary-700) !important;
+}
+
+/* ── Calendar date highlights ── */
+.p-datepicker table td>span.p-highlight,
+.p-datepicker table td.p-datepicker-today>span.p-highlight {
+    background: var(--primary-color) !important;
+    color: var(--primary-color-text) !important;
+}
+
+.p-datepicker .p-monthpicker .p-monthpicker-month.p-highlight,
+.p-datepicker .p-yearpicker .p-yearpicker-year.p-highlight {
+    background: var(--primary-color) !important;
+    color: var(--primary-color-text) !important;
+}
+
+.p-datepicker table td>span:focus {
+    box-shadow: 0 0 0 0.2rem var(--primary-200) !important;
+}
+
+/* ── Carousel indicators ── */
+.p-carousel .p-carousel-indicators .p-carousel-indicator.p-highlight button {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* ── Badge (default/no severity) ── */
+.p-badge:not(.p-badge-secondary):not(.p-badge-success):not(.p-badge-info):not(.p-badge-warning):not(.p-badge-danger) {
+    background: var(--primary-color) !important;
+    color: var(--primary-color-text) !important;
+}
+
+/* ── Tag (default/no severity) ── */
+.p-tag:not(.p-tag-success):not(.p-tag-info):not(.p-tag-warning):not(.p-tag-danger) {
+    background: var(--primary-color) !important;
+    color: var(--primary-color-text) !important;
+}
+
+/* ── Menu / MenuItem highlights ── */
+.p-menuitem.p-highlight>.p-menuitem-content {
+    background: var(--primary-50) !important;
+}
+
+.p-menuitem.p-highlight>.p-menuitem-content .p-menuitem-link .p-menuitem-text,
+.p-menuitem.p-highlight>.p-menuitem-content .p-menuitem-link .p-menuitem-icon,
+.p-menuitem.p-highlight>.p-menuitem-content .p-menuitem-link .p-submenu-icon {
+    color: var(--primary-700) !important;
+}
+
+/* Menubar root-level highlighted items */
+.p-menubar .p-menubar-root-list>.p-menuitem>.p-menuitem-link.p-highlight>.p-menuitem-content {
+    background: var(--primary-50) !important;
+}
+
+/* ── Accordion header focus ── */
+.p-accordion .p-accordion-header:not(.p-disabled) .p-accordion-header-link:focus-visible {
+    box-shadow: 0 0 0 0.2rem var(--primary-200) !important;
+}
+
+/* ── AutoComplete multi-token chip ── */
+.p-autocomplete .p-autocomplete-multiple-container .p-autocomplete-token {
+    background: var(--primary-50) !important;
+    color: var(--primary-700) !important;
+}
+
+/* ── Column filter active indicator ── */
+.p-column-filter-menu-button.p-column-filter-menu-button-active,
+.p-column-filter-menu-button.p-column-filter-menu-button-active:hover {
+    background: var(--primary-50) !important;
+    color: var(--primary-color) !important;
+}
+
+.p-column-filter-overlay .p-column-filter-row-items .p-column-filter-row-item.p-highlight {
+    background: var(--primary-50) !important;
+    color: var(--primary-700) !important;
+}
+
+/* ── General .p-highlight fallback ── */
+.p-highlight {
+    background: var(--primary-50);
+    color: var(--primary-700);
 }

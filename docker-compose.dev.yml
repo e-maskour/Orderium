@@ -1,9 +1,12 @@
 # ==================================
-# Development Docker Compose
+# Development — Application Stack
 # ==================================
-# This file provides development-specific configurations
-# Note: PostgreSQL is expected to be running externally on localhost:5432
-# Use: docker compose -f docker-compose.dev.yml up -d --build
+# Dev overrides for the app services.
+# Infrastructure (postgres, redis, minio) must be started first:
+#   docker compose -f docker-compose.infra.yml up -d
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d --build
 # ==================================
 
 services:
@@ -11,42 +14,36 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-      target: development # Use development stage with all dependencies
+      target: development
     container_name: orderium-api-dev
-    command: npm run start:dev # Hot reload in development
+    command: npm run start:dev
     env_file:
-      - ./api/.env
+      - .env
     environment:
       NODE_ENV: development
-      DB_HOST: host.docker.internal # Override to connect to host's PostgreSQL
-      DB_SYNCHRONIZE: "true" # Auto-sync schema in development
+      DB_HOST: postgres # infra postgres, same Docker network
+      DB_PORT: 5432
+      DB_SYNCHRONIZE: "false" # use migrations even in dev
       DB_LOGGING: "true"
-      CORS_ORIGIN: http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:5173
+      MASTER_DB_NAME: ${MASTER_DB_NAME:-orderium_master}
+      SUPER_ADMIN_API_KEY: ${SUPER_ADMIN_API_KEY}
+      CORS_ORIGIN: "http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:5173"
       REDIS_URL: redis://redis:6379
-      # MinIO - override endpoint to point to the local minio service
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
     volumes:
-      # Mount source code for hot reload
       - ./api/src:/app/src:ro
       - ./api/package.json:/app/package.json:ro
     ports:
       - "3000:3000"
     networks:
       - orderium-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway" # Enable host access on Linux
-    depends_on:
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\"" ]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 40s
 
   backoffice:
@@ -102,58 +99,26 @@ services:
       - ./delivery-portal/src:/app/src:ro
       - ./delivery-portal/public:/app/public:ro
     ports:
-      - "3003:3003" # Uses custom port in package.json
+      - "3003:3003"
     networks:
       - orderium-network
 
-  # ==================================
-  # MinIO Object Storage
-  # ==================================
-  minio:
-    image: minio/minio:latest
-    container_name: orderium-minio-dev
-    command: server /data --console-address ":9001"
-    restart: unless-stopped
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-    volumes:
-      - minio_data:/data
+  tenant-dashboard:
+    build:
+      context: ./tenant-dashboard
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+    container_name: orderium-tenant-dashboard-dev
     ports:
-      - "9000:9000" # S3-compatible API
-      - "9001:9001" # Web console (http://localhost:9001)
+      - "4000:80"
     networks:
       - orderium-network
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
 
-  # ==================================
-  # Redis Cache
-  # ==================================
-  redis:
-    image: redis:7-alpine
-    container_name: orderium-redis-dev
-    restart: unless-stopped
-    ports:
-      - "6380:6379"
-    networks:
-      - orderium-network
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
+# ────────────────────────────────────────────────────────
+# Network — must already exist (created by docker-compose.infra.yml)
+# ────────────────────────────────────────────────────────
 networks:
   orderium-network:
-    driver: bridge
+    external: true
     name: orderium-network
-
-volumes:
-  minio_data:
-    driver: local
-    name: orderium_minio_data_dev

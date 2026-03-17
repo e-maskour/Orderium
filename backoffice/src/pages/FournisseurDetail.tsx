@@ -51,7 +51,7 @@ export default function FournisseurDetail() {
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-            <div className="animate-spin" style={{ borderRadius: '9999px', width: '2rem', height: '2rem', borderBottom: '2px solid #f59e0b' }}></div>
+            <div className="animate-spin" style={{ borderRadius: '9999px', width: '2rem', height: '2rem', borderBottom: '2px solid #235ae4' }}></div>
           </div>
         </div>
       </AdminLayout>
@@ -97,8 +97,8 @@ export default function FournisseurDetail() {
                 style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #fef3c7, #fde68a)', border: '1px solid #fcd34d', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 8px rgba(245,158,11,0.2)' }}>
-                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
+                <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #dbeafe, #eff6ff)', border: '1px solid #bfdbfe', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 8px rgba(35,90,228,0.15)' }}>
+                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#235ae4' }} />
                 </div>
                 <div>
                   <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>{partner.name}</h1>
@@ -137,7 +137,7 @@ export default function FournisseurDetail() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ padding: '0.625rem', background: 'linear-gradient(to bottom right, #f59e0b, #d97706)', borderRadius: '0.75rem', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)' }}>
+                    <div style={{ padding: '0.625rem', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)', borderRadius: '0.75rem', boxShadow: '0 10px 15px -3px rgba(35,90,228,0.3)' }}>
                       <BarChart3 style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
                     </div>
                     <div>

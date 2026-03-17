@@ -35,7 +35,7 @@ export function PageHeader({ icon: Icon, title, subtitle, actions }: PageHeaderP
         width: '5rem',
         height: '5rem',
         borderRadius: '9999px',
-        background: 'radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(35,90,228,0.08) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
       <div style={{
@@ -45,7 +45,7 @@ export function PageHeader({ icon: Icon, title, subtitle, actions }: PageHeaderP
         width: '7rem',
         height: '7rem',
         borderRadius: '9999px',
-        background: 'radial-gradient(circle, rgba(217,119,6,0.06) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(26,71,184,0.06) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
 
@@ -58,11 +58,11 @@ export function PageHeader({ icon: Icon, title, subtitle, actions }: PageHeaderP
           width: '3rem',
           height: '3rem',
           borderRadius: '0.875rem',
-          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          background: 'linear-gradient(135deg, #235ae4 0%, #1a47b8 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(245,158,11,0.35), 0 1px 3px rgba(0,0,0,0.1)',
+          boxShadow: '0 4px 12px rgba(35,90,228,0.35), 0 1px 3px rgba(0,0,0,0.1)',
         }}>
           <Icon style={{ width: '1.375rem', height: '1.375rem', color: '#ffffff' }} strokeWidth={2} />
           {/* Inner shine */}

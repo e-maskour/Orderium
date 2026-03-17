@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, In } from 'typeorm';
 import { Notification } from './entities/notification.entity';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class NotificationsService {
   constructor(
-    @InjectRepository(Notification)
-    private readonly notificationRepository: Repository<Notification>,
-  ) {}
+    private readonly tenantConnService: TenantConnectionService,
+  ) { }
+
+  private get notificationRepository(): Repository<Notification> {
+    return this.tenantConnService.getRepository(Notification);
+  }
 
   async create(data: Partial<Notification>): Promise<Notification> {
     const notification = this.notificationRepository.create(data);

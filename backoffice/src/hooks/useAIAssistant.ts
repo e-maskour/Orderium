@@ -174,8 +174,8 @@ export function useAIAssistant() {
           },
         }));
 
-        let executedToolCalls: ToolCall[] = [];
-        let executedToolResults: ToolResult[] = [];
+        const executedToolCalls: ToolCall[] = [];
+        const executedToolResults: ToolResult[] = [];
 
         // Stream response
         await ollamaService.chatStream({
@@ -311,6 +311,7 @@ export function useAIAssistant() {
       id: 'streaming',
       role: 'assistant',
       content: currentStreamingMessage,
+      // eslint-disable-next-line react-hooks/purity
       timestamp: Date.now(),
       status: 'streaming',
     });

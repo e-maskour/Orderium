@@ -141,12 +141,12 @@ export function ShareQuoteDialog({
                 gap: '0.5rem',
                 fontSize: '0.75rem',
                 color: '#475569',
-                backgroundColor: '#fffbeb',
-                border: '1px solid #fde68a',
+                backgroundColor: '#eff6ff',
+                border: '1px solid rgba(35,90,228,0.2)',
                 borderRadius: '0.5rem',
                 padding: '0.75rem',
               }}>
-                <div style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+                <div style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', backgroundColor: '#235ae4' }} />
                 <span>
                   Ce lien expire le{' '}
                   {new Date(expiresAt).toLocaleDateString('fr-FR', {

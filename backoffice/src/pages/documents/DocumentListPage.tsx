@@ -336,7 +336,7 @@ export default function DocumentListPage({
                   style={{
                     whiteSpace: 'nowrap', flexShrink: 0,
                     ...(activeTab === tab.key
-                      ? { backgroundColor: '#f59e0b', color: '#fff', boxShadow: '0 4px 6px rgba(245,158,11,0.25)', border: 'none' }
+                      ? { backgroundColor: '#235ae4', color: '#fff', boxShadow: '0 4px 6px rgba(35,90,228,0.25)', border: 'none' }
                       : { color: '#475569' })
                   }}
                 />
@@ -445,7 +445,7 @@ export default function DocumentListPage({
                   pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
                 >
                   {/* Panel Header */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <Filter style={{ width: 20, height: 20, color: '#fff' }} />
                       <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#fff' }}>{t('filters')}</h2>
@@ -509,7 +509,7 @@ export default function DocumentListPage({
                     {/* Date Range */}
                     <div>
                       <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock style={{ width: 16, height: 16, color: '#d97706' }} />
+                        <Clock style={{ width: 16, height: 16, color: '#235ae4' }} />
                         {documentType === 'devis' ? t('quoteDate') : documentType === 'bon_livraison' ? t('deliveryDate') : t('invoiceDate')}
                       </div>
                       <Calendar
@@ -526,7 +526,7 @@ export default function DocumentListPage({
                     {/* Status Filter */}
                     <div>
                       <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <CheckCircle style={{ width: 16, height: 16, color: '#d97706' }} />
+                        <CheckCircle style={{ width: 16, height: 16, color: '#235ae4' }} />
                         {t('status')}
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -561,7 +561,7 @@ export default function DocumentListPage({
                             style={{
                               fontSize: '0.75rem',
                               ...(statusFilter === filter.key
-                                ? { backgroundColor: '#f59e0b', color: '#fff', boxShadow: '0 10px 15px rgba(245,158,11,0.3)', border: 'none' }
+                                ? { backgroundColor: '#235ae4', color: '#fff', boxShadow: '0 10px 15px rgba(35,90,228,0.3)', border: 'none' }
                                 : { backgroundColor: '#f8fafc', color: '#334155' })
                             }}
                           />

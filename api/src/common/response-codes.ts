@@ -384,6 +384,30 @@ export const PRT = {
   },
   /** GET /portal/user/:phoneNumber            → data: User             | metadata: null */
   USER_DETAIL: { code: 'PRT200_02', status: 200, message: 'User Retrieved' },
+  // ── Achats (purchases) ──
+  /** GET /portal/me/orders                    → data: paginated orders | metadata: PaginationMeta */
+  ORDERS_LIST: { code: 'PRT200_03', status: 200, message: 'Orders Retrieved' },
+  /** GET /portal/me/orders/:id                → data: Order            | metadata: null */
+  ORDER_DETAIL: { code: 'PRT200_04', status: 200, message: 'Order Retrieved' },
+  /** GET /portal/me/invoices                  → data: paginated invoices | metadata: PaginationMeta */
+  INVOICES_LIST: { code: 'PRT200_05', status: 200, message: 'Invoices Retrieved' },
+  /** GET /portal/me/invoices/:id              → data: Invoice          | metadata: null */
+  INVOICE_DETAIL: { code: 'PRT200_06', status: 200, message: 'Invoice Retrieved' },
+  /** GET /portal/me/quotes                    → data: paginated quotes | metadata: PaginationMeta */
+  QUOTES_LIST: { code: 'PRT200_07', status: 200, message: 'Quotes Retrieved' },
+  /** GET /portal/me/quotes/:id                → data: Quote            | metadata: null */
+  QUOTE_DETAIL: { code: 'PRT200_08', status: 200, message: 'Quote Retrieved' },
+  // ── Paramètres (public configuration) ──
+  /** GET /portal/config/company  (Public)     → data: Configuration    | metadata: null */
+  CONFIG_COMPANY: { code: 'PRT200_09', status: 200, message: 'Company Configuration Retrieved' },
+  /** GET /portal/config/:entity  (Public)     → data: Configuration    | metadata: null */
+  CONFIG_ENTITY: { code: 'PRT200_10', status: 200, message: 'Configuration Retrieved' },
+  /** GET /portal/admin/users                  → data: { data, total }  | metadata: null */
+  ADMIN_USERS_LIST: { code: 'PRT200_11', status: 200, message: 'Portal Users Retrieved' },
+  /** PATCH /portal/admin/users/:id/approve    → data: { id, status }   | metadata: null */
+  USER_APPROVED: { code: 'PRT200_12', status: 200, message: 'User Account Approved' },
+  /** PATCH /portal/admin/users/:id/reject     → data: { id, status }   | metadata: null */
+  USER_REJECTED: { code: 'PRT200_13', status: 200, message: 'User Account Rejected' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -949,6 +973,20 @@ export const DRV = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  ONB  (OnboardingController)
+// ─────────────────────────────────────────────────────────────
+export const ONB = {
+  /** GET  /onboarding/status  → data: OnboardingStatus | metadata: null */
+  STATUS: { code: 'ONB200_01', status: 200, message: 'Onboarding Status' },
+  /** POST /onboarding/company → data: Configuration   | metadata: null */
+  COMPANY_CREATED: { code: 'ONB201_01', status: 201, message: 'Company Profile Created' },
+  /** POST /onboarding/admin   → data: { user, token } | metadata: null */
+  ADMIN_CREATED: { code: 'ONB201_02', status: 201, message: 'Admin Account Created' },
+  /** POST /onboarding/complete→ data: Configuration   | metadata: null */
+  COMPLETED: { code: 'ONB200_02', status: 200, message: 'Onboarding Complete' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  ERROR CODES  (Shared across all modules)
 // ─────────────────────────────────────────────────────────────
 export const ERR = {
@@ -972,6 +1010,43 @@ export const ERR = {
     status: 500,
     message: 'Internal Server Error',
   },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  PERMISSIONS  (PermissionsController)
+// ─────────────────────────────────────────────────────────────
+export const PERM = {
+  LIST:    { code: 'PERM200_01', status: 200, message: 'Permissions Retrieved' },
+  DETAIL:  { code: 'PERM200_02', status: 200, message: 'Permission Retrieved' },
+  CREATED: { code: 'PERM201_01', status: 201, message: 'Permission Created' },
+  UPDATED: { code: 'PERM200_03', status: 200, message: 'Permission Updated' },
+  DELETED: { code: 'PERM200_04', status: 200, message: 'Permission Deleted' },
+  SEEDED:  { code: 'PERM200_05', status: 200, message: 'Permissions Seeded' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  ROLES  (RolesController)
+// ─────────────────────────────────────────────────────────────
+export const ROLE = {
+  LIST:    { code: 'ROLE200_01', status: 200, message: 'Roles Retrieved' },
+  DETAIL:  { code: 'ROLE200_02', status: 200, message: 'Role Retrieved' },
+  CREATED: { code: 'ROLE201_01', status: 201, message: 'Role Created' },
+  UPDATED: { code: 'ROLE200_03', status: 200, message: 'Role Updated' },
+  DELETED: { code: 'ROLE200_04', status: 200, message: 'Role Deleted' },
+  SEEDED:  { code: 'ROLE200_05', status: 200, message: 'Default Role Seeded' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  USERS  (UsersController)
+// ─────────────────────────────────────────────────────────────
+export const USR = {
+  LIST:        { code: 'USR200_01', status: 200, message: 'Users Retrieved' },
+  DETAIL:      { code: 'USR200_02', status: 200, message: 'User Retrieved' },
+  CREATED:     { code: 'USR201_01', status: 201, message: 'User Created' },
+  UPDATED:     { code: 'USR200_03', status: 200, message: 'User Updated' },
+  DELETED:     { code: 'USR200_04', status: 200, message: 'User Deleted' },
+  ACTIVATED:   { code: 'USR200_05', status: 200, message: 'User Activated' },
+  DEACTIVATED: { code: 'USR200_06', status: 200, message: 'User Deactivated' },
 } as const satisfies Record<string, ResponseDef>;
 
 /**

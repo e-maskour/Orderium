@@ -17,11 +17,13 @@ import { DeliveryService } from './delivery.service';
 import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
 import { Public } from '../auth/decorators/public.decorator';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { ApiRes } from '../../common/api-response';
 import { DLV } from '../../common/response-codes';
 
 @ApiTags('Delivery')
 @Controller('delivery')
+@PortalRoute()
 export class DeliveryController {
   constructor(
     private readonly deliveryService: DeliveryService,
@@ -47,6 +49,7 @@ export class DeliveryController {
       isAdmin: false,
       isCustomer: false,
       isDelivery: true,
+      scope: 'portal',
     });
 
     return ApiRes(DLV.LOGIN, {

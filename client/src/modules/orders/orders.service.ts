@@ -17,20 +17,20 @@ export class OrdersService {
   }
 
   async getById(id: number): Promise<Order> {
-    const response = await http<{ success: boolean; order: any }>(`/api/orders/${id}`);
+    const response = await http<{ success: boolean; order: Record<string, unknown> }>(`/api/orders/${id}`);
     // API returns { Order: {...}, Items: [...] }
-    const orderData = response.order.Order || response.order;
-    const items = response.order.Items || orderData.items || [];
+    const orderData = (response.order.Order || response.order) as Record<string, unknown>;
+    const items = (response.order.Items || orderData.items || []) as unknown[];
     return Order.fromApiResponse({ ...orderData, items });
   }
 
   async getByOrderNumber(orderNumber: string, customerId: number): Promise<Order> {
-    const response = await http<{ success: boolean; order: any }>(
+    const response = await http<{ success: boolean; order: Record<string, unknown> }>(
       `/api/orders/number/${orderNumber}?customerId=${customerId}`
     );
     // API returns { Order: {...}, Items: [...] }
-    const orderData = response.order.Order || response.order;
-    const items = response.order.Items || orderData.items || [];
+    const orderData = (response.order.Order || response.order) as Record<string, unknown>;
+    const items = (response.order.Items || orderData.items || []) as unknown[];
     return Order.fromApiResponse({ ...orderData, items });
   }
 
@@ -56,7 +56,7 @@ export class OrdersService {
     );
 
     if (response.orders) {
-      response.orders = response.orders.map((order: any) => Order.fromApiResponse(order));
+      response.orders = response.orders.map((order) => Order.fromApiResponse(order as Record<string, unknown>));
     }
 
     return response;

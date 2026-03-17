@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check for existing session
     const storedPerson = localStorage.getItem('deliveryPerson');
     const storedToken = localStorage.getItem('authToken');
-    
+
     if (storedPerson && storedToken) {
       try {
         setDeliveryPerson(JSON.parse(storedPerson));
@@ -41,38 +41,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (credentials: { phoneNumber: string; password: string }) => {
-    try {
-      const response = await fetch('/api/delivery/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          PhoneNumber: credentials.phoneNumber,
-          Password: credentials.password,
-        }),
-      });
+    const response = await fetch('/api/delivery/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        PhoneNumber: credentials.phoneNumber,
+        Password: credentials.password,
+      }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
-      }
-
-      const data = await response.json();
-      
-      // Transform PascalCase to camelCase
-      const deliveryPersonData = {
-        id: data.deliveryPerson.Id,
-        name: data.deliveryPerson.Name,
-        phoneNumber: data.deliveryPerson.PhoneNumber,
-        email: data.deliveryPerson.Email,
-      };
-      
-      setDeliveryPerson(deliveryPersonData);
-      setIsAuthenticated(true);
-      localStorage.setItem('deliveryPerson', JSON.stringify(deliveryPersonData));
-      localStorage.setItem('authToken', data.token);
-    } catch (error) {
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Login failed');
     }
+
+    const responseBody = await response.json();
+    const data = responseBody.data;
+
+    // Transform PascalCase to camelCase
+    const deliveryPersonData = {
+      id: data.deliveryPerson.Id,
+      name: data.deliveryPerson.Name,
+      phoneNumber: data.deliveryPerson.PhoneNumber,
+      email: data.deliveryPerson.Email,
+    };
+
+    setDeliveryPerson(deliveryPersonData);
+    setIsAuthenticated(true);
+    localStorage.setItem('deliveryPerson', JSON.stringify(deliveryPersonData));
+    localStorage.setItem('authToken', data.token);
   };
 
   const logout = () => {

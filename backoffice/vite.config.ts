@@ -10,7 +10,7 @@ export default defineConfig({
       '@orderium/ui': path.resolve(__dirname, '../shared/ui/src'),
     },
   },
-  // @ts-ignore - vitest config lives alongside vite config
+  // @ts-expect-error - vitest config lives alongside vite config
   test: {
     globals: true,
     environment: 'node',
@@ -31,6 +31,18 @@ export default defineConfig({
       '/api': {
         target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            // Extract tenant slug from subdomain and forward as X-Tenant-ID header.
+            // e.g. acme-admin.localhost:3001  →  X-Tenant-ID: acme
+            const host = (req.headers['host'] as string) ?? '';
+            const match = host.match(/^([a-z0-9-]+)\.(localhost|.+\..+?)(:\d+)?$/i);
+            if (match) {
+              const slug = match[1].replace(/-(admin|app|delivery)$/i, '');
+              proxyReq.setHeader('X-Tenant-ID', slug);
+            }
+          });
+        },
       },
     },
   },

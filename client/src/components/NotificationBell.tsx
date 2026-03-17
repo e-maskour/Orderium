@@ -3,6 +3,7 @@ import { Bell, Check, CheckCheck } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { TranslationKey } from '@/lib/i18n';
 import { Button } from 'primereact/button';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import { Badge } from 'primereact/badge';
@@ -129,7 +130,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
       titleKey = titleKey.replace(/\./g, '');
     }
 
-    const title = t(titleKey as any) || notification.Title;
+    const title = t(titleKey as TranslationKey) || notification.Title;
 
     let orderNumber = notification.Message;
     let statusKey = '';
@@ -148,7 +149,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
     let message = '';
     if (statusKey) {
       const statusTranslationKey = statusKey.replace('status.', 'status');
-      const status = t(statusTranslationKey as any) || statusKey;
+      const status = t(statusTranslationKey as TranslationKey) || statusKey;
       message = language === 'ar'
         ? `${status} - #${orderNumber} طلب`
         : `Commande ${orderNumber} - ${status}`;

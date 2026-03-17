@@ -194,7 +194,7 @@ export default function Orders() {
   };
 
   const toggleSelectOrder = (orderId: number) => { setSelectedOrders(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]); };
-  const toggleSelectAll = () => { selectedOrders.length === orders.length ? setSelectedOrders([]) : setSelectedOrders(orders.map((o: any) => o.id)); };
+  const toggleSelectAll = () => { if (selectedOrders.length === orders.length) { setSelectedOrders([]); } else { setSelectedOrders(orders.map((o: any) => o.id)); } };
   const clearSelection = () => setSelectedOrders([]);
 
   const pageSizeOptions = [
@@ -262,7 +262,7 @@ export default function Orders() {
                   onClick={() => setFiltersExpanded(!filtersExpanded)}
                   style={{
                     paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
-                    backgroundColor: filtersExpanded ? '#f59e0b' : '#ffffff',
+                    backgroundColor: filtersExpanded ? '#235ae4' : '#ffffff',
                     color: filtersExpanded ? '#ffffff' : '#334155',
                     boxShadow: filtersExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
                     ...(filtersExpanded ? {} : { border: '1px solid #cbd5e1' }),
@@ -274,7 +274,7 @@ export default function Orders() {
                 >
                   {filtersExpanded ? <ChevronUp style={{ width: '1rem', height: '1rem' }} /> : <ChevronDown style={{ width: '1rem', height: '1rem' }} />}
                   {(appliedFilters.search || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end || appliedFilters.deliveryStatus?.length > 0) && !filtersExpanded && (
-                    <span style={{ marginLeft: '0.25rem', padding: '0.125rem 0.5rem', backgroundColor: '#f59e0b', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px' }}>
+                    <span style={{ marginLeft: '0.25rem', padding: '0.125rem 0.5rem', backgroundColor: '#235ae4', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px' }}>
                       {[appliedFilters.search, appliedFilters.fromClient !== 'all', Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end), appliedFilters.deliveryStatus?.length > 0].filter(Boolean).length}
                     </span>
                   )}
@@ -295,7 +295,7 @@ export default function Orders() {
           pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
         >
           {/* Panel Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Filter style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
               <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>{t('filters')}</h2>
@@ -308,7 +308,7 @@ export default function Orders() {
             {/* Search */}
             <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Search style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                <Search style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
                 {t('search')}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -388,7 +388,7 @@ export default function Orders() {
             {/* Date Range */}
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                <Clock style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
                 {t('dateRange')}
               </div>
               <Calendar
@@ -413,7 +413,7 @@ export default function Orders() {
             {/* Source Filter */}
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
                 {t('orderSource')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -441,7 +441,7 @@ export default function Orders() {
             {/* Delivery Status Filter */}
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Truck style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                <Truck style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
                 {t('deliveryStatus')}
               </div>
               <MultiSelect
@@ -485,7 +485,7 @@ export default function Orders() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ position: 'relative' }}>
                 <div style={{ backgroundColor: '#fffbeb', borderRadius: '1rem', padding: '2rem', border: '2px solid #fef3c7' }}>
-                  <Package style={{ width: '4rem', height: '4rem', color: '#f59e0b', margin: '0 auto', display: 'block' }} strokeWidth={1.5} />
+                  <Package style={{ width: '4rem', height: '4rem', color: '#235ae4', margin: '0 auto', display: 'block' }} strokeWidth={1.5} />
                 </div>
               </div>
               <h3 style={{ marginTop: '1.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('noOrdersFound')}</h3>
@@ -507,7 +507,7 @@ export default function Orders() {
               .ord-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
               .ord-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
               .ord-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-              .ord-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+              .ord-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
             `}</style>
             <DataTable
               className="ord-datatable"
@@ -531,7 +531,7 @@ export default function Orders() {
               loading={ordersLoading}
               emptyMessage="Aucune commande trouvée."
               paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+              currentPageReportTemplate="{first}-{last} of {totalRecords}"
             >
               <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
               <Column
@@ -568,12 +568,12 @@ export default function Orders() {
                 sortField="customerName"
                 body={(order: any) => (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #fbbf24, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #4f8ef7, #235ae4)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Package style={{ width: '0.75rem', height: '0.75rem', color: '#ffffff' }} />
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{order.customerName}</p>
-                      <a href={`tel:${order.customerPhone}`} style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.125rem', textDecoration: 'none' }}>
+                      <a href={`tel:${order.customerPhone}`} style={{ fontSize: '0.75rem', color: '#235ae4', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.125rem', textDecoration: 'none' }}>
                         <Phone style={{ width: '0.625rem', height: '0.625rem' }} />{order.customerPhone}
                       </a>
                     </div>
@@ -584,7 +584,7 @@ export default function Orders() {
                 header={t('address')}
                 body={(order: any) => order.customerAddress ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                    <MapPin style={{ width: '0.75rem', height: '0.75rem', color: '#d97706', flexShrink: 0 }} />
+                    <MapPin style={{ width: '0.75rem', height: '0.75rem', color: '#235ae4', flexShrink: 0 }} />
                     <span style={{ fontSize: '0.75rem', color: '#475569' }}>{order.customerAddress}</span>
                   </div>
                 ) : <span style={{ color: '#cbd5e1' }}>—</span>}
@@ -594,7 +594,7 @@ export default function Orders() {
                 sortable
                 sortField="total"
                 body={(order: any) => (
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#d97706' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
                     {order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                   </span>
                 )}
@@ -639,7 +639,7 @@ export default function Orders() {
       >
         {/* Assign to Delivery */}
         <div style={{ position: 'relative' }}>
-          <User style={{ width: '0.875rem', height: '0.875rem', color: '#d97706', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 10 }} />
+          <User style={{ width: '0.875rem', height: '0.875rem', color: '#235ae4', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 10 }} />
           <Dropdown
             onChange={(e) => {
               if (e.value) {

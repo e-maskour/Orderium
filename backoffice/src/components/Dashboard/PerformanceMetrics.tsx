@@ -21,9 +21,9 @@ interface PerformanceMetricsProps {
 }
 
 const iconConfig = {
-    revenue: { Component: DollarSign, bg: 'linear-gradient(135deg, #22c55e, #16a34a)', shadow: 'rgba(34,197,94,0.2)' },
-    customers: { Component: Users, bg: 'linear-gradient(135deg, #a855f7, #9333ea)', shadow: 'rgba(168,85,247,0.2)' },
-    orders: { Component: ShoppingCart, bg: 'linear-gradient(135deg, #3b82f6, #2563eb)', shadow: 'rgba(59,130,246,0.2)' },
+    revenue: { Component: DollarSign, bg: 'linear-gradient(135deg, #22c55e, #16a34a)', shadow: 'rgba(22,163,74,0.22)' },
+    customers: { Component: Users, bg: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', shadow: 'rgba(124,58,237,0.22)' },
+    orders: { Component: ShoppingCart, bg: 'linear-gradient(135deg, #235ae4, #1a47b8)', shadow: 'rgba(35,90,228,0.22)' },
 };
 
 export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics }) => {
@@ -111,14 +111,14 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics 
                                 gap: '0.25rem',
                                 padding: '0.25rem 0.625rem',
                                 borderRadius: '2rem',
-                                backgroundColor: isPositive ? '#f0fdf4' : '#fef2f2',
-                                border: `1px solid ${isPositive ? '#dcfce7' : '#fecaca'}`,
+                                backgroundColor: isPositive ? '#f0fdf4' : '#fff1f2',
+                                border: `1px solid ${isPositive ? '#dcfce7' : '#fecdd3'}`,
                             }}>
                                 {isPositive
                                     ? <TrendingUp style={{ width: '0.75rem', height: '0.75rem', color: '#16a34a' }} strokeWidth={2.5} />
-                                    : <TrendingDown style={{ width: '0.75rem', height: '0.75rem', color: '#dc2626' }} strokeWidth={2.5} />
+                                    : <TrendingDown style={{ width: '0.75rem', height: '0.75rem', color: '#e11d48' }} strokeWidth={2.5} />
                                 }
-                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isPositive ? '#16a34a' : '#dc2626' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isPositive ? '#16a34a' : '#e11d48' }}>
                                     {isPositive ? '+' : ''}{metric.change}%
                                 </span>
                             </div>

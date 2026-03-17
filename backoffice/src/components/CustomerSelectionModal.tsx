@@ -113,9 +113,9 @@ export const CustomerSelectionModal = ({
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
       <div style={{
         width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem', flexShrink: 0,
-        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+        background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 4px 10px rgba(245,158,11,0.35)',
+        boxShadow: '0 4px 10px rgba(35,90,228,0.35)',
       }}>
         <User style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} strokeWidth={2.5} />
       </div>
@@ -139,8 +139,8 @@ export const CustomerSelectionModal = ({
     >
       <style>{`
         .cust-card { transition: all 0.15s ease; }
-        .cust-card:hover { background: #fffbeb !important; border-color: #f59e0b !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,0.15); }
-        .cust-input:focus { border-color: #f59e0b !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.15) !important; outline: none; }
+        .cust-card:hover { background: #eff6ff !important; border-color: #235ae4 !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35,90,228,0.15); }
+        .cust-input:focus { border-color: #235ae4 !important; box-shadow: 0 0 0 3px rgba(35,90,228,0.15) !important; outline: none; }
       `}</style>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
         {/* Search Input */}
@@ -218,7 +218,7 @@ export const CustomerSelectionModal = ({
                 >
                   <div style={{
                     width: '2.25rem', height: '2.25rem', borderRadius: '50%', flexShrink: 0,
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '0.875rem', fontWeight: 700, color: '#fff',
                   }}>
@@ -307,11 +307,11 @@ export const CustomerSelectionModal = ({
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem 0', textAlign: 'center' }}>
             <div style={{
               width: 64, height: 64, borderRadius: '1rem',
-              background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.08))',
-              border: '1.5px solid rgba(245,158,11,0.2)',
+              background: 'linear-gradient(135deg, rgba(35,90,228,0.1), rgba(26,71,184,0.06))',
+              border: '1.5px solid rgba(35,90,228,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.875rem',
             }}>
-              <Search style={{ width: 28, height: 28, color: '#d97706' }} />
+              <Search style={{ width: 28, height: 28, color: '#235ae4' }} />
             </div>
             <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#111827', marginBottom: '0.375rem' }}>{t('searchForCustomer')}</div>
             <div style={{ fontSize: '0.8125rem', color: '#9ca3af', maxWidth: '18rem' }}>{t('searchCustomerInstructions')}</div>

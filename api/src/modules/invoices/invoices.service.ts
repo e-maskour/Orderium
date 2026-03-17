@@ -5,7 +5,6 @@ import {
   Logger,
   Inject,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
@@ -17,6 +16,7 @@ import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { PDFService } from '../pdf/pdf.service';
 import { StockService } from '../inventory/stock.service';
 import { MovementType } from '../inventory/entities/stock-movement.entity';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 interface CreateInvoiceItemDTO {
   id?: number;
@@ -55,17 +55,24 @@ export class InvoicesService {
   private readonly logger = new Logger(InvoicesService.name);
 
   constructor(
-    @InjectRepository(Invoice)
-    private readonly invoiceRepository: Repository<Invoice>,
-    @InjectRepository(InvoiceItem)
-    private readonly invoiceItemRepository: Repository<InvoiceItem>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly stockService: StockService,
-  ) {}
+  ) { }
+
+  private get invoiceRepository(): Repository<Invoice> {
+    return this.tenantConnService.getRepository(Invoice);
+  }
+
+  private get invoiceItemRepository(): Repository<InvoiceItem> {
+    return this.tenantConnService.getRepository(InvoiceItem);
+  }
+
+  private get productRepository(): Repository<Product> {
+    return this.tenantConnService.getRepository(Product);
+  }
 
   private async calculateInvoiceStatus(
     invoiceId: number,

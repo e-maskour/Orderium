@@ -86,10 +86,10 @@ export function DocumentPartnerBox({
       }}>
         <div style={{
           width: '2rem', height: '2rem',
-          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
           borderRadius: '0.5rem', flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 2px 8px rgba(245,158,11,0.4)'
+          boxShadow: '0 2px 8px rgba(35,90,228,0.4)'
         }}>
           <Phone style={{ width: '1rem', height: '1rem', color: '#fff' }} />
         </div>

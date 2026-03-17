@@ -136,7 +136,7 @@ export default function Taxes() {
                     .tax-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
                     .tax-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
                     .tax-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                    .tax-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                    .tax-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
                 `}</style>
                 <DataTable
                     className="tax-datatable"

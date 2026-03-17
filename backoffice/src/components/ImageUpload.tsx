@@ -104,7 +104,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       const relativePath = imageData.url;
       const imagePublicId = imageData.publicId;
-      let fullImageUrl = getFullImageUrl(relativePath);
+      const fullImageUrl = getFullImageUrl(relativePath);
       if (!fullImageUrl) throw new Error(t('failedToConstructImageUrl'));
 
       setLocalPreview(fullImageUrl);
@@ -159,7 +159,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return { ...base, border: '2px dashed #e2e8f0', background: '#f8fafc', opacity: 0.5, cursor: 'not-allowed' };
     }
     if (dragActive) {
-      return { ...base, border: '2px dashed #f59e0b', background: '#fffbeb' };
+      return { ...base, border: '2px dashed #235ae4', background: '#eff6ff' };
     }
     return { ...base, border: '2px dashed #cbd5e1', cursor: 'pointer' };
   };
@@ -244,7 +244,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           <div className="flex flex-column align-items-center justify-content-center gap-2" style={{ width: '100%', height: '100%' }}>
             {isLoading ? (
               <>
-                <Loader className="animate-spin" style={{ width: 24, height: 24, color: '#f59e0b' }} />
+                <Loader className="animate-spin" style={{ width: 24, height: 24, color: '#235ae4' }} />
                 <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>Uploading...</span>
               </>
             ) : (

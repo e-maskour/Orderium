@@ -34,4 +34,5 @@ export interface PhoneCheckResponse {
   exists: boolean;
   customerName?: string;
   customerId?: number;
+  status?: string;
 }

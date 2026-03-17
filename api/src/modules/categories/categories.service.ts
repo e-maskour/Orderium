@@ -1,17 +1,20 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class CategoriesService {
   constructor(
-    @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
+    private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
+
+  private get categoryRepository(): Repository<Category> {
+    return this.tenantConnService.getRepository(Category);
+  }
 
   async findAll(type?: string): Promise<Category[]> {
     const query = this.categoryRepository

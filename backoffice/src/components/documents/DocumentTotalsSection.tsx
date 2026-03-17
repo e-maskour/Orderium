@@ -29,7 +29,7 @@ export function DocumentTotalsSection({
           borderBottom: '1.5px solid #e2e8f0',
           display: 'flex', alignItems: 'center', gap: '0.5rem'
         }}>
-          <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #f59e0b, #d97706)', borderRadius: '2px' }} />
+          <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #235ae4, #1a47b8)', borderRadius: '2px' }} />
           <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {t('totalTTC')}
           </span>
@@ -74,7 +74,7 @@ export function DocumentTotalsSection({
 
         {/* Total TTC - Prominent */}
         <div style={{
-          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          background: 'linear-gradient(135deg, #235ae4 0%, #1a47b8 100%)',
           padding: '1rem 1.25rem',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center'
         }}>

@@ -10,6 +10,7 @@ import pos from './pos';
 import configurations from './configurations';
 import purchases from './purchases';
 import drive from './drive';
+import users from './users';
 
 export default {
   ...common,
@@ -24,4 +25,5 @@ export default {
   ...configurations,
   ...purchases,
   ...drive,
+  ...users,
 };

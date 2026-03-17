@@ -3,20 +3,23 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UnitOfMeasure } from './entities/unit-of-measure.entity';
 import {
   CreateUnitOfMeasureDto,
   UpdateUnitOfMeasureDto,
 } from './dto/unit-of-measure.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class UnitOfMeasureService {
   constructor(
-    @InjectRepository(UnitOfMeasure)
-    private readonly uomRepository: Repository<UnitOfMeasure>,
-  ) {}
+    private readonly tenantConnService: TenantConnectionService,
+  ) { }
+
+  private get uomRepository(): Repository<UnitOfMeasure> {
+    return this.tenantConnService.getRepository(UnitOfMeasure);
+  }
 
   async create(createDto: CreateUnitOfMeasureDto): Promise<UnitOfMeasure> {
     // Check if code already exists

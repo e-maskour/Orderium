@@ -260,14 +260,14 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
       curve: chartType === 'line' || chartType === 'bar' ? 'smooth' : 'straight',
       width: chartType === 'line' ? 3 : chartType === 'bar' ? 0 : 1
     },
-    colors: ['#f59e0b'],
+    colors: ['#235ae4'],
     fill: {
       type: chartType === 'line' ? 'gradient' : 'solid',
       ...(chartType === 'line' && {
         gradient: {
           shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.2,
+          opacityFrom: 0.35,
+          opacityTo: 0.05,
           stops: [0, 90, 100]
         }
       })
@@ -337,7 +337,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
     },
     markers: {
       size: 4,
-      colors: ['#f59e0b'],
+      colors: ['#235ae4'],
       strokeColors: '#fff',
       strokeWidth: 2,
       hover: {
@@ -364,8 +364,8 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <TrendingUp style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
+            <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#eff3ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <TrendingUp style={{ width: '1.25rem', height: '1.25rem', color: '#235ae4' }} />
             </div>
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{chartTitle}</h3>
@@ -388,9 +388,9 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
               style={{
                 padding: '0.5rem 0.75rem',
                 borderRadius: '0.5rem',
-                border: chartType === 'bar' ? '1px solid #fcd34d' : '1px solid #e2e8f0',
-                backgroundColor: chartType === 'bar' ? '#fef3c7' : '#f8fafc',
-                color: chartType === 'bar' ? '#b45309' : '#475569',
+                border: chartType === 'bar' ? '1px solid #93b4f7' : '1px solid #e2e8f0',
+                backgroundColor: chartType === 'bar' ? '#eff3ff' : '#f8fafc',
+                color: chartType === 'bar' ? '#1a47b8' : '#475569',
                 fontSize: '0.75rem',
                 fontWeight: 500,
               }}
@@ -403,9 +403,9 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
               style={{
                 padding: '0.5rem 0.75rem',
                 borderRadius: '0.5rem',
-                border: chartType === 'line' ? '1px solid #fcd34d' : '1px solid #e2e8f0',
-                backgroundColor: chartType === 'line' ? '#fef3c7' : '#f8fafc',
-                color: chartType === 'line' ? '#b45309' : '#475569',
+                border: chartType === 'line' ? '1px solid #93b4f7' : '1px solid #e2e8f0',
+                backgroundColor: chartType === 'line' ? '#eff3ff' : '#f8fafc',
+                color: chartType === 'line' ? '#1a47b8' : '#475569',
                 fontSize: '0.75rem',
                 fontWeight: 500,
               }}

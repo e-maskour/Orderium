@@ -269,11 +269,11 @@ export function PartnerForm({ partner, type, onSubmit, onCancel, isSubmitting }:
         {/* Business Identifiers Card - Only for Companies */}
         {formData.isCompany && (
           <div style={{ background: '#fff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-            <div style={{ background: 'linear-gradient(135deg, #fffbeb, #fef9ee)', padding: '0.75rem 1.25rem', borderBottom: '1px solid #fcd34d', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              <div style={{ padding: '0.375rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.5rem', flexShrink: 0 }}>
+            <div style={{ background: 'linear-gradient(135deg, #eff6ff, #e0eaff)', padding: '0.75rem 1.25rem', borderBottom: '1px solid rgba(35,90,228,0.15)', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <div style={{ padding: '0.375rem', background: 'linear-gradient(135deg, #235ae4, #1a47b8)', borderRadius: '0.5rem', flexShrink: 0 }}>
                 <FileText style={{ width: 14, height: 14, color: '#fff' }} />
               </div>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#78350f', margin: 0 }}>{t('businessIdentifiers')}</h3>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e3a8a', margin: 0 }}>{t('businessIdentifiers')}</h3>
             </div>
 
             <div style={{ padding: '1rem' }}>

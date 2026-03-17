@@ -7,11 +7,11 @@ export class PartnersService {
     const response = await http<PartnerSearchResponse>(
       `/api/partners/search?phone=${encodeURIComponent(phone)}`
     );
-    
+
     if (response.partners) {
-      return response.partners.map((p: any) => Partner.fromApiResponse(p));
+      return response.partners.map((p) => Partner.fromApiResponse(p as Record<string, unknown>));
     }
-    
+
     return [];
   }
 

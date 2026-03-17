@@ -1,15 +1,13 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { DeliveryService } from './delivery.service';
 import { DeliveryController } from './delivery.controller';
-import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
-import { Order } from '../orders/entities/order.entity';
+import { TenantModule } from '../tenant/tenant.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([DeliveryPerson, OrderDelivery, Order]),
+    TenantModule,
     forwardRef(() => NotificationsModule),
     AuthModule,
   ],
@@ -17,4 +15,4 @@ import { AuthModule } from '../auth/auth.module';
   providers: [DeliveryService],
   exports: [DeliveryService],
 })
-export class DeliveryModule {}
+export class DeliveryModule { }

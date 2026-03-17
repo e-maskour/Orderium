@@ -11,7 +11,7 @@ export class PortalUser implements IPortalUser {
     public customerId?: number,
     public customerName?: string,
     public deliveryId?: number
-  ) {}
+  ) { }
 
   get displayName(): string {
     return this.fullName || this.customerName || this.phoneNumber;
@@ -48,7 +48,7 @@ export class PortalUser implements IPortalUser {
     return this.isAdmin;
   }
 
-  static fromApiResponse(data: any): PortalUser {
+  static fromApiResponse(data: IPortalUser): PortalUser {
     return new PortalUser(
       data.id,
       data.phoneNumber,

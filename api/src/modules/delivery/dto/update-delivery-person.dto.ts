@@ -15,7 +15,7 @@ export class UpdateDeliveryPersonDto {
 
   @ApiProperty({ example: 'john.doe@example.com', required: false })
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'email must be a valid email' })
   email?: string;
 
   @ApiProperty({ example: 'password123', required: false })

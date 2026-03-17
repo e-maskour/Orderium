@@ -840,9 +840,9 @@ export default function DocumentEditPage({
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '20rem', gap: '1rem' }}>
             <div style={{
               width: '3rem', height: '3rem',
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
               borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(245,158,11,0.3)',
+              boxShadow: '0 4px 12px rgba(35,90,228,0.3)',
               animation: 'pulse 1.5s ease-in-out infinite'
             }}>
               {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
@@ -883,7 +883,7 @@ export default function DocumentEditPage({
             onClick={() => navigate(listRoute)}
             style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem' }}
           />
-          <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.4)' }}>
+          <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #235ae4, #1a47b8)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(35,90,228,0.4)' }}>
             {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />; })()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -998,7 +998,7 @@ export default function DocumentEditPage({
 
         <div style={{ backgroundColor: '#ffffff', borderRadius: '1rem', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', border: '1.5px solid #e2e8f0', overflow: 'hidden' }}>
           {/* Top accent bar */}
-          <div style={{ height: '3px', background: 'linear-gradient(to right, #f59e0b, #d97706, #f59e0b)' }} />
+          <div style={{ height: '3px', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }} />
           <div style={{ padding: '1.5rem' }}>
             {/* Two column layout: Partner on left, Document info on right */}
             <div className="doc-edit-grid">
@@ -1030,10 +1030,10 @@ export default function DocumentEditPage({
                 <div style={{ padding: '0.875rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                   <div style={{
                     width: '2rem', height: '2rem',
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
                     borderRadius: '0.5rem', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(245,158,11,0.4)'
+                    boxShadow: '0 2px 8px rgba(35,90,228,0.4)'
                   }}>
                     <FileText style={{ width: '1rem', height: '1rem', color: '#fff' }} />
                   </div>
@@ -1228,7 +1228,7 @@ export default function DocumentEditPage({
                         iconPos="right"
                         label={t('actions')}
                         onClick={() => setShowActionsMenu(!showActionsMenu)}
-                        style={{ backgroundColor: '#d97706', borderColor: '#d97706' }}
+                        style={{ backgroundColor: '#235ae4', borderColor: '#235ae4' }}
                       />
                       {showActionsMenu && (
                         <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
@@ -1238,7 +1238,7 @@ export default function DocumentEditPage({
                               setShowActionsMenu(false);
                               toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                             }}
-                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />}
+                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />}
                             iconPos="left"
                             label={t('convertToInvoice')}
                             text
@@ -1302,7 +1302,7 @@ export default function DocumentEditPage({
                               setShowActionsMenu(false);
                               toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                             }}
-                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />}
+                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />}
                             iconPos="left"
                             label={t('createAnInvoice')}
                             text
@@ -1341,7 +1341,7 @@ export default function DocumentEditPage({
                     loading={saving}
                     icon={<Save style={{ width: '1rem', height: '1rem' }} />}
                     label={t('save')}
-                    style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', fontWeight: 700, boxShadow: '0 4px 12px rgba(245,158,11,0.35)' }}
+                    style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none', fontWeight: 700, boxShadow: '0 4px 12px rgba(35,90,228,0.35)' }}
                   />
                 </div>
               </div>

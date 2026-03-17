@@ -288,7 +288,7 @@ export default function Products() {
                   label={t('filters')}
                 />
                 {activeFiltersCount > 0 && (
-                  <span style={{ position: 'absolute', top: '-0.35rem', right: '-0.35rem', backgroundColor: '#f59e0b', color: 'white', fontSize: '0.7rem', fontWeight: 700, borderRadius: '9999px', width: '1.2rem', height: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                  <span style={{ position: 'absolute', top: '-0.35rem', right: '-0.35rem', backgroundColor: '#235ae4', color: 'white', fontSize: '0.7rem', fontWeight: 700, borderRadius: '9999px', width: '1.2rem', height: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                     {activeFiltersCount}
                   </span>
                 )}
@@ -350,7 +350,7 @@ export default function Products() {
                 .prod-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
                 .prod-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
                 .prod-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                .prod-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                .prod-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
               `}</style>
               <DataTable
                 className="prod-datatable"
@@ -402,7 +402,7 @@ export default function Products() {
                   sortable
                   sortField="price"
                   body={(product: IProduct) => (
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#d97706' }}>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#235ae4' }}>
                       {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                     </span>
                   )}
@@ -488,12 +488,12 @@ export default function Products() {
         pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
       >
         {/* Panel Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Filter style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
             <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>{t('filters')}</h2>
             {activeFiltersCount > 0 && (
-              <span style={{ backgroundColor: 'white', color: '#d97706', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ backgroundColor: 'white', color: '#235ae4', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {activeFiltersCount}
               </span>
             )}
@@ -594,7 +594,7 @@ export default function Products() {
                   onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
                   label={filter.label}
                   style={isServiceFilter === filter.key
-                    ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f59e0b', color: 'white', boxShadow: '0 10px 15px -3px rgba(245,158,11,0.3)', border: 'none' }
+                    ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#235ae4', color: 'white', boxShadow: '0 10px 15px -3px rgba(35,90,228,0.3)', border: 'none' }
                     : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }}
                   text={isServiceFilter !== filter.key}
                 />

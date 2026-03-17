@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { StockQuant } from './entities/stock-quant.entity';
 import {
@@ -20,22 +19,37 @@ import {
   ValidateMovementDto,
   InternalTransferDto,
 } from './dto/stock-movement.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class StockService {
   constructor(
-    @InjectRepository(StockQuant)
-    private readonly stockQuantRepository: Repository<StockQuant>,
-    @InjectRepository(StockMovement)
-    private readonly stockMovementRepository: Repository<StockMovement>,
-    @InjectRepository(Warehouse)
-    private readonly warehouseRepository: Repository<Warehouse>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
-    @InjectRepository(UnitOfMeasure)
-    private readonly uomRepository: Repository<UnitOfMeasure>,
-    private readonly dataSource: DataSource,
-  ) {}
+    private readonly tenantConnService: TenantConnectionService,
+  ) { }
+
+  private get stockQuantRepository(): Repository<StockQuant> {
+    return this.tenantConnService.getRepository(StockQuant);
+  }
+
+  private get stockMovementRepository(): Repository<StockMovement> {
+    return this.tenantConnService.getRepository(StockMovement);
+  }
+
+  private get warehouseRepository(): Repository<Warehouse> {
+    return this.tenantConnService.getRepository(Warehouse);
+  }
+
+  private get productRepository(): Repository<Product> {
+    return this.tenantConnService.getRepository(Product);
+  }
+
+  private get uomRepository(): Repository<UnitOfMeasure> {
+    return this.tenantConnService.getRepository(UnitOfMeasure);
+  }
+
+  private get dataSource(): DataSource {
+    return this.tenantConnService.getCurrentDataSource();
+  }
 
   // ==================== STOCK QUANT OPERATIONS ====================
 
@@ -288,7 +302,7 @@ export class StockService {
       if (stockQuant.availableQuantity < movement.quantity) {
         throw new BadRequestException(
           `Insufficient stock at ${movement.sourceWarehouse?.name}. ` +
-            `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
+          `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
         );
       }
     }

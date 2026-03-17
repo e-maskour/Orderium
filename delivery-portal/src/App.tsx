@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PrimeReactProvider } from 'primereact/api';
-import { orderiumPrimeConfig } from '@orderium/ui/theme';
+import deliveryPortalConfig from './theme-preset';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <PrimeReactProvider value={orderiumPrimeConfig}>
+    <PrimeReactProvider value={deliveryPortalConfig}>
       <QueryClientProvider client={queryClient}>
         <LanguageProvider>
           <AuthProvider>

@@ -74,7 +74,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
           {/* Order Information */}
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '0.75rem' }}>
             <h3 className="flex align-items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
-              <Calendar style={{ width: 16, height: 16, color: '#d97706' }} />
+              <Calendar style={{ width: 16, height: 16, color: '#235ae4' }} />
               {t('orderInformation')}
             </h3>
             <div className="flex flex-column gap-2">
@@ -98,7 +98,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
               {order.note && (
                 <div>
                   <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.125rem' }}>{t('note')}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#334155', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '0.5rem', padding: '0.5rem' }}>{order.note}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#334155', background: '#eff6ff', border: '1px solid rgba(35,90,228,0.2)', borderRadius: '0.5rem', padding: '0.5rem' }}>{order.note}</div>
                 </div>
               )}
             </div>
@@ -107,13 +107,13 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
           {/* Customer Information */}
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '0.75rem' }}>
             <h3 className="flex align-items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
-              <Package style={{ width: 16, height: 16, color: '#d97706' }} />
+              <Package style={{ width: 16, height: 16, color: '#235ae4' }} />
               {t('customerInformation')}
             </h3>
             <div className="flex flex-column gap-2">
               {order.customerName && (
                 <div className="flex align-items-start gap-2">
-                  <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #fbbf24, #d97706)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #235ae4, #1a47b8)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Package style={{ width: 14, height: 14, color: '#fff' }} />
                   </div>
                   <div>
@@ -239,7 +239,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
             )}
             <div className="flex justify-content-between align-items-center" style={{ paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0' }}>
               <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('grandTotal')}</span>
-              <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#d97706' }}>
+              <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#235ae4' }}>
                 {parseFloat(order.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.875rem' }}>{t('currency')}</span>
               </span>
             </div>

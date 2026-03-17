@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -33,6 +38,18 @@ import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { HealthModule } from './modules/health/health.module';
 import { DriveModule } from './modules/drive/drive.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { UsersModule } from './modules/users/users.module';
+
+// Multi-tenancy
+import { TenantModule, TenantMiddleware } from './modules/tenant/tenant.module';
+import { TenantLifecycleModule } from './modules/tenant-lifecycle/tenant-lifecycle.module';
+import { Tenant } from './modules/tenant/tenant.entity';
+import { Payment } from './modules/tenant-lifecycle/entities/payment.entity';
+import { SubscriptionPlan } from './modules/tenant-lifecycle/entities/subscription-plan.entity';
+import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-activity-log.entity';
 
 @Module({
   imports: [
@@ -61,12 +78,44 @@ import { DriveModule } from './modules/drive/drive.module';
         };
       },
     }),
+
+    // ── Default connection (existing single-tenant DB / first tenant) ─────────
+    // Keep this running during the migration period. Once all business modules
+    // have been converted to TenantAwareService, remove this block and have all
+    // data exclusively in per-tenant databases.
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
         configService.get('database') as TypeOrmModuleOptions,
     }),
+
+    // ── Master connection ─────────────────────────────────────────────────────
+    // Connects to `orderium_master` (or MASTER_DB_NAME env var).
+    // Only the Tenant entity is registered here.
+    // All other entities live in per-tenant databases.
+    TypeOrmModule.forRootAsync({
+      name: 'master',
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST') || 'localhost',
+        port: Number(configService.get('DB_PORT') ?? 5432),
+        username: configService.get<string>('DB_USERNAME') || 'postgres',
+        password: configService.get<string>('DB_PASSWORD') || 'postgres',
+        database:
+          configService.get<string>('MASTER_DB_NAME') || 'orderium_master',
+        entities: [Tenant, Payment, SubscriptionPlan, TenantActivityLog],
+        synchronize: false,
+        logging: configService.get<string>('DB_LOGGING') === 'true',
+        extra: { max: 5, min: 1 },
+      }),
+    }),
+
+    // Feature modules
+    TenantModule,
+    TenantLifecycleModule,
     ProductsModule,
     PartnersModule,
     OrdersModule,
@@ -84,6 +133,10 @@ import { DriveModule } from './modules/drive/drive.module';
     AuthModule,
     HealthModule,
     DriveModule,
+    OnboardingModule,
+    PermissionsModule,
+    RolesModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
@@ -92,4 +145,22 @@ import { DriveModule } from './modules/drive/drive.module';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(TenantMiddleware)
+      // Exclude routes that do NOT require a tenant context:
+      //  • Tenant management API (super-admin, creates/manages tenants)
+      //  • Health check endpoint
+      .exclude(
+        { path: 'api/admin/tenants', method: RequestMethod.ALL },
+        { path: 'api/admin/tenants/(.*)', method: RequestMethod.ALL },
+        { path: 'api/admin/payments', method: RequestMethod.ALL },
+        { path: 'api/admin/payments/(.*)', method: RequestMethod.ALL },
+        { path: 'api/admin/plans', method: RequestMethod.ALL },
+        { path: 'api/admin/plans/(.*)', method: RequestMethod.ALL },
+        { path: 'api/health', method: RequestMethod.GET },
+      )
+      .forRoutes('*');
+  }
+}

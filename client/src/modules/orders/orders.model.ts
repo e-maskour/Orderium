@@ -15,7 +15,7 @@ export class OrderItem implements IOrderItem {
     public description?: string,
     public price?: number,
     public tax?: number
-  ) {}
+  ) { }
 
   get displayPrice(): string {
     return `$${this.unitPrice.toFixed(2)}`;
@@ -34,21 +34,21 @@ export class OrderItem implements IOrderItem {
     return (this.discount / this.unitPrice) * 100;
   }
 
-  static fromApiResponse(data: any): OrderItem {
+  static fromApiResponse(data: Record<string, unknown>): OrderItem {
     return new OrderItem(
-      data.id,
-      data.orderId,
-      data.productId,
-      data.productName || data.description || `Product ${data.productId}`,
-      parseFloat(data.quantity) || 0,
-      parseFloat(data.unitPrice || data.price) || 0,
-      parseFloat(data.discount) || 0,
-      data.discountType || 0,
-      parseFloat(data.taxAmount || data.tax) || 0,
-      parseFloat(data.total) || 0,
-      data.description,
-      parseFloat(data.price) || undefined,
-      parseFloat(data.tax) || undefined
+      data.id as number,
+      data.orderId as number,
+      data.productId as number,
+      String(data.productName || data.description || `Product ${data.productId}`),
+      parseFloat(String(data.quantity)) || 0,
+      parseFloat(String(data.unitPrice || data.price)) || 0,
+      parseFloat(String(data.discount)) || 0,
+      (data.discountType as number) || 0,
+      parseFloat(String(data.taxAmount || data.tax)) || 0,
+      parseFloat(String(data.total)) || 0,
+      data.description as string | undefined,
+      parseFloat(String(data.price)) || undefined,
+      parseFloat(String(data.tax)) || undefined
     );
   }
 }
@@ -73,7 +73,7 @@ export class Order implements IOrder {
     public internalNote?: string,
     public date?: string,
     public isValidated?: boolean
-  ) {}
+  ) { }
 
   get displayTotal(): string {
     return `$${this.total.toFixed(2)}`;
@@ -134,30 +134,30 @@ export class Order implements IOrder {
     return this.isPending() || this.isProcessing();
   }
 
-  static fromApiResponse(data: any): Order {
-    const items = Array.isArray(data.items) 
-      ? data.items.map((item: any) => OrderItem.fromApiResponse(item))
+  static fromApiResponse(data: Record<string, unknown>): Order {
+    const items = Array.isArray(data.items)
+      ? (data.items as Record<string, unknown>[]).map((item) => OrderItem.fromApiResponse(item))
       : [];
 
     return new Order(
-      data.id,
-      data.orderNumber,  // API returns 'orderNumber'
-      data.customerId,
+      data.id as number,
+      data.orderNumber as string,
+      data.customerId as number,
       items,
-      parseFloat(data.subtotal) || 0,
-      parseFloat(data.taxAmount) || 0,
-      parseFloat(data.discountAmount) || 0,
-      parseFloat(data.total) || 0,
-      data.status,
-      data.dateCreated,
-      data.dateUpdated,
-      data.customerName,
-      data.customerPhone,
-      data.customerAddress,
-      data.note,
-      data.internalNote,
-      data.date,
-      data.isValidated
+      parseFloat(String(data.subtotal)) || 0,
+      parseFloat(String(data.taxAmount)) || 0,
+      parseFloat(String(data.discountAmount)) || 0,
+      parseFloat(String(data.total)) || 0,
+      data.status as string,
+      data.dateCreated as string,
+      data.dateUpdated as string,
+      data.customerName as string | undefined,
+      data.customerPhone as string | undefined,
+      data.customerAddress as string | undefined,
+      data.note as string | undefined,
+      data.internalNote as string | undefined,
+      data.date as string | undefined,
+      data.isValidated as boolean | undefined
     );
   }
 

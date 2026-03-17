@@ -54,9 +54,9 @@ export const OrderTracking = ({ orderNumber, customerId }: OrderTrackingProps) =
           deliveredAt: undefined,
           canceledAt: undefined,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch order:', err);
-        if (err?.message?.includes('404')) {
+        if (err instanceof Error && err.message.includes('404')) {
           setError(t('orderNotFound'));
         } else {
           setError(t('failedToLoad'));

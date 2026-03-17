@@ -233,7 +233,7 @@ export function NotificationBellPro() {
             borderRadius: '9999px', fontSize: '0.625rem', fontWeight: 600,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 1px 3px rgba(0,0,0,0.2), 0 0 0 2px #fff',
-            background: hasUrgentNotifications ? '#ef4444' : '#d97706', color: '#fff',
+            background: hasUrgentNotifications ? '#ef4444' : '#235ae4', color: '#fff',
           }}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
@@ -309,7 +309,7 @@ export function NotificationBellPro() {
                       }}
                     >
                       {!notification.isRead && (
-                        <div style={{ position: 'absolute', top: 0, bottom: 0, width: 3, background: '#d97706', ...(isRtl ? { right: 0 } : { left: 0 }) }} />
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, width: 3, background: '#235ae4', ...(isRtl ? { right: 0 } : { left: 0 }) }} />
                       )}
                       <div className="flex align-items-start gap-3" style={{ flexDirection: isRtl ? 'row-reverse' : 'row' }}>
                         <div style={getNotificationIconStyle(notification.type)}>
@@ -387,7 +387,7 @@ export function NotificationBellPro() {
                       }}
                     >
                       {!notification.isRead && (
-                        <div style={{ position: 'absolute', top: 0, bottom: 0, width: 3, background: '#d97706', ...(isRtl ? { right: 0 } : { left: 0 }) }} />
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, width: 3, background: '#235ae4', ...(isRtl ? { right: 0 } : { left: 0 }) }} />
                       )}
                       <div className="flex align-items-start gap-3" style={{ flexDirection: isRtl ? 'row-reverse' : 'row' }}>
                         <div style={getNotificationIconStyle(notification.type)}>

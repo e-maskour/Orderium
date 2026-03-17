@@ -1,14 +1,38 @@
 // ============================================================
 // @orderium/ui - Theme Configuration
 // ============================================================
+//
+// PrimeReact v10 Theming Architecture
+// ------------------------------------
+// This package uses PrimeReact v10's CSS-based theming model.
+// The `definePreset()` design-token API is a PrimeReact v4/v5 feature
+// and does NOT exist in v10.
+//
+// How theming works in this monorepo:
+//   1. src/styles.css imports the base lara-light-amber CSS theme.
+//   2. src/styles.css then overrides all PrimeReact component colors
+//      using CSS custom properties (var(--primary-color), var(--primary-NNN)).
+//   3. Each app imports @orderium/ui/styles.css first, then its own theme.css
+//      which sets its specific primary color palette.
+//   4. Import order guarantees per-app isolation with no cross-app leakage.
+//
+// App color assignments:
+//   backoffice:      Blue    #235ae4  →  backoffice/src/theme.css
+//   client:          Emerald #059669  →  client/src/theme.css
+//   delivery-portal: Orange  #df7817  →  delivery-portal/src/theme.css
+//   tenant-dashboard: Indigo #4f46e5  →  Tailwind only (no PrimeReact)
+//
+// Each app also has a src/theme-preset.ts which exports its specific
+// PrimeReact provider config and documents the brand token palette.
 
 /**
- * Orderium PrimeReact configuration values.
- * Pass this to <PrimeReactProvider value={orderiumPrimeConfig}>.
+ * Base Orderium PrimeReact configuration.
+ * Each app extends this via its own theme-preset.ts.
+ * Pass to: <PrimeReactProvider value={appConfig}>
  */
 export const orderiumPrimeConfig = {
     ripple: true,
-    inputStyle: 'filled' as const,
+    inputStyle: 'outlined' as const,
     zIndex: {
         modal: 10100,
         overlay: 10000,

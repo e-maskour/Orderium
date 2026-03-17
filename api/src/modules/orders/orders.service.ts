@@ -6,7 +6,6 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
@@ -25,6 +24,7 @@ import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { OrderNotificationService } from '../notifications/order-notification.service';
 import { PDFService } from '../pdf/pdf.service';
 import { StockService } from '../inventory/stock.service';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 // Removed composite response interface; service now returns `Order` directly.
 
@@ -33,12 +33,8 @@ export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
   constructor(
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
-    @InjectRepository(OrderItem)
-    private readonly orderItemRepository: Repository<OrderItem>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly partnersService: PartnersService,
-    private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
     private readonly configurationsService: ConfigurationsService,
     @Inject(forwardRef(() => OrderNotificationService))
@@ -46,7 +42,19 @@ export class OrdersService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly stockService: StockService,
-  ) {}
+  ) { }
+
+  private get orderRepository(): Repository<Order> {
+    return this.tenantConnService.getRepository(Order);
+  }
+
+  private get orderItemRepository(): Repository<OrderItem> {
+    return this.tenantConnService.getRepository(OrderItem);
+  }
+
+  private get dataSource(): DataSource {
+    return this.tenantConnService.getCurrentDataSource();
+  }
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<any> {
     if (!createOrderDto.items || createOrderDto.items.length === 0) {

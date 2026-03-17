@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Partner } from '../../partners/entities/partner.entity';
 import { DeliveryPerson } from '../../delivery/entities/delivery.entity';
+import { Role } from '../../roles/entities/role.entity';
 
 @Entity('portal')
 @Index(['phoneNumber'])
@@ -41,6 +42,9 @@ export class Portal {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
+  status: 'pending' | 'approved' | 'rejected';
+
   @CreateDateColumn()
   dateCreated: Date;
 
@@ -60,4 +64,20 @@ export class Portal {
 
   @Column({ type: 'int', nullable: true })
   deliveryId: number | null;
+
+  /** User type discriminator: 'admin' = backoffice user, 'client' = portal client */
+  @Column({ type: 'varchar', length: 20, default: 'client' })
+  userType: 'admin' | 'client';
+
+  /** Avatar image URL */
+  @Column({ type: 'text', nullable: true })
+  avatarUrl: string | null;
+
+  /** Assigned role (nullable) */
+  @Column({ type: 'int', nullable: true })
+  roleId: number | null;
+
+  @ManyToOne(() => Role, { nullable: true, onDelete: 'SET NULL', eager: false })
+  @JoinColumn({ name: 'roleId' })
+  role: Role | null;
 }

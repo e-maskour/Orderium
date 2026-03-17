@@ -1,5 +1,5 @@
 import { PrimeReactProvider } from 'primereact/api';
-import { orderiumPrimeConfig } from '@orderium/ui/theme';
+import clientConfig from './theme-preset';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Toaster as SileoToaster } from 'sileo';
 import 'sileo/styles.css';
@@ -34,7 +34,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
-  <PrimeReactProvider value={orderiumPrimeConfig}>
+  <PrimeReactProvider value={clientConfig}>
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>

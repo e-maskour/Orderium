@@ -132,7 +132,7 @@ export default function InventoryAdjustments() {
           .ia-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
           .ia-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
           .ia-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-          .ia-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+          .ia-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
         `}</style>
         <DataTable
           className="ia-datatable"
@@ -154,7 +154,7 @@ export default function InventoryAdjustments() {
             </div>
           }
           paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+          currentPageReportTemplate="{first}-{last} of {totalRecords}"
         >
           <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
           <Column field="reference" header="Référence" sortable body={(adj: InventoryAdjustment) => (

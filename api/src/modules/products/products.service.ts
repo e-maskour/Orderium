@@ -5,7 +5,6 @@ import {
   BadRequestException,
   Inject,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
@@ -16,20 +15,30 @@ import { Category } from '../categories/entities/category.entity';
 import { UnitOfMeasure } from '../inventory/entities/unit-of-measure.entity';
 import { Warehouse } from '../inventory/entities/warehouse.entity';
 import { ImportResultDto } from './dto/import-result.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
-    @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>,
-    @InjectRepository(UnitOfMeasure)
-    private readonly unitOfMeasureRepository: Repository<UnitOfMeasure>,
-    @InjectRepository(Warehouse)
-    private readonly warehouseRepository: Repository<Warehouse>,
+    private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
+
+  private get productRepository(): Repository<Product> {
+    return this.tenantConnService.getRepository(Product);
+  }
+
+  private get categoryRepository(): Repository<Category> {
+    return this.tenantConnService.getRepository(Category);
+  }
+
+  private get unitOfMeasureRepository(): Repository<UnitOfMeasure> {
+    return this.tenantConnService.getRepository(UnitOfMeasure);
+  }
+
+  private get warehouseRepository(): Repository<Warehouse> {
+    return this.tenantConnService.getRepository(Warehouse);
+  }
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const { categoryIds, ...productData } = createProductDto;

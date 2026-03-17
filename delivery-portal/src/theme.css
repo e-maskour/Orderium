@@ -1,0 +1,41 @@
+/* ============================================================
+   Delivery Portal — Brand Color Theme (Orange #df7817)
+   Mirrors the default shared @orderium/ui palette.
+   Import AFTER @orderium/ui/styles.css in main.tsx for
+   consistency; no visual change (delivery IS the defaults).
+   ============================================================ */
+
+:root {
+    /* ── PrimeReact primary palette ── */
+    --primary-color: #df7817;
+    --primary-color-text: #ffffff;
+    --primary-50: #fef6ec;
+    --primary-100: #fde8c9;
+    --primary-200: #fbcf97;
+    --primary-300: #f8b360;
+    --primary-400: #f4962d;
+    --primary-500: #df7817;
+    --primary-600: #be6614;
+    --primary-700: #9d5310;
+    --primary-800: #7c420d;
+    --primary-900: #5b3009;
+
+    /* ── Orderium semantic palette ── */
+    --orderium-primary: #df7817;
+    --orderium-primary-light: #e89440;
+    --orderium-primary-dark: #b86314;
+    --orderium-teal: #df7817;
+    --orderium-teal-light: #e89440;
+    --orderium-terracotta: #df7817;
+    --orderium-accent: #b86314;
+    --orderium-accent-light: #df7817;
+    --orderium-gold: #d4a017;
+
+    /* ── Form control focus states ── */
+    --form-input-border-focus: #df7817;
+    --form-input-shadow-focus: 0 0 0 2px rgba(223, 120, 23, 0.18);
+
+    /* ── Highlight (selected rows, multiselect, etc.) ── */
+    --highlight-bg: var(--primary-50);
+    --highlight-text-color: var(--primary-700);
+}

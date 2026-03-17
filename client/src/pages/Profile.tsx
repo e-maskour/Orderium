@@ -38,8 +38,8 @@ export default function Profile() {
         if (partner.wazeUrl) setWazeLink(partner.wazeUrl);
         else if (partner.latitude && partner.longitude) setWazeLink(`https://waze.com/ul?ll=${partner.latitude},${partner.longitude}&navigate=yes`);
       }
-    } catch (error: any) {
-      if (!error.message?.includes('404')) console.error('Failed to load partner data:', error);
+    } catch (error: unknown) {
+      if (!(error instanceof Error && error.message.includes('404'))) console.error('Failed to load partner data:', error);
     }
   };
 

@@ -4,7 +4,7 @@ import { PDFService } from './pdf.service';
 
 @Controller('pdf')
 export class PDFController {
-  constructor(private readonly pdfService: PDFService) { }
+  constructor(private readonly pdfService: PDFService) {}
 
   /**
    * Generate PDF for invoice

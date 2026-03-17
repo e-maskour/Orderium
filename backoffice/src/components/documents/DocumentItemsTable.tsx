@@ -3,7 +3,6 @@ import { Plus, Trash2, BookOpen, Hash, Package2 } from 'lucide-react';
 import { Dropdown as PrDropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
-import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import type { ColumnBodyOptions } from 'primereact/column';
@@ -39,7 +38,7 @@ const DIT_STYLES = `
     border-radius: 50%; font-size: 0.75rem; font-weight: 700;
     transition: background 0.15s, color 0.15s;
   }
-  .dit-tbody-row:hover .dit-row-num { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+  .dit-tbody-row:hover .dit-row-num { background: linear-gradient(135deg, #235ae4, #1a47b8); color: #fff; }
   .dit-wrap .p-datatable .p-datatable-thead > tr > th { background: transparent !important; }
   .dit-wrap .p-datatable .p-datatable-tbody > tr { transition: background 0.12s; border-bottom: 1px solid #f0f4f8; }
   .dit-wrap .p-datatable-wrapper { overflow: visible !important; }
@@ -88,12 +87,12 @@ const DIT_STYLES = `
   .dit-del:hover { background: #dc2626 !important; color: #fff !important; border-color: #dc2626 !important; }
   .dit-btn-add {
     display: inline-flex; align-items: center; gap: 0.375rem;
-    padding: 0.5rem 1rem; background: linear-gradient(135deg, #f59e0b, #d97706);
+    padding: 0.5rem 1rem; background: linear-gradient(135deg, #235ae4, #1a47b8);
     color: #fff; border: none; border-radius: 8px; font-size: 0.8125rem; font-weight: 600;
-    cursor: pointer; box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+    cursor: pointer; box-shadow: 0 2px 8px rgba(35,90,228,0.3);
     transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap;
   }
-  .dit-btn-add:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(245,158,11,0.4); }
+  .dit-btn-add:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(35,90,228,0.4); }
   .dit-btn-cat {
     display: inline-flex; align-items: center; gap: 0.375rem;
     padding: 0.5rem 1rem; background: #f1f5f9;
@@ -238,9 +237,9 @@ export function DocumentItemsTable({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{
               width: '2.25rem', height: '2.25rem', flexShrink: 0,
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
               borderRadius: '0.625rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 3px 10px rgba(245,158,11,0.4)'
+              boxShadow: '0 3px 10px rgba(35,90,228,0.4)'
             }}>
               <BookOpen style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} />
             </div>
@@ -256,14 +255,14 @@ export function DocumentItemsTable({
           </div>
           {!readOnly && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <Button text className="dit-btn-add" onClick={handleAddItem}>
+              <button className="dit-btn-add" onClick={handleAddItem}>
                 <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
                 {t('invoice.addLine')}
-              </Button>
-              <Button text className="dit-btn-cat" onClick={() => setShowCatalogueModal(true)}>
+              </button>
+              <button className="dit-btn-cat" onClick={() => setShowCatalogueModal(true)}>
                 <Package2 style={{ width: '0.875rem', height: '0.875rem' }} />
                 {t('invoice.productCatalogue')}
-              </Button>
+              </button>
             </div>
           )}
         </div>
@@ -440,9 +439,9 @@ export function DocumentItemsTable({
               headerStyle={{ padding: '0.5rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
               bodyStyle={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}
               body={(item: DocumentItem) => !readOnly && items.length > 1 ? (
-                <Button text className="dit-del" onClick={() => handleRemoveItem(item.id)}>
+                <button className="dit-del" onClick={() => handleRemoveItem(item.id)}>
                   <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
-                </Button>
+                </button>
               ) : null}
             />
           </DataTable>
@@ -463,7 +462,7 @@ export function DocumentItemsTable({
                   {t('invoice.totalHeader')} HT
                 </span>
                 <span style={{
-                  color: '#d97706',
+                  color: '#235ae4',
                   fontSize: '1.125rem', fontWeight: 800, letterSpacing: '-0.01em'
                 }}>
                   {fmt(grandTotal)} {currency}
@@ -482,7 +481,7 @@ export function DocumentItemsTable({
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: '1.5rem', height: '1.5rem', flexShrink: 0,
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
                     color: '#fff', borderRadius: '50%', fontSize: '0.75rem', fontWeight: 700
                   }}>
                     {index + 1}
@@ -492,16 +491,16 @@ export function DocumentItemsTable({
                   </span>
                 </div>
                 {!readOnly && items.length > 1 && (
-                  <Button
-                    text
+                  <button
                     onClick={() => handleRemoveItem(item.id)}
                     style={{
                       width: '1.75rem', height: '1.75rem', flexShrink: 0, padding: 0,
-                      borderRadius: '6px', border: '1.5px solid #fecaca', background: '#fff5f5', color: '#dc2626'
+                      borderRadius: '6px', border: '1.5px solid #fecaca', background: '#fff5f5', color: '#dc2626',
+                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     }}
                   >
                     <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
-                  </Button>
+                  </button>
                 )}
               </div>
               <div className="dit-mob-body">
@@ -556,11 +555,11 @@ export function DocumentItemsTable({
                             readOnly={readOnly}
                             pt={{ root: { style: { border: 'none', background: 'transparent', flex: 1 } } }}
                           />
-                          <Button text className="dit-dtb"
+                          <button className="dit-dtb"
                             onClick={() => !readOnly && handleItemChange(item.id, 'discountType', item.discountType === 0 ? 1 : 0)}
                             disabled={readOnly}>
                             {item.discountType === 0 ? currency : '%'}
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     )}
@@ -584,7 +583,7 @@ export function DocumentItemsTable({
                     <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       {t('invoice.totalHeader')} HT
                     </span>
-                    <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#d97706' }}>
+                    <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#235ae4' }}>
                       {fmt(calculateItemTotal(item))} {currency}
                     </span>
                   </div>
@@ -595,23 +594,17 @@ export function DocumentItemsTable({
           {/* Mobile action buttons */}
           {!readOnly && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
-              <Button text className="dit-btn-add" onClick={handleAddItem}>
+              <button className="dit-btn-add" onClick={handleAddItem}>
                 <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
                 {t('invoice.addLine')}
-              </Button>
-              <Button
-                text
+              </button>
+              <button
+                className="dit-btn-cat"
                 onClick={() => setShowCatalogueModal(true)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                  padding: '0.5rem 1rem', background: '#fff', color: '#475569',
-                  border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '0.8125rem',
-                  fontWeight: 600
-                }}
               >
                 <Package2 style={{ width: '0.875rem', height: '0.875rem' }} />
                 {t('invoice.productCatalogue')}
-              </Button>
+              </button>
             </div>
           )}
         </div>

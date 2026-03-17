@@ -56,7 +56,7 @@ export function ProductCatalogueModal({
   };
 
   const updateProductQuantity = (product: IProduct, newQuantity: number) => {
-    let updatedItems = [...currentItems];
+    const updatedItems = [...currentItems];
     const existingItemIndex = updatedItems.findIndex(item => item.productId === product.id);
 
     if (newQuantity <= 0) {

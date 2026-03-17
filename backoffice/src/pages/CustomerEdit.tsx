@@ -53,7 +53,7 @@ export default function CustomerEdit() {
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-            <div className="animate-spin" style={{ borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #f59e0b' }}></div>
+            <div className="animate-spin" style={{ borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #235ae4' }}></div>
           </div>
         </div>
       </AdminLayout>
@@ -85,8 +85,8 @@ export default function CustomerEdit() {
                 text rounded
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
+                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#235ae4' }} />
                 </div>
                 <div>
                   <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{t('editCustomer')}</h1>

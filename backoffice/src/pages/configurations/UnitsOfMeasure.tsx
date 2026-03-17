@@ -212,7 +212,7 @@ export default function UnitsOfMeasure() {
                     .uom-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
                     .uom-datatable .p-rowgroup-header td { background: #f8fafc !important; padding: 0.75rem 1rem !important; font-size: 0.875rem; font-weight: 600; color: #334155; border-bottom: 1px solid #e2e8f0; }
                     .uom-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                    .uom-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                    .uom-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
                 `}</style>
                 <DataTable
                     className="uom-datatable"

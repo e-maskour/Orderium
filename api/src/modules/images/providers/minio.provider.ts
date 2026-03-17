@@ -8,6 +8,7 @@ import {
   ImageUploadResult,
   ImageTransformOptions,
 } from '../interfaces/image-storage.interface';
+import { tenantStorage } from '../../tenant/tenant.context';
 
 /**
  * MinIO storage provider.
@@ -34,7 +35,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
   private publicUrl: string;
   private ready = false;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: ConfigService) { }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     if (!accessKey || !secretKey) {
       this.logger.error(
         '❌ MINIO_ACCESS_KEY and MINIO_SECRET_KEY must be set.  ' +
-          'MinIO provider will not be available.',
+        'MinIO provider will not be available.',
       );
       return;
     }
@@ -74,7 +75,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
       this.ready = true;
       this.logger.log(
         `✅ MinIO provider ready — endpoint: ${endpoint}:${port}, ` +
-          `bucket: ${this.bucket}, public: ${this.publicUrl}`,
+        `bucket: ${this.bucket}, public: ${this.publicUrl}`,
       );
     } catch (error) {
       this.logger.error('❌ MinIO provider initialisation failed', error);
@@ -113,9 +114,19 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     this.logger.log(`🔓  Public-read policy applied to bucket: ${this.bucket}`);
   }
 
+  /**
+   * Returns the bucket to use for the current request.
+   * Resolves to `orderium-{tenantSlug}` when inside a tenant request,
+   * falling back to the configured default bucket.
+   */
+  private getTenantBucket(): string {
+    const ctx = tenantStorage.getStore();
+    return ctx ? `orderium-${ctx.tenantSlug}` : this.bucket;
+  }
+
   /** Construct the public URL for a stored object key. */
-  private objectUrl(objectName: string): string {
-    return `${this.publicUrl}/${this.bucket}/${objectName}`;
+  private objectUrl(objectName: string, bucket: string): string {
+    return `${this.publicUrl}/${bucket}/${objectName}`;
   }
 
   // ─── IImageStorageProvider ────────────────────────────────────────────────
@@ -141,6 +152,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     // Sanitise folder to prevent path traversal
     const safeFolder = folder.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
     const objectName = `${safeFolder}/${uuidv4()}.webp`;
+    const bucket = this.getTenantBucket();
 
     // Optimise: cap dimensions, transcode to WebP
     const optimised = await sharp(file.buffer)
@@ -149,7 +161,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
       .toBuffer();
 
     await this.client.putObject(
-      this.bucket,
+      bucket,
       objectName,
       optimised,
       optimised.length,
@@ -160,11 +172,11 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     );
 
     this.logger.log(
-      `📤  ${objectName}  (${file.size} B → ${optimised.length} B)`,
+      `📤  [${bucket}] ${objectName}  (${file.size} B → ${optimised.length} B)`,
     );
 
     return {
-      url: this.objectUrl(objectName),
+      url: this.objectUrl(objectName, bucket),
       publicId: objectName,
       size: optimised.length,
       format: 'webp',
@@ -184,8 +196,9 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
       throw new Error(`Invalid publicId: ${publicId}`);
     }
 
-    await this.client.removeObject(this.bucket, publicId);
-    this.logger.log(`🗑️  Deleted: ${publicId}`);
+    const bucket = this.getTenantBucket();
+    await this.client.removeObject(bucket, publicId);
+    this.logger.log(`🗑️  Deleted: [${bucket}] ${publicId}`);
   }
 
   /**
@@ -229,18 +242,19 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     const safeFolder = folder.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
     const safeFilename = filename.replace(/[^a-z0-9._-]/gi, '_');
     const objectName = `${safeFolder}/${safeFilename}`;
+    const bucket = this.getTenantBucket();
 
     await this.client.putObject(
-      this.bucket,
+      bucket,
       objectName,
       buffer,
       buffer.length,
       { 'Content-Type': contentType },
     );
 
-    this.logger.log(`📤  ${objectName}  (${buffer.length} B)`);
+    this.logger.log(`📤  [${bucket}] ${objectName}  (${buffer.length} B)`);
 
-    return this.objectUrl(objectName);
+    return this.objectUrl(objectName, bucket);
   }
 
   isConfigured(): boolean {

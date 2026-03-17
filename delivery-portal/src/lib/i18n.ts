@@ -5,13 +5,13 @@ export const translations = {
     // App
     appName: 'Orderium',
     tagline: 'بوابة التوصيل',
-    
+
     // Navigation
     myDeliveries: 'مهامي',
     profile: 'الملف الشخصي',
     logout: 'تسجيل الخروج',
     signOut: 'تسجيل الخروج',
-    
+
     // Auth
     login: 'تسجيل الدخول',
     phoneNumber: 'رقم الهاتف',
@@ -23,7 +23,7 @@ export const translations = {
     invalidCredentials: 'بيانات الدخول غير صحيحة',
     loginFailed: 'فشل تسجيل الدخول',
     welcomeBack: 'مرحباً بعودتك',
-    
+
     // Orders
     orders: 'الطلبات',
     order: 'طلب',
@@ -43,7 +43,7 @@ export const translations = {
     noOrdersMessage: 'لا توجد طلبات',
     noOrdersAssigned: 'لم يتم تعيين أي طلبات لك بعد',
     searchOrders: 'ابحث برقم الطلب، اسم العميل أو رقم الهاتف',
-    
+
     // Filters
     filters: 'الفلاتر',
     enterOrderNumber: 'أدخل رقم الطلب',
@@ -53,7 +53,7 @@ export const translations = {
     dateRange: 'نطاق التاريخ',
     apply: 'تطبيق',
     reset: 'إعادة تعيين',
-    
+
     // Date Range Picker
     period: 'الفترة',
     start: 'البداية',
@@ -70,14 +70,14 @@ export const translations = {
     thisYear: 'هذا العام',
     lastYear: 'العام الماضي',
     ok: 'موافق',
-    
+
     // Pagination
     showing: 'عرض',
     to: 'إلى',
     of: 'من',
     results: 'نتائج',
     perPage: 'لكل صفحة',
-    
+
     // Order Details
     orderNumber: 'رقم الطلب',
     customer: 'العميل',
@@ -88,7 +88,7 @@ export const translations = {
     uniqueProducts: 'منتجات مختلفة',
     totalItems: 'إجمالي القطع',
     totalAmount: 'المبلغ الإجمالي',
-    
+
     // Actions
     confirmOrder: 'تأكيد الطلب',
     pickUpOrder: 'استلام الطلب',
@@ -101,7 +101,7 @@ export const translations = {
     waze: 'ويز',
     statusUpdated: 'تم تحديث الحالة بنجاح',
     statusUpdateFailed: 'فشل تحديث الحالة',
-    
+
     // Status
     status: 'الحالة',
     assignedStatus: 'معين',
@@ -109,7 +109,7 @@ export const translations = {
     inDeliveryStatus: 'قيد التوصيل',
     deliveredStatus: 'تم التسليم',
     canceledStatus: 'ملغي',
-    
+
     // General
     loading: 'جاري التحميل...',
     error: 'حدث خطأ',
@@ -120,26 +120,38 @@ export const translations = {
     confirm: 'تأكيد',
     delete: 'حذف',
     edit: 'تعديل',
-    
+
     // Messages
     updating: 'جاري التحديث...',
     updateSuccess: 'تم التحديث بنجاح',
     updateFailed: 'فشل التحديث',
     tryAgain: 'حاول مرة أخرى',
-    
+
     // Profile
     name: 'الاسم',
     email: 'البريد الإلكتروني',
     phone: 'رقم الهاتف',
-    
+
     // Language Toggle
     switchToFrench: 'Changer en français',
     switchToArabic: 'التبديل للعربية',
-    
+
+    // Login page UI
+    deliveryPortal: 'بوابة التوصيل',
+    deliveryDriverAccess: 'وصول السائق',
+    loginHeroTitle: 'على الطريق،',
+    loginHeroSubtitle: 'تحت السيطرة.',
+    loginHeroDesc: 'أدر توصيلاتك وتنقل عبر المسارات وأكد الطلبات أثناء التنقل.',
+    loginSignInDesc: 'سجل دخولك لعرض طلباتك المعينة وبدء نوبتك.',
+    loginFeatureRoute: 'التنقل في المسارات',
+    loginFeatureOrderMgmt: 'إدارة الطلبات',
+    loginFeatureLiveTracking: 'التتبع المباشر',
+    loginFeatureShift: 'تقارير النوبات',
+
     // Currency
     currency: 'د.م',
     dh: 'درهم',
-    
+
     // Notifications
     notifications: 'الإشعارات',
     noNotifications: 'لا توجد إشعارات',
@@ -162,13 +174,13 @@ export const translations = {
     // App
     appName: 'Orderium',
     tagline: 'Portail de Livraison',
-    
+
     // Navigation
     myDeliveries: 'Mes Livraisons',
     profile: 'Profil',
     logout: 'Déconnexion',
     signOut: 'Se déconnecter',
-    
+
     // Auth
     login: 'Connexion',
     phoneNumber: 'Numéro de téléphone',
@@ -180,7 +192,7 @@ export const translations = {
     invalidCredentials: 'Identifiants invalides',
     loginFailed: 'Échec de connexion',
     welcomeBack: 'Bon retour',
-    
+
     // Orders
     orders: 'Commandes',
     order: 'Commande',
@@ -200,7 +212,7 @@ export const translations = {
     noOrdersMessage: 'Aucune commande pour le moment',
     noOrdersAssigned: 'Aucune commande ne vous a été assignée',
     searchOrders: 'Rechercher par N° commande, nom client ou téléphone',
-    
+
     // Filters
     filters: 'Filtres',
     enterOrderNumber: 'Entrez le N° de commande',
@@ -210,7 +222,7 @@ export const translations = {
     dateRange: 'Plage de dates',
     apply: 'Appliquer',
     reset: 'Réinitialiser',
-    
+
     // Date Range Picker
     period: 'Période',
     start: 'Début',
@@ -227,14 +239,14 @@ export const translations = {
     thisYear: 'Cette année',
     lastYear: 'Année dernière',
     ok: 'OK',
-    
+
     // Pagination
     showing: 'Affichage',
     to: 'à',
     of: 'sur',
     results: 'résultats',
     perPage: 'par page',
-    
+
     // Order Details
     orderNumber: 'N° Commande',
     customer: 'Client',
@@ -245,7 +257,7 @@ export const translations = {
     uniqueProducts: 'Produits différents',
     totalItems: 'Articles total',
     totalAmount: 'Montant total',
-    
+
     // Actions
     confirmOrder: 'Confirmer',
     pickUpOrder: 'Récupérer',
@@ -258,7 +270,7 @@ export const translations = {
     waze: 'Waze',
     statusUpdated: 'Statut mis à jour',
     statusUpdateFailed: 'Échec de mise à jour',
-    
+
     // Status
     status: 'Statut',
     assignedStatus: 'Assignée',
@@ -266,7 +278,7 @@ export const translations = {
     inDeliveryStatus: 'En livraison',
     deliveredStatus: 'Livrée',
     canceledStatus: 'Annulée',
-    
+
     // General
     loading: 'Chargement...',
     error: 'Erreur',
@@ -277,25 +289,34 @@ export const translations = {
     confirm: 'Confirmer',
     delete: 'Supprimer',
     edit: 'Modifier',
-    
+
     // Messages
     updating: 'Mise à jour...',
     updateSuccess: 'Mise à jour réussie',
     updateFailed: 'Échec de mise à jour',
     tryAgain: 'Réessayez',
-    
+
     // Profile
     name: 'Nom',
     email: 'Email',
     phone: 'Téléphone',
-    
+
     // Language Toggle
     switchToFrench: 'Changer en français',
     switchToArabic: 'التبديل للعربية',
-    
-    // Currency
-    currency: 'DH',
-    dh: 'DH',    
+
+    // Login page UI
+    deliveryPortal: 'Portail de Livraison',
+    deliveryDriverAccess: 'Accès Livreur',
+    loginHeroTitle: 'Sur la route,',
+    loginHeroSubtitle: 'tout sous contrôle.',
+    loginHeroDesc: 'Gérez vos livraisons, naviguez sur les itinéraires et confirmez les commandes en déplacement.',
+    loginSignInDesc: 'Connectez-vous pour voir vos commandes assignées et démarrer votre tournée.',
+    loginFeatureRoute: 'Navigation GPS',
+    loginFeatureOrderMgmt: 'Gestion des Commandes',
+    loginFeatureLiveTracking: 'Suivi en Direct',
+    loginFeatureShift: 'Rapports de Tournée',
+    dh: 'DH',
     // Notifications
     notifications: 'Notifications',
     noNotifications: 'Aucune notification',
@@ -312,7 +333,8 @@ export const translations = {
     'status.to_delivery': 'À livrer',
     'status.in_delivery': 'En livraison',
     'status.delivered': 'Livrée',
-    'status.canceled': 'Annulée',  },
+    'status.canceled': 'Annulée',
+  },
 };
 
 export type TranslationKey = keyof typeof translations.ar;
@@ -321,12 +343,12 @@ export const formatCurrency = (amount: number, lang: Language): string => {
   if (amount === null || amount === undefined) {
     return lang === 'ar' ? '0.00 د.م' : '0.00 DH';
   }
-  
+
   const formatted = amount.toLocaleString('fr-MA', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  
+
   if (lang === 'ar') {
     return `${formatted} د.م`;
   }

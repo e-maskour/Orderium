@@ -127,7 +127,7 @@ export class AppContextProvider {
   }
 
   private static extractModule(path: string): string {
-    const match = path.match(/^\/([^\/]+)/);
+    const match = path.match(/^\/([^/]+)/);
     return match ? match[1] : 'home';
   }
 

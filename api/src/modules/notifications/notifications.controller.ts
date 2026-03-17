@@ -20,14 +20,16 @@ import {
 } from './dto/device-token.dto';
 import { ApiRes } from '../../common/api-response';
 import { NOT } from '../../common/response-codes';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Notifications')
 @Controller('notifications')
+@PortalRoute()
 export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationService: PushNotificationService,
-  ) {}
+  ) { }
 
   @Get()
   @ApiOperation({ summary: 'Get notifications with filters and pagination' })

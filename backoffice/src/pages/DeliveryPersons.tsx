@@ -249,7 +249,7 @@ export default function DeliveryPersons() {
                   text={activeTab !== tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
                   style={activeTab === tab.key
-                    ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, background: '#f59e0b', color: '#ffffff', boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)' }
+                    ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, background: '#235ae4', color: '#ffffff', boxShadow: '0 4px 6px -1px rgba(35,90,228,0.25)' }
                     : { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent' }}
                   icon={<Icon style={{ width: '1rem', height: '1rem' }} />}
                   label={tab.label}
@@ -340,7 +340,7 @@ export default function DeliveryPersons() {
                 <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
                   {isLoading ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '4rem', paddingBottom: '4rem' }}>
-                      <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
+                      <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
                     </div>
                   ) : filteredPersons.length === 0 ? (
                     <div style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '4rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
@@ -355,7 +355,7 @@ export default function DeliveryPersons() {
                         .dp-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
                         .dp-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
                         .dp-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                        .dp-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                        .dp-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
                       `}</style>
                       <DataTable
                         className="dp-datatable"

@@ -1,24 +1,20 @@
 # ==================================
-# Production-Grade Docker Compose for Orderium Platform
+# Production — Application Stack
 # ==================================
+# Manages stateless application services only (API + 3 frontends).
+# Infrastructure (postgres, redis, minio) lives in docker-compose.infra.yml
+# and must be started first.
 #
-# This compose file orchestrates:
-# - PostgreSQL database
-# - NestJS API backend
-# - MinIO object storage
-# - Backoffice React/Vite frontend
-# - Client Portal React/Vite frontend
-# - Delivery Portal React/Vite frontend
-#
-# Network: All services communicate via 'orderium-network'
-# Volumes: Database persistence + API uploads persistence
+# Usage:
+#   1. docker compose -f docker-compose.infra.yml up -d
+#   2. docker compose up -d --build
 # ==================================
 
 services:
 
-  # ==================================
+  # ────────────────────────────────────────────────────────
   # NestJS API Backend
-  # ==================================
+  # ────────────────────────────────────────────────────────
   api:
     build:
       context: ./api
@@ -27,50 +23,51 @@ services:
     restart: unless-stopped
 
     environment:
-      # Server
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
 
-      # Database
-      DB_TYPE: postgres
+      # ── Database (default / legacy) ──────────────────────
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_USERNAME: ${DB_USERNAME:-postgres_user}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres_password}
       DB_NAME: ${DB_NAME:-orderium_db}
-      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
+      DB_SYNCHRONIZE: "false"
       DB_LOGGING: ${DB_LOGGING:-false}
 
-      # JWT
-      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      # ── Multi-tenant master DB ───────────────────────────
+      MASTER_DB_NAME: ${MASTER_DB_NAME:-orderium_master}
+      SUPER_ADMIN_API_KEY: ${SUPER_ADMIN_API_KEY}
+
+      # ── JWT ──────────────────────────────────────────────
+      JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
 
-      # CORS - Allow all frontends in Docker network
-      CORS_ORIGIN: http://localhost:3001,http://localhost:3002,http://localhost:3003,http://backoffice,http://client,http://delivery-portal
+      # ── CORS ─────────────────────────────────────────────
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3001,http://localhost:3002,http://localhost:3003}
 
-      # Defaults
+      # ── Defaults ─────────────────────────────────────────
       DEFAULT_CASH_REGISTER_ID: ${DEFAULT_CASH_REGISTER_ID:-1}
       DEFAULT_WAREHOUSE_ID: ${DEFAULT_WAREHOUSE_ID:-1}
       DEFAULT_DOCUMENT_TYPE_ID: ${DEFAULT_DOCUMENT_TYPE_ID:-2}
       DEFAULT_PAID_STATUS: ${DEFAULT_PAID_STATUS:-2}
 
-      # Storage - MinIO (internal endpoint for API, public URL for browsers)
+      # ── MinIO ────────────────────────────────────────────
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       MINIO_BUCKET: ${MINIO_BUCKET:-orderium-media}
-      # MINIO_PUBLIC_URL must be the URL reachable from the browser host machine
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
 
-      # Firebase Admin SDK
+      # ── Redis ────────────────────────────────────────────
+      REDIS_URL: redis://redis:6379
+
+      # ── Firebase ─────────────────────────────────────────
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-
-      # Redis
-      REDIS_URL: redis://redis:6379
 
     ports:
       - "3000:3000"
@@ -78,30 +75,23 @@ services:
     networks:
       - orderium-network
 
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-
+    # Infra services run in a separate stack; restart handles timing.
+    # Frontends wait for the API to be healthy — that's enough.
     healthcheck:
       test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\"" ]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 40s
 
-  # ==================================
-  # Backoffice Frontend (Admin Panel)
-  # ==================================
+  # ────────────────────────────────────────────────────────
+  # Backoffice Frontend  (Admin)
+  # ────────────────────────────────────────────────────────
   backoffice:
     build:
       context: .
       dockerfile: backoffice/Dockerfile
       args:
-        # Pass environment variables at build time
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
         VITE_MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
         VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
@@ -114,17 +104,13 @@ services:
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     container_name: orderium-backoffice
     restart: unless-stopped
-
     ports:
       - "3001:80"
-
     networks:
       - orderium-network
-
     depends_on:
       api:
         condition: service_healthy
-
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
       interval: 30s
@@ -132,9 +118,9 @@ services:
       retries: 3
       start_period: 10s
 
-  # ==================================
+  # ────────────────────────────────────────────────────────
   # Client Portal Frontend
-  # ==================================
+  # ────────────────────────────────────────────────────────
   client:
     build:
       context: .
@@ -152,17 +138,13 @@ services:
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     container_name: orderium-client
     restart: unless-stopped
-
     ports:
       - "3002:80"
-
     networks:
       - orderium-network
-
     depends_on:
       api:
         condition: service_healthy
-
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
       interval: 30s
@@ -170,9 +152,9 @@ services:
       retries: 3
       start_period: 10s
 
-  # ==================================
+  # ────────────────────────────────────────────────────────
   # Delivery Portal Frontend
-  # ==================================
+  # ────────────────────────────────────────────────────────
   delivery-portal:
     build:
       context: .
@@ -190,17 +172,13 @@ services:
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     container_name: orderium-delivery
     restart: unless-stopped
-
     ports:
       - "3003:80"
-
     networks:
       - orderium-network
-
     depends_on:
       api:
         condition: service_healthy
-
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
       interval: 30s
@@ -208,74 +186,35 @@ services:
       retries: 3
       start_period: 10s
 
-  # ==================================
-  # Networks
-  # ==================================
-
-  # ==================================
-  # MinIO Object Storage
-  # ==================================
-  minio:
-    image: minio/minio:latest
-    container_name: orderium-minio
-    command: server /data --console-address ":9001"
+  # ────────────────────────────────────────────────────────
+  # Tenant Management Dashboard
+  # ────────────────────────────────────────────────────────
+  tenant-dashboard:
+    build:
+      context: ./tenant-dashboard
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${TENANT_DASHBOARD_API_URL:-http://localhost:3000}
+    container_name: orderium-tenant-dashboard
     restart: unless-stopped
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-    volumes:
-      - minio_data:/data
     ports:
-      - "9000:9000" # S3-compatible API
-      - "9001:9001" # Web console
+      - "4000:80"
     networks:
       - orderium-network
+    depends_on:
+      api:
+        condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 10s
 
-  # ==================================
-  # Redis Cache
-  # ==================================
-  redis:
-    image: redis:7-alpine
-    container_name: orderium-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - orderium-network
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
+# ────────────────────────────────────────────────────────
+# Network — must already exist (created by docker-compose.infra.yml)
+# ────────────────────────────────────────────────────────
 networks:
   orderium-network:
-    driver: bridge
+    external: true
     name: orderium-network
-
-# ==================================
-# Volumes
-# ==================================
-volumes:
-  # PostgreSQL data persistence
-  postgres_data:
-    driver: local
-    name: orderium_postgres_data
-
-  # MinIO object storage data
-  minio_data:
-    driver: local
-    name: orderium_minio_data
-
-  # Redis data persistence
-  redis_data:
-    driver: local
-    name: orderium_redis_data

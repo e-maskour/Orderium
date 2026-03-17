@@ -90,10 +90,6 @@ export default function Sequences() {
         { value: 'receipt', label: t('receipt') },
     ];
 
-    useEffect(() => {
-        updatePreview();
-    }, [formData]);
-
     const updatePreview = async () => {
         try {
             const previewData = {
@@ -106,6 +102,10 @@ export default function Sequences() {
             setPreviewSequence('Preview error');
         }
     };
+
+    useEffect(() => {
+        updatePreview();
+    }, [formData]);
 
     const openCreateModal = () => {
         setEditingSequence(null);
@@ -206,7 +206,7 @@ export default function Sequences() {
                     .seq-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
                     .seq-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
                     .seq-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                    .seq-datatable .p-paginator .p-paginator-page.p-highlight { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+                    .seq-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
                 `}</style>
                 <DataTable
                     className="seq-datatable"
@@ -405,17 +405,17 @@ export default function Sequences() {
 
                     {/* Preview */}
                     {previewSequence && (
-                        <div style={{ padding: '0.75rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400e' }}>
+                        <div style={{ padding: '0.75rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e3a8a' }}>
                                 <Eye style={{ width: '1rem', height: '1rem' }} />
                                 <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{t('preview')}:</span>
                                 <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{previewSequence}</span>
-                                <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: '0.5rem' }}>
+                                <span style={{ fontSize: '0.75rem', color: '#235ae4', marginLeft: '0.5rem' }}>
                                     ({t('exampleOnly')})
                                 </span>
                             </div>
                             {editingSequence && (
-                                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#b45309' }}>
+                                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#1a47b8' }}>
                                     💾 {t('actualNextNumber')}:
                                     <span style={{ fontWeight: 500, marginLeft: '0.25rem' }}>
                                         {editingSequence.realTimeNextNumber ?? editingSequence.nextNumber}

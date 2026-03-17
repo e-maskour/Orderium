@@ -1,0 +1,40 @@
+/* ============================================================
+   Backoffice — Brand Color Theme (Blue #235ae4)
+   Overrides shared @orderium/ui styles for this app only.
+   Import AFTER @orderium/ui/styles.css in main.tsx.
+   ============================================================ */
+
+:root {
+    /* ── PrimeReact primary palette ── */
+    --primary-color: #235ae4;
+    --primary-color-text: #ffffff;
+    --primary-50: #eef1fd;
+    --primary-100: #d4def9;
+    --primary-200: #abc0f4;
+    --primary-300: #829fed;
+    --primary-400: #587de7;
+    --primary-500: #235ae4;
+    --primary-600: #1c4bc4;
+    --primary-700: #163ba0;
+    --primary-800: #0f2d7a;
+    --primary-900: #0a1e52;
+
+    /* ── Orderium semantic palette ── */
+    --orderium-primary: #235ae4;
+    --orderium-primary-light: #4a78ea;
+    --orderium-primary-dark: #1a47b8;
+    --orderium-teal: #235ae4;
+    --orderium-teal-light: #4a78ea;
+    --orderium-terracotta: #235ae4;
+    --orderium-accent: #1a47b8;
+    --orderium-accent-light: #235ae4;
+    --orderium-gold: #1a47b8;
+
+    /* ── Form control focus states ── */
+    --form-input-border-focus: #235ae4;
+    --form-input-shadow-focus: 0 0 0 2px rgba(35, 90, 228, 0.18);
+
+    /* ── Highlight (selected rows, multiselect, etc.) ── */
+    --highlight-bg: var(--primary-50);
+    --highlight-text-color: var(--primary-700);
+}

@@ -42,20 +42,19 @@ export default function POS() {
   const [confirmedPrice, setConfirmedPrice] = useState<number | null>(null);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
-  const [sidebarWidth, setSidebarWidth] = useState(320);
-  const [isResizing, setIsResizing] = useState(false);
+  const sidebarWidth = 320;
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    try { localStorage.setItem('pos_cart', JSON.stringify(cart)); } catch { }
+    try { localStorage.setItem('pos_cart', JSON.stringify(cart)); } catch { /* empty */ }
   }, [cart]);
 
   useEffect(() => {
     try {
       if (selectedCustomer) localStorage.setItem('pos_customer', JSON.stringify(selectedCustomer));
       else localStorage.removeItem('pos_customer');
-    } catch { }
+    } catch { /* empty */ }
   }, [selectedCustomer]);
 
   useEffect(() => {
@@ -217,180 +216,200 @@ export default function POS() {
 
   const handleSelectCustomer = (customer: Customer) => { setSelectedCustomer(customer); };
 
-  const startResizing = (e: React.MouseEvent) => { e.preventDefault(); setIsResizing(true); };
-  const stopResizing = () => { setIsResizing(false); };
-  const resize = (e: MouseEvent) => {
-    if (!isResizing) return;
-    e.preventDefault();
-    const newWidth = dir === 'rtl' ? window.innerWidth - e.clientX : e.clientX;
-    const minWidth = 280;
-    const maxWidth = Math.min(600, window.innerWidth * 0.5);
-    setSidebarWidth(Math.max(minWidth, Math.min(newWidth, maxWidth)));
-  };
-
-  useEffect(() => {
-    if (isResizing) {
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-      window.addEventListener('mousemove', resize);
-      window.addEventListener('mouseup', stopResizing);
-      return () => {
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        window.removeEventListener('mousemove', resize);
-        window.removeEventListener('mouseup', stopResizing);
-      };
-    }
-  }, [isResizing, dir]);
-
   // ── Shared Cart Panel Content (used by desktop aside + mobile overlay) ──
   const renderCartContent = () => (
     <>
-      {/* Cart Header */}
+      {/* ── Cart Header ── */}
       <div style={{
-        padding: '0.875rem 1rem',
-        borderBottom: '1px solid #e5e7eb',
-        flexShrink: 0,
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        padding: '0 1rem',
+        height: '4rem',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        flexShrink: 0,
       }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{
-              width: '1.75rem', height: '1.75rem', borderRadius: '0.5rem',
-              background: 'linear-gradient(135deg, #1e1e2d, #16213e)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <ShoppingCart style={{ width: '0.875rem', height: '0.875rem', color: '#f59e0b' }} strokeWidth={2.2} />
-            </div>
-            <h2 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', width: '100%' }}>
+          <div style={{
+            width: '2rem', height: '2rem', borderRadius: '0.5rem',
+            background: 'rgba(35,90,228,0.25)', border: '1px solid rgba(35,90,228,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#93b4f8' }} strokeWidth={2} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '-0.01em' }}>
               {t('cart')}
             </h2>
             {cart.length > 0 && (
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                minWidth: '1.25rem', height: '1.25rem', padding: '0 0.25rem',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                color: '#fff', borderRadius: '2rem', fontSize: '0.625rem', fontWeight: 800,
-              }}>
-                {cart.length}
-              </span>
+              <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', margin: 0, fontWeight: 500 }}>
+                {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
+                <span style={{ margin: '0 0.3rem', opacity: 0.4 }}>·</span>
+                {cart.length} {cart.length === 1 ? t('cartProduct') : t('cartProducts')}
+              </p>
             )}
           </div>
           {cart.length > 0 && (
-            <p style={{ fontSize: '0.6875rem', color: '#6b7280', margin: '0.25rem 0 0', fontWeight: 500 }}>
-              {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
-            </p>
+            <button
+              onClick={clearCart}
+              className="pos-cart-clear-btn"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '2rem', height: '2rem', borderRadius: '0.5rem',
+                background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.25)',
+                color: '#fca5a5',
+                cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
+            </button>
           )}
         </div>
-        {cart.length > 0 && (
-          <Button
-            icon={<Trash2 style={{ width: '0.75rem', height: '0.75rem' }} />}
-            onClick={clearCart}
-            text rounded severity="danger"
-            style={{
-              color: '#ef4444', fontSize: '0.6875rem', fontWeight: 600,
-              padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
-              border: '1px solid #fee2e2', background: '#fef2f2',
-            }}
-          />
-        )}
       </div>
 
-      {/* Items */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0.75rem' }}>
+      {/* ── Items List ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0.625rem 0.75rem', background: '#f8fafc' }}>
         {cart.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2.5rem 0', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 1rem', textAlign: 'center' }}>
             <div style={{
-              width: '3.75rem', height: '3.75rem', borderRadius: '1rem',
-              background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem',
+              width: '4rem', height: '4rem', borderRadius: '1rem',
+              background: '#fff', border: '1.5px solid #e2e8f0',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.875rem',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
             }}>
-              <ShoppingCart style={{ width: '1.75rem', height: '1.75rem', color: '#9ca3af' }} strokeWidth={1.5} />
+              <ShoppingCart style={{ width: '1.75rem', height: '1.75rem', color: '#cbd5e1' }} strokeWidth={1.5} />
             </div>
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#111827', marginBottom: '0.25rem' }}>{t('cartEmpty')}</h3>
-            <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>{t('emptyCartMessage')}</p>
+            <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#374151', margin: '0 0 0.25rem' }}>{t('cartEmpty')}</p>
+            <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>{t('emptyCartMessage')}</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-            {cart.map((item) => {
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {cart.map((item, index) => {
               const itemSubtotal = item.product.price * item.quantity;
               const itemDiscountAmount = item.discountType === 1 ? (itemSubtotal * item.discount) / 100 : item.discount;
               const itemTotal = itemSubtotal - itemDiscountAmount;
+              const hasDiscount = item.discount > 0;
 
               return (
                 <div
                   key={item.product.id}
-                  onClick={() => openQuantityModal(item.product)}
                   className="pos-cart-item"
                   style={{
-                    display: 'flex', gap: '0.625rem', padding: '0.5rem 0.625rem',
-                    background: '#f9fafb', borderRadius: '0.625rem',
-                    border: '1px solid #f3f4f6', cursor: 'pointer',
+                    background: '#fff',
+                    borderRadius: '0.75rem',
+                    border: '1.5px solid #e2e8f0',
+                    overflow: 'hidden',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                   }}
                 >
-                  {/* Thumbnail */}
-                  <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.5rem', backgroundColor: '#fff', border: '1px solid #e5e7eb', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {item.product.imageUrl ? (
-                      <img src={getImageUrl(item.product.imageUrl)} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    ) : (
-                      <Package style={{ width: '1rem', height: '1rem', color: '#d1d5db' }} />
-                    )}
+                  {/* Row: index + thumb + name + delete */}
+                  <div
+                    onClick={() => openQuantityModal(item.product)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.625rem 0.625rem 0.5rem', cursor: 'pointer' }}
+                  >
+                    {/* Index badge */}
+                    <span style={{
+                      width: '1.375rem', height: '1.375rem', borderRadius: '0.375rem', flexShrink: 0,
+                      background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+                      color: 'rgba(255,255,255,0.6)', fontSize: '0.5625rem', fontWeight: 800,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {index + 1}
+                    </span>
+
+                    {/* Thumbnail */}
+                    <div style={{
+                      width: '2.75rem', height: '2.75rem', borderRadius: '0.5rem', flexShrink: 0,
+                      background: '#f8fafc', border: '1px solid #f1f5f9',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                    }}>
+                      {item.product.imageUrl ? (
+                        <img src={getImageUrl(item.product.imageUrl)} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      ) : (
+                        <Package style={{ width: '1.125rem', height: '1.125rem', color: '#cbd5e1' }} />
+                      )}
+                    </div>
+
+                    {/* Name */}
+                    <p style={{
+                      flex: 1, minWidth: 0,
+                      fontWeight: 600, color: '#0f172a', fontSize: '0.8125rem', lineHeight: 1.3,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0,
+                    }}>
+                      {item.product.name}
+                    </p>
+
+                    {/* Delete */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeFromCart(item.product.id); }}
+                      className="pos-cart-del-btn"
+                      style={{
+                        flexShrink: 0, width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem',
+                        background: '#fef2f2', border: '1px solid #fee2e2',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <X style={{ width: '0.625rem', height: '0.625rem', color: '#f87171' }} />
+                    </button>
                   </div>
 
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.25rem' }}>
-                      <p style={{ fontWeight: 600, color: '#111827', fontSize: '0.75rem', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0, flex: 1 }}>
-                        {item.product.name}
-                      </p>
-                      <Button
-                        icon={<X style={{ width: '0.75rem', height: '0.75rem' }} />}
-                        onClick={(e) => { e.stopPropagation(); removeFromCart(item.product.id); }}
-                        text rounded
-                        style={{ flexShrink: 0, width: '1.125rem', height: '1.125rem', padding: 0, color: '#9ca3af' }}
-                      />
+                  {/* Row: qty × price → total */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.375rem 0.625rem',
+                    background: '#f8fafc', borderTop: '1px solid #f1f5f9',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer' }} onClick={() => openQuantityModal(item.product)}>
+                      <span style={{
+                        minWidth: '1.75rem', height: '1.5rem', padding: '0 0.375rem', borderRadius: '0.375rem',
+                        background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                        color: '#fff', fontSize: '0.6875rem', fontWeight: 800,
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 2px 6px rgba(35,90,228,0.3)',
+                      }}>
+                        {item.quantity}
+                      </span>
+                      <span style={{ fontSize: '0.6875rem', color: '#64748b' }}>× {formatCurrency(item.product.price)}</span>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                          minWidth: '1.125rem', height: '1.125rem', padding: '0 0.2rem',
-                          background: 'linear-gradient(135deg, #1e1e2d, #16213e)',
-                          color: '#f59e0b', borderRadius: '0.3rem',
-                          fontSize: '0.5625rem', fontWeight: 800,
-                        }}>
-                          {item.quantity}
-                        </span>
-                        <span style={{ fontSize: '0.6875rem', color: '#6b7280' }}>× {formatCurrency(item.product.price)}</span>
-                      </div>
-                      <span style={{ fontWeight: 800, color: '#111827', fontSize: '0.8125rem' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
                         {formatCurrency(itemTotal)}
                       </span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                      <Button
-                        icon={<Tag style={{ height: '0.625rem', width: '0.625rem' }} />}
-                        label={item.discount > 0
-                          ? (item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount))
-                          : t('discount')}
-                        onClick={(e) => { e.stopPropagation(); openDiscountModal(item); }}
-                        text
-                        style={{
-                          fontSize: '0.625rem', padding: '0.125rem 0.375rem', borderRadius: '0.375rem',
-                          background: item.discount > 0 ? '#fff7ed' : '#f3f4f6',
-                          color: item.discount > 0 ? '#ea580c' : '#6b7280',
-                          fontWeight: 600,
-                        }}
-                      />
-                      {item.discount > 0 && (
-                        <span style={{ fontSize: '0.5625rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                      {hasDiscount && (
+                        <span style={{ display: 'block', fontSize: '0.625rem', color: '#94a3b8', textDecoration: 'line-through', lineHeight: 1 }}>
                           {formatCurrency(itemSubtotal)}
                         </span>
                       )}
                     </div>
+                  </div>
+
+                  {/* Discount bar */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.3rem 0.625rem 0.5rem',
+                  }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openDiscountModal(item); }}
+                      className="pos-disc-btn"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.2rem 0.5rem', borderRadius: '0.375rem',
+                        background: hasDiscount ? 'rgba(35,90,228,0.08)' : '#f1f5f9',
+                        border: hasDiscount ? '1px solid rgba(35,90,228,0.2)' : '1px solid #e2e8f0',
+                        color: hasDiscount ? '#235ae4' : '#94a3b8',
+                        fontSize: '0.625rem', fontWeight: 700, cursor: 'pointer',
+                      }}
+                    >
+                      <Tag style={{ width: '0.5625rem', height: '0.5625rem' }} />
+                      {hasDiscount
+                        ? (item.discountType === 1 ? `−${item.discount}%` : `−${formatCurrency(item.discount)}`)
+                        : (t('discount'))}
+                    </button>
+                    {hasDiscount && (
+                      <span style={{ fontSize: '0.625rem', color: '#22c55e', fontWeight: 600 }}>
+                        −{formatCurrency(itemDiscountAmount)}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -399,47 +418,84 @@ export default function POS() {
         )}
       </div>
 
-      {/* Cart Summary + Actions */}
+      {/* ── Footer: Summary + Actions ── */}
       {cart.length > 0 && (
         <div style={{
-          borderTop: '1px solid #e5e7eb',
-          padding: '0.875rem 1rem',
           background: '#fff',
-          display: 'flex', flexDirection: 'column', gap: '0.75rem', flexShrink: 0,
+          borderTop: '1.5px solid #e2e8f0',
+          padding: '0.875rem 1rem 1rem',
+          display: 'flex', flexDirection: 'column', gap: '0.625rem', flexShrink: 0,
         }}>
-          {/* Total row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 0.75rem', background: '#f9fafb', borderRadius: '0.625rem', border: '1px solid #f3f4f6' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>{t('total')}</span>
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>
-              {formatCurrency(total)}
-            </span>
+          {/* Summary panel */}
+          <div style={{
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            borderRadius: '0.875rem',
+            padding: '0.875rem 1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.625rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                {t('total')}
+              </p>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '1.5rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {formatCurrency(total)}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ margin: 0, fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+                {cart.length} {cart.length === 1 ? t('cartProduct') : t('cartProducts')}
+              </p>
+              <p style={{ margin: '0.1rem 0 0', fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+                {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
+              </p>
+            </div>
           </div>
 
-          <Button
-            label={t('confirmCash') || 'Confirm / Cash'}
-            onClick={handleConfirmCash}
-            disabled={!selectedCustomer || cart.length === 0 || createOrderMutation.isPending}
-            loading={createOrderMutation.isPending}
-            style={{
-              width: '100%', height: '2.75rem',
-              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-              border: 'none', borderRadius: '0.625rem',
-              fontSize: '0.875rem', fontWeight: 700, color: '#fff',
-              boxShadow: '0 4px 12px rgba(34,197,94,0.30)',
-            }}
-          />
-          <Button
-            label={t('payment') || 'Payment'}
-            onClick={handleCheckout}
-            disabled={!selectedCustomer || cart.length === 0}
-            style={{
-              width: '100%', height: '2.75rem',
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-              border: 'none', borderRadius: '0.625rem',
-              fontSize: '0.875rem', fontWeight: 700, color: '#fff',
-              boxShadow: '0 4px 12px rgba(245,158,11,0.30)',
-            }}
-          />
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button
+              label={t('confirmCash') || 'Cash'}
+              icon={<ShoppingBag style={{ width: '0.875rem', height: '0.875rem' }} strokeWidth={2.5} />}
+              onClick={handleConfirmCash}
+              disabled={!selectedCustomer || cart.length === 0 || createOrderMutation.isPending}
+              loading={createOrderMutation.isPending}
+              style={{
+                flex: 1, height: '2.75rem',
+                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                border: 'none', borderRadius: '0.75rem',
+                fontSize: '0.8125rem', fontWeight: 700, color: '#fff',
+                boxShadow: (!selectedCustomer || cart.length === 0) ? 'none' : '0 4px 12px rgba(34,197,94,0.30)',
+              }}
+            />
+            <Button
+              label={t('payment') || 'Pay'}
+              icon={<ChevronRight style={{ width: '0.875rem', height: '0.875rem' }} strokeWidth={2.5} />}
+              onClick={handleCheckout}
+              disabled={!selectedCustomer || cart.length === 0}
+              style={{
+                flex: 1, height: '2.75rem',
+                background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                border: 'none', borderRadius: '0.75rem',
+                fontSize: '0.8125rem', fontWeight: 700, color: '#fff',
+                boxShadow: (!selectedCustomer || cart.length === 0) ? 'none' : '0 4px 12px rgba(35,90,228,0.30)',
+              }}
+            />
+          </div>
+
+          {!selectedCustomer && (
+            <button
+              onClick={() => setShowCustomerModal(true)}
+              style={{
+                width: '100%', padding: '0.5rem', borderRadius: '0.625rem',
+                background: 'rgba(35,90,228,0.08)', border: '1px dashed rgba(35,90,228,0.4)',
+                color: '#235ae4', fontSize: '0.6875rem', fontWeight: 600,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+              }}
+            >
+              <User style={{ width: '0.75rem', height: '0.75rem' }} />
+              {t('selectCustomer')}
+            </button>
+          )}
         </div>
       )}
     </>
@@ -449,12 +505,19 @@ export default function POS() {
     <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6' }} dir={dir}>
       {/* ─── POS Global Styles ─── */}
       <style>{`
-        .pos-product-card { transition: transform 0.18s ease, box-shadow 0.18s ease; }
-        .pos-product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.10) !important; }
-        .pos-cart-item { transition: background 0.12s ease; }
-        .pos-cart-item:hover { background: #f9fafb !important; }
+        .pos-product-card { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+        .pos-product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(35,90,228,0.14) !important; }
+        .pos-cart-item { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+        .pos-cart-item:hover { border-color: #bfdbfe !important; box-shadow: 0 2px 10px rgba(35,90,228,0.10) !important; }
+        .pos-cart-clear-btn { transition: background 0.12s, border-color 0.12s; }
+        .pos-cart-clear-btn:hover { background: rgba(239,68,68,0.22) !important; }
+        .pos-cart-del-btn { transition: background 0.12s; }
+        .pos-cart-del-btn:hover { background: #fee2e2 !important; }
+        .pos-disc-btn { transition: background 0.12s; }
+        .pos-disc-btn:hover { background: rgba(35,90,228,0.14) !important; }
         .pos-keypad-btn { transition: transform 0.1s ease, background 0.1s ease; }
         .pos-keypad-btn:active { transform: scale(0.95); }
+        .pos-search-input:focus { border-color: #235ae4 !important; box-shadow: 0 0 0 3px rgba(35,90,228,0.14) !important; }
         .pos-mobile-overlay { animation: slideUp 0.28s cubic-bezier(0.34,1.36,0.64,1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @media (max-width: 767px) {
@@ -479,25 +542,26 @@ export default function POS() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '3.75rem' }}>
             {/* Left: back + branding */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-              <Button
-                icon={<ArrowLeft style={{ width: '0.875rem', height: '0.875rem', transform: dir === 'rtl' ? 'rotate(180deg)' : undefined }} />}
-                label={t('back')}
+              <button
                 onClick={() => navigate('/dashboard')}
-                text
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.375rem',
                   padding: '0.375rem 0.625rem', fontSize: '0.8125rem', fontWeight: 500,
-                  color: 'rgba(255,255,255,0.65)', borderRadius: '0.5rem',
-                  border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)',
+                  color: 'rgba(255,255,255,0.85)', borderRadius: '0.5rem',
+                  border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)',
+                  cursor: 'pointer',
                 }}
-              />
+              >
+                <ArrowLeft style={{ width: '0.875rem', height: '0.875rem', transform: dir === 'rtl' ? 'rotate(180deg)' : undefined }} />
+                {t('back')}
+              </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <div style={{
                   width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem',
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 4px 10px rgba(245,158,11,0.35)',
+                  boxShadow: '0 4px 10px rgba(35,90,228,0.35)',
                 }}>
                   <ShoppingBag style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2.2} />
                 </div>
@@ -551,34 +615,14 @@ export default function POS() {
           style={{
             display: 'flex', flexDirection: 'column',
             backgroundColor: '#fff',
+            height: '100%', overflow: 'hidden', position: 'relative',
+            width: `${sidebarWidth}px`,
+            flexShrink: 0,
             borderRight: dir === 'rtl' ? undefined : '1px solid #e5e7eb',
             borderLeft: dir === 'rtl' ? '1px solid #e5e7eb' : undefined,
-            height: '100%', overflow: 'hidden', position: 'relative',
-            width: `${sidebarWidth}px`, flexShrink: 0,
           }}
         >
           {renderCartContent()}
-
-          {/* Resize Handle */}
-          {!showCustomerModal && !isPriceModalOpen && !isModalOpen && !isDiscountModalOpen && (
-            <div
-              className="pos-desktop-resize"
-              onMouseDown={startResizing}
-              style={{
-                position: 'absolute', [dir === 'rtl' ? 'left' : 'right']: 0,
-                top: 0, bottom: 0, width: '0.375rem', cursor: 'col-resize', zIndex: 50,
-                background: isResizing ? 'rgba(245,158,11,0.18)' : 'transparent',
-                transition: 'background 0.15s',
-              }}
-            >
-              <div style={{
-                position: 'absolute', inset: 0,
-                [dir === 'rtl' ? 'left' : 'right']: '1px',
-                width: '1px', backgroundColor: isResizing ? '#f59e0b' : '#e5e7eb',
-                transition: 'background-color 0.15s',
-              }} />
-            </div>
-          )}
         </aside>
 
         {/* ── MAIN CONTENT (Products) ── */}
@@ -587,10 +631,13 @@ export default function POS() {
           <div style={{
             backgroundColor: '#fff',
             borderBottom: '1px solid #e5e7eb',
-            padding: '0.75rem 1rem',
+            padding: '0 1rem',
+            height: '4rem',
+            display: 'flex',
+            alignItems: 'center',
             flexShrink: 0,
           }}>
-            <div style={{ position: 'relative', maxWidth: '48rem' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
               <Search style={{
                 width: '1rem', height: '1rem',
                 position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)',
@@ -601,12 +648,14 @@ export default function POS() {
                 placeholder={t('searchProducts')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="pos-search-input"
                 style={{
                   width: '100%', paddingLeft: '2.375rem', paddingRight: searchQuery ? '2.375rem' : undefined,
                   height: '2.5rem', borderRadius: '0.625rem',
                   border: '1px solid #e5e7eb',
                   boxShadow: 'none',
                   fontSize: '0.875rem',
+                  transition: 'border-color 0.18s, box-shadow 0.18s',
                 }}
               />
               {searchQuery && (
@@ -669,8 +718,8 @@ export default function POS() {
                         backgroundColor: '#fff',
                         borderRadius: '0.875rem',
                         overflow: 'hidden',
-                        border: inCart ? '2px solid #f59e0b' : '1px solid #e5e7eb',
-                        boxShadow: inCart ? '0 0 0 3px rgba(245,158,11,0.12)' : '0 1px 3px rgba(0,0,0,0.05)',
+                        border: inCart ? '2px solid #235ae4' : '1px solid #e5e7eb',
+                        boxShadow: inCart ? '0 0 0 3px rgba(35,90,228,0.12)' : '0 1px 3px rgba(0,0,0,0.05)',
                         display: 'flex', flexDirection: 'column',
                         cursor: 'pointer',
                       }}
@@ -689,11 +738,11 @@ export default function POS() {
                             position: 'absolute', top: '0.375rem',
                             [dir === 'rtl' ? 'left' : 'right']: '0.375rem',
                             minWidth: '1.375rem', height: '1.375rem', padding: '0 0.3rem',
-                            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
                             color: '#fff', borderRadius: '2rem',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontWeight: 800, fontSize: '0.6875rem',
-                            boxShadow: '0 2px 8px rgba(245,158,11,0.45)',
+                            boxShadow: '0 2px 8px rgba(35,90,228,0.40)',
                           }}>
                             {quantity}
                           </div>
@@ -737,9 +786,9 @@ export default function POS() {
             zIndex: 60,
             width: '3.5rem', height: '3.5rem',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
             border: 'none',
-            boxShadow: '0 6px 20px rgba(245,158,11,0.50)',
+            boxShadow: '0 6px 20px rgba(35,90,228,0.45)',
           }}
         />
       )}

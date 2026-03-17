@@ -189,8 +189,8 @@ export default function OrderSuccessPage() {
                 <div style={{ background: '#ffffff', borderRadius: '1rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
                   <div style={{ padding: '1rem', paddingBottom: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: '2rem', height: '2rem', background: '#fffbeb', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <FileText style={{ width: '1rem', height: '1rem', color: '#d97706' }} />
+                      <div style={{ width: '2rem', height: '2rem', background: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <FileText style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
                       </div>
                       <div>
                         <h2 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>{t('deliveryNote')}</h2>
@@ -211,7 +211,7 @@ export default function OrderSuccessPage() {
                       disabled={isGenerating}
                       label={t('print')}
                       icon={<Printer style={{ width: '1rem', height: '1rem' }} />}
-                      style={{ width: '100%', height: '4rem', background: '#f59e0b', color: '#ffffff' }}
+                      style={{ width: '100%', height: '4rem', background: '#235ae4', color: '#ffffff' }}
                     />
                     <Button
                       onClick={() => handleDownload('delivery-note')}
@@ -219,7 +219,7 @@ export default function OrderSuccessPage() {
                       loading={isGenerating}
                       label={isGenerating ? t('generating') : 'Download'}
                       icon={<Download style={{ width: '1rem', height: '1rem' }} />}
-                      style={{ width: '100%', height: '4rem', background: '#d97706', color: '#ffffff' }}
+                      style={{ width: '100%', height: '4rem', background: '#1a47b8', color: '#ffffff' }}
                     />
                   </div>
                 </div>

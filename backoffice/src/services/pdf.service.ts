@@ -72,7 +72,7 @@ class PDFService {
       document.body.removeChild(link);
     } catch (error) {
       console.error('PDF download failed:', error);
-      throw new Error('Échec du téléchargement du PDF');
+      throw new Error('Échec du téléchargement du PDF', { cause: error });
     }
   }
 
@@ -81,7 +81,7 @@ class PDFService {
    */
   async generate(options: PDFOptions): Promise<void> {
     const mode = options.mode || 'download';
-    
+
     if (mode === 'preview') {
       return this.preview(options);
     } else {

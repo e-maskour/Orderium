@@ -4,7 +4,6 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { DriveNode } from './entities/drive-node.entity';
 import { DriveVersion } from './entities/drive-version.entity';
@@ -22,26 +21,40 @@ import { MoveNodeDto } from './dto/move-node.dto';
 import { CreateShareDto } from './dto/create-share.dto';
 import { SearchDriveDto } from './dto/search-drive.dto';
 import { DrivePermission } from './enums/drive-permission.enum';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class DriveService {
   private readonly logger = new Logger(DriveService.name);
 
   constructor(
-    @InjectRepository(DriveNode)
-    private readonly nodeRepo: Repository<DriveNode>,
-    @InjectRepository(DriveVersion)
-    private readonly versionRepo: Repository<DriveVersion>,
-    @InjectRepository(DriveShare)
-    private readonly shareRepo: Repository<DriveShare>,
-    @InjectRepository(DriveActivity)
-    private readonly activityRepo: Repository<DriveActivity>,
-    @InjectRepository(DriveTag)
-    private readonly tagRepo: Repository<DriveTag>,
-    @InjectRepository(DriveNodeTag)
-    private readonly nodeTagRepo: Repository<DriveNodeTag>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly storage: DriveStorageService,
-  ) {}
+  ) { }
+
+  private get nodeRepo(): Repository<DriveNode> {
+    return this.tenantConnService.getRepository(DriveNode);
+  }
+
+  private get versionRepo(): Repository<DriveVersion> {
+    return this.tenantConnService.getRepository(DriveVersion);
+  }
+
+  private get shareRepo(): Repository<DriveShare> {
+    return this.tenantConnService.getRepository(DriveShare);
+  }
+
+  private get activityRepo(): Repository<DriveActivity> {
+    return this.tenantConnService.getRepository(DriveActivity);
+  }
+
+  private get tagRepo(): Repository<DriveTag> {
+    return this.tenantConnService.getRepository(DriveTag);
+  }
+
+  private get nodeTagRepo(): Repository<DriveNodeTag> {
+    return this.tenantConnService.getRepository(DriveNodeTag);
+  }
 
   // ──────────────────────────────────────────────────────────────────────────
   //  Access guards helpers
@@ -343,7 +356,10 @@ export class DriveService {
     if (!(await this.canRead(node, userId, isAdmin)))
       throw new ForbiddenException('No access to this file');
     if (!node.storageKey) throw new NotFoundException('File not stored yet');
-    const url = await this.storage.getPresignedDownloadUrl(node.storageKey);
+    const url = await this.storage.getPresignedDownloadUrl(
+      node.storageKey,
+      node.storageBucket,
+    );
     await this.logActivity(DriveAction.DOWNLOAD, node, userId);
     return url;
   }
@@ -496,7 +512,7 @@ export class DriveService {
     // Delete storage files
     if (node.storageKey) {
       await this.storage
-        .deleteFile(node.storageKey)
+        .deleteFile(node.storageKey, node.storageBucket)
         .catch((err) =>
           this.logger.warn(`Storage delete skipped: ${err.message}`),
         );

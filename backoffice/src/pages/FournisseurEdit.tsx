@@ -53,7 +53,7 @@ export default function FournisseurEdit() {
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-            <div className="animate-spin" style={{ borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #f59e0b' }}></div>
+            <div className="animate-spin" style={{ borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #235ae4' }}></div>
           </div>
         </div>
       </AdminLayout>
@@ -85,7 +85,7 @@ export default function FournisseurEdit() {
               style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
             />
             <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #1e1e2d, #16213e)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(30,30,45,0.25)' }}>
-              <Users style={{ width: '1.25rem', height: '1.25rem', color: '#f59e0b' }} />
+              <Users style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
             </div>
             <div>
               <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>{t('editSupplier')}</h1>

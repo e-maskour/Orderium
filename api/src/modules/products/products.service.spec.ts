@@ -1,10 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  NotFoundException,
-  BadRequestException,
-  ConflictException,
-} from '@nestjs/common';
+import { NotFoundException, ConflictException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ProductsService } from './products.service';
 import { Product } from './entities/product.entity';
@@ -71,8 +67,6 @@ describe('ProductsService', () => {
   let service: ProductsService;
   let productRepo: ReturnType<typeof mockRepository>;
   let categoryRepo: ReturnType<typeof mockRepository>;
-  let uomRepo: ReturnType<typeof mockRepository>;
-  let warehouseRepo: ReturnType<typeof mockRepository>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -92,8 +86,8 @@ describe('ProductsService', () => {
     service = module.get<ProductsService>(ProductsService);
     productRepo = module.get(getRepositoryToken(Product));
     categoryRepo = module.get(getRepositoryToken(Category));
-    uomRepo = module.get(getRepositoryToken(UnitOfMeasure));
-    warehouseRepo = module.get(getRepositoryToken(Warehouse));
+    module.get(getRepositoryToken(UnitOfMeasure));
+    module.get(getRepositoryToken(Warehouse));
 
     jest.clearAllMocks();
   });

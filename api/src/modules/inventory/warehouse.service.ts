@@ -3,18 +3,24 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Warehouse } from './entities/warehouse.entity';
 import { CreateWarehouseDto, UpdateWarehouseDto } from './dto/warehouse.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class WarehouseService {
   constructor(
-    @InjectRepository(Warehouse)
-    private readonly warehouseRepository: Repository<Warehouse>,
-    private readonly dataSource: DataSource,
-  ) {}
+    private readonly tenantConnService: TenantConnectionService,
+  ) { }
+
+  private get warehouseRepository(): Repository<Warehouse> {
+    return this.tenantConnService.getRepository(Warehouse);
+  }
+
+  private get dataSource(): DataSource {
+    return this.tenantConnService.getCurrentDataSource();
+  }
 
   async create(createDto: CreateWarehouseDto): Promise<Warehouse> {
     // Check if code already exists

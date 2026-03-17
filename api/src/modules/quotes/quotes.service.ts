@@ -5,7 +5,6 @@ import {
   Logger,
   Inject,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
@@ -15,6 +14,7 @@ import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { PDFService } from '../pdf/pdf.service';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 interface CreateQuoteItemDTO {
   productId?: number;
@@ -53,16 +53,23 @@ export class QuotesService {
   private readonly logger = new Logger(QuotesService.name);
 
   constructor(
-    @InjectRepository(Quote)
-    private readonly quoteRepository: Repository<Quote>,
-    @InjectRepository(QuoteItem)
-    private readonly quoteItemRepository: Repository<QuoteItem>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
-  ) {}
+  ) { }
+
+  private get quoteRepository(): Repository<Quote> {
+    return this.tenantConnService.getRepository(Quote);
+  }
+
+  private get quoteItemRepository(): Repository<QuoteItem> {
+    return this.tenantConnService.getRepository(QuoteItem);
+  }
+
+  private get productRepository(): Repository<Product> {
+    return this.tenantConnService.getRepository(Product);
+  }
 
   private async getOrCreateSequence(
     entityType: string,

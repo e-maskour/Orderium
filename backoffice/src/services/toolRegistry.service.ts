@@ -194,7 +194,7 @@ export class ToolRegistry {
 
   private extractModuleFromRoute(route: string): string {
     // Extract module from route like '/inventory/items' → 'inventory'
-    const match = route.match(/^\/([^\/]+)/);
+    const match = route.match(/^\/([^/]+)/);
     return match ? match[1] : 'unknown';
   }
 
@@ -224,7 +224,7 @@ export class ToolRegistry {
     try {
       const stored = localStorage.getItem('ai_assistant_audit_logs');
       const logs = stored ? JSON.parse(stored) : [];
-      
+
       logs.push({
         ...log,
         timestamp: Date.now(),

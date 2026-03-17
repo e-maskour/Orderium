@@ -6,7 +6,6 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
 import {
@@ -18,21 +17,29 @@ import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
 import { OrderNotificationService } from '../notifications/order-notification.service';
 import * as bcrypt from 'bcrypt';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class DeliveryService {
   private readonly logger = new Logger(DeliveryService.name);
 
   constructor(
-    @InjectRepository(DeliveryPerson)
-    private readonly deliveryPersonRepository: Repository<DeliveryPerson>,
-    @InjectRepository(OrderDelivery)
-    private readonly orderDeliveryRepository: Repository<OrderDelivery>,
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
+    private readonly tenantConnService: TenantConnectionService,
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
-  ) {}
+  ) { }
+
+  private get deliveryPersonRepository(): Repository<DeliveryPerson> {
+    return this.tenantConnService.getRepository(DeliveryPerson);
+  }
+
+  private get orderDeliveryRepository(): Repository<OrderDelivery> {
+    return this.tenantConnService.getRepository(OrderDelivery);
+  }
+
+  private get orderRepository(): Repository<Order> {
+    return this.tenantConnService.getRepository(Order);
+  }
 
   async getAllDeliveryPersons(): Promise<DeliveryPerson[]> {
     return this.deliveryPersonRepository.find({
@@ -77,12 +84,14 @@ export class DeliveryService {
     createDto: CreateDeliveryPersonDto,
   ): Promise<DeliveryPerson> {
     // Check if email already exists
-    const existing = await this.deliveryPersonRepository.findOne({
-      where: { email: createDto.email },
-    });
+    if (createDto.email) {
+      const existing = await this.deliveryPersonRepository.findOne({
+        where: { email: createDto.email },
+      });
 
-    if (existing) {
-      throw new ConflictException('Email already exists');
+      if (existing) {
+        throw new ConflictException('Email already exists');
+      }
     }
 
     // Hash password

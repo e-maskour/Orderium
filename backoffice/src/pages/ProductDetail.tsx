@@ -239,7 +239,7 @@ export default function ProductDetail() {
     return (
       <AdminLayout>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-          <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem', color: '#d97706' }}></i>
+          <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem', color: '#235ae4' }}></i>
         </div>
       </AdminLayout>
     );
@@ -301,7 +301,7 @@ export default function ProductDetail() {
           onClick={() => navigate('/products')}
           style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem', padding: 0 }}
         />
-        <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.4)' }}>
+        <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #235ae4, #1a47b8)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(35,90,228,0.4)' }}>
           <Package style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -553,8 +553,8 @@ export default function ProductDetail() {
             {/* Cost Price */}
             <div style={panel}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                <div style={iconBox('#fffbeb')}>
-                  <TrendingUp style={{ width: '1rem', height: '1rem', color: '#f59e0b' }} />
+                <div style={iconBox('#eff6ff')}>
+                  <TrendingUp style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{t('costPrice')}</h3>

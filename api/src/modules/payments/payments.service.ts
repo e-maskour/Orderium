@@ -1,20 +1,25 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Payment } from './payment.entity';
 import { Invoice, InvoiceStatus } from '../invoices/entities/invoice.entity';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class PaymentsService {
   constructor(
-    @InjectRepository(Payment)
-    private paymentsRepository: Repository<Payment>,
-    @InjectRepository(Invoice)
-    private invoicesRepository: Repository<Invoice>,
+    private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
+
+  private get paymentsRepository(): Repository<Payment> {
+    return this.tenantConnService.getRepository(Payment);
+  }
+
+  private get invoicesRepository(): Repository<Invoice> {
+    return this.tenantConnService.getRepository(Invoice);
+  }
 
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
     // Verify invoice exists

@@ -18,6 +18,29 @@ export default function CheckoutPage() {
   const [globalDiscountType, setGlobalDiscountType] = useState(0);
   const [paidAmount, setPaidAmount] = useState('');
 
+  const createOrderMutation = useMutation({
+    mutationFn: (orderData: any) => posService.createOrder(orderData),
+    onSuccess: (data: any) => {
+      const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
+      const orderId = data?.order?.id || data?.id;
+      navigate('/checkout/success', {
+        state: {
+          orderNumber,
+          orderId,
+          customer: state?.customer,
+          items: state?.cart,
+          total,
+          paidAmount: paid,
+          change,
+          orderDate: new Date(),
+        }
+      });
+    },
+    onError: (error: any) => {
+      toastError(error.message || t('error'));
+    },
+  });
+
   useEffect(() => {
     if (!state || !state.cart || !state.customer) {
       navigate('/pos');
@@ -50,29 +73,6 @@ export default function CheckoutPage() {
   const totalItemsCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
   const paid = parseFloat(paidAmount) || 0;
   const change = paid - total;
-
-  const createOrderMutation = useMutation({
-    mutationFn: (orderData: any) => posService.createOrder(orderData),
-    onSuccess: (data: any) => {
-      const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
-      const orderId = data?.order?.id || data?.id;
-      navigate('/checkout/success', {
-        state: {
-          orderNumber,
-          orderId,
-          customer: state.customer,
-          items: state.cart,
-          total,
-          paidAmount: paid,
-          change,
-          orderDate: new Date(),
-        }
-      });
-    },
-    onError: (error: any) => {
-      toastError(error.message || t('error'));
-    },
-  });
 
   const handleConfirmOrder = () => {
     const items = state.cart.map(item => {
@@ -133,7 +133,7 @@ export default function CheckoutPage() {
             />
             <div style={{ flex: 1 }}>
               <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', margin: 0 }}>{t('cart')}</h1>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Review and confirm order</p>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>{t('reviewAndConfirmOrder')}</p>
             </div>
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function CheckoutPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Order Summary */}
             <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', padding: '1.5rem', position: 'sticky', top: '6rem' }}>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', margin: '0 0 1rem 0' }}>Order Summary</h2>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', margin: '0 0 1rem 0' }}>{t('orderSummary')}</h2>
 
               {/* Global Discount */}
               <div style={{ paddingTop: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #e5e7eb' }}>
@@ -230,7 +230,7 @@ export default function CheckoutPage() {
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <Button
                       icon={<DollarSign style={{ width: '1rem', height: '1rem' }} />}
-                      label="Amount"
+                      label={t('amount')}
                       onClick={() => { setGlobalDiscountType(0); setGlobalDiscount(0); }}
                       style={{
                         flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem',
@@ -241,7 +241,7 @@ export default function CheckoutPage() {
                     />
                     <Button
                       icon={<Percent style={{ width: '1rem', height: '1rem' }} />}
-                      label="Percentage"
+                      label={t('percentage')}
                       onClick={() => { setGlobalDiscountType(1); setGlobalDiscount(0); }}
                       style={{
                         flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem',
@@ -303,7 +303,7 @@ export default function CheckoutPage() {
                       type="number"
                       value={String(paidAmount)}
                       onChange={(e) => setPaidAmount(e.target.value)}
-                      placeholder="Paid Amount"
+                      placeholder={t('paidAmount')}
                       style={{ width: '100%', paddingLeft: '2.5rem', fontSize: '1.125rem' }}
                     />
                   </div>

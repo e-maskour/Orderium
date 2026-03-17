@@ -3,7 +3,7 @@ export default {
   pos: 'نقطة البيع',
   pointOfSale: 'نقطة البيع',
   createOrders: 'إنشاء الطلبات',
-  
+
   // Cart
   cart: 'السلة',
   cartEmpty: 'السلة فارغة',
@@ -28,7 +28,14 @@ export default {
   updateQty: 'تحديث الكمية',
   confirmPrice: 'تأكيد السعر',
   originalPrice: 'السعر الأصلي',
-  
+  applyDiscount: 'تطبيق الخصم',
+  percentage: 'نسبة مئوية',
+  belowCostWarning: 'البيع بأقل من سعر التكلفة',
+  confirmCash: 'تأكيد نقداً',
+  orderSummary: 'ملخص الطلب',
+  reviewAndConfirmOrder: 'مراجعة وتأكيد الطلب',
+  backToPOS: 'العودة إلى نقطة البيع',
+
   // Documents
   downloadDocuments: 'قم بتحميل المستندات أدناه',
   receipt: 'إيصال',
