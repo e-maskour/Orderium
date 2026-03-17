@@ -4,7 +4,6 @@ import { Product } from '@/types/database';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
-import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { ShoppingCart, X } from 'lucide-react';
 
@@ -150,17 +149,21 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
         style={{ maxWidth: '32rem', width: '95vw', margin: '0 1rem', zIndex: 10, pointerEvents: 'auto', animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
       >
         <div className="relative p-3 border-bottom-1 surface-border" style={{ background: 'linear-gradient(to bottom right, rgba(var(--primary-color-rgb, 16,185,129), 0.1), rgba(var(--primary-color-rgb, 16,185,129), 0.05))' }}>
-          <Button
-            text
-            rounded
+          <button
             type="button"
             onClick={handleClose}
-            className="absolute flex align-items-center justify-content-center border-circle surface-card shadow-1"
-            style={{ top: '0.75rem', [dir === 'rtl' ? 'left' : 'right']: '0.75rem', width: '2rem', height: '2rem', transition: 'transform 0.2s', padding: 0 }}
             aria-label="Close"
+            style={{
+              position: 'absolute', top: '0.75rem', [dir === 'rtl' ? 'left' : 'right']: '0.75rem',
+              width: '2rem', height: '2rem', borderRadius: '50%',
+              border: '1px solid var(--surface-border)', background: 'var(--surface-card)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'transform 0.2s',
+            }}
           >
             <X style={{ width: '1rem', height: '1rem', color: 'var(--text-color)' }} />
-          </Button>
+          </button>
           <div style={{ [dir === 'rtl' ? 'paddingLeft' : 'paddingRight']: '2.5rem' }}>
             <h2 className="text-base font-bold text-color mb-1" style={{ lineHeight: '1.25' }}>{displayName}</h2>
             <div className="flex align-items-baseline gap-2">
@@ -183,28 +186,16 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
               style={{ height: '3.5rem', fontSize: '1.5rem', background: 'var(--surface-50)', outline: 'none', transition: 'border-color 0.2s' }}
             />
           </div>
-          <div className="grid" style={{ gap: '0.375rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.375rem' }}>
             {numbers.map((num) => (
-              <div key={num} className="col-4">
-                <Button
-                  text
-                  type="button"
-                  onClick={() => handleNumberClick(num)}
-                  className="w-full flex align-items-center justify-content-center border-round-lg font-semibold"
-                  style={{
-                    height: '2.75rem',
-                    fontSize: '1rem',
-                    transition: 'all 0.15s',
-                    ...(num === 'C'
-                      ? { background: '#ef4444', color: 'white' }
-                      : num === '.'
-                        ? { background: '#3b82f6', color: 'white' }
-                        : { background: 'var(--surface-100)', color: 'var(--text-color)', border: '1px solid var(--surface-border)' }),
-                  }}
-                >
-                  {num === 'C' ? <span className="text-xs">{t('clear')}</span> : num}
-                </Button>
-              </div>
+              <button
+                key={num}
+                type="button"
+                onClick={() => handleNumberClick(num)}
+                className={`cl-key${num === 'C' ? ' clear' : num === '.' ? ' decimal' : ''}`}
+              >
+                {num === 'C' ? <span style={{ fontSize: '0.75rem' }}>{t('clear')}</span> : num}
+              </button>
             ))}
           </div>
           {hasQuantity && (
@@ -214,15 +205,15 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
             </div>
           )}
           {hasQuantity && (
-            <Button
+            <button
               type="button"
               onClick={handleAddToCart}
-              className="w-full font-semibold"
-              style={{ height: '2.75rem', animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}
+              className="cl-btn-primary"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}
             >
-              <ShoppingCart style={{ width: '1.125rem', height: '1.125rem', [dir === 'rtl' ? 'marginLeft' : 'marginRight']: '0.5rem' }} />
+              <ShoppingCart style={{ width: '1.125rem', height: '1.125rem' }} />
               {currentCartQuantity > 0 ? t('updateQty') : t('addToCart')}
-            </Button>
+            </button>
           )}
         </div>
       </div>

@@ -1,4 +1,3 @@
-import { Button } from 'primereact/button';
 import { Plus, Minus, Trash2 } from 'lucide-react';
 
 interface QuantityStepperProps {
@@ -18,47 +17,41 @@ export const QuantityStepper = ({
   size = 'md',
   showRemove = false,
 }: QuantityStepperProps) => {
-  const sizeMap = { sm: 'small' as const, md: undefined, lg: 'large' as const };
-  const btnSize = sizeMap[size];
+  const btnPx = size === 'lg' ? '0.625rem' : size === 'sm' ? '0.3rem' : '0.45rem';
+  const iconSize = size === 'sm' ? '0.875rem' : '1rem';
 
   return (
     <div className="flex align-items-center gap-1 surface-100 border-round-xl p-1">
       {showRemove && quantity === 1 ? (
-        <Button
-          text
-          rounded
-          severity="danger"
-          size={btnSize}
+        <button
           onClick={onRemove}
-          icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
           aria-label="Remove"
-        />
+          style={{ background: 'none', border: 'none', borderRadius: '50%', padding: btnPx, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}
+        >
+          <Trash2 style={{ width: iconSize, height: iconSize }} />
+        </button>
       ) : (
-        <Button
-          text
-          rounded
-          severity="secondary"
-          size={btnSize}
+        <button
           onClick={onDecrement}
           disabled={quantity <= 1 && !showRemove}
-          icon={<Minus style={{ width: '1rem', height: '1rem' }} />}
           aria-label="Decrease"
-        />
+          style={{ background: 'none', border: 'none', borderRadius: '50%', padding: btnPx, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', opacity: quantity <= 1 && !showRemove ? 0.4 : 1 }}
+        >
+          <Minus style={{ width: iconSize, height: iconSize }} />
+        </button>
       )}
 
       <span className="font-bold text-color text-center" style={{ minWidth: size === 'lg' ? '3rem' : '2rem', fontSize: size === 'lg' ? '1.125rem' : undefined }}>
         {quantity}
       </span>
 
-      <Button
-        text
-        rounded
-        severity="secondary"
-        size={btnSize}
+      <button
         onClick={onIncrement}
-        icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
         aria-label="Increase"
-      />
+        style={{ background: 'none', border: 'none', borderRadius: '50%', padding: btnPx, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}
+      >
+        <Plus style={{ width: iconSize, height: iconSize }} />
+      </button>
     </div>
   );
 };

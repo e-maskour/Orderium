@@ -103,36 +103,23 @@ export function DocumentTable({
     setSelectedRows([]);
   }, [currentPage]);
 
-  const getStatusStyle = (status: string): React.CSSProperties => {
+  const getStatusBadgeClass = (status: string): string => {
     switch (status) {
-      case 'paid':
-        return { backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' };
+      case 'paid': return 'status-badge status-badge--success';
       case 'partial':
-      case 'pending':
-        return { backgroundColor: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' };
-      case 'overdue':
-        return { backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' };
-      case 'unpaid':
-        return { backgroundColor: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' };
-      case 'open':
-        return { backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' };
-      case 'signed':
-        return { backgroundColor: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' };
-      case 'closed':
-        return { backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' };
-      case 'invoiced':
-        return { backgroundColor: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff' };
-      case 'validated':
-        return { backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' };
-      case 'in_progress':
-        return { backgroundColor: '#ecfeff', color: '#0e7490', border: '1px solid #a5f3fc' };
-      case 'delivered':
-        return { backgroundColor: '#f0fdfa', color: '#0f766e', border: '1px solid #99f6e4' };
-      case 'cancelled':
-        return { backgroundColor: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3' };
+      case 'pending': return 'status-badge status-badge--warning';
+      case 'overdue': return 'status-badge status-badge--danger';
+      case 'unpaid': return 'status-badge status-badge--orange';
+      case 'open': return 'status-badge status-badge--primary';
+      case 'signed': return 'status-badge status-badge--success';
+      case 'closed': return 'status-badge status-badge--danger';
+      case 'invoiced': return 'status-badge status-badge--purple';
+      case 'validated': return 'status-badge status-badge--sky';
+      case 'in_progress': return 'status-badge status-badge--teal';
+      case 'delivered': return 'status-badge status-badge--emerald';
+      case 'cancelled': return 'status-badge status-badge--rose';
       case 'draft':
-      default:
-        return { backgroundColor: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0' };
+      default: return 'status-badge status-badge--neutral';
     }
   };
 
@@ -180,14 +167,6 @@ export function DocumentTable({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      <style>{`
-        .doc-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-        .doc-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
-        .doc-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
-        .doc-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-        .doc-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-        .doc-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
-      `}</style>
       {/* Floating Action Bar */}
       <FloatingActionBar
         selectedCount={selectedDocuments.length}
@@ -318,8 +297,8 @@ export function DocumentTable({
         removableSort
         loading={loading}
         emptyMessage={t('noDocumentFound')}
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-        currentPageReportTemplate="{first} - {last} / {totalRecords}"
+        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+        currentPageReportTemplate="{first}-{last} of {totalRecords}"
       >
         <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
         <Column
@@ -437,7 +416,7 @@ export function DocumentTable({
           field="status"
           header={t('status')}
           body={(doc: Document) => (
-            <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, ...getStatusStyle(doc.status) }}>
+            <span className={getStatusBadgeClass(doc.status)}>
               {getStatusLabel(doc.status)}
             </span>
           )}

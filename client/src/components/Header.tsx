@@ -3,7 +3,6 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { LanguageToggle } from './LanguageToggle';
 import { NotificationBell } from './NotificationBell';
-import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Menu } from 'primereact/menu';
 import { InputText } from 'primereact/inputtext';
@@ -165,49 +164,46 @@ export const Header = ({ onCartClick }: HeaderProps) => {
         {/* Right actions */}
         <div className="flex align-items-center gap-2 flex-shrink-0">
           {canInstall && (
-            <Button
-              label="Install"
-              size="small"
+            <button
               onClick={handleInstallClick}
-              style={{ background: '#d97706', borderColor: '#d97706' }}
-            />
+              style={{ background: '#d97706', border: 'none', color: 'white', borderRadius: '0.5rem', padding: '0.375rem 0.75rem', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Install
+            </button>
           )}
           {user?.customerId && <NotificationBell customerId={user.customerId} />}
           <LanguageToggle />
 
           {/* Track Order Button */}
           {hasActiveOrders && (
-            <Button
-              text
-              rounded
+            <button
               onClick={() => setShowTracking(true)}
-              className="relative flex align-items-center justify-content-center border-circle"
-              style={{ width: '2.5rem', height: '2.5rem', background: 'transparent', transition: 'background 0.2s', padding: 0 }}
+              className="cl-icon-btn relative"
+              style={{ width: '2.5rem', height: '2.5rem' }}
               title={t('trackOrder')}
               aria-label={t('trackOrder')}
             >
               <Package style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
               <span className="absolute animate-pulse border-circle" style={{ top: '0.25rem', right: '0.25rem', width: '0.5rem', height: '0.5rem', background: '#3b82f6' }} />
-            </Button>
+            </button>
           )}
 
           {/* User Menu */}
           <Menu model={userMenuItems} popup ref={userMenuRef} />
-          <Button
-            icon={<User style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color)' }} />}
-            text
-            rounded
+          <button
+            className="cl-icon-btn"
+            style={{ width: '2.25rem', height: '2.25rem' }}
             onClick={(e) => userMenuRef.current?.toggle(e)}
             aria-label={t('profile')}
-          />
+          >
+            <User style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color)' }} />
+          </button>
 
           {/* Mobile Cart Button */}
-          <Button
-            text
-            rounded
+          <button
             onClick={onCartClick}
-            className="relative flex align-items-center justify-content-center border-circle lg:hidden"
-            style={{ width: '2.5rem', height: '2.5rem', background: 'transparent', padding: 0 }}
+            className="cl-icon-btn relative lg:hidden"
+            style={{ width: '2.5rem', height: '2.5rem' }}
             aria-label={t('cart')}
           >
             <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color)' }} />
@@ -228,7 +224,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
                 {itemCount}
               </span>
             )}
-          </Button>
+          </button>
         </div>
       </div>
 

@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { partnersService } from '@/modules';
-import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
-import { Card } from 'primereact/card';
 import { toastSuccess, toastError } from '@/services/toast.service';
 import { useNavigate } from 'react-router-dom';
 import { AddressInput } from '@/components/AddressInput';
+import { LogOut, Save, User, Phone, MapPin } from 'lucide-react';
 
 export default function Profile() {
   const { user, logout, refreshUser } = useAuth();
-  const { language, dir, t } = useLanguage();
+  const { language: _lang, dir, t } = useLanguage();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [mapsLink, setMapsLink] = useState<string | null>(null);
@@ -73,67 +72,82 @@ export default function Profile() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--surface-ground)' }} dir={dir}>
-      <div className="mx-auto px-3 py-4" style={{ maxWidth: '42rem' }}>
-        <div className="mb-4">
-          <Button
-            icon="pi pi-arrow-left"
-            label={t('back')}
-            text
-            severity="secondary"
-            onClick={() => navigate('/')}
-          />
+      {/* Header */}
+      <header style={{ background: 'linear-gradient(135deg, #1e1e2d, #16213e)', padding: '1.25rem 1rem' }}>
+        <div style={{ maxWidth: '40rem', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+          <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '50%', background: 'rgba(52,211,153,0.15)', border: '2px solid rgba(52,211,153,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <User style={{ width: '1.25rem', height: '1.25rem', color: '#34d399' }} />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, color: 'white', fontWeight: 700, fontSize: '1.0625rem' }}>{t('profile')}</h1>
+            {user?.phoneNumber && <p style={{ margin: 0, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.55)' }}>{user.phoneNumber}</p>}
+          </div>
         </div>
+      </header>
 
-        <Card title={<span className="text-2xl font-bold">{t('profile')}</span>}>
-          <form onSubmit={handleSubmit} className="flex flex-column gap-4">
-            {/* Phone (readonly) */}
-            <div className="flex flex-column gap-2">
-              <label htmlFor="phone" className="font-medium">{t('phoneNumber')}</label>
-              <InputText id="phone" type="tel" value={user?.phoneNumber || ''} disabled className="surface-100" />
-              <small className="text-color-secondary">{t('phoneCannotBeChanged')}</small>
+      <div style={{ maxWidth: '40rem', margin: '1.5rem auto', padding: '0 1rem 6rem' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Phone (readonly) */}
+          <div style={{ background: 'var(--surface-card)', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
+              <Phone style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)', flexShrink: 0 }} />
+              <label style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{t('phoneNumber')}</label>
             </div>
+            <InputText value={user?.phoneNumber || ''} disabled className="w-full surface-100" style={{ height: '3rem' }} />
+            <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('phoneCannotBeChanged')}</p>
+          </div>
 
-            {/* Name */}
-            <div className="flex flex-column gap-2">
-              <label htmlFor="name" className="font-medium">{t('name')}</label>
-              <InputText id="name" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder={t('enterYourName')} required />
+          {/* Name */}
+          <div style={{ background: 'var(--surface-card)', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
+              <User style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)', flexShrink: 0 }} />
+              <label htmlFor="name" style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{t('name')} *</label>
             </div>
+            <InputText id="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder={t('enterYourName')} className="w-full" style={{ height: '3rem' }} required />
+          </div>
 
-            {/* Address */}
-            <div className="flex flex-column gap-2">
-              <label htmlFor="address" className="font-medium">{t('address')}</label>
-              <AddressInput
-                value={formData.address}
-                onChange={handleAddressChange}
-                onMapsLinksChange={handleMapsLinksChange}
-                googleMapsUrl={mapsLink}
-                wazeUrl={wazeLink}
-              />
+          {/* Address */}
+          <div style={{ background: 'var(--surface-card)', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
+              <MapPin style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)', flexShrink: 0 }} />
+              <label htmlFor="address" style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{t('address')}</label>
             </div>
+            <AddressInput value={formData.address} onChange={handleAddressChange} onMapsLinksChange={handleMapsLinksChange} googleMapsUrl={mapsLink} wazeUrl={wazeLink} />
+          </div>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              label={isLoading ? t('saving') : t('saveChanges')}
-              icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
-              className="w-full"
-              disabled={isLoading}
-              loading={isLoading}
-            />
+          {/* Save */}
+          <button
+            type="submit"
+            className="cl-btn-primary"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.9375rem', opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
+            ) : (
+              <Save style={{ width: '1.125rem', height: '1.125rem' }} />
+            )}
+            {isLoading ? t('saving') : t('saveChanges')}
+          </button>
 
-            {/* Logout */}
-            <Button
-              type="button"
-              label={t('logout')}
-              outlined
-              severity="danger"
-              className="w-full"
-              onClick={() => { logout(); navigate('/login'); }}
-            />
-          </form>
-        </Card>
+          {/* Logout */}
+          <button
+            type="button"
+            onClick={() => { logout(); navigate('/login'); }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              padding: '0.875rem', borderRadius: '1rem', border: '1px solid #fca5a5',
+              background: 'transparent', color: '#ef4444', fontWeight: 600, fontSize: '0.9375rem',
+              cursor: 'pointer', transition: 'background 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <LogOut style={{ width: '1.125rem', height: '1.125rem' }} />
+            {t('logout')}
+          </button>
+        </form>
       </div>
     </div>
   );
 }
-

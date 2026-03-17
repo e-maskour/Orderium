@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { toastSuccess, toastError, toastWarning } from '@/services/toast.service';
 import { MapPin } from 'lucide-react';
-import { ProgressSpinner } from 'primereact/progressspinner';
 
 interface AddressInputProps {
   value: string;
@@ -147,21 +145,19 @@ export function AddressInput({
           className={`flex-1 ${error ? 'p-invalid' : ''} ${className || ''}`}
           style={{ height: '3rem' }}
         />
-        <Button
+        <button
           type="button"
-          outlined
           onClick={handleDetectLocation}
           disabled={isDetectingLocation}
-          style={{ width: '3rem', height: '3rem', flexShrink: 0 }}
-          tooltip={t('detectMyLocation')}
-          tooltipOptions={{ position: 'top' }}
+          title={t('detectMyLocation')}
+          style={{ width: '3rem', height: '3rem', flexShrink: 0, background: 'white', border: '1px solid #d1d5db', borderRadius: '0.5rem', cursor: isDetectingLocation ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isDetectingLocation ? 0.7 : 1 }}
         >
           {isDetectingLocation ? (
-            <ProgressSpinner style={{ width: '1.25rem', height: '1.25rem' }} strokeWidth="4" />
+            <span style={{ width: '1.25rem', height: '1.25rem', border: '2px solid rgba(5,150,105,0.3)', borderTopColor: '#059669', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite', display: 'inline-block' }} />
           ) : (
-            <MapPin style={{ width: '1.25rem', height: '1.25rem' }} />
+            <MapPin style={{ width: '1.25rem', height: '1.25rem', color: '#059669' }} />
           )}
-        </Button>
+        </button>
       </div>
       {error && <small className="p-error">{error}</small>}
       {coordinates && (

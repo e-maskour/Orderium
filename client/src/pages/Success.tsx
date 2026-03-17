@@ -2,9 +2,7 @@ import { useLocation, Link, Navigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
-import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
-import { Divider } from 'primereact/divider';
 import { CheckCircle2, Home, FileText, Receipt as ReceiptIcon, MapPin, Package, User, Phone } from 'lucide-react';
 import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
@@ -109,7 +107,7 @@ const Success = () => {
                 )}
               </div>
 
-              <Divider />
+              <div style={{ borderTop: '1px solid #e5e7eb', margin: '0.75rem 0' }} />
               <div className="flex align-items-center justify-content-between">
                 <span className="text-sm font-bold text-color-secondary">{t('total')}</span>
                 <span className="text-xl font-bold text-primary">{formatCurrency(state.total, language)}</span>
@@ -117,51 +115,48 @@ const Success = () => {
             </div>
 
             {/* Track Order */}
-            <Button
-              label={t('trackYourOrder')}
-              icon="pi pi-map-marker"
+            <button
               onClick={() => setShowTracking(true)}
-              className="w-full"
-              style={{ background: 'linear-gradient(to right, #2563eb, #4f46e5, #7c3aed)', border: 'none' }}
-            />
+              className="cl-btn-primary w-full"
+              style={{ background: 'linear-gradient(to right, #2563eb, #4f46e5, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            >
+              <MapPin style={{ width: '1rem', height: '1rem' }} />
+              {t('trackYourOrder')}
+            </button>
 
             {/* Document buttons */}
             <div className="grid">
               <div className="col-6">
-                <Button
+                <button
                   onClick={() => handlePreview('receipt')}
-                  className="w-full"
-                  style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6)', border: 'none' }}
+                  className="w-full border-round-xl border-none cursor-pointer py-3 flex flex-column align-items-center gap-2"
+                  style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6)' }}
                 >
-                  <div className="flex flex-column align-items-center gap-1 w-full py-1">
-                    <ReceiptIcon style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
-                    <span className="text-xs font-bold text-white">{t('receipt')}</span>
-                  </div>
-                </Button>
+                  <ReceiptIcon style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+                  <span className="text-xs font-bold text-white">{t('receipt')}</span>
+                </button>
               </div>
               <div className="col-6">
-                <Button
+                <button
                   onClick={() => handlePreview('invoice')}
-                  className="w-full"
-                  style={{ background: 'linear-gradient(135deg, #14b8a6, #06b6d4)', border: 'none' }}
+                  className="w-full border-round-xl border-none cursor-pointer py-3 flex flex-column align-items-center gap-2"
+                  style={{ background: 'linear-gradient(135deg, #14b8a6, #06b6d4)' }}
                 >
-                  <div className="flex flex-column align-items-center gap-1 w-full py-1">
-                    <FileText style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
-                    <span className="text-xs font-bold text-white">{t('deliveryNote')}</span>
-                  </div>
-                </Button>
+                  <FileText style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+                  <span className="text-xs font-bold text-white">{t('deliveryNote')}</span>
+                </button>
               </div>
             </div>
 
             {/* Back to Home */}
-            <Link to="/" style={{ textDecoration: 'none' }}>
-              <Button
-                label={t('backToHome')}
-                icon={<Home style={{ width: '0.875rem', height: '0.875rem', marginInlineEnd: '0.5rem' }} />}
-                outlined
-                severity="secondary"
-                className="w-full"
-              />
+            <Link to="/" style={{ textDecoration: 'none', display: 'block' }}>
+              <button
+                className="w-full border-round-xl cursor-pointer py-3 font-semibold flex align-items-center justify-content-center gap-2"
+                style={{ background: 'white', border: '2px solid #d1d5db', color: '#374151' }}
+              >
+                <Home style={{ width: '1rem', height: '1rem' }} />
+                {t('backToHome')}
+              </button>
             </Link>
           </div>
         </div>

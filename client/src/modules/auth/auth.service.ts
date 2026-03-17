@@ -31,10 +31,12 @@ export class AuthService {
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await http<AuthResponse>('/api/portal/login', {
+    const raw = await http<{ data: AuthResponse }>('/api/portal/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+
+    const response = raw.data ?? (raw as unknown as AuthResponse);
 
     // Transform user to model
     if (response.user) {
@@ -57,13 +59,15 @@ export class AuthService {
   }
 
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await http<AuthResponse>('/api/portal/register', {
+    const raw = await http<{ data: AuthResponse }>('/api/portal/register', {
       method: 'POST',
       body: JSON.stringify({
         ...data,
         isCustomer: data.isCustomer ?? true,
       }),
     });
+
+    const response = raw.data ?? (raw as unknown as AuthResponse);
 
     // Transform user to model
     if (response.user) {

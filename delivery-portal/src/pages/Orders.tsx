@@ -1,483 +1,248 @@
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { toastSuccess, toastError } from '../services/toast.service';
 import { deliveryService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { LanguageToggle } from '../components/LanguageToggle';
+import { formatCurrency } from '../lib/i18n';
+import { AppLayout } from '../components/AppLayout';
 import { NotificationBell } from '../components/NotificationBell';
-import { Package, Truck, Phone, MapPin } from 'lucide-react';
-import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-import { Card } from 'primereact/card';
-import { Tag } from 'primereact/tag';
-import { Sidebar } from 'primereact/sidebar';
-import { Calendar } from 'primereact/calendar';
-import { Paginator } from 'primereact/paginator';
-import { ProgressSpinner } from 'primereact/progressspinner';
-import { Message } from 'primereact/message';
-import { Divider } from 'primereact/divider';
+import { RefreshCw, Phone } from 'lucide-react';
 import type { Order } from '../types';
 
-export default function Orders() {
-  const { deliveryPerson, logout } = useAuth();
-  const { t } = useLanguage();
-  const queryClient = useQueryClient();
-  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
-  const [showFilters, setShowFilters] = useState(false);
+const PRI = '#df7817';
+const PRI_DARK = '#b86314';
 
-  // Filter states
-  const [orderNumberFilter, setOrderNumberFilter] = useState('');
-  const [customerNameFilter, setCustomerNameFilter] = useState('');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+function getStripeColor(status: string | null) {
+  if (status === 'confirmed') return '#4f46e5';
+  return PRI;
+}
 
-  // Applied filters
-  const [appliedFilters, setAppliedFilters] = useState({
-    orderNumber: '',
-    customerName: '',
-    startDate: '',
-    endDate: '',
-  });
+function getActionConfig(status: string | null) {
+  if (status === 'assigned')  return { label: 'Confirmer',  nextStatus: 'confirmed'  as const, bg: PRI,      color: '#fff' };
+  if (status === 'confirmed') return { label: 'Récupérer',  nextStatus: 'picked_up'  as const, bg: '#4f46e5', color: '#fff' };
+  return null;
+}
 
-  const { data: ordersData, isLoading, error } = useQuery({
-    queryKey: ['orders', deliveryPerson?.id, currentPage + 1, pageSize, appliedFilters],
-    queryFn: () => deliveryPerson ? deliveryService.getMyOrders(deliveryPerson.id, {
-      page: currentPage + 1,
-      pageSize,
-      ...appliedFilters,
-    }) : Promise.resolve({ success: true, orders: [], total: 0, page: 1, pageSize: 50, totalPages: 0 }),
-    enabled: !!deliveryPerson,
-  });
-
-  const orders = ordersData?.orders || [];
-  const totalCount = ordersData?.total || 0;
-
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ orderId, status }: { orderId: number; status: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' }) =>
-      deliveryService.updateOrderStatus(orderId, status, deliveryPerson!.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toastSuccess(t('statusUpdated'));
-    },
-    onError: () => {
-      toastError(t('statusUpdateFailed'));
-    },
-  });
-
-  const filteredOrders = orders.filter((order: Order) =>
-    deliveryStatusFilter === 'all' || order.status === deliveryStatusFilter
+function SkeletonCard() {
+  return (
+    <div style={{ background: '#fff', borderRadius: '18px', overflow: 'hidden',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.07)', display: 'flex' }}>
+      <div style={{ width: '5px', background: '#e5e7eb', flexShrink: 0 }} />
+      <div style={{ flex: 1, padding: '1rem' }}>
+        {[60, 40, 80, 50].map((w, i) => (
+          <div key={i} style={{ height: '14px', borderRadius: '7px', background: '#f3f4f6',
+            width: `${w}%`, marginBottom: i < 3 ? '0.625rem' : 0 }} />
+        ))}
+      </div>
+    </div>
   );
+}
 
-  const deliveryStatusCounts = {
-    all: orders.length,
-    pending: orders.filter((o: Order) => o.status === 'pending').length,
-    assigned: orders.filter((o: Order) => o.status === 'assigned').length,
-    confirmed: orders.filter((o: Order) => o.status === 'confirmed').length,
-    picked_up: orders.filter((o: Order) => o.status === 'picked_up').length,
-    to_delivery: orders.filter((o: Order) => o.status === 'to_delivery').length,
-    in_delivery: orders.filter((o: Order) => o.status === 'in_delivery').length,
-    delivered: orders.filter((o: Order) => o.status === 'delivered').length,
-    canceled: orders.filter((o: Order) => o.status === 'canceled').length,
-  };
+export function EmptyState({ message }: { message: string }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '3rem 1.5rem' }}>
+      <div style={{ fontSize: '3.5rem', marginBottom: '0.75rem', lineHeight: 1 }}>📭</div>
+      <p style={{ color: '#6b7280', fontSize: '1rem', fontWeight: 600, margin: 0 }}>{message}</p>
+    </div>
+  );
+}
 
-  const applyFilters = () => {
-    setAppliedFilters({
-      orderNumber: orderNumberFilter,
-      customerName: customerNameFilter,
-      startDate: startDate ? startDate.toISOString().split('T')[0] : '',
-      endDate: endDate ? endDate.toISOString().split('T')[0] : '',
-    });
-    setCurrentPage(0);
-    setShowFilters(false);
-  };
-
-  const resetFilters = () => {
-    setOrderNumberFilter('');
-    setCustomerNameFilter('');
-    setStartDate(null);
-    setEndDate(null);
-    setAppliedFilters({ orderNumber: '', customerName: '', startDate: '', endDate: '' });
-    setCurrentPage(0);
-    setShowFilters(false);
-  };
-
-  const getStatusSeverity = (status: string | null): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | null => {
-    const map: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'secondary'> = {
-      pending: 'secondary',
-      assigned: 'info',
-      confirmed: 'info',
-      picked_up: 'warning',
-      to_delivery: 'warning',
-      in_delivery: 'warning',
-      delivered: 'success',
-      canceled: 'danger',
-    };
-    return map[status || 'pending'] || 'secondary';
-  };
-
-  const getStatusLabel = (status: string | null): string => {
-    const map: Record<string, string> = {
-      pending: t('pending'),
-      assigned: t('assigned'),
-      confirmed: t('confirmed'),
-      picked_up: t('pickedUp'),
-      to_delivery: t('toDelivery'),
-      in_delivery: t('inDelivery'),
-      delivered: t('delivered'),
-      canceled: t('canceled'),
-    };
-    return map[status || 'pending'] || t('pending');
-  };
-
-  const getStatusIcon = (status: string | null): string => {
-    const map: Record<string, string> = {
-      pending: '⏳', assigned: '👤', confirmed: '✓', picked_up: '📦',
-      to_delivery: '⚠️', in_delivery: '🚗', delivered: '✅', canceled: '❌',
-    };
-    return map[status || 'pending'] || '⏳';
-  };
-
-  const getStatusTimestamp = (order: Order): string | null => {
-    const timestampMap: Record<string, string | undefined> = {
-      pending: order.pendingAt, assigned: order.assignedAt, confirmed: order.confirmedAt,
-      picked_up: order.pickedUpAt, to_delivery: order.toDeliveryAt,
-      in_delivery: order.inDeliveryAt, delivered: order.deliveredAt, canceled: order.canceledAt,
-    };
-    return timestampMap[order.status || 'pending'] || null;
-  };
-
-  const formatStatusTimestamp = (timestamp: string | null): string => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
-
-  const openNavigation = (order: Order, app: 'google' | 'waze') => {
-    if (!order.latitude || !order.longitude) return;
-    const url = app === 'waze'
-      ? `https://waze.com/ul?ll=${order.latitude},${order.longitude}&navigate=yes`
-      : `https://www.google.com/maps/dir/?api=1&destination=${order.latitude},${order.longitude}`;
-    window.open(url, '_blank');
-  };
-
-  const getWorkflowAction = (order: Order): { label: string; nextStatus: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered'; severity: 'info' | 'warning' | 'success' | 'help' } | null => {
-    const statusActions: Record<string, { label: string; nextStatus: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered'; severity: 'info' | 'warning' | 'success' | 'help' }> = {
-      assigned: { label: t('confirmOrder'), nextStatus: 'confirmed', severity: 'info' },
-      confirmed: { label: t('pickUpOrder'), nextStatus: 'picked_up', severity: 'help' },
-      picked_up: { label: t('startToDelivery'), nextStatus: 'to_delivery', severity: 'warning' },
-      to_delivery: { label: t('startDelivery'), nextStatus: 'in_delivery', severity: 'warning' },
-      in_delivery: { label: t('markAsDelivered'), nextStatus: 'delivered', severity: 'success' },
-    };
-    return statusActions[order.status || ''] || null;
-  };
-
-  const formatOrderDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
-
-  const statusFilterItems = [
-    { key: 'all', label: `📦 ${t('all')}`, count: deliveryStatusCounts.all },
-    { key: 'pending', label: `⏳ ${t('pending')}`, count: deliveryStatusCounts.pending },
-    { key: 'assigned', label: `👤 ${t('assigned')}`, count: deliveryStatusCounts.assigned },
-    { key: 'confirmed', label: `✓ ${t('confirmed')}`, count: deliveryStatusCounts.confirmed },
-    { key: 'picked_up', label: `📦 ${t('pickedUp')}`, count: deliveryStatusCounts.picked_up },
-    { key: 'to_delivery', label: `⚠️ ${t('toDelivery')}`, count: deliveryStatusCounts.to_delivery },
-    { key: 'in_delivery', label: `🚗 ${t('inDelivery')}`, count: deliveryStatusCounts.in_delivery },
-    { key: 'delivered', label: `✅ ${t('delivered')}`, count: deliveryStatusCounts.delivered },
-    { key: 'canceled', label: `❌ ${t('canceled')}`, count: deliveryStatusCounts.canceled },
-  ];
-
-  const activeFilterCount = [appliedFilters.orderNumber, appliedFilters.customerName, appliedFilters.startDate, appliedFilters.endDate].filter(Boolean).length;
+function OrderCard({ order, onAction, actionLoading }: {
+  order: Order;
+  onAction: (orderId: number, status: 'confirmed' | 'picked_up') => void;
+  actionLoading: boolean;
+}) {
+  const navigate = useNavigate();
+  const { language } = useLanguage();
+  const action = getActionConfig(order.status ?? null);
+  const stripe = getStripeColor(order.status ?? null);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--orderium-bg)' }}>
-      {/* Header */}
-      <div className="surface-card shadow-1 sticky" style={{ top: 0, zIndex: 10 }}>
-        <div className="flex align-items-center justify-content-between px-3 md:px-5 py-3" style={{ maxWidth: '80rem', margin: '0 auto' }}>
-          <div className="flex align-items-center gap-3">
-            <div className="flex align-items-center justify-content-center border-round-xl"
-              style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, var(--orderium-primary), var(--orderium-primary-dark))' }}>
-              <span className="text-2xl font-bold text-white">O</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold m-0" style={{ color: 'var(--orderium-text)' }}>{t('myDeliveries')}</h1>
-              <p className="text-sm m-0 mt-1" style={{ color: 'var(--orderium-text-secondary)' }}>
-                {t('welcomeBack')}, {deliveryPerson?.name}
-              </p>
-            </div>
-          </div>
-          <div className="flex align-items-center gap-2">
-            <NotificationBell />
-            <LanguageToggle />
-            <Button
-              icon="pi pi-sign-out"
-              label={t('signOut')}
-              severity="secondary"
-              text
-              size="small"
-              onClick={logout}
-            />
-          </div>
-        </div>
-      </div>
+    <div
+      onClick={() => navigate(`/orders/${order.orderId}`, { state: { order } })}
+      style={{
+        background: '#fff', borderRadius: '18px', overflow: 'hidden',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+        display: 'flex', cursor: 'pointer',
+        WebkitTapHighlightColor: 'transparent', userSelect: 'none',
+      }}
+      onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.985)'; }}
+      onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+    >
+      <div style={{ width: '5px', background: stripe, flexShrink: 0 }} />
 
-      {/* Main Content */}
-      <div className="px-3 md:px-5 py-4" style={{ maxWidth: '80rem', margin: '0 auto' }}>
-        {/* Filter Button */}
-        <div className="flex justify-content-end mb-3">
-          <Button
-            icon="pi pi-filter"
-            label={t('filters')}
-            severity="secondary"
-            outlined
-            size="small"
-            badge={activeFilterCount > 0 ? String(activeFilterCount) : undefined}
-            onClick={() => setShowFilters(true)}
-          />
+      <div style={{ flex: 1, padding: '0.875rem 1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.375rem' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: stripe,
+            background: stripe + '18', borderRadius: '999px', padding: '0.15rem 0.6rem' }}>
+            #{order.orderNumber ?? order.orderId}
+          </span>
+          <span style={{ fontSize: '1.25rem', fontWeight: 900, color: PRI }}>
+            {formatCurrency(order.totalAmount ?? 0, language as any)}
+          </span>
         </div>
 
-        {/* Filter Sidebar */}
-        <Sidebar
-          visible={showFilters}
-          position="right"
-          onHide={() => setShowFilters(false)}
-          header={
-            <div className="flex align-items-center gap-2">
-              <i className="pi pi-filter" />
-              <span className="font-bold">{t('filters')}</span>
-            </div>
-          }
-          style={{ width: '28rem' }}
+        <p style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', margin: '0 0 0.25rem',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {order.customerName}
+        </p>
+
+        <a
+          href={`tel:${order.customerPhone}`}
+          onClick={e => e.stopPropagation()}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+            color: '#2563eb', fontSize: '0.9rem', fontWeight: 600, textDecoration: 'none',
+            marginBottom: '0.375rem' }}
         >
-          <div className="flex flex-column gap-4">
-            <div className="flex flex-column gap-2">
-              <label className="font-semibold text-sm">{t('orderNumber')}</label>
-              <InputText
-                value={orderNumberFilter}
-                onChange={(e) => setOrderNumberFilter(e.target.value)}
-                placeholder={t('enterOrderNumber')}
-                className="w-full"
-              />
-            </div>
+          <Phone size={14} />
+          {order.customerPhone}
+        </a>
 
-            <div className="flex flex-column gap-2">
-              <label className="font-semibold text-sm">{t('customerName')}</label>
-              <InputText
-                value={customerNameFilter}
-                onChange={(e) => setCustomerNameFilter(e.target.value)}
-                placeholder={t('enterCustomerName')}
-                className="w-full"
-              />
-            </div>
-
-            <Divider />
-
-            <div className="flex flex-column gap-2">
-              <label className="font-bold text-sm text-uppercase">{t('dateRange')}</label>
-              <div className="grid">
-                <div className="col-6">
-                  <label className="text-sm mb-1 block">{t('start')}</label>
-                  <Calendar
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.value as Date)}
-                    dateFormat="dd/mm/yy"
-                    placeholder={t('start')}
-                    showIcon
-                    className="w-full"
-                  />
-                </div>
-                <div className="col-6">
-                  <label className="text-sm mb-1 block">{t('end')}</label>
-                  <Calendar
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.value as Date)}
-                    dateFormat="dd/mm/yy"
-                    placeholder={t('end')}
-                    showIcon
-                    className="w-full"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Divider />
-
-            <div className="flex gap-3">
-              <Button
-                label={t('reset')}
-                severity="secondary"
-                outlined
-                className="flex-1"
-                onClick={resetFilters}
-              />
-              <Button
-                label={t('apply')}
-                className="flex-1"
-                onClick={applyFilters}
-              />
-            </div>
-          </div>
-        </Sidebar>
-
-        {/* Status Filter Bar */}
-        <Card className="mb-3">
-          <div className="flex align-items-center gap-2 mb-3">
-            <Truck size={16} style={{ color: 'var(--orderium-primary)' }} />
-            <span className="font-bold text-sm text-uppercase" style={{ color: 'var(--orderium-text-secondary)', letterSpacing: '0.05em' }}>
-              {t('deliveryStatus')}
-            </span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {statusFilterItems.map((filter) => (
-              <Button
-                key={filter.key}
-                label={`${filter.label} (${filter.count})`}
-                size="small"
-                severity={deliveryStatusFilter === filter.key ? 'warning' : 'secondary'}
-                outlined={deliveryStatusFilter !== filter.key}
-                onClick={() => setDeliveryStatusFilter(filter.key)}
-              />
-            ))}
-          </div>
-        </Card>
-
-        {/* Paginator */}
-        {totalCount > 0 && (
-          <Paginator
-            first={currentPage * pageSize}
-            rows={pageSize}
-            totalRecords={totalCount}
-            rowsPerPageOptions={[10, 50, 100]}
-            onPageChange={(e) => { setCurrentPage(e.page); setPageSize(e.rows); }}
-            className="mb-3"
-          />
+        {order.customerAddress && (
+          <p style={{ fontSize: '0.83rem', color: '#6b7280', margin: '0 0 0.75rem',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            📍 {order.customerAddress}
+          </p>
         )}
 
-        {/* Orders Grid */}
-        {isLoading ? (
-          <div className="flex align-items-center justify-content-center" style={{ height: '16rem' }}>
-            <ProgressSpinner />
-          </div>
-        ) : error ? (
-          <Message severity="error" text={t('error')} className="w-full" />
-        ) : filteredOrders.length === 0 ? (
-          <Card className="text-center">
-            <Package size={64} style={{ color: 'var(--orderium-text-muted)' }} className="mb-3" />
-            <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--orderium-text)' }}>{t('noOrdersFound')}</h3>
-            <p style={{ color: 'var(--orderium-text-secondary)' }}>
-              {deliveryStatusFilter === 'all'
-                ? t('noOrdersAssigned')
-                : `${t('noOrdersMessage')} ${getStatusLabel(deliveryStatusFilter)}`
-              }
-            </p>
-          </Card>
-        ) : (
-          <div className="grid">
-            {filteredOrders.map((order: Order) => (
-              <div key={order.orderId} className="col-12 sm:col-6 lg:col-4 xl:col-3">
-                <Card className="h-full">
-                  {/* Header */}
-                  <div className="flex align-items-center justify-content-between mb-2">
-                    <span className="font-bold text-sm">#{order.orderNumber}</span>
-                    <span className="text-xs" style={{ color: 'var(--orderium-text-muted)' }}>{formatOrderDate(order.createdAt)}</span>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className="flex align-items-center gap-2 mb-3 flex-wrap">
-                    <Tag
-                      value={`${getStatusIcon(order.status || null)} ${getStatusLabel(order.status || null)}`}
-                      severity={getStatusSeverity(order.status || null)}
-                    />
-                    {getStatusTimestamp(order) && (
-                      <span className="text-xs" style={{ color: 'var(--orderium-text-muted)' }}>
-                        {formatStatusTimestamp(getStatusTimestamp(order))}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Customer */}
-                  <div className="flex align-items-start gap-2 mb-2">
-                    <div className="flex align-items-center justify-content-center border-round"
-                      style={{ width: '1.75rem', height: '1.75rem', background: '#fff3e0', flexShrink: 0 }}>
-                      <Package size={14} style={{ color: 'var(--orderium-primary)' }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm m-0 white-space-nowrap overflow-hidden text-overflow-ellipsis">{order.customerName}</p>
-                      <a href={`tel:${order.customerPhone}`} className="text-sm flex align-items-center gap-1 mt-1 no-underline" style={{ color: 'var(--orderium-primary)' }}>
-                        <Phone size={12} />
-                        <span>{order.customerPhone}</span>
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Address */}
-                  {order.customerAddress && (
-                    <div className="flex align-items-start gap-2 p-2 border-round mb-2" style={{ background: '#eff6ff', border: '1px solid #dbeafe' }}>
-                      <MapPin size={12} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
-                      <p className="text-xs m-0 line-height-3" style={{ color: 'var(--orderium-text)' }}>{order.customerAddress}</p>
-                    </div>
-                  )}
-
-                  {/* Navigation Buttons */}
-                  {order.latitude && order.longitude && (
-                    <div className="flex gap-2 mb-2">
-                      <Button
-                        label="Google Maps"
-                        icon="pi pi-map"
-                        size="small"
-                        severity="info"
-                        className="flex-1"
-                        onClick={() => openNavigation(order, 'google')}
-                      />
-                      <Button
-                        label="Waze"
-                        icon="pi pi-compass"
-                        size="small"
-                        severity="help"
-                        className="flex-1"
-                        onClick={() => openNavigation(order, 'waze')}
-                      />
-                    </div>
-                  )}
-
-                  {/* Workflow Action */}
-                  {order.status === 'delivered' ? (
-                    <Message severity="success" text={t('orderDelivered')} className="w-full" />
-                  ) : order.status === 'canceled' ? (
-                    <Message severity="error" text={t('orderCanceled')} className="w-full" />
-                  ) : (() => {
-                    const action = getWorkflowAction(order);
-                    return action ? (
-                      <Button
-                        label={updateStatusMutation.isPending ? t('updating') : action.label}
-                        severity={action.severity}
-                        className="w-full"
-                        loading={updateStatusMutation.isPending}
-                        disabled={updateStatusMutation.isPending}
-                        onClick={() => updateStatusMutation.mutate({ orderId: order.orderId, status: action.nextStatus })}
-                      />
-                    ) : null;
-                  })()}
-
-                  {/* Footer */}
-                  <Divider className="my-2" />
-                  <div className="flex align-items-center justify-content-between">
-                    <span className="text-xs font-semibold text-uppercase" style={{ color: 'var(--orderium-text-secondary)', letterSpacing: '0.05em' }}>{t('total')}</span>
-                    <div className="flex align-items-baseline gap-1">
-                      <span className="text-xl font-bold" style={{ color: 'var(--orderium-primary)' }}>{order.totalAmount?.toFixed(2)}</span>
-                      <span className="text-xs font-semibold" style={{ color: 'var(--orderium-text-muted)' }}>{t('currency')}</span>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            ))}
-          </div>
+        {action && (
+          <button
+            onClick={e => { e.stopPropagation(); onAction(order.orderId, action.nextStatus); }}
+            disabled={actionLoading}
+            style={{
+              width: '100%', padding: '0.6rem', borderRadius: '12px',
+              background: actionLoading ? '#9ca3af' : action.bg,
+              color: action.color, border: 'none', cursor: actionLoading ? 'not-allowed' : 'pointer',
+              fontSize: '0.9rem', fontWeight: 700, letterSpacing: '0.01em',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {actionLoading ? '...' : action.label}
+          </button>
         )}
       </div>
     </div>
+  );
+}
+
+export default function Orders() {
+  const { deliveryPerson } = useAuth();
+  const { t, language } = useLanguage();
+  const queryClient = useQueryClient();
+
+  const { data: ordersData, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: ['orders', deliveryPerson?.id],
+    queryFn: () =>
+      deliveryPerson
+        ? deliveryService.getMyOrders(deliveryPerson.id, { page: 1, pageSize: 200 })
+        : Promise.resolve({ success: true, orders: [], total: 0, page: 1, pageSize: 200, totalPages: 0 }),
+    enabled: !!deliveryPerson,
+  });
+
+  const mutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: number; status: 'confirmed' | 'picked_up' }) =>
+      deliveryService.updateOrderStatus(orderId, status, deliveryPerson!.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders', deliveryPerson?.id] });
+      toastSuccess(t('statusUpdated'));
+    },
+    onError: () => toastError(t('statusUpdateFailed')),
+  });
+
+  const allOrders = ordersData?.orders ?? [];
+  const toPickUp = allOrders.filter((o: Order) => ['assigned', 'confirmed'].includes(o.status ?? ''));
+  const activeCount = allOrders.filter((o: Order) => ['picked_up', 'to_delivery', 'in_delivery'].includes(o.status ?? '')).length;
+
+  return (
+    <AppLayout>
+      <div style={{
+        background: `linear-gradient(135deg, ${PRI_DARK} 0%, ${PRI} 60%, #e8891f 100%)`,
+        padding: '1rem 1.25rem 3rem',
+        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.8rem', fontWeight: 600,
+              textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.25rem' }}>
+              {t('myDeliveries')}
+            </p>
+            <h1 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>
+              {deliveryPerson?.name}
+            </h1>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <NotificationBell />
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '10px',
+                width: '38px', height: '38px', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}
+            >
+              <RefreshCw size={18} color="#fff" style={{ animation: isFetching ? 'spin 1s linear infinite' : 'none' }} />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.875rem', flexWrap: 'wrap' }}>
+          <Chip label={`📦 ${toPickUp.length} ${language === 'ar' ? 'للاستلام' : 'à récupérer'}`} />
+          {activeCount > 0 && (
+            <Chip label={`🚚 ${activeCount} ${language === 'ar' ? 'جارية' : 'en cours'}`} color="rgba(255,255,255,0.15)" />
+          )}
+        </div>
+      </div>
+
+      <div style={{ padding: '0 1rem', marginTop: '-1.75rem' }}>
+        {isLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {[0, 1, 2].map(i => <SkeletonCard key={i} />)}
+          </div>
+        ) : error ? (
+          <div style={{ background: '#fef2f2', borderRadius: '16px', padding: '1.25rem',
+            textAlign: 'center', border: '1px solid #fecaca' }}>
+            <p style={{ color: '#dc2626', fontWeight: 700, margin: '0 0 0.5rem' }}>Erreur de chargement</p>
+            <button
+              onClick={() => refetch()}
+              style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: '10px',
+                padding: '0.5rem 1.25rem', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Réessayer
+            </button>
+          </div>
+        ) : toPickUp.length === 0 ? (
+          <div style={{ background: '#fff', borderRadius: '18px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+            <EmptyState message={t('noOrdersAssigned')} />
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {toPickUp.map((order: Order) => (
+              <OrderCard
+                key={order.orderId}
+                order={order}
+                onAction={(id, status) => mutation.mutate({ orderId: id, status })}
+                actionLoading={mutation.isPending}
+              />
+            ))}
+          </div>
+        )}
+        <div style={{ height: '0.5rem' }} />
+      </div>
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </AppLayout>
+  );
+}
+
+function Chip({ label, color }: { label: string; color?: string }) {
+  return (
+    <span style={{
+      background: color ?? 'rgba(255,255,255,0.25)',
+      color: '#fff', fontSize: '0.8rem', fontWeight: 700,
+      borderRadius: '999px', padding: '0.3rem 0.75rem',
+      backdropFilter: 'blur(4px)',
+    }}>
+      {label}
+    </span>
   );
 }

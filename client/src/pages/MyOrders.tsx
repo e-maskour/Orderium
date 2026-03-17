@@ -1,19 +1,17 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
 import { ordersService } from '@/modules/orders';
 import { Order, OrderItem } from '@/modules/orders/orders.interface';
 import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
 import { Sidebar } from 'primereact/sidebar';
 import { Calendar } from 'primereact/calendar';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
-import { ProgressSpinner } from 'primereact/progressspinner';
 import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
-import { Package, MapPin, Calendar as CalendarIcon, ArrowLeft, ShoppingBag, Eye, Search, X, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Package, MapPin, Calendar as CalendarIcon, ShoppingBag, Eye, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toastError } from '@/services/toast.service';
 
@@ -179,332 +177,201 @@ export default function MyOrders() {
 
   if (isLoading) {
     return (
-      <div className="flex align-items-center justify-content-center surface-ground" style={{ minHeight: '100vh' }} dir={dir}>
-        <ProgressSpinner style={{ width: '2rem', height: '2rem' }} strokeWidth="4" />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-ground)' }} dir={dir}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '2.5rem', height: '2.5rem', border: '3px solid var(--surface-border)', borderTopColor: 'var(--primary-color)', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
+          <p style={{ color: 'var(--text-color-secondary)', margin: 0 }}>{t('loading')}</p>
+        </div>
       </div>
     );
   }
 
   if (!user?.customerId) {
     return (
-      <div className="surface-ground py-5 px-3" style={{ minHeight: '100vh' }} dir={dir}>
-        <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
-          <h1 className="text-2xl sm:text-3xl font-bold text-color mb-4">{t('myOrders')}</h1>
-          <div className="surface-card border-round-xl shadow-1 p-6 text-center">
-            <Package style={{ width: '4rem', height: '4rem', color: 'var(--text-color-secondary)', margin: '0 auto 1rem' }} />
-            <h3 className="text-lg font-medium text-color mb-2">{t('cannotLoadOrders')}</h3>
-            <p className="text-color-secondary">{t('noCustomerId')}</p>
-          </div>
+      <div style={{ minHeight: '100vh', background: 'var(--surface-ground)', padding: '1.5rem 1rem' }} dir={dir}>
+        <div style={{ maxWidth: '40rem', margin: '4rem auto', textAlign: 'center' }}>
+          <div className="cl-empty-icon"><Package style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} /></div>
+          <h3 style={{ color: 'var(--text-color)', fontWeight: 600, marginBottom: '0.5rem' }}>{t('cannotLoadOrders')}</h3>
+          <p style={{ color: 'var(--text-color-secondary)' }}>{t('noCustomerId')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="surface-ground py-3 sm:py-4 px-2 sm:px-3" style={{ minHeight: '100vh' }} dir={dir}>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
-        {/* Header */}
-        <div className="mb-4 flex flex-column gap-3">
-          <div className="flex align-items-center justify-content-between">
-            <div className="flex align-items-center gap-2">
-              <Button
-                icon={<ArrowLeft style={{ width: '1rem', height: '1rem', transform: dir === 'rtl' ? 'rotate(180deg)' : 'none' }} />}
-                text
-                rounded
-                onClick={() => navigate('/')}
-              />
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-color flex align-items-center gap-2 m-0">
-                  <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-color)' }} />
-                  {t('myOrders')}
-                </h1>
-                <p className="text-xs text-color-secondary mt-1 hidden sm:block m-0">{t('trackAndManage')}</p>
-              </div>
-            </div>
-          </div>
+    <div style={{ minHeight: '100vh', background: 'var(--surface-ground)' }} dir={dir}>
+      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1rem' }}>
 
-          {/* Filter Button */}
-          <div className="flex justify-content-end">
-            <Button
-              text={!filtersExpanded}
-              onClick={() => setFiltersExpanded(!filtersExpanded)}
-              className="flex align-items-center gap-2 px-3 py-2 border-round-lg font-medium text-sm"
+        {/* Page header */}
+        <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-color)' }} />
+            {t('myOrders')}
+          </h1>
+          <button
+            onClick={() => setFiltersExpanded(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.5rem 1rem', borderRadius: '0.75rem',
+              background: (appliedFilters.orderNumber || appliedFilters.dateRange.start) ? 'var(--primary-color)' : 'var(--surface-card)',
+              color: (appliedFilters.orderNumber || appliedFilters.dateRange.start) ? 'white' : 'var(--text-color)',
+              border: '1px solid var(--surface-border)', cursor: 'pointer',
+              fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s',
+            }}
+          >
+            <Filter style={{ width: '0.875rem', height: '0.875rem' }} />
+            {t('filters')}
+            {(appliedFilters.orderNumber || appliedFilters.dateRange.start) && (
+              <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '9999px', padding: '0.1rem 0.4rem', fontSize: '0.75rem', fontWeight: 700 }}>
+                {[Boolean(appliedFilters.orderNumber), Boolean(appliedFilters.dateRange.start)].filter(Boolean).length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Status filter chips */}
+        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.75rem', marginBottom: '1rem', scrollbarWidth: 'none' }}>
+          {[
+            { key: 'all', label: t('all') },
+            { key: 'pending', label: t('statusPending') },
+            { key: 'assigned', label: t('statusAssigned') },
+            { key: 'confirmed', label: t('statusConfirmed') },
+            { key: 'picked_up', label: t('statusPickedUp') },
+            { key: 'to_delivery', label: t('statusToDelivery') },
+            { key: 'in_delivery', label: t('statusInDelivery') },
+            { key: 'delivered', label: t('statusDelivered') },
+            { key: 'canceled', label: t('statusCanceled') },
+          ].map(f => (
+            <button
+              key={f.key}
+              onClick={() => { setStatusFilter(f.key as typeof statusFilter); setCurrentPage(1); }}
               style={{
-                background: filtersExpanded ? 'var(--primary-color)' : 'var(--surface-card)',
-                color: filtersExpanded ? 'white' : 'var(--text-color)',
-                border: filtersExpanded ? 'none' : '1px solid var(--surface-border)',
-                boxShadow: filtersExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.2s',
+                flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                padding: '0.375rem 0.875rem', borderRadius: '9999px',
+                background: statusFilter === f.key ? 'var(--primary-color)' : 'var(--surface-card)',
+                color: statusFilter === f.key ? 'white' : 'var(--text-color)',
+                border: statusFilter === f.key ? 'none' : '1px solid var(--surface-border)',
+                fontWeight: statusFilter === f.key ? 600 : 400,
+                fontSize: '0.8125rem', cursor: 'pointer', transition: 'all 0.2s',
+                boxShadow: statusFilter === f.key ? '0 2px 8px rgba(5,150,105,0.3)' : 'none',
+                whiteSpace: 'nowrap',
               }}
             >
-              <Filter style={{ width: '0.875rem', height: '0.875rem' }} />
-              <span className="hidden sm:inline">{t('filters')}</span>
-              {filtersExpanded ? (
-                <ChevronUp style={{ width: '0.875rem', height: '0.875rem' }} />
-              ) : (
-                <ChevronDown style={{ width: '0.875rem', height: '0.875rem' }} />
-              )}
-              {(appliedFilters.orderNumber || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && !filtersExpanded && (
-                <span className="px-2 py-1 border-round-xl text-xs font-bold" style={{ background: 'var(--primary-color)', color: 'white', marginInlineStart: '0.25rem' }}>
-                  {[Boolean(appliedFilters.orderNumber), Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end)].filter(Boolean).length}
-                </span>
-              )}
-            </Button>
-          </div>
+              {f.label}
+              <span style={{
+                background: statusFilter === f.key ? 'rgba(255,255,255,0.25)' : 'var(--surface-100)',
+                color: statusFilter === f.key ? 'white' : 'var(--text-color-secondary)',
+                borderRadius: '9999px', padding: '0.05rem 0.375rem', fontSize: '0.7rem', fontWeight: 600,
+              }}>
+                {statusCounts[f.key as keyof typeof statusCounts]}
+              </span>
+            </button>
+          ))}
         </div>
 
-        {/* Delivery Status Filter */}
-        <div className="mb-4">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-            {[
-              { key: 'all', label: t('all'), icon: '📦' },
-              { key: 'pending', label: t('statusPending'), icon: '⏳' },
-              { key: 'assigned', label: t('statusAssigned'), icon: '👤' },
-              { key: 'confirmed', label: t('statusConfirmed'), icon: '✓' },
-              { key: 'picked_up', label: t('statusPickedUp'), icon: '📦' },
-              { key: 'to_delivery', label: t('statusToDelivery'), icon: '⚠️' },
-              { key: 'in_delivery', label: t('statusInDelivery'), icon: '🚗' },
-              { key: 'delivered', label: t('statusDelivered'), icon: '✅' },
-              { key: 'canceled', label: t('statusCanceled'), icon: '❌' }
-            ].map((filter) => (
-              <Button
-                key={filter.key}
-                text={statusFilter !== filter.key}
-                onClick={() => setStatusFilter(filter.key as typeof statusFilter)}
-                className="flex align-items-center gap-1 px-2 sm:px-3 py-1 border-round-md text-xs sm:text-sm font-medium white-space-nowrap"
-                style={{
-                  background: statusFilter === filter.key ? '#f59e0b' : 'var(--surface-50)',
-                  color: statusFilter === filter.key ? 'white' : 'var(--text-color)',
-                  border: statusFilter === filter.key ? 'none' : '1px solid var(--surface-border)',
-                  boxShadow: statusFilter === filter.key ? '0 4px 6px rgba(245,158,11,0.3)' : 'none',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span className="text-xs">{filter.icon}</span>
-                <span className="hidden sm:inline">{filter.label}</span>
-                <span
-                  className="px-1 py-0 border-round-xl text-xs font-semibold"
-                  style={{
-                    background: statusFilter === filter.key ? 'rgba(255,255,255,0.25)' : 'var(--surface-200)',
-                    color: statusFilter === filter.key ? 'white' : 'var(--text-color-secondary)',
-                  }}
-                >
-                  {statusCounts[filter.key as keyof typeof statusCounts]}
-                </span>
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Filters Sidebar */}
-        <Sidebar
-          visible={filtersExpanded}
-          onHide={() => setFiltersExpanded(false)}
-          position={dir === 'rtl' ? 'left' : 'right'}
-          style={{ width: '32rem' }}
-          header={
-            <div className="flex align-items-center gap-2">
-              <Filter style={{ width: '1.25rem', height: '1.25rem' }} />
-              <span className="text-lg font-bold">{t('filters')}</span>
-            </div>
-          }
-        >
-          <div className="flex flex-column gap-5 p-3">
-            {/* Search Section */}
-            <div className="pb-4 border-bottom-1 surface-border">
-              <label className="text-xs font-bold text-color uppercase mb-3 block flex align-items-center gap-2" style={{ letterSpacing: '0.05em' }}>
-                <Search style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)' }} />
-                {t('search')}
-              </label>
-              <div>
-                <label className="text-xs font-semibold text-color-secondary mb-2 block">{t('orderNumber')}</label>
-                <span className="p-input-icon-right w-full">
-                  {orderNumberSearch && (
-                    <i className="pi pi-times cursor-pointer" onClick={() => setOrderNumberSearch('')} />
-                  )}
-                  <InputText
-                    placeholder={t('enterOrderNumber')}
-                    value={orderNumberSearch}
-                    onChange={(e) => setOrderNumberSearch(e.target.value)}
-                    className="w-full"
-                  />
-                </span>
-              </div>
-            </div>
-
-            {/* Date Range Section */}
-            <div>
-              <label className="text-xs font-bold text-color uppercase mb-3 block flex align-items-center gap-2" style={{ letterSpacing: '0.05em' }}>
-                <CalendarIcon style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)' }} />
-                {t('dateRange')}
-              </label>
-              <Calendar
-                value={dateRange}
-                onChange={(e) => setDateRange(e.value as Date[] | undefined)}
-                selectionMode="range"
-                placeholder={t('selectDate')}
-                className="w-full"
-                showIcon
-                readOnlyInput
-              />
-            </div>
-          </div>
-
-          {/* Panel Footer */}
-          <div className="flex gap-3 p-3 border-top-1 surface-border mt-auto" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'var(--surface-50)' }}>
-            <Button
-              label={t('reset')}
-              outlined
-              className="flex-1"
-              onClick={() => {
-                setOrderNumberSearch('');
-                setDateRange(undefined);
-                setStatusFilter('all');
-                setCurrentPage(1);
-                setAppliedFilters({
-                  orderNumber: '',
-                  dateRange: { start: undefined, end: undefined },
-                });
-                setFiltersExpanded(false);
-              }}
-            />
-            <Button
-              label={t('apply')}
-              className="flex-1"
-              onClick={() => {
-                setCurrentPage(1);
-                setAppliedFilters({
-                  orderNumber: orderNumberSearch,
-                  dateRange: {
-                    start: dateRange?.[0],
-                    end: dateRange?.[1],
-                  },
-                });
-                setFiltersExpanded(false);
-              }}
-            />
-          </div>
-        </Sidebar>
-
-        {/* Orders List */}
-        {isLoading ? (
-          <div className="flex align-items-center justify-content-center py-8">
-            <ProgressSpinner style={{ width: '2.5rem', height: '2.5rem' }} strokeWidth="4" />
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="surface-card border-round-xl shadow-1 border-1 surface-border p-6 text-center">
-            <Package style={{ width: '4rem', height: '4rem', color: 'var(--text-color-secondary)', margin: '0 auto 1rem' }} />
-            <h3 className="text-lg font-medium text-color mb-2">{t('noOrdersFound')}</h3>
-            <p className="text-color-secondary">
+        {/* Orders list */}
+        {orders.length === 0 ? (
+          <div className="cl-empty" style={{ padding: '4rem 0' }}>
+            <div className="cl-empty-icon"><Package style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} /></div>
+            <h3 style={{ fontWeight: 600, color: 'var(--text-color)', margin: '0 0 0.5rem' }}>{t('noOrdersFound')}</h3>
+            <p style={{ color: 'var(--text-color-secondary)', margin: 0, fontSize: '0.875rem' }}>
               {appliedFilters.orderNumber ? t('noResultsMessage') : t('noOrdersYet')}
             </p>
           </div>
         ) : (
           <>
-            {/* Pagination Info Bar */}
+            {/* Pagination bar */}
             {totalCount > 0 && (
-              <div className="px-2 py-2 flex align-items-center justify-content-between text-sm">
-                <div className="text-color-secondary hidden md:block">
-                  {t('showing')} <span className="font-semibold text-color">{startIndex}</span> {t('to')}
-                  {' '}<span className="font-semibold text-color">{endIndex}</span> {t('of')}{' '}
-                  <span className="font-semibold text-color">{totalCount}</span> {t('results')}
-                </div>
-
-                <div className="flex align-items-center gap-2">
-                  <label className="text-xs font-medium text-color-secondary hidden lg:inline">{t('perPage')}</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-color-secondary)' }}>
+                  {t('showing')} <strong style={{ color: 'var(--text-color)' }}>{startIndex}–{endIndex}</strong> {t('of')} <strong style={{ color: 'var(--text-color)' }}>{totalCount}</strong>
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Dropdown
                     value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(e.value);
-                      setCurrentPage(1);
-                    }}
-                    options={[
-                      { label: '10', value: 10 },
-                      { label: '20', value: 20 },
-                      { label: '50', value: 50 },
-                      { label: '100', value: 100 },
-                    ]}
-                    optionLabel="label"
-                    optionValue="value"
-                    style={{ height: '2rem' }}
+                    onChange={e => { setPageSize(e.value); setCurrentPage(1); }}
+                    options={[{ label: '10', value: 10 }, { label: '20', value: 20 }, { label: '50', value: 50 }]}
+                    optionLabel="label" optionValue="value"
+                    style={{ height: '2.25rem', fontSize: '0.8125rem' }}
                   />
-                </div>
-
-                <div className="flex align-items-center gap-1 ml-auto">
-                  <Button
-                    icon={<ChevronLeft style={{ width: '0.875rem', height: '0.875rem' }} />}
-                    text
-                    size="small"
+                  <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                  />
-                  <span className="text-sm font-medium text-color px-2">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <Button
-                    icon={<ChevronRight style={{ width: '0.875rem', height: '0.875rem' }} />}
-                    text
-                    size="small"
+                    className="cl-page-btn"
+                    style={{ opacity: currentPage === 1 ? 0.4 : 1 }}
+                  >
+                    <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
+                  </button>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-color)' }}>{currentPage} / {totalPages}</span>
+                  <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                  />
+                    className="cl-page-btn"
+                    style={{ opacity: currentPage === totalPages ? 0.4 : 1 }}
+                  >
+                    <ChevronRight style={{ width: '1rem', height: '1rem' }} />
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Orders Grid */}
-            <div className="grid">
-              {orders.map((order) => {
+            {/* Order cards grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              {orders.map(order => {
                 const status = getStatusStyle(order.deliveryStatus);
                 return (
-                  <div key={order.id} className="col-12 sm:col-6 lg:col-4">
-                    <div className="surface-card border-round-xl shadow-1 border-1 surface-border overflow-hidden h-full">
-                      {/* Order Header */}
-                      <div className="p-3 border-bottom-1 surface-border" style={{ background: 'linear-gradient(to right, rgba(var(--primary-color-rgb,16,185,129),0.05), rgba(var(--primary-color-rgb,16,185,129),0.1))' }}>
-                        <div className="flex align-items-center justify-content-between mb-1">
-                          <div className="flex align-items-center gap-1">
-                            <Package style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)' }} />
-                            <span className="text-xs font-medium text-color-secondary">{t('orderNumber')}</span>
-                          </div>
-                          <span className="px-2 py-1 border-round-xl text-xs font-semibold" style={{ background: status.bg, color: status.color }}>
-                            {status.label}
-                          </span>
-                        </div>
-                        <p className="font-bold text-base text-color m-0" style={{ fontFamily: 'monospace' }}>{order.orderNumber}</p>
+                  <div key={order.id} style={{ background: 'var(--surface-card)', borderRadius: '1rem', border: '1px solid var(--surface-border)', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+                    {/* Card header */}
+                    <div style={{ padding: '0.875rem', borderBottom: '1px solid var(--surface-border)', background: 'var(--surface-50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Package style={{ width: '1rem', height: '1rem', color: 'var(--primary-color)', flexShrink: 0 }} />
+                        <span style={{ fontWeight: 700, fontSize: '0.9375rem', fontFamily: 'monospace', color: 'var(--text-color)' }}>{order.orderNumber}</span>
+                      </div>
+                      <span style={{ background: status.bg, color: status.color, padding: '0.2rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        {status.label}
+                      </span>
+                    </div>
+
+                    {/* Card body */}
+                    <div style={{ padding: '0.875rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: 'var(--text-color-secondary)' }}>
+                        <CalendarIcon style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0 }} />
+                        {formatDate(order.dateCreated)}
                       </div>
 
-                      {/* Order Details */}
-                      <div className="p-3 flex flex-column gap-2">
-                        <div className="flex align-items-center gap-2 text-xs text-color-secondary">
-                          <CalendarIcon style={{ width: '0.875rem', height: '0.875rem' }} />
-                          <span>{formatDate(order.dateCreated)}</span>
-                        </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.625rem', borderTop: '1px solid var(--surface-border)' }}>
+                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-color-secondary)' }}>{t('totalAmount')}</span>
+                        <span style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--primary-color)' }}>{formatCurrency(order.total || 0, language)}</span>
+                      </div>
 
-                        <div className="flex align-items-center justify-content-between pt-2 border-top-1 surface-border">
-                          <span className="text-xs font-medium text-color-secondary">{t('totalAmount')}</span>
-                          <span className="text-lg font-bold text-primary">{formatCurrency(order.total || 0, language)}</span>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 pt-2">
-                          <Button
-                            label={t('viewDetails')}
-                            icon={<Eye style={{ width: '0.875rem', height: '0.875rem', marginInlineEnd: '0.25rem' }} />}
-                            outlined
-                            size="small"
-                            className="flex-1"
-                            onClick={() => handleViewItems(order)}
-                          />
-                          {(order.deliveryStatus !== 'delivered' && order.deliveryStatus !== 'canceled') && (
-                            <Button
-                              label={t('track')}
-                              icon={<MapPin style={{ width: '0.875rem', height: '0.875rem', marginInlineEnd: '0.25rem' }} />}
-                              size="small"
-                              className="flex-1"
-                              onClick={() => setSelectedOrder(order.orderNumber)}
-                            />
-                          )}
-                        </div>
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                        <button
+                          onClick={() => handleViewItems(order)}
+                          style={{
+                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                            padding: '0.625rem', borderRadius: '0.625rem', border: '1px solid var(--surface-border)',
+                            background: 'var(--surface-50)', color: 'var(--text-color)', cursor: 'pointer',
+                            fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.15s',
+                          }}
+                        >
+                          <Eye style={{ width: '0.875rem', height: '0.875rem' }} />
+                          {t('viewDetails')}
+                        </button>
+                        {order.deliveryStatus !== 'delivered' && order.deliveryStatus !== 'canceled' && (
+                          <button
+                            onClick={() => setSelectedOrder(order.orderNumber)}
+                            style={{
+                              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                              padding: '0.625rem', borderRadius: '0.625rem', border: 'none',
+                              background: 'var(--primary-color)', color: 'white', cursor: 'pointer',
+                              fontSize: '0.8125rem', fontWeight: 600, transition: 'all 0.15s',
+                            }}
+                          >
+                            <MapPin style={{ width: '0.875rem', height: '0.875rem' }} />
+                            {t('track')}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -515,141 +382,136 @@ export default function MyOrders() {
         )}
       </div>
 
-      {/* Tracking Modal */}
+      {/* Filters Sidebar */}
+      <Sidebar
+        visible={filtersExpanded}
+        onHide={() => setFiltersExpanded(false)}
+        position={dir === 'rtl' ? 'left' : 'right'}
+        style={{ width: '24rem' }}
+        header={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Filter style={{ width: '1.125rem', height: '1.125rem' }} />
+            <span style={{ fontWeight: 700, fontSize: '1rem' }}>{t('filters')}</span>
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem', height: '100%' }}>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-color-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}>
+              <Search style={{ width: '0.875rem', height: '0.875rem' }} /> {t('orderNumber')}
+            </label>
+            <InputText
+              placeholder={t('enterOrderNumber')}
+              value={orderNumberSearch}
+              onChange={e => setOrderNumberSearch(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-color-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}>
+              <CalendarIcon style={{ width: '0.875rem', height: '0.875rem' }} /> {t('dateRange')}
+            </label>
+            <Calendar
+              value={dateRange}
+              onChange={e => setDateRange(e.value as Date[] | undefined)}
+              selectionMode="range"
+              placeholder={t('selectDate')}
+              className="w-full"
+              showIcon readOnlyInput
+            />
+          </div>
+
+          <div style={{ marginTop: 'auto', display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={() => {
+                setOrderNumberSearch(''); setDateRange(undefined); setStatusFilter('all'); setCurrentPage(1);
+                setAppliedFilters({ orderNumber: '', dateRange: { start: undefined, end: undefined } });
+                setFiltersExpanded(false);
+              }}
+              style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', background: 'var(--surface-card)', color: 'var(--text-color)', cursor: 'pointer', fontWeight: 500 }}
+            >
+              {t('reset')}
+            </button>
+            <button
+              onClick={() => {
+                setCurrentPage(1);
+                setAppliedFilters({ orderNumber: orderNumberSearch, dateRange: { start: dateRange?.[0], end: dateRange?.[1] } });
+                setFiltersExpanded(false);
+              }}
+              className="cl-btn-primary"
+              style={{ flex: 1, padding: '0.75rem' }}
+            >
+              {t('apply')}
+            </button>
+          </div>
+        </div>
+      </Sidebar>
+
+      {/* Tracking Dialog */}
       <Dialog
         visible={!!selectedOrder}
         onHide={() => setSelectedOrder(null)}
-        header={
-          <div className="flex align-items-center gap-2">
-            <MapPin style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-color)' }} />
-            <span>{t('trackOrder')}</span>
-          </div>
-        }
-        modal
-        style={{ width: '95vw', maxWidth: '42rem' }}
+        header={<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPin style={{ width: '1.125rem', height: '1.125rem', color: 'var(--primary-color)' }} /><span>{t('trackOrder')}</span></div>}
+        modal style={{ width: '95vw', maxWidth: '42rem' }}
         contentStyle={{ maxHeight: '80vh', overflow: 'auto' }}
       >
-        <div className="mt-3">
-          {selectedOrder && user?.customerId && (
-            <>
-              <div className="border-round-lg p-3 mb-3" style={{ background: 'var(--surface-100)' }}>
-                <p className="text-xs text-color-secondary m-0">{t('orderNumber')}</p>
-                <p className="font-bold text-primary m-0" style={{ fontFamily: 'monospace' }}>{selectedOrder}</p>
-              </div>
-              <OrderTracking orderNumber={selectedOrder} customerId={user.customerId} />
-            </>
-          )}
-        </div>
-      </Dialog>
-
-      {/* Order Items Modal */}
-      <Dialog
-        visible={!!selectedOrderItems}
-        onHide={() => setSelectedOrderItems(null)}
-        header={
-          <div className="flex align-items-center gap-2">
-            <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-color)' }} />
-            <span>{t('orderDetails')}</span>
+        {selectedOrder && user?.customerId && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <div style={{ background: 'var(--surface-100)', borderRadius: '0.75rem', padding: '0.875rem', marginBottom: '1rem' }}>
+              <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('orderNumber')}</p>
+              <p style={{ margin: 0, fontWeight: 700, color: 'var(--primary-color)', fontFamily: 'monospace' }}>{selectedOrder}</p>
+            </div>
+            <OrderTracking orderNumber={selectedOrder} customerId={user.customerId} />
           </div>
-        }
-        modal
-        style={{ width: '95vw', maxWidth: '48rem' }}
-        contentStyle={{ padding: 0 }}
-        footer={
-          selectedOrderItems && (
-            <div className="flex flex-column gap-3">
-              <div className="flex align-items-center justify-content-between">
-                <span className="text-lg font-semibold text-color">{t('total')}</span>
-                <span className="text-2xl font-bold text-primary">{formatCurrency(selectedOrderItems.order.total || 0, language)}</span>
-              </div>
-              <div className="grid">
-                <div className="col-6">
-                  <Button
-                    label={t('receipt')}
-                    icon={<Eye style={{ width: '1rem', height: '1rem', marginInlineEnd: '0.5rem' }} />}
-                    outlined
-                    className="w-full"
-                    onClick={() => handlePreview('receipt')}
-                  />
-                </div>
-                <div className="col-6">
-                  <Button
-                    label={t('deliveryNote')}
-                    icon={<Eye style={{ width: '1rem', height: '1rem', marginInlineEnd: '0.5rem' }} />}
-                    outlined
-                    className="w-full"
-                    onClick={() => handlePreview('invoice')}
-                  />
-                </div>
-              </div>
-            </div>
-          )
-        }
-      >
-        {selectedOrderItems && (
-          <>
-            {/* Order Info */}
-            <div className="px-4 pb-3">
-              <div className="border-round-lg p-3" style={{ background: 'var(--surface-100)' }}>
-                <div className="grid">
-                  <div className="col-6">
-                    <p className="text-xs text-color-secondary mb-1 m-0">{t('orderNumber')}</p>
-                    <p className="font-bold text-primary m-0" style={{ fontFamily: 'monospace' }}>{selectedOrderItems.order.orderNumber}</p>
-                  </div>
-                  <div className="col-6">
-                    <p className="text-xs text-color-secondary mb-1 m-0">{t('date')}</p>
-                    <p className="font-medium m-0">{formatDate(selectedOrderItems.order.dateCreated)}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Items List */}
-            <div className="px-4">
-              <div className="flex flex-column gap-2 pb-3">
-                <h3 className="font-semibold text-color flex align-items-center gap-2 m-0 py-2 sticky surface-card" style={{ top: 0 }}>
-                  <Package style={{ width: '1rem', height: '1rem' }} />
-                  {t('products')}
-                  <span className="text-sm text-color-secondary">({selectedOrderItems.items.length})</span>
-                </h3>
-
-                {selectedOrderItems.items.length === 0 ? (
-                  <p className="text-center text-color-secondary py-5">{t('noProductsInCategory')}</p>
-                ) : (
-                  <div className="flex flex-column gap-2">
-                    {selectedOrderItems.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex align-items-center justify-content-between p-3 surface-card border-1 surface-border border-round-lg"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium text-color m-0">
-                            {item.productName || `${t('cartProduct')} ${item.productId}`}
-                          </p>
-                          <p className="text-sm text-color-secondary m-0">
-                            {t('quantity')}: {item.quantity} × {formatCurrency(item.unitPrice, language)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-primary m-0">{formatCurrency(item.total, language)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
         )}
       </Dialog>
 
-      {/* PDF Preview Modal */}
-      <PDFPreviewModal
-        isOpen={showPDFPreview}
-        onClose={() => setShowPDFPreview(false)}
-        pdfUrl={pdfUrl}
-        title={pdfTitle}
-      />
+      {/* Order Items Dialog */}
+      <Dialog
+        visible={!!selectedOrderItems}
+        onHide={() => setSelectedOrderItems(null)}
+        header={<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShoppingBag style={{ width: '1.125rem', height: '1.125rem', color: 'var(--primary-color)' }} /><span>{t('orderDetails')}</span></div>}
+        modal style={{ width: '95vw', maxWidth: '48rem' }}
+        contentStyle={{ padding: 0 }}
+        footer={selectedOrderItems && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{t('total')}</span>
+              <span style={{ fontWeight: 800, fontSize: '1.375rem', color: 'var(--primary-color)' }}>{formatCurrency(selectedOrderItems.order.total || 0, language)}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button onClick={() => handlePreview('receipt')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', background: 'var(--surface-card)', cursor: 'pointer', fontWeight: 500 }}>
+                <Eye style={{ width: '0.875rem', height: '0.875rem' }} /> {t('receipt')}
+              </button>
+              <button onClick={() => handlePreview('invoice')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', background: 'var(--surface-card)', cursor: 'pointer', fontWeight: 500 }}>
+                <Eye style={{ width: '0.875rem', height: '0.875rem' }} /> {t('deliveryNote')}
+              </button>
+            </div>
+          </div>
+        )}
+      >
+        {selectedOrderItems && (
+          <div style={{ padding: '1rem' }}>
+            <div style={{ background: 'var(--surface-100)', borderRadius: '0.75rem', padding: '0.875rem', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div><p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('orderNumber')}</p><p style={{ margin: 0, fontWeight: 700, color: 'var(--primary-color)', fontFamily: 'monospace' }}>{selectedOrderItems.order.orderNumber}</p></div>
+              <div><p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('date')}</p><p style={{ margin: 0, fontWeight: 500 }}>{formatDate(selectedOrderItems.order.dateCreated)}</p></div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {selectedOrderItems.items.map(item => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', background: 'var(--surface-card)' }}>
+                  <div>
+                    <p style={{ margin: '0 0 0.25rem', fontWeight: 500, color: 'var(--text-color)' }}>{item.productName || `${t('cartProduct')} ${item.productId}`}</p>
+                    <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-color-secondary)' }}>{item.quantity} × {formatCurrency(item.unitPrice, language)}</p>
+                  </div>
+                  <span style={{ fontWeight: 700, color: 'var(--primary-color)' }}>{formatCurrency(item.total, language)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Dialog>
+
+      <PDFPreviewModal isOpen={showPDFPreview} onClose={() => setShowPDFPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
     </div>
   );
 }

@@ -4,9 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { TranslationKey } from '@/lib/i18n';
-import { Button } from 'primereact/button';
 import { OverlayPanel } from 'primereact/overlaypanel';
-import { Badge } from 'primereact/badge';
 
 interface Notification {
   Id: number;
@@ -172,34 +170,34 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
 
   return (
     <div dir={dir}>
-      <Button
-        text
-        rounded
-        severity="secondary"
-        className="p-overlay-badge"
+      <button
+        className="cl-icon-btn p-overlay-badge"
+        style={{ width: '2.25rem', height: '2.25rem', position: 'relative' }}
         onClick={(e) => op.current?.toggle(e)}
         aria-label={t('notifications')}
       >
         <Bell style={{ width: '1.25rem', height: '1.25rem' }} />
         {unreadCount > 0 && (
-          <Badge value={unreadCount > 9 ? '9+' : unreadCount.toString()} severity="danger" />
+          <span
+            className="absolute flex align-items-center justify-content-center border-round-xl font-bold"
+            style={{ top: '-0.25rem', insetInlineEnd: '-0.25rem', minWidth: '1.125rem', height: '1.125rem', padding: '0 0.2rem', background: '#ef4444', color: 'white', fontSize: '0.6rem' }}
+          >
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
         )}
-      </Button>
+      </button>
 
       <OverlayPanel ref={op} style={{ width: '20rem', maxWidth: 'calc(100vw - 2rem)' }} dir={dir}>
         <div className="flex align-items-center justify-content-between pb-3 mb-3 border-bottom-1 surface-border">
           <h3 className="font-semibold text-color m-0">{t('notifications')}</h3>
           {unreadCount > 0 && (
-            <Button
-              text
-              size="small"
+            <button
               onClick={() => markAllAsReadMutation.mutate()}
-              className="p-0"
-              style={{ fontSize: '0.75rem' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#2563eb', fontSize: '0.75rem', fontWeight: 500, padding: '0.25rem' }}
             >
-              <CheckCheck style={{ width: '0.875rem', height: '0.875rem', marginInlineEnd: '0.25rem' }} />
+              <CheckCheck style={{ width: '0.875rem', height: '0.875rem' }} />
               {t('markAllAsRead')}
-            </Button>
+            </button>
           )}
         </div>
         <div style={{ maxHeight: '25rem', overflowY: 'auto' }}>
@@ -236,19 +234,15 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
                       <div className="flex align-items-center justify-content-between">
                         <p className="text-xs text-color-secondary m-0">{formatDate(notification.DateCreated)}</p>
                         {!notification.IsRead && (
-                          <Button
-                            text
-                            rounded
-                            severity="info"
-                            size="small"
-                            className="p-1"
+                          <button
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem', borderRadius: '50%', color: '#2563eb' }}
                             onClick={(e) => {
                               e.stopPropagation();
                               markAsReadMutation.mutate(notification.Id);
                             }}
                           >
                             <Check style={{ width: '0.875rem', height: '0.875rem' }} />
-                          </Button>
+                          </button>
                         )}
                       </div>
                     </div>

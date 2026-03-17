@@ -49,18 +49,19 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
   };
 
   return (
-    <div className="w-full" dir={dir}>
-      <span className="p-input-icon-left w-full">
-        <i className="pi pi-search" />
-        <InputText
-          ref={inputRef}
-          type="text"
-          placeholder={t('searchPlaceholder')}
-          value={value}
-          onChange={handleInput}
-          className="w-full"
-        />
+    <div className="cl-search-wrap" dir={dir}>
+      <span className="cl-search-icon">
+        <i className="pi pi-search" style={{ fontSize: '1rem' }} />
       </span>
+      <InputText
+        ref={inputRef}
+        type="text"
+        placeholder={t('searchPlaceholder')}
+        value={value}
+        onChange={handleInput}
+        className="w-full"
+        style={{ paddingInlineStart: '2.75rem', height: '2.875rem', borderRadius: '9999px', border: '1.5px solid var(--surface-border)', background: 'var(--surface-50)', fontSize: '0.9375rem' }}
+      />
     </div>
   );
 };

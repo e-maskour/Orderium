@@ -349,14 +349,6 @@ export default function DeliveryPersons() {
                     </div>
                   ) : (
                     <>
-                      <style>{`
-                        .dp-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-                        .dp-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
-                        .dp-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
-                        .dp-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-                        .dp-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                        .dp-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
-                      `}</style>
                       <DataTable
                         className="dp-datatable"
                         value={filteredPersons}
@@ -371,7 +363,7 @@ export default function DeliveryPersons() {
                         removableSort
                         emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
                       >
                         <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                         <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (

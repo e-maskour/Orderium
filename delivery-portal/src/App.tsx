@@ -9,6 +9,10 @@ import { Toaster as SileoToaster } from 'sileo';
 import 'sileo/styles.css';
 import Login from './pages/Login';
 import Orders from './pages/Orders';
+import ActiveOrders from './pages/ActiveOrders';
+import DeliveredOrders from './pages/DeliveredOrders';
+import Profile from './pages/Profile';
+import OrderDetail from './pages/OrderDetail';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +47,38 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Orders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/orders/:orderId"
+                  element={
+                    <ProtectedRoute>
+                      <OrderDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/active"
+                  element={
+                    <ProtectedRoute>
+                      <ActiveOrders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/delivered"
+                  element={
+                    <ProtectedRoute>
+                      <DeliveredOrders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
                     </ProtectedRoute>
                   }
                 />

@@ -4,6 +4,7 @@ import App from './App.tsx';
 import '@orderium/ui/styles.css';
 import './theme.css';
 import './GlobalOverlayPanel.css';
+import './DataTableTheme.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -169,6 +169,30 @@ export const translations = {
     'status.in_delivery': 'قيد التوصيل',
     'status.delivered': 'تم التسليم',
     'status.canceled': 'ملغي',
+
+    // Bottom nav tabs
+    ordersTab: 'طلباتي',
+    inProgressTab: 'جارية',
+    deliveredTab: 'مسلّمة',
+    profileTab: 'ملفي',
+
+    // Order detail / actions
+    backToOrders: 'رجوع',
+    callCustomer: 'اتصال',
+    viewOnMaps: 'التنقل',
+    orderItems: 'محتوى الطلب',
+    itemsCount: 'مقالة',
+    articlesSuffix: 'مقالة',
+
+    // Empty states
+    noInProgressOrders: 'لا طلبات جارية',
+    noDeliveredOrders: 'لا توصيلات مسلّمة',
+
+    // Profile
+    driverProfile: 'بيانات السائق',
+    available: 'متاح',
+    unavailable: 'غير متاح',
+
   },
   fr: {
     // App
@@ -334,6 +358,32 @@ export const translations = {
     'status.in_delivery': 'En livraison',
     'status.delivered': 'Livrée',
     'status.canceled': 'Annulée',
+
+    // Bottom nav tabs
+    ordersTab: 'Commandes',
+    inProgressTab: 'En cours',
+    deliveredTab: 'Livrées',
+    profileTab: 'Profil',
+
+    // Order detail / actions
+    backToOrders: 'Retour',
+    callCustomer: 'Appeler',
+    viewOnMaps: 'Naviguer',
+    orderItems: 'Contenu de la commande',
+    itemsCount: 'article',
+    articlesSuffix: 'articles',
+
+    // Empty states
+    noInProgressOrders: 'Aucune livraison en cours',
+    noDeliveredOrders: 'Aucune livraison effectuée',
+
+    // Profile
+    driverProfile: 'Mon Profil',
+    available: 'Disponible',
+    unavailable: 'Non disponible',
+
+    // Currency
+    currency: 'DH',
   },
 };
 

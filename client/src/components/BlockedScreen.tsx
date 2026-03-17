@@ -76,18 +76,8 @@ export function BlockedScreen({ reason }: Props) {
                 </p>
                 <button
                     onClick={() => window.location.reload()}
-                    style={{
-                        display: 'inline-block',
-                        padding: '0.55rem 1.5rem',
-                        background: accent,
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        marginBottom: '1.25rem',
-                    }}
+                    className="cl-btn-primary"
+                    style={{ marginBottom: '1.25rem', padding: '0.625rem 2rem' }}
                 >
                     Retry
                 </button>

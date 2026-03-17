@@ -1,10 +1,12 @@
 import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { PDFService } from './pdf.service';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
+@PortalRoute()
 @Controller('pdf')
 export class PDFController {
-  constructor(private readonly pdfService: PDFService) {}
+  constructor(private readonly pdfService: PDFService) { }
 
   /**
    * Generate PDF for invoice

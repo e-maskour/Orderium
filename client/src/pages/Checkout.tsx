@@ -4,10 +4,8 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency, validateMoroccanPhone } from '@/lib/i18n';
-import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
-import { ProgressSpinner } from 'primereact/progressspinner';
 import { ArrowLeft, ArrowRight, Package } from 'lucide-react';
 import { toastError } from '@/services/toast.service';
 import { partnersService, ordersService, Partner } from '@/modules';
@@ -232,15 +230,15 @@ const Checkout = () => {
 
   if (items.length === 0) {
     return (
-      <div className="flex align-items-center justify-content-center p-4 surface-ground" style={{ minHeight: '100vh' }} dir={dir}>
-        <div className="text-center">
-          <div className="flex align-items-center justify-content-center border-circle mx-auto mb-4" style={{ width: '5rem', height: '5rem', background: 'var(--surface-100)' }}>
-            <Package style={{ width: '2.5rem', height: '2.5rem', color: 'var(--text-color-secondary)' }} />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: 'var(--surface-ground)' }} dir={dir}>
+        <div style={{ textAlign: 'center', maxWidth: '24rem' }}>
+          <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: 'var(--surface-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+            <Package style={{ width: '2.5rem', height: '2.5rem', color: 'var(--text-color-secondary)', opacity: 0.5 }} />
           </div>
-          <h2 className="text-xl font-semibold text-color mb-2">{t('emptyCart')}</h2>
-          <p className="text-color-secondary mb-4">{t('emptyCartMessage')}</p>
-          <Link to="/">
-            <Button label={t('continueShopping')} />
+          <h2 style={{ fontWeight: 700, color: 'var(--text-color)', marginBottom: '0.5rem' }}>{t('emptyCart')}</h2>
+          <p style={{ color: 'var(--text-color-secondary)', marginBottom: '1.5rem' }}>{t('emptyCartMessage')}</p>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <button className="cl-btn-primary" style={{ padding: '0.875rem 2rem' }}>{t('continueShopping')}</button>
           </Link>
         </div>
       </div>
@@ -248,83 +246,63 @@ const Checkout = () => {
   }
 
   return (
-    <div className="surface-ground" style={{ minHeight: '100vh' }} dir={dir}>
-      {/* Header */}
-      <header className="sticky surface-card shadow-1 border-bottom-1 surface-border" style={{ top: 0, zIndex: 40, backdropFilter: 'blur(8px)' }}>
-        <div className="px-3 sm:px-4 flex align-items-center gap-3" style={{ height: '3.5rem' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--surface-ground)' }} dir={dir}>
+      {/* Sticky header */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 40, background: 'var(--surface-card)', borderBottom: '1px solid var(--surface-border)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0 1rem', height: '3.5rem' }}>
           <Link to="/">
-            <Button icon={<BackIcon style={{ width: '1.125rem', height: '1.125rem' }} />} text rounded aria-label={t('goBack')} />
+            <button style={{ width: '2.25rem', height: '2.25rem', borderRadius: '50%', border: 'none', background: 'var(--surface-100)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label={t('goBack')}>
+              <BackIcon style={{ width: '1.125rem', height: '1.125rem', color: 'var(--text-color)' }} />
+            </button>
           </Link>
-          <h1 className="text-lg font-bold text-color">{t('checkoutTitle')}</h1>
+          <h1 style={{ margin: 0, fontWeight: 700, fontSize: '1.0625rem', color: 'var(--text-color)' }}>{t('checkoutTitle')}</h1>
         </div>
       </header>
 
-      <main className="px-3 sm:px-4 py-4 sm:py-5">
+      <main style={{ padding: '1rem', maxWidth: '72rem', margin: '0 auto' }}>
         <div className="grid">
-          {/* Form */}
+          {/* Form column */}
           <div className="col-12 lg:col-6">
-            <form onSubmit={handleSubmit} className="flex flex-column gap-4">
-              <div className="surface-card border-round-xl sm:border-round-2xl p-4 sm:p-5 shadow-1">
-                <h2 className="text-base sm:text-lg font-semibold text-color mb-3">{t('customerInfo')}</h2>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'var(--surface-card)', borderRadius: '1.25rem', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <h2 style={{ margin: '0 0 1rem', fontWeight: 600, fontSize: '1rem', color: 'var(--text-color)' }}>{t('customerInfo')}</h2>
 
-                <div className="flex flex-column gap-4">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {/* Phone */}
-                  <div className="flex flex-column gap-2">
-                    <div className="flex align-items-center justify-content-between">
-                      <label htmlFor="phone" className="font-medium">{t('phone')} *</label>
-                      {isSearchingCustomer && (
-                        <span className="text-xs text-color-secondary flex align-items-center gap-1">
-                          <ProgressSpinner style={{ width: '0.75rem', height: '0.75rem' }} strokeWidth="6" />
-                          {t('searching')}
-                        </span>
-                      )}
-                      {existingCustomer && (
-                        <span className="text-xs px-2 py-1 border-round-xl" style={{ background: '#dcfce7', color: '#15803d' }}>
-                          {t('existingCustomer')}
-                        </span>
-                      )}
+                  <div className="cl-field">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                      <label className="cl-label" htmlFor="phone">{t('phone')} *</label>
+                      {isSearchingCustomer && <span style={{ fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{t('searching')}…</span>}
+                      {existingCustomer && <span style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#15803d', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontWeight: 600 }}>{t('existingCustomer')}</span>}
                     </div>
                     <InputText
-                      id="phone"
-                      type="tel"
+                      id="phone" type="tel"
                       value={formData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
+                      onChange={e => updateField('phone', e.target.value)}
                       placeholder={t('phonePlaceholder')}
-                      className={[
-                        'w-full',
-                        errors.phone ? 'p-invalid' : '',
-                        existingCustomer ? 'border-green-500' : '',
-                      ].filter(Boolean).join(' ')}
-                      style={{ height: '3rem', background: 'var(--surface-100)' }}
-                      dir="ltr"
-                      autoFocus
-                      disabled
+                      className={`w-full${errors.phone ? ' p-invalid' : ''}${existingCustomer ? ' border-green-500' : ''}`}
+                      style={{ height: '3rem' }}
+                      dir="ltr" autoFocus disabled
                     />
-                    {errors.phone && (
-                      <small className="p-error">{errors.phone}</small>
-                    )}
+                    {errors.phone && <small className="cl-error-msg">{errors.phone}</small>}
                   </div>
 
                   {/* Name */}
-                  <div className="flex flex-column gap-2">
-                    <label htmlFor="name" className="font-medium">{t('name')} *</label>
+                  <div className="cl-field">
+                    <label className="cl-label" htmlFor="name">{t('name')} *</label>
                     <InputText
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => updateField('name', e.target.value)}
+                      id="name" value={formData.name}
+                      onChange={e => updateField('name', e.target.value)}
                       placeholder={t('namePlaceholder')}
                       className={errors.name ? 'p-invalid w-full' : 'w-full'}
-                      style={{ height: '3rem' }}
-                      required
+                      style={{ height: '3rem' }} required
                     />
-                    {errors.name && (
-                      <small className="p-error">{errors.name}</small>
-                    )}
+                    {errors.name && <small className="cl-error-msg">{errors.name}</small>}
                   </div>
 
                   {/* Address */}
-                  <div className="flex flex-column gap-2">
-                    <label htmlFor="address" className="font-medium">{t('address')} *</label>
+                  <div className="cl-field">
+                    <label className="cl-label" htmlFor="address">{t('address')} *</label>
                     <AddressInput
                       value={formData.address}
                       onChange={handleAddressChange}
@@ -334,99 +312,93 @@ const Checkout = () => {
                       googleMapsUrl={mapsLink}
                       wazeUrl={wazeLink}
                     />
+                    {errors.address && <small className="cl-error-msg">{errors.address}</small>}
                   </div>
 
                   {/* Note */}
-                  <div className="flex flex-column gap-2">
-                    <label htmlFor="note" className="font-medium">{t('note')}</label>
+                  <div className="cl-field">
+                    <label className="cl-label" htmlFor="note">{t('note')}</label>
                     <InputTextarea
-                      id="note"
-                      value={formData.note}
-                      onChange={(e) => updateField('note', e.target.value)}
+                      id="note" value={formData.note}
+                      onChange={e => updateField('note', e.target.value)}
                       placeholder={t('notePlaceholder')}
-                      rows={3}
-                      autoResize
-                      className="w-full"
+                      rows={3} autoResize className="w-full"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Submit button (mobile) */}
+              {/* Submit (mobile only) */}
               <div className="lg:hidden">
-                <Button
+                <button
                   type="submit"
-                  className="w-full font-semibold"
-                  style={{ height: '3rem' }}
+                  className="cl-btn-primary"
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.9375rem', opacity: (isSubmitting || !isFormValid) ? 0.6 : 1, cursor: (isSubmitting || !isFormValid) ? 'not-allowed' : 'pointer' }}
                   disabled={isSubmitting || !isFormValid}
-                  label={isSubmitting ? t('processing') : t('placeOrder')}
-                  icon={isSubmitting ? <ProgressSpinner style={{ width: '1.25rem', height: '1.25rem' }} strokeWidth="6" /> : undefined}
                 >
-                  {!isSubmitting && (
-                    <span className="font-bold ml-2">{formatCurrency(subtotal, language)}</span>
+                  {isSubmitting ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
+                      {t('processing')}
+                    </span>
+                  ) : (
+                    <>
+                      {t('placeOrder')}
+                      <strong style={{ marginInlineStart: '0.25rem' }}>{formatCurrency(subtotal, language)}</strong>
+                    </>
                   )}
-                </Button>
+                </button>
               </div>
             </form>
           </div>
 
-          {/* Order summary */}
+          {/* Order summary column */}
           <div className="col-12 lg:col-6">
-            <div className="surface-card border-round-xl sm:border-round-2xl p-4 sm:p-5 shadow-1 lg:sticky" style={{ top: '6rem' }}>
-              <h2 className="text-base sm:text-lg font-semibold text-color mb-3">{t('orderSummary')}</h2>
+            <div style={{ background: 'var(--surface-card)', borderRadius: '1.25rem', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', position: 'sticky', top: '5rem' }}>
+              <h2 style={{ margin: '0 0 1rem', fontWeight: 600, fontSize: '1rem', color: 'var(--text-color)' }}>{t('orderSummary')}</h2>
 
-              <div className="flex flex-column gap-2 overflow-y-auto" style={{ maxHeight: '18rem' }}>
-                {items.map((item) => {
-                  const displayName = item.product.name;
-                  return (
-                    <div key={item.product.id} className="flex gap-2 py-2">
-                      <div className="flex-shrink-0 border-round-lg overflow-hidden" style={{ width: '3rem', height: '3rem', background: 'var(--surface-100)' }}>
-                        {item.product.imageUrl ? (
-                          <img
-                            src={getImageUrl(item.product.imageUrl)}
-                            alt={displayName}
-                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex align-items-center justify-content-center">
-                            <Package style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color-secondary)', opacity: 0.4 }} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1" style={{ minWidth: 0 }}>
-                        <p className="font-medium text-color text-sm line-clamp-1 m-0">{displayName}</p>
-                        <p className="text-xs text-color-secondary m-0">
-                          {item.quantity} × {formatCurrency(item.product.price, language)}
-                        </p>
-                      </div>
-                      <span className="font-semibold text-color text-sm">
-                        {formatCurrency(item.product.price * item.quantity, language)}
-                      </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '18rem', overflowY: 'auto' }}>
+                {items.map(item => (
+                  <div key={item.product.id} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <div style={{ flexShrink: 0, width: '3rem', height: '3rem', borderRadius: '0.625rem', overflow: 'hidden', background: 'var(--surface-100)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {item.product.imageUrl ? (
+                        <img src={getImageUrl(item.product.imageUrl)} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      ) : (
+                        <Package style={{ width: '1.25rem', height: '1.25rem', color: 'var(--text-color-secondary)', opacity: 0.4 }} />
+                      )}
                     </div>
-                  );
-                })}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: '0 0 0.125rem', fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.product.name}</p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-color-secondary)' }}>{item.quantity} × {formatCurrency(item.product.price, language)}</p>
+                    </div>
+                    <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)', flexShrink: 0 }}>{formatCurrency(item.product.price * item.quantity, language)}</span>
+                  </div>
+                ))}
               </div>
 
-              <div className="border-top-1 surface-border mt-3 pt-3">
-                <div className="flex align-items-center justify-content-between">
-                  <span className="text-color-secondary text-base">{t('total')}</span>
-                  <span className="text-xl font-bold text-color">
-                    {formatCurrency(subtotal, language)}
-                  </span>
-                </div>
+              <div style={{ borderTop: '1px solid var(--surface-border)', marginTop: '1rem', paddingTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-color-secondary)' }}>{t('total')}</span>
+                <span style={{ fontWeight: 800, fontSize: '1.375rem', color: 'var(--text-color)' }}>{formatCurrency(subtotal, language)}</span>
               </div>
 
-              {/* Submit button (desktop) */}
-              <div className="hidden lg:block mt-5">
-                <Button
+              {/* Submit (desktop) */}
+              <div className="hidden lg:block" style={{ marginTop: '1.25rem' }}>
+                <button
                   type="submit"
-                  className="w-full font-semibold"
-                  style={{ height: '3rem' }}
-                  disabled={isSubmitting || !isFormValid}
                   onClick={handleSubmit}
-                  label={isSubmitting ? t('processing') : t('placeOrder')}
-                  icon={isSubmitting ? <ProgressSpinner style={{ width: '1.25rem', height: '1.25rem' }} strokeWidth="6" /> : undefined}
-                />
+                  className="cl-btn-primary"
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.9375rem', opacity: (isSubmitting || !isFormValid) ? 0.6 : 1, cursor: (isSubmitting || !isFormValid) ? 'not-allowed' : 'pointer' }}
+                  disabled={isSubmitting || !isFormValid}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
+                      {t('processing')}
+                    </>
+                  ) : (
+                    <>{t('placeOrder')} · <strong>{formatCurrency(subtotal, language)}</strong></>
+                  )}
+                </button>
               </div>
             </div>
           </div>

@@ -35,15 +35,17 @@ import { ProductResponseDto } from './dto/product-response.dto';
 import { ProductImageResponseDto } from '../images/dto/product-image.dto';
 import { ApiRes } from '../../common/api-response';
 import { PRD } from '../../common/response-codes';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Products')
+@PortalRoute()
 @Controller('products')
 export class ProductsController {
   private readonly logger = new Logger(ProductsController.name);
   constructor(
     private readonly productsService: ProductsService,
     private readonly imageService: ImageService,
-  ) {}
+  ) { }
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new product' })

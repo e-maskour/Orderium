@@ -161,8 +161,7 @@ export class DeliveryService {
       .leftJoinAndSelect('ord.customer', 'customer')
       .where('orderDelivery.deliveryPersonId = :deliveryPersonId', {
         deliveryPersonId,
-      })
-      .andWhere('ord.fromClient = :fromClient', { fromClient: true }); // Only fromClient orders
+      });
 
     // Apply filters
     if (orderNumber) {

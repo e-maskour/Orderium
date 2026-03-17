@@ -231,11 +231,15 @@ export default function UsersPage() {
             value={users}
             loading={isLoading}
             paginator
+            paginatorPosition="top"
             rows={perPage}
+            rowsPerPageOptions={[10, 25, 50, 100]}
             totalRecords={totalRecords}
             lazy
             first={(page - 1) * perPage}
             onPage={(e) => setPage(Math.floor((e.first ?? 0) / perPage) + 1)}
+            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            currentPageReportTemplate="{first}-{last} of {totalRecords}"
             emptyMessage={t('noResults' as any) || 'No users found'}
             dataKey="id"
             stripedRows

@@ -30,51 +30,6 @@
   gap: 0.4rem;
 }
 
-/* ─── Global paginator: compact arrows + rows-per-page only ─── */
-.p-paginator {
-  border: none !important;
-  background: transparent !important;
-  padding: 0.25rem 0.5rem !important;
-  justify-content: flex-end;
-  gap: 0.25rem;
-}
-
-.p-paginator .p-paginator-prev,
-.p-paginator .p-paginator-next {
-  min-width: 1.75rem !important;
-  height: 1.75rem !important;
-  width: 1.75rem !important;
-  border-radius: 0.375rem !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  color: #64748b;
-}
-
-.p-paginator .p-paginator-prev:hover,
-.p-paginator .p-paginator-next:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-.p-paginator .p-paginator-current {
-  font-size: 0.8rem !important;
-  color: #64748b;
-  padding: 0 0.5rem !important;
-  height: 1.75rem !important;
-  line-height: 1.75rem !important;
-  white-space: nowrap;
-}
-
-.p-paginator .p-paginator-rpp-dropdown {
-  height: 1.75rem !important;
-}
-
-.p-paginator .p-paginator-rpp-dropdown .p-dropdown-label {
-  padding: 0 0.4rem !important;
-  font-size: 0.8rem !important;
-  line-height: 1.75rem !important;
-}
-
 /* ─── Sileo Toast: ensure toasts appear above the sticky header ─── */
 [data-sileo-viewport] {
   z-index: 99999 !important;

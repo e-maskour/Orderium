@@ -15,7 +15,7 @@ export class PortalService {
   async findByEmail(email: string): Promise<Portal | null> {
     return this.portalRepository.findOne({
       where: { email },
-      relations: ['role', 'role.permissions'],
+      relations: ['role'],
     });
   }
 
@@ -52,7 +52,7 @@ export class PortalService {
   async findByPhoneNumber(phoneNumber: string): Promise<Portal | null> {
     return this.portalRepository.findOne({
       where: { phoneNumber },
-      relations: ['role', 'role.permissions'],
+      relations: ['role'],
     });
   }
 

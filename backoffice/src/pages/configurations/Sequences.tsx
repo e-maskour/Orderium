@@ -200,14 +200,6 @@ export default function Sequences() {
             />
 
             <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                <style>{`
-                    .seq-datatable .p-datatable-thead > tr > th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-                    .seq-datatable .p-datatable-tbody > tr > td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; }
-                    .seq-datatable .p-datatable-tbody > tr:hover > td { background: #f8fafc !important; }
-                    .seq-datatable .p-datatable-tbody > tr.p-highlight > td { background: #fffbeb !important; }
-                    .seq-datatable .p-paginator { border: none; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 0.125rem 0.5rem; border-radius: 0; }
-                    .seq-datatable .p-paginator .p-paginator-page.p-highlight { background: #235ae4; color: #fff; border-color: #235ae4; }
-                `}</style>
                 <DataTable
                     className="seq-datatable"
                     value={sequences}
