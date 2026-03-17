@@ -22,7 +22,7 @@ export const translations = {
     passwordRequired: 'كلمة المرور مطلوبة',
     invalidCredentials: 'بيانات الدخول غير صحيحة',
     loginFailed: 'فشل تسجيل الدخول',
-    welcomeBack: 'مرحباً بعودتك',
+    welcomeBack: 'جاهز للانطلاق؟',
 
     // Orders
     orders: 'الطلبات',
@@ -142,7 +142,7 @@ export const translations = {
     loginHeroTitle: 'على الطريق،',
     loginHeroSubtitle: 'تحت السيطرة.',
     loginHeroDesc: 'أدر توصيلاتك وتنقل عبر المسارات وأكد الطلبات أثناء التنقل.',
-    loginSignInDesc: 'سجل دخولك لعرض طلباتك المعينة وبدء نوبتك.',
+    loginSignInDesc: 'حمّل مهامك اليومية وانطلق في جولتك — كل توصيلة تُحدث فرقاً.',
     loginFeatureRoute: 'التنقل في المسارات',
     loginFeatureOrderMgmt: 'إدارة الطلبات',
     loginFeatureLiveTracking: 'التتبع المباشر',
@@ -215,7 +215,7 @@ export const translations = {
     passwordRequired: 'Mot de passe requis',
     invalidCredentials: 'Identifiants invalides',
     loginFailed: 'Échec de connexion',
-    welcomeBack: 'Bon retour',
+    welcomeBack: 'Prêt à livrer ?',
 
     // Orders
     orders: 'Commandes',
@@ -335,7 +335,7 @@ export const translations = {
     loginHeroTitle: 'Sur la route,',
     loginHeroSubtitle: 'tout sous contrôle.',
     loginHeroDesc: 'Gérez vos livraisons, naviguez sur les itinéraires et confirmez les commandes en déplacement.',
-    loginSignInDesc: 'Connectez-vous pour voir vos commandes assignées et démarrer votre tournée.',
+    loginSignInDesc: 'Chargez vos missions du jour et prenez la route — chaque livraison compte.',
     loginFeatureRoute: 'Navigation GPS',
     loginFeatureOrderMgmt: 'Gestion des Commandes',
     loginFeatureLiveTracking: 'Suivi en Direct',

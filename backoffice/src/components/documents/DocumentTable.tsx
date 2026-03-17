@@ -276,6 +276,7 @@ export function DocumentTable({
       />
 
       {/* DataTable */}
+      <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
       <DataTable
         className="doc-datatable"
         value={documents}
@@ -422,6 +423,7 @@ export function DocumentTable({
           )}
         />
       </DataTable>
+      </div>
 
       {/* PDF Preview Modal */}
       <PDFPreviewModal

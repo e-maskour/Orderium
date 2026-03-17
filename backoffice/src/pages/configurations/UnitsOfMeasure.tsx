@@ -180,6 +180,7 @@ export default function UnitsOfMeasure() {
 
     return (
         <AdminLayout>
+            <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
             <PageHeader
                 icon={Ruler}
                 title={t('unitsOfMeasure') || 'Units of Measure'}
@@ -204,7 +205,7 @@ export default function UnitsOfMeasure() {
                 }
             />
 
-            <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+            <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                 <DataTable
                     className="uom-datatable"
                     value={filteredUoms.slice().sort((a, b) => a.category.localeCompare(b.category))}
@@ -228,16 +229,16 @@ export default function UnitsOfMeasure() {
                     <Column field="name" header={t('name')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
                     <Column field="code" header={t('code')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.code}</span>} />
                     <Column field="isBaseUnit" header={t('type') || 'Type'} body={(row: IUnitOfMeasure) => row.isBaseUnit ? (
-                        <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#dbeafe', color: '#1e40af', borderRadius: '0.375rem' }}>{t('baseUnit') || 'Base Unit'}</span>
-                    ) : (
+                        <span className="erp-badge erp-badge--active">{t('baseUnit') || 'Base Unit'}</span>
+                        ) : (
                         <span style={{ fontSize: '0.75rem', color: '#475569' }}>{t('derived') || 'Derived'}</span>
                     )} />
                     <Column field="ratio" header={t('ratio')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.ratio}</span>} />
                     <Column field="roundingPrecision" header={t('rounding') || 'Rounding'} body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.roundingPrecision || '-'}</span>} />
                     <Column field="isActive" header={t('status')} body={(row: IUnitOfMeasure) => row.isActive ? (
-                        <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#dcfce7', color: '#166534', borderRadius: '0.375rem' }}>{t('active')}</span>
+                        <span className="erp-badge erp-badge--paid">{t('active')}</span>
                     ) : (
-                        <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#fee2e2', color: '#991b1b', borderRadius: '0.375rem' }}>{t('inactive')}</span>
+                        <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>
                     )} />
                     <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: IUnitOfMeasure) => (
                         <div style={{ textAlign: 'right' }}>
@@ -362,6 +363,7 @@ export default function UnitsOfMeasure() {
 
                 </form>
             </Modal>
+            </div>
         </AdminLayout>
     );
 }

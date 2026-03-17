@@ -500,7 +500,7 @@ export default function Orders() {
             </div>
           </div>
         ) : (
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             <DataTable
               className="ord-datatable"
               value={orders}

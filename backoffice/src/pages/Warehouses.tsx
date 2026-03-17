@@ -128,6 +128,7 @@ export default function Warehouses() {
 
   return (
     <AdminLayout>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
       <PageHeader
         icon={Building2}
         title={t('warehouses')}
@@ -208,8 +209,7 @@ export default function Warehouses() {
               </div>
 
               <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: warehouse.isActive ? '#f0fdf4' : '#f1f5f9', color: warehouse.isActive ? '#15803d' : '#475569' }}>
-                  <span style={{ width: '0.375rem', height: '0.375rem', borderRadius: '9999px', background: warehouse.isActive ? '#22c55e' : '#94a3b8' }}></span>
+                <span className={`erp-badge ${warehouse.isActive ? 'erp-badge--active' : 'erp-badge--draft'}`}>
                   {warehouse.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
@@ -291,6 +291,7 @@ export default function Warehouses() {
         </form>
       </Dialog>
 
+      </div>
     </AdminLayout>
   );
 }

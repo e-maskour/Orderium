@@ -227,6 +227,7 @@ export default function UsersPage() {
     );
 
     const renderTable = () => (
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         <DataTable
             value={users}
             loading={isLoading}
@@ -243,7 +244,6 @@ export default function UsersPage() {
             emptyMessage={t('noResults' as any) || 'No users found'}
             dataKey="id"
             stripedRows
-            style={{ borderRadius: '0.75rem', overflow: 'hidden' }}
         >
             <Column
                 header={t('name' as any)}
@@ -278,6 +278,7 @@ export default function UsersPage() {
             <Column header={t('status' as any)} body={statusTemplate} style={{ minWidth: '7rem' }} />
             <Column header={t('actions' as any)} body={actionsTemplate} style={{ minWidth: '9rem' }} />
         </DataTable>
+        </div>
     );
 
     const roleOptions = roles.map((r) => ({ label: r.isSuperAdmin ? `⭐ ${r.name}` : r.name, value: r.id }));

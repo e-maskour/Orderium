@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Truck, Phone, Lock, Eye, EyeOff } from 'lucide-react';
+import { Truck, Phone, Lock, Eye, EyeOff, AlertTriangle, Zap } from 'lucide-react';
 import { LanguageToggle } from '../components/LanguageToggle';
 
 const PRI = '#df7817';
@@ -39,10 +39,12 @@ export default function Login() {
         .dlv-field-input:focus { border-color: ${PRI} !important; box-shadow: 0 0 0 3px rgba(223,120,23,0.14) !important; outline: none; }
         .dlv-submit-btn:active:not(:disabled) { transform: scale(0.97); }
         * { box-sizing: border-box; }
+        html, body { overflow: hidden; height: 100%; margin: 0; }
       `}</style>
 
       <div dir={dir} style={{
-        minHeight: '100dvh',
+        height: '100dvh',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         background: '#ffffff',
@@ -108,8 +110,8 @@ export default function Login() {
           margin: '0 auto',
           boxSizing: 'border-box',
         }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: '0 0 0.4rem' }}>
-            {t('welcomeBack')} 👋
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: '0 0 0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {t('welcomeBack')} <Zap size={22} color={PRI} strokeWidth={2.5} style={{ flexShrink: 0 }} />
           </h2>
           <p style={{ color: '#6b7280', margin: '0 0 2rem', fontSize: '0.95rem', lineHeight: 1.55 }}>
             {t('loginSignInDesc')}
@@ -205,7 +207,7 @@ export default function Login() {
                 borderRadius: '12px', fontSize: '0.9rem', fontWeight: 500,
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
               }}>
-                <span>⚠️</span> {error}
+                <AlertTriangle size={16} strokeWidth={2} style={{ flexShrink: 0 }} /> {error}
               </div>
             )}
 

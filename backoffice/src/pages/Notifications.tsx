@@ -155,21 +155,21 @@ export default function Notifications() {
     return iconMap[type];
   };
 
-  const getNotificationColorStyle = (type: NotificationType): React.CSSProperties => {
-    const colorMap: Record<NotificationType, React.CSSProperties> = {
-      [NotificationType.NEW_ORDER]: { background: '#dcfce7', color: '#15803d' },
-      [NotificationType.ORDER_ASSIGNED]: { background: '#dbeafe', color: '#1d4ed8' },
-      [NotificationType.ORDER_STATUS_CHANGED]: { background: '#fef3c7', color: '#b45309' },
-      [NotificationType.DELIVERY_STATUS_UPDATE]: { background: '#f3e8ff', color: '#7e22ce' },
-      [NotificationType.ORDER_CANCELLED]: { background: '#fee2e2', color: '#b91c1c' },
-      [NotificationType.PAYMENT_RECEIVED]: { background: '#d1fae5', color: '#047857' },
-      [NotificationType.LOW_STOCK]: { background: '#ffedd5', color: '#c2410c' },
-      [NotificationType.SYSTEM]: { background: '#f3f4f6', color: '#374151' },
-      [NotificationType.INFO]: { background: '#e0f2fe', color: '#0369a1' },
-      [NotificationType.WARNING]: { background: '#fef9c3', color: '#a16207' },
-      [NotificationType.ERROR]: { background: '#ffe4e6', color: '#be123c' },
+  const getNotificationClassName = (type: NotificationType): string => {
+    const classMap: Record<NotificationType, string> = {
+      [NotificationType.NEW_ORDER]:              'notif-icon notif-icon--new_order',
+      [NotificationType.ORDER_ASSIGNED]:         'notif-icon notif-icon--order_assigned',
+      [NotificationType.ORDER_STATUS_CHANGED]:   'notif-icon notif-icon--order_status_changed',
+      [NotificationType.DELIVERY_STATUS_UPDATE]: 'notif-icon notif-icon--delivery_status_update',
+      [NotificationType.ORDER_CANCELLED]:        'notif-icon notif-icon--order_cancelled',
+      [NotificationType.PAYMENT_RECEIVED]:       'notif-icon notif-icon--payment_received',
+      [NotificationType.LOW_STOCK]:              'notif-icon notif-icon--low_stock',
+      [NotificationType.SYSTEM]:                 'notif-icon notif-icon--system',
+      [NotificationType.INFO]:                   'notif-icon notif-icon--info',
+      [NotificationType.WARNING]:                'notif-icon notif-icon--warning',
+      [NotificationType.ERROR]:                  'notif-icon notif-icon--error',
     };
-    return colorMap[type];
+    return classMap[type] || 'notif-icon notif-icon--info';
   };
 
   const formatDate = (dateString: string) => {
@@ -341,7 +341,7 @@ export default function Notifications() {
             />
 
             {/* Icon */}
-            <div style={{ padding: '0.625rem', borderRadius: '0.5rem', ...getNotificationColorStyle(notification.type) }}>
+            <div className={getNotificationClassName(notification.type)}>
               {getNotificationIcon(notification.type)}
             </div>
 

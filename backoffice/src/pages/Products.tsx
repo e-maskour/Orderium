@@ -278,13 +278,15 @@ export default function Products() {
           title={t('products')}
           subtitle={t('manageProducts')}
           actions={
-            <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               {/* Filters Button */}
               <div style={{ position: 'relative' }}>
                 <Button
                   onClick={() => setFiltersExpanded(true)}
                   outlined
-                  icon={<Filter style={{ width: '1.125rem', height: '1.125rem' }} />}
+                  severity="secondary"
+                  size="small"
+                  icon={<Filter style={{ width: 16, height: 16 }} />}
                   label={t('filters')}
                 />
                 {activeFiltersCount > 0 && (
@@ -298,29 +300,36 @@ export default function Products() {
               <Button
                 onClick={handleDownloadTemplate}
                 outlined
-                icon={<FileSpreadsheet style={{ width: '1rem', height: '1rem' }} />}
+                severity="secondary"
+                size="small"
+                icon={<FileSpreadsheet style={{ width: 16, height: 16 }} />}
                 title="Télécharger le modèle"
               />
               <Button
                 onClick={handleImport}
                 outlined
-                icon={<Upload style={{ width: '1rem', height: '1rem' }} />}
+                severity="secondary"
+                size="small"
+                icon={<Upload style={{ width: 16, height: 16 }} />}
                 title="Importer"
               />
               <Button
                 onClick={handleExport}
                 outlined
-                icon={<Download style={{ width: '1rem', height: '1rem' }} />}
+                severity="secondary"
+                size="small"
+                icon={<Download style={{ width: 16, height: 16 }} />}
                 title="Exporter"
               />
 
               {/* Add Product Button */}
               <Button
                 onClick={() => navigate('/products/create')}
-                icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+                size="small"
+                icon={<Plus style={{ width: 16, height: 16 }} />}
                 label={t('addProduct')}
               />
-            </>
+            </div>
           }
         />
 
@@ -343,7 +352,7 @@ export default function Products() {
               ))}
             </div>
           ) : (
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
               <DataTable
                 className="prod-datatable"
                 value={productsList}

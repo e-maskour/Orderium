@@ -105,6 +105,7 @@ export default function Taxes() {
 
     return (
         <AdminLayout>
+            <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
             <PageHeader
                 icon={Percent}
                 title={t('taxRates')}
@@ -129,7 +130,7 @@ export default function Taxes() {
                 }
             />
 
-            <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+            <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                 <DataTable
                     className="tax-datatable"
                     value={rates.map((r, i) => ({ ...r, _idx: i }))}
@@ -149,7 +150,7 @@ export default function Taxes() {
                     <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                     <Column field="name" header={t('name')} sortable body={(row) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
                     <Column field="rate" header={t('ratePercentage')} sortable body={(row) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.rate}%</span>} />
-                    <Column field="isDefault" header={t('status')} body={(row) => row.isDefault ? <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, background: '#dcfce7', color: '#166534', borderRadius: '0.375rem' }}>{t('default')}</span> : null} />
+                    <Column field="isDefault" header={t('status')} body={(row) => row.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null} />
                     <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row) => (
                         <div style={{ textAlign: 'right' }}>
                             <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row._idx)} text rounded severity="info" />
@@ -215,6 +216,7 @@ export default function Taxes() {
 
                 </form>
             </Modal>
+            </div>
         </AdminLayout>
     );
 }

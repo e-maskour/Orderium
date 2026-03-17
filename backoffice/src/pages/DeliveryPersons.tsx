@@ -348,7 +348,7 @@ export default function DeliveryPersons() {
                       <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noDeliveryPersonsFound')}</p>
                     </div>
                   ) : (
-                    <>
+                    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                       <DataTable
                         className="dp-datatable"
                         value={filteredPersons}
@@ -387,7 +387,7 @@ export default function DeliveryPersons() {
                           </div>
                         )} />
                       </DataTable>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>

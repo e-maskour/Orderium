@@ -108,13 +108,13 @@ export default function PaiementsAchat() {
   });
   const thisMonthAmount = thisMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
-  const PAYMENT_METHOD_CONFIG: Record<string, { bg: string; color: string; border: string; icon: React.ElementType }> = {
-    cash: { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', icon: Banknote },
-    check: { bg: '#fefce8', color: '#a16207', border: '#fde68a', icon: FileCheck },
-    bank_transfer: { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', icon: Building2 },
-    credit_card: { bg: '#faf5ff', color: '#7e22ce', border: '#e9d5ff', icon: CreditCard },
-    mobile_payment: { bg: '#eef2ff', color: '#4338ca', border: '#c7d2fe', icon: Smartphone },
-    other: { bg: '#f8fafc', color: '#475569', border: '#e2e8f0', icon: Wallet },
+  const PAYMENT_METHOD_CONFIG: Record<string, { cls: string; icon: React.ElementType }> = {
+    cash:           { cls: 'pm-badge pm-badge--cash',         icon: Banknote },
+    check:          { cls: 'pm-badge pm-badge--check',        icon: FileCheck },
+    bank_transfer:  { cls: 'pm-badge pm-badge--bank-transfer',icon: Building2 },
+    credit_card:    { cls: 'pm-badge pm-badge--credit-card',  icon: CreditCard },
+    mobile_payment: { cls: 'pm-badge pm-badge--mobile',       icon: Smartphone },
+    other:          { cls: 'pm-badge pm-badge--other',        icon: Wallet },
   };
 
   return (
@@ -252,13 +252,8 @@ export default function PaiementsAchat() {
               const cfg = PAYMENT_METHOD_CONFIG[p.paymentType] || PAYMENT_METHOD_CONFIG.other;
               const MethodIcon = cfg.icon;
               return (
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                  background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-                  borderRadius: '9999px', padding: '0.25rem 0.625rem',
-                  fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap',
-                }}>
-                  <MethodIcon style={{ width: '0.75rem', height: '0.75rem' }} />
+                <span className={cfg.cls}>
+                  <MethodIcon />
                   {PAYMENT_TYPE_LABELS[p.paymentType]}
                 </span>
               );

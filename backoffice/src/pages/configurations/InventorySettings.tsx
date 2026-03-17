@@ -189,6 +189,7 @@ export default function InventorySettings() {
 
     return (
         <AdminLayout>
+            <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
             <PageHeader
                 icon={Package}
                 title={t('inventorySettings')}
@@ -313,6 +314,7 @@ export default function InventorySettings() {
 
                 </div>
             </form>
+            </div>
         </AdminLayout>
     );
 }

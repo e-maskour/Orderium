@@ -12,8 +12,8 @@ export default {
   createAccount: 'إنشاء الحساب',
 
   // Messages
-  appAccess: 'الوصول إلى التطبيق',
-  enterPhoneToStart: 'أدخل رقم هاتفك للبدء',
+  appAccess: '!مرحباً بك في Orderium',
+  enterPhoneToStart: 'أدخل رقمك لاستعراض كتالوجك والطلب بسهولة.',
   createPasswordForNewAccount: 'أنشئ كلمة مرور لحسابك الجديد',
   enterPasswordToContinue: 'أدخل كلمة المرور للمتابعة',
   yourInfoIsSecure: 'معلوماتك آمنة ولن تتم مشاركتها.',

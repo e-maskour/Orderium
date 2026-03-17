@@ -284,14 +284,13 @@ export default function RolesPage() {
                     }
                 />
 
-                <div style={{ marginTop: '1rem' }}>
+                <div style={{ marginTop: '1rem', backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                     <DataTable
                         value={roles}
                         loading={isLoading}
                         emptyMessage={t('noResults' as any) || 'No roles found'}
                         dataKey="id"
                         stripedRows
-                        style={{ borderRadius: '0.75rem', overflow: 'hidden' }}
                     >
                         <Column header={t('name' as any)} body={nameTemplate} style={{ minWidth: '14rem' }} />
                         <Column header={t('description' as any)} field="description" style={{ minWidth: '14rem' }}

@@ -83,22 +83,19 @@ export default function InventoryAdjustments() {
   );
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      draft: { label: t('draft'), style: { background: '#f1f5f9', color: '#334155' } },
-      in_progress: { label: t('inProgress'), style: { background: '#dbeafe', color: '#1d4ed8' } },
-      done: { label: t('validated'), style: { background: '#d1fae5', color: '#047857' } },
-      cancelled: { label: t('cancelled'), style: { background: '#fee2e2', color: '#b91c1c' } },
+    const statusConfig: Record<string, { label: string; cls: string }> = {
+      draft:       { label: t('draft'),       cls: 'erp-badge erp-badge--draft' },
+      in_progress: { label: t('inProgress'),  cls: 'erp-badge erp-badge--active' },
+      done:        { label: t('validated'),    cls: 'erp-badge erp-badge--paid' },
+      cancelled:   { label: t('cancelled'),   cls: 'erp-badge erp-badge--unpaid' },
     };
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return (
-      <span style={{ display: 'inline-block', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...config.style }}>
-        {config.label}
-      </span>
-    );
+    const config = statusConfig[status] || statusConfig.draft;
+    return <span className={config.cls}>{config.label}</span>;
   };
 
   return (
     <AdminLayout>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
       <PageHeader
         icon={ClipboardCheck}
         title={t('inventoryAdjustments')}
@@ -187,6 +184,7 @@ export default function InventoryAdjustments() {
             </div>
           )} />
         </DataTable>
+      </div>
       </div>
     </AdminLayout>
   );

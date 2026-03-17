@@ -175,6 +175,7 @@ export default function Sequences() {
 
     return (
         <AdminLayout>
+            <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
             <PageHeader
                 icon={Hash}
                 title={t('sequences')}
@@ -199,7 +200,7 @@ export default function Sequences() {
                 }
             />
 
-            <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+            <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                 <DataTable
                     className="seq-datatable"
                     value={sequences}
@@ -222,7 +223,7 @@ export default function Sequences() {
                     <Column field="format" header={t('format')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569', fontFamily: 'monospace' }}>{row.format || 'N/A'}</span>} />
                     <Column field="nextDocumentNumber" header={t('nextDocumentNumber')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#16a34a', fontFamily: 'monospace' }}>{row.nextDocumentNumber || 'N/A'}</span>} />
                     <Column field="isActive" header={t('status')} body={(row: Sequence) => (
-                        <span style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 500, borderRadius: '0.375rem', ...(row.isActive ? { background: '#dcfce7', color: '#166534' } : { background: '#fee2e2', color: '#991b1b' }) }}>
+                        <span className={`erp-badge ${row.isActive ? 'erp-badge--active' : 'erp-badge--unpaid'}`}>
                             {row.isActive ? t('active') : t('inactive')}
                         </span>
                     )} />
@@ -419,6 +420,7 @@ export default function Sequences() {
 
                 </form>
             </Modal>
+            </div>
         </AdminLayout>
     );
 }

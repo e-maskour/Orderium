@@ -329,7 +329,7 @@ export default function Customers() {
                       <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noCustomersFound')}</p>
                     </div>
                   ) : (
-                    <>
+                    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                       <DataTable
                         className="cust-datatable"
                         value={filteredCustomers}
@@ -370,7 +370,7 @@ export default function Customers() {
                           </div>
                         )} />
                       </DataTable>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>

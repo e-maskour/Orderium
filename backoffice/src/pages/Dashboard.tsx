@@ -7,6 +7,7 @@ import { statisticsService } from '../modules/statistics';
 import { formatCurrency } from '../lib/formatters';
 import { Skeleton } from 'primereact/skeleton';
 import { Tag } from 'primereact/tag';
+import { useNavigate } from 'react-router-dom';
 import {
     Package,
     Truck,
@@ -17,6 +18,10 @@ import {
     Users,
     DollarSign,
     ShoppingCart,
+    FilePlus,
+    FileText,
+    UserPlus,
+    ClipboardList,
 } from 'lucide-react';
 import {
     StatsCard,
@@ -32,6 +37,7 @@ import {
 export default function Dashboard() {
     const { admin } = useAuth();
     const { t, language } = useLanguage();
+    const navigate = useNavigate();
 
     const { data: comprehensiveStats, isLoading } = useQuery({
         queryKey: ['statistics', 'comprehensive'],
@@ -147,7 +153,6 @@ export default function Dashboard() {
 
                 {isLoading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {/* KPI Skeletons */}
                         <div className="dashboard-grid-4">
                             {[...Array(4)].map((_, i) => (
                                 <div key={i} style={{

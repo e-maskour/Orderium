@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { authService } from '@/modules/auth';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import { ShoppingCart, Phone, Lock, Eye, EyeOff, Loader2, Clock, ShieldX } from 'lucide-react';
+import { ShoppingCart, Phone, Lock, Eye, EyeOff, Loader2, Clock, ShieldX, HandMetal, AlertTriangle } from 'lucide-react';
 import { toastSuccess, toastError } from '@/services/toast.service';
 import { useNavigate } from 'react-router-dom';
 
@@ -168,10 +168,12 @@ export default function Login() {
         .clt-field-input:focus { border-color: ${PRI} !important; box-shadow: 0 0 0 3px rgba(5,150,105,0.14) !important; outline: none; }
         .clt-submit-btn:active:not(:disabled) { transform: scale(0.97); }
         * { box-sizing: border-box; }
+        html, body { overflow: hidden; height: 100%; margin: 0; }
       `}</style>
 
       <div dir={dir} style={{
-        minHeight: '100dvh',
+        height: '100dvh',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         background: '#ffffff',
@@ -237,8 +239,8 @@ export default function Login() {
           margin: '0 auto',
           boxSizing: 'border-box',
         }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: '0 0 0.4rem' }}>
-            {headingText} {isExistingAccount ? '👋' : ''}
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: '0 0 0.4rem', display: 'flex', alignItems: 'center' }}>
+            {headingText}{isExistingAccount && <HandMetal size={20} color={PRI} strokeWidth={2} style={{ marginLeft: '0.4rem', flexShrink: 0 }} />}
           </h2>
           {isExistingAccount && customerName && (
             <div style={{
@@ -318,7 +320,7 @@ export default function Login() {
               )}
               {errors.phone && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.3rem' }}>
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem' }}>⚠</span>
+                  <AlertTriangle size={14} color='#ef4444' strokeWidth={2} style={{ flexShrink: 0 }} />
                   <span style={{ fontSize: '0.8rem', color: '#ef4444' }}>{errors.phone}</span>
                 </div>
               )}
@@ -364,7 +366,7 @@ export default function Login() {
               </div>
               {errors.password && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.3rem' }}>
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem' }}>⚠</span>
+                  <AlertTriangle size={14} color='#ef4444' strokeWidth={2} style={{ flexShrink: 0 }} />
                   <span style={{ fontSize: '0.8rem', color: '#ef4444' }}>{errors.password}</span>
                 </div>
               )}

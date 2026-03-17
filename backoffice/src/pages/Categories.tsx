@@ -162,9 +162,7 @@ export default function Categories() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <h4 style={{ fontWeight: 500, color: '#0f172a', margin: 0 }}>{category.name}</h4>
               {!category.isActive && (
-                <span style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.125rem', paddingBottom: '0.125rem', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '0.25rem' }}>
-                  Inactive
-                </span>
+                <span className="erp-badge erp-badge--unpaid">Inactive</span>
               )}
             </div>
             {category.description && (

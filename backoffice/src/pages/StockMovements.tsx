@@ -59,20 +59,16 @@ export default function StockMovements() {
   );
 
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; bg: string; color: string }> = {
-      draft: { label: t('draft'), bg: '#f1f5f9', color: '#334155' },
-      waiting: { label: t('pending'), bg: '#fef9c3', color: '#a16207' },
-      confirmed: { label: t('confirmed'), bg: '#dbeafe', color: '#1d4ed8' },
-      assigned: { label: t('assigned'), bg: '#e0e7ff', color: '#4338ca' },
-      done: { label: t('done'), bg: '#d1fae5', color: '#047857' },
-      cancelled: { label: t('cancelled'), bg: '#fee2e2', color: '#b91c1c' },
+    const statusConfig: Record<string, { label: string; cls: string }> = {
+      draft:     { label: t('draft'),     cls: 'erp-badge erp-badge--draft' },
+      waiting:   { label: t('pending'),   cls: 'erp-badge erp-badge--pending' },
+      confirmed: { label: t('confirmed'), cls: 'erp-badge erp-badge--active' },
+      assigned:  { label: t('assigned'),  cls: 'erp-badge erp-badge--active' },
+      done:      { label: t('done'),      cls: 'erp-badge erp-badge--paid' },
+      cancelled: { label: t('cancelled'), cls: 'erp-badge erp-badge--unpaid' },
     };
     const config = statusConfig[status] || statusConfig.draft;
-    return (
-      <span style={{ padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, backgroundColor: config.bg, color: config.color }}>
-        {config.label}
-      </span>
-    );
+    return <span className={config.cls}>{config.label}</span>;
   };
 
   const getTypeIcon = (type: string) => {
@@ -125,6 +121,7 @@ export default function StockMovements() {
 
   return (
     <AdminLayout>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
       <PageHeader
         icon={ArrowLeftRight}
         title={t('stockMovements')}
@@ -245,6 +242,7 @@ export default function StockMovements() {
             </div>
           )} />
         </DataTable>
+      </div>
       </div>
     </AdminLayout>
   );
