@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Truck, Phone, Lock, Eye, EyeOff, AlertTriangle, Zap } from 'lucide-react';
+import orderiumLogo from '../assets/logo-delivery.svg';
 import { LanguageToggle } from '../components/LanguageToggle';
 
 const PRI = '#df7817';
@@ -71,18 +72,18 @@ export default function Login() {
           <div style={{ position: 'absolute', bottom: '20px', left: '-60px', width: '180px', height: '180px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
 
           {/* Logo icon */}
-          <div style={{
-            width: '90px', height: '90px',
-            borderRadius: '26px',
-            background: 'rgba(255,255,255,0.18)',
-            border: '2px solid rgba(255,255,255,0.3)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: '1.25rem',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.22)',
-            position: 'relative', zIndex: 1,
-          }}>
-            <Truck size={44} color="#fff" strokeWidth={2} />
-          </div>
+          <img
+            src={orderiumLogo}
+            alt="Orderium"
+            style={{
+              width: '90px',
+              height: '90px',
+              marginBottom: '1.25rem',
+              position: 'relative',
+              zIndex: 1,
+              filter: 'drop-shadow(0 8px 30px rgba(0,0,0,0.22))',
+            }}
+          />
 
           <h1 style={{ color: '#fff', fontSize: '2.4rem', fontWeight: 900, margin: '0', letterSpacing: '-0.5px', lineHeight: 1.05, position: 'relative', zIndex: 1 }}>
             Orderium

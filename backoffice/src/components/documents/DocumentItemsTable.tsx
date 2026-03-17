@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, BookOpen, Hash, Package2 } from 'lucide-react';
 import { Dropdown as PrDropdown } from 'primereact/dropdown';
+import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { DataTable } from 'primereact/datatable';

@@ -1,10 +1,10 @@
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
-import { KpiCard, KpiGrid } from '../../components/KpiCard';
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Plus, FileText, TrendingUp, TrendingDown, Clock, CheckCircle, Filter, X, ChevronDown, ChevronUp, Download } from 'lucide-react';
-import { DocumentTable, DocumentAnalysisChart } from '../../components/documents';
+import { Plus, Clock, CheckCircle, Filter, X, Download } from 'lucide-react';
+import { DocumentTable } from '../../components/documents';
 import { documentsService, DocumentItem } from '../../modules/documents/services/documents.service';
 import { partnersService } from '../../modules';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
@@ -38,7 +38,6 @@ export default function DocumentListPage({
 }: DocumentListPageProps) {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<{ id: number; number: string; total: number } | null>(null);
 
@@ -61,9 +60,6 @@ export default function DocumentListPage({
     dateRange: { start: undefined as Date | undefined, end: undefined as Date | undefined },
   });
 
-  // Year selection for analytics
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-
   // Fetch partners for autocomplete
   const { data: partnersData } = useQuery({
     queryKey: ['partners'],
@@ -85,12 +81,6 @@ export default function DocumentListPage({
       page: currentPage,
       pageSize: pageSize
     }),
-  });
-
-  // Fetch analytics from API
-  const { data: analytics, isLoading: analyticsLoading } = useQuery({
-    queryKey: ['documents-analytics', documentType, direction, selectedYear],
-    queryFn: () => documentsService.getAnalytics(documentType, direction, selectedYear),
   });
 
   const documents = documentsData.documents || [];
@@ -200,71 +190,19 @@ export default function DocumentListPage({
     setCurrentPage(1);
   };
 
-  const tabs = [
-    { key: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
-    { key: 'list', label: `${t('listOf')} ${config.title.toLowerCase()}`, icon: List },
-  ];
-
-  // Document type specific KPIs from API analytics
-  let kpi1, kpi2, kpi3, kpi4;
-
-  if (analytics && analytics.kpis) {
-    if (documentType === 'devis') {
-      // Devis-specific KPIs from API
-      const { totalQuotes, acceptedCount, pendingCount, conversionRate } = analytics.kpis;
-
-      kpi1 = { count: totalQuotes, label: t('totalQuotes'), icon: FileText, color: 'blue' };
-      kpi2 = { count: acceptedCount, label: t('acceptedQuotes'), icon: CheckCircle, color: 'emerald' };
-      kpi3 = { count: pendingCount, label: t('pendingQuotes'), icon: Clock, color: 'amber' };
-      kpi4 = { count: `${conversionRate.toFixed(1)}%`, label: t('conversionRate'), icon: TrendingUp, color: 'purple' };
-
-    } else if (documentType === 'bon_livraison') {
-      // Bon de livraison-specific KPIs from API
-      const { totalOrders, deliveredCount, inProgressCount, totalItems } = analytics.kpis;
-
-      kpi1 = { count: totalOrders, label: t('totalDeliveries'), icon: FileText, color: 'blue' };
-      kpi2 = { count: deliveredCount, label: t('delivered'), icon: CheckCircle, color: 'emerald' };
-      kpi3 = { count: inProgressCount, label: t('inProgress'), icon: Clock, color: 'amber' };
-      kpi4 = { count: totalItems, label: t('totalItems'), icon: TrendingUp, color: 'purple' };
-
-    } else {
-      // Facture-specific KPIs from API
-      const { totalInvoices, unpaidCount, paidCount, unpaidAmount } = analytics.kpis;
-
-      kpi1 = { count: totalInvoices, label: t('totalInvoices'), icon: FileText, color: 'blue' };
-      kpi2 = { count: unpaidCount, label: t('unpaidInvoices'), icon: Clock, color: 'amber' };
-      kpi3 = { count: paidCount, label: t('paidInvoices'), icon: CheckCircle, color: 'emerald' };
-      kpi4 = { count: `${unpaidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`, label: t('unpaidAmount'), icon: TrendingDown, color: 'red' };
-    }
-  } else {
-    // Fallback to empty KPIs while loading
-    kpi1 = { count: 0, label: t('total'), icon: FileText, color: 'blue' };
-    kpi2 = { count: 0, label: t('pending'), icon: Clock, color: 'amber' };
-    kpi3 = { count: 0, label: t('completed'), icon: CheckCircle, color: 'emerald' };
-    kpi4 = { count: 0, label: t('amount'), icon: TrendingUp, color: 'purple' };
-  }
-
-  // Calculate draft count from current documents (for the draft section)
-  const draftInvoices = documents.filter(doc => doc.status === 'draft').length;
-
-  const Icon = config.icon;
-
-  // Export to XLSX
   const handleExport = async () => {
     try {
       let blob: Blob;
       let filename: string;
 
-      const supplierId = direction === 'achat' ? 1 : undefined; // Use appropriate supplierId logic
-
       if (documentType === 'devis') {
-        blob = await quotesService.exportToXlsx(supplierId);
+        blob = await quotesService.exportToXlsx(undefined);
         filename = direction === 'achat' ? 'demandes-prix' : 'devis';
       } else if (documentType === 'facture') {
-        blob = await invoicesService.exportToXlsx(supplierId);
+        blob = await invoicesService.exportToXlsx(undefined);
         filename = direction === 'achat' ? 'factures-achat' : 'factures-vente';
       } else if (documentType === 'bon_livraison') {
-        blob = await ordersService.exportToXlsx(supplierId);
+        blob = await ordersService.exportToXlsx(undefined);
         filename = direction === 'achat' ? 'bons-achat' : 'bons-livraison';
       } else {
         toastError(t('unsupportedDocumentType'));
@@ -285,6 +223,8 @@ export default function DocumentListPage({
       console.error(error);
     }
   };
+
+  const Icon = config.icon;
 
   return (
     <AdminLayout>
@@ -320,121 +260,7 @@ export default function DocumentListPage({
             </div>
           }
         />
-
-        {/* Tabs Navigation */}
-        <div style={{ backgroundColor: '#fff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', borderBottom: '1px solid #e2e8f0', overflowX: 'auto' }}>
-            {tabs.map((tab) => {
-              const TabIcon = tab.icon;
-              return (
-                <Button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
-                  icon={<TabIcon style={{ width: 16, height: 16 }} />}
-                  label={tab.label}
-                  text={activeTab !== tab.key}
-                  style={{
-                    whiteSpace: 'nowrap', flexShrink: 0,
-                    ...(activeTab === tab.key
-                      ? { backgroundColor: '#235ae4', color: '#fff', boxShadow: '0 4px 6px rgba(35,90,228,0.25)', border: 'none' }
-                      : { color: '#475569' })
-                  }}
-                />
-              );
-            })}
-          </div>
-
-          {/* Tab Content */}
-          <div style={{ padding: '0.75rem', paddingTop: '0.5rem' }}>
-            {activeTab === 'dashboard' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <style>{`
-                  .doc-dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
-                  @media (max-width: 768px) { .doc-dash-grid { grid-template-columns: 1fr !important; } }
-                `}</style>
-                <KpiGrid count={4}>
-                  <KpiCard label={kpi1.label} value={kpi1.count} icon={kpi1.icon} color={kpi1.color as any} loading={analyticsLoading} />
-                  <KpiCard label={kpi2.label} value={kpi2.count} icon={kpi2.icon} color={kpi2.color as any} loading={analyticsLoading} />
-                  <KpiCard label={kpi3.label} value={kpi3.count} icon={kpi3.icon} color={kpi3.color as any} loading={analyticsLoading} />
-                  <KpiCard label={kpi4.label} value={kpi4.count} icon={kpi4.icon} color={kpi4.color as any} loading={analyticsLoading} />
-                </KpiGrid>
-
-                {/* Analysis Chart - Full Width */}
-                <DocumentAnalysisChart
-                  documents={documents}
-                  documentType={documentType}
-                  analytics={analytics}
-                  onYearChange={setSelectedYear}
-                />
-
-                {/* Dashboard Grid */}
-                <div className="doc-dash-grid">
-                  {/* Recent Documents */}
-                  <div style={{ backgroundColor: '#fff', borderRadius: '0.875rem', padding: '1.25rem 1.5rem', border: '1.5px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>
-                      {t('lastThree')} {config.titleShort.toLowerCase()}
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {transformedFactures.slice(0, 3).map((facture) => (
-                        <div key={facture.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <FileText style={{ width: 16, height: 16, color: '#3b82f6' }} />
-                            <Button
-                              label={facture.number}
-                              link
-                              onClick={() => handleEdit(facture.id)}
-                              style={{ fontSize: '0.875rem', fontWeight: 500, padding: 0 }}
-                            />
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{facture.partnerName}</span>
-                            <span style={{ fontSize: '0.75rem', color: '#64748b', width: '6rem' }}>{new Date(facture.date).toLocaleDateString('fr-FR')}</span>
-                            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#059669', width: '6rem', textAlign: 'right' }}>{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          </div>
-                        </div>
-                      ))}
-                      {transformedFactures.length === 0 && (
-                        <p style={{ fontSize: '0.875rem', color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>{t('noRecentDocument')} {config.titleShort.toLowerCase()} {t('recentSuffix')}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Draft Documents */}
-                  <div style={{ backgroundColor: '#fff', borderRadius: '0.875rem', padding: '1.25rem 1.5rem', border: '1.5px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                    <div style={{ marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>{t('drafts')}</h3>
-                        <span style={{ backgroundColor: '#e2e8f0', color: '#334155', fontSize: '0.75rem', fontWeight: 600, padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>{draftInvoices}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {draftInvoices === 0 ? (
-                        <p style={{ fontSize: '0.875rem', color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>{t('noDrafts')}</p>
-                      ) : (
-                        transformedFactures.filter(f => f.status === 'draft').slice(0, 3).map((facture) => (
-                          <div key={facture.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <FileText style={{ width: 16, height: 16, color: '#64748b' }} />
-                              <Button
-                                label={facture.number}
-                                link
-                                onClick={() => handleEdit(facture.id)}
-                                style={{ fontSize: '0.875rem', fontWeight: 500, padding: 0, color: '#475569' }}
-                              />
-                            </div>
-                            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#475569' }}>{facture.total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'list' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                {/* Filters Overlay Panel */}
+            {/* Filters Overlay Panel */}
                 <Sidebar
                   visible={filtersExpanded}
                   onHide={() => setFiltersExpanded(false)}
@@ -614,10 +440,6 @@ export default function DocumentListPage({
                     setCurrentPage(1);
                   }}
                 />
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       {config.features.hasPayments && selectedInvoice && (

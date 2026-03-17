@@ -19,6 +19,7 @@ import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { PDFPreviewModal } from '../components/PDFPreviewModal';
 import { pdfService } from '../services/pdf.service';
+import { MobileList } from '../components/MobileList';
 
 export default function Orders() {
   const { t, language } = useLanguage();
@@ -465,8 +466,32 @@ export default function Orders() {
         </Sidebar>
 
         {/* Orders Content */}
+        {/* Mobile card list — always rendered, handles loading internally */}
+        <div className="responsive-table-mobile">
+          <MobileList
+            items={orders}
+            keyExtractor={(o: any) => o.id}
+            onTap={(o: any) => setSelectedOrderId(o.id)}
+            loading={ordersLoading}
+            totalCount={totalCount}
+            countLabel={t('orders')}
+            emptyMessage={t('noOrdersFound')}
+            hasMore={currentPage * pageSize < totalCount}
+            onLoadMore={() => setCurrentPage(prev => prev + 1)}
+            config={{
+              topLeft: (o: any) => `#${o.orderNumber}`,
+              topRight: (o: any) => `${(o.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${t('currency')}`,
+              bottomLeft: (o: any) => [o.customerName, o.customerPhone].filter(Boolean).join(' · '),
+              bottomRight: (o: any) => {
+                const dsb = getDeliveryStatusBadge(o.deliveryStatus);
+                return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '9999px', fontSize: '0.7rem', fontWeight: 600, backgroundColor: dsb.bg, color: dsb.color, border: `1px solid ${dsb.border}` }}>{dsb.label}</span>;
+              },
+            }}
+          />
+        </div>
+
         {ordersLoading ? (
-          <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
+          <div className="responsive-table-desktop animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -481,7 +506,7 @@ export default function Orders() {
             ))}
           </div>
         ) : orders.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '4rem' }}>
+          <div className="responsive-table-desktop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '4rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ position: 'relative' }}>
                 <div style={{ backgroundColor: '#fffbeb', borderRadius: '1rem', padding: '2rem', border: '2px solid #fef3c7' }}>
@@ -500,7 +525,7 @@ export default function Orders() {
             </div>
           </div>
         ) : (
-          <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div className="responsive-table-desktop" style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             <DataTable
               className="ord-datatable"
               value={orders}

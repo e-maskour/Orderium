@@ -1,4 +1,5 @@
 import { AlertTriangle, XCircle, PauseCircle, Ban, Mail, ArrowLeft, ShieldOff, Clock } from 'lucide-react';
+import orderiumLogo from '../assets/logo-backoffice.svg';
 
 export type BlockReason = 'trial_expired' | 'subscription_expired' | 'suspended' | 'disabled';
 
@@ -115,15 +116,11 @@ export function BlockedScreen({ reason }: Props) {
                         {/* Brand + nav row */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                                <div style={{
-                                    width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem',
-                                    background: `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: `0 4px 12px rgba(35,90,228,0.35)`,
-                                    flexShrink: 0,
-                                }}>
-                                    <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#fff' }}>O</span>
-                                </div>
+                                <img
+                                    src={orderiumLogo}
+                                    alt="Orderium"
+                                    style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+                                />
                                 <span style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a', letterSpacing: '-0.01em' }}>Orderium</span>
                             </div>
 

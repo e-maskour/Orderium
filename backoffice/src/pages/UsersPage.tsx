@@ -14,6 +14,7 @@ import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Users as UsersIcon, Shield, Plus, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
 import { usersService, type User, type CreateUserPayload, type UpdateUserPayload, type UserType } from '../modules/users';
+import { MobileList } from '../components/MobileList';
 import { rolesService, type Role } from '../modules/roles';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 
@@ -227,7 +228,30 @@ export default function UsersPage() {
     );
 
     const renderTable = () => (
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <>
+        <div className="responsive-table-mobile">
+            <MobileList
+                items={users}
+                keyExtractor={(u: User) => u.id}
+                loading={isLoading}
+                totalCount={totalRecords}
+                countLabel="utilisateurs"
+                emptyMessage="Aucun utilisateur trouvé"
+                hasMore={page * perPage < totalRecords}
+                onLoadMore={() => setPage((p) => p + 1)}
+                config={{
+                    topLeft: (u: User) => u.name || u.email || '—',
+                    topRight: (u: User) => u.phoneNumber || '',
+                    bottomLeft: (u: User) => u.role?.name || '—',
+                    bottomRight: (u: User) => (
+                        <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(u.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#fef2f2', color: '#dc2626' }) }}>
+                            {u.isActive ? 'Actif' : 'Inactif'}
+                        </span>
+                    ),
+                }}
+            />
+        </div>
+        <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         <DataTable
             value={users}
             loading={isLoading}
@@ -279,6 +303,7 @@ export default function UsersPage() {
             <Column header={t('actions' as any)} body={actionsTemplate} style={{ minWidth: '9rem' }} />
         </DataTable>
         </div>
+        </>
     );
 
     const roleOptions = roles.map((r) => ({ label: r.isSuperAdmin ? `⭐ ${r.name}` : r.name, value: r.id }));

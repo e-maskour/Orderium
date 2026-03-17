@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import orderiumLogo from '../../assets/logo-backoffice.svg';
 import { toastSuccess, toastError } from '../../services/toast.service';
 import { submitCompanyProfile, submitAdminAccount, completeOnboarding, invalidateOnboardingStatus } from '../../api/onboarding';
 import type { CreateAdminPayload } from '../../api/onboarding';
@@ -197,20 +198,11 @@ export default function OnboardingPage() {
                     <>
                         {/* Logo row */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                            <div
-                                style={{
-                                    width: '2.25rem',
-                                    height: '2.25rem',
-                                    borderRadius: '0.5rem',
-                                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    flexShrink: 0,
-                                }}
-                            >
-                                <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#fff' }}>O</span>
-                            </div>
+                            <img
+                                src={orderiumLogo}
+                                alt="Orderium"
+                                style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+                            />
                             <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>Orderium</span>
                         </div>
 

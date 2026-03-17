@@ -14,6 +14,7 @@ import { deliveryPersonService } from '../modules/delivery';
 import { DeliveryPerson } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { toastCreated, toastUpdated, toastDeleted, toastError, toastConfirm } from '../services/toast.service';
+import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { Modal } from '../components/Modal';
 
@@ -338,6 +339,27 @@ export default function DeliveryPersons() {
 
                 {/* Delivery Persons List */}
                 <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                  <div className="responsive-table-mobile">
+                    <MobileList
+                      items={filteredPersons}
+                      keyExtractor={(p: DeliveryPerson) => p.id}
+                      loading={isLoading}
+                      totalCount={filteredPersons.length}
+                      countLabel="livreurs"
+                      emptyMessage="Aucun livreur trouvé"
+                      config={{
+                        topLeft: (p: DeliveryPerson) => p.name,
+                        topRight: (p: DeliveryPerson) => p.phoneNumber,
+                        bottomLeft: (p: DeliveryPerson) => p.email || '',
+                        bottomRight: (p: DeliveryPerson) => (
+                          <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(p.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
+                            {p.isActive ? 'Actif' : 'Inactif'}
+                          </span>
+                        ),
+                      }}
+                    />
+                  </div>
+                  <div className="responsive-table-desktop">
                   {isLoading ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '4rem', paddingBottom: '4rem' }}>
                       <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
@@ -389,6 +411,7 @@ export default function DeliveryPersons() {
                       </DataTable>
                     </div>
                   )}
+                  </div>{/* end responsive-table-desktop */}
                 </div>
               </div>
             )}

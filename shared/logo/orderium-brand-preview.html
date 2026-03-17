@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orderium Logo Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #0f0f13;
+    color: #ffffff;
+    min-height: 100vh;
+    padding: 60px 40px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 80px;
+  }
+  .header h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #8a8a9a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header p {
+    font-size: 16px;
+    color: #6b6b7b;
+    font-weight: 400;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    max-width: 1100px;
+    margin: 0 auto 100px;
+  }
+  .card {
+    background: #18181f;
+    border-radius: 24px;
+    padding: 48px 32px;
+    text-align: center;
+    border: 1px solid #2a2a35;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .card svg {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 28px;
+  }
+  .card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .card .app-name {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+  .card .hex {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .card-blue .app-name { color: #5b8af0; }
+  .card-blue .hex { background: rgba(35,90,228,0.15); color: #5b8af0; }
+  .card-green .app-name { color: #34d399; }
+  .card-green .hex { background: rgba(5,150,105,0.15); color: #34d399; }
+  .card-orange .app-name { color: #f5a623; }
+  .card-orange .hex { background: rgba(223,120,23,0.15); color: #f5a623; }
+
+  /* Usage section */
+  .section-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 48px;
+    color: #ffffff;
+  }
+  .usage-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto 100px;
+  }
+  .usage-card {
+    background: #18181f;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #2a2a35;
+  }
+  .usage-card .preview {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .usage-card .preview svg {
+    width: 56px;
+    height: 56px;
+  }
+  .usage-card .preview .brand-text {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+  .preview-blue { background: linear-gradient(135deg, #1a3fba 0%, #2b6af0 100%); }
+  .preview-green { background: linear-gradient(135deg, #047857 0%, #06b57a 100%); }
+  .preview-orange { background: linear-gradient(135deg, #c96510 0%, #f08a2e 100%); }
+  .preview-dark { background: #0f0f13; }
+  .preview-light { background: #f5f5f7; }
+  .preview-white { background: #ffffff; }
+  .usage-card .label {
+    padding: 16px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #8a8a9a;
+  }
+
+  /* Sidebar mockups */
+  .sidebar-section {
+    max-width: 1100px;
+    margin: 0 auto 100px;
+  }
+  .sidebar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+  .sidebar-mock {
+    background: #18181f;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #2a2a35;
+  }
+  .sidebar-inner {
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .sidebar-inner svg { width: 40px; height: 40px; flex-shrink: 0; }
+  .sidebar-inner .sb-text h4 { font-size: 15px; font-weight: 700; }
+  .sidebar-inner .sb-text span { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
+  .sb-dark { background: #0c1023; }
+  .sb-dark .sb-text span { color: #5b8af0; }
+  .sb-green-dark { background: #0a1f18; }
+  .sb-green-dark .sb-text span { color: #34d399; }
+  .sb-orange-dark { background: #1f1408; }
+  .sb-orange-dark .sb-text span { color: #f5a623; }
+  .sidebar-mock .label {
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #8a8a9a;
+    border-top: 1px solid #2a2a35;
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 40px 20px; }
+    .header h1 { font-size: 28px; }
+    .grid, .usage-grid, .sidebar-grid { grid-template-columns: 1fr; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Orderium — Logo Suite</h1>
+  <p>Professional brand identity across all three portals</p>
+</div>
+
+<!-- Main logos -->
+<div class="grid">
+  <div class="card card-blue">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2b6af0"/><stop offset="100%" style="stop-color:#1a3fba"/></linearGradient>
+        <linearGradient id="o1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#e0e8ff"/></linearGradient>
+      </defs>
+      <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg1)"/>
+      <rect x="14" y="14" width="172" height="172" rx="37" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+      <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o1)"/>
+      <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#235ae4"/>
+    </svg>
+    <h3>Orderium</h3>
+    <p class="app-name">Backoffice</p>
+    <span class="hex">#235AE4</span>
+  </div>
+
+  <div class="card card-green">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#06b57a"/><stop offset="100%" style="stop-color:#047857"/></linearGradient>
+        <linearGradient id="o2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#d1fae5"/></linearGradient>
+      </defs>
+      <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg2)"/>
+      <rect x="14" y="14" width="172" height="172" rx="37" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+      <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o2)"/>
+      <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#059669"/>
+    </svg>
+    <h3>Orderium</h3>
+    <p class="app-name">Client Portal</p>
+    <span class="hex">#059669</span>
+  </div>
+
+  <div class="card card-orange">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f08a2e"/><stop offset="100%" style="stop-color:#c96510"/></linearGradient>
+        <linearGradient id="o3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#fff0db"/></linearGradient>
+      </defs>
+      <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg3)"/>
+      <rect x="14" y="14" width="172" height="172" rx="37" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+      <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o3)"/>
+      <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#df7817"/>
+    </svg>
+    <h3>Orderium</h3>
+    <p class="app-name">Delivery Portal</p>
+    <span class="hex">#DF7817</span>
+  </div>
+</div>
+
+<!-- Usage on colored backgrounds -->
+<h2 class="section-title">On Brand Backgrounds</h2>
+<div class="usage-grid">
+  <div class="usage-card">
+    <div class="preview preview-blue">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bg4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2b6af0"/><stop offset="100%" style="stop-color:#1a3fba"/></linearGradient><linearGradient id="o4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#e0e8ff"/></linearGradient></defs>
+        <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg4)"/>
+        <rect x="14" y="14" width="172" height="172" rx="37" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+        <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o4)"/>
+        <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#235ae4"/>
+      </svg>
+      <span class="brand-text">Orderium</span>
+    </div>
+    <div class="label">Backoffice — branded header</div>
+  </div>
+  <div class="usage-card">
+    <div class="preview preview-green">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#06b57a"/><stop offset="100%" style="stop-color:#047857"/></linearGradient><linearGradient id="o5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#d1fae5"/></linearGradient></defs>
+        <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg5)"/>
+        <rect x="14" y="14" width="172" height="172" rx="37" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+        <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o5)"/>
+        <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#059669"/>
+      </svg>
+      <span class="brand-text">Orderium</span>
+    </div>
+    <div class="label">Client — branded header</div>
+  </div>
+  <div class="usage-card">
+    <div class="preview preview-orange">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bg6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f08a2e"/><stop offset="100%" style="stop-color:#c96510"/></linearGradient><linearGradient id="o6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#fff0db"/></linearGradient></defs>
+        <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg6)"/>
+        <rect x="14" y="14" width="172" height="172" rx="37" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+        <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o6)"/>
+        <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#df7817"/>
+      </svg>
+      <span class="brand-text">Orderium</span>
+    </div>
+    <div class="label">Delivery — branded header</div>
+  </div>
+</div>
+
+<!-- Sidebar usage -->
+<h2 class="section-title">Sidebar Usage</h2>
+<div class="sidebar-section">
+  <div class="sidebar-grid">
+    <div class="sidebar-mock">
+      <div class="sidebar-inner sb-dark">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="bg7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2b6af0"/><stop offset="100%" style="stop-color:#1a3fba"/></linearGradient><linearGradient id="o7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#e0e8ff"/></linearGradient></defs>
+          <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg7)"/>
+          <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o7)"/>
+          <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#235ae4"/>
+        </svg>
+        <div class="sb-text">
+          <h4>Orderium</h4>
+          <span>Enterprise</span>
+        </div>
+      </div>
+      <div class="label">Backoffice sidebar — dark navy</div>
+    </div>
+    <div class="sidebar-mock">
+      <div class="sidebar-inner sb-green-dark">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="bg8" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#06b57a"/><stop offset="100%" style="stop-color:#047857"/></linearGradient><linearGradient id="o8" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#d1fae5"/></linearGradient></defs>
+          <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg8)"/>
+          <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o8)"/>
+          <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#059669"/>
+        </svg>
+        <div class="sb-text">
+          <h4>Orderium</h4>
+          <span>Client</span>
+        </div>
+      </div>
+      <div class="label">Client sidebar — dark emerald</div>
+    </div>
+    <div class="sidebar-mock">
+      <div class="sidebar-inner sb-orange-dark">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="bg9" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f08a2e"/><stop offset="100%" style="stop-color:#c96510"/></linearGradient><linearGradient id="o9" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#fff0db"/></linearGradient></defs>
+          <rect x="10" y="10" width="180" height="180" rx="40" fill="url(#bg9)"/>
+          <path d="M100 52c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 78c-16.6 0-30-13.4-30-30s13.4-30 30-30 30 13.4 30 30-13.4 30-30 30z" fill="url(#o9)"/>
+          <circle cx="152" cy="52" r="8" fill="#ffffff" opacity="0.9"/><circle cx="152" cy="52" r="4" fill="#df7817"/>
+        </svg>
+        <div class="sb-text">
+          <h4>Orderium</h4>
+          <span>Delivery</span>
+        </div>
+      </div>
+      <div class="label">Delivery sidebar — dark amber</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

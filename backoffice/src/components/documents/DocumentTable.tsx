@@ -7,6 +7,8 @@ import { DocumentType } from '../../modules/documents/types';
 import { pdfService } from '../../services/pdf.service';
 import { PDFPreviewModal } from '../PDFPreviewModal';
 import { useLanguage } from '../../context/LanguageContext';
+import { MobileList } from '../MobileList';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface Document {
   id: number;
@@ -73,6 +75,7 @@ export function DocumentTable({
   onPageSizeChange
 }: DocumentTableProps) {
   const { t, language } = useLanguage();
+  const isMobile = useIsMobile();
   const [selectedRows, setSelectedRows] = useState<Document[]>([]);
   const selectedDocuments = selectedRows.map(r => r.id);
   const visibleColumns = { tax: false, paidAmount: false, remainingAmount: false };
@@ -275,8 +278,8 @@ export function DocumentTable({
         })()}
       />
 
-      {/* DataTable */}
-      <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      {/* DataTable — desktop only */}
+      <div className="responsive-table-desktop" style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
       <DataTable
         className="doc-datatable"
         value={documents}
@@ -423,6 +426,37 @@ export function DocumentTable({
           )}
         />
       </DataTable>
+      </div>
+
+      {/* Mobile card list */}
+      <div className="responsive-table-mobile">
+        <MobileList
+          items={documents}
+          keyExtractor={(doc) => doc.id}
+          onTap={(doc) => onEdit?.(doc.id)}
+          loading={loading}
+          totalCount={totalCount}
+          countLabel={itemLabel}
+          emptyMessage={t('noDocumentFound')}
+          config={{
+            topLeft: (doc) => doc.number,
+            topRight: (doc) => (
+              <span>
+                {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })}{' '}
+                {language === 'ar' ? 'د.م' : 'DH'}
+              </span>
+            ),
+            bottomLeft: (doc) =>
+              `${doc.partnerName} · ${new Date(doc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+            bottomRight: (doc) => (
+              <span className={getStatusBadgeClass(doc.status)}>
+                {getStatusLabel(doc.status)}
+              </span>
+            ),
+          }}
+          hasMore={currentPage * pageSize < totalCount}
+          onLoadMore={() => onPageChange(currentPage + 1)}
+        />
       </div>
 
       {/* PDF Preview Modal */}

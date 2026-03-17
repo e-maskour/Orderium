@@ -12,6 +12,7 @@ import { stockMovementService } from '../modules/inventory/stock-movements.servi
 import { StockMovement } from '../modules/inventory/inventory.model';
 import { toastValidated, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
+import { MobileList } from '../components/MobileList';
 
 export default function StockMovements() {
   const { t } = useLanguage();
@@ -169,7 +170,23 @@ export default function StockMovements() {
       </div>
 
       {/* Movements List */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      <div className="responsive-table-mobile" style={{ marginBottom: '0.5rem' }}>
+        <MobileList
+          items={filteredMovements}
+          keyExtractor={(m: StockMovement) => m.id}
+          loading={isLoading}
+          totalCount={filteredMovements.length}
+          countLabel="mouvements"
+          emptyMessage="Aucun mouvement trouvé"
+          config={{
+            topLeft: (m: StockMovement) => m.reference,
+            topRight: (m: StockMovement) => `${parseFloat(m.quantity.toString()).toFixed(2)} ${m.unitOfMeasureCode || 'U'}`,
+            bottomLeft: (m: StockMovement) => m.productName || `Produit #${m.productId}`,
+            bottomRight: (m: StockMovement) => getStatusBadge(m.status),
+          }}
+        />
+      </div>
+      <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         <DataTable
           className="sm-datatable"
           value={filteredMovements}

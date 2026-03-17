@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orderium Logo & Brand Usage Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #0f0f13;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 60px 40px;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+            font-size: 0.875em;
+            background: #1e1e2a;
+            border: 1px solid #2a2a38;
+            border-radius: 6px;
+            padding: 2px 7px;
+            color: #a5b4fc;
+        }
+
+        pre {
+            background: #13131a;
+            border: 1px solid #2a2a38;
+            border-radius: 12px;
+            padding: 20px 24px;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #e2e8f0;
+            margin: 16px 0;
+        }
+
+        pre .comment {
+            color: #4b5563;
+        }
+
+        pre .keyword {
+            color: #a78bfa;
+        }
+
+        pre .string {
+            color: #86efac;
+        }
+
+        pre .attr {
+            color: #7dd3fc;
+        }
+
+        /* ─── Layout ─── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ─── Header ─── */
+        .page-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .page-header h1 {
+            font-size: 44px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #6b7280 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            font-size: 16px;
+            color: #6b6b7b;
+            font-weight: 400;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            margin-bottom: 20px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+        }
+
+        /* ─── Section titles ─── */
+        .section {
+            margin-bottom: 80px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #1e1e2a;
+        }
+
+        .section-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .section-header span {
+            font-size: 13px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        /* ─── Logo grid ─── */
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .logo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .logo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .logo-card {
+            background: #18181f;
+            border-radius: 20px;
+            padding: 40px 24px;
+            text-align: center;
+            border: 1px solid #2a2a35;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+        }
+
+        .logo-card img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .logo-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #f1f5f9;
+        }
+
+        .logo-card .portal-tag {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .logo-card .hex {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            margin-bottom: 8px;
+        }
+
+        .logo-card .filename {
+            font-size: 11px;
+            color: #4b5563;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .blue .portal-tag {
+            color: #5b8af0;
+        }
+
+        .blue .hex {
+            background: rgba(35, 90, 228, 0.15);
+            color: #5b8af0;
+        }
+
+        .green .portal-tag {
+            color: #34d399;
+        }
+
+        .green .hex {
+            background: rgba(5, 150, 105, 0.15);
+            color: #34d399;
+        }
+
+        .orange .portal-tag {
+            color: #f5a623;
+        }
+
+        .orange .hex {
+            background: rgba(223, 120, 23, 0.15);
+            color: #f5a623;
+        }
+
+        .slate .portal-tag {
+            color: #94a3b8;
+        }
+
+        .slate .hex {
+            background: rgba(71, 85, 105, 0.2);
+            color: #94a3b8;
+        }
+
+        /* ─── Banner grid ─── */
+        .banner-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .banner-card {
+            background: #18181f;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2a2a35;
+        }
+
+        .banner-preview {
+            padding: 28px 32px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+        }
+
+        .banner-preview img {
+            height: 56px;
+        }
+
+        .banner-preview.dark {
+            background: #0f172a;
+        }
+
+        .banner-info {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .banner-info .name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .banner-info .file {
+            font-size: 12px;
+            font-family: 'SF Mono', monospace;
+            color: #4b5563;
+        }
+
+        /* ─── Background usage ─── */
+        .bg-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .bg-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .bg-chip {
+            border-radius: 14px;
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 80px;
+        }
+
+        .bg-chip img {
+            height: 40px;
+        }
+
+        .bg-chip .bg-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            opacity: 0.7;
+        }
+
+        .bg-brand-blue {
+            background: linear-gradient(135deg, #1a3fba, #2b6af0);
+        }
+
+        .bg-brand-green {
+            background: linear-gradient(135deg, #047857, #06b57a);
+        }
+
+        .bg-brand-orange {
+            background: linear-gradient(135deg, #c96510, #f08a2e);
+        }
+
+        .bg-dark {
+            background: #0f172a;
+        }
+
+        .bg-mid {
+            background: #1e293b;
+        }
+
+        .bg-light {
+            background: #f8fafc;
+        }
+
+        .bg-white {
+            background: #ffffff;
+        }
+
+        /* ─── Size guide ─── */
+        .size-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 0;
+            border-bottom: 1px solid #1e1e2a;
+        }
+
+        .size-row:last-child {
+            border-bottom: none;
+        }
+
+        .size-label {
+            width: 150px;
+            font-size: 13px;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+
+        .size-px {
+            width: 60px;
+            font-size: 13px;
+            font-family: 'SF Mono', monospace;
+            color: #a5b4fc;
+            flex-shrink: 0;
+        }
+
+        .size-demo {
+            display: flex;
+            align-items: center;
+        }
+
+        .size-demo img {
+            display: block;
+        }
+
+        /* ─── Do / Don't ─── */
+        .rule-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .rule-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .rule-card {
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid;
+        }
+
+        .rule-card.do {
+            background: rgba(5, 150, 105, 0.08);
+            border-color: rgba(5, 150, 105, 0.25);
+        }
+
+        .rule-card.dont {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .rule-card .rule-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rule-card.do .rule-title {
+            color: #34d399;
+        }
+
+        .rule-card.dont .rule-title {
+            color: #f87171;
+        }
+
+        .rule-card ul {
+            padding-left: 18px;
+        }
+
+        .rule-card li {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        /* ─── Code snippets ─── */
+        .snippet-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 0;
+            border-bottom: 1px solid #1e1e2a;
+            padding-bottom: 0;
+        }
+
+        .snippet-tab {
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            background: transparent;
+            transition: all 0.15s;
+        }
+
+        .snippet-tab.active {
+            color: #a5b4fc;
+            background: #13131a;
+            border-color: #2a2a38;
+        }
+
+        .snippet-block {
+            background: #13131a;
+            border: 1px solid #2a2a38;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            padding: 20px 24px;
+            margin-bottom: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- ─── Page Header ─── -->
+        <div class="page-header">
+            <div class="badge">Brand Assets v1.0 · March 2026</div>
+            <h1>Orderium Logo &amp; Brand Guide</h1>
+            <p>Official logo and banner assets for all Orderium portals. Import from <code>shared/logo/</code> — never
+                duplicate files in individual portal folders.</p>
+        </div>
+
+        <!-- ─── 1. Logo Variants ─── -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Logo Variants</h2>
+                <span>4 files · square format · 200×200 viewBox</span>
+            </div>
+            <div class="logo-grid">
+                <div class="logo-card blue">
+                    <img src="logo-backoffice.svg" alt="Backoffice logo">
+                    <h3>Backoffice</h3>
+                    <div class="portal-tag">Admin / Enterprise</div>
+                    <div class="hex">#235ae4</div><br>
+                    <div class="filename">logo-backoffice.svg</div>
+                </div>
+                <div class="logo-card green">
+                    <img src="logo-client.svg" alt="Client logo">
+                    <h3>Client Portal</h3>
+                    <div class="portal-tag">Customer App</div>
+                    <div class="hex">#059669</div><br>
+                    <div class="filename">logo-client.svg</div>
+                </div>
+                <div class="logo-card orange">
+                    <img src="logo-delivery.svg" alt="Delivery logo">
+                    <h3>Delivery Portal</h3>
+                    <div class="portal-tag">Driver App</div>
+                    <div class="hex">#df7817</div><br>
+                    <div class="filename">logo-delivery.svg</div>
+                </div>
+                <div class="logo-card slate">
+                    <img src="logo-master.svg" alt="Master logo">
+                    <h3>Master / Neutral</h3>
+                    <div class="portal-tag">Invoices · PDFs · Email</div>
+                    <div class="hex">#1e293b</div><br>
+                    <div class="filename">logo-master.svg</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── 2. Banner Variants ─── -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Banner Variants</h2>
+                <span>3 files · horizontal format · 360×80 viewBox</span>
+            </div>
+            <div class="banner-grid">
+                <div class="banner-card">
+                    <div class="banner-preview bg-light">
+                        <img src="banner-backoffice.svg" alt="Backoffice banner">
+                    </div>
+                    <div class="banner-info">
+                        <span class="name">Backoffice Banner — light background</span>
+                        <span class="file">banner-backoffice.svg</span>
+                    </div>
+                </div>
+                <div class="banner-card">
+                    <div class="banner-preview bg-dark">
+                        <img src="banner-backoffice.svg" alt="Backoffice banner dark">
+                    </div>
+                    <div class="banner-info">
+                        <span class="name">Backoffice Banner — dark background</span>
+                        <span class="file">banner-backoffice.svg</span>
+                    </div>
+                </div>
+                <div class="banner-card">
+                    <div class="banner-preview bg-light">
+                        <img src="banner-client.svg" alt="Client banner">
+                    </div>
+                    <div class="banner-info">
+                        <span class="name">Client Portal Banner</span>
+                        <span class="file">banner-client.svg</span>
+                    </div>
+                </div>
+                <div class="banner-card">
+                    <div class="banner-preview bg-light">
+                        <img src="banner-delivery.svg" alt="Delivery banner">
+                    </div>
+                    <div class="banner-info">
+                        <span class="name">Delivery Portal Banner</span>
+                        <span class="file">banner-delivery.svg</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── 3. Background Usage ─── -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Background Placement</h2>
+                <span>Logos on all approved background types</span>
+            </div>
+            <div class="bg-grid">
+                <div class="bg-chip bg-brand-blue">
+                    <img src="logo-backoffice.svg" alt="">
+                    <span class="bg-label" style="color:#fff">Brand Blue</span>
+                </div>
+                <div class="bg-chip bg-brand-green">
+                    <img src="logo-client.svg" alt="">
+                    <span class="bg-label" style="color:#fff">Brand Green</span>
+                </div>
+                <div class="bg-chip bg-brand-orange">
+                    <img src="logo-delivery.svg" alt="">
+                    <span class="bg-label" style="color:#fff">Brand Orange</span>
+                </div>
+                <div class="bg-chip bg-dark" style="border:1px solid #1e293b">
+                    <img src="logo-backoffice.svg" alt="">
+                    <span class="bg-label" style="color:#94a3b8">Dark bg (#0f172a)</span>
+                </div>
+                <div class="bg-chip bg-mid" style="border:1px solid #1e293b">
+                    <img src="logo-backoffice.svg" alt="">
+                    <span class="bg-label" style="color:#94a3b8">Mid bg (#1e293b)</span>
+                </div>
+                <div class="bg-chip bg-white" style="border:1px solid #e5e7eb">
+                    <img src="logo-master.svg" alt="">
+                    <span class="bg-label" style="color:#94a3b8">White bg</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── 4. Size Guide ─── -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Minimum Size Guide</h2>
+                <span>Never render below 16px — the "O" ring becomes unreadable</span>
+            </div>
+            <div class="size-row">
+                <div class="size-label">Favicon / tiny</div>
+                <div class="size-px">16px</div>
+                <div class="size-demo"><img src="logo-backoffice.svg" style="height:16px;width:16px"></div>
+            </div>
+            <div class="size-row">
+                <div class="size-label">Sidebar collapsed</div>
+                <div class="size-px">36px</div>
+                <div class="size-demo"><img src="logo-backoffice.svg" style="height:36px;width:36px"></div>
+            </div>
+            <div class="size-row">
+                <div class="size-label">Sidebar expanded</div>
+                <div class="size-px">36px</div>
+                <div class="size-demo"><img src="logo-backoffice.svg" style="height:36px;width:36px"></div>
+            </div>
+            <div class="size-row">
+                <div class="size-label">Header / mobile</div>
+                <div class="size-px">36px</div>
+                <div class="size-demo"><img src="logo-client.svg" style="height:36px;width:36px"></div>
+            </div>
+            <div class="size-row">
+                <div class="size-label">Login hero</div>
+                <div class="size-px">90px</div>
+                <div class="size-demo"><img src="logo-backoffice.svg" style="height:90px;width:90px"></div>
+            </div>
+            <div class="size-row">
+                <div class="size-label">Marketing / splash</div>
+                <div class="size-px">120px</div>
+                <div class="size-demo"><img src="logo-backoffice.svg" style="height:120px;width:120px"></div>
+            </div>
+        </div>
+
+        <!-- ─── 5. Do / Don't ─── -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Do's &amp; Don'ts</h2>
+            </div>
+            <div class="rule-grid">
+                <div class="rule-card do">
+                    <div class="rule-title">✓ Do</div>
+                    <ul>
+                        <li>Use the correct portal color variant for each app</li>
+                        <li>Maintain equal padding around the logo (minimum 8px clear space)</li>
+                        <li>Use <code>logo-master.svg</code> for printed/PDF/email contexts</li>
+                        <li>Import only from <code>shared/logo/</code> — use the Vite alias</li>
+                        <li>Use <code>&lt;img&gt;</code> or inline SVG — both are fine</li>
+                        <li>Import banners (<code>banner-*.svg</code>) for sidebar desktop headers</li>
+                        <li>Maintain aspect ratio at all times</li>
+                    </ul>
+                </div>
+                <div class="rule-card dont">
+                    <div class="rule-title">✗ Don't</div>
+                    <ul>
+                        <li>Don't copy SVG files into individual portal <code>src/assets/</code> folders</li>
+                        <li>Don't stretch or squash the logo (set both width and height equally)</li>
+                        <li>Don't recolor or modify the SVG gradients</li>
+                        <li>Don't place the backoffice (blue) logo in the client app</li>
+                        <li>Don't render below 16px (favicon minimum)</li>
+                        <li>Don't use the letter "O" div or Lucide icons as logo substitutes</li>
+                        <li>Don't place the logo on clashing mid-tone colored backgrounds</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── 6. React Usage ─── -->
+        <div class="section">
+            <div class="section-header">
+                <h2>React Import Examples</h2>
+                <span>Copy-paste snippets for each portal</span>
+            </div>
+
+            <h3 style="font-size:16px;color:#94a3b8;margin-bottom:8px;margin-top:24px">1 · Import the logo URL</h3>
+            <pre><span class="comment">// Works in all portals via the @shared-logo Vite alias</span>
+<span class="keyword">import</span> orderiumLogo <span class="keyword">from</span> <span class="string">'@shared-logo/logo-backoffice.svg'</span>;   <span class="comment">// backoffice</span>
+<span class="keyword">import</span> orderiumLogo <span class="keyword">from</span> <span class="string">'@shared-logo/logo-client.svg'</span>;       <span class="comment">// client portal</span>
+<span class="keyword">import</span> orderiumLogo <span class="keyword">from</span> <span class="string">'@shared-logo/logo-delivery.svg'</span>;     <span class="comment">// delivery portal</span>
+<span class="keyword">import</span> orderiumBanner <span class="keyword">from</span> <span class="string">'@shared-logo/banner-backoffice.svg'</span>; <span class="comment">// sidebar banner</span></pre>
+
+            <h3 style="font-size:16px;color:#94a3b8;margin-bottom:8px;margin-top:24px">2 · Sidebar header (desktop
+                expanded)</h3>
+            <pre><span class="comment">// Shows full banner with wordmark on expanded sidebar</span>
+&lt;<span class="attr">img</span>
+  src={orderiumBanner}
+  alt=<span class="string">"Orderium"</span>
+  style={{ height: <span class="string">'2rem'</span>, width: <span class="string">'auto'</span> }}
+/&gt;</pre>
+
+            <h3 style="font-size:16px;color:#94a3b8;margin-bottom:8px;margin-top:24px">3 · Sidebar header (collapsed /
+                icon-only)</h3>
+            <pre>&lt;<span class="attr">img</span>
+  src={orderiumLogo}
+  alt=<span class="string">"Orderium"</span>
+  style={{ width: <span class="string">'2.25rem'</span>, height: <span class="string">'2.25rem'</span>, flexShrink: 0 }}
+/&gt;</pre>
+
+            <h3 style="font-size:16px;color:#94a3b8;margin-bottom:8px;margin-top:24px">4 · Login page hero logo</h3>
+            <pre>&lt;<span class="attr">img</span>
+  src={orderiumLogo}
+  alt=<span class="string">"Orderium"</span>
+  style={{
+    width: <span class="string">'90px'</span>,
+    height: <span class="string">'90px'</span>,
+    marginBottom: <span class="string">'1.25rem'</span>,
+    position: <span class="string">'relative'</span>,
+    zIndex: 1,
+    filter: <span class="string">'drop-shadow(0 8px 30px rgba(0,0,0,0.22))'</span>,
+  }}
+/&gt;</pre>
+
+            <h3 style="font-size:16px;color:#94a3b8;margin-bottom:8px;margin-top:24px">5 · Mobile header logo + wordmark
+            </h3>
+            <pre><span class="comment">// Logo-only on mobile (sm:hidden), banner on desktop (hidden sm:flex)</span>
+&lt;<span class="attr">Link</span> to=<span class="string">"/"</span>&gt;
+  &lt;<span class="comment">/* Mobile: logo icon only */</span>&gt;
+  &lt;<span class="attr">img</span> src={orderiumLogo} alt=<span class="string">"Orderium"</span>
+       style={{ width: <span class="string">'2.25rem'</span>, height: <span class="string">'2.25rem'</span> }} /&gt;
+
+  &lt;<span class="comment">/* Desktop: full banner */</span>&gt;
+  &lt;<span class="attr">img</span> src={orderiumBanner} alt=<span class="string">"Orderium"</span>
+       className=<span class="string">"hidden sm:block"</span>
+       style={{ height: <span class="string">'2rem'</span>, width: <span class="string">'auto'</span> }} /&gt;
+&lt;/<span class="attr">Link</span>&gt;</pre>
+
+            <h3 style="font-size:16px;color:#94a3b8;margin-bottom:8px;margin-top:24px">6 · TypeScript type declaration
+                (if needed)</h3>
+            <pre><span class="comment">// vite-env.d.ts or a custom *.d.ts file</span>
+<span class="keyword">declare</span> module <span class="string">'*.svg'</span> {
+  <span class="keyword">const</span> src: <span class="keyword">string</span>
+  <span class="keyword">export default</span> src
+}</pre>
+        </div>
+
+        <!-- ─── Footer ─── -->
+        <div style="text-align:center;padding:40px 0;border-top:1px solid #1e1e2a;color:#4b5563;font-size:13px;">
+            Orderium Brand Assets · shared/logo/ · Do not distribute externally
+        </div>
+
+    </div>
+</body>
+
+</html>

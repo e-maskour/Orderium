@@ -32,6 +32,9 @@
       ],
       "@orderium/ui/*": [
         "../shared/ui/src/*"
+      ],
+      "@shared-logo/*": [
+        "../shared/logo/*"
       ]
     }
   },

@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
         allow: [
           path.resolve(__dirname, '.'),
           path.resolve(__dirname, '../shared/ui'),
+          path.resolve(__dirname, '../shared/logo'),
         ],
       },
       proxy: {
@@ -32,6 +33,7 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "@orderium/ui": path.resolve(__dirname, "../shared/ui/src"),
+        "@shared-logo": path.resolve(__dirname, "../shared/logo"),
       },
     },
   };

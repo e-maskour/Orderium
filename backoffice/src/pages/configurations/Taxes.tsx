@@ -13,6 +13,7 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
+import { MobileList } from '../../components/MobileList';
 
 export default function Taxes() {
     const { t } = useLanguage();
@@ -113,14 +114,6 @@ export default function Taxes() {
                 actions={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Button
-                            onClick={() => navigate('/configurations')}
-                            icon={<ArrowLeft style={{ width: 16, height: 16 }} />}
-                            label={t('retour')}
-                            severity="secondary"
-                            outlined
-                            size="small"
-                        />
-                        <Button
                             onClick={openCreateModal}
                             icon={<Plus style={{ width: 16, height: 16 }} />}
                             label={t('addTaxRate')}
@@ -130,7 +123,22 @@ export default function Taxes() {
                 }
             />
 
-            <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div className="responsive-table-mobile">
+                <MobileList
+                    items={rates}
+                    keyExtractor={(r: TaxRate) => String(r.name)}
+                    loading={isLoading}
+                    totalCount={rates.length}
+                    countLabel="taux"
+                    emptyMessage="Aucun taux configuré"
+                    config={{
+                        topLeft: (r: TaxRate) => r.name,
+                        topRight: (r: TaxRate) => `${r.rate}%`,
+                        bottomRight: (r: TaxRate) => r.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null,
+                    }}
+                />
+            </div>
+            <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                 <DataTable
                     className="tax-datatable"
                     value={rates.map((r, i) => ({ ...r, _idx: i }))}
@@ -159,8 +167,6 @@ export default function Taxes() {
                     )} />
                 </DataTable>
             </div>
-
-            {/* Modal */}
             <Modal
                 isOpen={showModal}
                 onClose={closeModal}

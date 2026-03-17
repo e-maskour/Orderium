@@ -14,6 +14,7 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
+import { MobileList } from '../../components/MobileList';
 
 export default function UnitsOfMeasure() {
     const { t } = useLanguage();
@@ -188,14 +189,6 @@ export default function UnitsOfMeasure() {
                 actions={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Button
-                            onClick={() => navigate('/configurations')}
-                            icon={<ArrowLeft style={{ width: 16, height: 16 }} />}
-                            label={t('retour')}
-                            severity="secondary"
-                            outlined
-                            size="small"
-                        />
-                        <Button
                             onClick={openCreateModal}
                             icon={<Plus style={{ width: 16, height: 16 }} />}
                             label={t('addUom') || 'Add UOM'}
@@ -205,7 +198,25 @@ export default function UnitsOfMeasure() {
                 }
             />
 
-            <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div className="responsive-table-mobile">
+                <MobileList
+                    items={filteredUoms}
+                    keyExtractor={(uom: IUnitOfMeasure) => uom.id ?? String(uom.code)}
+                    loading={isLoading}
+                    totalCount={filteredUoms.length}
+                    countLabel="unités"
+                    emptyMessage="Aucune unité trouvée"
+                    config={{
+                        topLeft: (uom: IUnitOfMeasure) => uom.name,
+                        topRight: (uom: IUnitOfMeasure) => uom.code,
+                        bottomLeft: (uom: IUnitOfMeasure) => uom.category,
+                        bottomRight: (uom: IUnitOfMeasure) => uom.isActive
+                            ? <span className="erp-badge erp-badge--paid">{t('active')}</span>
+                            : <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>,
+                    }}
+                />
+            </div>
+            <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                 <DataTable
                     className="uom-datatable"
                     value={filteredUoms.slice().sort((a, b) => a.category.localeCompare(b.category))}
@@ -249,7 +260,6 @@ export default function UnitsOfMeasure() {
                 </DataTable>
             </div>
 
-            {/* Modal */}
             <Modal
                 isOpen={showModal}
                 onClose={closeModal}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import orderiumLogo from '../assets/logo-backoffice.svg';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -536,27 +537,24 @@ export default function POS() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
               <button
                 onClick={() => navigate('/dashboard')}
+                title={t('back')}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '0.375rem',
-                  padding: '0.375rem 0.625rem', fontSize: '0.8125rem', fontWeight: 500,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0.375rem', fontSize: '0.8125rem',
                   color: 'rgba(255,255,255,0.85)', borderRadius: '0.5rem',
                   border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)',
                   cursor: 'pointer',
                 }}
               >
                 <ArrowLeft style={{ width: '0.875rem', height: '0.875rem', transform: dir === 'rtl' ? 'rotate(180deg)' : undefined }} />
-                {t('back')}
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                <div style={{
-                  width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem',
-                  background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 4px 10px rgba(35,90,228,0.35)',
-                }}>
-                  <ShoppingBag style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2.2} />
-                </div>
+                <img
+                  src={orderiumLogo}
+                  alt="Orderium"
+                  style={{ width: '2.25rem', height: '2.25rem' }}
+                />
                 <div>
                   <h1 style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.01em' }}>
                     {t('pointOfSale')}

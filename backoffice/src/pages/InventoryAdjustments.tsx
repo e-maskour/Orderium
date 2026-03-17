@@ -12,6 +12,7 @@ import { Column } from 'primereact/column';
 import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjustments.service';
 import { InventoryAdjustment } from '../modules/inventory/inventory.model';
 import { toastSuccess, toastValidated, toastDeleted, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
+import { MobileList } from '../components/MobileList';
 
 export default function InventoryAdjustments() {
   const { dir, t } = useLanguage();
@@ -122,7 +123,23 @@ export default function InventoryAdjustments() {
       </div>
 
       {/* Adjustments List */}
-      <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      <div className="responsive-table-mobile">
+        <MobileList
+          items={filteredAdjustments}
+          keyExtractor={(adj: InventoryAdjustment) => adj.id}
+          loading={isLoading}
+          totalCount={filteredAdjustments.length}
+          countLabel="ajustements"
+          emptyMessage="Aucun ajustement trouvé"
+          config={{
+            topLeft: (adj: InventoryAdjustment) => adj.reference,
+            topRight: (adj: InventoryAdjustment) => adj.warehouseName || `Entrepôt ${adj.warehouseId}`,
+            bottomLeft: (adj: InventoryAdjustment) => adj.notes || adj.adjustmentDate || '',
+            bottomRight: (adj: InventoryAdjustment) => getStatusBadge(adj.status),
+          }}
+        />
+      </div>
+      <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         <DataTable
           className="ia-datatable"
           value={filteredAdjustments}

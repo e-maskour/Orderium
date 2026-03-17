@@ -13,6 +13,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { Tag } from 'primereact/tag';
 import { Shield, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { rolesService, type Role, type CreateRolePayload, type UpdateRolePayload } from '../modules/roles';
+import { MobileList } from '../components/MobileList';
 import { permissionsService, type Permission, groupPermissionsByModule } from '../modules/permissions';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 
@@ -284,7 +285,25 @@ export default function RolesPage() {
                     }
                 />
 
-                <div style={{ marginTop: '1rem', backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <div className="responsive-table-mobile" style={{ marginTop: '1rem' }}>
+                    <MobileList
+                        items={roles}
+                        keyExtractor={(r: Role) => r.id}
+                        loading={isLoading}
+                        totalCount={roles.length}
+                        countLabel="rôles"
+                        emptyMessage="Aucun rôle trouvé"
+                        config={{
+                            topLeft: (r: Role) => r.name,
+                            topRight: (r: Role) => r.isSuperAdmin ? 'Super Admin' : `${r.permissions.length} permis.`,
+                            bottomLeft: (r: Role) => r.description || '',
+                            bottomRight: (r: Role) => r.isSuperAdmin ? (
+                                <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, background: '#235ae4', color: '#fff' }}>Admin</span>
+                            ) : null,
+                        }}
+                    />
+                </div>
+                <div className="responsive-table-desktop" style={{ marginTop: '1rem', backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                     <DataTable
                         value={roles}
                         loading={isLoading}
@@ -300,8 +319,6 @@ export default function RolesPage() {
                         <Column header={t('actions' as any)} body={actionsTemplate} style={{ minWidth: '8rem' }} />
                     </DataTable>
                 </div>
-
-                {/* ── Create / Edit Modal ── */}
                 <Modal
                     isOpen={showModal}
                     onClose={closeModal}

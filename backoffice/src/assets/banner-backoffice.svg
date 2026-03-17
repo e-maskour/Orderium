@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80">
+  <defs>
+    <linearGradient id="boIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2b6af0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a3fba;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="boRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0e8ff;stop-opacity:1" />
+    </linearGradient>
+    <filter id="boShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0a1a5c" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <!-- Logo icon at 60×60, vertically centered in 80px height -->
+  <g transform="translate(10, 10)" filter="url(#boShadow)">
+    <!-- Outer rounded square -->
+    <rect x="0" y="0" width="60" height="60" rx="14" ry="14" fill="url(#boIconGrad)"/>
+    <!-- Inner glow ring -->
+    <rect x="1.5" y="1.5" width="57" height="57" rx="13" ry="13" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+    <!-- Letter O ring (scaled from 200px to 60px, ratio 0.3) -->
+    <path d="M30 15.6c-7.95 0-14.4 6.45-14.4 14.4s6.45 14.4 14.4 14.4 14.4-6.45 14.4-14.4-6.45-14.4-14.4-14.4zm0 23.4c-4.98 0-9-4.02-9-9s4.02-9 9-9 9 4.02 9 9-4.02 9-9 9z" fill="url(#boRingGrad)"/>
+    <!-- Accent dot -->
+    <circle cx="45.6" cy="15.6" r="2.4" fill="#ffffff" opacity="0.9"/>
+    <circle cx="45.6" cy="15.6" r="1.2" fill="#235ae4"/>
+  </g>
+
+  <!-- Wordmark: "Orderium" -->
+  <text x="84" y="43" font-family="'Plus Jakarta Sans','Inter','Segoe UI',system-ui,sans-serif" font-size="26" font-weight="800" fill="#0f172a" letter-spacing="-0.5">Orderium</text>
+  <!-- Subtitle: "Enterprise" -->
+  <text x="85" y="60" font-family="'Plus Jakarta Sans','Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="600" fill="#235ae4" letter-spacing="2" text-transform="uppercase">ENTERPRISE</text>
+</svg>

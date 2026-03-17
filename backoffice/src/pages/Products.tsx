@@ -9,6 +9,7 @@ import { Plus, Eye, Trash2, Search, Package, X, Filter, ChevronDown, ChevronLeft
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
+import { MobileList } from '../components/MobileList';
 import { toastExported, toastImported, toastError, toastWarning, toastInfo, toastConfirm } from '../services/toast.service';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
@@ -335,8 +336,35 @@ export default function Products() {
 
         {/* Products View */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* ── Mobile card list ── */}
+          <div className="responsive-table-mobile">
+            <MobileList
+              items={productsList}
+              keyExtractor={(p: IProduct) => p.id}
+              onTap={(p: IProduct) => handleViewProduct(p.id)}
+              loading={isLoading}
+              totalCount={totalCount}
+              countLabel={t('products')}
+              emptyMessage={t('noProductsFound')}
+              hasMore={currentPage < totalPages}
+              onLoadMore={() => setCurrentPage(prev => prev + 1)}
+              config={{
+                topLeft: (p: IProduct) => p.name,
+                topRight: (p: IProduct) => `${(p.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${t('currency')}`,
+                bottomLeft: (p: IProduct) => [p.code, p.stock != null ? `Stock: ${p.stock}` : null].filter(Boolean).join(' · '),
+                bottomRight: (p: IProduct) => {
+                  if (p.stock == null) return null;
+                  if (p.stock < 0) return <span className="erp-badge erp-badge--unpaid">Négatif</span>;
+                  if (p.stock === 0) return <span className="erp-badge erp-badge--draft">Zéro</span>;
+                  return <span className="erp-badge erp-badge--paid">En stock</span>;
+                },
+              }}
+            />
+          </div>
+
+          {/* ── Desktop DataTable ── */}
           {isLoading ? (
-            <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="responsive-table-desktop animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -352,7 +380,7 @@ export default function Products() {
               ))}
             </div>
           ) : (
-            <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div className="responsive-table-desktop" style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
               <DataTable
                 className="prod-datatable"
                 value={productsList}
@@ -483,6 +511,7 @@ export default function Products() {
         visible={filtersExpanded}
         onHide={() => setFiltersExpanded(false)}
         position="right"
+        className="sidebar-bottom-sheet"
         style={{ width: '560px' }}
         showCloseIcon={false}
         blockScroll

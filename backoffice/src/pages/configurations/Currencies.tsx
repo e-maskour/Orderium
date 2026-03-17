@@ -13,6 +13,7 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
+import { MobileList } from '../../components/MobileList';
 
 export default function Currencies() {
     const { t } = useLanguage();
@@ -114,14 +115,6 @@ export default function Currencies() {
                 actions={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Button
-                            onClick={() => navigate('/configurations')}
-                            icon={<ArrowLeft style={{ width: 16, height: 16 }} />}
-                            label={t('retour')}
-                            severity="secondary"
-                            outlined
-                            size="small"
-                        />
-                        <Button
                             onClick={openCreateModal}
                             icon={<Plus style={{ width: 16, height: 16 }} />}
                             label={t('addCurrency')}
@@ -131,7 +124,22 @@ export default function Currencies() {
                 }
             />
 
-            <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div className="responsive-table-mobile">
+                <MobileList
+                    items={currencies}
+                    keyExtractor={(c: Currency) => c.code}
+                    loading={isLoading}
+                    totalCount={currencies.length}
+                    countLabel="devises"
+                    emptyMessage="Aucune devise configurée"
+                    config={{
+                        topLeft: (c: Currency) => `${c.code} ${c.symbol}`,
+                        topRight: (c: Currency) => c.name,
+                        bottomRight: (c: Currency) => c.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null,
+                    }}
+                />
+            </div>
+            <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                 <DataTable
                     className="curr-datatable"
                     value={currencies.map((c, i) => ({ ...c, _idx: i }))}
@@ -162,7 +170,6 @@ export default function Currencies() {
                 </DataTable>
             </div>
 
-            {/* Modal */}
             <Modal
                 isOpen={showModal}
                 onClose={closeModal}

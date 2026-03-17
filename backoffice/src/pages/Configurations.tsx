@@ -65,15 +65,7 @@ export default function Configurations() {
           icon={Settings}
           title={t('configurations')}
           subtitle={t('manageSystemConfigurations')}
-          actions={
-            <Link
-              to="/dashboard"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#475569', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500 }}
-            >
-              <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
-              {t('backToDashboard')}
-            </Link>
-          }
+          actions={undefined}
         />
 
         <div className="config-modules-grid">

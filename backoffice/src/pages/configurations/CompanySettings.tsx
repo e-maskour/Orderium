@@ -95,14 +95,6 @@ export default function CompanySettings() {
                 actions={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Button
-                            onClick={() => navigate('/configurations')}
-                            icon={<ArrowLeft style={{ width: 16, height: 16 }} />}
-                            label={t('retour')}
-                            severity="secondary"
-                            outlined
-                            size="small"
-                        />
-                        <Button
                             onClick={() => { if (formData) updateMutation.mutate(formData); }}
                             icon={updateMutation.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <Save style={{ width: 16, height: 16 }} />}
                             label={t('save')}

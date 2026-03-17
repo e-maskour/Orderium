@@ -5,6 +5,7 @@ import { LanguageToggle } from './LanguageToggle';
 import { NotificationBell } from './NotificationBell';
 import { ShoppingBag, ClipboardList, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import orderiumLogo from '../assets/logo-client.svg';
 
 interface HeaderProps {
   onCartClick?: () => void;
@@ -42,21 +43,11 @@ export const Header = ({ onCartClick }: HeaderProps) => {
           to="/"
           style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none' }}
         >
-          <div
-            style={{
-              width: '2.25rem',
-              height: '2.25rem',
-              borderRadius: '0.625rem',
-              background: 'linear-gradient(135deg, #059669, #047857)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              boxShadow: '0 2px 8px rgba(5,150,105,0.3)',
-            }}
-          >
-            <span style={{ color: 'white', fontWeight: 800, fontSize: '1rem' }}>O</span>
-          </div>
+          <img
+            src={orderiumLogo}
+            alt="Orderium"
+            style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+          />
           <span
             style={{
               fontWeight: 800,

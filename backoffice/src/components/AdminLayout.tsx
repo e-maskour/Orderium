@@ -1,21 +1,29 @@
 import { ReactNode, useState } from 'react';
 import { Sidebar as AppSidebar } from './Sidebar';
 import { Header } from './Header';
+import { ModuleTabBar } from './ModuleTabBar';
 import { Sidebar } from 'primereact/sidebar';
 import { useLanguage } from '../context/LanguageContext';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Package, TrendingUp, MoreHorizontal, CreditCard } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, TrendingUp, MoreHorizontal } from 'lucide-react';
 
 interface AdminLayoutProps {
     children: ReactNode;
 }
 
-const MOBILE_TABS = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
-    { path: '/orders', icon: ShoppingCart, label: 'Commandes' },
-    { path: '/pos', icon: CreditCard, label: 'PDV' },
-    { path: '/products', icon: Package, label: 'Produits' },
-    { path: '/devis', icon: TrendingUp, label: 'Ventes' },
+interface MobileTab {
+    path: string;
+    icon: React.ComponentType<{ style?: React.CSSProperties; strokeWidth?: number }>;
+    label: string;
+    activePaths: string[];
+    exactMatch?: boolean;
+}
+
+const MOBILE_TABS: MobileTab[] = [
+    { path: '/dashboard',    icon: LayoutDashboard, label: 'Accueil',   activePaths: ['/dashboard'], exactMatch: true },
+    { path: '/orders',       icon: ShoppingCart,    label: 'Commandes', activePaths: ['/orders', '/pos', '/checkout'] },
+    { path: '/devis',        icon: TrendingUp,      label: 'Ventes',    activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'] },
+    { path: '/products',     icon: Package,         label: 'Stock',     activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
@@ -25,10 +33,12 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     const location = useLocation();
     const dir = language === 'ar' ? 'rtl' : 'ltr';
 
-    const isTabActive = (path: string) =>
-        path === '/dashboard'
-            ? location.pathname === path
-            : location.pathname.startsWith(path);
+    const isTabActive = (tab: MobileTab) => {
+        if (tab.exactMatch) return location.pathname === tab.path;
+        return tab.activePaths.some(
+            (p) => location.pathname === p || location.pathname.startsWith(p + '/')
+        );
+    };
 
     return (
         <div style={{ minHeight: '100vh', background: '#f0f4f8' }} dir={dir}>
@@ -56,8 +66,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                 style={{
                     transition: 'margin 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                     ...(language === 'ar'
-                        ? { marginRight: isSidebarCollapsed ? '4.5rem' : '16.5rem' }
-                        : { marginLeft: isSidebarCollapsed ? '4.5rem' : '16.5rem' }),
+                        ? { marginRight: isSidebarCollapsed ? '4.5rem' : '14rem' }
+                        : { marginLeft: isSidebarCollapsed ? '4.5rem' : '14rem' }),
                 }}
                 className="admin-main-content"
             >
@@ -66,6 +76,9 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                     onMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
                 />
 
+                {/* Module-level sub-navigation tab bar */}
+                <ModuleTabBar />
+
                 <main className="admin-main-area" style={{ maxWidth: '100%', minHeight: 'calc(100vh - 6.875rem)' }}>
                     {children}
                 </main>
@@ -73,8 +86,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
             {/* Mobile Bottom Tab Bar */}
             <nav className="mobile-bottom-nav lg:hidden" aria-label="Navigation mobile">
-                {MOBILE_TABS.map(tab => {
-                    const active = isTabActive(tab.path);
+                {MOBILE_TABS.map((tab) => {
+                    const active = isTabActive(tab);
                     return (
                         <Link
                             key={tab.path}
@@ -137,4 +150,5 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         </div>
     );
 };
+
 

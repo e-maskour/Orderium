@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@orderium/ui': path.resolve(__dirname, '../shared/ui/src'),
+      '@shared-logo': path.resolve(__dirname, '../shared/logo'),
     },
   },
   // @ts-expect-error - vitest config lives alongside vite config

@@ -29,12 +29,16 @@
       ],
       "@orderium/ui/*": [
         "../shared/ui/src/*"
+      ],
+      "@shared-logo/*": [
+        "../shared/logo/*"
       ]
     }
   },
   "include": [
     "src",
-    "../shared/ui/src"
+    "../shared/ui/src",
+    "../shared/logo"
   ],
   "references": [
     {

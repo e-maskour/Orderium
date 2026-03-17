@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { getOnboardingStatus } from '../api/onboarding';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { Shield, Phone, Lock, BarChart3, Package, Users, TrendingUp } from 'lucide-react';
+import orderiumLogo from '../assets/logo-backoffice.svg';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 
@@ -169,17 +170,11 @@ export default function Login() {
             {/* Logo */}
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
-                <div style={{
-                  width: '4.25rem', height: '4.25rem', borderRadius: '1.125rem',
-                  background: 'rgba(255,255,255,0.15)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  animation: 'login-ring-pulse 2.5s ease-out infinite',
-                  flexShrink: 0,
-                }}>
-                  <BarChart3 style={{ width: '2.125rem', height: '2.125rem', color: '#fff', animation: 'login-icon-breathe 4s ease-in-out infinite' }} />
-                </div>
+                <img
+                  src={orderiumLogo}
+                  alt="Orderium"
+                  style={{ width: '4.25rem', height: '4.25rem', flexShrink: 0, filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.25))' }}
+                />
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '1.625rem', color: '#fff', lineHeight: 1.1 }}>{t('appName')}</div>
                   <div style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.82)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.2rem' }}>

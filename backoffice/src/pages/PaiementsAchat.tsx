@@ -12,6 +12,7 @@ import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/paymen
 import { invoicesService } from '../modules/invoices';
 import PaymentModal from '../components/PaymentModal';
 import { toastConfirm, toastError } from '../services/toast.service';
+import { MobileList } from '../components/MobileList';
 
 export default function PaiementsAchat() {
   const { t, language } = useLanguage();
@@ -174,8 +175,26 @@ export default function PaiementsAchat() {
             </div>
           </div>
 
+          {/* Mobile list */}
+          <div className="responsive-table-mobile" style={{ padding: '0.75rem' }}>
+            <MobileList
+              items={filteredPayments}
+              keyExtractor={(p: Payment) => p.id}
+              loading={loading}
+              totalCount={filteredPayments.length}
+              countLabel="paiements achat"
+              emptyMessage="Aucun paiement trouvé"
+              config={{
+                topLeft: (p: Payment) => getInvoiceNumber(p.invoiceId),
+                topRight: (p: Payment) => `${p.amount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`,
+                bottomLeft: (p: Payment) => `${getSupplierName(p.invoiceId)} · ${new Date(p.paymentDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+                bottomRight: (p: Payment) => <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>{PAYMENT_TYPE_LABELS[p.paymentType]}</span>,
+              }}
+            />
+          </div>
+
           <DataTable
-            className="pa-datatable"
+            className="pa-datatable responsive-table-desktop"
             value={filteredPayments}
             selection={selectedRows}
             onSelectionChange={(e) => setSelectedRows(e.value as Payment[])}
