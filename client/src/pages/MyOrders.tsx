@@ -54,10 +54,12 @@ export default function MyOrders() {
           undefined,
           statusFilter !== 'all' ? statusFilter as any : undefined,
         );
-        if (response.success) {
-          setOrders(response.orders);
-          setTotalCount(response.total);
-          setTotalPages(response.totalPages);
+        if (response.data) {
+          setOrders(response.data);
+          setTotalCount(response.metadata?.total ?? 0);
+          const total = response.metadata?.total ?? 0;
+          const limit = response.metadata?.limit ?? pageSize;
+          setTotalPages(Math.ceil(total / limit));
         }
       } catch {
         toastError(t('error'));

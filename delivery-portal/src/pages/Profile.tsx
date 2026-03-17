@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../lib/i18n';
 import { AppLayout } from '../components/AppLayout';
+import orderiumLogo from '../assets/logo-delivery.svg';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { LogOut, Phone, User } from 'lucide-react';
 import { deliveryService } from '../services/api';
@@ -40,6 +41,10 @@ export default function Profile() {
         padding: '1rem 1.25rem 3.5rem',
         paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
       }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>
+          <img src={orderiumLogo} alt="Orderium" style={{ height: '32px', width: 'auto', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))' }} />
+          <span style={{ color: '#fff', fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.3px', opacity: 0.95 }}>Orderium</span>
+        </div>
         <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>
           👤 {t('profileTab')}
         </h1>

@@ -64,16 +64,17 @@ export interface OrderItem {
 }
 
 export interface OrderResponse {
-  success: boolean;
-  order: Order;
-  documentNumber: string;
+  data: Order;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface OrdersListResponse {
-  success: boolean;
-  orders: Order[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  data: Order[];
+  metadata?: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  } | null;
 }

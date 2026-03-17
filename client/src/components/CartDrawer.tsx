@@ -296,7 +296,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
           </div>
         }
         style={{ width: '100%', maxWidth: '28rem' }}
-        contentStyle={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%' }}
+        pt={{ content: { style: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%' } } }}
       >
         {cartContent}
       </Sidebar>

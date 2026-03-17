@@ -45,9 +45,9 @@ export interface PartnerFormData {
 }
 
 export interface PartnerSearchResponse {
-  partners: Partner[];
+  data: Partner[];
 }
 
 export interface PartnerResponse {
-  partner: Partner;
+  data: Partner;
 }

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../lib/i18n';
 import { AppLayout } from '../components/AppLayout';
+import orderiumLogo from '../assets/logo-delivery.svg';
 import { RefreshCw, ChevronRight } from 'lucide-react';
 import type { Order } from '../types';
 
@@ -52,6 +53,10 @@ export default function DeliveredOrders() {
         padding: '1rem 1.25rem 1.125rem',
         paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
       }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>
+          <img src={orderiumLogo} alt="Orderium" style={{ height: '32px', width: 'auto', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))' }} />
+          <span style={{ color: '#fff', fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.3px', opacity: 0.95 }}>Orderium</span>
+        </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '0.82rem', fontWeight: 500 }}>

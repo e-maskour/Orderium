@@ -134,7 +134,7 @@ const Checkout = () => {
         fromPortal: true, fromClient: true, deliveryStatus: 'pending',
       });
 
-      navigate('/success', { state: { orderNumber: orderResult.documentNumber, orderId: orderResult.order.id, total: subtotal, customerName: formData.name, customerPhone: formData.phone, customerAddress: formData.address, items } });
+      navigate('/success', { state: { orderNumber: orderResult.data.orderNumber, orderId: orderResult.data.id, total: subtotal, customerName: formData.name, customerPhone: formData.phone, customerAddress: formData.address, items } });
       clearCart();
     } catch {
       toastError(t('orderCreationError'));

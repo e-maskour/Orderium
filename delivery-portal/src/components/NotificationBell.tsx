@@ -126,15 +126,15 @@ export function NotificationBell() {
     const titleKey = titleMap[notification.Title] || notification.Title;
     const title = t(titleKey as any) || notification.Title;
 
-    let orderNumber = notification.Message;
+    let orderNumber = notification.Message ?? '';
     let statusKey = '';
 
-    if (notification.Message.includes('|')) {
-      const parts = notification.Message.split('|');
+    if ((notification.Message ?? '').includes('|')) {
+      const parts = (notification.Message ?? '').split('|');
       orderNumber = parts[0];
       statusKey = parts[1] || '';
     } else {
-      const orderMatch = notification.Message.match(/\d{2}-\d{3}-\d{6}/);
+      const orderMatch = (notification.Message ?? '').match(/\d{2}-\d{3}-\d{6}/);
       if (orderMatch) {
         orderNumber = orderMatch[0];
       }
