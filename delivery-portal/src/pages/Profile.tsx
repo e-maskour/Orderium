@@ -6,6 +6,7 @@ import { AppLayout } from '../components/AppLayout';
 import orderiumLogo from '../assets/logo-delivery.svg';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { LogOut, Phone, User } from 'lucide-react';
+import { NotificationBell } from '../components/NotificationBell';
 import { deliveryService } from '../services/api';
 import type { Order } from '../types';
 
@@ -35,23 +36,45 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      {/* Header */}
+      {/* Slim sticky header */}
       <div style={{
+        position: 'sticky', top: 0, zIndex: 100,
         background: `linear-gradient(135deg, #7c420d 0%, ${PRI} 100%)`,
-        padding: '1rem 1.25rem 3.5rem',
-        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        boxShadow: '0 2px 12px rgba(124,66,13,0.4)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>
-          <img src={orderiumLogo} alt="Orderium" style={{ height: '32px', width: 'auto', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))' }} />
-          <span style={{ color: '#fff', fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.3px', opacity: 0.95 }}>Orderium</span>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          padding: '0.625rem 1rem', gap: '0.625rem', minHeight: '56px',
+        }}>
+          <img src={orderiumLogo} alt="Orderium" style={{ height: '28px', width: 'auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.67rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              Livreur
+            </div>
+            <div style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {deliveryPerson?.name}
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <NotificationBell />
+            <button
+              onClick={logout}
+              style={{
+                background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '10px',
+                width: '40px', height: '40px', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flexShrink: 0,
+              }}
+              title="Déconnexion"
+            >
+              <LogOut size={17} color="#fff" />
+            </button>
+          </div>
         </div>
-        <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>
-          👤 {t('profileTab')}
-        </h1>
       </div>
 
-      {/* Avatar card — overlaps header */}
-      <div style={{ padding: '0 1rem', marginTop: '-2.25rem' }}>
+      {/* Avatar card */}
+      <div style={{ padding: '0 1rem', marginTop: '1rem' }}>
         <div style={{
           background: '#fff', borderRadius: '22px',
           padding: '1.5rem 1.25rem',

@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo } from 'react';
 import { MultiSelect } from 'primereact/multiselect';
-import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter } from 'lucide-react';
 import { toastSuccess, toastDeleted, toastCancelled, toastError, toastWarning, toastConfirm } from '../services/toast.service';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -17,8 +17,9 @@ import { Sidebar } from 'primereact/sidebar';
 import { Column } from 'primereact/column';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { FloatingActionBar } from '../components/FloatingActionBar';
-import { PDFPreviewModal } from '../components/PDFPreviewModal';
+import { Dialog } from 'primereact/dialog';
 import { pdfService } from '../services/pdf.service';
+import { PDFPreviewModal } from '../components/PDFPreviewModal';
 import { MobileList } from '../components/MobileList';
 
 export default function Orders() {
@@ -198,6 +199,23 @@ export default function Orders() {
   const toggleSelectAll = () => { if (selectedOrders.length === orders.length) { setSelectedOrders([]); } else { setSelectedOrders(orders.map((o: any) => o.id)); } };
   const clearSelection = () => setSelectedOrders([]);
 
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [deliveryModalSearch, setDeliveryModalSearch] = useState('');
+
+  const handleBulkAssign = (deliveryPersonId: string) => {
+    let assigned = 0; let skipped = 0;
+    selectedOrders.forEach(orderId => {
+      const order = orders.find((o: any) => o.id === orderId);
+      if (order && order.deliveryStatus === 'pending') { handleAssign(orderId, deliveryPersonId); assigned++; }
+      else { skipped++; }
+    });
+    if (assigned > 0) toastSuccess(`${assigned} ${t('ordersAssigned')}`);
+    if (skipped > 0) toastWarning(`${skipped} ${t('ordersSkippedNotPending')}`);
+    setShowAssignModal(false);
+    setDeliveryModalSearch('');
+    clearSelection();
+  };
+
   const pageSizeOptions = [
     { label: '10', value: 10 },
     { label: '50', value: 50 },
@@ -261,25 +279,12 @@ export default function Orders() {
                 {/* Filters Toggle */}
                 <Button
                   onClick={() => setFiltersExpanded(!filtersExpanded)}
-                  style={{
-                    paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
-                    backgroundColor: filtersExpanded ? '#235ae4' : '#ffffff',
-                    color: filtersExpanded ? '#ffffff' : '#334155',
-                    boxShadow: filtersExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
-                    ...(filtersExpanded ? {} : { border: '1px solid #cbd5e1' }),
-                  }}
-                  text={!filtersExpanded}
-                  icon={<Filter style={{ width: '1rem', height: '1rem' }} />}
+                  icon={<Filter style={{ width: 16, height: 16 }} />}
                   label={t('filters')}
-                  iconPos="left"
-                >
-                  {filtersExpanded ? <ChevronUp style={{ width: '1rem', height: '1rem' }} /> : <ChevronDown style={{ width: '1rem', height: '1rem' }} />}
-                  {(appliedFilters.search || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end || appliedFilters.deliveryStatus?.length > 0) && !filtersExpanded && (
-                    <span style={{ marginLeft: '0.25rem', padding: '0.125rem 0.5rem', backgroundColor: '#235ae4', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px' }}>
-                      {[appliedFilters.search, appliedFilters.fromClient !== 'all', Boolean(appliedFilters.dateRange.start || appliedFilters.dateRange.end), appliedFilters.deliveryStatus?.length > 0].filter(Boolean).length}
-                    </span>
-                  )}
-                </Button>
+                  severity="secondary"
+                  outlined
+                  size="small"
+                />
               </>
             }
           />
@@ -478,6 +483,8 @@ export default function Orders() {
             emptyMessage={t('noOrdersFound')}
             hasMore={currentPage * pageSize < totalCount}
             onLoadMore={() => setCurrentPage(prev => prev + 1)}
+            selectedKeys={new Set(selectedOrders)}
+            onToggleSelect={(key) => toggleSelectOrder(key as number)}
             config={{
               topLeft: (o: any) => `#${o.orderNumber}`,
               topRight: (o: any) => `${(o.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${t('currency')}`,
@@ -539,6 +546,11 @@ export default function Orders() {
               selection={orders.filter((o: any) => selectedOrders.includes(o.id))}
               onSelectionChange={(e) => setSelectedOrders((e.value as any[]).map((o) => o.id))}
               selectionMode="checkbox"
+              onRowClick={(e) => {
+                const target = e.originalEvent.target as HTMLElement;
+                if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+                toggleSelectOrder(e.data.id);
+              }}
               dataKey="id"
               paginator
               paginatorPosition="top"
@@ -647,38 +659,86 @@ export default function Orders() {
         isAllSelected={selectedOrders.length === orders.length}
         totalCount={orders.length}
         actions={[
+          { id: 'assign', label: t('assignToDelivery'), icon: <UserPlus style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => setShowAssignModal(true) },
           { id: 'details', label: t('details'), icon: <Info style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => setSelectedOrderId(selectedOrders[0]), hidden: selectedOrders.length !== 1 },
           { id: 'preview-receipt', label: t('previewReceipt'), icon: <Receipt style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('receipt'), hidden: selectedOrders.length !== 1 },
           { id: 'preview-delivery-note', label: t('previewDeliveryNote'), icon: <Truck style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('delivery-note'), hidden: selectedOrders.length !== 1 },
           { id: 'cancel-delivery', label: t('cancelDelivery'), icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => cancelDeliveryMutation.mutate(selectedOrders), variant: 'danger' as const, hidden: !selectedOrders.every(orderId => { const order = orders.find((o: any) => o.id === orderId); return order && ['pending', 'assigned', 'confirmed'].includes(order.deliveryStatus); }) },
           { id: 'delete', label: t('delete'), icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => toastConfirm(t('deleteOrders'), () => deleteMutation.mutate(selectedOrders), { description: t('confirmDeleteOrders'), confirmLabel: t('delete') }), variant: 'danger' as const },
         ]}
+      />
+
+      {/* Assign to Delivery Modal */}
+      <Dialog
+        visible={showAssignModal}
+        onHide={() => { setShowAssignModal(false); setDeliveryModalSearch(''); }}
+        header={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: 'linear-gradient(135deg, #2563eb, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Truck style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>{t('assignToDelivery')}</p>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>{selectedOrders.length} {t('ordersSelected')}</p>
+            </div>
+          </div>
+        }
+        style={{ width: '26rem', maxWidth: '95vw' }}
+        contentStyle={{ padding: '1rem 1.25rem 1.25rem' }}
+        modal
+        draggable={false}
+        resizable={false}
+        pt={{ header: { style: { padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid #f1f5f9' } } }}
       >
-        {/* Assign to Delivery */}
-        <div style={{ position: 'relative' }}>
-          <User style={{ width: '0.875rem', height: '0.875rem', color: '#235ae4', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 10 }} />
-          <Dropdown
-            onChange={(e) => {
-              if (e.value) {
-                let assignedCount = 0;
-                let skippedCount = 0;
-                selectedOrders.forEach(orderId => {
-                  const order = orders.find((o: any) => o.id === orderId);
-                  if (order && order.deliveryStatus === 'pending') { handleAssign(orderId, e.value); assignedCount++; } else { skippedCount++; }
-                });
-                if (assignedCount > 0) toastSuccess(`${assignedCount} ${t('ordersAssigned')}`);
-                if (skippedCount > 0) toastWarning(`${skippedCount} ${t('ordersSkippedNotPending')}`);
-                clearSelection();
-              }
-            }}
-            options={deliveryPersons.filter((p: any) => p.isActive).map((person: any) => ({ label: person.name, value: String(person.id) }))}
-            optionLabel="label"
-            optionValue="value"
-            placeholder={t('assignToDelivery')}
-            style={{ maxWidth: '10rem', paddingLeft: '2rem' }}
+        {/* Search */}
+        <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
+          <Search style={{ width: '0.875rem', height: '0.875rem', color: '#94a3b8', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <InputText
+            value={deliveryModalSearch}
+            onChange={(e) => setDeliveryModalSearch(e.target.value)}
+            placeholder={t('search')}
+            style={{ width: '100%', paddingLeft: '2.25rem', fontSize: '0.875rem' }}
           />
         </div>
-      </FloatingActionBar>
+
+        {/* Delivery person list */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '20rem', overflowY: 'auto' }}>
+          {deliveryPersons
+            .filter((p: any) => p.isActive)
+            .filter((p: any) => !deliveryModalSearch || p.name.toLowerCase().includes(deliveryModalSearch.toLowerCase()))
+            .map((person: any) => (
+              <button
+                key={person.id}
+                type="button"
+                onClick={() => handleBulkAssign(String(person.id))}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  padding: '0.75rem 1rem', borderRadius: '0.625rem',
+                  background: '#f8fafc', border: '1.5px solid #e2e8f0',
+                  cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', width: '100%',
+                  transition: 'background 0.14s, border-color 0.14s',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#eff6ff'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#bfdbfe'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f8fafc'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#e2e8f0'; }}
+              >
+                <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'linear-gradient(135deg, #2563eb, #60a5fa)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <User style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.name}</p>
+                  {person.phone && <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>{person.phone}</p>}
+                </div>
+                <UserPlus style={{ width: '1rem', height: '1rem', color: '#94a3b8', flexShrink: 0 }} />
+              </button>
+            ))
+          }
+          {deliveryPersons.filter((p: any) => p.isActive).filter((p: any) => !deliveryModalSearch || p.name.toLowerCase().includes(deliveryModalSearch.toLowerCase())).length === 0 && (
+            <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.875rem', padding: '1.5rem 0', margin: 0 }}>
+              {t('noDeliveryPersons')}
+            </p>
+          )}
+        </div>
+      </Dialog>
 
       <PDFPreviewModal isOpen={showPDFPreview} onClose={() => setShowPDFPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
     </AdminLayout>

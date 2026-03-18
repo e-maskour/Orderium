@@ -88,10 +88,8 @@ export default function Profile() {
           <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: 'white', flexShrink: 0, WebkitTapHighlightColor: 'transparent' as const }}>
             <ArrowLeft size={18} />
           </Link>
-          <div>
-            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: 0 }}>
-              👤 {t('profile')}
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <User size={26} strokeWidth={2.5} style={{ color: '#fff', flexShrink: 0 }} />
             <h1 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>
               {t('myProfile')}
             </h1>

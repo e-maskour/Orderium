@@ -107,6 +107,7 @@ export default {
   catalog: 'الكتالوج',
   myProfile: 'ملفي الشخصي',
   language: 'اللغة',
+  settings: 'الإعدادات',
 
   // Greeting
   hello: 'مرحبًا',

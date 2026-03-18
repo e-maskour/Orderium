@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
-import { Home, ClipboardList, ShoppingBag, User } from 'lucide-react';
+import { Home, ClipboardList, ShoppingBag, Settings, User } from 'lucide-react';
 
 export const BottomNav = () => {
   const { t, dir } = useLanguage();
@@ -139,6 +139,33 @@ export const BottomNav = () => {
           )}
         </button>
       </div>
+
+      {/* Settings tab */}
+      <Link
+        to="/settings"
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.2rem',
+          padding: '0.5rem 0',
+          textDecoration: 'none',
+          color: location.pathname === '/settings' ? '#059669' : '#9ca3af',
+          fontWeight: 600,
+          fontSize: '0.625rem',
+          letterSpacing: '0.02em',
+          transition: 'color 0.15s',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <Settings
+          size={22}
+          strokeWidth={location.pathname === '/settings' ? 2.5 : 2}
+        />
+        <span>{t('settings')}</span>
+      </Link>
 
       {/* Profile tab */}
       <Link

@@ -4,25 +4,26 @@ import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
 import { ordersService } from '@/modules/orders';
 import { Order, OrderItem } from '@/modules/orders/orders.interface';
+import { partnersService } from '@/modules/partners';
 import { Dialog } from 'primereact/dialog';
 import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { CartDrawer } from '@/components/CartDrawer';
 import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
-import { Package, MapPin, Calendar as CalendarIcon, FileText, ReceiptText, ChevronLeft, ChevronRight, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Package, MapPin, Calendar as CalendarIcon, FileText, ReceiptText, ChevronLeft, ChevronRight, ArrowLeft, ShoppingBag, ClipboardList } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toastError } from '@/services/toast.service';
 
 const STATUS_CONFIG: Record<string, { label_fr: string; label_ar: string; color: string; bg: string; stripe: string }> = {
-  pending:     { label_fr: 'En attente',   label_ar: 'قيد الانتظار',  color: '#1d4ed8', bg: '#eff6ff', stripe: '#3b82f6' },
-  assigned:    { label_fr: 'Assignée',      label_ar: 'مُعيَّنة',       color: '#7c3aed', bg: '#f5f3ff', stripe: '#8b5cf6' },
-  confirmed:   { label_fr: 'Confirmée',     label_ar: 'مؤكدة',          color: '#0369a1', bg: '#e0f2fe', stripe: '#0ea5e9' },
-  picked_up:   { label_fr: 'Récupérée',     label_ar: 'تم الاستلام',    color: '#0e7490', bg: '#cffafe', stripe: '#06b6d4' },
-  to_delivery: { label_fr: 'En préparation',label_ar: 'جاهز للتسليم',  color: '#c2410c', bg: '#fff7ed', stripe: '#f97316' },
-  in_delivery: { label_fr: 'En livraison',  label_ar: 'في الطريق',      color: '#a16207', bg: '#fefce8', stripe: '#eab308' },
-  delivered:   { label_fr: 'Livrée',        label_ar: 'تم التسليم',     color: '#15803d', bg: '#f0fdf4', stripe: '#22c55e' },
-  canceled:    { label_fr: 'Annulée',       label_ar: 'ملغاة',           color: '#b91c1c', bg: '#fef2f2', stripe: '#ef4444' },
+  pending: { label_fr: 'En attente', label_ar: 'قيد الانتظار', color: '#1d4ed8', bg: '#eff6ff', stripe: '#3b82f6' },
+  assigned: { label_fr: 'Assignée', label_ar: 'مُعيَّنة', color: '#7c3aed', bg: '#f5f3ff', stripe: '#8b5cf6' },
+  confirmed: { label_fr: 'Confirmée', label_ar: 'مؤكدة', color: '#0369a1', bg: '#e0f2fe', stripe: '#0ea5e9' },
+  picked_up: { label_fr: 'Récupérée', label_ar: 'تم الاستلام', color: '#0e7490', bg: '#cffafe', stripe: '#06b6d4' },
+  to_delivery: { label_fr: 'En préparation', label_ar: 'جاهز للتسليم', color: '#c2410c', bg: '#fff7ed', stripe: '#f97316' },
+  in_delivery: { label_fr: 'En livraison', label_ar: 'في الطريق', color: '#a16207', bg: '#fefce8', stripe: '#eab308' },
+  delivered: { label_fr: 'Livrée', label_ar: 'تم التسليم', color: '#15803d', bg: '#f0fdf4', stripe: '#22c55e' },
+  canceled: { label_fr: 'Annulée', label_ar: 'ملغاة', color: '#b91c1c', bg: '#fef2f2', stripe: '#ef4444' },
 };
 
 export default function MyOrders() {
@@ -46,13 +47,19 @@ export default function MyOrders() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user?.customerId) { setIsLoading(false); return; }
+      if (!user?.phoneNumber) { setIsLoading(false); return; }
       setIsLoading(true);
       try {
+        let customerId = user.customerId;
+        if (!customerId) {
+          const partner = await partnersService.getByPhone(user.phoneNumber);
+          customerId = partner?.id;
+        }
+        if (!customerId) { setIsLoading(false); return; }
         const response = await ordersService.getCustomerOrders(
-          user.customerId, currentPage, pageSize,
+          customerId, currentPage, pageSize,
           undefined,
-          statusFilter !== 'all' ? statusFilter as any : undefined,
+          statusFilter !== 'all' ? statusFilter : undefined,
         );
         if (response.data) {
           setOrders(response.data);
@@ -115,10 +122,10 @@ export default function MyOrders() {
 
   const statusTabs = [
     { key: 'all', label: language === 'ar' ? 'الكل' : 'Tous' },
-    { key: 'pending',     label: language === 'ar' ? 'انتظار' : 'Attente' },
+    { key: 'pending', label: language === 'ar' ? 'انتظار' : 'Attente' },
     { key: 'in_delivery', label: language === 'ar' ? 'الطريق' : 'Livraison' },
-    { key: 'delivered',   label: language === 'ar' ? 'تسليم' : 'Livrée' },
-    { key: 'canceled',    label: language === 'ar' ? 'ملغاة' : 'Annulée' },
+    { key: 'delivered', label: language === 'ar' ? 'تسليم' : 'Livrée' },
+    { key: 'canceled', label: language === 'ar' ? 'ملغاة' : 'Annulée' },
   ];
 
   return (
@@ -127,7 +134,7 @@ export default function MyOrders() {
       {/* Gradient header */}
       <div style={{
         background: 'linear-gradient(135deg, #15803d 0%, #16a34a 60%, #22c55e 100%)',
-        padding: '1rem 1.25rem 3rem',
+        padding: '1rem 1.25rem',
         paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
@@ -135,16 +142,14 @@ export default function MyOrders() {
             <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: 'white', flexShrink: 0, WebkitTapHighlightColor: 'transparent' as const }}>
               <ArrowLeft size={18} />
             </Link>
-            <div>
-              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: 0 }}>
-                {t('orders') || 'Commandes'}
-              </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <ClipboardList size={26} strokeWidth={2.5} style={{ color: '#fff', flexShrink: 0 }} />
               <h1 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>{t('myOrders')}</h1>
             </div>
           </div>
           {totalCount > 0 && (
             <span style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, borderRadius: '999px', padding: '0.3rem 0.75rem' }}>
-              📦 {totalCount}
+              <Package size={13} style={{ display: 'inline', verticalAlign: 'middle', marginInlineEnd: '0.25rem' }} />{totalCount}
             </span>
           )}
         </div>

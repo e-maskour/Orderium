@@ -8,7 +8,7 @@ import { toastSuccess, toastError } from '../services/toast.service';
 import { AppLayout } from '../components/AppLayout';
 import orderiumLogo from '../assets/logo-delivery.svg';
 import { NotificationBell } from '../components/NotificationBell';
-import { Phone, MapPin, RefreshCw, ChevronRight, Navigation } from 'lucide-react';
+import { Phone, MapPin, RefreshCw, Navigation, Package } from 'lucide-react';
 import type { Order } from '../types';
 
 const PRI = '#df7817';
@@ -16,7 +16,7 @@ const PRI = '#df7817';
 type ActiveStatus = 'to_delivery' | 'in_delivery' | 'delivered';
 
 function getStatusBadge(status: string | null | undefined) {
-  if (status === 'picked_up')   return { stripe: '#2563eb', bg: '#eff6ff', text: '#1d4ed8' };
+  if (status === 'picked_up') return { stripe: '#2563eb', bg: '#eff6ff', text: '#1d4ed8' };
   if (status === 'to_delivery') return { stripe: '#f59e0b', bg: '#fffbeb', text: '#b45309' };
   if (status === 'in_delivery') return { stripe: '#df7817', bg: '#fff7ed', text: '#9a4300' };
   return { stripe: '#94a3b8', bg: '#f1f5f9', text: '#475569' };
@@ -25,16 +25,15 @@ function getStatusBadge(status: string | null | undefined) {
 function getAction(status: string | null | undefined, t: (k: any) => string): {
   label: string; next: ActiveStatus; bg: string; shadow: string;
 } | null {
-  if (status === 'picked_up')   return { label: t('startToDelivery'), next: 'to_delivery', bg: '#2563eb', shadow: 'rgba(37,99,235,0.35)' };
-  if (status === 'to_delivery') return { label: t('startDelivery'),   next: 'in_delivery',  bg: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' };
-  if (status === 'in_delivery') return { label: t('markAsDelivered'), next: 'delivered',    bg: '#16a34a', shadow: 'rgba(22,163,74,0.35)' };
+  if (status === 'picked_up') return { label: t('startToDelivery'), next: 'to_delivery', bg: '#2563eb', shadow: 'rgba(37,99,235,0.35)' };
+  if (status === 'to_delivery') return { label: t('startDelivery'), next: 'in_delivery', bg: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' };
+  if (status === 'in_delivery') return { label: t('markAsDelivered'), next: 'delivered', bg: '#16a34a', shadow: 'rgba(22,163,74,0.35)' };
   return null;
 }
 
 export default function ActiveOrders() {
   const { deliveryPerson } = useAuth();
   const { t, language } = useLanguage();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: ordersData, isLoading, error, refetch, isFetching } = useQuery({
@@ -65,45 +64,43 @@ export default function ActiveOrders() {
     <AppLayout>
       <style>{`@keyframes dlv-spin { to { transform: rotate(360deg); } }`}</style>
 
-      {/* Header */}
+      {/* Slim sticky header */}
       <div style={{
+        position: 'sticky', top: 0, zIndex: 100,
         background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 100%)',
-        padding: '1rem 1.25rem 1.125rem',
-        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        boxShadow: '0 2px 12px rgba(30,64,175,0.4)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>
-          <img src={orderiumLogo} alt="Orderium" style={{ height: '32px', width: 'auto', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))' }} />
-          <span style={{ color: '#fff', fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.3px', opacity: 0.95 }}>Orderium</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '0.82rem', fontWeight: 500 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          padding: '0.625rem 1rem', gap: '0.625rem', minHeight: '56px',
+        }}>
+          <img src={orderiumLogo} alt="Orderium" style={{ height: '28px', width: 'auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.67rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              Livreur
+            </div>
+            <div style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {deliveryPerson?.name}
-            </p>
-            <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, margin: '0.15rem 0 0', letterSpacing: '-0.3px' }}>
-              🚚 {t('inProgressTab')}
-            </h1>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <div style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '999px', padding: '0.2rem 0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Package size={13} color="#fff" />
+              <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 800 }}>{orders.length}</span>
+            </div>
             <NotificationBell />
             <button
               onClick={() => refetch()}
               disabled={isFetching}
               style={{
-                width: '40px', height: '40px', borderRadius: '50%',
-                background: 'rgba(255,255,255,0.16)',
-                border: '1px solid rgba(255,255,255,0.22)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '10px',
+                width: '40px', height: '40px', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flexShrink: 0,
               }}
             >
               <RefreshCw size={17} color="#fff" style={{ animation: isFetching ? 'dlv-spin 1s linear infinite' : 'none' }} />
             </button>
-          </div>
-        </div>
-        <div style={{ marginTop: '0.875rem' }}>
-          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '20px', padding: '0.3rem 0.875rem', fontSize: '0.8rem', fontWeight: 700, color: '#fff', display: 'inline-block' }}>
-            {orders.length} livraison{orders.length !== 1 ? 's' : ''} active{orders.length !== 1 ? 's' : ''}
           </div>
         </div>
       </div>
@@ -126,7 +123,6 @@ export default function ActiveOrders() {
                 t={t}
                 isPending={mutation.isPending}
                 onAction={(next) => mutation.mutate({ orderId: order.orderId, status: next })}
-                onTap={() => navigate(`/orders/${order.orderId}`, { state: { order } })}
               />
             ))}
           </div>
@@ -136,16 +132,19 @@ export default function ActiveOrders() {
   );
 }
 
-function ActiveCard({ order, language, t, isPending, onAction, onTap }: {
+function ActiveCard({ order, language, t, isPending, onAction }: {
   order: Order; language: string; t: (k: any) => string;
-  isPending: boolean; onAction: (next: ActiveStatus) => void; onTap: () => void;
+  isPending: boolean; onAction: (next: ActiveStatus) => void;
 }) {
+  const navigate = useNavigate();
   const badge = getStatusBadge(order.status);
   const action = getAction(order.status, t);
 
   const openMaps = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (order.latitude && order.longitude) {
+    if (order.googleMapsUrl) {
+      window.open(order.googleMapsUrl, '_blank');
+    } else if (order.latitude && order.longitude) {
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.latitude},${order.longitude}`, '_blank');
     } else if (order.customerAddress) {
       window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.customerAddress)}`, '_blank');
@@ -154,7 +153,7 @@ function ActiveCard({ order, language, t, isPending, onAction, onTap }: {
 
   return (
     <div
-      onClick={onTap}
+      onClick={() => navigate(`/orders/${order.orderId}`, { state: { order } })}
       style={{
         background: '#fff', borderRadius: '18px', overflow: 'hidden',
         boxShadow: '0 1px 6px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.05)',
@@ -169,10 +168,7 @@ function ActiveCard({ order, language, t, isPending, onAction, onTap }: {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.625rem' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6b7280' }}>#{order.orderNumber}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: badge.stripe }} />
-            <ChevronRight size={16} color="#d1d5db" />
-          </div>
+          <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: badge.stripe }} />
         </div>
 
         {/* Customer */}

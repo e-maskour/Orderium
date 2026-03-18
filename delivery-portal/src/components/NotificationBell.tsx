@@ -164,6 +164,7 @@ export function NotificationBell() {
         severity="secondary"
         onClick={(e) => op.current?.toggle(e)}
         className="p-overlay-badge"
+        style={{ color: '#fff' }}
       >
         {unreadCount > 0 && (
           <Badge value={unreadCount > 9 ? '9+' : String(unreadCount)} severity="danger" />
@@ -191,11 +192,11 @@ export function NotificationBell() {
               {t('noNotifications') || 'No notifications'}
             </div>
           ) : (
-            notifications.map((notification: Notification) => {
+            notifications.map((notification: Notification, idx: number) => {
               const { title, message } = translateNotification(notification);
               return (
                 <div
-                  key={notification.Id}
+                  key={notification.Id ?? idx}
                   onClick={() => {
                     if (!notification.IsRead) markAsReadMutation.mutate(notification.Id);
                   }}

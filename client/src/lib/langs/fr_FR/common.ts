@@ -107,6 +107,7 @@ export default {
   catalog: 'Catalogue',
   myProfile: 'Mon profil',
   language: 'Langue',
+  settings: 'Paramètres',
 
   // Greeting
   hello: 'Bonjour',

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Check } from 'lucide-react';
 
 export interface MobileCardConfig<T> {
   /** Bold primary identifier — top-left */
@@ -28,6 +28,10 @@ interface MobileListProps<T> {
   hasMore?: boolean;
   onLoadMore?: () => void;
   loadingMore?: boolean;
+  /** Keys of currently selected items */
+  selectedKeys?: Set<string | number>;
+  /** Called when the selection circle for an item is tapped */
+  onToggleSelect?: (key: string | number) => void;
 }
 
 /** Card skeleton shown while first load */
@@ -59,6 +63,8 @@ export function MobileList<T>({
   hasMore,
   onLoadMore,
   loadingMore,
+  selectedKeys,
+  onToggleSelect,
 }: MobileListProps<T>) {
   if (loading && items.length === 0) {
     return (
@@ -89,39 +95,74 @@ export function MobileList<T>({
       </p>
 
       <div className="ml-list">
-        {items.map((item) => (
-          <div
-            key={keyExtractor(item)}
-            className={`ml-card${onTap ? ' ml-card--tappable' : ''}`}
-            onClick={onTap ? () => onTap(item) : undefined}
-            role={onTap ? 'button' : undefined}
-            tabIndex={onTap ? 0 : undefined}
-            onKeyDown={onTap ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(item); } } : undefined}
-          >
-            {/* Row 1: top-left + top-right */}
-            <div className="ml-card__row ml-card__row--top">
-              <span className="ml-card__primary">{config.topLeft(item)}</span>
-              <span className="ml-card__value">{config.topRight(item)}</span>
-            </div>
+        {items.map((item) => {
+          const itemKey = keyExtractor(item);
+          const isSelected = selectedKeys?.has(itemKey) ?? false;
+          const hasSelect = !!onToggleSelect;
 
-            {/* Row 2: bottom-left + bottom-right + chevron */}
-            {(config.bottomLeft || config.bottomRight) && (
-              <div className="ml-card__row ml-card__row--bottom">
-                <span className="ml-card__secondary">{config.bottomLeft?.(item)}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                  {config.bottomRight?.(item)}
-                  {onTap && (
-                    <ChevronRight className="ml-card__chevron" />
-                  )}
-                </div>
+          const rowContent = (
+            <>
+              {/* Row 1: top-left + top-right */}
+              <div className="ml-card__row ml-card__row--top">
+                <span className="ml-card__primary">{config.topLeft(item)}</span>
+                <span className="ml-card__value">{config.topRight(item)}</span>
               </div>
-            )}
-            {/* Show chevron alone if no bottom content */}
-            {!config.bottomLeft && !config.bottomRight && onTap && (
-              <ChevronRight className="ml-card__chevron" style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-            )}
-          </div>
-        ))}
+
+              {/* Row 2: bottom-left + bottom-right + chevron */}
+              {(config.bottomLeft || config.bottomRight) && (
+                <div className="ml-card__row ml-card__row--bottom">
+                  <span className="ml-card__secondary">{config.bottomLeft?.(item)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    {config.bottomRight?.(item)}
+                    {onTap && (
+                      <ChevronRight className="ml-card__chevron" />
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Show chevron alone if no bottom content */}
+              {!config.bottomLeft && !config.bottomRight && onTap && (
+                <ChevronRight className="ml-card__chevron" style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+              )}
+            </>
+          );
+
+          return (
+            <div
+              key={itemKey}
+              className={[
+                'ml-card',
+                onTap ? 'ml-card--tappable' : '',
+                hasSelect ? 'ml-card--selectable' : '',
+                isSelected ? 'ml-card--selected' : '',
+              ].filter(Boolean).join(' ')}
+              onClick={onTap ? () => onTap(item) : undefined}
+              role={onTap ? 'button' : undefined}
+              tabIndex={onTap ? 0 : undefined}
+              onKeyDown={onTap ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(item); } } : undefined}
+            >
+              {/* Selection circle */}
+              {hasSelect && (
+                <button
+                  type="button"
+                  className={`ml-card__select-btn${isSelected ? ' ml-card__select-btn--checked' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); onToggleSelect!(itemKey); }}
+                  role="checkbox"
+                  aria-checked={isSelected}
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); onToggleSelect!(itemKey); } }}
+                >
+                  {isSelected && <Check style={{ width: '0.75rem', height: '0.75rem', color: '#fff' }} />}
+                </button>
+              )}
+
+              {/* Card body */}
+              {hasSelect ? (
+                <div className="ml-card__body">{rowContent}</div>
+              ) : rowContent}
+            </div>
+          );
+        })}
       </div>
 
       {/* Load more */}

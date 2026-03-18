@@ -6,7 +6,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../lib/i18n';
 import { AppLayout } from '../components/AppLayout';
 import orderiumLogo from '../assets/logo-delivery.svg';
-import { RefreshCw, ChevronRight } from 'lucide-react';
+import { RefreshCw, ChevronRight, Package } from 'lucide-react';
+import { NotificationBell } from '../components/NotificationBell';
 import type { Order } from '../types';
 
 export default function DeliveredOrders() {
@@ -47,50 +48,44 @@ export default function DeliveredOrders() {
     <AppLayout>
       <style>{`@keyframes dlv-spin { to { transform: rotate(360deg); } }`}</style>
 
-      {/* Header */}
+      {/* Slim sticky header */}
       <div style={{
+        position: 'sticky', top: 0, zIndex: 100,
         background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
-        padding: '1rem 1.25rem 1.125rem',
-        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        boxShadow: '0 2px 12px rgba(21,128,61,0.4)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>
-          <img src={orderiumLogo} alt="Orderium" style={{ height: '32px', width: 'auto', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))' }} />
-          <span style={{ color: '#fff', fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.3px', opacity: 0.95 }}>Orderium</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '0.82rem', fontWeight: 500 }}>
-              {deliveryPerson?.name}
-            </p>
-            <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, margin: '0.15rem 0 0', letterSpacing: '-0.3px' }}>
-              ✅ {t('deliveredTab')}
-            </h1>
-          </div>
-          <button
-            onClick={() => refetch()}
-            disabled={isFetching}
-            style={{
-              width: '40px', height: '40px', borderRadius: '50%',
-              background: 'rgba(255,255,255,0.16)',
-              border: '1px solid rgba(255,255,255,0.22)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <RefreshCw size={17} color="#fff" style={{ animation: isFetching ? 'dlv-spin 1s linear infinite' : 'none' }} />
-          </button>
-        </div>
-
-        {/* Stats row */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.875rem' }}>
-          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '20px', padding: '0.3rem 0.875rem', fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>
-            {orders.length} total
-          </div>
-          {totalToday > 0 && (
-            <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '20px', padding: '0.3rem 0.875rem', fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>
-              🎯 {totalToday} aujourd'hui
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          padding: '0.625rem 1rem', gap: '0.625rem', minHeight: '56px',
+        }}>
+          <img src={orderiumLogo} alt="Orderium" style={{ height: '28px', width: 'auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.67rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              Livreur
             </div>
-          )}
+            <div style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {deliveryPerson?.name}
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <div style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '999px', padding: '0.2rem 0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Package size={13} color="#fff" />
+              <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 800 }}>{orders.length}</span>
+            </div>
+            <NotificationBell />
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              style={{
+                background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '10px',
+                width: '40px', height: '40px', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flexShrink: 0,
+              }}
+            >
+              <RefreshCw size={17} color="#fff" style={{ animation: isFetching ? 'dlv-spin 1s linear infinite' : 'none' }} />
+            </button>
+          </div>
         </div>
       </div>
 
