@@ -230,49 +230,56 @@ export default function DocumentCreatePage({
         .doc-cal .p-inputtext { padding-right: 2.5rem !important; width: 100% !important; border-top-right-radius: var(--orderium-radius-md, 6px) !important; border-bottom-right-radius: var(--orderium-radius-md, 6px) !important; }
         .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
         .doc-cal .p-datepicker-trigger:hover { color: var(--form-input-border-focus) !important; background: transparent !important; }
+        .doc-notes-totals { display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-top: 1.5rem; align-items: flex-start; }
         @media (max-width: 768px) {
           .doc-create-grid { grid-template-columns: 1fr !important; }
           .doc-sticky-bar { left: 0 !important; }
+          .doc-notes-totals { grid-template-columns: 1fr !important; gap: 1rem !important; }
         }
       `}</style>
       <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
 
         {/* ── Page Header ── */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '1rem',
-          marginBottom: '0.75rem',
-          padding: '1.125rem 1.375rem',
+          marginBottom: '1.5rem',
           background: '#ffffff',
           borderRadius: '1rem',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-          border: '1.5px solid #e2e8f0'
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.05)',
+          border: '1.5px solid #e2e8f0',
         }}>
-          <Button
-            icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
-            onClick={() => navigate(listRoute)}
-            style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem' }}
-          />
-          <div style={{
-            width: '2.75rem', height: '2.75rem', flexShrink: 0,
-            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-            borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(35,90,228,0.4)'
-          }}>
-            {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />; })()}
-          </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
-              {t('new')} {config.titleShort}
-            </h1>
-            <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0 }}>{t('createNew')} {config.titleShort.toLowerCase()}</p>
-          </div>
-          {/* New badge */}
-          <div style={{
-            padding: '0.375rem 0.875rem', borderRadius: '9999px',
-            background: '#eff6ff',
-            border: '1px solid rgba(35,90,228,0.2)'
-          }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#235ae4' }}>NOUVEAU</span>
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, #235ae4 0%, #818cf8 100%)' }} />
+          <div style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <Button
+              icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
+              onClick={() => navigate(listRoute)}
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+            />
+            <div style={{
+              width: '3rem', height: '3rem', flexShrink: 0,
+              background: 'linear-gradient(135deg, #235ae4 0%, #818cf8 100%)',
+              borderRadius: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(35,90,228,0.35)',
+            }}>
+              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
+                <span
+                  onClick={() => navigate(listRoute)}
+                  style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', cursor: 'pointer' }}
+                >{config.titleShort}</span>
+                <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>›</span>
+                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#235ae4', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{t('new')}</span>
+              </div>
+              <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                {t('new')} {config.titleShort}
+              </h1>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #eff6ff, #eef2ff)', border: '1.5px solid rgba(35,90,228,0.18)' }}>
+              <div style={{ width: '0.4375rem', height: '0.4375rem', borderRadius: '9999px', background: '#235ae4', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#235ae4', textTransform: 'uppercase', letterSpacing: '0.07em' }}>NOUVEAU</span>
+            </div>
           </div>
         </div>
 
@@ -403,21 +410,22 @@ export default function DocumentCreatePage({
             />
 
             {/* Notes + Totals Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1.5rem', marginTop: '1.5rem', alignItems: 'flex-start' }}>
+            <div className="doc-notes-totals">
               {/* Notes */}
               <div style={{ minWidth: 0 }}>
                 <div style={{
                   backgroundColor: '#ffffff', borderRadius: '0.875rem',
                   border: '1.5px solid #e2e8f0', overflow: 'hidden',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.06)'
                 }}>
                   <div style={{
                     padding: '0.75rem 1.125rem',
-                    background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+                    background: 'linear-gradient(to right, #f8fafc, #eff6ff)',
                     borderBottom: '1.5px solid #e2e8f0',
-                    display: 'flex', alignItems: 'center', gap: '0.5rem'
+                    display: 'flex', alignItems: 'center', gap: '0.625rem'
                   }}>
-                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #94a3b8, #64748b)', borderRadius: '2px' }} />
+                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #235ae4, #1a47b8)', borderRadius: '2px', flexShrink: 0 }} />
+                    <FileText style={{ width: '0.9375rem', height: '0.9375rem', color: '#3b82f6', flexShrink: 0 }} />
                     <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('notes')}</h3>
                   </div>
                   <div style={{ padding: '1rem 1.125rem' }}>
@@ -426,7 +434,7 @@ export default function DocumentCreatePage({
                       onChange={(e) => setNotes(e.target.value)}
                       rows={4}
                       placeholder={t('additionalNotes')}
-                      style={{ width: '100%', resize: 'vertical' }}
+                      style={{ width: '100%', resize: 'vertical', minHeight: '7rem' }}
                     />
                   </div>
                 </div>

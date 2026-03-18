@@ -458,19 +458,6 @@ export default function Products() {
                     </span>
                   )}
                 />
-                <Column
-                  header={t('actions')}
-                  body={(product: IProduct) => (
-                    <Button
-                      text
-                      rounded
-                      onClick={() => handleViewProduct(product.id)}
-                      icon={<Eye style={{ width: '1rem', height: '1rem', color: '#64748b' }} />}
-                      title={t('view')}
-                      style={{ padding: '0.375rem' }}
-                    />
-                  )}
-                />
               </DataTable>
             </div>
           )}

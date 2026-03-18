@@ -13,6 +13,7 @@ import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjus
 import { InventoryAdjustment } from '../modules/inventory/inventory.model';
 import { toastSuccess, toastValidated, toastDeleted, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
+import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function InventoryAdjustments() {
   const { dir, t } = useLanguage();
@@ -83,12 +84,18 @@ export default function InventoryAdjustments() {
     adj.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const clearSelection = () => setSelectedRows([]);
+  const toggleSelectAll = () =>
+    selectedRows.length === filteredAdjustments.length
+      ? setSelectedRows([])
+      : setSelectedRows(filteredAdjustments);
+
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; cls: string }> = {
-      draft:       { label: t('draft'),       cls: 'erp-badge erp-badge--draft' },
-      in_progress: { label: t('inProgress'),  cls: 'erp-badge erp-badge--active' },
-      done:        { label: t('validated'),    cls: 'erp-badge erp-badge--paid' },
-      cancelled:   { label: t('cancelled'),   cls: 'erp-badge erp-badge--unpaid' },
+      draft: { label: t('draft'), cls: 'erp-badge erp-badge--draft' },
+      in_progress: { label: t('inProgress'), cls: 'erp-badge erp-badge--active' },
+      done: { label: t('validated'), cls: 'erp-badge erp-badge--paid' },
+      cancelled: { label: t('cancelled'), cls: 'erp-badge erp-badge--unpaid' },
     };
     const config = statusConfig[status] || statusConfig.draft;
     return <span className={config.cls}>{config.label}</span>;
@@ -97,111 +104,161 @@ export default function InventoryAdjustments() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-      <PageHeader
-        icon={ClipboardCheck}
-        title={t('inventoryAdjustments')}
-        subtitle={t('manageInventoryAdjustments')}
-      />
-
-      {/* Filters and Actions Bar */}
-      <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', padding: '1rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-          {/* Search */}
-          <div style={{ flex: 1 }}>
-            <span style={{ position: 'relative', display: 'block', width: '100%' }}>
-              <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-              <InputText id="search-adjustments" type="text" placeholder={t('searchByReference')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label={t('searchByReference')} style={{ width: '100%', paddingLeft: '2.5rem' }} />
-            </span>
-          </div>
-
-          {/* Status Filter */}
-          <Dropdown value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={[{ label: 'Tous les statuts', value: 'all' }, { label: 'Brouillon', value: 'draft' }, { label: 'En cours', value: 'in_progress' }, { label: 'Validé', value: 'done' }, { label: 'Annulé', value: 'cancelled' }]} optionLabel="label" optionValue="value" style={{ minWidth: '12rem' }} />
-
-          {/* Create Button */}
-          <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('newAdjustment')} onClick={() => setShowCreateModal(true)} />
-        </div>
-      </div>
-
-      {/* Adjustments List */}
-      <div className="responsive-table-mobile">
-        <MobileList
-          items={filteredAdjustments}
-          keyExtractor={(adj: InventoryAdjustment) => adj.id}
-          loading={isLoading}
-          totalCount={filteredAdjustments.length}
-          countLabel="ajustements"
-          emptyMessage="Aucun ajustement trouvé"
-          config={{
-            topLeft: (adj: InventoryAdjustment) => adj.reference,
-            topRight: (adj: InventoryAdjustment) => adj.warehouseName || `Entrepôt ${adj.warehouseId}`,
-            bottomLeft: (adj: InventoryAdjustment) => adj.notes || adj.adjustmentDate || '',
-            bottomRight: (adj: InventoryAdjustment) => getStatusBadge(adj.status),
-          }}
+        <PageHeader
+          icon={ClipboardCheck}
+          title={t('inventoryAdjustments')}
+          subtitle={t('manageInventoryAdjustments')}
         />
-      </div>
-      <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-        <DataTable
-          className="ia-datatable"
-          value={filteredAdjustments}
-          selection={selectedRows}
-          onSelectionChange={(e) => setSelectedRows(e.value as InventoryAdjustment[])}
-          selectionMode="checkbox"
-          dataKey="id"
-          paginator
-          paginatorPosition="top"
-          rows={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          removableSort
-          loading={isLoading}
-          emptyMessage={
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-              <ClipboardCheck style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
-              {t('noAdjustmentsFound')}
+
+        {/* Filters and Actions Bar */}
+        <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', padding: '1rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+            {/* Search */}
+            <div style={{ flex: 1 }}>
+              <span style={{ position: 'relative', display: 'block', width: '100%' }}>
+                <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+                <InputText id="search-adjustments" type="text" placeholder={t('searchByReference')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label={t('searchByReference')} style={{ width: '100%', paddingLeft: '2.5rem' }} />
+              </span>
             </div>
-          }
-          paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-          currentPageReportTemplate="{first}-{last} of {totalRecords}"
-        >
-          <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-          <Column field="reference" header="Référence" sortable body={(adj: InventoryAdjustment) => (
-            <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{adj.reference}</span>
-          )} />
-          <Column field="name" header="Nom" sortable body={(adj: InventoryAdjustment) => (
-            <span style={{ fontSize: '0.875rem', color: '#334155' }}>{adj.name}</span>
-          )} />
-          <Column field="warehouseName" header="Entrepôt" sortable body={(adj: InventoryAdjustment) => (
-            <span style={{ fontSize: '0.875rem', color: '#475569' }}>{adj.warehouseName || `Entrepôt ${adj.warehouseId}`}</span>
-          )} />
-          <Column field="adjustmentDate" header="Date" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
-            <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-              {adj.adjustmentDate ? new Date(adj.adjustmentDate).toLocaleDateString('fr-FR') : '-'}
-            </span>
-          )} />
-          <Column field="status" header="Statut" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => getStatusBadge(adj.status)} />
-          <Column header="Lignes" align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
-            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#334155', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
-              {adj.lines?.length || 0}
-            </span>
-          )} />
-          <Column header="Actions" align="right" headerStyle={{ textAlign: 'right' }} body={(adj: InventoryAdjustment) => (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-              {adj.status === 'draft' && (
-                <Button icon={<Play style={{ width: '1rem', height: '1rem' }} />} onClick={() => startCountingMutation.mutate(adj.id)} text rounded severity="info" title={t('start')} />
-              )}
-              {adj.status === 'in_progress' && (
-                <Button icon={<CheckCircle2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => setSelectedAdjustment(adj)} text rounded severity="success" title={t('validate')} />
-              )}
-              <Button icon={<Eye style={{ width: '1rem', height: '1rem' }} />} onClick={() => setSelectedAdjustment(adj)} text rounded severity="secondary" title={t('details')} />
-              {adj.status === 'draft' && (
-                <>
-                  <Button icon={<XCircle style={{ width: '1rem', height: '1rem' }} />} onClick={() => cancelMutation.mutate(adj.id)} text rounded severity="warning" title={t('cancel')} />
-                  <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => toastConfirm(t('confirmDeleteAdjustment'), () => deleteMutation.mutate(adj.id))} text rounded severity="danger" title={t('delete')} />
-                </>
-              )}
-            </div>
-          )} />
-        </DataTable>
-      </div>
+
+            {/* Status Filter */}
+            <Dropdown value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={[{ label: 'Tous les statuts', value: 'all' }, { label: 'Brouillon', value: 'draft' }, { label: 'En cours', value: 'in_progress' }, { label: 'Validé', value: 'done' }, { label: 'Annulé', value: 'cancelled' }]} optionLabel="label" optionValue="value" style={{ minWidth: '12rem' }} />
+
+            {/* Create Button */}
+            <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('newAdjustment')} onClick={() => setShowCreateModal(true)} />
+          </div>
+        </div>
+
+        {/* Adjustments List */}
+        <div className="responsive-table-mobile">
+          <MobileList
+            items={filteredAdjustments}
+            keyExtractor={(adj: InventoryAdjustment) => adj.id}
+            loading={isLoading}
+            totalCount={filteredAdjustments.length}
+            countLabel="ajustements"
+            emptyMessage="Aucun ajustement trouvé"
+            config={{
+              topLeft: (adj: InventoryAdjustment) => adj.reference,
+              topRight: (adj: InventoryAdjustment) => adj.warehouseName || `Entrepôt ${adj.warehouseId}`,
+              bottomLeft: (adj: InventoryAdjustment) => adj.notes || adj.adjustmentDate || '',
+              bottomRight: (adj: InventoryAdjustment) => getStatusBadge(adj.status),
+            }}
+          />
+        </div>
+        <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <DataTable
+            className="ia-datatable"
+            value={filteredAdjustments}
+            selection={selectedRows}
+            onSelectionChange={(e) => setSelectedRows(e.value as InventoryAdjustment[])}
+            selectionMode="checkbox"
+            dataKey="id"
+            paginator
+            paginatorPosition="top"
+            rows={25}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            removableSort
+            loading={isLoading}
+            emptyMessage={
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                <ClipboardCheck style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
+                {t('noAdjustmentsFound')}
+              </div>
+            }
+            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            currentPageReportTemplate="{first}-{last} of {totalRecords}"
+          >
+            <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+            <Column field="reference" header="Référence" sortable body={(adj: InventoryAdjustment) => (
+              <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{adj.reference}</span>
+            )} />
+            <Column field="name" header="Nom" sortable body={(adj: InventoryAdjustment) => (
+              <span style={{ fontSize: '0.875rem', color: '#334155' }}>{adj.name}</span>
+            )} />
+            <Column field="warehouseName" header="Entrepôt" sortable body={(adj: InventoryAdjustment) => (
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>{adj.warehouseName || `Entrepôt ${adj.warehouseId}`}</span>
+            )} />
+            <Column field="adjustmentDate" header="Date" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                {adj.adjustmentDate ? new Date(adj.adjustmentDate).toLocaleDateString('fr-FR') : '-'}
+              </span>
+            )} />
+            <Column field="status" header="Statut" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => getStatusBadge(adj.status)} />
+            <Column header="Lignes" align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#334155', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
+                {adj.lines?.length || 0}
+              </span>
+            )} />
+          </DataTable>
+        </div>
+
+        <FloatingActionBar
+          selectedCount={selectedRows.length}
+          onClearSelection={clearSelection}
+          onSelectAll={toggleSelectAll}
+          isAllSelected={selectedRows.length === filteredAdjustments.length && filteredAdjustments.length > 0}
+          totalCount={filteredAdjustments.length}
+          itemLabel="ajustement"
+          actions={(() => {
+            const adj = selectedRows.length === 1 ? selectedRows[0] : null;
+            const acts: any[] = [];
+            if (adj) {
+              if (adj.status === 'draft') {
+                acts.push({
+                  id: 'start',
+                  label: t('start'),
+                  icon: <Play style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => startCountingMutation.mutate(adj.id),
+                  variant: 'primary' as const,
+                });
+              }
+              if (adj.status === 'in_progress') {
+                acts.push({
+                  id: 'validate',
+                  label: t('validate'),
+                  icon: <CheckCircle2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => setSelectedAdjustment(adj),
+                  variant: 'primary' as const,
+                });
+              }
+              acts.push({
+                id: 'view',
+                label: t('details'),
+                icon: <Eye style={{ width: '0.875rem', height: '0.875rem' }} />,
+                onClick: () => setSelectedAdjustment(adj),
+              });
+              if (adj.status === 'draft') {
+                acts.push({
+                  id: 'cancel',
+                  label: t('cancel'),
+                  icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => cancelMutation.mutate(adj.id),
+                  variant: 'secondary' as const,
+                });
+                acts.push({
+                  id: 'delete',
+                  label: t('delete'),
+                  icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => toastConfirm(t('confirmDeleteAdjustment'), () => { deleteMutation.mutate(adj.id); clearSelection(); }),
+                  variant: 'danger' as const,
+                });
+              }
+            } else {
+              const draftSelected = selectedRows.filter(r => r.status === 'draft');
+              if (draftSelected.length > 0) {
+                acts.push({
+                  id: 'delete',
+                  label: `${t('delete')} (${draftSelected.length})`,
+                  icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => toastConfirm(t('confirmDeleteAdjustment'), () => { draftSelected.forEach(r => deleteMutation.mutate(r.id)); clearSelection(); }),
+                  variant: 'danger' as const,
+                });
+              }
+            }
+            return acts;
+          })()}
+        />
       </div>
     </AdminLayout>
   );

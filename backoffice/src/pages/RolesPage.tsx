@@ -14,6 +14,7 @@ import { Tag } from 'primereact/tag';
 import { Shield, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { rolesService, type Role, type CreateRolePayload, type UpdateRolePayload } from '../modules/roles';
 import { MobileList } from '../components/MobileList';
+import { FloatingActionBar } from '../components/FloatingActionBar';
 import { permissionsService, type Permission, groupPermissionsByModule } from '../modules/permissions';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 
@@ -25,6 +26,7 @@ export default function RolesPage() {
 
     const [showModal, setShowModal] = useState(false);
     const [editingRole, setEditingRole] = useState<Role | null>(null);
+    const [selectedRoles, setSelectedRoles] = useState<Role[]>([]);
 
     // form states
     const [formName, setFormName] = useState('');
@@ -261,6 +263,10 @@ export default function RolesPage() {
     const selectAll = () => setSelectedPermIds(new Set(allPerms.map((p) => p.id)));
     const deselectAll = () => setSelectedPermIds(new Set());
 
+    const clearRoleSelection = () => setSelectedRoles([]);
+    const toggleSelectAllRoles = () =>
+        selectedRoles.length === roles.length ? setSelectedRoles([]) : setSelectedRoles(roles);
+
     return (
         <AdminLayout>
             <div dir={dir} className="page-container">
@@ -310,13 +316,16 @@ export default function RolesPage() {
                         emptyMessage={t('noResults' as any) || 'No roles found'}
                         dataKey="id"
                         stripedRows
+                        selectionMode="checkbox"
+                        selection={selectedRoles}
+                        onSelectionChange={(e) => setSelectedRoles(e.value as Role[])}
                     >
+                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                         <Column header={t('name' as any)} body={nameTemplate} style={{ minWidth: '14rem' }} />
                         <Column header={t('description' as any)} field="description" style={{ minWidth: '14rem' }}
                             body={(r: Role) => <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>{r.description || '—'}</span>}
                         />
                         <Column header={t('permissionsCount' as any)} body={permCountTemplate} style={{ minWidth: '9rem' }} />
-                        <Column header={t('actions' as any)} body={actionsTemplate} style={{ minWidth: '8rem' }} />
                     </DataTable>
                 </div>
                 <Modal
@@ -387,6 +396,41 @@ export default function RolesPage() {
                     </div>
                 </Modal>
             </div>
+
+            <FloatingActionBar
+                selectedCount={selectedRoles.length}
+                onClearSelection={clearRoleSelection}
+                onSelectAll={toggleSelectAllRoles}
+                isAllSelected={selectedRoles.length === roles.length && roles.length > 0}
+                totalCount={roles.length}
+                itemLabel="rôle"
+                actions={[
+                    ...(selectedRoles.length === 1 ? [{
+                        id: 'edit',
+                        label: t('edit' as any),
+                        icon: <Pencil style={{ width: '0.875rem', height: '0.875rem' }} />,
+                        onClick: () => openEdit(selectedRoles[0]),
+                        variant: 'secondary' as const,
+                    }] : []),
+                    ...(!selectedRoles.every(r => r.isSuperAdmin) ? [{
+                        id: 'delete',
+                        label: t('delete' as any),
+                        icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                        onClick: () => {
+                            const deletable = selectedRoles.filter(r => !r.isSuperAdmin);
+                            if (deletable.length === 1) {
+                                handleDelete(deletable[0]);
+                            } else {
+                                toastConfirm(
+                                    `${t('delete' as any)} ${deletable.length} rôles?`,
+                                    () => { deletable.forEach(r => deleteMutation.mutate(r.id)); clearRoleSelection(); }
+                                );
+                            }
+                        },
+                        variant: 'danger' as const,
+                    }] : []),
+                ]}
+            />
         </AdminLayout>
     );
 }

@@ -628,19 +628,6 @@ export default function Orders() {
                   </span>
                 )}
               />
-              <Column
-                header={t('actions')}
-                body={(order: any) => (
-                  <Button
-                    text
-                    rounded
-                    onClick={() => setSelectedOrderId(order.id)}
-                    icon={<Info style={{ width: '1rem', height: '1rem', color: '#64748b' }} />}
-                    title={t('details')}
-                    style={{ padding: '0.375rem' }}
-                  />
-                )}
-              />
             </DataTable>
           </div>
         )}

@@ -13,6 +13,7 @@ import { invoicesService } from '../modules/invoices';
 import PaymentModal from '../components/PaymentModal';
 import { toastConfirm, toastError } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
+import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function PaiementsVente() {
   const { t, language } = useLanguage();
@@ -23,6 +24,12 @@ export default function PaiementsVente() {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [selectedRows, setSelectedRows] = useState<Payment[]>([]);
+
+  const clearSelection = () => setSelectedRows([]);
+  const toggleSelectAll = () =>
+    selectedRows.length === filteredPayments.length
+      ? setSelectedRows([])
+      : setSelectedRows(filteredPayments);
 
 
   useEffect(() => {
@@ -110,12 +117,12 @@ export default function PaiementsVente() {
   const thisMonthAmount = thisMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   const PAYMENT_METHOD_CONFIG: Record<string, { cls: string; icon: React.ElementType }> = {
-    cash:           { cls: 'pm-badge pm-badge--cash',         icon: Banknote },
-    check:          { cls: 'pm-badge pm-badge--check',        icon: FileCheck },
-    bank_transfer:  { cls: 'pm-badge pm-badge--bank-transfer',icon: Building2 },
-    credit_card:    { cls: 'pm-badge pm-badge--credit-card',  icon: CreditCard },
-    mobile_payment: { cls: 'pm-badge pm-badge--mobile',       icon: Smartphone },
-    other:          { cls: 'pm-badge pm-badge--other',        icon: Wallet },
+    cash: { cls: 'pm-badge pm-badge--cash', icon: Banknote },
+    check: { cls: 'pm-badge pm-badge--check', icon: FileCheck },
+    bank_transfer: { cls: 'pm-badge pm-badge--bank-transfer', icon: Building2 },
+    credit_card: { cls: 'pm-badge pm-badge--credit-card', icon: CreditCard },
+    mobile_payment: { cls: 'pm-badge pm-badge--mobile', icon: Smartphone },
+    other: { cls: 'pm-badge pm-badge--other', icon: Wallet },
   };
 
   return (
@@ -164,11 +171,6 @@ export default function PaiementsVente() {
               />
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              {selectedRows.length > 0 && (
-                <span style={{ background: '#dbeafe', color: '#1d4ed8', borderRadius: '9999px', padding: '0.125rem 0.75rem', fontSize: '0.75rem', fontWeight: 600 }}>
-                  {selectedRows.length} sélectionnés
-                </span>
-              )}
               <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
                 {filteredPayments.length} résultat{filteredPayments.length !== 1 ? 's' : ''}
               </span>
@@ -295,16 +297,38 @@ export default function PaiementsVente() {
               </div>
             )} />
 
-            {/* Actions */}
-            <Column header={t('invoice.actions')} align="center" headerStyle={{ textAlign: 'center' }} body={(p: Payment) => (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-                <Button icon={<Edit2 style={{ width: '0.875rem', height: '0.875rem' }} />} onClick={() => handleEdit(p)} text rounded severity="info" title={t('modify')} />
-                <Button icon={<Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />} onClick={() => handleDelete(p.id)} text rounded severity="danger" title={t('delete')} />
-              </div>
-            )} />
           </DataTable>
         </div>
       </div>
+
+      <FloatingActionBar
+        selectedCount={selectedRows.length}
+        onClearSelection={clearSelection}
+        onSelectAll={toggleSelectAll}
+        isAllSelected={selectedRows.length === filteredPayments.length && filteredPayments.length > 0}
+        totalCount={filteredPayments.length}
+        itemLabel="paiement"
+        actions={[
+          ...(selectedRows.length === 1 ? [{
+            id: 'edit',
+            label: t('modify'),
+            icon: <Edit2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+            onClick: () => handleEdit(selectedRows[0]),
+            variant: 'secondary' as const,
+          }] : []),
+          {
+            id: 'delete',
+            label: t('delete'),
+            icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+            onClick: () => toastConfirm(
+              `${t('delete')} ${selectedRows.length} paiement(s)?`,
+              async () => { for (const p of selectedRows) { await paymentsService.delete(p.id); } await loadPayments(); clearSelection(); },
+              { confirmLabel: t('delete') }
+            ),
+            variant: 'danger' as const,
+          },
+        ]}
+      />
 
       {selectedPayment && (
         <PaymentModal

@@ -173,43 +173,36 @@ export default function DeliveryPersons() {
   };
 
   const getFloatingActions = () => {
+    const actions: any[] = [];
     if (selectedPersons.length === 1) {
       const person = deliveryPersons.find((p: DeliveryPerson) => p.id === selectedPersons[0]);
-      return [
-        {
-          id: 'view',
-          label: t('view'),
-          icon: <Eye style={{ width: '1rem', height: '1rem' }} />,
-          onClick: () => {
-            if (person) {
-              handleViewPerson(person);
-            }
-          },
-        },
+      actions.push(
         {
           id: 'edit',
           label: t('edit'),
           icon: <Edit2 style={{ width: '1rem', height: '1rem' }} />,
-          onClick: () => {
-            if (person) {
-              handleEditPerson(person);
-            }
-          },
+          onClick: () => { if (person) handleEditPerson(person); },
         },
-        {
-          id: 'delete',
-          label: t('delete'),
-          icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
-          onClick: () => {
-            if (person) {
-              handleDeletePerson(person);
-            }
-          },
-          variant: 'danger' as const,
-        },
-      ];
+      );
     }
-    return [];
+    actions.push({
+      id: 'delete',
+      label: t('delete'),
+      icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
+      onClick: () => {
+        if (selectedPersons.length === 1) {
+          const person = deliveryPersons.find((p: DeliveryPerson) => p.id === selectedPersons[0]);
+          if (person) handleDeletePerson(person);
+        } else {
+          toastConfirm(
+            `${t('delete')} ${selectedPersons.length} livreurs?`,
+            () => { selectedPersons.forEach(id => deleteMutation.mutate(id)); clearSelection(); }
+          );
+        }
+      },
+      variant: 'danger' as const,
+    });
+    return actions;
   };
 
   const tabs = [
@@ -360,57 +353,51 @@ export default function DeliveryPersons() {
                     />
                   </div>
                   <div className="responsive-table-desktop">
-                  {isLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '4rem', paddingBottom: '4rem' }}>
-                      <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
-                    </div>
-                  ) : filteredPersons.length === 0 ? (
-                    <div style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '4rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                      <Truck style={{ width: '5rem', height: '5rem', color: '#cbd5e1', display: 'block', margin: '0 auto', marginBottom: '1rem' }} />
-                      <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noDeliveryPersonsFound')}</p>
-                    </div>
-                  ) : (
-                    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                      <DataTable
-                        className="dp-datatable"
-                        value={filteredPersons}
-                        selection={filteredPersons.filter((p: DeliveryPerson) => selectedPersons.includes(p.id))}
-                        onSelectionChange={(e) => setSelectedPersons((e.value as DeliveryPerson[]).map((p) => p.id))}
-                        selectionMode="checkbox"
-                        dataKey="id"
-                        paginator
-                        paginatorPosition="top"
-                        rows={25}
-                        rowsPerPageOptions={[10, 25, 50, 100]}
-                        removableSort
-                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
-                        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
-                      >
-                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                        <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
-                            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>
-                          </div>
-                        )} />
-                        <Column field="phoneNumber" header="Téléphone" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
-                        <Column field="email" header="Email" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
-                        <Column field="isActive" header="Statut" body={(row: DeliveryPerson) => (
-                          <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
-                            {row.isActive ? 'Actif' : 'Inactif'}
-                          </span>
-                        )} />
-                        <Column header="Actions" headerStyle={{ textAlign: 'right' }} body={(row: DeliveryPerson) => (
-                          <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
-                            <Button text rounded severity="info" onClick={(e) => { e.stopPropagation(); handleViewPerson(row); }} icon={<Eye style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
-                            <Button text rounded severity="warning" onClick={(e) => { e.stopPropagation(); handleEditPerson(row); }} icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
-                            <Button text rounded severity="danger" onClick={(e) => { e.stopPropagation(); handleDeletePerson(row); }} icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.375rem' }} />
-                          </div>
-                        )} />
-                      </DataTable>
-                    </div>
-                  )}
+                    {isLoading ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '4rem', paddingBottom: '4rem' }}>
+                        <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
+                      </div>
+                    ) : filteredPersons.length === 0 ? (
+                      <div style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '4rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                        <Truck style={{ width: '5rem', height: '5rem', color: '#cbd5e1', display: 'block', margin: '0 auto', marginBottom: '1rem' }} />
+                        <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noDeliveryPersonsFound')}</p>
+                      </div>
+                    ) : (
+                      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                        <DataTable
+                          className="dp-datatable"
+                          value={filteredPersons}
+                          selection={filteredPersons.filter((p: DeliveryPerson) => selectedPersons.includes(p.id))}
+                          onSelectionChange={(e) => setSelectedPersons((e.value as DeliveryPerson[]).map((p) => p.id))}
+                          selectionMode="checkbox"
+                          dataKey="id"
+                          paginator
+                          paginatorPosition="top"
+                          rows={25}
+                          rowsPerPageOptions={[10, 25, 50, 100]}
+                          removableSort
+                          emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
+                          paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                          currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                        >
+                          <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                          <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
+                              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>
+                            </div>
+                          )} />
+                          <Column field="phoneNumber" header="Téléphone" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
+                          <Column field="email" header="Email" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                          <Column field="isActive" header="Statut" body={(row: DeliveryPerson) => (
+                            <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
+                              {row.isActive ? 'Actif' : 'Inactif'}
+                            </span>
+                          )} />
+
+                        </DataTable>
+                      </div>
+                    )}
                   </div>{/* end responsive-table-desktop */}
                 </div>
               </div>

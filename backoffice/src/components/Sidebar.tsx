@@ -125,7 +125,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                 padding: isCollapsed ? '0 0.75rem' : '0 0.875rem 0 1.25rem',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: isCollapsed ? 'center' : 'space-between',
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
                 borderBottom: '1px solid rgba(255,255,255,0.07)',
                 flexShrink: 0,
             }}>
@@ -142,22 +142,6 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                         </div>
                     )}
                 </div>
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="hidden lg:flex sb-collapse-btn"
-                    title={isCollapsed ? 'Expand' : 'Collapse'}
-                    style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: '1.625rem', height: '1.625rem', borderRadius: '0.375rem',
-                        background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
-                        color: 'rgba(255,255,255,0.4)', cursor: 'pointer', flexShrink: 0,
-                    }}
-                >
-                    {isCollapsed
-                        ? (isRtl ? <ChevronLeft style={{ width: '0.8rem', height: '0.8rem' }} /> : <ChevronRight style={{ width: '0.8rem', height: '0.8rem' }} />)
-                        : (isRtl ? <ChevronRight style={{ width: '0.8rem', height: '0.8rem' }} /> : <ChevronLeft style={{ width: '0.8rem', height: '0.8rem' }} />)
-                    }
-                </button>
             </div>
 
             {/* ── Navigation ───────────────────────────────── */}
@@ -256,10 +240,42 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                 )}
             </div>
 
+            {/* ── Collapse button ───────────────────────────── */}
+            <div className="hidden lg:flex" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: isCollapsed ? '0.5rem 0.375rem' : '0.5rem 0.625rem', flexShrink: 0 }}>
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="sb-collapse-btn sb-collapse-bottom"
+                    title={isCollapsed ? 'Expand' : 'Collapse'}
+                    style={{
+                        display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'flex-start',
+                        gap: '0.5rem',
+                        width: '100%', padding: isCollapsed ? '0.5rem' : '0.5rem 0.625rem',
+                        borderRadius: '0.5rem',
+                        background: 'transparent', border: 'none',
+                        color: 'rgba(255,255,255,0.4)', cursor: 'pointer',
+                        fontSize: '0.75rem', fontWeight: 500,
+                        transition: 'all 0.15s ease',
+                    }}
+                >
+                    <span style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem',
+                        border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0,
+                    }}>
+                        {isCollapsed
+                            ? (isRtl ? <ChevronLeft style={{ width: '0.75rem', height: '0.75rem' }} /> : <ChevronRight style={{ width: '0.75rem', height: '0.75rem' }} />)
+                            : (isRtl ? <ChevronRight style={{ width: '0.75rem', height: '0.75rem' }} /> : <ChevronLeft style={{ width: '0.75rem', height: '0.75rem' }} />)
+                        }
+                    </span>
+                    {!isCollapsed && <span style={{ whiteSpace: 'nowrap' }}>Réduire</span>}
+                </button>
+            </div>
+
             <style>{`
                 .sb-link:hover { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.92) !important; }
                 .sb-link--active:hover { background: rgba(35,90,228,0.22) !important; }
                 .sb-collapse-btn:hover { background: rgba(255,255,255,0.08) !important; color: rgba(255,255,255,0.7) !important; }
+                .sb-collapse-bottom:hover { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.7) !important; }
                 .sidebar-enterprise nav::-webkit-scrollbar { width: 3px; }
                 .sidebar-enterprise nav::-webkit-scrollbar-track { background: transparent; }
                 .sidebar-enterprise nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }

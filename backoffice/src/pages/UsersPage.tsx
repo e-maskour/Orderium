@@ -15,6 +15,7 @@ import { Tag } from 'primereact/tag';
 import { Users as UsersIcon, Shield, Plus, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
 import { usersService, type User, type CreateUserPayload, type UpdateUserPayload, type UserType } from '../modules/users';
 import { MobileList } from '../components/MobileList';
+import { FloatingActionBar } from '../components/FloatingActionBar';
 import { rolesService, type Role } from '../modules/roles';
 import { toastSuccess, toastError, toastConfirm } from '../services/toast.service';
 
@@ -28,6 +29,7 @@ export default function UsersPage() {
     const [page, setPage] = useState(1);
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
     const perPage = 20;
 
     const currentUserType: UserType = activeTab === 0 ? 'admin' : 'client';
@@ -227,82 +229,89 @@ export default function UsersPage() {
         </div>
     );
 
+    const clearUserSelection = () => setSelectedUsers([]);
+    const toggleSelectAllUsers = () =>
+        selectedUsers.length === users.length ? setSelectedUsers([]) : setSelectedUsers(users);
+
     const renderTable = () => (
         <>
-        <div className="responsive-table-mobile">
-            <MobileList
-                items={users}
-                keyExtractor={(u: User) => u.id}
-                loading={isLoading}
-                totalCount={totalRecords}
-                countLabel="utilisateurs"
-                emptyMessage="Aucun utilisateur trouvé"
-                hasMore={page * perPage < totalRecords}
-                onLoadMore={() => setPage((p) => p + 1)}
-                config={{
-                    topLeft: (u: User) => u.name || u.email || '—',
-                    topRight: (u: User) => u.phoneNumber || '',
-                    bottomLeft: (u: User) => u.role?.name || '—',
-                    bottomRight: (u: User) => (
-                        <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(u.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#fef2f2', color: '#dc2626' }) }}>
-                            {u.isActive ? 'Actif' : 'Inactif'}
-                        </span>
-                    ),
-                }}
-            />
-        </div>
-        <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-        <DataTable
-            value={users}
-            loading={isLoading}
-            paginator
-            paginatorPosition="top"
-            rows={perPage}
-            rowsPerPageOptions={[10, 25, 50, 100]}
-            totalRecords={totalRecords}
-            lazy
-            first={(page - 1) * perPage}
-            onPage={(e) => setPage(Math.floor((e.first ?? 0) / perPage) + 1)}
-            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-            currentPageReportTemplate="{first}-{last} of {totalRecords}"
-            emptyMessage={t('noResults' as any) || 'No users found'}
-            dataKey="id"
-            stripedRows
-        >
-            <Column
-                header={t('name' as any)}
-                field="name"
-                body={(user: User) => (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                        <div style={{
-                            width: '2rem', height: '2rem', borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#fff', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0,
-                        }}>
-                            {(user.name || '?').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                            <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#0f172a' }}>{user.name}</div>
-                            {user.email && <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{user.email}</div>}
-                        </div>
-                    </div>
-                )}
-                style={{ minWidth: '14rem' }}
-            />
-            <Column
-                header={t('phone' as any)}
-                field="phoneNumber"
-                style={{ minWidth: '9rem' }}
-                body={(user: User) => (
-                    <span style={{ fontSize: '0.8125rem', color: '#475569', fontFamily: 'var(--font-latin)' }}>{user.phoneNumber}</span>
-                )}
-            />
-            <Column header={t('role' as any)} body={roleTemplate} style={{ minWidth: '8rem' }} />
-            <Column header={t('status' as any)} body={statusTemplate} style={{ minWidth: '7rem' }} />
-            <Column header={t('actions' as any)} body={actionsTemplate} style={{ minWidth: '9rem' }} />
-        </DataTable>
-        </div>
+            <div className="responsive-table-mobile">
+                <MobileList
+                    items={users}
+                    keyExtractor={(u: User) => u.id}
+                    loading={isLoading}
+                    totalCount={totalRecords}
+                    countLabel="utilisateurs"
+                    emptyMessage="Aucun utilisateur trouvé"
+                    hasMore={page * perPage < totalRecords}
+                    onLoadMore={() => setPage((p) => p + 1)}
+                    config={{
+                        topLeft: (u: User) => u.name || u.email || '—',
+                        topRight: (u: User) => u.phoneNumber || '',
+                        bottomLeft: (u: User) => u.role?.name || '—',
+                        bottomRight: (u: User) => (
+                            <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(u.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#fef2f2', color: '#dc2626' }) }}>
+                                {u.isActive ? 'Actif' : 'Inactif'}
+                            </span>
+                        ),
+                    }}
+                />
+            </div>
+            <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <DataTable
+                    value={users}
+                    loading={isLoading}
+                    paginator
+                    paginatorPosition="top"
+                    rows={perPage}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    totalRecords={totalRecords}
+                    lazy
+                    first={(page - 1) * perPage}
+                    onPage={(e) => setPage(Math.floor((e.first ?? 0) / perPage) + 1)}
+                    paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                    emptyMessage={t('noResults' as any) || 'No users found'}
+                    dataKey="id"
+                    stripedRows
+                    selectionMode="checkbox"
+                    selection={selectedUsers}
+                    onSelectionChange={(e) => setSelectedUsers(e.value as User[])}
+                >
+                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                    <Column
+                        header={t('name' as any)}
+                        field="name"
+                        body={(user: User) => (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                <div style={{
+                                    width: '2rem', height: '2rem', borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: '#fff', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0,
+                                }}>
+                                    {(user.name || '?').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#0f172a' }}>{user.name}</div>
+                                    {user.email && <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{user.email}</div>}
+                                </div>
+                            </div>
+                        )}
+                        style={{ minWidth: '14rem' }}
+                    />
+                    <Column
+                        header={t('phone' as any)}
+                        field="phoneNumber"
+                        style={{ minWidth: '9rem' }}
+                        body={(user: User) => (
+                            <span style={{ fontSize: '0.8125rem', color: '#475569', fontFamily: 'var(--font-latin)' }}>{user.phoneNumber}</span>
+                        )}
+                    />
+                    <Column header={t('role' as any)} body={roleTemplate} style={{ minWidth: '8rem' }} />
+                    <Column header={t('status' as any)} body={statusTemplate} style={{ minWidth: '7rem' }} />
+                </DataTable>
+            </div>
         </>
     );
 
@@ -489,6 +498,52 @@ export default function UsersPage() {
                     </div>
                 </Modal>
             </div>
+
+            <FloatingActionBar
+                selectedCount={selectedUsers.length}
+                onClearSelection={clearUserSelection}
+                onSelectAll={toggleSelectAllUsers}
+                isAllSelected={selectedUsers.length === users.length && users.length > 0}
+                totalCount={totalRecords}
+                itemLabel="utilisateur"
+                actions={[
+                    ...(selectedUsers.length === 1 ? [
+                        {
+                            id: 'edit',
+                            label: t('edit' as any),
+                            icon: <Pencil style={{ width: '0.875rem', height: '0.875rem' }} />,
+                            onClick: () => openEdit(selectedUsers[0]),
+                            variant: 'secondary' as const,
+                        },
+                        {
+                            id: 'toggle',
+                            label: selectedUsers[0].isActive ? t('deactivate' as any) || 'Désactiver' : t('activate' as any) || 'Activer',
+                            icon: selectedUsers[0].isActive
+                                ? <UserX style={{ width: '0.875rem', height: '0.875rem' }} />
+                                : <UserCheck style={{ width: '0.875rem', height: '0.875rem' }} />,
+                            onClick: () => handleToggleActive(selectedUsers[0]),
+                            variant: 'secondary' as const,
+                        },
+                    ] : []),
+                    {
+                        id: 'delete',
+                        label: t('delete' as any),
+                        icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                        onClick: () => {
+                            if (selectedUsers.length === 1) {
+                                handleDelete(selectedUsers[0]);
+                            } else {
+                                const deletable = selectedUsers.filter(u => u.id !== admin?.id);
+                                toastConfirm(
+                                    `${t('delete' as any)} ${deletable.length} utilisateur(s)?`,
+                                    () => { deletable.forEach(u => deleteMutation.mutate(u.id)); clearUserSelection(); }
+                                );
+                            }
+                        },
+                        variant: 'danger' as const,
+                    },
+                ]}
+            />
         </AdminLayout>
     );
 }

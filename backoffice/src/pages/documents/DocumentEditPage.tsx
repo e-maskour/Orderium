@@ -864,97 +864,92 @@ export default function DocumentEditPage({
         .doc-cal .p-inputtext { padding-right: 2.5rem !important; width: 100% !important; border-top-right-radius: var(--orderium-radius-md, 6px) !important; border-bottom-right-radius: var(--orderium-radius-md, 6px) !important; }
         .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
         .doc-cal .p-datepicker-trigger:hover { color: var(--form-input-border-focus) !important; background: transparent !important; }
-        @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } }
+        .doc-notes-totals { display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-top: 1.5rem; align-items: flex-start; }
+        @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } .doc-notes-totals { grid-template-columns: 1fr !important; gap: 1rem !important; } }
       `}</style>
       <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
         {/* ── Page Header ── */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '1rem',
-          marginBottom: '0.75rem',
-          padding: '1.125rem 1.375rem',
+          marginBottom: '1.5rem',
           background: '#ffffff',
           borderRadius: '1rem',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.05)',
           border: '1.5px solid #e2e8f0',
-          flexWrap: 'wrap'
         }}>
-          <Button
-            icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
-            onClick={() => navigate(listRoute)}
-            style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem' }}
-          />
-          <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #235ae4, #1a47b8)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(35,90,228,0.4)' }}>
-            {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />; })()}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h1 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0, letterSpacing: '-0.01em' }}>
-                  {config.titleShort} {invoiceNumber}
-                </h1>
-                <p style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.125rem', margin: '0.125rem 0 0' }}>{t('editDocument')} {config.titleShort.toLowerCase()}</p>
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, #235ae4 0%, #818cf8 100%)' }} />
+          <div style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <Button
+              icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
+              onClick={() => navigate(listRoute)}
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+            />
+            <div style={{
+              width: '3rem', height: '3rem', flexShrink: 0,
+              background: 'linear-gradient(135deg, #235ae4 0%, #818cf8 100%)',
+              borderRadius: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(35,90,228,0.35)',
+            }}>
+              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
+                <span
+                  onClick={() => navigate(listRoute)}
+                  style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', cursor: 'pointer' }}
+                >{config.titleShort}</span>
+                <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>›</span>
+                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#235ae4', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{invoiceNumber}</span>
               </div>
-              {/* Status badges - positioned to the right */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                {/* Validation status badge */}
-                {config.features.hasValidation && (
-                  isValidated ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(to right, #ecfdf5, #f0fdfa)', border: '1px solid #a7f3d0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: '#10b981', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
-                        <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#047857' }}>{t('validated')}</span>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: 'linear-gradient(to right, #fffbeb, #fff7ed)', border: '1px solid #fcd34d', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: '#f59e0b', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', flexShrink: 0 }}>
-                        <XCircle style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#b45309' }}>{t('notValidated')}</span>
-                    </div>
-                  )
-                )}
-
-                {/* Document status badge - different for each document type */}
-                {documentType === 'facture' && (() => {
-                  const statusConfig = getPaymentStatusBadge(status);
-                  const StatusIcon = statusConfig.icon;
-                  return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                        <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
-                    </div>
-                  );
-                })()}
-
-                {documentType === 'devis' && (() => {
-                  const statusConfig = getDevisStatusBadge(status);
-                  const StatusIcon = statusConfig.icon;
-                  return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                        <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
-                    </div>
-                  );
-                })()}
-
-                {documentType === 'bon_livraison' && (() => {
-                  const statusConfig = getBonStatusBadge(status);
-                  const StatusIcon = statusConfig.icon;
-                  return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1px solid ${statusConfig.borderColor}`, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', borderRadius: '9999px', backgroundColor: statusConfig.iconBgColor, boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                        <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: '#ffffff' }} strokeWidth={2.5} />
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: statusConfig.textColor }}>{statusConfig.label}</span>
-                    </div>
-                  );
-                })()}
-              </div>
+              <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                {config.titleShort} <span style={{ color: '#235ae4' }}>{invoiceNumber}</span>
+              </h1>
+            </div>
+            {/* Status badges */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {config.features.hasValidation && (
+                isValidated ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #ecfdf5, #f0fdfa)', border: '1.5px solid #a7f3d0', whiteSpace: 'nowrap' }}>
+                    <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: '#10b981', flexShrink: 0 }} strokeWidth={2.5} />
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#047857', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('validated')}</span>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #fffbeb, #fff7ed)', border: '1.5px solid #fcd34d', whiteSpace: 'nowrap' }}>
+                    <Clock style={{ width: '0.875rem', height: '0.875rem', color: '#f59e0b', flexShrink: 0 }} strokeWidth={2.5} />
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('notValidated')}</span>
+                  </div>
+                )
+              )}
+              {documentType === 'facture' && (() => {
+                const statusConfig = getPaymentStatusBadge(status);
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}` }}>
+                    <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
+                  </div>
+                );
+              })()}
+              {documentType === 'devis' && (() => {
+                const statusConfig = getDevisStatusBadge(status);
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}` }}>
+                    <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
+                  </div>
+                );
+              })()}
+              {documentType === 'bon_livraison' && (() => {
+                const statusConfig = getBonStatusBadge(status);
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}` }}>
+                    <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -1113,12 +1108,13 @@ export default function DocumentEditPage({
             />
 
             {/* Notes + Totals Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1.5rem', marginTop: '1.5rem', alignItems: 'flex-start' }}>
+            <div className="doc-notes-totals">
               {/* Notes - 60% */}
               <div style={{ minWidth: 0 }}>
-                <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
-                  <div style={{ padding: '0.75rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #94a3b8, #64748b)', borderRadius: '2px' }} />
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                  <div style={{ padding: '0.75rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #eff6ff)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #235ae4, #1a47b8)', borderRadius: '2px', flexShrink: 0 }} />
+                    <FileText style={{ width: '0.9375rem', height: '0.9375rem', color: '#3b82f6', flexShrink: 0 }} />
                     <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('notes')}</h3>
                   </div>
                   <div style={{ padding: '1rem 1.125rem' }}>
@@ -1128,7 +1124,7 @@ export default function DocumentEditPage({
                       rows={3}
                       placeholder={t('additionalNotes')}
                       disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                      style={{ width: '100%', resize: 'vertical' }}
+                      style={{ width: '100%', resize: 'vertical', minHeight: '7rem' }}
                     />
                   </div>
                 </div>

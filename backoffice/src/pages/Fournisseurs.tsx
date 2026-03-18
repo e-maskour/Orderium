@@ -12,7 +12,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { toastDeleted, toastError } from '../services/toast.service';
+import { toastDeleted, toastError, toastConfirm } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { formatDH, formatFrenchNumber } from '../utils/formatNumber';
 import { MobileList } from '../components/MobileList';
@@ -97,9 +97,10 @@ export default function Fournisseurs() {
   };
 
   const getFloatingActions = () => {
+    const actions: any[] = [];
     if (selectedSuppliers.length === 1) {
       const supplier = suppliers.find((s: Partner) => s.id === selectedSuppliers[0]);
-      return [
+      actions.push(
         {
           id: 'view',
           label: t('view'),
@@ -112,16 +113,26 @@ export default function Fournisseurs() {
           icon: <Edit2 style={{ width: '1rem', height: '1rem' }} />,
           onClick: () => { if (supplier) handleEditSupplier(supplier); },
         },
-        {
-          id: 'delete',
-          label: t('delete'),
-          icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
-          onClick: () => { if (supplier) handleDeletePartner(supplier); },
-          variant: 'danger' as const,
-        },
-      ];
+      );
     }
-    return [];
+    actions.push({
+      id: 'delete',
+      label: t('delete'),
+      icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
+      onClick: () => {
+        if (selectedSuppliers.length === 1) {
+          const supplier = suppliers.find((s: Partner) => s.id === selectedSuppliers[0]);
+          if (supplier) handleDeletePartner(supplier);
+        } else {
+          toastConfirm(
+            `${t('delete')} ${selectedSuppliers.length} ${t('suppliers').toLowerCase()}?`,
+            () => { selectedSuppliers.forEach(id => deleteMutation.mutate(id)); clearSelection(); }
+          );
+        }
+      },
+      variant: 'danger' as const,
+    });
+    return actions;
   };
 
   return (
@@ -136,94 +147,88 @@ export default function Fournisseurs() {
           }
         />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                {/* Toolbar */}
-                <div className="partner-list-toolbar">
-                  <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                    <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '0.9rem', height: '0.9rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                    <InputText id="search-suppliers" type="text" placeholder={t('searchSuppliersPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', paddingLeft: '2.25rem' }} aria-label={t('searchSuppliersPlaceholder')} />
-                    {searchTerm && (
-                      <Button text rounded onClick={() => setSearchTerm('')} icon={<X style={{ width: '1rem', height: '1rem' }} />} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }} />
-                    )}
-                  </div>
-                </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          {/* Toolbar */}
+          <div className="partner-list-toolbar">
+            <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+              <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '0.9rem', height: '0.9rem', color: '#94a3b8', pointerEvents: 'none' }} />
+              <InputText id="search-suppliers" type="text" placeholder={t('searchSuppliersPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', paddingLeft: '2.25rem' }} aria-label={t('searchSuppliersPlaceholder')} />
+              {searchTerm && (
+                <Button text rounded onClick={() => setSearchTerm('')} icon={<X style={{ width: '1rem', height: '1rem' }} />} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }} />
+              )}
+            </div>
+          </div>
 
-                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-                  {/* Mobile cards */}
-                  <div className="responsive-table-mobile">
-                    <MobileList
-                      items={filteredSuppliers}
-                      keyExtractor={(s: Partner) => s.id}
-                      onTap={(s: Partner) => handleViewSupplier(s)}
-                      loading={isLoading}
-                      totalCount={filteredSuppliers.length}
-                      countLabel={t('suppliers')}
-                      emptyMessage="Aucun fournisseur trouvé"
-                      config={{
-                        topLeft: (s: Partner) => s.name,
-                        topRight: (s: Partner) => s.phoneNumber || '',
-                        bottomLeft: (s: Partner) => s.email || '',
-                        bottomRight: (s: Partner) => (
-                          <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(s.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
-                            {s.isEnabled ? t('active') : t('inactive')}
-                          </span>
-                        ),
-                      }}
-                    />
-                  </div>
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+            {/* Mobile cards */}
+            <div className="responsive-table-mobile">
+              <MobileList
+                items={filteredSuppliers}
+                keyExtractor={(s: Partner) => s.id}
+                onTap={(s: Partner) => handleViewSupplier(s)}
+                loading={isLoading}
+                totalCount={filteredSuppliers.length}
+                countLabel={t('suppliers')}
+                emptyMessage="Aucun fournisseur trouvé"
+                config={{
+                  topLeft: (s: Partner) => s.name,
+                  topRight: (s: Partner) => s.phoneNumber || '',
+                  bottomLeft: (s: Partner) => s.email || '',
+                  bottomRight: (s: Partner) => (
+                    <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(s.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
+                      {s.isEnabled ? t('active') : t('inactive')}
+                    </span>
+                  ),
+                }}
+              />
+            </div>
 
-                  {/* Desktop DataTable */}
-                  {filteredSuppliers.length === 0 ? (
-                    <div className="responsive-table-desktop" style={{ textAlign: 'center', padding: '4rem 0', backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                      <Users style={{ width: '5rem', height: '5rem', color: '#cbd5e1', margin: '0 auto 1rem' }} />
-                      <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>Aucun fournisseur trouvé</p>
-                    </div>
-                  ) : (
-                    <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                      <DataTable
-                        className="fourn-datatable"
-                        value={filteredSuppliers}
-                        selection={filteredSuppliers.filter((s: Partner) => selectedSuppliers.includes(s.id))}
-                        onSelectionChange={(e) => setSelectedSuppliers((e.value as Partner[]).map((s) => s.id))}
-                        selectionMode="checkbox"
-                        dataKey="id"
-                        paginator
-                        paginatorPosition="top"
-                        rows={25}
-                        rowsPerPageOptions={[10, 25, 50, 100]}
-                        removableSort
-                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Aucun fournisseur trouvé</div>}
-                        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
-                      >
-                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                        <Column field="name" header={t('name')} sortable body={(row: Partner) => (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
-                            </div>
-                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>
-                          </div>
-                        )} />
-                        <Column field="phoneNumber" header={t('phone')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber || '-'}</span>} />
-                        <Column field="email" header={t('email')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
-                        <Column field="isEnabled" header={t('status')} body={(row: Partner) => (
-                          <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
-                            {row.isEnabled ? t('active') : t('inactive')}
-                          </span>
-                        )} />
-                        <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Partner) => (
-                          <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                            <Button text rounded severity="secondary" onClick={() => handleViewSupplier(row)} icon={<Eye style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.25rem' }} />
-                            <Button text rounded severity="info" onClick={() => handleEditSupplier(row)} icon={<Edit2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.25rem' }} />
-                            <Button text rounded severity="danger" onClick={() => handleDeletePartner(row)} icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} style={{ padding: '0.25rem' }} />
-                          </div>
-                        )} />
-                      </DataTable>
-                    </div>
-                  )}
-                </div>
+            {/* Desktop DataTable */}
+            {filteredSuppliers.length === 0 ? (
+              <div className="responsive-table-desktop" style={{ textAlign: 'center', padding: '4rem 0', backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                <Users style={{ width: '5rem', height: '5rem', color: '#cbd5e1', margin: '0 auto 1rem' }} />
+                <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>Aucun fournisseur trouvé</p>
               </div>
+            ) : (
+              <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <DataTable
+                  className="fourn-datatable"
+                  value={filteredSuppliers}
+                  selection={filteredSuppliers.filter((s: Partner) => selectedSuppliers.includes(s.id))}
+                  onSelectionChange={(e) => setSelectedSuppliers((e.value as Partner[]).map((s) => s.id))}
+                  selectionMode="checkbox"
+                  dataKey="id"
+                  paginator
+                  paginatorPosition="top"
+                  rows={25}
+                  rowsPerPageOptions={[10, 25, 50, 100]}
+                  removableSort
+                  emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Aucun fournisseur trouvé</div>}
+                  paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                  currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                >
+                  <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                  <Column field="name" header={t('name')} sortable body={(row: Partner) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
+                      </div>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>
+                    </div>
+                  )} />
+                  <Column field="phoneNumber" header={t('phone')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber || '-'}</span>} />
+                  <Column field="email" header={t('email')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                  <Column field="isEnabled" header={t('status')} body={(row: Partner) => (
+                    <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
+                      {row.isEnabled ? t('active') : t('inactive')}
+                    </span>
+                  )} />
+
+                </DataTable>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {selectedSuppliers.length > 0 && (

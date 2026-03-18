@@ -6,6 +6,105 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { Search, Package2, Wrench, ShoppingBag } from 'lucide-react';
+
+const PCAT_STYLES = `
+  .pcat-search-wrap {
+    padding: 0.625rem 0.875rem;
+    background: #f8fafc;
+    border-bottom: 1.5px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .pcat-search-inner { position: relative; }
+  .pcat-search-inner .p-inputtext { padding-left: 2.25rem !important; width: 100%; border-radius: 0.5rem !important; height: 2.25rem !important; font-size: 0.875rem !important; }
+  .pcat-search-icon { position: absolute; left: 0.625rem; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 1; }
+  .pcat-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.375rem;
+    padding: 0.625rem;
+  }
+  @media (min-width: 480px) { .pcat-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; padding: 0.75rem; } }
+  .pcat-card {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.625rem;
+    background: #ffffff;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    user-select: none;
+    min-height: 3rem;
+  }
+  .pcat-card:hover:not(.pcat-selected) {
+    border-color: #94a3b8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background: #f8fafc;
+  }
+  .pcat-selected {
+    border-color: #235ae4;
+    background: #f0f6ff;
+    cursor: default;
+    box-shadow: 0 2px 10px rgba(35,90,228,0.12);
+  }
+  .pcat-thumb {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pcat-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .pcat-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.0625rem; }
+  .pcat-name { font-size: 0.8125rem; font-weight: 700; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pcat-selected .pcat-name { color: #1d4ed8; }
+  .pcat-meta { display: flex; align-items: center; gap: 0.375rem; min-width: 0; }
+  .pcat-code {
+    display: inline-flex; align-items: center;
+    padding: 0.0625rem 0.375rem;
+    background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px;
+    font-size: 0.6875rem; font-weight: 700; color: #64748b; white-space: nowrap; flex-shrink: 0;
+  }
+  .pcat-selected .pcat-code { background: #dbeafe; border-color: #bfdbfe; color: #1d4ed8; }
+  .pcat-desc { font-size: 0.75rem; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+  .pcat-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; flex-shrink: 0; }
+  .pcat-price { font-size: 0.875rem; font-weight: 800; color: #0f172a; white-space: nowrap; }
+  .pcat-selected .pcat-price { color: #1d4ed8; }
+  .pcat-price-dim { font-size: 0.6875rem; font-weight: 500; color: #94a3b8; margin-left: 0.125rem; }
+  .pcat-stock {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.125rem 0.375rem; border-radius: 99px;
+    font-size: 0.625rem; font-weight: 700;
+  }
+  .pcat-stock-ok { background: #f0fdf4; color: #16a34a; }
+  .pcat-stock-low { background: #fff7ed; color: #ea580c; }
+  .pcat-stock-zero { background: #fef2f2; color: #dc2626; }
+  .pcat-check {
+    flex-shrink: 0; width: 1.125rem; height: 1.125rem; border-radius: 50%;
+    background: linear-gradient(135deg, #235ae4, #1a47b8);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 5px rgba(35,90,228,0.4);
+  }
+  .pcat-qty { display: flex; align-items: center; }
+  .pcat-qty .p-inputnumber { height: 1.75rem; }
+  .pcat-qty .p-inputnumber-input { width: 2rem !important; text-align: center !important; padding: 0.125rem 0.125rem !important; font-weight: 700 !important; font-size: 0.8125rem !important; height: 1.75rem !important; }
+  .pcat-qty .p-button { width: 1.5rem !important; height: 1.75rem !important; padding: 0 !important; }
+  .pcat-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2.5rem 1rem; gap: 0.625rem;
+  }
+  .pcat-empty-icon {
+    width: 3rem; height: 3rem; border-radius: 50%;
+    background: #f1f5f9; display: flex; align-items: center; justify-content: center;
+  }
+`;
 
 interface InvoiceItemRow {
   id: string;
@@ -122,20 +221,48 @@ export function ProductCatalogueModal({
     onClose();
   };
 
+  const selectedCount = currentItems.filter(item => item.productId).length;
+
   const headerContent = (
-    <div>
-      <div style={{ fontWeight: 600, fontSize: '1.125rem', color: '#0f172a' }}>Catalogue des produits</div>
-      <div style={{ fontSize: '0.875rem', color: '#475569' }}>
-        {currentItems.filter(item => item.productId).length} produit(s) sélectionné(s)
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div style={{
+        width: '2.5rem', height: '2.5rem', flexShrink: 0,
+        background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+        borderRadius: '0.6875rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 3px 10px rgba(35,90,228,0.4)'
+      }}>
+        <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />
+      </div>
+      <div>
+        <div style={{ fontWeight: 700, fontSize: '1.0625rem', color: '#0f172a' }}>Catalogue des produits</div>
+        <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.125rem' }}>
+          {selectedCount > 0
+            ? <span style={{ color: '#235ae4', fontWeight: 600 }}>{selectedCount} produit{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1 ? 's' : ''}</span>
+            : 'Sélectionnez des produits à ajouter'
+          }
+        </div>
       </div>
     </div>
   );
 
   const footerContent = (
-    <div className="flex justify-content-end">
-      <Button label="Terminé" onClick={handleClose} />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0' }}>
+      <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
+        {filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''} affiché{filteredProducts.length !== 1 ? 's' : ''}
+      </span>
+      <Button
+        label="Terminé"
+        onClick={handleClose}
+        style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none', boxShadow: '0 2px 8px rgba(35,90,228,0.35)', fontWeight: 600 }}
+      />
     </div>
   );
+
+  const getStockBadge = (stock?: number | null) => {
+    if (stock === undefined || stock === null) return null;
+    const cls = stock === 0 ? 'pcat-stock pcat-stock-zero' : stock <= 5 ? 'pcat-stock pcat-stock-low' : 'pcat-stock pcat-stock-ok';
+    return <span className={cls}>Stock: {stock}</span>;
+  };
 
   return (
     <Dialog
@@ -145,97 +272,121 @@ export function ProductCatalogueModal({
       footer={footerContent}
       modal
       dismissableMask
-      style={{ width: '95vw', maxWidth: '56rem' }}
-      breakpoints={{ '960px': '75vw', '640px': '95vw' }}
-      contentStyle={{ padding: 0, overflowY: 'auto' }}
+      style={{ width: '95vw', maxWidth: '58rem' }}
+      breakpoints={{ '960px': '90vw', '640px': '95vw' }}
+      contentStyle={{ padding: 0, overflowY: 'auto', maxHeight: 'calc(80vh - 9rem)' }}
     >
-      <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0' }}>
-        <InputText
-          placeholder="Rechercher un produit..."
-          value={catalogueSearch}
-          onChange={(e) => setCatalogueSearch(e.target.value)}
-          style={{ width: '100%' }}
-        />
+      <style>{PCAT_STYLES}</style>
+
+      {/* ── Sticky search bar ── */}
+      <div className="pcat-search-wrap">
+        <div className="pcat-search-inner">
+          <Search className="pcat-search-icon" style={{ width: '1rem', height: '1rem', color: '#94a3b8' }} />
+          <InputText
+            placeholder="Rechercher un produit..."
+            value={catalogueSearch}
+            onChange={(e) => setCatalogueSearch(e.target.value)}
+            style={{ width: '100%' }}
+          />
+        </div>
       </div>
 
-      <div style={{ overflowY: 'auto', padding: '1rem' }}>
-        {catalogueLoading ? (
-          <div className="flex align-items-center justify-content-center" style={{ padding: '2rem 0' }}>
-            <ProgressSpinner style={{ width: '2rem', height: '2rem' }} />
+      {/* ── Content ── */}
+      {catalogueLoading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
+          <ProgressSpinner style={{ width: '2.5rem', height: '2.5rem' }} />
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="pcat-empty">
+          <div className="pcat-empty-icon">
+            <Package2 style={{ width: '1.5rem', height: '1.5rem', color: '#94a3b8' }} />
           </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="flex align-items-center justify-content-center" style={{ padding: '2rem 0', color: '#475569' }}>
-            Aucun produit trouvé
-          </div>
-        ) : (
-          <div className="flex flex-column gap-2">
-            {filteredProducts.map((product) => {
-              const currentQuantity = getProductQuantity(product.id);
-              const isSelected = currentQuantity > 0;
+          <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#64748b' }}>Aucun produit trouvé</span>
+          {catalogueSearch && (
+            <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>Essayez un autre terme de recherche</span>
+          )}
+        </div>
+      ) : (
+        <div className="pcat-grid">
+          {filteredProducts.map((product) => {
+            const currentQuantity = getProductQuantity(product.id);
+            const isSelected = currentQuantity > 0;
+            const displayPrice = (isVente ? product.price : (product.cost || product.price))
+              .toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-              return (
+            return (
+              <div
+                key={product.id}
+                className={`pcat-card${isSelected ? ' pcat-selected' : ''}`}
+                onClick={() => { if (!isSelected) updateProductQuantity(product, 1); }}
+              >
+                {/* Thumbnail */}
                 <div
-                  key={product.id}
-                  onClick={() => {
-                    if (!isSelected) {
-                      updateProductQuantity(product, 1);
-                    }
-                  }}
-                  className="flex align-items-center justify-content-between"
+                  className="pcat-thumb"
                   style={{
-                    padding: '0.75rem',
-                    border: `1px solid ${isSelected ? '#fcd34d' : '#e2e8f0'}`,
-                    borderRadius: '0.5rem',
-                    background: isSelected ? '#fffbeb' : 'transparent',
-                    cursor: isSelected ? 'default' : 'pointer',
+                    background: product.imageUrl
+                      ? undefined
+                      : product.isService
+                        ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
+                        : 'linear-gradient(135deg, #235ae4, #1a47b8)'
                   }}
                 >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500, color: isSelected ? '#92400e' : '#0f172a' }}>
-                      {product.name}
-                    </div>
-                    {product.code && (
-                      <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Code: {product.code}</div>
-                    )}
+                  {product.imageUrl ? (
+                    <img src={product.imageUrl} alt={product.name} />
+                  ) : product.isService ? (
+                    <Wrench style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                  ) : (
+                    <Package2 style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                  )}
+                </div>
+
+                {/* Body */}
+                <div className="pcat-body">
+                  <span className="pcat-name" title={product.name}>{product.name}</span>
+                  <div className="pcat-meta">
+                    {product.code && <span className="pcat-code">#{product.code}</span>}
                     {product.description && (
-                      <div style={{ fontSize: '0.875rem', color: '#475569' }}>{product.description}</div>
+                      <span className="pcat-desc" title={product.description}>{product.description}</span>
                     )}
                   </div>
+                </div>
 
-                  <div className="flex align-items-center gap-3">
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>
-                        {(isVente ? product.price : (product.cost || product.price)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
-                      </div>
-                      {product.stock !== undefined && (
-                        <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Stock: {product.stock}</div>
-                      )}
-                    </div>
-
-                    {isSelected && (
+                {/* Right: price + stock/qty + check */}
+                <div className="pcat-right">
+                  <span className="pcat-price">
+                    {displayPrice}<span className="pcat-price-dim">DH</span>
+                  </span>
+                  {!isSelected ? (
+                    getStockBadge(product.stock)
+                  ) : (
+                    <div className="pcat-qty" onClick={(e) => e.stopPropagation()}>
                       <InputNumber
                         value={currentQuantity}
-                        onValueChange={(e) => {
-                          const newQuantity = Math.max(0, e.value || 0);
-                          updateProductQuantity(product, newQuantity);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
+                        onValueChange={(e) => updateProductQuantity(product, Math.max(0, e.value || 0))}
                         min={0}
                         showButtons
                         buttonLayout="horizontal"
                         incrementButtonIcon="pi pi-plus"
                         decrementButtonIcon="pi pi-minus"
-                        style={{ width: '6rem' }}
-                        inputStyle={{ textAlign: 'center', width: '2.5rem' }}
+                        style={{ width: '6.5rem' }}
+                        inputStyle={{ textAlign: 'center', width: '2rem', fontWeight: 700 }}
                       />
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
+                {isSelected && (
+                  <div className="pcat-check">
+                    <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </Dialog>
   );
 }
