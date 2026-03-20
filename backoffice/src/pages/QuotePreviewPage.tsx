@@ -10,6 +10,7 @@ import { quotesService } from '../modules/quotes/quotes.service';
 import { QuoteWithDetails } from '../modules/quotes/quotes.model';
 import { toastError, toastConfirm } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
+import { formatAmount } from '@orderium/ui';
 
 export default function QuotePreviewPage() {
   const { t } = useLanguage();
@@ -213,14 +214,14 @@ export default function QuotePreviewPage() {
                 header="Prix unitaire"
                 headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
                 bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155' }}
-                body={(item: any) => `${item.unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH`}
+                body={(item: any) => `${formatAmount(item.unitPrice, 2)} DH`}
               />
               <Column
                 field="total"
                 header="Total"
                 headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
                 bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}
-                body={(item: any) => `${item.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH`}
+                body={(item: any) => `${formatAmount(item.total, 2)} DH`}
               />
             </DataTable>
           </div>
@@ -321,19 +322,19 @@ export default function QuotePreviewPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
                   <span style={{ color: '#475569' }}>Sous-total HT:</span>
                   <span style={{ fontWeight: 600, color: '#0f172a' }}>
-                    {q.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
+                    {formatAmount(q.subtotal, 2)} DH
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
                   <span style={{ color: '#475569' }}>TVA:</span>
                   <span style={{ fontWeight: 600, color: '#0f172a' }}>
-                    {q.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
+                    {formatAmount(q.tax, 2)} DH
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.125rem', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>Total TTC:</span>
                   <span style={{ fontWeight: 700, color: '#2563eb' }}>
-                    {q.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
+                    {formatAmount(q.total, 2)} DH
                   </span>
                 </div>
               </div>

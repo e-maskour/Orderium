@@ -7,6 +7,7 @@ import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Search, Package2, Wrench, ShoppingBag } from 'lucide-react';
+import { formatAmount } from '@orderium/ui';
 
 const PCAT_STYLES = `
   .pcat-search-wrap {
@@ -104,6 +105,7 @@ const PCAT_STYLES = `
     width: 3rem; height: 3rem; border-radius: 50%;
     background: #f1f5f9; display: flex; align-items: center; justify-content: center;
   }
+  .p-dialog-footer { width: 100% !important; }
 `;
 
 interface InvoiceItemRow {
@@ -246,7 +248,7 @@ export function ProductCatalogueModal({
   );
 
   const footerContent = (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0.25rem 0' }}>
       <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
         {filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''} affiché{filteredProducts.length !== 1 ? 's' : ''}
       </span>
@@ -311,8 +313,7 @@ export function ProductCatalogueModal({
           {filteredProducts.map((product) => {
             const currentQuantity = getProductQuantity(product.id);
             const isSelected = currentQuantity > 0;
-            const displayPrice = (isVente ? product.price : (product.cost || product.price))
-              .toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const displayPrice = formatAmount(isVente ? product.price : (product.cost || product.price), 2);
 
             return (
               <div
@@ -343,12 +344,11 @@ export function ProductCatalogueModal({
                 {/* Body */}
                 <div className="pcat-body">
                   <span className="pcat-name" title={product.name}>{product.name}</span>
-                  <div className="pcat-meta">
-                    {product.code && <span className="pcat-code">#{product.code}</span>}
-                    {product.description && (
-                      <span className="pcat-desc" title={product.description}>{product.description}</span>
-                    )}
-                  </div>
+                  {product.code && (
+                    <div className="pcat-meta">
+                      <span className="pcat-code">#{product.code}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right: price + stock/qty + check */}

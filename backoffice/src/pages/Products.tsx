@@ -18,6 +18,7 @@ import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Sidebar } from 'primereact/sidebar';
 import { AutoComplete } from 'primereact/autocomplete';
+import { formatAmount } from '@orderium/ui';
 
 export default function Products() {
   const { t } = useLanguage();
@@ -350,7 +351,7 @@ export default function Products() {
               onLoadMore={() => setCurrentPage(prev => prev + 1)}
               config={{
                 topLeft: (p: IProduct) => p.name,
-                topRight: (p: IProduct) => `${(p.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${t('currency')}`,
+                topRight: (p: IProduct) => `${formatAmount(p.price || 0, 2)} ${t('currency')}`,
                 bottomLeft: (p: IProduct) => [p.code, p.stock != null ? `Stock: ${p.stock}` : null].filter(Boolean).join(' · '),
                 bottomRight: (p: IProduct) => {
                   if (p.stock == null) return null;
@@ -430,9 +431,9 @@ export default function Products() {
                   header={t('price')}
                   sortable
                   sortField="price"
-                  body={(product: IProduct) => (
+                  body={(product: IProduct) => formatAmount(
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#235ae4' }}>
-                      {(product.price || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
+                      {(product.price || 0, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                     </span>
                   )}
                 />
@@ -440,9 +441,9 @@ export default function Products() {
                   header={t('cost')}
                   sortable
                   sortField="cost"
-                  body={(product: IProduct) => (
+                  body={(product: IProduct) => formatAmount(
                     <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                      {(product.cost || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
+                      {(product.cost || 0, 2)} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
                     </span>
                   )}
                 />

@@ -14,6 +14,7 @@ import { PriceConfirmModal } from '../components/PriceConfirmModal';
 import { CustomerSelectionModal } from '../components/CustomerSelectionModal';
 import { DiscountModal } from '../components/DiscountModal';
 import { posService, IPosProduct as Product, IPosCustomer as Customer, IPosCartItem as CartItem } from '../modules/pos';
+import { formatCurrency } from '@orderium/ui';
 
 export default function POS() {
   const { t, language, dir } = useLanguage();
@@ -64,12 +65,6 @@ export default function POS() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-
-  const formatCurrency = (price: number) => {
-    return language === 'ar'
-      ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م`
-      : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
-  };
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
@@ -355,7 +350,7 @@ export default function POS() {
                     >
                       <Tag style={{ width: '0.5625rem', height: '0.5625rem' }} />
                       {hasDiscount
-                        ? (item.discountType === 1 ? `−${item.discount}%` : `−${formatCurrency(item.discount)}`)
+                        ? (item.discountType === 1 ? `−${item.discount}%` : `−${formatCurrency(item.discount, language as 'fr' | 'ar')}`)
                         : (t('discount'))}
                     </button>
 
@@ -390,15 +385,15 @@ export default function POS() {
                       }}>
                         {item.quantity}
                       </span>
-                      <span style={{ fontSize: '0.6875rem', color: '#64748b' }}>× {formatCurrency(item.product.price)}</span>
+                      <span style={{ fontSize: '0.6875rem', color: '#64748b' }}>× {formatCurrency(item.product.price, language as 'fr' | 'ar')}</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
-                        {formatCurrency(itemTotal)}
+                        {formatCurrency(itemTotal, language as 'fr' | 'ar')}
                       </span>
                       {hasDiscount && (
                         <span style={{ display: 'block', fontSize: '0.625rem', color: '#94a3b8', textDecoration: 'line-through', lineHeight: 1 }}>
-                          {formatCurrency(itemSubtotal)}
+                          {formatCurrency(itemSubtotal, language as 'fr' | 'ar')}
                         </span>
                       )}
                     </div>
@@ -431,7 +426,7 @@ export default function POS() {
                 {t('total')}
               </p>
               <p style={{ margin: '0.15rem 0 0', fontSize: '1.5rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                {formatCurrency(total)}
+                {formatCurrency(total, language as 'fr' | 'ar')}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -750,7 +745,7 @@ export default function POS() {
                           {product.name}
                         </p>
                         <p style={{ fontSize: '0.875rem', fontWeight: 800, color: '#1e1e2d', margin: 0 }}>
-                          {formatCurrency(product.price)}
+                          {formatCurrency(product.price, language as 'fr' | 'ar')}
                         </p>
                       </div>
                     </div>

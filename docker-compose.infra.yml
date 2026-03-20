@@ -15,7 +15,7 @@
 #   Prod:  docker compose up -d --build
 #   Dev:   docker compose -f docker-compose.dev.yml up -d --build
 # ==================================
-
+name: orderium-infra
 services:
 
   # ────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ services:
 # ────────────────────────────────────────────────────────
 networks:
   orderium-network:
-    driver: bridge
+    external: true
     name: orderium-network
 
 # ────────────────────────────────────────────────────────
@@ -117,13 +117,13 @@ networks:
 # ────────────────────────────────────────────────────────
 volumes:
   postgres_data:
-    driver: local
+    external: true
     name: orderium_postgres_data
 
   redis_data:
-    driver: local
+    external: true
     name: orderium_redis_data
 
   minio_data:
-    driver: local
+    external: true
     name: orderium_minio_data

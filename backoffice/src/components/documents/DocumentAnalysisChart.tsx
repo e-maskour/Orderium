@@ -7,6 +7,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { TrendingUp, Calendar, BarChart3, LineChart } from 'lucide-react';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
+import { formatAmount } from '@orderium/ui';
 
 interface DocumentAnalysisChartProps {
   documents: DocumentItem[];
@@ -32,14 +33,6 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
     if (onYearChange) {
       onYearChange(year);
     }
-  };
-
-  // French number formatter (12.392,34 format)
-  const formatFrenchNumber = (value: number, decimals: number = 2): string => {
-    const fixed = value.toFixed(decimals);
-    const [integer, decimal] = fixed.split('.');
-    const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return decimal ? `${formattedInteger},${decimal}` : formattedInteger;
   };
 
   // Get available years from documents or a default range
@@ -300,7 +293,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           if (selectedMeasure === 'count' || selectedMeasure === 'status') {
             return value.toFixed(0);
           }
-          return formatFrenchNumber(value, 0);
+          return formatAmount(value, 0);
         }
       },
       title: {
@@ -319,7 +312,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           if (selectedMeasure === 'count' || selectedMeasure === 'status') {
             return `${value} ${documentType === 'facture' ? t('invoices') || 'factures' : documentType === 'devis' ? t('quotes') || 'devis' : t('deliveries') || 'bons'}`;
           }
-          return `${formatFrenchNumber(value, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`;
+          return `${formatAmount(value, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`;
         }
       },
       x: {
@@ -372,7 +365,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
               <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
                 {(selectedMeasure === 'count' || selectedMeasure === 'status')
                   ? `${yearTotal} ${t('documents') || 'documents'}`
-                  : `${formatFrenchNumber(yearTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`
+                  : `${formatAmount(yearTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`
                 }
               </p>
             </div>

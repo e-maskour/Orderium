@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { DollarSign, X, TrendingDown } from 'lucide-react';
+import { formatAmount } from '@orderium/ui';
 
 interface Product {
   id: number;
@@ -32,7 +33,7 @@ export const PriceConfirmModal = ({
 
   useEffect(() => {
     if (isOpen && product) {
-      setPrice(product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setPrice(formatAmount(product.price, 2));
       setDecimalMode(false);
     }
   }, [isOpen, product]);
@@ -183,7 +184,7 @@ export const PriceConfirmModal = ({
             }}>
               <p style={{ margin: 0, fontSize: '0.625rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('originalPrice')}</p>
               <p style={{ margin: '0.2rem 0 0', fontSize: '0.9rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
-                {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                {formatAmount(product.price, 2)} {t('currency')}
               </p>
             </div>
             {product.cost != null && (
@@ -193,7 +194,7 @@ export const PriceConfirmModal = ({
               }}>
                 <p style={{ margin: 0, fontSize: '0.625rem', fontWeight: 600, color: 'rgba(252,165,165,0.8)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('cost')}</p>
                 <p style={{ margin: '0.2rem 0 0', fontSize: '0.9rem', fontWeight: 700, color: '#fca5a5' }}>
-                  {product.cost.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                  {formatAmount(product.cost, 2)} {t('currency')}
                 </p>
               </div>
             )}

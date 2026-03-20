@@ -1,9 +1,8 @@
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Plus, Truck, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Phone, Mail } from 'lucide-react';
+import { Plus, Truck, Edit2, Trash2, Search, X } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
@@ -21,7 +20,6 @@ import { Modal } from '../components/Modal';
 export default function DeliveryPersons() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'list'>('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPersons, setSelectedPersons] = useState<number[]>([]);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -205,21 +203,6 @@ export default function DeliveryPersons() {
     return actions;
   };
 
-  const tabs = [
-    { key: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
-    { key: 'list', label: t('deliveryPersonList'), icon: List },
-  ];
-
-  // Calculate statistics
-  const totalPersons = deliveryPersons.length;
-  const activePersons = deliveryPersons.filter((p: DeliveryPerson) => p.isActive).length;
-  const inactivePersons = deliveryPersons.filter((p: DeliveryPerson) => !p.isActive).length;
-
-  // Recent delivery persons
-  const recentPersons = [...deliveryPersons]
-    .sort((a: DeliveryPerson, b: DeliveryPerson) => (b.id || 0) - (a.id || 0))
-    .slice(0, 5);
-
   return (
     <AdminLayout>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
@@ -232,176 +215,101 @@ export default function DeliveryPersons() {
           }
         />
 
-        {/* Tabs Navigation */}
-        <div style={{ background: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', borderBottom: '1px solid #e2e8f0' }}>
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          {/* Toolbar */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+            {/* Search */}
+            <span style={{ position: 'relative', display: 'block', width: '24rem' }}>
+              <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+              <InputText
+                id="search-delivery-persons"
+                type="text"
+                placeholder={t('searchDeliveryPersons')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ width: '100%', paddingLeft: '2.5rem' }}
+                aria-label={t('searchDeliveryPersons')}
+              />
+              {searchTerm && (
                 <Button
-                  key={tab.key}
-                  text={activeTab !== tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
-                  style={activeTab === tab.key
-                    ? { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, background: '#235ae4', color: '#ffffff', boxShadow: '0 4px 6px -1px rgba(35,90,228,0.25)' }
-                    : { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: '#475569', background: 'transparent' }}
-                  icon={<Icon style={{ width: '1rem', height: '1rem' }} />}
-                  label={tab.label}
+                  text
+                  rounded
+                  onClick={() => setSearchTerm('')}
+                  icon={<X style={{ width: '1rem', height: '1rem' }} />}
+                  style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }}
                 />
-              );
-            })}
+              )}
+            </span>
           </div>
 
-          {/* Tab Content */}
-          <div style={{ padding: '0.75rem', paddingTop: '0.5rem' }}>
-            {activeTab === 'dashboard' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* Stats Cards */}
-                <KpiGrid count={3}>
-                  <KpiCard label="Livreurs totaux" value={totalPersons} icon={Truck} color="blue" />
-                  <KpiCard label="Livreurs actifs" value={activePersons} icon={CheckCircle} color="emerald" />
-                  <KpiCard label="Livreurs inactifs" value={inactivePersons} icon={Clock} color="amber" />
-                </KpiGrid>
-
-                {/* Dashboard Grid - Recent Delivery Persons */}
-                <div style={{ background: '#ffffff', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>Les 5 derniers livreurs ajoutés</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>Nom</span>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>Téléphone</span>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b', width: '6rem', textAlign: 'right' }}>Statut</span>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {recentPersons.map((person) => (
-                      <div key={person.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
-                          <Button
-                            link
-                            label={person.name}
-                            onClick={() => handleViewPerson(person)}
-                            style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2563eb', padding: 0 }}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flex: 1, marginLeft: '1rem' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>{person.name}</span>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b', width: '8rem' }}>{person.phoneNumber}</span>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, width: '6rem', textAlign: 'right', color: person.isActive ? '#059669' : '#475569' }}>
-                            {person.isActive ? 'Actif' : 'Inactif'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {recentPersons.length === 0 && (
-                      <p style={{ fontSize: '0.875rem', color: '#94a3b8', textAlign: 'center', paddingTop: '1rem', paddingBottom: '1rem' }}>Aucun livreur trouvé</p>
-                    )}
-                  </div>
+          {/* Delivery Persons List */}
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+            <div className="responsive-table-mobile">
+              <MobileList
+                items={filteredPersons}
+                keyExtractor={(p: DeliveryPerson) => p.id}
+                loading={isLoading}
+                totalCount={filteredPersons.length}
+                countLabel="livreurs"
+                emptyMessage="Aucun livreur trouvé"
+                config={{
+                  topLeft: (p: DeliveryPerson) => p.name,
+                  topRight: (p: DeliveryPerson) => p.phoneNumber,
+                  bottomLeft: (p: DeliveryPerson) => p.email || '',
+                  bottomRight: (p: DeliveryPerson) => (
+                    <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(p.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
+                      {p.isActive ? 'Actif' : 'Inactif'}
+                    </span>
+                  ),
+                }}
+              />
+            </div>
+            <div className="responsive-table-desktop">
+              {isLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '4rem', paddingBottom: '4rem' }}>
+                  <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
                 </div>
-              </div>
-            )}
-
-            {activeTab === 'list' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                {/* Toolbar */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                  {/* Search */}
-                  <span style={{ position: 'relative', display: 'block', width: '24rem' }}>
-                    <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                    <InputText
-                      id="search-delivery-persons"
-                      type="text"
-                      placeholder={t('searchDeliveryPersons')}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{ width: '100%', paddingLeft: '2.5rem' }}
-                      aria-label={t('searchDeliveryPersons')}
-                    />
-                    {searchTerm && (
-                      <Button
-                        text
-                        rounded
-                        onClick={() => setSearchTerm('')}
-                        icon={<X style={{ width: '1rem', height: '1rem' }} />}
-                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }}
-                      />
-                    )}
-                  </span>
+              ) : filteredPersons.length === 0 ? (
+                <div style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '4rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                  <Truck style={{ width: '5rem', height: '5rem', color: '#cbd5e1', display: 'block', margin: '0 auto', marginBottom: '1rem' }} />
+                  <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noDeliveryPersonsFound')}</p>
                 </div>
-
-                {/* Delivery Persons List */}
-                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-                  <div className="responsive-table-mobile">
-                    <MobileList
-                      items={filteredPersons}
-                      keyExtractor={(p: DeliveryPerson) => p.id}
-                      loading={isLoading}
-                      totalCount={filteredPersons.length}
-                      countLabel="livreurs"
-                      emptyMessage="Aucun livreur trouvé"
-                      config={{
-                        topLeft: (p: DeliveryPerson) => p.name,
-                        topRight: (p: DeliveryPerson) => p.phoneNumber,
-                        bottomLeft: (p: DeliveryPerson) => p.email || '',
-                        bottomRight: (p: DeliveryPerson) => (
-                          <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(p.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
-                            {p.isActive ? 'Actif' : 'Inactif'}
-                          </span>
-                        ),
-                      }}
-                    />
-                  </div>
-                  <div className="responsive-table-desktop">
-                    {isLoading ? (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '4rem', paddingBottom: '4rem' }}>
-                        <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
+              ) : (
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                  <DataTable
+                    className="dp-datatable"
+                    value={filteredPersons}
+                    selection={filteredPersons.filter((p: DeliveryPerson) => selectedPersons.includes(p.id))}
+                    onSelectionChange={(e) => setSelectedPersons((e.value as DeliveryPerson[]).map((p) => p.id))}
+                    selectionMode="checkbox"
+                    dataKey="id"
+                    paginator
+                    paginatorPosition="top"
+                    rows={25}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    removableSort
+                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
+                    paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                  >
+                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                    <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
+                        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>
                       </div>
-                    ) : filteredPersons.length === 0 ? (
-                      <div style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '4rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                        <Truck style={{ width: '5rem', height: '5rem', color: '#cbd5e1', display: 'block', margin: '0 auto', marginBottom: '1rem' }} />
-                        <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noDeliveryPersonsFound')}</p>
-                      </div>
-                    ) : (
-                      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                        <DataTable
-                          className="dp-datatable"
-                          value={filteredPersons}
-                          selection={filteredPersons.filter((p: DeliveryPerson) => selectedPersons.includes(p.id))}
-                          onSelectionChange={(e) => setSelectedPersons((e.value as DeliveryPerson[]).map((p) => p.id))}
-                          selectionMode="checkbox"
-                          dataKey="id"
-                          paginator
-                          paginatorPosition="top"
-                          rows={25}
-                          rowsPerPageOptions={[10, 25, 50, 100]}
-                          removableSort
-                          emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
-                          paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                          currentPageReportTemplate="{first}-{last} of {totalRecords}"
-                        >
-                          <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                          <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
-                              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>
-                            </div>
-                          )} />
-                          <Column field="phoneNumber" header="Téléphone" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
-                          <Column field="email" header="Email" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
-                          <Column field="isActive" header="Statut" body={(row: DeliveryPerson) => (
-                            <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
-                              {row.isActive ? 'Actif' : 'Inactif'}
-                            </span>
-                          )} />
-
-                        </DataTable>
-                      </div>
-                    )}
-                  </div>{/* end responsive-table-desktop */}
+                    )} />
+                    <Column field="phoneNumber" header="Téléphone" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
+                    <Column field="email" header="Email" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                    <Column field="isActive" header="Statut" body={(row: DeliveryPerson) => (
+                      <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
+                        {row.isActive ? 'Actif' : 'Inactif'}
+                      </span>
+                    )} />
+                  </DataTable>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

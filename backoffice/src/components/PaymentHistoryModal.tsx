@@ -7,6 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { formatAmount } from '@orderium/ui';
 
 interface PaymentHistoryModalProps {
   isOpen: boolean;
@@ -116,16 +117,16 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(10rem, 1fr))', gap: '1rem' }}>
             <div>
               <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('totalInvoice')}</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{formatAmount(invoiceTotal, 2)} {currency}</div>
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('totalPaid')}</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669' }}>{totalPaid.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669' }}>{formatAmount(totalPaid, 2)} {currency}</div>
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('remainingToPay')}</div>
               <div style={{ fontSize: '1.5rem', fontWeight: 700, color: isFullyPaid ? '#059669' : '#d97706' }}>
-                {remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
+                {formatAmount(remainingAmount, 2)} {currency}
               </div>
             </div>
           </div>
@@ -172,7 +173,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                     <div>
                       <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>{t('amount')}</div>
                       <div style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}>
-                        {parseFloat(p.amount.toString()).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
+                        {formatAmount(parseFloat(p.amount.toString()), 2)} {currency}
                       </div>
                     </div>
                     <div>

@@ -4,6 +4,7 @@ import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { formatAmount } from '@orderium/ui';
 
 interface OrderDetailsModalProps {
   order: any;
@@ -196,7 +197,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                 header={t('unitPrice')}
                 headerStyle={{ textAlign: 'right', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
                 bodyStyle={{ textAlign: 'right', padding: '0.5rem', fontWeight: 600, fontSize: '0.75rem', color: '#334155' }}
-                body={(item: any) => `${parseFloat(item.unitPrice || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('currency')}`}
+                body={(item: any) => `${parseFloatformatAmount(item.unitPrice || 0, 2)} ${t('currency')}`}
               />
               <Column
                 field="discount"
@@ -205,7 +206,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                 bodyStyle={{ textAlign: 'right', padding: '0.5rem' }}
                 body={(item: any) => parseFloat(item.discount || 0) > 0 ? (
                   <span style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.75rem' }}>
-                    -{parseFloat(item.discount || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                    -{parseFloatformatAmount(item.discount || 0, 2)} {t('currency')}
                   </span>
                 ) : (
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>-</span>
@@ -216,7 +217,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                 header={t('total')}
                 headerStyle={{ textAlign: 'right', padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
                 bodyStyle={{ textAlign: 'right', padding: '0.5rem 0.75rem', fontWeight: 700, fontSize: '0.75rem', color: '#1e293b' }}
-                body={(item: any) => `${parseFloat(item.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('currency')}`}
+                body={(item: any) => `${parseFloatformatAmount(item.total || 0, 2)} ${t('currency')}`}
               />
             </DataTable>
           </div>
@@ -226,21 +227,21 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
             <div className="flex justify-content-between align-items-center">
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>{t('subtotal')}</span>
               <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>
-                {(order.items || []).reduce((sum: number, item: any) => sum + parseFloat(item.total || 0), 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                {formatAmount((order.items || []).reduce((sum: number, item: any) => sum + parseFloat(item.total || 0), 0), 2)} {t('currency')}
               </span>
             </div>
             {parseFloat(order.discount || 0) > 0 && (
               <div className="flex justify-content-between align-items-center">
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>{t('discount')}</span>
                 <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#dc2626' }}>
-                  -{parseFloat(order.discount || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                  -{parseFloatformatAmount(order.discount || 0, 2)} {t('currency')}
                 </span>
               </div>
             )}
             <div className="flex justify-content-between align-items-center" style={{ paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0' }}>
               <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('grandTotal')}</span>
               <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#235ae4' }}>
-                {parseFloat(order.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.875rem' }}>{t('currency')}</span>
+                {parseFloatformatAmount(order.total || 0, 2)} <span style={{ fontSize: '0.875rem' }}>{t('currency')}</span>
               </span>
             </div>
           </div>

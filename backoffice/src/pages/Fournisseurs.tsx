@@ -1,9 +1,8 @@
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, Plus, Users, TrendingUp, Clock, CheckCircle, Eye, Edit2, Trash2, Search, X, Phone, Mail } from 'lucide-react';
+import { Plus, Users, Eye, Edit2, Trash2, Search, X } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
@@ -14,7 +13,6 @@ import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { toastDeleted, toastError, toastConfirm } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
-import { formatDH, formatFrenchNumber } from '../utils/formatNumber';
 import { MobileList } from '../components/MobileList';
 
 export default function Fournisseurs() {
@@ -33,11 +31,6 @@ export default function Fournisseurs() {
   });
 
   const suppliers = data?.partners?.filter((p: Partner) => p.isSupplier) || [];
-
-  const { data: dashboardData } = useQuery({
-    queryKey: ['suppliers-dashboard'],
-    queryFn: () => partnersService.getSuppliersDashboard(),
-  });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => partnersService.delete(id),

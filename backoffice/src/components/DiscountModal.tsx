@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Tag, Percent, X } from 'lucide-react';
+import { formatAmount } from '@orderium/ui';
 
 interface DiscountModalProps {
   productName: string;
@@ -195,10 +196,10 @@ export const DiscountModal = ({
                 {t('subtotal')}
               </span>
               <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'rgba(255,255,255,0.9)' }}>
-                {subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                {formatAmount(subtotal, 2)} {t('currency')}
               </span>
               <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)' }}>
-                {quantity} × {unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {quantity} × {formatAmount(unitPrice, 2)}
               </span>
             </div>
           </div>
@@ -305,7 +306,7 @@ export const DiscountModal = ({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.875rem', borderBottom: '1px solid #f1f5f9' }}>
                 <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>{t('subtotal')}</span>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#374151' }}>
-                  {subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                  {formatAmount(subtotal, 2)} {t('currency')}
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.875rem', borderBottom: '1px solid #f1f5f9' }}>
@@ -313,13 +314,13 @@ export const DiscountModal = ({
                   {t('discount')} {discountType === 1 ? `(${discountValue}%)` : `(${discountPct.toFixed(1)}%)`}
                 </span>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#235ae4' }}>
-                  −{discountAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                  −{formatAmount(discountAmount, 2)} {t('currency')}
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.875rem', background: '#f8fafc' }}>
                 <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a' }}>{t('total')}</span>
                 <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#235ae4', letterSpacing: '-0.02em' }}>
-                  {total.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                  {formatAmount(total, 2)} {t('currency')}
                 </span>
               </div>
             </div>

@@ -17,6 +17,7 @@ import { InputText } from 'primereact/inputtext';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tag } from 'primereact/tag';
+import { formatAmount } from '@orderium/ui';
 
 export default function InvoicesListExample() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -107,7 +108,7 @@ export default function InvoicesListExample() {
             header="Montant"
             headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontWeight: 600, color: '#334155' }}
             bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontWeight: 600, color: '#0f172a' }}
-            body={(item: any) => `${Number(item.invoice.total).toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH`}
+            body={(item: any) => `${NumberformatAmount(item.invoice.total, 2)} DH`}
           />
           <Column
             field="invoice.status"
@@ -159,9 +160,8 @@ export default function InvoicesListExample() {
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
           <div className="text-sm text-slate-600 mb-1">Montant Total</div>
           <div className="text-2xl font-bold text-blue-600">
-            {invoices
-              .reduce((sum: number, i: any) => sum + Number(i.invoice.total), 0)
-              .toLocaleString('de-DE', { minimumFractionDigits: 2 })}{' '}
+            {formatAmount(invoices
+              .reduce((sum: number, i: any) => sum + Number(i.invoice.total), 0), 2)}{' '}
             DH
           </div>
         </div>

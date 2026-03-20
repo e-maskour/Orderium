@@ -5,6 +5,7 @@ import { CheckCircle, Home, Download, Printer, Eye, FileText, Receipt as Receipt
 import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
 import { IPosCartItem as CartItem, ICheckoutCustomer as Customer, IOrderSuccessState as SuccessState } from '../modules/pos';
+import { formatCurrency } from '@orderium/ui';
 
 export default function OrderSuccessPage() {
   const navigate = useNavigate();
@@ -39,12 +40,6 @@ export default function OrderSuccessPage() {
   if (!state || !state.orderNumber) {
     return null;
   }
-
-  const formatCurrency = (price: number) => {
-    return language === 'ar'
-      ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م.`
-      : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
-  };
 
   const ensureOrderId = () => {
     if (!resolvedOrderId) {
@@ -131,15 +126,15 @@ export default function OrderSuccessPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                   <div style={{ padding: '0.75rem', background: '#f9fafb', borderRadius: '0.75rem', border: '1px solid #f3f4f6' }}>
                     <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>{t('total')}</p>
-                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>{formatCurrency(state.total)}</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>{formatCurrency(state.total, language as 'fr' | 'ar')}</p>
                   </div>
                   <div style={{ padding: '0.75rem', background: '#ecfdf5', borderRadius: '0.75rem', border: '1px solid #d1fae5' }}>
                     <p style={{ fontSize: '0.75rem', color: '#047857', marginBottom: '0.25rem' }}>Paid</p>
-                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#047857' }}>{formatCurrency(state.paidAmount)}</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#047857' }}>{formatCurrency(state.paidAmount, language as 'fr' | 'ar')}</p>
                   </div>
                   <div style={{ padding: '0.75rem', background: '#eff6ff', borderRadius: '0.75rem', border: '1px solid #dbeafe' }}>
                     <p style={{ fontSize: '0.75rem', color: '#1d4ed8', marginBottom: '0.25rem' }}>{t('change')}</p>
-                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1d4ed8' }}>{formatCurrency(state.change)}</p>
+                    <p style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1d4ed8' }}>{formatCurrency(state.change, language as 'fr' | 'ar')}</p>
                   </div>
                 </div>
               </div>

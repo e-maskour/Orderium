@@ -389,18 +389,4 @@ export const translations = {
 
 export type TranslationKey = keyof typeof translations.ar;
 
-export const formatCurrency = (amount: number, lang: Language): string => {
-  if (amount === null || amount === undefined) {
-    return lang === 'ar' ? '0.00 د.م' : '0.00 DH';
-  }
-
-  const formatted = amount.toLocaleString('fr-MA', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-  if (lang === 'ar') {
-    return `${formatted} د.م`;
-  }
-  return `${formatted} DH`;
-};
+export { formatCurrency } from '@orderium/ui';

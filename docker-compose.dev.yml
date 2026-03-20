@@ -1,13 +1,26 @@
 # ==================================
-# Development — Application Stack
+# Development — Application Stack (Optimized)
 # ==================================
-# Dev overrides for the app services.
 # Infrastructure (postgres, redis, minio) must be started first:
 #   docker compose -f docker-compose.infra.yml up -d
 #
 # Usage:
 #   docker compose -f docker-compose.dev.yml up -d --build
+#
+# Optimizations:
+#   • BuildKit parallel builds enabled
+#   • Shared node_modules cache across all services (pnpm store)
+#   • Only package files copied before install (max layer cache hits)
+#   • Source mounted as volumes — no rebuild needed for code changes
+#   • depends_on with healthcheck ensures API is ready before frontends
 # ==================================
+name: orderium-dev
+
+x-frontend-common: &frontend-common
+  networks:
+    - orderium-network
+  restart: unless-stopped
+  init: true
 
 services:
   api:
@@ -15,38 +28,44 @@ services:
       context: ./api
       dockerfile: Dockerfile
       target: development
+      cache_from:
+        - type=registry,ref=orderium-api:dev-cache
     container_name: orderium-api-dev
-    command: npm run start:dev
+    command: pnpm run start:dev
     env_file:
       - .env
     environment:
       NODE_ENV: development
-      DB_HOST: postgres # infra postgres, same Docker network
+      DB_HOST: orderium-postgres
       DB_PORT: 5432
-      DB_SYNCHRONIZE: "false" # use migrations even in dev
+      DB_SYNCHRONIZE: "false"
       DB_LOGGING: "true"
       MASTER_DB_NAME: ${MASTER_DB_NAME:-orderium_master}
       SUPER_ADMIN_API_KEY: ${SUPER_ADMIN_API_KEY}
-      CORS_ORIGIN: "http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:5173"
-      REDIS_URL: redis://redis:6379
-      MINIO_ENDPOINT: minio
+      CORS_ORIGIN: "http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:4000"
+      REDIS_URL: redis://orderium-redis:6379
+      MINIO_ENDPOINT: orderium-minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
     volumes:
-      - ./api/src:/app/src:ro
+      - ./api/src:/app/src
       - ./api/package.json:/app/package.json:ro
+      # Prevent node_modules from being overwritten by host mount
+      - api_node_modules:/app/node_modules
     ports:
       - "3000:3000"
+      - "9229:9229" # debugger
     networks:
       - orderium-network
     healthcheck:
-      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\"" ]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
+      interval: 15s
+      timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 30s
 
   backoffice:
+    <<: *frontend-common
     build:
       context: .
       dockerfile: backoffice/Dockerfile
@@ -56,16 +75,20 @@ services:
       - ./backoffice/.env
     environment:
       NODE_ENV: development
-      VITE_API_PROXY_TARGET: http://api:3000
+      VITE_API_PROXY_TARGET: http://orderium-api-dev:3000
     volumes:
-      - ./backoffice/src:/app/src:ro
-      - ./backoffice/public:/app/public:ro
+      - ./backoffice/src:/app/src
+      - ./backoffice/public:/app/public
+      - ./shared/ui:/shared/ui:ro
+      - bo_node_modules:/app/node_modules
     ports:
       - "3001:3001"
-    networks:
-      - orderium-network
+    depends_on:
+      api:
+        condition: service_healthy
 
   client:
+    <<: *frontend-common
     build:
       context: .
       dockerfile: client/Dockerfile
@@ -75,16 +98,20 @@ services:
       - ./client/.env
     environment:
       NODE_ENV: development
-      VITE_API_PROXY_TARGET: http://api:3000
+      VITE_API_PROXY_TARGET: http://orderium-api-dev:3000
     volumes:
-      - ./client/src:/app/src:ro
-      - ./client/public:/app/public:ro
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+      - ./shared/ui:/shared/ui:ro
+      - client_node_modules:/app/node_modules
     ports:
       - "3002:3002"
-    networks:
-      - orderium-network
+    depends_on:
+      api:
+        condition: service_healthy
 
   delivery-portal:
+    <<: *frontend-common
     build:
       context: .
       dockerfile: delivery-portal/Dockerfile
@@ -94,16 +121,20 @@ services:
       - ./delivery-portal/.env
     environment:
       NODE_ENV: development
-      VITE_API_PROXY_TARGET: http://api:3000
+      VITE_API_PROXY_TARGET: http://orderium-api-dev:3000
     volumes:
-      - ./delivery-portal/src:/app/src:ro
-      - ./delivery-portal/public:/app/public:ro
+      - ./delivery-portal/src:/app/src
+      - ./delivery-portal/public:/app/public
+      - ./shared/ui:/shared/ui:ro
+      - delivery_node_modules:/app/node_modules
     ports:
       - "3003:3003"
-    networks:
-      - orderium-network
+    depends_on:
+      api:
+        condition: service_healthy
 
   tenant-dashboard:
+    <<: *frontend-common
     build:
       context: ./tenant-dashboard
       dockerfile: Dockerfile
@@ -112,13 +143,23 @@ services:
     container_name: orderium-tenant-dashboard-dev
     ports:
       - "4000:80"
-    networks:
-      - orderium-network
+    depends_on:
+      api:
+        condition: service_healthy
 
 # ────────────────────────────────────────────────────────
-# Network — must already exist (created by docker-compose.infra.yml)
+# Network — created by docker-compose.infra.yml
 # ────────────────────────────────────────────────────────
 networks:
   orderium-network:
     external: true
     name: orderium-network
+
+# ────────────────────────────────────────────────────────
+# Named volumes for node_modules (persist across rebuilds)
+# ────────────────────────────────────────────────────────
+volumes:
+  api_node_modules:
+  bo_node_modules:
+  client_node_modules:
+  delivery_node_modules:

@@ -10,6 +10,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Message } from 'primereact/message';
+import { formatAmount } from '@orderium/ui';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -97,7 +98,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       if (!payment) {
         const newTotal = totalPaid + amount;
         if (newTotal > invoiceTotal) {
-          throw new Error(`${t('errorPaymentExceedsInvoice')} (${newTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'} > ${invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'})`);
+          throw new Error(`${t('errorPaymentExceedsInvoice')} (${formatAmount(newTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'} > ${formatAmount(invoiceTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'})`);
         }
       }
 
@@ -195,21 +196,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div>
               <div style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('invoice.totalInvoice')}</div>
               <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#f1f5f9' }}>
-                {invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatAmount(invoiceTotal, 2)}
                 <span style={{ fontSize: '0.6875rem', color: '#64748b', marginLeft: '0.25rem' }}>{currency}</span>
               </div>
             </div>
             <div>
               <div style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('invoice.totalPaid')}</div>
               <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#34d399' }}>
-                {totalPaid.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatAmount(totalPaid, 2)}
                 <span style={{ fontSize: '0.6875rem', color: '#64748b', marginLeft: '0.25rem' }}>{currency}</span>
               </div>
             </div>
             <div>
               <div style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('invoice.remaining')}</div>
               <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: isFullyPaid ? '#34d399' : '#fbbf24' }}>
-                {remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatAmount(remainingAmount, 2)}
                 <span style={{ fontSize: '0.6875rem', color: '#64748b', marginLeft: '0.25rem' }}>{currency}</span>
               </div>
             </div>
@@ -249,7 +250,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 type="button"
                 onClick={() => setFormData({ ...formData, amount: remainingAmount })}
                 icon={<AlertCircle style={{ width: '0.625rem', height: '0.625rem' }} />}
-                label={`Payer le reste (${remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency})`}
+                label={`Payer le reste (${formatAmount(remainingAmount, 2)} ${currency})`}
                 pt={{ root: { style: { background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', borderRadius: '9999px', padding: '0.1875rem 0.625rem', fontSize: '0.6875rem', fontWeight: 700, gap: '0.25rem' } } }}
                 text
                 size="small"

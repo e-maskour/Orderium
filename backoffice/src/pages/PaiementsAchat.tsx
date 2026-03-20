@@ -14,6 +14,7 @@ import PaymentModal from '../components/PaymentModal';
 import { toastConfirm, toastError } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
+import { formatAmount } from '@orderium/ui';
 
 export default function PaiementsAchat() {
   const { t, language } = useLanguage();
@@ -140,13 +141,13 @@ export default function PaiementsAchat() {
             <KpiCard label={t('totalPayments')} value={filteredPayments.length} icon={CreditCard} color="blue" />
             <KpiCard
               label={t('totalAmount')}
-              value={`${totalAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`}
+              value={`${formatAmount(totalAmount, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`}
               icon={Wallet}
               color="red"
             />
             <KpiCard
               label={t('thisMonth')}
-              value={`${thisMonthAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`}
+              value={`${formatAmount(thisMonthAmount, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`}
               icon={Calendar}
               color="purple"
               subtitle={`${thisMonthPayments.length} paiements`}
@@ -188,7 +189,7 @@ export default function PaiementsAchat() {
               emptyMessage="Aucun paiement trouvé"
               config={{
                 topLeft: (p: Payment) => getInvoiceNumber(p.invoiceId),
-                topRight: (p: Payment) => `${p.amount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'}`,
+                topRight: (p: Payment) => `${formatAmount(p.amount, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`,
                 bottomLeft: (p: Payment) => `${getSupplierName(p.invoiceId)} · ${new Date(p.paymentDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
                 bottomRight: (p: Payment) => <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>{PAYMENT_TYPE_LABELS[p.paymentType]}</span>,
               }}
@@ -291,7 +292,7 @@ export default function PaiementsAchat() {
             <Column field="amount" header={t('amount')} sortable align="right" headerStyle={{ textAlign: 'right' }} body={(p: Payment) => (
               <div style={{ textAlign: 'right', lineHeight: 1.2 }}>
                 <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#dc2626' }}>
-                  −{p.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  −{formatAmount(p.amount, 2)}
                   <span style={{ color: '#94a3b8', fontSize: '0.6875rem', fontWeight: 500, marginLeft: '0.25rem' }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
                 </div>
               </div>

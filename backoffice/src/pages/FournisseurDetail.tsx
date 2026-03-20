@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { AdminLayout } from '../components/AdminLayout';
 import { useLanguage } from '../context/LanguageContext';
-import { formatDH, formatFrenchNumber } from '../utils/formatNumber';
+import { formatDH } from '../utils/formatNumber';
 import {
   Users,
   ArrowLeft,
@@ -21,6 +21,7 @@ import Chart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
+import { formatAmount } from '@orderium/ui';
 
 interface ChartDataPoint {
   month: string;
@@ -190,7 +191,7 @@ export default function FournisseurDetail() {
                             yaxis: {
                               labels: {
                                 style: { colors: '#475569', fontSize: '11px', fontWeight: 700 },
-                                formatter: (value) => value >= 1000 ? `${(value / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k` : formatFrenchNumber(value, 0),
+                                formatter: (value) => value >= 1000 ? `${formatAmount(value / 1000, 1)}k` : formatAmount(value, 0),
                                 offsetX: -5
                               },
                               title: { text: 'Montant (DH)', style: { color: '#64748B', fontSize: '11px', fontWeight: 600 }, offsetX: 0 }

@@ -1,42 +1,49 @@
 # ==================================
-# Production-Grade React/Vite Dockerfile (Backoffice)
+# Production-Grade React/Vite Dockerfile (Backoffice) — Optimized
 # ==================================
+# Dev optimization: package files copied first for max cache hits.
+# Source is volume-mounted via docker-compose, so dev rebuilds are instant.
 
-# ============ Stage 1: Dependencies ============
-FROM node:20-alpine AS dependencies
-
-WORKDIR /app
-
-# Enable pnpm via corepack
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
-COPY shared/ui /shared/ui
-
-# Copy package files
-COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# ============ Stage 2: Build ============
-FROM node:20-alpine AS builder
+# ============ Stage 1: Development ============
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
-# Enable pnpm via corepack
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy shared UI package
 COPY shared/ui /shared/ui
 
-# Copy dependencies
-COPY --from=dependencies /app/node_modules ./node_modules
+# 1. Copy ONLY package files — cached until deps change
+COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# 2. Copy source AFTER install (fallback if not volume-mounted)
 COPY backoffice/ .
 
-# Build arguments for environment variables (can be overridden at build time)
+EXPOSE 3001
+CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+# ============ Stage 2: Dependencies (prod) ============
+FROM node:20-alpine AS dependencies
+
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY shared/ui /shared/ui
+COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# ============ Stage 3: Build ============
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY shared/ui /shared/ui
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY backoffice/ .
+
 ARG VITE_API_BASE_URL=http://localhost:3000
 ARG VITE_FIREBASE_API_KEY
 ARG VITE_FIREBASE_AUTH_DOMAIN
@@ -57,47 +64,14 @@ ENV VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
 ENV VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}
 ENV VITE_FIREBASE_VAPID_KEY=${VITE_FIREBASE_VAPID_KEY}
 
-# Build the application
-# Vite outputs to dist/ by default
 RUN pnpm run build
-
-# ============ Stage 3: Development ============
-FROM node:20-alpine AS development
-
-WORKDIR /app
-
-# Enable pnpm via corepack
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
-COPY shared/ui /shared/ui
-
-# Copy package files
-COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
-
-# Install all dependencies (including devDependencies)
-RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY backoffice/ .
-
-# Expose Vite dev server port
-EXPOSE 3001
-
-# Start Vite dev server
-# --host 0.0.0.0 allows external access from Docker
-CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # ============ Stage 4: Production with Nginx ============
 FROM nginx:1.25-alpine AS production
 
-# Copy custom nginx configuration
 COPY backoffice/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy built static files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create non-root user
 RUN addgroup -g 1001 -S nginx-run && \
   adduser -S nginx-run -u 1001 && \
   chown -R nginx-run:nginx-run /usr/share/nginx/html && \
@@ -106,15 +80,10 @@ RUN addgroup -g 1001 -S nginx-run && \
   touch /var/run/nginx.pid && \
   chown nginx-run:nginx-run /var/run/nginx.pid
 
-# Switch to non-root user
 USER nginx-run
-
-# Expose port 80
 EXPOSE 80
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

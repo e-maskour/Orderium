@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
 import { posService, IPosCartItem as CartItem, ICheckoutCustomer as Customer, ICheckoutState } from '../modules/pos';
+import { formatCurrency } from '@orderium/ui';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -50,12 +51,6 @@ export default function CheckoutPage() {
   if (!state || !state.cart || !state.customer) {
     return null;
   }
-
-  const formatCurrency = (price: number) => {
-    return language === 'ar'
-      ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م`
-      : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
-  };
 
   const itemsSubtotal = state.cart.reduce((sum, item) => {
     const itemSubtotal = item.product.price * item.quantity;
@@ -191,19 +186,19 @@ export default function CheckoutPage() {
                       <div style={{ flex: 1 }}>
                         <h3 style={{ fontWeight: 500, color: '#111827', marginBottom: '0.25rem', margin: 0 }}>{item.product.name}</h3>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', color: '#4b5563' }}>
-                          <span>{formatCurrency(item.product.price)} × {item.quantity}</span>
+                          <span>{formatCurrency(item.product.price, language as 'fr' | 'ar')} × {item.quantity}</span>
                           {item.discount > 0 && (
                             <span style={{ color: '#ea580c', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                               <Tag style={{ width: '0.75rem', height: '0.75rem' }} />
-                              -{item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount)}
+                              -{item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount, language as 'fr' | 'ar')}
                             </span>
                           )}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 600, color: '#111827' }}>{formatCurrency(itemTotal)}</div>
+                        <div style={{ fontWeight: 600, color: '#111827' }}>{formatCurrency(itemTotal, language as 'fr' | 'ar')}</div>
                         {item.discount > 0 && (
-                          <div style={{ fontSize: '0.75rem', color: '#9ca3af', textDecoration: 'line-through' }}>{formatCurrency(itemSubtotal)}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#9ca3af', textDecoration: 'line-through' }}>{formatCurrency(itemSubtotal, language as 'fr' | 'ar')}</div>
                         )}
                       </div>
                     </div>
@@ -272,19 +267,19 @@ export default function CheckoutPage() {
                 {globalDiscount > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
                     <span style={{ color: '#4b5563' }}>{t('discount')}</span>
-                    <span style={{ fontWeight: 500, color: '#ea580c' }}>-{formatCurrency(globalDiscountAmount)}</span>
+                    <span style={{ fontWeight: 500, color: '#ea580c' }}>-{formatCurrency(globalDiscountAmount, language as 'fr' | 'ar')}</span>
                   </div>
                 )}
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
                   <span style={{ color: '#4b5563' }}>{t('subtotal')}</span>
-                  <span style={{ fontWeight: 500, color: '#111827' }}>{formatCurrency(itemsSubtotal)}</span>
+                  <span style={{ fontWeight: 500, color: '#111827' }}>{formatCurrency(itemsSubtotal, language as 'fr' | 'ar')}</span>
                 </div>
 
                 <div style={{ paddingTop: '0.75rem', borderTop: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontWeight: 600, color: '#111827' }}>{t('total')}</span>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>{formatCurrency(total)}</span>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>{formatCurrency(total, language as 'fr' | 'ar')}</span>
                   </div>
                 </div>
               </div>
@@ -317,7 +312,7 @@ export default function CheckoutPage() {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
                         <span style={{ color: '#4b5563' }}>{t('change')}</span>
                         <span style={{ fontWeight: 600, color: change >= 0 ? '#16a34a' : '#dc2626' }}>
-                          {formatCurrency(Math.abs(change))}
+                          {formatCurrency(Math.abs(change), language as 'fr' | 'ar')}
                         </span>
                       </div>
                     </div>

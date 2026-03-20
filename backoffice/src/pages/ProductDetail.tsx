@@ -30,6 +30,7 @@ import { Tag as PTag } from 'primereact/tag';
 import { Message } from 'primereact/message';
 import { RadioButton } from 'primereact/radiobutton';
 import { TabView, TabPanel } from 'primereact/tabview';
+import { formatAmount } from '@orderium/ui';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -533,7 +534,7 @@ export default function ProductDetail() {
               {priceWithTax != null && saleTaxRate > 0 && (
                 <div style={{ marginTop: '0.875rem', padding: '0.625rem 0.875rem', background: '#f0fdf4', borderRadius: '0.5rem', border: '1px solid #bbf7d0' }}>
                   <span style={{ fontSize: '0.8125rem', color: '#166534' }}>
-                    {t('priceWithTax')}: <strong>{priceWithTax.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</strong>
+                    {t('priceWithTax')}: <strong>{formatAmount(priceWithTax, 2)} {currency}</strong>
                   </span>
                 </div>
               )}
@@ -587,7 +588,7 @@ export default function ProductDetail() {
                   <p style={{ margin: '0 0 0.75rem', fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Margin Analysis</p>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
                     {[
-                      { label: t('marginAmount'), value: `${margin.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`, color: margin >= 0 ? '#0f172a' : '#ef4444', border: '#f1f5f9' },
+                      { label: t('marginAmount'), value: `${formatAmount(margin, 2)} ${currency}`, color: margin >= 0 ? '#0f172a' : '#ef4444', border: '#f1f5f9' },
                       { label: t('marginPercent'), value: `${marginPct?.toFixed(1) ?? '—'}%`, color: '#16a34a', border: '#dcfce7' },
                       { label: t('markupPercent'), value: `${markupPct?.toFixed(1) ?? '—'}%`, color: '#2563eb', border: '#dbeafe' },
                     ].map(({ label, value, color, border }) => (

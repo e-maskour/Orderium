@@ -20,6 +20,7 @@ import {
 interface SidebarProps {
     isCollapsed: boolean;
     setIsCollapsed: (value: boolean) => void;
+    isMobileDrawer?: boolean;
 }
 
 const NAV_ITEMS = [
@@ -89,7 +90,7 @@ const NAV_ITEMS = [
     },
 ] as const;
 
-export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
+export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }: SidebarProps) => {
     const location = useLocation();
     const { language } = useLanguage();
     const isRtl = language === 'ar';
@@ -105,17 +106,17 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         <aside
             className="sidebar-enterprise"
             style={{
-                position: 'fixed',
-                top: 0,
-                [isRtl ? 'right' : 'left']: 0,
-                height: '100vh',
-                width: isCollapsed ? '4.5rem' : '14rem',
+                position: isMobileDrawer ? 'relative' : 'fixed',
+                top: isMobileDrawer ? undefined : 0,
+                [isRtl ? 'right' : 'left']: isMobileDrawer ? undefined : 0,
+                height: isMobileDrawer ? '100%' : '100vh',
+                width: isMobileDrawer ? '100%' : (isCollapsed ? '4.5rem' : '14rem'),
                 background: 'linear-gradient(195deg, #0f172a 0%, #111827 50%, #0f1e3c 100%)',
-                transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                zIndex: 20,
+                transition: isMobileDrawer ? 'none' : 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                zIndex: isMobileDrawer ? undefined : 20,
                 display: 'flex',
                 flexDirection: 'column',
-                boxShadow: '4px 0 32px rgba(0,0,0,0.22)',
+                boxShadow: isMobileDrawer ? 'none' : '4px 0 32px rgba(0,0,0,0.22)',
                 overflow: 'hidden',
             }}
         >

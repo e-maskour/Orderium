@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ShoppingCart, X, Package } from 'lucide-react';
+import { formatAmount } from '@orderium/ui';
 
 interface Product {
   id: number;
@@ -184,7 +185,7 @@ export const ProductQuantityModal = ({
               </h2>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', marginTop: '0.3rem' }}>
                 <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#93b4f8', letterSpacing: '-0.01em' }}>
-                  {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                  {formatAmount(product.price, 2)} {t('currency')}
                 </span>
                 <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>/ {unitCode}</span>
               </div>
@@ -245,7 +246,7 @@ export const ProductQuantityModal = ({
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <p style={{ margin: 0, fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('total')}</p>
                 <p style={{ margin: '0.1rem 0 0', fontSize: '1.25rem', fontWeight: 800, color: '#235ae4', letterSpacing: '-0.02em' }}>
-                  {totalPrice.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
+                  {formatAmount(totalPrice, 2)} {t('currency')}
                 </p>
               </div>
             )}

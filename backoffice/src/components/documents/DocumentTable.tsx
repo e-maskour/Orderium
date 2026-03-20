@@ -9,6 +9,7 @@ import { PDFPreviewModal } from '../PDFPreviewModal';
 import { useLanguage } from '../../context/LanguageContext';
 import { MobileList } from '../MobileList';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { formatAmount } from '@orderium/ui';
 
 interface Document {
   id: number;
@@ -280,152 +281,152 @@ export function DocumentTable({
 
       {/* DataTable — desktop only */}
       <div className="responsive-table-desktop" style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-      <DataTable
-        className="doc-datatable"
-        value={documents}
-        lazy
-        totalRecords={totalCount}
-        first={(currentPage - 1) * pageSize}
-        onPage={(e: DataTablePageEvent) => {
-          onPageChange(Math.floor(e.first / e.rows) + 1);
-          onPageSizeChange(e.rows);
-        }}
-        selection={selectedRows}
-        onSelectionChange={(e) => setSelectedRows(e.value as Document[])}
-        selectionMode="checkbox"
-        dataKey="id"
-        paginator
-        paginatorPosition="top"
-        rows={pageSize}
-        rowsPerPageOptions={[10, 25, 50, 100]}
-        removableSort
-        loading={loading}
-        emptyMessage={t('noDocumentFound')}
-        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-        currentPageReportTemplate="{first}-{last} of {totalRecords}"
-      >
-        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-        <Column
-          field="number"
-          header={t('number')}
-          sortable
-          body={(doc: Document) => (
-            <Button
-              label={doc.number}
-              link
-              onClick={(e) => { e.stopPropagation(); onEdit?.(doc.id); }}
-              style={{ fontSize: '0.875rem', fontWeight: 600, padding: 0 }}
+        <DataTable
+          className="doc-datatable"
+          value={documents}
+          lazy
+          totalRecords={totalCount}
+          first={(currentPage - 1) * pageSize}
+          onPage={(e: DataTablePageEvent) => {
+            onPageChange(Math.floor(e.first / e.rows) + 1);
+            onPageSizeChange(e.rows);
+          }}
+          selection={selectedRows}
+          onSelectionChange={(e) => setSelectedRows(e.value as Document[])}
+          selectionMode="checkbox"
+          dataKey="id"
+          paginator
+          paginatorPosition="top"
+          rows={pageSize}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          removableSort
+          loading={loading}
+          emptyMessage={t('noDocumentFound')}
+          paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+          currentPageReportTemplate="{first}-{last} of {totalRecords}"
+        >
+          <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+          <Column
+            field="number"
+            header={t('number')}
+            sortable
+            body={(doc: Document) => (
+              <Button
+                label={doc.number}
+                link
+                onClick={(e) => { e.stopPropagation(); onEdit?.(doc.id); }}
+                style={{ fontSize: '0.8125rem', fontWeight: 700, padding: '0.25rem 0.625rem', background: 'linear-gradient(135deg, #eff6ff, #eef2ff)', border: '1.5px solid rgba(35,90,228,0.18)', borderRadius: '9999px', color: '#235ae4', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}
+              />
+            )}
+          />
+          <Column
+            field="partnerName"
+            header={partnerLabel}
+            sortable
+            body={(doc: Document) => (
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{doc.partnerName}</span>
+            )}
+          />
+          <Column
+            field="date"
+            header={documentType === 'facture' ? t('invoiceDate') : documentType === 'devis' ? t('quoteDate') : t('deliveryDate')}
+            sortable
+            body={(doc: Document) => (
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                {new Date(doc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </span>
+            )}
+          />
+          {documentType === 'facture' && (
+            <Column
+              field="dueDate"
+              header={t('dueDate')}
+              sortable
+              body={(doc: Document) => (
+                <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                  {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                </span>
+              )}
             />
           )}
-        />
-        <Column
-          field="partnerName"
-          header={partnerLabel}
-          sortable
-          body={(doc: Document) => (
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{doc.partnerName}</span>
+          {showValidationColumn && (
+            <Column
+              field="validationDate"
+              header={t('validationDate')}
+              sortable
+              body={(doc: Document) => (
+                <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                  {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                </span>
+              )}
+            />
           )}
-        />
-        <Column
-          field="date"
-          header={documentType === 'facture' ? t('invoiceDate') : documentType === 'devis' ? t('quoteDate') : t('deliveryDate')}
-          sortable
-          body={(doc: Document) => (
-            <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-              {new Date(doc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-            </span>
-          )}
-        />
-        {documentType === 'facture' && (
           <Column
-            field="dueDate"
-            header={t('dueDate')}
-            sortable
-            body={(doc: Document) => (
-              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-              </span>
-            )}
-          />
-        )}
-        {showValidationColumn && (
-          <Column
-            field="validationDate"
-            header={t('validationDate')}
-            sortable
-            body={(doc: Document) => (
-              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-              </span>
-            )}
-          />
-        )}
-        <Column
-          field="subtotal"
-          header={t('amountHT')}
-          sortable
-          body={(doc: Document) => (
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
-              {doc.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-            </span>
-          )}
-        />
-        {visibleColumns.tax && (
-          <Column
-            field="tax"
-            header={t('taxAmount')}
+            field="subtotal"
+            header={t('amountHT')}
             sortable
             body={(doc: Document) => (
               <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
-                {doc.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                {formatAmount(doc.subtotal, 2)} {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             )}
           />
-        )}
-        <Column
-          field="total"
-          header={t('amountTTC')}
-          sortable
-          body={(doc: Document) => (
-            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
-              {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-            </span>
+          {visibleColumns.tax && (
+            <Column
+              field="tax"
+              header={t('taxAmount')}
+              sortable
+              body={(doc: Document) => (
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#334155' }}>
+                  {formatAmount(doc.tax, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                </span>
+              )}
+            />
           )}
-        />
-        {showPaymentColumns && visibleColumns.paidAmount && (
           <Column
-            field="paidAmount"
-            header={t('alreadyPaid')}
+            field="total"
+            header={t('amountTTC')}
             sortable
             body={(doc: Document) => (
-              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#15803d' }}>
-                {doc.paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
+                {formatAmount(doc.total, 2)} {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             )}
           />
-        )}
-        {showPaymentColumns && visibleColumns.remainingAmount && (
-          <Column
-            field="remainingAmount"
-            header={t('remainingToPay')}
-            sortable
-            body={(doc: Document) => (
-              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: doc.remainingAmount > 0 ? '#b91c1c' : '#64748b' }}>
-                {doc.remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
-              </span>
-            )}
-          />
-        )}
-        <Column
-          field="status"
-          header={t('status')}
-          body={(doc: Document) => (
-            <span className={getStatusBadgeClass(doc.status)}>
-              {getStatusLabel(doc.status)}
-            </span>
+          {showPaymentColumns && visibleColumns.paidAmount && (
+            <Column
+              field="paidAmount"
+              header={t('alreadyPaid')}
+              sortable
+              body={(doc: Document) => (
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#15803d' }}>
+                  {formatAmount(doc.paidAmount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                </span>
+              )}
+            />
           )}
-        />
-      </DataTable>
+          {showPaymentColumns && visibleColumns.remainingAmount && (
+            <Column
+              field="remainingAmount"
+              header={t('remainingToPay')}
+              sortable
+              body={(doc: Document) => (
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: doc.remainingAmount > 0 ? '#b91c1c' : '#64748b' }}>
+                  {formatAmount(doc.remainingAmount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                </span>
+              )}
+            />
+          )}
+          <Column
+            field="status"
+            header={t('status')}
+            body={(doc: Document) => (
+              <span className={getStatusBadgeClass(doc.status)}>
+                {getStatusLabel(doc.status)}
+              </span>
+            )}
+          />
+        </DataTable>
       </div>
 
       {/* Mobile card list */}
@@ -439,10 +440,14 @@ export function DocumentTable({
           countLabel={itemLabel}
           emptyMessage={t('noDocumentFound')}
           config={{
-            topLeft: (doc) => doc.number,
+            topLeft: (doc) => (
+              <span style={{ display: 'inline-block', padding: '0.1875rem 0.5rem', background: 'linear-gradient(135deg, #eff6ff, #eef2ff)', border: '1.5px solid rgba(35,90,228,0.18)', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, color: '#235ae4', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
+                {doc.number}
+              </span>
+            ),
             topRight: (doc) => (
               <span>
-                {doc.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })}{' '}
+                {formatAmount(doc.total, 2)}{' '}
                 {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             ),

@@ -1,6 +1,7 @@
 import { useDocumentCalculation } from '../../modules/documents/hooks';
 import { DocumentItem } from '../../modules/documents/types';
 import { useLanguage } from '../../context/LanguageContext';
+import { formatAmount } from '@orderium/ui';
 
 interface DocumentTotalsSectionProps {
   items: DocumentItem[];
@@ -45,7 +46,7 @@ export function DocumentTotalsSection({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: '1px solid #e8edf2' }}>
               <span style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 500 }}>{t('subtotalHT')}</span>
               <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
-                {totalHT.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                {formatAmount(totalHT, 2)} {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             </div>
 
@@ -59,7 +60,7 @@ export function DocumentTotalsSection({
                       <span style={{ fontSize: '0.875rem', color: '#475569' }}>TVA {rate}%</span>
                     </div>
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
-                      {amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                      {formatAmount(amount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
                     </span>
                   </div>
                 ))}
@@ -71,7 +72,7 @@ export function DocumentTotalsSection({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid #e8edf2' }}>
                 <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('totalTVA')}</span>
                 <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#334155' }}>
-                  {totalTVA.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+                  {formatAmount(totalTVA, 2)} {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               </div>
             )}
@@ -86,7 +87,7 @@ export function DocumentTotalsSection({
             <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700, fontSize: '1rem' }}>{t('totalTTC')}</span>
             <div style={{ textAlign: 'right' }}>
               <span style={{ color: '#ffffff', fontWeight: 800, fontSize: '1.375rem', display: 'block', letterSpacing: '-0.02em' }}>
-                {totalTTC.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatAmount(totalTTC, 2)}
               </span>
               <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.75rem', fontWeight: 600 }}>
                 {language === 'ar' ? 'د.م' : 'DH'}

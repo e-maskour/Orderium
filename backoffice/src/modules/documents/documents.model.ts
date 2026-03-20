@@ -1,4 +1,5 @@
 import { DocumentItem } from './services/documents.service';
+import { formatAmount } from '@orderium/ui';
 
 export class DocumentListItem implements DocumentItem {
     id: number;
@@ -38,17 +39,11 @@ export class DocumentListItem implements DocumentItem {
     }
 
     get formattedSubtotal(): string {
-        return this.subtotal.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+        return formatAmount(this.subtotal, 2);
     }
 
     get formattedTax(): string {
-        return this.tax.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+        return formatAmount(this.tax, 2);
     }
 
     get formattedDate(): string {
@@ -78,17 +73,11 @@ export class DocumentListItem implements DocumentItem {
     }
 
     get formattedTotal(): string {
-        return this.total.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+        return formatAmount(this.total, 2);
     }
 
     get formattedRemaining(): string {
-        return this.remainingAmount.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+        return formatAmount(this.remainingAmount, 2);
     }
 
     get paymentProgress(): number {

@@ -13,6 +13,7 @@ import { IProduct } from '../../modules/products/products.interface';
 import { productsService } from '../../modules/products/products.service';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductCatalogueModal } from '../ProductCatalogueModal';
+import { formatAmount } from '@orderium/ui';
 
 interface DocumentItemsTableProps {
   items: DocumentItem[];
@@ -124,7 +125,6 @@ export function DocumentItemsTable({
   const { t, language } = useLanguage();
   const isVente = direction === 'vente';
   const currency = language === 'ar' ? 'د.م' : 'DH';
-  const fmt = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [showCatalogueModal, setShowCatalogueModal] = useState(false);
@@ -250,7 +250,7 @@ export function DocumentItemsTable({
               </h3>
               <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
                 {items.length} {t('items')}
-                {showTotalColumn && ` — ${fmt(grandTotal)} ${currency}`}
+                {showTotalColumn && ` — ${formatAmount(grandTotal)} ${currency}`}
               </p>
             </div>
           </div>
@@ -351,7 +351,7 @@ export function DocumentItemsTable({
                 bodyClassName="dit-ig"
                 header={t('invoice.unitPriceHeader')}
                 body={(item: DocumentItem) => readOnly ? (
-                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{fmt(item.unitPrice)}</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{formatAmount(item.unitPrice)}</span>
                 ) : (
                   <InputText
                     type="number" min={0} step={0.01}
@@ -428,7 +428,7 @@ export function DocumentItemsTable({
                 header={t('invoice.totalHeader')}
                 body={(item: DocumentItem) => (
                   <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                    {fmt(calculateItemTotal(item))} <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 500 }}>{currency}</span>
+                    {formatAmount(calculateItemTotal(item))} <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 500 }}>{currency}</span>
                   </span>
                 )}
               />
@@ -466,7 +466,7 @@ export function DocumentItemsTable({
                   color: '#235ae4',
                   fontSize: '1.125rem', fontWeight: 800, letterSpacing: '-0.01em'
                 }}>
-                  {fmt(grandTotal)} {currency}
+                  {formatAmount(grandTotal)} {currency}
                 </span>
               </div>
             </div>
@@ -585,29 +585,13 @@ export function DocumentItemsTable({
                       {t('invoice.totalHeader')} HT
                     </span>
                     <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#235ae4' }}>
-                      {fmt(calculateItemTotal(item))} {currency}
+                      {formatAmount(calculateItemTotal(item))} {currency}
                     </span>
                   </div>
                 )}
               </div>
             </div>
           ))}
-          {/* Mobile action buttons */}
-          {!readOnly && (
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
-              <button className="dit-btn-add" onClick={handleAddItem}>
-                <Plus style={{ width: '0.875rem', height: '0.875rem' }} />
-                {t('invoice.addLine')}
-              </button>
-              <button
-                className="dit-btn-cat"
-                onClick={() => setShowCatalogueModal(true)}
-              >
-                <Package2 style={{ width: '0.875rem', height: '0.875rem' }} />
-                {t('invoice.productCatalogue')}
-              </button>
-            </div>
-          )}
         </div>
 
       </div>

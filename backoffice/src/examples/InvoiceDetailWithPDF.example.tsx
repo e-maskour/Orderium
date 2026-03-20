@@ -13,6 +13,7 @@ import PDFActionButtons from '../components/PDFActionButtons';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { formatAmount } from '@orderium/ui';
 
 export default function InvoiceDetailExample() {
   const { invoiceId } = useParams<{ invoiceId: string }>();
@@ -89,12 +90,12 @@ export default function InvoiceDetailExample() {
       <div className="mb-6">
         <span
           className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${invoice.status === 'paid'
-              ? 'bg-green-100 text-green-700'
-              : invoice.status === 'partial'
-                ? 'bg-yellow-100 text-yellow-700'
-                : invoice.status === 'unpaid'
-                  ? 'bg-orange-100 text-orange-700'
-                  : 'bg-slate-100 text-slate-700'
+            ? 'bg-green-100 text-green-700'
+            : invoice.status === 'partial'
+              ? 'bg-yellow-100 text-yellow-700'
+              : invoice.status === 'unpaid'
+                ? 'bg-orange-100 text-orange-700'
+                : 'bg-slate-100 text-slate-700'
             }`}
         >
           {invoice.status === 'paid'
@@ -170,14 +171,14 @@ export default function InvoiceDetailExample() {
             header="Prix Unitaire"
             headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
             bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', color: '#334155' }}
-            body={(item: any) => `${Number(item.unitPrice).toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH`}
+            body={(item: any) => `${NumberformatAmount(item.unitPrice, 2)} DH`}
           />
           <Column
             field="total"
             header="Total"
             headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
             bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontWeight: 600, color: '#0f172a' }}
-            body={(item: any) => `${Number(item.total).toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH`}
+            body={(item: any) => `${NumberformatAmount(item.total, 2)} DH`}
           />
         </DataTable>
       </div>
@@ -188,27 +189,21 @@ export default function InvoiceDetailExample() {
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">Sous-total HT:</span>
             <span className="font-semibold text-slate-900">
-              {Number(invoice.subtotal).toLocaleString('de-DE', {
-                minimumFractionDigits: 2,
-              })}{' '}
+              {formatAmount(Number(invoice.subtotal), 2)}{' '}
               DH
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">TVA (20%):</span>
             <span className="font-semibold text-slate-900">
-              {Number(invoice.tax).toLocaleString('de-DE', {
-                minimumFractionDigits: 2,
-              })}{' '}
+              {formatAmount(Number(invoice.tax), 2)}{' '}
               DH
             </span>
           </div>
           <div className="flex justify-between pt-3 border-t border-slate-200">
             <span className="font-bold text-slate-900">Total TTC:</span>
             <span className="font-bold text-xl text-blue-600">
-              {Number(invoice.total).toLocaleString('de-DE', {
-                minimumFractionDigits: 2,
-              })}{' '}
+              {formatAmount(Number(invoice.total), 2)}{' '}
               DH
             </span>
           </div>
@@ -217,18 +212,14 @@ export default function InvoiceDetailExample() {
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Montant payé:</span>
                 <span className="font-semibold text-green-600">
-                  {Number(invoice.paidAmount || 0).toLocaleString('de-DE', {
-                    minimumFractionDigits: 2,
-                  })}{' '}
+                  {formatAmount(Number(invoice.paidAmount || 0), 2)}{' '}
                   DH
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Montant restant:</span>
                 <span className="font-semibold text-orange-600">
-                  {Number(invoice.remainingAmount || invoice.total).toLocaleString('de-DE', {
-                    minimumFractionDigits: 2,
-                  })}{' '}
+                  {formatAmount(Number(invoice.remainingAmount || invoice.total), 2)}{' '}
                   DH
                 </span>
               </div>

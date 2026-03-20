@@ -1,4 +1,5 @@
 import { ICompany } from './company.interface';
+import { formatAmount } from '@orderium/ui';
 
 export class Company implements ICompany {
   companyName: string;
@@ -62,7 +63,7 @@ export class Company implements ICompany {
 
   get displayCapital(): string {
     if (this.capital == null) return 'N/A';
-    return this.capital.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatAmount(this.capital, 2);
   }
 
   get fiscalYearStartMonthName(): string {

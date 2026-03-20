@@ -20,10 +20,10 @@ interface MobileTab {
 }
 
 const MOBILE_TABS: MobileTab[] = [
-    { path: '/dashboard',    icon: LayoutDashboard, label: 'Accueil',   activePaths: ['/dashboard'], exactMatch: true },
-    { path: '/orders',       icon: ShoppingCart,    label: 'Commandes', activePaths: ['/orders', '/pos', '/checkout'] },
-    { path: '/devis',        icon: TrendingUp,      label: 'Ventes',    activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'] },
-    { path: '/products',     icon: Package,         label: 'Stock',     activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil', activePaths: ['/dashboard'], exactMatch: true },
+    { path: '/orders', icon: ShoppingCart, label: 'Commandes', activePaths: ['/orders', '/pos', '/checkout'] },
+    { path: '/devis', icon: TrendingUp, label: 'Ventes', activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'] },
+    { path: '/products', icon: Package, label: 'Stock', activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
@@ -56,9 +56,9 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                 className="lg:hidden"
                 style={{ width: '17rem', padding: 0 }}
                 showCloseIcon={false}
-                pt={{ root: { style: { padding: 0 } }, content: { style: { padding: 0 } } }}
+                pt={{ root: { style: { padding: 0 } }, header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column' } } }}
             >
-                <AppSidebar isCollapsed={false} setIsCollapsed={() => setIsMobileSidebarOpen(false)} />
+                <AppSidebar isCollapsed={false} setIsCollapsed={() => setIsMobileSidebarOpen(false)} isMobileDrawer />
             </Sidebar>
 
             {/* Main Content */}

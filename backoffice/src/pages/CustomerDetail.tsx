@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { AdminLayout } from '../components/AdminLayout';
 import { useLanguage } from '../context/LanguageContext';
-import { formatDH, formatFrenchNumber } from '../utils/formatNumber';
+import { formatDH } from '../utils/formatNumber';
 import {
   Users,
   ArrowLeft,
@@ -21,6 +21,7 @@ import Chart from 'react-apexcharts';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import type { ApexOptions } from 'apexcharts';
+import { formatAmount } from '@orderium/ui';
 
 interface ChartDataPoint {
   month: string;
@@ -286,7 +287,7 @@ export default function CustomerDetail() {
                                     </div>
                                     <div style="display:flex;align-items:center;justify-content:space-between;gap:2rem">
                                       <span style="color:#cbd5e1;font-size:0.75rem">Montant:</span>
-                                      <span style="font-weight:700;color:#34d399">${value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH</span>
+                                      <span style="font-weight:700;color:#34d399">${formatAmount(value, 2)} DH</span>
                                     </div>
                                   </div>`;
                                 },

@@ -21,6 +21,7 @@ import { Dialog } from 'primereact/dialog';
 import { pdfService } from '../services/pdf.service';
 import { PDFPreviewModal } from '../components/PDFPreviewModal';
 import { MobileList } from '../components/MobileList';
+import { formatAmount } from '@orderium/ui';
 
 export default function Orders() {
   const { t, language } = useLanguage();
@@ -487,7 +488,7 @@ export default function Orders() {
             onToggleSelect={(key) => toggleSelectOrder(key as number)}
             config={{
               topLeft: (o: any) => `#${o.orderNumber}`,
-              topRight: (o: any) => `${(o.total || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${t('currency')}`,
+              topRight: (o: any) => `${formatAmount(o.total || 0, 2)} ${t('currency')}`,
               bottomLeft: (o: any) => [o.customerName, o.customerPhone].filter(Boolean).join(' · '),
               bottomRight: (o: any) => {
                 const dsb = getDeliveryStatusBadge(o.deliveryStatus);
@@ -624,7 +625,7 @@ export default function Orders() {
                 sortField="total"
                 body={(order: any) => (
                   <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
-                    {order.total?.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
+                    {formatAmount(order.total, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                   </span>
                 )}
               />
