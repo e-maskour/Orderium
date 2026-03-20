@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import { BarChart2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-import { formatCurrency, formatNumber } from '../../lib/formatters';
+import { formatCurrency } from '../../lib/formatters';
 
 interface SalesPerformanceChartProps {
   data: {
@@ -126,12 +127,32 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({ da
   ];
 
   return (
-    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid rgba(226,232,240,0.6)', padding: '1.25rem' }}>
-      <div style={{ marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{t('salesComparison')}</h3>
-        <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{t('currentVsPrevious')}</p>
+    <div className="db-chart-card">
+      <div className="db-chart-header">
+        <div className="db-chart-header-left">
+          <div className="db-chart-icon" style={{
+            background: 'linear-gradient(135deg,#3b82f6,#2563eb)',
+            boxShadow: '0 4px 10px rgba(59,130,246,0.28)',
+          }}>
+            <BarChart2 style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="db-chart-title">{t('salesComparison')}</h3>
+            <p className="db-chart-subtitle">{t('currentVsPrevious')}</p>
+          </div>
+        </div>
+        <span className="db-chart-badge" style={{
+          background: '#eff6ff', color: '#2563eb',
+          border: '1px solid #bfdbfe',
+        }}>
+          {t('currentPeriod')} vs {t('previousPeriod')}
+        </span>
       </div>
-      <ReactApexChart options={chartOptions} series={series} type="bar" height={280} />
+      <div className="db-chart-body">
+        {Object.keys(chartOptions).length > 0 && (
+          <ReactApexChart options={chartOptions} series={series} type="bar" height={280} />
+        )}
+      </div>
     </div>
   );
 };

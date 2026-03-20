@@ -18,6 +18,12 @@ export class QuoteItemDto {
   @IsOptional()
   @IsInt()
   @Min(0)
+  id?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
   productId?: number;
 
   @ApiProperty()
@@ -190,7 +196,27 @@ export class UpdateQuoteDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  customerPhone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  customerAddress?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   supplierName?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  supplierPhone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  supplierAddress?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

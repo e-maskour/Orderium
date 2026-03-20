@@ -22,6 +22,11 @@ export class PartnersService {
     return Partner.fromApiResponse(response.data as Record<string, unknown>);
   }
 
+  async getById(id: number): Promise<Partner> {
+    const response = await http<PartnerResponse>(`/api/partners/${id}`);
+    return Partner.fromApiResponse(response.data as Record<string, unknown>);
+  }
+
   async upsert(data: PartnerFormData & { portalPhoneNumber?: string }): Promise<Partner> {
     const response = await http<PartnerResponse>(`/api/partners/upsert`, {
       method: 'POST',

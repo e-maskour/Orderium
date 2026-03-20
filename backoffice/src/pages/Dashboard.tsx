@@ -6,22 +6,11 @@ import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '../modules/statistics';
 import { formatCurrency } from '../lib/formatters';
 import { Skeleton } from 'primereact/skeleton';
-import { Tag } from 'primereact/tag';
 import { useNavigate } from 'react-router-dom';
 import {
-    Package,
-    Truck,
-    CheckCircle,
-    Clock,
-    TrendingUp,
-    LayoutDashboard,
-    Users,
-    DollarSign,
-    ShoppingCart,
-    FilePlus,
-    FileText,
-    UserPlus,
-    ClipboardList,
+    Package, Truck, CheckCircle, Clock, TrendingUp,
+    LayoutDashboard, Users, DollarSign, ShoppingCart,
+    RefreshCw,
 } from 'lucide-react';
 import {
     StatsCard,
@@ -34,12 +23,57 @@ import {
     OrdersTimelineChart,
 } from '../components/Dashboard';
 
+// ─── Section separator ─────────────────────────────────────────────────────
+function SectionHeader({ number, label }: { number: number; label: string }) {
+    return (
+        <div className="db-section-header">
+            <span className="db-section-number">{number}</span>
+            <span className="db-section-label">{label}</span>
+            <span className="db-section-line" />
+        </div>
+    );
+}
+
+// ─── Dashboard skeleton ────────────────────────────────────────────────────
+function DashboardSkeleton() {
+    const SkCard = () => (
+        <div className="db-stats-skeleton">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
+                <Skeleton width="5rem" height="0.6875rem" />
+                <Skeleton width="2.5rem" height="2.5rem" borderRadius="0.625rem" />
+            </div>
+            <Skeleton width="7rem" height="1.75rem" className="mb-2" />
+            <Skeleton width="4rem" height="0.6875rem" />
+        </div>
+    );
+
+    const SkChart = ({ height = '18rem' }: { height?: string }) => (
+        <div className="db-chart-card" style={{ padding: '1.25rem' }}>
+            <Skeleton width="8.5rem" height="0.9375rem" className="mb-1" />
+            <Skeleton width="5rme" height="0.75rem" className="mb-3" style={{ marginTop: '0.25rem' }} />
+            <Skeleton height={height} borderRadius="0.625rem" />
+        </div>
+    );
+
+    return (
+        <>
+            <div className="db-kpi-grid">{[...Array(4)].map((_, i) => <SkCard key={i} />)}</div>
+            <div className="db-kpi-grid">{[...Array(4)].map((_, i) => <SkCard key={i} />)}</div>
+            <div className="db-grid-2-1"><SkChart height="18rem" /><SkChart height="18rem" /></div>
+            <div className="db-grid-2-1"><SkChart height="18rem" /><SkChart height="16rem" /></div>
+            <div className="db-grid-2"><SkChart height="16rem" /><SkChart height="16rem" /></div>
+            <SkChart height="14rem" />
+        </>
+    );
+}
+
+// ─── Page ──────────────────────────────────────────────────────────────────
 export default function Dashboard() {
     const { admin } = useAuth();
     const { t, language } = useLanguage();
     const navigate = useNavigate();
 
-    const { data: comprehensiveStats, isLoading } = useQuery({
+    const { data: comprehensiveStats, isLoading, refetch, isFetching } = useQuery({
         queryKey: ['statistics', 'comprehensive'],
         queryFn: () => statisticsService.getComprehensiveStats(7),
     });
@@ -63,38 +97,34 @@ export default function Dashboard() {
     const totalCustomers = statistics?.TotalCustomers || 0;
     const avgOrderValue = statistics?.AverageOrderValue || 0;
 
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', { weekday: 'short' });
-    };
+    const formatDate = (dateStr: string) =>
+        new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });
 
     const revenueData = {
-        dates: dailyStats.length > 0 ? dailyStats.map((stat) => formatDate(stat.date)) : [],
-        revenue: dailyStats.length > 0 ? dailyStats.map((stat) => stat.revenue) : [],
-        orders: dailyStats.length > 0 ? dailyStats.map((stat) => stat.orders) : [],
+        dates: dailyStats.map((s) => formatDate(s.date)),
+        revenue: dailyStats.map((s) => s.revenue),
+        orders: dailyStats.map((s) => s.orders),
     };
 
     const ordersTimelineData = {
-        dates: dailyStats.length > 0 ? dailyStats.map((stat) => formatDate(stat.date)) : [],
-        newOrders: dailyStats.length > 0 ? dailyStats.map((stat) => stat.newOrders) : [],
-        delivered: dailyStats.length > 0 ? dailyStats.map((stat) => stat.delivered) : [],
-        cancelled: dailyStats.length > 0 ? dailyStats.map((stat) => stat.cancelled) : [],
+        dates: dailyStats.map((s) => formatDate(s.date)),
+        newOrders: dailyStats.map((s) => s.newOrders),
+        delivered: dailyStats.map((s) => s.delivered),
+        cancelled: dailyStats.map((s) => s.cancelled),
     };
 
     const midPoint = Math.floor(dailyStats.length / 2);
-    const currentWeekStats = dailyStats.length > 0 ? dailyStats.slice(midPoint) : [];
-    const previousWeekStats = dailyStats.length > 0 ? dailyStats.slice(0, midPoint) : [];
+    const cur = dailyStats.slice(midPoint);
+    const prev = dailyStats.slice(0, midPoint);
 
     const salesComparisonData = {
-        categories: currentWeekStats.length > 0
-            ? currentWeekStats.map((_, idx) => `Day ${idx + 1}`)
-            : ['Day 1', 'Day 2', 'Day 3', 'Day 4'],
-        currentPeriod: currentWeekStats.length > 0 ? currentWeekStats.map((stat) => stat.revenue) : [0, 0, 0, 0],
-        previousPeriod: previousWeekStats.length > 0 ? previousWeekStats.map((stat) => stat.revenue) : [0, 0, 0, 0],
+        categories: cur.length > 0 ? cur.map((_, i) => `Day ${i + 1}`) : ['D1', 'D2', 'D3', 'D4'],
+        currentPeriod: cur.map((s) => s.revenue),
+        previousPeriod: prev.map((s) => s.revenue),
     };
 
     const performanceMetricsData = {
-        avgOrderValue: avgOrderValue,
+        avgOrderValue,
         avgOrderValueChange: 12.5,
         customerGrowth: totalCustomers,
         customerGrowthChange: 8.3,
@@ -102,117 +132,91 @@ export default function Dashboard() {
         conversionRateChange: 3.2,
     };
 
-    const formattedTopProducts = topProducts.map((product) => ({
-        name: product.productName,
-        sales: product.sales,
-        revenue: product.revenue,
+    const formattedTopProducts = topProducts.map((p) => ({
+        name: p.productName,
+        sales: p.sales,
+        revenue: p.revenue,
         trend: 12,
     }));
 
     const getGreeting = () => {
-        const hour = new Date().getHours();
-        if (hour < 12) return t('goodMorning') || 'Good morning';
-        if (hour < 18) return t('goodAfternoon') || 'Good afternoon';
+        const h = new Date().getHours();
+        if (h < 12) return t('goodMorning') || 'Good morning';
+        if (h < 18) return t('goodAfternoon') || 'Good afternoon';
         return t('goodEvening') || 'Good evening';
     };
 
     return (
         <AdminLayout>
-            <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-                {/* Page Header */}
+            <div className="db-page">
+
+                {/* ── Page header ───────────────────────── */}
                 <PageHeader
                     icon={LayoutDashboard}
                     title={t('dashboard')}
                     subtitle={`${getGreeting()}, ${admin?.fullName || 'Admin'}`}
                     actions={
-                        <>
-                            <Tag
-                                value="Live"
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <span style={{
+                                display: 'inline-flex', alignItems: 'center',
+                                padding: '0.25rem 0.625rem',
+                                background: '#f0fdf4', color: '#16a34a',
+                                border: '1px solid #bbf7d0', borderRadius: '9999px',
+                                fontSize: '0.6875rem', fontWeight: 700,
+                            }}>
+                                <span className="db-live-dot" />Live
+                            </span>
+                            <span style={{
+                                padding: '0.25rem 0.625rem',
+                                background: '#f8fafc', color: '#64748b',
+                                border: '1px solid #e2e8f0', borderRadius: '9999px',
+                                fontSize: '0.6875rem', fontWeight: 600,
+                                display: 'inline-block',
+                            }}>
+                                {t('last7Days') || 'Last 7 days'}
+                            </span>
+                            <button
+                                onClick={() => refetch()}
+                                disabled={isFetching}
+                                title="Refresh data"
                                 style={{
-                                    backgroundColor: '#f0fdf4',
-                                    color: '#16a34a',
-                                    border: '1px solid #dcfce7',
-                                    fontWeight: 700,
-                                    fontSize: '0.6875rem',
-                                    letterSpacing: '0.03em',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    width: '2rem', height: '2rem', borderRadius: '0.5rem',
+                                    border: '1px solid #e2e8f0', background: '#fff',
+                                    cursor: isFetching ? 'not-allowed' : 'pointer',
+                                    color: '#64748b', opacity: isFetching ? 0.5 : 1,
+                                    transition: 'all 0.15s ease',
                                 }}
-                            />
-                            <Tag
-                                value={t('last7Days') || 'Last 7 days'}
-                                style={{
-                                    backgroundColor: '#eff6ff',
-                                    color: '#2563eb',
-                                    border: '1px solid #dbeafe',
-                                    fontWeight: 600,
-                                    fontSize: '0.6875rem',
-                                }}
-                            />
-                        </>
+                            >
+                                <RefreshCw
+                                    style={{
+                                        width: '0.9rem', height: '0.9rem',
+                                        animation: isFetching ? 'spin 1s linear infinite' : 'none',
+                                    }}
+                                />
+                            </button>
+                        </div>
                     }
                 />
 
                 {isLoading ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div className="dashboard-grid-4">
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} style={{
-                                    backgroundColor: '#ffffff',
-                                    borderRadius: '0.875rem',
-                                    padding: '1.25rem',
-                                    border: '1px solid #e5e7eb',
-                                }}>
-                                    <Skeleton width="5rem" height="0.75rem" className="mb-3" />
-                                    <Skeleton width="7rem" height="1.75rem" className="mb-2" />
-                                    <Skeleton width="4rem" height="0.75rem" />
-                                </div>
-                            ))}
-                        </div>
-                        <div className="dashboard-grid-4">
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} style={{
-                                    backgroundColor: '#ffffff',
-                                    borderRadius: '0.875rem',
-                                    padding: '1.25rem',
-                                    border: '1px solid #e5e7eb',
-                                }}>
-                                    <Skeleton width="5rem" height="0.75rem" className="mb-3" />
-                                    <Skeleton width="4rem" height="1.75rem" className="mb-2" />
-                                    <Skeleton width="6rem" height="0.75rem" />
-                                </div>
-                            ))}
-                        </div>
-                        {/* Chart Skeletons */}
-                        <div className="dashboard-grid-2-1">
-                            <div style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '0.875rem',
-                                padding: '1.25rem',
-                                border: '1px solid #e5e7eb',
-                            }}>
-                                <Skeleton width="8rem" height="1rem" className="mb-3" />
-                                <Skeleton height="14rem" />
-                            </div>
-                            <div style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '0.875rem',
-                                padding: '1.25rem',
-                                border: '1px solid #e5e7eb',
-                            }}>
-                                <Skeleton width="6rem" height="1rem" className="mb-3" />
-                                <Skeleton height="14rem" shape="circle" size="10rem" />
-                            </div>
-                        </div>
-                    </div>
+                    <DashboardSkeleton />
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {/* Primary KPI Cards */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
+                    <>
+                        {/* ─────────────────────────────────────────────
+                            SECTION 1 — Vue d'ensemble (KPI Overview)
+                        ───────────────────────────────────────────── */}
+                        <SectionHeader number={1} label={t('dashboardOverview') || 'Vue d\'ensemble'} />
+
+                        {/* Primary KPIs */}
+                        <div className="db-kpi-grid">
                             <StatsCard
                                 title={t('totalRevenue')}
                                 value={formatCurrency(totalRevenue, language)}
                                 icon={DollarSign}
                                 color="green"
                                 trend={{ value: 12.5, isPositive: true }}
+                                onClick={() => navigate('/orders')}
                             />
                             <StatsCard
                                 title={t('totalOrders')}
@@ -220,6 +224,7 @@ export default function Dashboard() {
                                 icon={ShoppingCart}
                                 color="blue"
                                 trend={{ value: 8.3, isPositive: true }}
+                                onClick={() => navigate('/orders')}
                             />
                             <StatsCard
                                 title={t('avgOrderValue')}
@@ -234,17 +239,20 @@ export default function Dashboard() {
                                 icon={Users}
                                 color="indigo"
                                 trend={{ value: 15.8, isPositive: true }}
+                                onClick={() => navigate('/customers')}
                             />
                         </div>
 
-                        {/* Secondary KPI Cards */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
+                        {/* Order status KPIs */}
+                        <div className="db-kpi-grid">
                             <StatsCard
                                 title={t('pending')}
                                 value={pendingOrders}
                                 icon={Clock}
                                 color="orange"
                                 subtitle={t('ordersAwaitingProcessing')}
+                                progress={totalOrders > 0 ? (pendingOrders / totalOrders) * 100 : 0}
+                                onClick={() => navigate('/orders?status=pending')}
                             />
                             <StatsCard
                                 title={t('inDelivery')}
@@ -252,6 +260,8 @@ export default function Dashboard() {
                                 icon={Truck}
                                 color="blue"
                                 subtitle={t('ordersInTransit')}
+                                progress={totalOrders > 0 ? (inDeliveryOrders / totalOrders) * 100 : 0}
+                                onClick={() => navigate('/orders?status=in_delivery')}
                             />
                             <StatsCard
                                 title={t('delivered')}
@@ -259,148 +269,62 @@ export default function Dashboard() {
                                 icon={CheckCircle}
                                 color="emerald"
                                 subtitle={t('successfulDeliveries')}
+                                progress={totalOrders > 0 ? (deliveredOrders / totalOrders) * 100 : 0}
+                                onClick={() => navigate('/orders?status=delivered')}
                             />
                             <StatsCard
                                 title={t('activeDeliveryPersons')}
                                 value={activeDeliveryPersons}
-                                icon={Users}
+                                icon={Package}
                                 color="purple"
                                 subtitle={t('currentlyActive')}
+                                onClick={() => navigate('/delivery-persons')}
                             />
                         </div>
 
-                        {/* Charts Row 1: Revenue + Orders Distribution */}
-                        <div className="dashboard-grid-2-1">
-                            <div className="chart-card-enterprise" style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '0.875rem',
-                                border: '1px solid #e5e7eb',
-                                overflow: 'hidden',
-                                transition: 'box-shadow 0.2s ease',
-                            }}>
-                                <RevenueChart data={revenueData} />
-                            </div>
-                            <div className="chart-card-enterprise" style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '0.875rem',
-                                border: '1px solid #e5e7eb',
-                                overflow: 'hidden',
-                                transition: 'box-shadow 0.2s ease',
-                            }}>
-                                <OrdersDistributionChart
-                                    data={{
-                                        pending: pendingOrders,
-                                        inDelivery: inDeliveryOrders,
-                                        delivered: deliveredOrders,
-                                        cancelled: cancelledOrders,
-                                    }}
-                                />
-                            </div>
+                        {/* ─────────────────────────────────────────────
+                            SECTION 2 — Analytiques (Charts)
+                        ───────────────────────────────────────────── */}
+                        <SectionHeader number={2} label="Analytiques" />
+
+                        {/* Revenue + Orders Distribution */}
+                        <div className="db-grid-2-1">
+                            <RevenueChart data={revenueData} />
+                            <OrdersDistributionChart data={{
+                                pending: pendingOrders,
+                                inDelivery: inDeliveryOrders,
+                                delivered: deliveredOrders,
+                                cancelled: cancelledOrders,
+                            }} />
                         </div>
 
-                        {/* Charts Row 2: Sales Performance + Performance Metrics */}
-                        <div className="dashboard-grid-2-1">
-                            <div className="chart-card-enterprise" style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '0.875rem',
-                                border: '1px solid #e5e7eb',
-                                overflow: 'hidden',
-                                transition: 'box-shadow 0.2s ease',
-                            }}>
-                                <SalesPerformanceChart data={salesComparisonData} />
-                            </div>
-                            <div className="chart-card-enterprise" style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '0.875rem',
-                                border: '1px solid #e5e7eb',
-                                overflow: 'hidden',
-                                transition: 'box-shadow 0.2s ease',
-                            }}>
-                                <PerformanceMetrics metrics={performanceMetricsData} />
-                            </div>
+                        {/* Sales Comparison + Performance Metrics */}
+                        <div className="db-grid-2-1">
+                            <SalesPerformanceChart data={salesComparisonData} />
+                            <PerformanceMetrics metrics={performanceMetricsData} />
                         </div>
 
-                        {/* Charts Row 3: Orders Timeline & Top Products */}
-                        <div className="dashboard-grid-2">
-                            <div className="chart-card-enterprise" style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '0.875rem',
-                                border: '1px solid #e5e7eb',
-                                overflow: 'hidden',
-                                transition: 'box-shadow 0.2s ease',
-                            }}>
-                                <OrdersTimelineChart data={ordersTimelineData} />
-                            </div>
-                            <div className="chart-card-enterprise" style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '0.875rem',
-                                border: '1px solid #e5e7eb',
-                                overflow: 'hidden',
-                                transition: 'box-shadow 0.2s ease',
-                            }}>
-                                <TopProductsWidget products={formattedTopProducts} />
-                            </div>
+                        {/* ─────────────────────────────────────────────
+                            SECTION 3 — Performance & Produits
+                        ───────────────────────────────────────────── */}
+                        <SectionHeader number={3} label="Performance & Produits" />
+
+                        {/* Orders Timeline + Top Products */}
+                        <div className="db-grid-2">
+                            <OrdersTimelineChart data={ordersTimelineData} />
+                            <TopProductsWidget products={formattedTopProducts} />
                         </div>
 
-                        {/* Recent Activity - Full Width */}
-                        <div className="chart-card-enterprise" style={{
-                            backgroundColor: '#ffffff',
-                            borderRadius: '0.875rem',
-                            border: '1px solid #e5e7eb',
-                            overflow: 'hidden',
-                            transition: 'box-shadow 0.2s ease',
-                        }}>
-                            <RecentActivity activities={recentActivities} />
-                        </div>
-                    </div>
+                        {/* ─────────────────────────────────────────────
+                            SECTION 4 — Activité récente
+                        ───────────────────────────────────────────── */}
+                        <SectionHeader number={4} label={t('recentActivity') || 'Activité récente'} />
+
+                        <RecentActivity activities={recentActivities} />
+                    </>
                 )}
             </div>
-
-            <style>{`
-        .dashboard-grid-4 {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 1rem;
-        }
-        .dashboard-grid-2-1 {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 1rem;
-        }
-        .dashboard-grid-2 {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-        }
-        .dashboard-grid-4 > *,
-        .dashboard-grid-2-1 > *,
-        .dashboard-grid-2 > * {
-          min-width: 0;
-        }
-        .chart-card-enterprise:hover {
-          box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-        }
-        @media (max-width: 1023px) {
-          .dashboard-grid-2-1,
-          .dashboard-grid-2 {
-            grid-template-columns: 1fr;
-          }
-          .dashboard-grid-4 {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-        @media (max-width: 639px) {
-          .dashboard-grid-4 {
-            grid-template-columns: 1fr;
-          }
-          .dashboard-title {
-            font-size: 1.125rem !important;
-          }
-          .dashboard-page-header {
-            margin-bottom: 1rem !important;
-          }
-        }
-      `}</style>
         </AdminLayout>
     );
 }
+

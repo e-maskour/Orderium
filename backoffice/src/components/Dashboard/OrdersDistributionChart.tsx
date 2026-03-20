@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import { PieChart } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 interface OrdersDistributionChartProps {
@@ -93,13 +94,35 @@ export const OrdersDistributionChart: React.FC<OrdersDistributionChartProps> = (
 
   const series = [data.pending, data.inDelivery, data.delivered, data.cancelled];
 
+  const total = series.reduce((a, b) => a + b, 0);
+
   return (
-    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid rgba(226,232,240,0.6)', padding: '1.25rem' }}>
-      <div style={{ marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{t('ordersDistribution')}</h3>
-        <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{t('byStatus')}</p>
+    <div className="db-chart-card">
+      <div className="db-chart-header">
+        <div className="db-chart-header-left">
+          <div className="db-chart-icon" style={{
+            background: 'linear-gradient(135deg,#f59e0b,#d97706)',
+            boxShadow: '0 4px 10px rgba(217,119,6,0.28)',
+          }}>
+            <PieChart style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="db-chart-title">{t('ordersDistribution')}</h3>
+            <p className="db-chart-subtitle">{t('byStatus')}</p>
+          </div>
+        </div>
+        <span className="db-chart-badge" style={{
+          background: '#fffbeb', color: '#d97706',
+          border: '1px solid #fde68a',
+        }}>
+          {total} {t('orders').toLowerCase()}
+        </span>
       </div>
-      <ReactApexChart options={chartOptions} series={series} type="donut" height={280} />
+      <div className="db-chart-body">
+        {Object.keys(chartOptions).length > 0 && (
+          <ReactApexChart options={chartOptions} series={series} type="donut" height={280} />
+        )}
+      </div>
     </div>
   );
 };

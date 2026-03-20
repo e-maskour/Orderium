@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import { Activity } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 interface OrdersTimelineChartProps {
@@ -118,12 +119,32 @@ export const OrdersTimelineChart: React.FC<OrdersTimelineChartProps> = ({ data }
   ];
 
   return (
-    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid rgba(226,232,240,0.6)', padding: '1.25rem' }}>
-      <div style={{ marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{t('ordersTimeline')}</h3>
-        <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{t('dailyOrdersFlow')}</p>
+    <div className="db-chart-card">
+      <div className="db-chart-header">
+        <div className="db-chart-header-left">
+          <div className="db-chart-icon" style={{
+            background: 'linear-gradient(135deg,#10b981,#059669)',
+            boxShadow: '0 4px 10px rgba(16,185,129,0.28)',
+          }}>
+            <Activity style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="db-chart-title">{t('ordersTimeline')}</h3>
+            <p className="db-chart-subtitle">{t('dailyOrdersFlow')}</p>
+          </div>
+        </div>
+        <span className="db-chart-badge" style={{
+          background: '#ecfdf5', color: '#059669',
+          border: '1px solid #a7f3d0',
+        }}>
+          {t('newOrders')} · {t('delivered')} · {t('cancelled')}
+        </span>
       </div>
-      <ReactApexChart options={chartOptions} series={series} type="line" height={280} />
+      <div className="db-chart-body">
+        {Object.keys(chartOptions).length > 0 && (
+          <ReactApexChart options={chartOptions} series={series} type="line" height={280} />
+        )}
+      </div>
     </div>
   );
 };

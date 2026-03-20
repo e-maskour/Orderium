@@ -14,10 +14,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import { InvoiceStatus } from '../entities/invoice.entity';
 
 export class InvoiceItemDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsInt()
   @Min(0)
-  productId: number;
+  id?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  productId?: number;
 
   @ApiProperty()
   @IsNumber()
@@ -79,7 +86,27 @@ export class CreateInvoiceDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  customerPhone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  customerAddress?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   supplierName?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  supplierPhone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  supplierAddress?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -168,7 +195,27 @@ export class UpdateInvoiceDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  customerPhone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  customerAddress?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   supplierName?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  supplierPhone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  supplierAddress?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

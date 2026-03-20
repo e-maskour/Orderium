@@ -188,6 +188,36 @@ export class PortalController {
     }
   }
 
+  @Get('me')
+  @ApiOperation({ summary: 'Get the authenticated user profile' })
+  async getMe(@Request() req: { user: { id: number; sub: number } }) {
+    const userId = req.user.sub ?? req.user.id;
+    const user = await this.portalService.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    let customerName: string | null = null;
+    if (user.customerId) {
+      try {
+        const partner = await this.partnersService.findOne(user.customerId);
+        customerName = partner?.name ?? null;
+      } catch { /* partner may have been deleted */ }
+    }
+    return ApiRes(PRT.USER_DETAIL, {
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      name: user.name,
+      status: user.status,
+      customerId: user.customerId,
+      customerName,
+      isAdmin: user.isAdmin,
+      isCustomer: user.isCustomer,
+      isDelivery: user.isDelivery,
+      deliveryId: user.deliveryId,
+    });
+  }
+
   @Get('me/data-export')
   @ApiOperation({ summary: 'Export own personal data (GDPR)' })
   async exportMyData(@Request() req: { user: { id: number; sub: number } }) {

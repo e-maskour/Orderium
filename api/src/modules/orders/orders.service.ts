@@ -6,7 +6,7 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
@@ -17,6 +17,7 @@ import {
   DeliveryStatus,
 } from './entities/order.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
+import { Product } from '../products/entities/product.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
@@ -210,11 +211,28 @@ export class OrdersService {
         await this.updateSequenceNextNumber('receipt', receiptSequence);
       }
 
+      // Resolve product IDs — set to null if the product no longer exists
+      // (productId is nullable with onDelete: SET NULL, so stale cart items are allowed)
+      const productIds = items
+        .map((item) => item.productId)
+        .filter((id): id is number => id != null);
+      let validProductIdSet = new Set<number>();
+      if (productIds.length > 0) {
+        const existingProducts = await manager.find(Product, {
+          where: { id: In(productIds) },
+          select: ['id'],
+        });
+        validProductIdSet = new Set(existingProducts.map((p) => p.id));
+      }
+
       // Create order items with values from frontend
       const orderItems = items.map((item) =>
         manager.create(OrderItem, {
           orderId: savedOrder.id,
-          productId: item.productId,
+          productId:
+            item.productId != null && validProductIdSet.has(item.productId)
+              ? item.productId
+              : null,
           description: item.description,
           quantity: item.quantity,
           unitPrice: item.unitPrice ?? 0,

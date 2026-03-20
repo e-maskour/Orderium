@@ -1110,4 +1110,461 @@ body {
     height: 0.875rem;
     flex-shrink: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD v2 — Layout & Component Styles
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Page wrapper ── */
+.db-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+}
+
+/* ── Responsive KPI grid: 4 → 4 → 2 → 2 ── */
+.db-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 1023px) {
+    .db-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 479px) {
+    .db-kpi-grid {
+        gap: 0.625rem;
+    }
+}
+
+/* ── Chart grid layouts ── */
+.db-grid-2-1 {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 1rem;
+}
+
+.db-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 1023px) {
+
+    .db-grid-2-1,
+    .db-grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ── Chart card shell ── */
+.db-chart-card {
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid var(--erp-border);
+    box-shadow: var(--erp-shadow-sm);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.db-chart-card:hover {
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* ── Chart card header ── */
+.db-chart-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1.25rem 1.25rem 0;
+    gap: 1rem;
+}
+
+.db-chart-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.db-chart-icon {
+    flex-shrink: 0;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.db-chart-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.db-chart-subtitle {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0.1875rem 0 0;
+    font-weight: 500;
+}
+
+.db-chart-body {
+    padding: 0.5rem 0.25rem 0.25rem;
+}
+
+.db-chart-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ── Stats card ── */
+.db-stats-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid #e8ecf2;
+    padding: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    cursor: default;
+}
+
+.db-stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09);
+    border-color: #d1d9e8;
+}
+
+.db-stats-skeleton {
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid #e8ecf2;
+    padding: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* ── Performance metric row ── */
+.db-metric-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    border-radius: 0.875rem;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    gap: 0.75rem;
+}
+
+.db-metric-row:hover {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+
+.db-metric-progress {
+    height: 4px;
+    border-radius: 9999px;
+    background: #e8ecf2;
+    overflow: hidden;
+    margin-top: 0.375rem;
+}
+
+.db-metric-progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.7s ease;
+}
+
+/* ── Activity list item ── */
+.db-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid #f8fafc;
+    transition: background 0.12s ease;
+    position: relative;
+}
+
+.db-activity-item:last-child {
+    border-bottom: none;
+}
+
+.db-activity-item:hover {
+    background: #f8fafc;
+}
+
+/* ── Top product row ── */
+.db-product-row {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid #f8fafc;
+    transition: background 0.12s ease;
+}
+
+.db-product-row:last-child {
+    border-bottom: none;
+}
+
+.db-product-row:hover {
+    background: #f8fafc;
+}
+
+.db-product-bar {
+    height: 3px;
+    border-radius: 9999px;
+    background: #e8ecf2;
+    overflow: hidden;
+    margin-top: 0.25rem;
+}
+
+.db-product-bar-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.7s ease;
+}
+
+/* ── Rank badge ── */
+.db-rank-1 {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35);
+}
+
+.db-rank-2 {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(100, 116, 139, 0.3);
+}
+
+.db-rank-3 {
+    background: linear-gradient(135deg, #fb923c, #ea580c);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);
+}
+
+.db-rank-n {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* ── Dashboard live pulse dot ── */
+@keyframes db-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(0.85);
+    }
+}
+
+.db-live-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #16a34a;
+    animation: db-pulse 1.8s ease-in-out infinite;
+    margin-right: 0.25rem;
+    vertical-align: middle;
+}
+
+/* ── Dashboard Section Separator ── */
+.db-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: -0.25rem;
+    margin-top: 0.25rem;
+    pointer-events: none;
+}
+
+.db-section-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #235ae4, #1a47b8);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(35, 90, 228, 0.3);
+}
+
+.db-section-label {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+}
+
+.db-section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #e2e8f0 0%, transparent 100%);
+}
+
+/* ── Stats card left accent stripe ── */
+.db-stats-card-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 1rem 0 0 1rem;
+}
+
+/* ── Stats card click variant ── */
+.db-stats-card--clickable {
+    cursor: pointer;
+}
+
+.db-stats-card--clickable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1);
+    border-color: #c8d3e6;
+}
+
+/* ── Chart card consistent padding fix ── */
+.db-chart-body {
+    padding: 0.5rem 0.5rem 0.75rem;
+}
+
+/* ── Performance metric progress bar upgrade ── */
+.db-metric-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0.875rem 1rem;
+    border-radius: 0.875rem;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.db-metric-row:hover {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.db-metric-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+/* ── Product row hover state ── */
+.db-product-row:hover {
+    background: #f8fafc;
+}
+
+/* ── Activity item connector line ── */
+.db-activity-timeline {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.db-activity-item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid #f8fafc;
+    transition: background 0.12s ease;
+}
+
+.db-activity-item:last-child {
+    border-bottom: none;
+}
+
+.db-activity-item:hover {
+    background: #f8fafc;
+}
+
+/* ── Order funnel flow ── */
+.db-funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.db-funnel-arrow {
+    color: #cbd5e1;
+    flex-shrink: 0;
+    margin: 0 -0.25rem;
+    z-index: 1;
+}
+
+/* ── Empty state ── */
+.db-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.db-empty-state__icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.875rem;
+}
+
+.db-empty-state__text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* ── Quick actions section refinement ── */
+.db-quick-actions-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    align-items: center;
+}
 }

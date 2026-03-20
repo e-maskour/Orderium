@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { TranslationKey } from '@/lib/i18n';
 import { OverlayPanel } from 'primereact/overlaypanel';
+import { http } from '@/services/httpClient';
 
 interface Notification {
   Id: number;
@@ -30,9 +31,8 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', 'customer', customerId],
     queryFn: async () => {
-      const response = await fetch(`/api/notifications?userType=customer&customerId=${customerId}`);
-      if (!response.ok) throw new Error('Failed to fetch notifications');
-      return response.json();
+      const res = await http<{ data: Notification[] }>(`/api/notifications?userType=customer&customerId=${customerId}`);
+      return res.data ?? [];
     },
     enabled: !!customerId,
     refetchInterval: 30000,
@@ -41,9 +41,8 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
   const { data: unreadData } = useQuery({
     queryKey: ['notifications', 'customer', customerId, 'unread-count'],
     queryFn: async () => {
-      const response = await fetch(`/api/notifications/unread-count?userType=customer&customerId=${customerId}`);
-      if (!response.ok) throw new Error('Failed to fetch unread count');
-      return response.json();
+      const res = await http<{ data: { count: number } }>(`/api/notifications/unread-count?userType=customer&customerId=${customerId}`);
+      return res.data ?? { count: 0 };
     },
     enabled: !!customerId,
     refetchInterval: 10000,
@@ -53,9 +52,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: number) => {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, { method: 'PATCH' });
-      if (!response.ok) throw new Error('Failed to mark as read');
-      return response.json();
+      return http(`/api/notifications/${notificationId}/read`, { method: 'PATCH' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -64,13 +61,10 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/notifications/mark-all-read', {
+      return http('/api/notifications/mark-all-read', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userType: 'customer', customerId }),
       });
-      if (!response.ok) throw new Error('Failed to mark all as read');
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });

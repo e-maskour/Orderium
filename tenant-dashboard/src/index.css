@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,45 +6,85 @@
 
 @layer base {
     body {
-        @apply antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100;
+        @apply antialiased bg-slate-50 dark:bg-[#080d1a] text-slate-900 dark:text-slate-100;
         font-family: 'Inter', 'ui-sans-serif', system-ui, -apple-system, sans-serif;
+        font-feature-settings: 'cv11', 'ss01';
     }
 
     * {
-        @apply border-slate-200 dark:border-slate-700;
+        @apply border-slate-200 dark:border-slate-700/60;
     }
 }
 
 @layer components {
+
+    /* ── Cards ── */
     .card {
-        @apply rounded-xl border border-slate-200 bg-white dark:border-slate-700/60 dark:bg-slate-900 shadow-sm;
+        @apply rounded-2xl border border-slate-200/80 bg-white dark:border-slate-700/40 dark:bg-slate-900/90 shadow-sm;
     }
 
+    .card-hover {
+        @apply card transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+    }
+
+    /* ── Buttons ── */
     .btn-primary {
-        @apply rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50 active:scale-[0.98];
+        @apply inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-500/20 transition-all duration-150 hover:bg-indigo-700 hover:shadow-indigo-500/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:opacity-50 active:scale-[0.97];
     }
 
     .btn-secondary {
-        @apply rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700;
+        @apply inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-150 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:opacity-50 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:border-slate-600;
     }
 
     .btn-danger {
-        @apply rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50;
+        @apply inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-red-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:opacity-50 active:scale-[0.97];
     }
 
+    .btn-ghost {
+        @apply inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+    }
+
+    /* ── Form inputs ── */
     .input {
-        @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-indigo-400;
+        @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20;
     }
 
     .label {
-        @apply mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300;
+        @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400;
+    }
+
+    /* ── Stat cards ── */
+    .stat-card {
+        @apply card p-5 flex flex-col cursor-default transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+    }
+
+    /* ── Sidebar nav ── */
+    .nav-link {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150;
+    }
+
+    .nav-link-active {
+        @apply nav-link bg-indigo-600 text-white shadow-sm shadow-indigo-500/25;
+    }
+
+    .nav-link-inactive {
+        @apply nav-link text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-100;
+    }
+
+    .nav-section-title {
+        @apply px-3 pt-4 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600;
+    }
+
+    /* ── Sidebar icon button ── */
+    .icon-btn {
+        @apply flex items-center justify-center rounded-xl transition-all duration-150;
     }
 }
 
-/* Smooth scrollbar */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -52,18 +92,18 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-slate-300 dark:bg-slate-600;
+    @apply rounded-full bg-slate-300 dark:bg-slate-700;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-500;
+    @apply bg-slate-400 dark:bg-slate-600;
 }
 
-/* Animation utilities */
-@keyframes fadeIn {
+/* ── Animations ── */
+@keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(12px);
     }
 
     to {
@@ -72,6 +112,81 @@
     }
 }
 
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+
+    to {
+        opacity: 1;
+        max-height: 200px;
+    }
+}
+
 .animate-fade-in {
-    animation: fadeIn 0.25s ease-out;
+    animation: fadeInUp 0.3s ease-out both;
+}
+
+.animate-fade-in-left {
+    animation: fadeInLeft 0.3s ease-out both;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.2s ease-out both;
+}
+
+.animate-slide-down {
+    animation: slideDown 0.25s ease-out both;
+}
+
+/* Stagger delay helpers */
+.delay-75 {
+    animation-delay: 75ms;
+}
+
+.delay-100 {
+    animation-delay: 100ms;
+}
+
+.delay-150 {
+    animation-delay: 150ms;
+}
+
+.delay-200 {
+    animation-delay: 200ms;
+}
+
+.delay-300 {
+    animation-delay: 300ms;
+}
+
+/* Glassmorphism overlay backdrop */
+.glass {
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
 }

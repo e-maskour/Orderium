@@ -28,13 +28,13 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    if (user?.phoneNumber) loadCustomerData();
-  }, [user?.phoneNumber]);
+    if (user?.customerId) loadCustomerData();
+  }, [user?.customerId]);
 
   const loadCustomerData = async () => {
-    if (!user?.phoneNumber) return;
+    if (!user?.customerId) return;
     try {
-      const partner = await partnersService.getByPhone(user.phoneNumber);
+      const partner = await partnersService.getById(user.customerId);
       if (partner) {
         setFormData({ name: partner.name || '', address: partner.address || '', latitude: partner.latitude, longitude: partner.longitude });
         if (partner.googleMapsUrl) setMapsLink(partner.googleMapsUrl);
