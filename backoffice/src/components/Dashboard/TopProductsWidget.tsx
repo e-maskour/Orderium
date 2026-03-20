@@ -14,17 +14,17 @@ interface TopProductsWidgetProps {
 }
 
 const rankClass = (i: number) =>
-    i === 0 ? 'db-rank-1' : i === 1 ? 'db-rank-2' : i === 2 ? 'db-rank-3' : 'db-rank-n';
+  i === 0 ? 'db-rank-1' : i === 1 ? 'db-rank-2' : i === 2 ? 'db-rank-3' : 'db-rank-n';
 
 export const TopProductsWidget: React.FC<TopProductsWidgetProps> = ({ products }) => {
   const { t, language } = useLanguage();
 
   const items: Product[] = products && products.length > 0 ? products : [
     { name: 'Product A', sales: 245, revenue: 12450, trend: 12 },
-    { name: 'Product B', sales: 198, revenue: 9890,  trend: -5 },
-    { name: 'Product C', sales: 167, revenue: 8350,  trend: 8  },
-    { name: 'Product D', sales: 145, revenue: 7250,  trend: 15 },
-    { name: 'Product E', sales: 132, revenue: 6600,  trend: 3  },
+    { name: 'Product B', sales: 198, revenue: 9890, trend: -5 },
+    { name: 'Product C', sales: 167, revenue: 8350, trend: 8 },
+    { name: 'Product D', sales: 145, revenue: 7250, trend: 15 },
+    { name: 'Product E', sales: 132, revenue: 6600, trend: 3 },
   ];
 
   const maxSales = Math.max(...items.map((p) => p.sales), 1);

@@ -12,14 +12,14 @@ interface StatsCardProps {
 }
 
 const colorConfig: Record<string, { gradient: string; shadow: string; light: string; text: string }> = {
-    blue:    { gradient: 'linear-gradient(135deg,#235ae4,#1a47b8)', shadow: 'rgba(35,90,228,0.28)',   light: '#eef1fd', text: '#235ae4' },
-    amber:   { gradient: 'linear-gradient(135deg,#f59e0b,#d97706)', shadow: 'rgba(217,119,6,0.26)',   light: '#fffbeb', text: '#d97706' },
-    green:   { gradient: 'linear-gradient(135deg,#22c55e,#16a34a)', shadow: 'rgba(22,163,74,0.26)',   light: '#f0fdf4', text: '#16a34a' },
-    purple:  { gradient: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', shadow: 'rgba(124,58,237,0.26)', light: '#f5f3ff', text: '#7c3aed' },
-    red:     { gradient: 'linear-gradient(135deg,#f43f5e,#e11d48)', shadow: 'rgba(225,29,72,0.26)',   light: '#fff1f2', text: '#e11d48' },
-    emerald: { gradient: 'linear-gradient(135deg,#10b981,#059669)', shadow: 'rgba(5,150,105,0.26)',   light: '#ecfdf5', text: '#059669' },
-    orange:  { gradient: 'linear-gradient(135deg,#fb923c,#ea580c)', shadow: 'rgba(234,88,12,0.26)',   light: '#fff7ed', text: '#ea580c' },
-    indigo:  { gradient: 'linear-gradient(135deg,#6366f1,#4f46e5)', shadow: 'rgba(79,70,229,0.26)',  light: '#eef2ff', text: '#4f46e5' },
+    blue: { gradient: 'linear-gradient(135deg,#235ae4,#1a47b8)', shadow: 'rgba(35,90,228,0.28)', light: '#eef1fd', text: '#235ae4' },
+    amber: { gradient: 'linear-gradient(135deg,#f59e0b,#d97706)', shadow: 'rgba(217,119,6,0.26)', light: '#fffbeb', text: '#d97706' },
+    green: { gradient: 'linear-gradient(135deg,#22c55e,#16a34a)', shadow: 'rgba(22,163,74,0.26)', light: '#f0fdf4', text: '#16a34a' },
+    purple: { gradient: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', shadow: 'rgba(124,58,237,0.26)', light: '#f5f3ff', text: '#7c3aed' },
+    red: { gradient: 'linear-gradient(135deg,#f43f5e,#e11d48)', shadow: 'rgba(225,29,72,0.26)', light: '#fff1f2', text: '#e11d48' },
+    emerald: { gradient: 'linear-gradient(135deg,#10b981,#059669)', shadow: 'rgba(5,150,105,0.26)', light: '#ecfdf5', text: '#059669' },
+    orange: { gradient: 'linear-gradient(135deg,#fb923c,#ea580c)', shadow: 'rgba(234,88,12,0.26)', light: '#fff7ed', text: '#ea580c' },
+    indigo: { gradient: 'linear-gradient(135deg,#6366f1,#4f46e5)', shadow: 'rgba(79,70,229,0.26)', light: '#eef2ff', text: '#4f46e5' },
 };
 
 export const StatsCard: React.FC<StatsCardProps> = ({

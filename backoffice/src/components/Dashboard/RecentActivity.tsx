@@ -8,27 +8,27 @@ interface RecentActivityProps {
 }
 
 const iconConfig: Record<string, { bg: string; color: string; shadow: string }> = {
-    order:    { bg: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff', shadow: 'rgba(59,130,246,0.22)' },
+    order: { bg: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff', shadow: 'rgba(59,130,246,0.22)' },
     customer: { bg: 'linear-gradient(135deg,#a855f7,#9333ea)', color: '#fff', shadow: 'rgba(168,85,247,0.22)' },
-    product:  { bg: 'linear-gradient(135deg,#0ea5e9,#0284c7)', color: '#fff', shadow: 'rgba(14,165,233,0.22)'  },
-    revenue:  { bg: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', shadow: 'rgba(34,197,94,0.22)'  },
-    default:  { bg: 'linear-gradient(135deg,#64748b,#475569)', color: '#fff', shadow: 'rgba(100,116,139,0.22)' },
+    product: { bg: 'linear-gradient(135deg,#0ea5e9,#0284c7)', color: '#fff', shadow: 'rgba(14,165,233,0.22)' },
+    revenue: { bg: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', shadow: 'rgba(34,197,94,0.22)' },
+    default: { bg: 'linear-gradient(135deg,#64748b,#475569)', color: '#fff', shadow: 'rgba(100,116,139,0.22)' },
 };
 
 const typeBadgeConfig: Record<string, { bg: string; color: string; border: string; label: string }> = {
-    order:    { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label: 'Order'    },
+    order: { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label: 'Order' },
     customer: { bg: '#faf5ff', color: '#9333ea', border: '#e9d5ff', label: 'Customer' },
-    product:  { bg: '#f0f9ff', color: '#0284c7', border: '#bae6fd', label: 'Product'  },
-    revenue:  { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0', label: 'Revenue'  },
+    product: { bg: '#f0f9ff', color: '#0284c7', border: '#bae6fd', label: 'Product' },
+    revenue: { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0', label: 'Revenue' },
 };
 
 function getIcon(type: string) {
     switch (type) {
-        case 'order':    return ShoppingBag;
+        case 'order': return ShoppingBag;
         case 'customer': return Users;
-        case 'product':  return Package;
-        case 'revenue':  return TrendingUp;
-        default:         return Bell;
+        case 'product': return Package;
+        case 'revenue': return TrendingUp;
+        default: return Bell;
     }
 }
 
@@ -38,7 +38,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
     const formatRelativeTime = (timestamp: string): string => {
         const now = new Date();
         const diff = Math.floor((now.getTime() - new Date(timestamp).getTime()) / 1000);
-        if (diff < 60)   return `${diff} ${t('secondsAgo') || 's ago'}`;
+        if (diff < 60) return `${diff} ${t('secondsAgo') || 's ago'}`;
         if (diff < 3600) return `${Math.floor(diff / 60)} ${t('minutesAgo') || 'min ago'}`;
         if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('hoursAgo') || 'h ago'}`;
         return `${Math.floor(diff / 86400)} ${t('daysAgo') || 'd ago'}`;

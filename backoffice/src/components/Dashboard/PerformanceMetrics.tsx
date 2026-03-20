@@ -14,9 +14,9 @@ interface PerformanceMetricsProps {
 }
 
 const iconConfig = {
-    revenue:   { Component: DollarSign, gradient: 'linear-gradient(135deg,#22c55e,#16a34a)',   shadow: 'rgba(22,163,74,0.22)',   progress: '#22c55e' },
-    customers: { Component: Users,       gradient: 'linear-gradient(135deg,#8b5cf6,#7c3aed)',  shadow: 'rgba(124,58,237,0.22)',  progress: '#8b5cf6' },
-    orders:    { Component: ShoppingCart, gradient: 'linear-gradient(135deg,#235ae4,#1a47b8)', shadow: 'rgba(35,90,228,0.22)',   progress: '#235ae4' },
+    revenue: { Component: DollarSign, gradient: 'linear-gradient(135deg,#22c55e,#16a34a)', shadow: 'rgba(22,163,74,0.22)', progress: '#22c55e' },
+    customers: { Component: Users, gradient: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', shadow: 'rgba(124,58,237,0.22)', progress: '#8b5cf6' },
+    orders: { Component: ShoppingCart, gradient: 'linear-gradient(135deg,#235ae4,#1a47b8)', shadow: 'rgba(35,90,228,0.22)', progress: '#235ae4' },
 };
 
 export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics }) => {
