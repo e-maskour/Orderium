@@ -214,9 +214,8 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
 
     <!-- Totals -->
     <div class="rcp-totals">
-      ${
-        !data.hideVAT
-          ? `
+      ${!data.hideVAT
+      ? `
       <div class="totals-line">
         <span>Sous-total</span>
         <span>${data.subtotal} DH</span>
@@ -227,10 +226,10 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
         <span>${data.tax} DH</span>
       </div>
       `
-          : `
+      : `
       ${discountRowHtml}
       `
-      }
+    }
       <div class="totals-grand">
         <span>TOTAL</span>
         <span>${data.total} DH</span>
