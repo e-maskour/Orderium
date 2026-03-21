@@ -13,6 +13,7 @@ import {
   BaseDocument,
   BaseStandardItem,
 } from '../../../common/entities/base-document.entity';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
 export enum InvoiceStatus {
   DRAFT = 'draft',
@@ -73,10 +74,10 @@ export class Invoice extends BaseDocument {
   @Column({ type: 'text', nullable: true })
   pdfUrl: string | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   paidAmount: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   remainingAmount: number;
 
   // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument

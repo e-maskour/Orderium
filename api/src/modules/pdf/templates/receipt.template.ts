@@ -18,8 +18,8 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   // Build discount row if it exists
   const discountRowHtml =
     data.discount && data.discount !== '0.00'
-      ? `<div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
-         <span>Remise${data.discountType === 1 ? ' (%)' : ''}:</span>
+      ? `<div class="totals-line">
+         <span>Remise${data.discountType === 1 ? ' (%)' : ''}</span>
          <span>-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</span>
        </div>`
       : '';
@@ -31,88 +31,199 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=block" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;600;700&display=block" rel="stylesheet">
   <title>Reçu ${data.documentNumber}</title>
   <style>
-    @page {
-      size: 80mm auto;
-      margin: 0;
-    }
+    @page { size: 80mm auto; margin: 0; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: "Noto Sans Arabic", "Noto Sans", "Courier New", monospace;
-      background-color: #ffffff;
+      font-family: "Noto Sans", "Noto Sans Arabic", monospace;
+      background: #fff;
       width: 80mm;
       margin: 0;
       padding: 0;
-      font-size: 8pt;
-      color: #000000;
-      line-height: 1.4;
+      font-size: 7.5pt;
+      color: #000;
+      line-height: 1.25;
+      -webkit-font-smoothing: antialiased;
     }
-    .receipt-content {
+
+    .receipt {
       padding: 3mm;
     }
-    .header {
+
+    /* ── Company header ──────────────────── */
+    .rcp-header {
       text-align: center;
-      margin-bottom: 3mm;
-      font-weight: bold;
+      padding-bottom: 2mm;
     }
-    .divider {
+    .rcp-company-name {
+      font-size: 11pt;
+      font-weight: 700;
+      letter-spacing: 0.5pt;
+      line-height: 1.2;
+    }
+    .rcp-company-detail {
+      font-size: 6.5pt;
+      color: #444;
+      line-height: 1.4;
+      margin-top: 0.5mm;
+    }
+
+    /* ── Separators ──────────────────────── */
+    .sep-dash {
+      border: none;
       border-top: 1px dashed #000;
       margin: 2mm 0;
     }
-    .items {
+    .sep-solid {
+      border: none;
+      border-top: 1.5px solid #000;
       margin: 2mm 0;
     }
-    .item {
-      margin-bottom: 1mm;
-      padding-bottom: 1mm;
-      border-bottom: 1px dotted #CCCCCC;
+
+    /* ── Document info ───────────────────── */
+    .rcp-info {
+      padding: 0.5mm 0 1mm 0;
     }
-    .totals {
-      margin-top: 3mm;
-      padding-top: 2mm;
+    .rcp-doc-label {
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 0.3pt;
+    }
+    .rcp-meta {
+      font-size: 7pt;
+      color: #333;
+      margin-top: 0.5mm;
+      line-height: 1.4;
+    }
+
+    /* ── Items list ──────────────────────── */
+    .rcp-items {
+      padding: 0;
+    }
+    .rcp-item {
+      padding: 1.5px 0;
+    }
+    .rcp-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2mm;
+    }
+    .rcp-item-desc {
+      font-size: 7.5pt;
+      font-weight: 600;
+      line-height: 1.25;
+      flex: 1;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      text-overflow: ellipsis;
+    }
+    .rcp-item-total {
+      font-size: 7.5pt;
+      font-weight: 600;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      min-width: 14mm;
+    }
+    .rcp-item-detail {
+      font-size: 6.5pt;
+      color: #555;
+      line-height: 1.3;
+      margin-top: 0.3mm;
+    }
+    .rcp-item-detail .rcp-discount {
+      color: #777;
+    }
+
+    /* ── Totals ──────────────────────────── */
+    .rcp-totals {
+      padding-top: 0.5mm;
+    }
+    .totals-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      padding: 0.5mm 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .totals-line span:first-child {
+      color: #333;
+    }
+    .totals-grand {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10pt;
+      font-weight: 700;
+      padding: 1.5mm 0 0.5mm 0;
+      border-top: 1.5px solid #000;
+      margin-top: 1mm;
+    }
+
+    /* ── Footer ──────────────────────────── */
+    .rcp-footer {
+      text-align: center;
+      padding-top: 1mm;
+    }
+    .rcp-thanks {
+      font-size: 7pt;
+      font-weight: 600;
+      letter-spacing: 0.2pt;
+    }
+    .rcp-legal {
+      font-size: 5.5pt;
+      color: #666;
+      margin-top: 1mm;
+      line-height: 1.3;
     }
   </style>
 </head>
 <body>
-  <div class="receipt-content">
-    <!-- Header -->
-    <div class="header">
-      <div dir="auto" style="font-size: 12pt;">${data.companyName}</div>
-      ${data.companyLines.map((line) => `<div dir="auto" style="font-size: 7pt;">${line}</div>`).join('')}
+  <div class="receipt">
+    <!-- Company Header -->
+    <div class="rcp-header">
+      <div class="rcp-company-name" dir="auto">${data.companyName}</div>
+      ${data.companyLines.map((line) => `<div class="rcp-company-detail" dir="auto">${line}</div>`).join('')}
     </div>
-    
-    <div class="divider"></div>
-    
-    <!-- Receipt Info -->
-    <div style="font-weight: bold; margin: 2mm 0;">
-      REÇU N° ${data.documentNumber}
+
+    <hr class="sep-dash" />
+
+    <!-- Document Info -->
+    <div class="rcp-info">
+      <div class="rcp-doc-label">REÇU N° ${data.documentNumber}</div>
+      <div class="rcp-meta">
+        ${data.date}<br/>
+        <span dir="auto">${data.customerName}</span>${data.customerPhone ? ` · ${data.customerPhone}` : ''}
+      </div>
     </div>
-    <div style="font-size: 7pt; margin-bottom: 3mm;">
-      Date: ${data.date}<br />
-      Client: <span dir="auto">${data.customerName}</span><br />
-      ${data.customerPhone ? `Tel: ${data.customerPhone}<br />` : ''}
-    </div>
-    
-    <div class="divider"></div>
-    
+
+    <hr class="sep-dash" />
+
     <!-- Items -->
-    <div class="items">
+    <div class="rcp-items">
       ${data.itemsHtml}
     </div>
-    
+
+    <hr class="sep-dash" />
+
     <!-- Totals -->
-    <div class="totals">
+    <div class="rcp-totals">
       ${
         !data.hideVAT
           ? `
-      <div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
-        <span>Sous-total:</span>
+      <div class="totals-line">
+        <span>Sous-total</span>
         <span>${data.subtotal} DH</span>
       </div>
       ${discountRowHtml}
-      <div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
-        <span>TVA (20%):</span>
+      <div class="totals-line">
+        <span>TVA (20%)</span>
         <span>${data.tax} DH</span>
       </div>
       `
@@ -120,17 +231,17 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
       ${discountRowHtml}
       `
       }
-      <div style="display: flex; justify-content: space-between; font-weight: bold; ${!data.hideVAT ? 'border-top: 1px solid #000; padding-top: 1mm; margin-top: 1mm;' : ''}">
-        <span>Total:</span>
+      <div class="totals-grand">
+        <span>TOTAL</span>
         <span>${data.total} DH</span>
       </div>
     </div>
-    
-    <div class="divider"></div>
-    
+
+    <hr class="sep-dash" />
+
     <!-- Footer -->
-    <div style="text-align: center; font-size: 6pt; margin-top: 3mm;">
-      Merci pour votre commande!
+    <div class="rcp-footer">
+      <div class="rcp-thanks">Merci pour votre confiance !</div>
     </div>
   </div>
 </body>

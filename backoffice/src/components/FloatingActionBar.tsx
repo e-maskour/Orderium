@@ -75,8 +75,15 @@ const FAB_STYLES = `
     animation: fab-bounce-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
   }
 
-  /* progress stripe */
-  .fab-pill::before {
+  /* progress track — clips the stripe to the pill shape without clipping buttons */
+  .fab-pill__track {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .fab-pill__track::before {
     content: '';
     position: absolute;
     inset: 0 0 auto 0;
@@ -91,7 +98,6 @@ const FAB_STYLES = `
     border-radius: 0 2px 2px 0;
     box-shadow: 0 0 8px rgba(35,90,228,0.65);
     transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
-    pointer-events: none;
   }
 
   /* left badge */
@@ -137,15 +143,16 @@ const FAB_STYLES = `
   }
 
   /* spacer — pushes actions to the right */
-  .fab-pill__spacer { flex: 1; min-width: 0.25rem; }
+  .fab-pill__spacer { flex: 0 0 0.25rem; }
 
   /* actions row — right-aligned, scrollable */
   .fab-pill__actions {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    flex-shrink: 0;
-    max-width: 60%;
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-end;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -351,11 +358,13 @@ export function FloatingActionBar({
       <div className="fab-scrim" />
       <div className="fab-wrap">
         <div className="fab-pill">
-          {/* Blue progress stripe */}
-          <div
-            className="fab-pill__progress"
-            style={{ width: progressPct !== null ? `${progressPct}%` : '0%' }}
-          />
+          {/* Progress stripe — clipped independently so buttons aren't cut */}
+          <div className="fab-pill__track">
+            <div
+              className="fab-pill__progress"
+              style={{ width: progressPct !== null ? `${progressPct}%` : '0%' }}
+            />
+          </div>
 
           {/* Count badge */}
           <div className="fab-pill__badge">

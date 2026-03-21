@@ -28,7 +28,7 @@ const loadCartFromStorage = (): CartItem[] => {
     if (!stored) return [];
 
     const cartData: CartData = JSON.parse(stored);
-    
+
     // Check if cart has expired
     if (Date.now() > cartData.expiresAt) {
       localStorage.removeItem(CART_STORAGE_KEY);
@@ -104,7 +104,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeItem(productId);
       return;
     }
-    
+
     setItems(prev =>
       prev.map(item =>
         item.product.id === productId
@@ -124,7 +124,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items]);
 
   const subtotal = items.reduce(
-    (sum, item) => sum + (Number(item.product.price) || 0) * item.quantity,
+    (sum, item) => sum + (item.product.price || 0) * item.quantity,
     0
   );
 

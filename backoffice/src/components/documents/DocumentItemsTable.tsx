@@ -46,6 +46,15 @@ const DIT_STYLES = `
   .dit-wrap .p-datatable-wrapper { overflow: visible !important; }
   .dit-wrap .p-datatable table, .dit-wrap .p-datatable td, .dit-wrap .p-datatable th { font-family: inherit !important; font-size: 0.875rem !important; }
   .dit-wrap table, .dit-wrap .p-datatable table, .dit-wrap td, .dit-wrap th, .dit-wrap input, .dit-wrap .p-dropdown, .dit-wrap .p-inputtext { font-family: inherit !important; font-size: 0.875rem !important; }
+  .dit-wrap .dit-al .p-column-header-content { justify-content: flex-start !important; }
+  .dit-wrap .dit-ac .p-column-header-content { justify-content: center !important; }
+  .dit-wrap .dit-ar .p-column-header-content { justify-content: flex-end !important; }
+  .dit-wrap .p-datatable .p-datatable-thead > tr > th.dit-al,
+  .dit-wrap .p-datatable .p-datatable-tbody > tr > td.dit-al { text-align: left !important; }
+  .dit-wrap .p-datatable .p-datatable-thead > tr > th.dit-ac,
+  .dit-wrap .p-datatable .p-datatable-tbody > tr > td.dit-ac { text-align: center !important; }
+  .dit-wrap .p-datatable .p-datatable-thead > tr > th.dit-ar,
+  .dit-wrap .p-datatable .p-datatable-tbody > tr > td.dit-ar { text-align: right !important; }
   .dit-dg .p-dropdown {
     border: 1.5px solid transparent !important; background: transparent !important;
     transition: border-color 0.15s, box-shadow 0.15s; border-radius: 6px !important;
@@ -66,9 +75,9 @@ const DIT_STYLES = `
   .dit-dg .p-dropdown { height: 2.5rem !important; }
   .dit-dg .p-dropdown .p-dropdown-label { display: flex !important; align-items: center !important; text-align: center !important; justify-content: center !important; color: #1e293b !important; font-weight: 600 !important; font-size: 0.875rem !important; }
   .dit-dsc {
-    display: inline-flex; align-items: center; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
     border: 1.5px solid transparent; border-radius: 6px; background: transparent;
-    height: 2.5rem;
+    width: 100%; height: 2.5rem;
     transition: border-color 0.15s, background 0.15s;
   }
   .dit-dsc:hover { border-color: #e2e8f0 !important; background: #fff !important; }
@@ -287,8 +296,10 @@ export function DocumentItemsTable({
             {/* # */}
             <Column
               style={{ width: '3rem' }}
-              headerStyle={{ padding: '0.625rem 0.5rem', textAlign: 'center', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
-              bodyStyle={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}
+              headerClassName="dit-ac"
+              headerStyle={{ padding: '0.625rem 0.5rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+              bodyClassName="dit-ac"
+              bodyStyle={{ padding: '0.5rem 0.5rem' }}
               header={<Hash style={{ width: '0.75rem', height: '0.75rem', color: '#94a3b8', display: 'inline-block' }} />}
               body={(_item: DocumentItem, options: ColumnBodyOptions) => (
                 <span className="dit-row-num">{options.rowIndex + 1}</span>
@@ -299,9 +310,10 @@ export function DocumentItemsTable({
             <Column
               field="description"
               style={{ width: '22%' }}
-              headerStyle={{ padding: '0.625rem 0.75rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+              headerClassName="dit-al"
+              headerStyle={{ padding: '0.625rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
               bodyStyle={{ padding: '0.5rem 0.75rem', overflow: 'visible' }}
-              bodyClassName="dit-dg"
+              bodyClassName="dit-dg dit-al"
               header={t('invoice.descriptionHeader')}
               body={(item: DocumentItem) => readOnly ? (
                 <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
@@ -325,9 +337,10 @@ export function DocumentItemsTable({
             <Column
               field="quantity"
               style={{ width: '7rem' }}
-              headerStyle={{ padding: '0.625rem 0.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
-              bodyStyle={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}
-              bodyClassName="dit-ig"
+              headerClassName="dit-ac"
+              headerStyle={{ padding: '0.625rem 0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+              bodyStyle={{ padding: '0.5rem 0.25rem' }}
+              bodyClassName="dit-ig dit-ac"
               header={t('invoice.quantityHeader')}
               body={(item: DocumentItem) => readOnly ? (
                 <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{item.quantity}</span>
@@ -346,9 +359,10 @@ export function DocumentItemsTable({
               <Column
                 field="unitPrice"
                 style={{ width: '9.5rem' }}
-                headerStyle={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
-                bodyStyle={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}
-                bodyClassName="dit-ig"
+                headerClassName="dit-ac"
+                headerStyle={{ padding: '0.625rem 0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.5rem 0.25rem' }}
+                bodyClassName="dit-ig dit-ac"
                 header={t('invoice.unitPriceHeader')}
                 body={(item: DocumentItem) => readOnly ? (
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{formatAmount(item.unitPrice)}</span>
@@ -368,8 +382,10 @@ export function DocumentItemsTable({
               <Column
                 field="discount"
                 style={{ width: '9rem' }}
-                headerStyle={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
-                bodyStyle={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}
+                headerClassName="dit-ac"
+                headerStyle={{ padding: '0.625rem 0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+                bodyClassName="dit-ac"
+                bodyStyle={{ padding: '0.5rem 0.25rem' }}
                 header={t('invoice.discountHeader')}
                 body={(item: DocumentItem) => readOnly ? (
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
@@ -400,9 +416,10 @@ export function DocumentItemsTable({
               <Column
                 field="tax"
                 style={{ width: '7.5rem' }}
-                headerStyle={{ padding: '0.625rem 0.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
-                bodyStyle={{ padding: '0.5rem 0.5rem', textAlign: 'center' }}
-                bodyClassName="dit-dg"
+                headerClassName="dit-ac"
+                headerStyle={{ padding: '0.625rem 0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.5rem 0.25rem' }}
+                bodyClassName="dit-dg dit-ac"
                 header={t('invoice.tax')}
                 body={(item: DocumentItem) => readOnly ? (
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{item.tax}%</span>
@@ -423,8 +440,10 @@ export function DocumentItemsTable({
               <Column
                 field="total"
                 style={{ width: '12rem' }}
-                headerStyle={{ padding: '0.625rem 0.75rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
-                bodyStyle={{ padding: '0.5rem 0.75rem', textAlign: 'right' }}
+                headerClassName="dit-ar"
+                headerStyle={{ padding: '0.625rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '2px solid #e2e8f0' }}
+                bodyClassName="dit-ar"
+                bodyStyle={{ padding: '0.5rem 0.75rem' }}
                 header={t('invoice.totalHeader')}
                 body={(item: DocumentItem) => (
                   <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>

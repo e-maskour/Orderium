@@ -8,6 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 import { Product } from '../../products/entities/product.entity';
 import { Warehouse } from './warehouse.entity';
 import { UnitOfMeasure } from './unit-of-measure.entity';
@@ -76,7 +77,7 @@ export class StockMovement {
   @Column({ type: 'int', nullable: true })
   destWarehouseId: number | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 4 })
+  @Column({ type: 'decimal', precision: 18, scale: 4, transformer: numericTransformer })
   quantity: number;
 
   @ManyToOne(() => UnitOfMeasure, { nullable: true })

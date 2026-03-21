@@ -40,15 +40,15 @@ export class OrderItem implements IOrderItem {
       data.orderId as number,
       data.productId as number,
       String(data.productName || data.description || `Product ${data.productId}`),
-      parseFloat(String(data.quantity)) || 0,
-      parseFloat(String(data.unitPrice || data.price)) || 0,
-      parseFloat(String(data.discount)) || 0,
+      (data.quantity as number) || 0,
+      (data.unitPrice as number || data.price as number) || 0,
+      (data.discount as number) || 0,
       (data.discountType as number) || 0,
-      parseFloat(String(data.taxAmount || data.tax)) || 0,
-      parseFloat(String(data.total)) || 0,
+      (data.taxAmount as number || data.tax as number) || 0,
+      (data.total as number) || 0,
       data.description as string | undefined,
-      parseFloat(String(data.price)) || undefined,
-      parseFloat(String(data.tax)) || undefined
+      (data.price as number) || undefined,
+      (data.tax as number) || undefined
     );
   }
 }
@@ -144,10 +144,10 @@ export class Order implements IOrder {
       data.orderNumber as string,
       data.customerId as number,
       items,
-      parseFloat(String(data.subtotal)) || 0,
-      parseFloat(String(data.taxAmount)) || 0,
-      parseFloat(String(data.discountAmount)) || 0,
-      parseFloat(String(data.total)) || 0,
+      (data.subtotal as number) || 0,
+      (data.taxAmount as number) || 0,
+      (data.discountAmount as number) || 0,
+      (data.total as number) || 0,
       data.status as string,
       data.dateCreated as string,
       data.dateUpdated as string,

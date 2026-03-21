@@ -18,7 +18,7 @@ export class Payment {
     this.invoiceId = data.invoiceId;
     this.customerId = data.customerId;
     this.supplierId = data.supplierId;
-    this.amount = parseFloat(data.amount);
+    this.amount = data.amount;
     this.paymentDate = data.paymentDate;
     this.paymentType = data.paymentType;
     this.notes = data.notes;

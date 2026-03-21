@@ -5,6 +5,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
 @Entity('subscription_plans')
 export class SubscriptionPlan {
@@ -19,10 +20,10 @@ export class SubscriptionPlan {
     @Column({ type: 'varchar', length: 100 })
     displayName: string;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, transformer: numericTransformer })
     priceMonthly: number;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, transformer: numericTransformer })
     priceYearly: number;
 
     @Column({ type: 'varchar', length: 3, default: 'MAD' })

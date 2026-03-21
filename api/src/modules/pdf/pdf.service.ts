@@ -425,8 +425,8 @@ export class PDFService {
         headerTemplate,
         footerTemplate,
         margin: {
-          top: '33mm',
-          bottom: '12mm',
+          top: '32mm',
+          bottom: '7mm',
           left: '5mm',
           right: '5mm',
         },
@@ -507,25 +507,25 @@ export class PDFService {
 
     // Generate items HTML
     const itemsHtml = data.items
-      .map((item, index) => {
+      .map((item) => {
         if (hidePrices) {
           // For demande de prix, only show description and quantity
           return `
-              <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
-                <td dir="ltr" style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
-                <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
+              <tr class="table-row">
+                <td dir="auto" class="cell-desc">${item.description}</td>
+                <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
               </tr>
             `;
         } else {
           // Normal quote/invoice with prices
           return `
-              <tr class="table-row" style="background-color: ${index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}">
-                <td dir="ltr" style="text-align: left; padding: 2mm 1.5mm;">${item.description}</td>
-                <td style="text-align: center; font-weight: bold; padding: 2mm 1.5mm;">${item.quantity}</td>
-                <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.unitPrice)}</td>
-                <td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.discount)}</td>
-                ${!hideVAT ? `<td style="text-align: right; font-family: monospace; padding: 2mm 1.5mm;">${item.tax}%</td>` : ''}
-                <td style="text-align: right; font-weight: bold; font-family: monospace; padding: 2mm 1.5mm;">${this.formatCurrency(item.total)}</td>
+              <tr class="table-row">
+                <td dir="auto" class="cell-desc">${item.description}</td>
+                <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
+                <td class="num" style="text-align: right;">${this.formatCurrency(item.unitPrice)}</td>
+                <td class="num" style="text-align: right;">${this.formatCurrency(item.discount)}</td>
+                ${!hideVAT ? `<td class="num" style="text-align: right;">${item.tax}%</td>` : ''}
+                <td class="num" style="text-align: right; font-weight: 600;">${this.formatCurrency(item.total)}</td>
               </tr>
             `;
         }
@@ -579,14 +579,16 @@ export class PDFService {
     const itemsHtml = data.items
       .map(
         (item) => `
-          <div class="item">
-            <div dir="ltr" style="font-weight: bold; text-align: left;">${item.description}</div>
-            <div style="display: flex; justify-content: space-between;">
-              <span>${item.quantity} x ${this.formatCurrency(item.unitPrice)}</span>
-              <span>${this.formatCurrency(item.total)} DH</span>
+          <div class="rcp-item">
+            <div class="rcp-item-top">
+              <div dir="auto" class="rcp-item-desc">${item.description}</div>
+              <div class="rcp-item-total">${this.formatCurrency(item.total)} DH</div>
             </div>
-            ${item.discount > 0 ? `<div style="font-size: 6pt; color: #666;">Remise: ${this.formatCurrency(item.discount)} DH</div>` : ''}
-            ${!hideVAT && item.tax > 0 ? `<div style="font-size: 6pt; color: #666;">TVA: ${this.formatCurrency(item.tax)}%</div>` : ''}
+            <div class="rcp-item-detail">
+              ${item.quantity} × ${this.formatCurrency(item.unitPrice)}
+              ${item.discount > 0 ? `<span class="rcp-discount"> · Remise: ${this.formatCurrency(item.discount)} DH</span>` : ''}
+              ${!hideVAT && item.tax > 0 ? `<span class="rcp-discount"> · TVA: ${item.tax}%</span>` : ''}
+            </div>
           </div>
         `,
       )

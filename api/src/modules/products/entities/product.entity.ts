@@ -13,6 +13,7 @@ import {
 import { Warehouse } from '../../inventory/entities/warehouse.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { UnitOfMeasure } from '../../inventory/entities/unit-of-measure.entity';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
 @Entity('products')
 @Index(['name'])
@@ -30,10 +31,10 @@ export class Product {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   price: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   cost: number;
 
   @Column({ type: 'boolean', default: false })
@@ -54,13 +55,13 @@ export class Product {
   @Column({ type: 'int', nullable: true })
   stock: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, transformer: numericTransformer })
   saleTax: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, transformer: numericTransformer })
   purchaseTax: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   minPrice: number;
 
   @Column({ type: 'int', nullable: true })

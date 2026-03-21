@@ -48,7 +48,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
     try {
       const data = await paymentsService.getByInvoice(invoiceId);
       setPayments(data);
-      const total = data.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
+      const total = data.reduce((sum, p) => sum + p.amount, 0);
       setTotalPaid(total);
     } catch (error) {
       console.error('Error fetching payments:', error);
@@ -173,7 +173,7 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                     <div>
                       <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>{t('amount')}</div>
                       <div style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}>
-                        {formatAmount(parseFloat(p.amount.toString()), 2)} {currency}
+                        {formatAmount(p.amount, 2)} {currency}
                       </div>
                     </div>
                     <div>

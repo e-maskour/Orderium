@@ -42,6 +42,18 @@ export class ProductsService {
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const { categoryIds, ...productData } = createProductDto;
+
+    // Default saleUnitId and purchaseUnitId to the 'UNIT' unit of measure
+    if (!productData.saleUnitId || !productData.purchaseUnitId) {
+      const unitUom = await this.unitOfMeasureRepository.findOne({
+        where: { code: 'UNIT' },
+      });
+      if (unitUom) {
+        if (!productData.saleUnitId) productData.saleUnitId = unitUom.id;
+        if (!productData.purchaseUnitId) productData.purchaseUnitId = unitUom.id;
+      }
+    }
+
     const product = this.productRepository.create(productData);
 
     if (categoryIds && categoryIds.length > 0) {

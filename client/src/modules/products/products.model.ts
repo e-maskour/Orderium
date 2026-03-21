@@ -96,8 +96,8 @@ export class Product implements IProduct {
     return new Product(
       data.id as number,
       data.name as string,
-      parseFloat(String(data.price)) || 0,
-      parseFloat(String(data.cost)) || 0,
+      data.price as number || 0,
+      data.cost as number || 0,
       (data.isService as boolean) || false,
       data.isEnabled !== false,
       data.dateCreated as string,

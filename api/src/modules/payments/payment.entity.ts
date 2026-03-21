@@ -10,6 +10,7 @@ import {
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { Order } from '../orders/entities/order.entity';
 import { Partner } from '../partners/entities/partner.entity';
+import { numericTransformer } from '../../common/transformers/numeric.transformer';
 
 export enum PaymentType {
   CASH = 'cash',
@@ -53,7 +54,11 @@ export class Payment {
   @Column({ type: 'int', nullable: true })
   supplierId: number | null;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: numericTransformer,
+  })
   amount: number;
 
   @Column({ type: 'date' })

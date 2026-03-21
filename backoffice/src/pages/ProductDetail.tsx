@@ -155,6 +155,7 @@ export default function ProductDetail() {
   useEffect(() => {
     if (product) {
       const productCategories = (product as any).categories || [];
+      const defaultUom = uoms.length > 0 ? (uoms.find((u: any) => u.code === 'UNIT') || uoms[0]) : null;
       setFormData({
         name: product.name,
         code: product.code || '',
@@ -164,8 +165,8 @@ export default function ProductDetail() {
         minPrice: product.minPrice,
         saleTaxId: taxRates.find((r: any) => r.rate === product.saleTax)?.name ?? null,
         purchaseTaxId: taxRates.find((r: any) => r.rate === product.purchaseTax)?.name ?? null,
-        saleUnitId: (product as any).saleUnitOfMeasure?.id ?? null,
-        purchaseUnitId: (product as any).purchaseUnitOfMeasure?.id ?? null,
+        saleUnitId: (product as any).saleUnitOfMeasure?.id ?? defaultUom?.id ?? null,
+        purchaseUnitId: (product as any).purchaseUnitOfMeasure?.id ?? defaultUom?.id ?? null,
         categoryIds: productCategories.map((c: any) => c.id),
         warehouseId: product.warehouseId ?? null,
         isService: product.isService,
@@ -173,7 +174,19 @@ export default function ProductDetail() {
         isPriceChangeAllowed: product.isPriceChangeAllowed,
       });
     }
-  }, [product, taxRates.length]);
+  }, [product, taxRates.length, uoms.length]);
+
+  // If uoms loaded after the product, backfill missing unit defaults
+  useEffect(() => {
+    if (uoms.length > 0 && product) {
+      const defaultUom = uoms.find((u: any) => u.code === 'UNIT') || uoms[0];
+      setFormData(prev => ({
+        ...prev,
+        saleUnitId: prev.saleUnitId ?? defaultUom.id,
+        purchaseUnitId: prev.purchaseUnitId ?? defaultUom.id,
+      }));
+    }
+  }, [uoms.length]);
 
   const handleRegenerateCode = async () => {
     try {

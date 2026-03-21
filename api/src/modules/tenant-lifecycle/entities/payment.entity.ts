@@ -8,6 +8,7 @@ import {
     JoinColumn,
     Index,
 } from 'typeorm';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 import { Tenant } from '../../tenant/tenant.entity';
 
 export type PaymentStatus = 'pending' | 'validated' | 'rejected' | 'refunded';
@@ -27,7 +28,7 @@ export class Payment {
     @JoinColumn({ name: 'tenantId' })
     tenant: Tenant;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({ type: 'decimal', precision: 10, scale: 2, transformer: numericTransformer })
     amount: number;
 
     @Column({ type: 'varchar', length: 3, default: 'MAD' })

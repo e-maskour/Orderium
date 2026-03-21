@@ -313,8 +313,8 @@ export default function DocumentEditPage({
 
       // Load payment data for invoices
       if (documentType === 'facture') {
-        setPaidAmount(parseFloat(doc.paidAmount?.toString() || '0'));
-        setRemainingAmount(parseFloat(doc.remainingAmount?.toString() || '0'));
+        setPaidAmount(doc.paidAmount ?? 0);
+        setRemainingAmount(doc.remainingAmount ?? 0);
       }
 
       // Load share token and signature data for devis
@@ -420,12 +420,12 @@ export default function DocumentEditPage({
         id: String(item.id),
         productId: item.productId,
         description: item.product?.name || item.description || '',
-        quantity: parseFloat(item.quantity || 0),
-        unitPrice: parseFloat(item.unitPrice || item.price || item.priceBeforeTax || 0),
-        discount: parseFloat(item.discount || 0),
+        quantity: item.quantity || 0,
+        unitPrice: item.unitPrice || item.price || item.priceBeforeTax || 0,
+        discount: item.discount || 0,
         discountType: item.discountType || 0,
-        tax: parseFloat(item.tax || item.saleTax || 0),
-        total: parseFloat(item.total || 0)
+        tax: item.tax || item.saleTax || 0,
+        total: item.total || 0
       }));
       setItems(mappedItems);
 

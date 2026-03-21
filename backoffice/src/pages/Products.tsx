@@ -431,9 +431,9 @@ export default function Products() {
                   header={t('price')}
                   sortable
                   sortField="price"
-                  body={(product: IProduct) => formatAmount(
+                  body={(product: IProduct) => (
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#235ae4' }}>
-                      {(product.price || 0, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
+                      {formatAmount(product.price || 0, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                     </span>
                   )}
                 />
@@ -441,9 +441,9 @@ export default function Products() {
                   header={t('cost')}
                   sortable
                   sortField="cost"
-                  body={(product: IProduct) => formatAmount(
+                  body={(product: IProduct) => (
                     <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                      {(product.cost || 0, 2)} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
+                      {formatAmount(product.cost || 0, 2)} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
                     </span>
                   )}
                 />
