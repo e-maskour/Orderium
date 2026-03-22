@@ -75,6 +75,14 @@ export class OrdersService {
         customerId = partner?.id;
       }
 
+      // Validate that customer exists if customerId is provided
+      if (customerId) {
+        const customerExists = await manager.getRepository('partners').findOne({ where: { id: customerId } });
+        if (!customerExists) {
+          throw new BadRequestException(`Customer with ID ${customerId} does not exist`);
+        }
+      }
+
       // Generate provisional document number (PROV format for draft)
       let documentNumber: string;
       let receiptNumber: string | null = null;

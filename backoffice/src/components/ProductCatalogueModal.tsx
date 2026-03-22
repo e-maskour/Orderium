@@ -14,13 +14,18 @@ const PCAT_STYLES = `
     padding: 0.625rem 0.875rem;
     background: #f8fafc;
     border-bottom: 1.5px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    flex-shrink: 0;
+    z-index: 20;
   }
   .pcat-search-inner { position: relative; }
-  .pcat-search-inner .p-inputtext { padding-left: 2.25rem !important; width: 100%; border-radius: 0.5rem !important; height: 2.25rem !important; font-size: 0.875rem !important; }
+  .pcat-search-inner .p-inputtext { padding-left: 2.25rem !important; width: 100%; border-radius: 0.5rem !important; height: 2.5rem !important; font-size: 0.875rem !important; }
   .pcat-search-icon { position: absolute; left: 0.625rem; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 1; }
+  .pcat-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
   .pcat-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -31,8 +36,8 @@ const PCAT_STYLES = `
   .pcat-card {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.625rem;
     border: 1.5px solid #e2e8f0;
     border-radius: 0.625rem;
     background: #ffffff;
@@ -40,6 +45,14 @@ const PCAT_STYLES = `
     transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
     user-select: none;
     min-height: 3rem;
+    overflow: hidden;
+  }
+  @media (max-width: 479px) {
+    .pcat-card { gap: 0.375rem; padding: 0.5rem; }
+    .pcat-right { gap: 0.125rem; }
+    .pcat-price { font-size: 0.8125rem !important; }
+    .pcat-qty .p-inputnumber-input { width: 1.75rem !important; font-size: 0.75rem !important; }
+    .pcat-qty .p-button { width: 1.375rem !important; height: 1.5rem !important; }
   }
   .pcat-card:hover:not(.pcat-selected) {
     border-color: #94a3b8;
@@ -63,8 +76,6 @@ const PCAT_STYLES = `
     justify-content: center;
   }
   .pcat-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .pcat-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.0625rem; }
-  .pcat-name { font-size: 0.8125rem; font-weight: 700; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pcat-selected .pcat-name { color: #1d4ed8; }
   .pcat-meta { display: flex; align-items: center; gap: 0.375rem; min-width: 0; }
   .pcat-code {
@@ -97,6 +108,8 @@ const PCAT_STYLES = `
   .pcat-qty .p-inputnumber { height: 1.75rem; }
   .pcat-qty .p-inputnumber-input { width: 2rem !important; text-align: center !important; padding: 0.125rem 0.125rem !important; font-weight: 700 !important; font-size: 0.8125rem !important; height: 1.75rem !important; }
   .pcat-qty .p-button { width: 1.5rem !important; height: 1.75rem !important; padding: 0 !important; }
+  .pcat-name { font-size: 0.8125rem; font-weight: 700; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .pcat-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.0625rem; overflow: hidden; }
   .pcat-empty {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 2.5rem 1rem; gap: 0.625rem;
@@ -276,7 +289,7 @@ export function ProductCatalogueModal({
       dismissableMask
       style={{ width: '95vw', maxWidth: '58rem' }}
       breakpoints={{ '960px': '90vw', '640px': '95vw' }}
-      contentStyle={{ padding: 0, overflowY: 'auto', maxHeight: 'calc(80vh - 9rem)' }}
+      contentStyle={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'calc(80vh - 9rem)' }}
     >
       <style>{PCAT_STYLES}</style>
 
@@ -293,100 +306,102 @@ export function ProductCatalogueModal({
         </div>
       </div>
 
-      {/* ── Content ── */}
-      {catalogueLoading ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
-          <ProgressSpinner style={{ width: '2.5rem', height: '2.5rem' }} />
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="pcat-empty">
-          <div className="pcat-empty-icon">
-            <Package2 style={{ width: '1.5rem', height: '1.5rem', color: '#94a3b8' }} />
+      {/* ── Scrollable content ── */}
+      <div className="pcat-scroll-area">
+        {catalogueLoading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
+            <ProgressSpinner style={{ width: '2.5rem', height: '2.5rem' }} />
           </div>
-          <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#64748b' }}>Aucun produit trouvé</span>
-          {catalogueSearch && (
-            <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>Essayez un autre terme de recherche</span>
-          )}
-        </div>
-      ) : (
-        <div className="pcat-grid">
-          {filteredProducts.map((product) => {
-            const currentQuantity = getProductQuantity(product.id);
-            const isSelected = currentQuantity > 0;
-            const displayPrice = formatAmount(isVente ? product.price : (product.cost || product.price), 2);
+        ) : filteredProducts.length === 0 ? (
+          <div className="pcat-empty">
+            <div className="pcat-empty-icon">
+              <Package2 style={{ width: '1.5rem', height: '1.5rem', color: '#94a3b8' }} />
+            </div>
+            <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#64748b' }}>Aucun produit trouvé</span>
+            {catalogueSearch && (
+              <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>Essayez un autre terme de recherche</span>
+            )}
+          </div>
+        ) : (
+          <div className="pcat-grid">
+            {filteredProducts.map((product) => {
+              const currentQuantity = getProductQuantity(product.id);
+              const isSelected = currentQuantity > 0;
+              const displayPrice = formatAmount(isVente ? product.price : (product.cost || product.price), 2);
 
-            return (
-              <div
-                key={product.id}
-                className={`pcat-card${isSelected ? ' pcat-selected' : ''}`}
-                onClick={() => { if (!isSelected) updateProductQuantity(product, 1); }}
-              >
-                {/* Thumbnail */}
+              return (
                 <div
-                  className="pcat-thumb"
-                  style={{
-                    background: product.imageUrl
-                      ? undefined
-                      : product.isService
-                        ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
-                        : 'linear-gradient(135deg, #235ae4, #1a47b8)'
-                  }}
+                  key={product.id}
+                  className={`pcat-card${isSelected ? ' pcat-selected' : ''}`}
+                  onClick={() => { if (!isSelected) updateProductQuantity(product, 1); }}
                 >
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} />
-                  ) : product.isService ? (
-                    <Wrench style={{ width: '1rem', height: '1rem', color: '#fff' }} />
-                  ) : (
-                    <Package2 style={{ width: '1rem', height: '1rem', color: '#fff' }} />
-                  )}
-                </div>
-
-                {/* Body */}
-                <div className="pcat-body">
-                  <span className="pcat-name" title={product.name}>{product.name}</span>
-                  {product.code && (
-                    <div className="pcat-meta">
-                      <span className="pcat-code">#{product.code}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right: price + stock/qty + check */}
-                <div className="pcat-right">
-                  <span className="pcat-price">
-                    {displayPrice}<span className="pcat-price-dim">DH</span>
-                  </span>
-                  {!isSelected ? (
-                    getStockBadge(product.stock)
-                  ) : (
-                    <div className="pcat-qty" onClick={(e) => e.stopPropagation()}>
-                      <InputNumber
-                        value={currentQuantity}
-                        onValueChange={(e) => updateProductQuantity(product, Math.max(0, e.value || 0))}
-                        min={0}
-                        showButtons
-                        buttonLayout="horizontal"
-                        incrementButtonIcon="pi pi-plus"
-                        decrementButtonIcon="pi pi-minus"
-                        style={{ width: '6.5rem' }}
-                        inputStyle={{ textAlign: 'center', width: '2rem', fontWeight: 700 }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {isSelected && (
-                  <div className="pcat-check">
-                    <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                  {/* Thumbnail */}
+                  <div
+                    className="pcat-thumb"
+                    style={{
+                      background: product.imageUrl
+                        ? undefined
+                        : product.isService
+                          ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
+                          : 'linear-gradient(135deg, #235ae4, #1a47b8)'
+                    }}
+                  >
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} />
+                    ) : product.isService ? (
+                      <Wrench style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                    ) : (
+                      <Package2 style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+
+                  {/* Body */}
+                  <div className="pcat-body">
+                    <span className="pcat-name" title={product.name}>{product.name}</span>
+                    {product.code && (
+                      <div className="pcat-meta">
+                        <span className="pcat-code">#{product.code}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right: price + stock/qty + check */}
+                  <div className="pcat-right">
+                    <span className="pcat-price">
+                      {displayPrice}<span className="pcat-price-dim">DH</span>
+                    </span>
+                    {!isSelected ? (
+                      getStockBadge(product.stock)
+                    ) : (
+                      <div className="pcat-qty" onClick={(e) => e.stopPropagation()}>
+                        <InputNumber
+                          value={currentQuantity}
+                          onValueChange={(e) => updateProductQuantity(product, Math.max(0, e.value || 0))}
+                          min={0}
+                          showButtons
+                          buttonLayout="horizontal"
+                          incrementButtonIcon="pi pi-plus"
+                          decrementButtonIcon="pi pi-minus"
+                          style={{ width: '6.5rem' }}
+                          inputStyle={{ textAlign: 'center', width: '2rem', fontWeight: 700 }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {isSelected && (
+                    <div className="pcat-check">
+                      <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </Dialog>
   );
 }

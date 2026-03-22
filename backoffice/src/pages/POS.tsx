@@ -79,11 +79,22 @@ export default function POS() {
   });
 
   useEffect(() => {
-    if (!hasSetDefaultCustomer.current && partnersData && partnersData.length > 0) {
-      const comptoirClient = partnersData.find((p: Customer) => p.name === 'Client Comptoir');
-      if (comptoirClient) {
-        setSelectedCustomer(comptoirClient);
-        hasSetDefaultCustomer.current = true;
+    if (partnersData && partnersData.length > 0) {
+      // Validate cached customer still exists in the database
+      if (selectedCustomer) {
+        const stillExists = partnersData.find((p: Customer) => p.id === selectedCustomer.id);
+        if (!stillExists) {
+          setSelectedCustomer(null);
+          localStorage.removeItem('pos_customer');
+        }
+      }
+
+      if (!hasSetDefaultCustomer.current) {
+        const comptoirClient = partnersData.find((p: Customer) => p.name === 'Client Comptoir');
+        if (comptoirClient) {
+          setSelectedCustomer(comptoirClient);
+          hasSetDefaultCustomer.current = true;
+        }
       }
     }
   }, [partnersData]);
