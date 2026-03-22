@@ -11,19 +11,81 @@ export class AuthService {
       const response = await http<{
         data: {
           exists: boolean;
+          id?: number;
           phoneNumber?: string;
+          name?: string;
           customerId?: number;
           customerName?: string;
           status?: string;
+          address?: string;
+          deliveryAddress?: string;
+          latitude?: number;
+          longitude?: number;
+          googleMapsUrl?: string;
+          wazeUrl?: string;
+          email?: string;
         };
-      }>(`/api/portal/user/${phoneNumber}`);
+      }>(`/api/portal/user/${encodeURIComponent(phoneNumber)}`);
 
       const d = response.data;
       return {
         exists: d.exists,
+        id: d.id ?? undefined,
+        phoneNumber: d.phoneNumber ?? undefined,
+        name: d.name ?? d.customerName ?? undefined,
         customerName: d.customerName ?? undefined,
         customerId: d.customerId ?? undefined,
         status: d.status ?? undefined,
+        address: d.address ?? undefined,
+        deliveryAddress: d.deliveryAddress ?? undefined,
+        latitude: d.latitude ?? undefined,
+        longitude: d.longitude ?? undefined,
+        googleMapsUrl: d.googleMapsUrl ?? undefined,
+        wazeUrl: d.wazeUrl ?? undefined,
+        email: d.email ?? undefined,
+      };
+    } catch {
+      return { exists: false };
+    }
+  }
+
+  async getPortalUserById(id: number): Promise<PhoneCheckResponse> {
+    try {
+      const response = await http<{
+        data: {
+          exists: boolean;
+          id?: number;
+          phoneNumber?: string;
+          name?: string;
+          customerId?: number;
+          customerName?: string;
+          status?: string;
+          address?: string;
+          deliveryAddress?: string;
+          latitude?: number;
+          longitude?: number;
+          googleMapsUrl?: string;
+          wazeUrl?: string;
+          email?: string;
+        };
+      }>(`/api/portal/user/id/${id}`);
+
+      const d = response.data;
+      return {
+        exists: d.exists,
+        id: d.id ?? undefined,
+        phoneNumber: d.phoneNumber ?? undefined,
+        name: d.name ?? d.customerName ?? undefined,
+        customerName: d.customerName ?? undefined,
+        customerId: d.customerId ?? undefined,
+        status: d.status ?? undefined,
+        address: d.address ?? undefined,
+        deliveryAddress: d.deliveryAddress ?? undefined,
+        latitude: d.latitude ?? undefined,
+        longitude: d.longitude ?? undefined,
+        googleMapsUrl: d.googleMapsUrl ?? undefined,
+        wazeUrl: d.wazeUrl ?? undefined,
+        email: d.email ?? undefined,
       };
     } catch {
       return { exists: false };

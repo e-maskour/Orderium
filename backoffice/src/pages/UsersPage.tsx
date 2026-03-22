@@ -12,7 +12,7 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
-import { Users as UsersIcon, Shield, Plus, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Users as UsersIcon, Shield, Plus, Pencil, Trash2, UserCheck, UserX, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { usersService, type User, type CreateUserPayload, type UpdateUserPayload, type UserType } from '../modules/users';
 import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
@@ -102,6 +102,24 @@ export default function UsersPage() {
         onError: (e: any) => toastError(e.message),
     });
 
+    const approveUserMutation = useMutation({
+        mutationFn: (id: number) => usersService.approve(id),
+        onSuccess: () => {
+            toastSuccess(t('userApproved' as any) || 'Utilisateur approuvé');
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+        onError: (e: any) => toastError(e.message),
+    });
+
+    const rejectUserMutation = useMutation({
+        mutationFn: (id: number) => usersService.reject(id),
+        onSuccess: () => {
+            toastSuccess(t('userRejected' as any) || 'Utilisateur rejeté');
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+        onError: (e: any) => toastError(e.message),
+    });
+
     const openCreate = () => {
         setEditingUser(null);
         setFormName('');
@@ -182,6 +200,69 @@ export default function UsersPage() {
         </div>
     );
 
+    const portalStatusColors: Record<string, { bg: string; color: string; border: string; icon: typeof Clock }> = {
+        pending: { bg: '#fef9c3', color: '#a16207', border: '#fde68a', icon: Clock },
+        approved: { bg: '#dcfce7', color: '#15803d', border: '#bbf7d0', icon: CheckCircle },
+        rejected: { bg: '#fee2e2', color: '#b91c1c', border: '#fecaca', icon: XCircle },
+    };
+
+    const portalStatusOptions = [
+        { label: t('pending' as any) || 'En attente', value: 'pending' },
+        { label: t('approved' as any) || 'Approuvé', value: 'approved' },
+        { label: t('rejected' as any) || 'Rejeté', value: 'rejected' },
+    ];
+
+    const handlePortalStatusChange = (user: User, newStatus: string) => {
+        if (newStatus === user.status) return;
+        if (newStatus === 'approved') {
+            approveUserMutation.mutate(user.id);
+        } else if (newStatus === 'rejected') {
+            rejectUserMutation.mutate(user.id);
+        }
+    };
+
+    const portalStatusTemplate = (user: User) => {
+        const status = user.status || 'pending';
+        const style = portalStatusColors[status] || portalStatusColors.pending;
+        const Icon = style.icon;
+        return (
+            <Dropdown
+                value={status}
+                options={portalStatusOptions}
+                onChange={(e) => handlePortalStatusChange(user, e.value)}
+                style={{
+                    width: '10rem',
+                    borderRadius: '0.5rem',
+                    border: `1.5px solid ${style.border}`,
+                    background: style.bg,
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                }}
+                valueTemplate={(option) => {
+                    if (!option) return null;
+                    const s = portalStatusColors[option.value || option] || portalStatusColors.pending;
+                    const I = s.icon;
+                    return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: s.color }}>
+                            <I style={{ width: '0.875rem', height: '0.875rem' }} />
+                            <span>{option.label || option}</span>
+                        </div>
+                    );
+                }}
+                itemTemplate={(option) => {
+                    const s = portalStatusColors[option.value] || portalStatusColors.pending;
+                    const I = s.icon;
+                    return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: s.color }}>
+                            <I style={{ width: '0.875rem', height: '0.875rem' }} />
+                            <span>{option.label}</span>
+                        </div>
+                    );
+                }}
+            />
+        );
+    };
+
     const roleTemplate = (user: User) => {
         if (!user.role) return <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>—</span>;
         return (
@@ -249,11 +330,28 @@ export default function UsersPage() {
                         topLeft: (u: User) => u.name || u.email || '—',
                         topRight: (u: User) => u.phoneNumber || '',
                         bottomLeft: (u: User) => u.role?.name || '—',
-                        bottomRight: (u: User) => (
-                            <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(u.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#fef2f2', color: '#dc2626' }) }}>
-                                {u.isActive ? 'Actif' : 'Inactif'}
-                            </span>
-                        ),
+                        bottomRight: (u: User) => {
+                            if (currentUserType === 'client') {
+                                const status = u.status || 'pending';
+                                const colors: Record<string, { bg: string; color: string }> = {
+                                    pending: { bg: '#fef9c3', color: '#a16207' },
+                                    approved: { bg: '#d1fae5', color: '#047857' },
+                                    rejected: { bg: '#fef2f2', color: '#dc2626' },
+                                };
+                                const s = colors[status] || colors.pending;
+                                const labels: Record<string, string> = { pending: t('pending' as any) || 'En attente', approved: t('approved' as any) || 'Approuvé', rejected: t('rejected' as any) || 'Rejeté' };
+                                return (
+                                    <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, background: s.bg, color: s.color }}>
+                                        {labels[status]}
+                                    </span>
+                                );
+                            }
+                            return (
+                                <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(u.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#fef2f2', color: '#dc2626' }) }}>
+                                    {u.isActive ? 'Actif' : 'Inactif'}
+                                </span>
+                            );
+                        },
                     }}
                 />
             </div>
@@ -309,7 +407,7 @@ export default function UsersPage() {
                         )}
                     />
                     <Column header={t('role' as any)} body={roleTemplate} style={{ minWidth: '8rem' }} />
-                    <Column header={t('status' as any)} body={statusTemplate} style={{ minWidth: '7rem' }} />
+                    <Column header={t('status' as any)} body={currentUserType === 'client' ? portalStatusTemplate : statusTemplate} style={{ minWidth: currentUserType === 'client' ? '11rem' : '7rem' }} />
                 </DataTable>
             </div>
         </>

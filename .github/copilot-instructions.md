@@ -13,7 +13,7 @@
 
 **Package manager:** `pnpm`
 **Database:** PostgreSQL (multi-tenant via `TenantConnectionService`)
-**Auth:** JWT — all API routes use `@PortalRoute()` decorator unless explicitly public
+**Auth:** JWT is enforced globally. `@PortalRoute()` allows portal-scoped tokens (customers, delivery persons) to access a route — without it only admin/backoffice tokens are accepted (portal tokens get 403). `@Public()` bypasses JWT entirely.
 
 ---
 
@@ -48,7 +48,9 @@ import { FEAT } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Feature')
-@PortalRoute()                            // REQUIRED on every controller
+// @PortalRoute()  ← Add ONLY if customer/delivery portal needs this route.
+//                   Omit for backoffice/admin-only controllers.
+//                   @Public() if the endpoint needs no auth at all.
 @Controller('feature')
 export class FeatureController {
   private readonly logger = new Logger(FeatureController.name);
@@ -352,7 +354,7 @@ FEATURES: {
 - **Hard deletes are fine** — `repository.remove()` and `repository.delete()` are both acceptable
 - **Decimal columns** in entities always use `numericTransformer`
 - **No direct `Repository` injection** in services — use `TenantConnectionService.getRepository()`
-- **`@PortalRoute()`** required on every NestJS controller
+- **`@PortalRoute()`** — add ONLY to controllers that customer/delivery portal apps must call (e.g. `portal`, `products`, `partners`, `delivery`, `orders`, `notifications`, `pdf`). Do NOT add to backoffice/admin-only controllers — doing so would allow customer tokens to hit admin endpoints (security bug).
 - **`PartialType`** from `@nestjs/swagger` (not `@nestjs/mapped-types`) for update DTOs
 - **`pnpm`** for all package installs — never `npm install` or `yarn add`
 - **Migrations** over `synchronize: true` — never enable synchronize in production

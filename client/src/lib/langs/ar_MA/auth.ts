@@ -14,7 +14,7 @@ export default {
   // Messages
   appAccess: '!مرحباً بك في Orderium',
   enterPhoneToStart: 'أدخل رقمك لاستعراض كتالوجك والطلب بسهولة.',
-  createPasswordForNewAccount: 'أنشئ كلمة مرور لحسابك الجديد',
+  createPasswordForNewAccount: 'أدخل اسمك وأنشئ كلمة مرور',
   enterPasswordToContinue: 'أدخل كلمة المرور للمتابعة',
   yourInfoIsSecure: 'معلوماتك آمنة ولن تتم مشاركتها.',
 
@@ -25,6 +25,9 @@ export default {
   passwordMinLength: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
   passwordMinLengthHint: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
   enterValidMoroccanPhone: 'أدخل رقم هاتف مغربي صحيح (مثال: 0612345678)',
+  fullName: 'الاسم الكامل',
+  fullNamePlaceholder: 'مثال: أحمد بنعلي',
+  nameRequired: 'الاسم مطلوب',
 
   // Success & Error Messages
   loginSuccess: 'تم تسجيل الدخول بنجاح',

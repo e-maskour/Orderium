@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -18,6 +19,7 @@ import type { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrdersDto } from './dto/filter-orders.dto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { ApiRes } from '../../common/api-response';
 import { ORD } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
@@ -46,8 +48,7 @@ export class OrdersController {
   async filterOrders(
     @Body() filterDto: FilterOrdersDto,
     @Query('fromPortal') fromPortal?: string,
-    @Query('page') page?: string,
-    @Query('perPage') perPage?: string,
+    @Query() pagination?: PaginationDto,
     @Query('direction') direction?: string,
   ) {
     const fromPortalBool =
@@ -64,11 +65,10 @@ export class OrdersController {
     const endDateObj = filterDto.endDate
       ? new Date(filterDto.endDate)
       : undefined;
-    const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const pageNum = pagination?.page ?? 1;
     // Allowed page sizes capped at 100 for standard queries
     const allowedPageSizes = [10, 50, 100];
-    const pageSizeNum = Math.max(1, parseInt(perPage ?? '50', 10) || 50);
-    const pageSize = allowedPageSizes.includes(pageSizeNum) ? pageSizeNum : 50;
+    const pageSize = allowedPageSizes.includes(pagination?.perPage ?? 50) ? (pagination?.perPage ?? 50) : 50;
 
     const result = await this.ordersService.filterOrders(
       startDateObj,
@@ -182,6 +182,7 @@ export class OrdersController {
   @ApiQuery({ name: 'customerId', required: true, type: Number })
   @ApiResponse({ status: 200, description: 'Order retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @ApiResponse({ status: 400, description: 'Customer ID is required' })
   async findByNumber(
     @Param('orderNumber') orderNumber: string,
     @Query('customerId') customerId?: string,
@@ -259,6 +260,7 @@ export class OrdersController {
     status: 200,
     description: 'Order analytics retrieved successfully',
   })
+  @ApiResponse({ status: 400, description: 'Invalid direction parameter' })
   async getAnalytics(
     @Param('direction') direction: 'vente' | 'achat',
     @Query('year') year?: string,
@@ -277,7 +279,7 @@ export class OrdersController {
     return ApiRes(ORD.DETAIL, order);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update an order' })
   @ApiResponse({ status: 200, description: 'Order updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update a validated order' })

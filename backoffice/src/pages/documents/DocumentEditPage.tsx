@@ -5,7 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useDocumentCalculation } from '../../modules/documents/hooks';
 import { Save, X, CheckCircle, XCircle, ChevronDown, FileText, Truck, ArrowLeft, DollarSign, Clock, AlertCircle, Share2, PenTool, Ban, Receipt, History } from 'lucide-react';
 import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
-import { Partner, IPartner, partnersService } from '../../modules/partners';
+import { Partner, IPartner } from '../../modules/partners';
 import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
 import { ShareQuoteDialog } from '../../components/documents/ShareQuoteDialog';
 import { invoicesService } from '../../modules/invoices/invoices.service';
@@ -326,92 +326,42 @@ export default function DocumentEditPage({
         setClientNotes((doc as any).clientNotes || '');
       }
 
-      // Set partner - fetch full partner details from partnersService
+      // Set partner from document data
       const customerId = doc.customerId || doc.customer?.id;
       const customerName = doc.customerName || doc.customer?.name;
       const customerPhone = doc.customerPhone || doc.customer?.phone || doc.customer?.phoneNumber;
       const customerAddress = doc.customerAddress || doc.customer?.address;
 
       if (isVente && customerId) {
-        try {
-          const partnerData = await partnersService.getById(customerId);
-          if (partnerData) {
-            setPartner(partnerData);
-          } else {
-            // Fallback to document data if partner not found
-            setPartner({
-              id: customerId,
-              name: customerName || '',
-              phoneNumber: customerPhone || '',
-              ice: doc.customerIce || null,
-              address: customerAddress || null,
-              deliveryAddress: '',
-              isCompany: false,
-              isEnabled: true,
-              isCustomer: true,
-              isSupplier: false,
-              dateCreated: '',
-              dateUpdated: ''
-            });
-          }
-        } catch (error) {
-          console.error('Error loading partner:', error);
-          // Fallback to document data
-          setPartner({
-            id: customerId,
-            name: customerName || '',
-            phoneNumber: customerPhone || '',
-            ice: doc.customerIce || null,
-            address: customerAddress || null,
-            deliveryAddress: '',
-            isCompany: false,
-            isEnabled: true,
-            isCustomer: true,
-            isSupplier: false,
-            dateCreated: '',
-            dateUpdated: ''
-          });
-        }
+        setPartner({
+          id: customerId,
+          name: customerName || '',
+          phoneNumber: customerPhone || '',
+          ice: doc.customerIce || null,
+          address: customerAddress || null,
+          deliveryAddress: '',
+          isCompany: false,
+          isEnabled: true,
+          isCustomer: true,
+          isSupplier: false,
+          dateCreated: '',
+          dateUpdated: ''
+        });
       } else if (!isVente && doc.supplierId) {
-        try {
-          const partnerData = await partnersService.getById(doc.supplierId);
-          if (partnerData) {
-            setPartner(partnerData);
-          } else {
-            // Fallback to document data if partner not found
-            setPartner({
-              id: doc.supplierId,
-              name: doc.supplierName || '',
-              phoneNumber: doc.supplierPhone || '',
-              ice: doc.supplierIce || null,
-              address: doc.supplierAddress || null,
-              deliveryAddress: '',
-              isCompany: false,
-              isEnabled: true,
-              isCustomer: false,
-              isSupplier: true,
-              dateCreated: '',
-              dateUpdated: ''
-            });
-          }
-        } catch (error) {
-          console.error('Error loading partner:', error);
-          // Fallback to document data
-          setPartner({
-            id: doc.supplierId,
-            name: doc.supplierName || '',
-            phoneNumber: doc.supplierPhone || '',
-            ice: doc.supplierIce || null,
-            address: doc.supplierAddress || null,
-            deliveryAddress: '',
-            isCompany: false,
-            isEnabled: true,
-            isCustomer: false,
-            isSupplier: true,
-            dateCreated: '',
-            dateUpdated: ''
-          });
-        }
+        setPartner({
+          id: doc.supplierId,
+          name: doc.supplierName || '',
+          phoneNumber: doc.supplierPhone || '',
+          ice: doc.supplierIce || null,
+          address: doc.supplierAddress || null,
+          deliveryAddress: '',
+          isCompany: false,
+          isEnabled: true,
+          isCustomer: false,
+          isSupplier: true,
+          dateCreated: '',
+          dateUpdated: ''
+        });
       }
 
       // Set items

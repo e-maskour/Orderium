@@ -15,38 +15,7 @@ import { ConfigurationsService } from '../configurations/configurations.service'
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { PDFService } from '../pdf/pdf.service';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
-
-interface CreateQuoteItemDTO {
-  productId?: number;
-  description: string;
-  quantity: number;
-  unitPrice?: number | null; // Optional for demande de prix
-  discount: number;
-  discountType: number;
-  tax?: number;
-  total?: number | null; // Optional for demande de prix
-}
-
-interface CreateQuoteDTO {
-  customerId?: number;
-  customerName?: string;
-  customerPhone?: string;
-  customerAddress?: string;
-  supplierId?: number; // For demande de prix (achat)
-  supplierName?: string;
-  supplierPhone?: string;
-  supplierAddress?: string;
-  date: string;
-  dueDate?: string;
-  expirationDate?: string;
-  items: CreateQuoteItemDTO[];
-  subtotal?: number;
-  tax: number;
-  discount: number;
-  discountType: number;
-  total?: number;
-  notes?: string;
-}
+import { CreateQuoteDto, QuoteItemDto } from './dto/quote.dto';
 
 @Injectable()
 export class QuotesService {
@@ -470,7 +439,7 @@ export class QuotesService {
     return quote;
   }
 
-  async create(createQuoteDto: CreateQuoteDTO): Promise<Quote> {
+  async create(createQuoteDto: CreateQuoteDto): Promise<Quote> {
     // Generate simple provisional quote number: PROV1, PROV2, PROV3, etc.
     const lastProvisional = await this.quoteRepository
       .createQueryBuilder('quote')
@@ -496,7 +465,7 @@ export class QuotesService {
   }
 
   private async createQuoteWithNumber(
-    createQuoteDto: CreateQuoteDTO,
+    createQuoteDto: CreateQuoteDto,
     quoteNumber: string,
   ): Promise<Quote> {
     // Use values from frontend directly (no recalculation)
@@ -590,7 +559,7 @@ export class QuotesService {
 
   async update(
     id: number,
-    updateQuoteDto: Partial<CreateQuoteDTO>,
+    updateQuoteDto: Partial<CreateQuoteDto>,
   ): Promise<Quote> {
     const quote = await this.findOne(id);
     if (!quote) {

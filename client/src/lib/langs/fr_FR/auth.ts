@@ -14,7 +14,7 @@ export default {
   // Messages
   appAccess: 'Bienvenue chez Orderium !',
   enterPhoneToStart: 'Entrez votre numéro pour explorer votre catalogue.',
-  createPasswordForNewAccount: 'Créez un mot de passe pour votre nouveau compte',
+  createPasswordForNewAccount: 'Remplissez votre nom et créez un mot de passe',
   enterPasswordToContinue: 'Entrez votre mot de passe pour continuer',
   yourInfoIsSecure: "Votre informations est sécurisée et ne sera pas partagée.",
 
@@ -25,6 +25,9 @@ export default {
   passwordMinLength: 'Le mot de passe doit contenir au moins 6 caractères',
   passwordMinLengthHint: 'Le mot de passe doit contenir au moins 6 caractères',
   enterValidMoroccanPhone: 'Entrez un numéro marocain valide (ex: 0612345678)',
+  fullName: 'Nom complet',
+  fullNamePlaceholder: 'Ex: Ahmed Benali',
+  nameRequired: 'Le nom est obligatoire',
 
   // Success & Error Messages
   loginSuccess: 'Connexion réussie',

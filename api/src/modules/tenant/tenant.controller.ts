@@ -12,6 +12,7 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
@@ -19,82 +20,62 @@ import { ListTenantsDto } from './dto/list-tenants.dto';
 import { SuperAdminGuard } from './tenant.guard';
 import { Public } from '../auth/decorators/public.decorator';
 
-/**
- * Super-admin API for managing tenants.
- *
- * ALL endpoints require the `X-Super-Admin-Key` header (see SuperAdminGuard).
- * The global JwtAuthGuard is bypassed via @Public() because these endpoints
- * use their own authentication mechanism.
- *
- * These routes are EXCLUDED from TenantMiddleware (see AppModule configuration).
- */
+@ApiTags('Admin - Tenants')
 @Controller('admin/tenants')
 @UseGuards(SuperAdminGuard)
 @Public()
 export class TenantController {
   constructor(private readonly tenantService: TenantService) { }
 
-  /**
-   * GET /api/admin/tenants
-   * List all tenants with optional search, status/plan filters, sort and pagination.
-   */
   @Get()
+  @ApiOperation({ summary: 'List all tenants with optional filters and pagination' })
+  @ApiResponse({ status: 200, description: 'Tenants retrieved successfully' })
   findAll(@Query() dto: ListTenantsDto) {
     return this.tenantService.findAll(dto);
   }
 
-  /**
-   * GET /api/admin/tenants/:id
-   * Get a single tenant by primary key.
-   */
   @Get(':id')
+  @ApiOperation({ summary: 'Get a single tenant by ID' })
+  @ApiResponse({ status: 200, description: 'Tenant retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Tenant not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.tenantService.findOne(id);
   }
 
-  /**
-   * GET /api/admin/tenants/:id/activity
-   * Retrieve the activity log for a tenant.
-   */
   @Get(':id/activity')
+  @ApiOperation({ summary: 'Get activity log for a tenant' })
+  @ApiResponse({ status: 200, description: 'Activity log retrieved successfully' })
   getActivity(@Param('id', ParseIntPipe) id: number) {
     return this.tenantService.getActivity(id);
   }
 
-  /**
-   * GET /api/admin/tenants/:id/payments
-   * Retrieve payments for a tenant.
-   */
   @Get(':id/payments')
+  @ApiOperation({ summary: 'Get payments for a tenant' })
+  @ApiResponse({ status: 200, description: 'Payments retrieved successfully' })
   getPayments(@Param('id', ParseIntPipe) id: number) {
     return this.tenantService.getPayments(id);
   }
 
-  /**
-   * GET /api/admin/tenants/:id/stats
-   * Retrieve DB size, user count, order count, and MinIO storage usage.
-   */
   @Get(':id/stats')
+  @ApiOperation({ summary: 'Get DB size, user count, order count and storage usage' })
+  @ApiResponse({ status: 200, description: 'Stats retrieved successfully' })
   getStats(@Param('id', ParseIntPipe) id: number) {
     return this.tenantService.getStats(id);
   }
 
-  /**
-   * POST /api/admin/tenants
-   * Create a new tenant: provisions Postgres DB, MinIO bucket, Redis keys.
-   */
   @Post()
+  @ApiOperation({ summary: 'Create a new tenant (provisions DB, MinIO bucket, Redis keys)' })
+  @ApiResponse({ status: 201, description: 'Tenant created successfully' })
+  @ApiResponse({ status: 409, description: 'Tenant already exists' })
   create(@Body() dto: CreateTenantDto) {
     return this.tenantService.create(dto);
   }
 
-  /**
-   * POST /api/admin/tenants/:id/reset
-   * DANGEROUS — drops and re-provisions the tenant database.
-   * Body must include { confirmation: "RESET" }.
-   */
   @Post(':id/reset')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'DANGEROUS — drops and re-provisions the tenant database' })
+  @ApiResponse({ status: 200, description: 'Tenant data reset successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid confirmation string' })
   resetData(
     @Param('id', ParseIntPipe) id: number,
     @Body('confirmation') confirmation: string,
@@ -102,42 +83,34 @@ export class TenantController {
     return this.tenantService.resetData(id, confirmation);
   }
 
-  /**
-   * PATCH /api/admin/tenants/:id
-   * Update tenant profile fields (name, logo, colors, contact info, plan, etc.).
-   */
   @Patch(':id')
+  @ApiOperation({ summary: 'Update tenant profile fields' })
+  @ApiResponse({ status: 200, description: 'Tenant updated successfully' })
+  @ApiResponse({ status: 404, description: 'Tenant not found' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTenantDto) {
     return this.tenantService.update(id, dto);
   }
 
-  /**
-   * PATCH /api/admin/tenants/:id/activate
-   * Re-activate a previously disabled tenant.
-   */
   @Patch(':id/activate')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Re-activate a previously disabled tenant' })
+  @ApiResponse({ status: 200, description: 'Tenant activated successfully' })
   activate(@Param('id', ParseIntPipe) id: number) {
     return this.tenantService.activate(id);
   }
 
-  /**
-   * PATCH /api/admin/tenants/:id/disable
-   * Disable a tenant (isActive=false, sets disabledAt, updates Redis).
-   */
   @Patch(':id/disable')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Disable a tenant' })
+  @ApiResponse({ status: 200, description: 'Tenant disabled successfully' })
   disable(@Param('id', ParseIntPipe) id: number) {
     return this.tenantService.disable(id);
   }
 
-  /**
-   * DELETE /api/admin/tenants/:id
-   * Soft-delete a tenant (sets deletedAt, evicts from cache, clears Redis keys).
-   * The database and MinIO bucket are NOT deleted — data is retained.
-   */
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Soft-delete a tenant (data retained, access revoked)' })
+  @ApiResponse({ status: 200, description: 'Tenant deleted successfully' })
   softDelete(@Param('id', ParseIntPipe) id: number) {
     return this.tenantService.softDelete(id);
   }

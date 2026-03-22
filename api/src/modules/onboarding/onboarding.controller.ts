@@ -9,7 +9,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { OnboardingService } from './onboarding.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -32,6 +32,7 @@ export class OnboardingController {
     @Get('status')
     @Throttle({ short: { limit: 60, ttl: 60000 } })
     @ApiOperation({ summary: 'Get onboarding status (public)' })
+    @ApiResponse({ status: 200, description: 'Onboarding status' })
     async getStatus() {
         const status = await this.onboardingService.getStatus();
         return ApiRes(ONB.STATUS, status);
@@ -46,6 +47,8 @@ export class OnboardingController {
     @Get('public-status')
     @Throttle({ short: { limit: 60, ttl: 60000 } })
     @ApiOperation({ summary: 'Get tenant public status (always accessible)' })
+    @ApiResponse({ status: 200, description: 'Tenant public status' })
+    @ApiResponse({ status: 401, description: 'Missing tenant identifier' })
     async getTenantPublicStatus(@Req() req: Request) {
         const slug = this.extractSlug(req);
         if (!slug) {
@@ -77,6 +80,8 @@ export class OnboardingController {
     @Throttle({ short: { limit: 5, ttl: 60000 } })
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({ summary: 'Create company profile (onboarding step 1)' })
+    @ApiResponse({ status: 201, description: 'Company profile created' })
+    @ApiResponse({ status: 409, description: 'Company profile already exists' })
     async createCompany(@Body() dto: CreateCompanyDto) {
         const company = await this.onboardingService.createCompany(dto);
         return ApiRes(ONB.COMPANY_CREATED, company);
@@ -92,6 +97,8 @@ export class OnboardingController {
     @Throttle({ short: { limit: 5, ttl: 60000 } })
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({ summary: 'Create first admin account (onboarding step 2)' })
+    @ApiResponse({ status: 201, description: 'Admin account created with JWT token' })
+    @ApiResponse({ status: 409, description: 'Admin user already exists' })
     async createAdmin(@Body() dto: CreateAdminDto) {
         const result = await this.onboardingService.createAdmin(dto);
         return ApiRes(ONB.ADMIN_CREATED, result);
@@ -106,6 +113,7 @@ export class OnboardingController {
     @Throttle({ short: { limit: 5, ttl: 60000 } })
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Mark onboarding complete (public)' })
+    @ApiResponse({ status: 200, description: 'Onboarding marked as complete' })
     async complete() {
         const result = await this.onboardingService.completeOnboarding();
         return ApiRes(ONB.COMPLETED, result);

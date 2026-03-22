@@ -3,13 +3,16 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Query,
   Body,
   ParseIntPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Res, Header } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
@@ -25,6 +28,7 @@ export class InvoicesController {
 
   @Post('list')
   @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
+  @ApiResponse({ status: 200, description: 'Invoices retrieved' })
   async findAll(
     @Body() filterDto: FilterInvoicesDto,
     @Query('page') page?: string,
@@ -69,6 +73,7 @@ export class InvoicesController {
   @ApiOperation({
     summary: 'Get all invoices (legacy - use POST /list instead)',
   })
+  @ApiResponse({ status: 200, description: 'Invoices retrieved' })
   async findAllLegacy(
     @Query('limit') limit?: string,
     @Query('direction') direction?: string,
@@ -105,6 +110,7 @@ export class InvoicesController {
 
   @Get('analytics/:direction')
   @ApiOperation({ summary: 'Get invoice analytics with chart data and KPIs' })
+  @ApiResponse({ status: 200, description: 'Analytics retrieved' })
   async getAnalytics(
     @Param('direction') direction: 'vente' | 'achat',
     @Query('year') year?: string,
@@ -119,6 +125,8 @@ export class InvoicesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get invoice by ID' })
+  @ApiResponse({ status: 200, description: 'Invoice retrieved' })
+  @ApiResponse({ status: 404, description: 'Invoice not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.findOne(id);
     return ApiRes(INV.DETAIL, invoice);
@@ -126,26 +134,33 @@ export class InvoicesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new invoice' })
+  @ApiResponse({ status: 201, description: 'Invoice created' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
   async create(@Body() createInvoiceDto: CreateInvoiceDto) {
-    const invoice = await this.invoicesService.create(createInvoiceDto as any);
+    const invoice = await this.invoicesService.create(createInvoiceDto);
     return ApiRes(INV.CREATED, invoice);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update an invoice' })
+  @ApiResponse({ status: 200, description: 'Invoice updated' })
+  @ApiResponse({ status: 404, description: 'Invoice not found' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateInvoiceDto: UpdateInvoiceDto,
   ) {
     const invoice = await this.invoicesService.update(
       id,
-      updateInvoiceDto as any,
+      updateInvoiceDto,
     );
     return ApiRes(INV.UPDATED, invoice);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an invoice' })
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({ status: 200, description: 'Invoice deleted' })
+  @ApiResponse({ status: 404, description: 'Invoice not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.invoicesService.remove(id);
     return ApiRes(INV.DELETED, null);
@@ -155,6 +170,7 @@ export class InvoicesController {
   @ApiOperation({
     summary: 'Validate an invoice (change from draft to unpaid)',
   })
+  @ApiResponse({ status: 200, description: 'Invoice validated' })
   async validate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.validate(id);
     return ApiRes(INV.VALIDATED, invoice);
@@ -162,6 +178,7 @@ export class InvoicesController {
 
   @Put(':id/devalidate')
   @ApiOperation({ summary: 'Devalidate an invoice (change back to draft)' })
+  @ApiResponse({ status: 200, description: 'Invoice devalidated' })
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.devalidate(id);
     return ApiRes(INV.DEVALIDATED, invoice);
@@ -173,6 +190,7 @@ export class InvoicesController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export invoices to XLSX file' })
+  @ApiResponse({ status: 200, description: 'Export successful' })
   async exportToXlsx(
     @Res() res: Response,
     @Query('supplierId') supplierId?: string,

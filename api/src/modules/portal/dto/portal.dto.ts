@@ -38,10 +38,9 @@ export class RegisterDto {
   @MinLength(4)
   password: string;
 
-  @ApiProperty({ required: false, description: 'Full name' })
-  @IsOptional()
+  @ApiProperty({ description: 'Full name (used to create customer record)' })
   @IsString()
-  fullName?: string;
+  fullName: string;
 
   @ApiProperty({ required: false, description: 'Customer ID to link' })
   @IsOptional()

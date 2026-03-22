@@ -17,38 +17,7 @@ import { PDFService } from '../pdf/pdf.service';
 import { StockService } from '../inventory/stock.service';
 import { MovementType } from '../inventory/entities/stock-movement.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
-
-interface CreateInvoiceItemDTO {
-  id?: number;
-  productId?: number;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  discount: number;
-  discountType: number;
-  tax?: number;
-  total?: number;
-}
-
-interface CreateInvoiceDTO {
-  customerId?: number;
-  customerName?: string;
-  customerPhone?: string;
-  customerAddress?: string;
-  supplierId?: number;
-  supplierName?: string;
-  supplierPhone?: string;
-  supplierAddress?: string;
-  date: string;
-  dueDate?: string;
-  items: CreateInvoiceItemDTO[];
-  subtotal: number;
-  tax: number;
-  discount: number;
-  discountType: number;
-  total: number;
-  notes?: string;
-}
+import { CreateInvoiceDto, InvoiceItemDto } from './dto/invoice.dto';
 
 @Injectable()
 export class InvoicesService {
@@ -470,7 +439,7 @@ export class InvoicesService {
     return invoice;
   }
 
-  async create(createInvoiceDto: CreateInvoiceDTO): Promise<Invoice> {
+  async create(createInvoiceDto: CreateInvoiceDto): Promise<Invoice> {
     // Generate simple provisional invoice number: PROV1, PROV2, PROV3, etc.
     const lastProvisional = await this.invoiceRepository
       .createQueryBuilder('invoice')
@@ -496,11 +465,11 @@ export class InvoicesService {
   }
 
   private async createInvoiceWithNumber(
-    createInvoiceDto: CreateInvoiceDTO,
+    createInvoiceDto: CreateInvoiceDto,
     invoiceNumber: string,
   ): Promise<Invoice> {
     // Use values from frontend directly (no recalculation)
-    const items = createInvoiceDto.items.map((item) => {
+    const items = (createInvoiceDto.items ?? []).map((item) => {
       return {
         ...item,
         total: item.total || 0,
@@ -523,7 +492,7 @@ export class InvoicesService {
       supplierName: createInvoiceDto.supplierName,
       supplierPhone: createInvoiceDto.supplierPhone,
       supplierAddress: createInvoiceDto.supplierAddress,
-      date: new Date(createInvoiceDto.date),
+      date: createInvoiceDto.date ? new Date(createInvoiceDto.date) : new Date(),
       dueDate: createInvoiceDto.dueDate
         ? new Date(createInvoiceDto.dueDate)
         : undefined,
@@ -588,7 +557,7 @@ export class InvoicesService {
 
   async update(
     id: number,
-    updateInvoiceDto: Partial<CreateInvoiceDTO>,
+    updateInvoiceDto: Partial<CreateInvoiceDto>,
   ): Promise<Invoice> {
     const invoice = await this.findOne(id);
     if (!invoice) {

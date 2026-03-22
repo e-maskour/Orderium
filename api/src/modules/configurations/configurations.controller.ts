@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Body,
@@ -13,7 +14,7 @@ import {
   Inject,
   Logger,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { DataSource } from 'typeorm';
 import { ConfigurationsService } from './configurations.service';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
@@ -40,6 +41,7 @@ export class ConfigurationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all configurations' })
+  @ApiResponse({ status: 200, description: 'List of configurations' })
   async findAll() {
     const configurations = await this.configurationsService.findAll();
     return ApiRes(CFG.LIST, configurations);
@@ -47,6 +49,8 @@ export class ConfigurationsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get configuration by ID' })
+  @ApiResponse({ status: 200, description: 'Configuration details' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const configuration = await this.configurationsService.findOne(id);
     return ApiRes(CFG.DETAIL, configuration);
@@ -54,6 +58,8 @@ export class ConfigurationsController {
 
   @Get('entity/:entity')
   @ApiOperation({ summary: 'Get configuration by entity name' })
+  @ApiResponse({ status: 200, description: 'Configuration details' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
   async findByEntity(@Param('entity') entity: string) {
     const configuration = await this.configurationsService.findByEntity(entity);
     // If it's sequences, enhance with real-time next numbers and format info
@@ -101,13 +107,16 @@ export class ConfigurationsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new configuration' })
+  @ApiResponse({ status: 201, description: 'Configuration created successfully' })
   async create(@Body() createDto: CreateConfigurationDto) {
     const configuration = await this.configurationsService.create(createDto);
     return ApiRes(CFG.CREATED, configuration);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a configuration' })
+  @ApiResponse({ status: 200, description: 'Configuration updated successfully' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateConfigurationDto,
@@ -122,6 +131,8 @@ export class ConfigurationsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a configuration' })
+  @ApiResponse({ status: 204, description: 'Configuration deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.configurationsService.delete(id);
   }
@@ -129,6 +140,7 @@ export class ConfigurationsController {
   // Sequences-specific endpoints
   @Post('entity/sequences')
   @ApiOperation({ summary: 'Create a new sequence' })
+  @ApiResponse({ status: 201, description: 'Sequence created successfully' })
   async createSequence(@Body() sequenceData: CreateSequenceDto) {
     const config = await this.configurationsService
       .findByEntity('sequences')
@@ -184,8 +196,11 @@ export class ConfigurationsController {
     return ApiRes(CFG.SEQ_CREATED, enrichedSequence);
   }
 
-  @Put('entity/sequences/:id')
+  @Patch('entity/sequences/:id')
   @ApiOperation({ summary: 'Update a sequence' })
+  @ApiResponse({ status: 200, description: 'Sequence updated successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot update sequence' })
+  @ApiResponse({ status: 404, description: 'Sequence not found' })
   async updateSequence(
     @Param('id') sequenceId: string,
     @Body() sequenceData: UpdateSequenceDto,
@@ -230,6 +245,8 @@ export class ConfigurationsController {
 
   @Delete('entity/sequences/:id')
   @ApiOperation({ summary: 'Delete a sequence' })
+  @ApiResponse({ status: 400, description: 'Sequences cannot be deleted' })
+  @ApiResponse({ status: 404, description: 'Sequence not found' })
   async deleteSequence(@Param('id') sequenceId: string) {
     const config = await this.configurationsService.findByEntity('sequences');
     const sequences = (config.values.sequences as SequenceConfig[]) || [];
@@ -247,6 +264,7 @@ export class ConfigurationsController {
 
   @Post('entity/sequences/preview')
   @ApiOperation({ summary: 'Generate sequence preview' })
+  @ApiResponse({ status: 200, description: 'Sequence preview generated' })
   generateSequencePreview(@Body() sequenceData: SequencePreviewDto) {
     const config = sequenceData as unknown as SequenceConfig;
     const example = this.generateSequenceExample(config);
@@ -257,6 +275,8 @@ export class ConfigurationsController {
 
   @Get('entity/sequences/next/:entityType')
   @ApiOperation({ summary: 'Get next sequence for entity type' })
+  @ApiResponse({ status: 200, description: 'Next sequence details' })
+  @ApiResponse({ status: 400, description: 'No active sequence found' })
   async getNextSequence(@Param('entityType') entityType: string) {
     const config = await this.configurationsService.findByEntity('sequences');
     const sequences = (config.values.sequences as SequenceConfig[]) || [];
@@ -491,6 +511,8 @@ export class ConfigurationsController {
 
   @Post('entity/sequences/:id/reset')
   @ApiOperation({ summary: 'Reset sequence number' })
+  @ApiResponse({ status: 200, description: 'Sequence reset successfully' })
+  @ApiResponse({ status: 404, description: 'Sequence not found' })
   async resetSequence(@Param('id') sequenceId: string) {
     const config = await this.configurationsService.findByEntity('sequences');
     const sequences = (config.values.sequences as SequenceConfig[]) || [];
@@ -615,14 +637,16 @@ export class ConfigurationsController {
   // Company Configuration endpoints
   @Get('entity/my_company')
   @ApiOperation({ summary: 'Get company information' })
+  @ApiResponse({ status: 200, description: 'Company information' })
   async getCompanyInfo() {
     const configuration =
       await this.configurationsService.findByEntity('my_company');
     return ApiRes(CFG.COMPANY_DETAIL, configuration.values);
   }
 
-  @Put('entity/my_company')
+  @Patch('entity/my_company')
   @ApiOperation({ summary: 'Update company information' })
+  @ApiResponse({ status: 200, description: 'Company information updated' })
   async updateCompanyInfo(@Body() companyDto: CompanyDto) {
     const config = await this.configurationsService.findByEntity('my_company');
     const updated = await this.configurationsService.update(config.id, {

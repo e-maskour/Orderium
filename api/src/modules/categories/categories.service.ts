@@ -21,12 +21,13 @@ export class CategoriesService {
       .createQueryBuilder('category')
       .leftJoinAndSelect('category.parent', 'parent')
       .leftJoinAndSelect('category.children', 'children')
-      .orderBy('category.name', 'ASC');
+      .where('category.isActive = :isActive', { isActive: true });
 
     if (type) {
-      query.where('category.type = :type', { type });
+      query.andWhere('category.type = :type', { type });
     }
 
+    query.orderBy('category.name', 'ASC');
     return query.getMany();
   }
 
@@ -40,7 +41,7 @@ export class CategoriesService {
     if (cached) return cached;
 
     const category = await this.categoryRepository.findOne({
-      where: { id },
+      where: { id, isActive: true },
       relations: ['parent', 'children', 'products'],
     });
 
@@ -54,7 +55,7 @@ export class CategoriesService {
 
   async findByType(type: string): Promise<Category[]> {
     return this.categoryRepository.find({
-      where: { type },
+      where: { type, isActive: true },
       relations: ['parent', 'children'],
       order: { name: 'ASC' },
     });
@@ -122,6 +123,7 @@ export class CategoriesService {
     const query = this.categoryRepository
       .createQueryBuilder('category')
       .where('category.parentId IS NULL')
+      .andWhere('category.isActive = :isActive', { isActive: true })
       .leftJoinAndSelect('category.children', 'children')
       .orderBy('category.name', 'ASC');
 

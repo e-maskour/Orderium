@@ -58,6 +58,14 @@ class UsersService {
     async remove(id: number): Promise<void> {
         await apiClient.delete(API_ROUTES.USERS.DELETE(id));
     }
+
+    async approve(id: number): Promise<void> {
+        await apiClient.patch(API_ROUTES.USERS.APPROVE(id), {});
+    }
+
+    async reject(id: number): Promise<void> {
+        await apiClient.patch(API_ROUTES.USERS.REJECT(id), {});
+    }
 }
 
 export const usersService = new UsersService();

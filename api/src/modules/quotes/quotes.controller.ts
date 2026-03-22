@@ -3,13 +3,16 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Query,
   Body,
   ParseIntPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Res, Header } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
@@ -26,6 +29,7 @@ export class QuotesController {
 
   @Post('list')
   @ApiOperation({ summary: 'Get all quotes with filters (POST method)' })
+  @ApiResponse({ status: 200, description: 'Quotes retrieved' })
   async findAll(
     @Body() filterDto: FilterQuotesDto,
     @Query('page') page?: string,
@@ -68,6 +72,7 @@ export class QuotesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all quotes (legacy - use POST /list instead)' })
+  @ApiResponse({ status: 200, description: 'Quotes retrieved' })
   async findAllLegacy(
     @Query('limit') limit?: string,
     @Query('direction') direction?: string,
@@ -104,6 +109,8 @@ export class QuotesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get quote by ID' })
+  @ApiResponse({ status: 200, description: 'Quote retrieved' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.findOne(id);
     return ApiRes(QUO.DETAIL, quote);
@@ -111,23 +118,30 @@ export class QuotesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new quote' })
+  @ApiResponse({ status: 201, description: 'Quote created' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
   async create(@Body() createQuoteDto: CreateQuoteDto) {
-    const quote = await this.quotesService.create(createQuoteDto as any);
+    const quote = await this.quotesService.create(createQuoteDto);
     return ApiRes(QUO.CREATED, quote);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a quote' })
+  @ApiResponse({ status: 200, description: 'Quote updated' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateQuoteDto: UpdateQuoteDto,
   ) {
-    const quote = await this.quotesService.update(id, updateQuoteDto as any);
+    const quote = await this.quotesService.update(id, updateQuoteDto);
     return ApiRes(QUO.UPDATED, quote);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a quote' })
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({ status: 200, description: 'Quote deleted' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.quotesService.remove(id);
     return ApiRes(QUO.DELETED, null);
@@ -135,6 +149,7 @@ export class QuotesController {
 
   @Put(':id/validate')
   @ApiOperation({ summary: 'Validate a quote (change from draft to sent)' })
+  @ApiResponse({ status: 200, description: 'Quote validated' })
   async validate(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.validate(id);
     return ApiRes(QUO.VALIDATED, quote);
@@ -142,6 +157,7 @@ export class QuotesController {
 
   @Put(':id/devalidate')
   @ApiOperation({ summary: 'Devalidate a quote (change back to draft)' })
+  @ApiResponse({ status: 200, description: 'Quote devalidated' })
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.devalidate(id);
     return ApiRes(QUO.DEVALIDATED, quote);
@@ -149,6 +165,7 @@ export class QuotesController {
 
   @Put(':id/accept')
   @ApiOperation({ summary: 'Accept a quote' })
+  @ApiResponse({ status: 200, description: 'Quote accepted' })
   async accept(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.accept(id);
     return ApiRes(QUO.ACCEPTED, quote);
@@ -156,6 +173,7 @@ export class QuotesController {
 
   @Put(':id/reject')
   @ApiOperation({ summary: 'Reject a quote' })
+  @ApiResponse({ status: 200, description: 'Quote rejected' })
   async reject(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.reject(id);
     return ApiRes(QUO.REJECTED, quote);
@@ -163,6 +181,7 @@ export class QuotesController {
 
   @Post(':id/share')
   @ApiOperation({ summary: 'Generate share link for quote' })
+  @ApiResponse({ status: 200, description: 'Share link generated' })
   async generateShareLink(@Param('id', ParseIntPipe) id: number) {
     const result = await this.quotesService.generateShareLink(id);
     return ApiRes(QUO.SHARED, result);
@@ -171,6 +190,8 @@ export class QuotesController {
   @Public()
   @Get('shared/:token')
   @ApiOperation({ summary: 'Get quote by share token (public)' })
+  @ApiResponse({ status: 200, description: 'Shared quote retrieved' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
   async getByShareToken(@Param('token') token: string) {
     const quote = await this.quotesService.getByShareToken(token);
     return ApiRes(QUO.SHARED_DETAIL, quote);
@@ -179,6 +200,8 @@ export class QuotesController {
   @Public()
   @Post('shared/:token/sign')
   @ApiOperation({ summary: 'Sign quote via share link (public)' })
+  @ApiResponse({ status: 200, description: 'Quote signed' })
+  @ApiResponse({ status: 400, description: 'Invalid request' })
   async signQuote(
     @Param('token') token: string,
     @Body() signData: { signedBy: string; clientNotes?: string },
@@ -195,6 +218,7 @@ export class QuotesController {
   @ApiOperation({
     summary: 'Refuse a signed quote and set status to closed (admin only)',
   })
+  @ApiResponse({ status: 200, description: 'Quote unsigned' })
   async unsignQuote(@Param('id', ParseIntPipe) id: number) {
     const quote = await this.quotesService.unsignQuote(id);
     return ApiRes(QUO.UNSIGNED, quote);
@@ -204,6 +228,7 @@ export class QuotesController {
   @ApiOperation({
     summary: 'Mark quote as converted to order (bon de livraison)',
   })
+  @ApiResponse({ status: 200, description: 'Quote converted to order' })
   async convertToOrder(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { orderId: number },
@@ -214,6 +239,7 @@ export class QuotesController {
 
   @Put(':id/convert-to-invoice')
   @ApiOperation({ summary: 'Mark quote as converted to invoice (facture)' })
+  @ApiResponse({ status: 200, description: 'Quote converted to invoice' })
   async convertToInvoice(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { invoiceId: number },
@@ -224,6 +250,7 @@ export class QuotesController {
 
   @Get('analytics/:direction')
   @ApiOperation({ summary: 'Get quote analytics with chart data and KPIs' })
+  @ApiResponse({ status: 200, description: 'Analytics retrieved' })
   async getAnalytics(
     @Param('direction') direction: 'vente' | 'achat',
     @Query('year') year?: string,
@@ -239,6 +266,7 @@ export class QuotesController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({ summary: 'Export quotes/devis to XLSX file' })
+  @ApiResponse({ status: 200, description: 'Export successful' })
   async exportToXlsx(
     @Res() res: Response,
     @Query('supplierId') supplierId?: string,

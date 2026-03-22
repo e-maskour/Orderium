@@ -8,7 +8,8 @@ import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { ArrowLeft, ArrowRight, Package, ShoppingBag, User, Phone, MapPin, FileText } from 'lucide-react';
 import { toastError } from '@/services/toast.service';
-import { partnersService, ordersService, Partner } from '@/modules';
+import { partnersService, ordersService } from '@/modules';
+import { authService } from '@/modules/auth';
 import { AddressInput } from '@/components/AddressInput';
 
 const getImageUrl = (imageUrl?: string): string | undefined => {
@@ -41,7 +42,7 @@ const Checkout = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
-  const [existingCustomer, setExistingCustomer] = useState<Partner | null>(null);
+  const [existingCustomerId, setExistingCustomerId] = useState<number | null>(null);
   const [mapsLink, setMapsLink] = useState<string | null>(null);
   const [wazeLink, setWazeLink] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -62,34 +63,29 @@ const Checkout = () => {
 
   const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
-  const searchCustomerByPhone = useCallback(async (phone: string) => {
-    const cleanPhone = phone.replace(/[\s\-()]/g, '');
-    if (cleanPhone.length < 10) { setExistingCustomer(null); return; }
+  const loadCustomerInfo = useCallback(async (portalUserId: number) => {
     setIsSearchingCustomer(true);
     try {
-      const result = await partnersService.searchByPhone(cleanPhone);
-      if (result && result.length > 0) {
-        const customer = result[0];
-        setExistingCustomer(customer);
-        setFormData(prev => ({ ...prev, name: customer.name, address: customer.address || '', note: '', latitude: customer.latitude, longitude: customer.longitude }));
-        if (customer.googleMapsUrl) setMapsLink(customer.googleMapsUrl);
-        if (customer.wazeUrl) setWazeLink(customer.wazeUrl);
+      const result = await authService.getPortalUserById(portalUserId);
+      if (result && (result.exists || result.customerId)) {
+        setExistingCustomerId(result.customerId ?? null);
+        setFormData(prev => ({ ...prev, name: result.name || result.customerName || '', address: result.address || '', note: '', latitude: result.latitude, longitude: result.longitude }));
+        if (result.googleMapsUrl) setMapsLink(result.googleMapsUrl);
+        if (result.wazeUrl) setWazeLink(result.wazeUrl);
         setErrors({});
       } else {
-        setExistingCustomer(null);
-        setFormData(prev => ({ ...prev, name: '', address: '', note: '', latitude: undefined, longitude: undefined }));
-        setMapsLink(null); setWazeLink(null);
+        setExistingCustomerId(null);
       }
     } catch {
-      setExistingCustomer(null);
+      setExistingCustomerId(null);
     } finally {
       setIsSearchingCustomer(false);
     }
   }, []);
 
   useEffect(() => {
-    if (user?.phoneNumber) searchCustomerByPhone(user.phoneNumber);
-  }, [user?.phoneNumber, searchCustomerByPhone]);
+    if (user?.id) loadCustomerInfo(user.id);
+  }, [user?.id, loadCustomerInfo]);
 
   const handleAddressChange = (address: string, latitude?: number, longitude?: number) => {
     setFormData(prev => ({ ...prev, address, latitude, longitude }));
@@ -115,11 +111,13 @@ const Checkout = () => {
     if (!validateForm() || items.length === 0) return;
     setIsSubmitting(true);
     try {
-      let customerId: number | undefined;
-      try {
-        const partnerResult = await partnersService.upsert({ phoneNumber: formData.phone, name: formData.name, deliveryAddress: formData.address, latitude: formData.latitude, longitude: formData.longitude, googleMapsUrl: mapsLink || undefined, wazeUrl: wazeLink || undefined, portalPhoneNumber: user?.phoneNumber });
-        customerId = partnerResult.id;
-      } catch { /* non-critical */ }
+      let customerId: number | undefined = existingCustomerId ?? undefined;
+      if (!customerId) {
+        try {
+          const partnerResult = await partnersService.upsert({ phoneNumber: formData.phone, name: formData.name, deliveryAddress: formData.address, latitude: formData.latitude, longitude: formData.longitude, googleMapsUrl: mapsLink || undefined, wazeUrl: wazeLink || undefined, portalPhoneNumber: user?.phoneNumber });
+          customerId = partnerResult.id;
+        } catch { /* non-critical */ }
+      }
 
       const orderItems = items.map(item => ({
         productId: item.product.id, description: item.product.name || '',
@@ -204,7 +202,7 @@ const Checkout = () => {
                         <Phone size={13} color="#059669" /> {t('phone')}
                       </label>
                       {isSearchingCustomer && <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('searching')}…</span>}
-                      {existingCustomer && (
+                      {existingCustomerId && (
                         <span style={{ fontSize: '0.75rem', background: '#d1fae5', color: '#059669', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontWeight: 700 }}>
                           {t('existingCustomer')}
                         </span>
@@ -216,7 +214,7 @@ const Checkout = () => {
                       onChange={e => updateField('phone', e.target.value)}
                       placeholder={t('phonePlaceholder')}
                       className={`w-full${errors.phone ? ' p-invalid' : ''}`}
-                      style={{ height: '3.25rem', fontSize: '1rem', borderColor: existingCustomer ? '#059669' : undefined }}
+                      style={{ height: '3.25rem', fontSize: '1rem', borderColor: existingCustomerId ? '#059669' : undefined }}
                       dir="ltr" disabled
                     />
                     {errors.phone && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.phone}</p>}

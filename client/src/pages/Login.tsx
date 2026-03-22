@@ -4,7 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { authService } from '@/modules/auth';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import orderiumLogo from '../assets/logo-client.svg';
-import { ShoppingCart, Phone, Lock, Eye, EyeOff, Loader2, Clock, ShieldX, HandMetal, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, Phone, Lock, Eye, EyeOff, Loader2, Clock, ShieldX, HandMetal, AlertTriangle, User } from 'lucide-react';
 import { toastSuccess, toastError } from '@/services/toast.service';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,10 +25,12 @@ export default function Login() {
   const [formData, setFormData] = useState({
     phone: '',
     password: '',
+    fullName: '',
   });
   const [errors, setErrors] = useState({
     phone: '',
     password: '',
+    fullName: '',
   });
 
   useEffect(() => {
@@ -80,7 +82,7 @@ export default function Login() {
   }, [formData.phone]);
 
   const validateForm = () => {
-    const newErrors = { phone: '', password: '' };
+    const newErrors = { phone: '', password: '', fullName: '' };
     let isValid = true;
 
     if (!formData.phone.trim()) {
@@ -99,6 +101,11 @@ export default function Login() {
       isValid = false;
     }
 
+    if (phoneExists === false && !formData.fullName.trim()) {
+      newErrors.fullName = t('nameRequired');
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
@@ -110,7 +117,7 @@ export default function Login() {
     try {
       const normalizedPhone = normalizePhoneNumber(formData.phone);
       if (phoneExists === false) {
-        await register({ phoneNumber: normalizedPhone, password: formData.password, customerId, isCustomer: true });
+        await register({ phoneNumber: normalizedPhone, password: formData.password, fullName: formData.fullName.trim(), customerId, isCustomer: true });
         setAccountStatus('pending');
         toastSuccess(t('accountCreatedPending'));
       } else {
@@ -326,6 +333,41 @@ export default function Login() {
                 </div>
               )}
             </div>
+
+            {/* Full Name (registration only) */}
+            {isNewAccount && (
+              <div>
+                <label style={{ display: 'block', fontWeight: 600, color: '#374151', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  {t('fullName')}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <User size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+                  <input
+                    className="clt-field-input"
+                    type="text"
+                    autoComplete="name"
+                    value={formData.fullName}
+                    onChange={e => { setFormData({ ...formData, fullName: e.target.value }); setErrors({ ...errors, fullName: '' }); }}
+                    placeholder={t('fullNamePlaceholder')}
+                    disabled={isLoading}
+                    style={{
+                      width: '100%', height: '56px',
+                      paddingLeft: '2.875rem', paddingRight: '1rem',
+                      fontSize: '1rem', fontWeight: 500,
+                      border: errors.fullName ? '2px solid #ef4444' : '2px solid #e5e7eb',
+                      borderRadius: '14px', background: '#f9fafb', color: '#111827',
+                      boxSizing: 'border-box', transition: 'border-color 0.18s',
+                    }}
+                  />
+                </div>
+                {errors.fullName && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.3rem' }}>
+                    <AlertTriangle size={14} color='#ef4444' strokeWidth={2} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.8rem', color: '#ef4444' }}>{errors.fullName}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Password */}
             <div>

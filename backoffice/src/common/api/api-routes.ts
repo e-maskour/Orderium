@@ -304,5 +304,7 @@ export const API_ROUTES = {
         DELETE: (id: number) => `/api/users/${id}`,
         ACTIVATE: (id: number) => `/api/users/${id}/activate`,
         DEACTIVATE: (id: number) => `/api/users/${id}/deactivate`,
+        APPROVE: (id: number) => `/api/portal/admin/users/${id}/approve`,
+        REJECT: (id: number) => `/api/portal/admin/users/${id}/reject`,
     },
 } as const;

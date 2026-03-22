@@ -12,6 +12,7 @@ import {
     HttpStatus,
     ParseIntPipe,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TenantLifecycleService } from './tenant-lifecycle.service';
 import { SuperAdminGuard } from '../tenant/tenant.guard';
 import { Public } from '../auth/decorators/public.decorator';
@@ -26,6 +27,7 @@ import {
     UpdatePlanDto,
 } from './dto/lifecycle.dto';
 
+@ApiTags('Tenant Lifecycle')
 @Controller()
 @UseGuards(SuperAdminGuard)
 @Public()
@@ -36,6 +38,8 @@ export class TenantLifecycleController {
 
     @Post('admin/tenants/:id/activate')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Activate tenant' })
+    @ApiResponse({ status: 200, description: 'Tenant activated' })
     activate(
         @Param('id', ParseIntPipe) id: number,
         @Body('performedBy') performedBy?: string,
@@ -45,6 +49,8 @@ export class TenantLifecycleController {
 
     @Post('admin/tenants/:id/disable')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Disable tenant' })
+    @ApiResponse({ status: 200, description: 'Tenant disabled' })
     disable(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: ChangeStatusDto,
@@ -55,6 +61,8 @@ export class TenantLifecycleController {
 
     @Post('admin/tenants/:id/suspend')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Suspend tenant' })
+    @ApiResponse({ status: 200, description: 'Tenant suspended' })
     suspend(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: ChangeStatusDto,
@@ -65,6 +73,8 @@ export class TenantLifecycleController {
 
     @Post('admin/tenants/:id/archive')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Archive tenant' })
+    @ApiResponse({ status: 200, description: 'Tenant archived' })
     archive(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: ArchiveTenantDto,
@@ -75,6 +85,8 @@ export class TenantLifecycleController {
 
     @Post('admin/tenants/:id/unarchive')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Unarchive tenant' })
+    @ApiResponse({ status: 200, description: 'Tenant unarchived' })
     unarchive(
         @Param('id', ParseIntPipe) id: number,
         @Body('performedBy') performedBy?: string,
@@ -84,6 +96,8 @@ export class TenantLifecycleController {
 
     @Delete('admin/tenants/:id/permanent')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Permanently delete tenant' })
+    @ApiResponse({ status: 200, description: 'Tenant deleted permanently' })
     deletePermanently(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: DeleteTenantDto,
@@ -94,6 +108,8 @@ export class TenantLifecycleController {
 
     @Post('admin/tenants/:id/extend-trial')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Extend trial period' })
+    @ApiResponse({ status: 200, description: 'Trial extended' })
     extendTrial(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: ExtendTrialDto,
@@ -105,6 +121,8 @@ export class TenantLifecycleController {
     // ─── Activity log ──────────────────────────────────────────────────────────
 
     @Get('admin/tenants/:id/activity')
+    @ApiOperation({ summary: 'Get tenant activity log' })
+    @ApiResponse({ status: 200, description: 'Activity log' })
     getActivity(@Param('id', ParseIntPipe) id: number) {
         return this.lifecycleService.getActivityLog(id);
     }
@@ -112,6 +130,8 @@ export class TenantLifecycleController {
     // ─── Payments per tenant ───────────────────────────────────────────────────
 
     @Post('admin/tenants/:id/payments')
+    @ApiOperation({ summary: 'Create payment for tenant' })
+    @ApiResponse({ status: 201, description: 'Payment created' })
     createPayment(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: CreatePaymentDto,
@@ -121,6 +141,8 @@ export class TenantLifecycleController {
     }
 
     @Get('admin/tenants/:id/payments')
+    @ApiOperation({ summary: 'List tenant payments' })
+    @ApiResponse({ status: 200, description: 'List of payments' })
     listPayments(@Param('id', ParseIntPipe) id: number) {
         return this.lifecycleService.listPayments(id);
     }
@@ -128,6 +150,8 @@ export class TenantLifecycleController {
     // ─── Global payments ───────────────────────────────────────────────────────
 
     @Get('admin/payments')
+    @ApiOperation({ summary: 'List all payments' })
+    @ApiResponse({ status: 200, description: 'List of all payments' })
     listAllPayments(
         @Query('status') status?: string,
         @Query('from') from?: string,
@@ -138,6 +162,8 @@ export class TenantLifecycleController {
 
     @Post('admin/payments/:id/validate')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Validate payment' })
+    @ApiResponse({ status: 200, description: 'Payment validated' })
     validatePayment(
         @Param('id') id: string,
         @Body() dto: ValidatePaymentDto,
@@ -148,6 +174,8 @@ export class TenantLifecycleController {
 
     @Post('admin/payments/:id/reject')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Reject payment' })
+    @ApiResponse({ status: 200, description: 'Payment rejected' })
     rejectPayment(
         @Param('id') id: string,
         @Body() dto: RejectPaymentDto,
@@ -158,6 +186,8 @@ export class TenantLifecycleController {
 
     @Post('admin/payments/:id/refund')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Refund payment' })
+    @ApiResponse({ status: 200, description: 'Payment refunded' })
     refundPayment(
         @Param('id') id: string,
         @Body('performedBy') performedBy?: string,
@@ -168,17 +198,23 @@ export class TenantLifecycleController {
     // ─── Plans ──────────────────────────────────────────────────────────────────
 
     @Get('admin/plans')
+    @ApiOperation({ summary: 'List plans' })
+    @ApiResponse({ status: 200, description: 'List of plans' })
     listPlans() {
         return this.lifecycleService.listPlans();
     }
 
     @Patch('admin/plans/:id')
+    @ApiOperation({ summary: 'Update plan' })
+    @ApiResponse({ status: 200, description: 'Plan updated' })
     updatePlan(@Param('id') id: string, @Body() dto: UpdatePlanDto) {
         return this.lifecycleService.updatePlan(id, dto);
     }
 
     @Delete('admin/plans/:id')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Deactivate plan' })
+    @ApiResponse({ status: 200, description: 'Plan deactivated' })
     deactivatePlan(@Param('id') id: string) {
         return this.lifecycleService.deactivatePlan(id);
     }

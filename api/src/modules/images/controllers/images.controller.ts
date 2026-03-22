@@ -26,7 +26,7 @@ import { IMG } from '../../../common/response-codes';
 @ApiTags('Images')
 @Controller('images')
 export class ImagesController {
-  constructor(private readonly imageService: ImageService) {}
+  constructor(private readonly imageService: ImageService) { }
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('image'))
@@ -101,7 +101,7 @@ export class ImagesController {
     const optimizedUrl = this.imageService.transformUrl(url, {
       width: width ? parseInt(width, 10) : undefined,
       height: height ? parseInt(height, 10) : undefined,
-      crop: (crop as any) || undefined,
+      crop: (crop as 'fill' | 'fit' | 'scale') || undefined,
     });
 
     return ApiRes(IMG.OPTIMIZED, { url: optimizedUrl });

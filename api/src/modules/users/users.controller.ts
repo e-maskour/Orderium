@@ -12,7 +12,7 @@ import {
     HttpStatus,
     Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -27,6 +27,7 @@ export class UsersController {
 
     @Get()
     @ApiOperation({ summary: 'List users with filtering and pagination' })
+    @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
     async findAll(@Query() dto: FilterUsersDto) {
         const { users, total } = await this.usersService.findAll(dto);
         const page = dto.page ?? 1;
@@ -43,6 +44,8 @@ export class UsersController {
 
     @Get(':id')
     @ApiOperation({ summary: 'Get a user by ID' })
+    @ApiResponse({ status: 200, description: 'User retrieved successfully' })
+    @ApiResponse({ status: 404, description: 'User not found' })
     async findOne(@Param('id', ParseIntPipe) id: number) {
         const data = await this.usersService.findOne(id);
         return ApiRes(USR.DETAIL, data);
@@ -50,6 +53,8 @@ export class UsersController {
 
     @Post()
     @ApiOperation({ summary: 'Create a user' })
+    @ApiResponse({ status: 201, description: 'User created successfully' })
+    @ApiResponse({ status: 400, description: 'Invalid user data' })
     async create(@Body() dto: CreateUserDto) {
         const data = await this.usersService.create(dto);
         return ApiRes(USR.CREATED, data);
@@ -57,6 +62,8 @@ export class UsersController {
 
     @Patch(':id')
     @ApiOperation({ summary: 'Update a user' })
+    @ApiResponse({ status: 200, description: 'User updated successfully' })
+    @ApiResponse({ status: 404, description: 'User not found' })
     async update(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateUserDto,
@@ -69,6 +76,8 @@ export class UsersController {
     @Patch(':id/activate')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Activate a user' })
+    @ApiResponse({ status: 200, description: 'User activated successfully' })
+    @ApiResponse({ status: 404, description: 'User not found' })
     async activate(
         @Param('id', ParseIntPipe) id: number,
         @Request() req: any,
@@ -80,6 +89,8 @@ export class UsersController {
     @Patch(':id/deactivate')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Deactivate a user' })
+    @ApiResponse({ status: 200, description: 'User deactivated successfully' })
+    @ApiResponse({ status: 404, description: 'User not found' })
     async deactivate(
         @Param('id', ParseIntPipe) id: number,
         @Request() req: any,
@@ -91,6 +102,8 @@ export class UsersController {
     @Delete(':id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Delete a user' })
+    @ApiResponse({ status: 200, description: 'User deleted successfully' })
+    @ApiResponse({ status: 404, description: 'User not found' })
     async remove(
         @Param('id', ParseIntPipe) id: number,
         @Request() req: any,

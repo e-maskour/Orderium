@@ -57,7 +57,7 @@ export class OrdersService {
     return this.tenantConnService.getCurrentDataSource();
   }
 
-  async createOrder(createOrderDto: CreateOrderDto): Promise<any> {
+  async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
     if (!createOrderDto.items || createOrderDto.items.length === 0) {
       throw new BadRequestException('Order must have at least one item');
     }
@@ -1473,7 +1473,7 @@ export class OrdersService {
     }
   }
 
-  async validate(id: number): Promise<any> {
+  async validate(id: number): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer'],
@@ -1531,7 +1531,7 @@ export class OrdersService {
     return await this.getOrderById(id);
   }
 
-  async devalidate(id: number): Promise<any> {
+  async devalidate(id: number): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer'],
@@ -1643,7 +1643,7 @@ export class OrdersService {
   async updateOrder(
     id: number,
     updateOrderDto: Partial<CreateOrderDto>,
-  ): Promise<any> {
+  ): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer', 'items'],
@@ -1802,7 +1802,7 @@ export class OrdersService {
     });
   }
 
-  async deliver(id: number): Promise<any> {
+  async deliver(id: number): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer'],
@@ -1831,7 +1831,7 @@ export class OrdersService {
     return await this.getOrderById(id);
   }
 
-  async cancel(id: number): Promise<any> {
+  async cancel(id: number): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer'],
@@ -1855,7 +1855,7 @@ export class OrdersService {
     return await this.getOrderById(id);
   }
 
-  async markAsInvoiced(orderId: number, invoiceId: number): Promise<any> {
+  async markAsInvoiced(orderId: number, invoiceId: number): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
     });

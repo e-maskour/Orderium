@@ -6,6 +6,7 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
 import {
@@ -27,6 +28,7 @@ export class DeliveryService {
     private readonly tenantConnService: TenantConnectionService,
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
+    private readonly jwtService: JwtService,
   ) { }
 
   private get deliveryPersonRepository(): Repository<DeliveryPerson> {
@@ -47,7 +49,10 @@ export class DeliveryService {
     });
   }
 
-  async login(phoneNumber: string, password: string): Promise<DeliveryPerson> {
+  async login(
+    phoneNumber: string,
+    password: string,
+  ): Promise<{ deliveryPerson: Omit<DeliveryPerson, 'password'>; token: string }> {
     const person = await this.deliveryPersonRepository.findOne({
       where: { phoneNumber },
     });
@@ -65,7 +70,18 @@ export class DeliveryService {
       throw new NotFoundException('Invalid phone number or password');
     }
 
-    return person;
+    const { password: _, ...personData } = person;
+
+    const token = this.jwtService.sign({
+      sub: personData.id,
+      phoneNumber: personData.phoneNumber,
+      isAdmin: false,
+      isCustomer: false,
+      isDelivery: true,
+      scope: 'portal',
+    });
+
+    return { deliveryPerson: personData, token };
   }
 
   async getDeliveryPersonById(id: number): Promise<DeliveryPerson> {

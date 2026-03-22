@@ -50,8 +50,11 @@ pnpm test:e2e                                       # E2E tests
 - Format: `PREFIX + HTTP_STATUS + "_" + SEQUENCE` (e.g., `ORD201_01`)
 
 ### Auth
-- `@PortalRoute()` on every controller (JWT guard + tenant context)
-- Public endpoints use `@Public()` decorator
+- JWT is required on all routes by default via `JwtAuthGuard`
+- `@PortalRoute()` — marks a route as accessible by **portal-scoped tokens** (customers, delivery persons). WITHOUT it, portal tokens receive a 403. Only add to controllers that the customer portal, delivery portal, or tenant dashboard need to call. Do NOT add to backoffice/admin-only controllers.
+- `@Public()` — bypasses JWT entirely (truly unauthenticated endpoints)
+- Controllers with `@PortalRoute()`: `portal`, `products`, `partners`, `delivery`, `orders`, `notifications`, `pdf`
+- Controllers WITHOUT `@PortalRoute()` (admin/backoffice only): all others (`categories`, `configurations`, `payments`, `invoices`, `quotes`, `images`, `roles`, `permissions`, `statistics`, `users`, `drive`, all inventory controllers, etc.)
 
 ### Deletes
 - Hard deletes are intentional — `repository.remove()` and `repository.delete()` are both acceptable

@@ -16,7 +16,7 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtService } from '@nestjs/jwt';
 import { PortalService } from './portal.service';
@@ -53,6 +53,10 @@ export class PortalController {
   @Throttle({ short: { limit: 5, ttl: 60000 } })
   @Post('login')
   @ApiOperation({ summary: 'Portal login' })
+  @ApiResponse({ status: 200, description: 'Login successful with JWT token' })
+  @ApiResponse({ status: 400, description: 'Email or phone required' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 403, description: 'Account pending or rejected' })
   async login(@Body() body: LoginDto) {
     const emailOrPhone = body.email || body.phoneNumber;
     if (!emailOrPhone) {
@@ -107,6 +111,8 @@ export class PortalController {
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Portal registration' })
+  @ApiResponse({ status: 200, description: 'Registration successful, pending approval' })
+  @ApiResponse({ status: 409, description: 'Phone number already registered' })
   async register(@Body() body: RegisterDto) {
     const existingUser = await this.portalService.findByPhoneNumber(
       body.phoneNumber,
@@ -115,11 +121,20 @@ export class PortalController {
       throw new ConflictException('Phone number already registered');
     }
 
+    // Find or create partner (customer) for this phone number
+    const partner = await this.partnersService.upsert(
+      {
+        name: body.fullName,
+        phoneNumber: body.phoneNumber,
+        isCustomer: true,
+      },
+    );
+
     const user = await this.portalService.create({
       phoneNumber: body.phoneNumber,
       password: body.password,
       name: body.fullName,
-      customerId: body.customerId,
+      customerId: partner.id,
       isCustomer: body.isCustomer ?? true,
       isDelivery: body.isDelivery ?? false,
       isAdmin: false, // Never allow self-registration as admin
@@ -143,20 +158,76 @@ export class PortalController {
 
   @Public()
   @Throttle({ short: { limit: 10, ttl: 60000 } })
+  @Get('user/id/:id')
+  @ApiOperation({ summary: 'Get portal user by ID (public, includes partner details)' })
+  @ApiResponse({ status: 200, description: 'User details' })
+  @ApiResponse({ status: 404, description: 'Portal user not found' })
+  async getUserById(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const user = await this.portalService.findById(id);
+    if (!user) {
+      throw new NotFoundException('Portal user not found');
+    }
+
+    let partnerData: Record<string, unknown> = {};
+    if (user.customerId) {
+      try {
+        const partner = await this.partnersService.findOne(user.customerId);
+        if (partner) {
+          partnerData = {
+            customerName: partner.name,
+            address: partner.address ?? null,
+            deliveryAddress: partner.deliveryAddress ?? null,
+            latitude: partner.latitude ?? null,
+            longitude: partner.longitude ?? null,
+            googleMapsUrl: partner.googleMapsUrl ?? null,
+            wazeUrl: partner.wazeUrl ?? null,
+            email: partner.email ?? null,
+          };
+        }
+      } catch { /* partner may have been deleted */ }
+    }
+
+    return ApiRes(PRT.USER_DETAIL, {
+      exists: true,
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      name: user.name,
+      status: user.status,
+      customerId: user.customerId,
+      ...partnerData,
+    });
+  }
+
+  @Public()
+  @Throttle({ short: { limit: 10, ttl: 60000 } })
   @Get('user/:phoneNumber')
-  @ApiOperation({ summary: 'Check if a portal user exists by phone number (public, limited info)' })
+  @ApiOperation({ summary: 'Check if a portal user exists by phone number (public, includes partner details)' })
+  @ApiResponse({ status: 200, description: 'User existence check result' })
   async getUserByPhone(
     @Param('phoneNumber') phoneNumber: string,
   ) {
     const user = await this.portalService.findByPhoneNumber(phoneNumber);
 
     if (user) {
-      // User exists in Portal — return portal info + partner name if linked
-      let customerName: string | null = null;
+      // User exists in Portal — return portal info + full partner details if linked
+      let partnerData: Record<string, unknown> = {};
       if (user.customerId) {
         try {
           const partner = await this.partnersService.findOne(user.customerId);
-          customerName = partner?.name ?? null;
+          if (partner) {
+            partnerData = {
+              customerName: partner.name,
+              address: partner.address ?? null,
+              deliveryAddress: partner.deliveryAddress ?? null,
+              latitude: partner.latitude ?? null,
+              longitude: partner.longitude ?? null,
+              googleMapsUrl: partner.googleMapsUrl ?? null,
+              wazeUrl: partner.wazeUrl ?? null,
+              email: partner.email ?? null,
+            };
+          }
         } catch { /* partner may have been deleted */ }
       }
       return ApiRes(PRT.USER_DETAIL, {
@@ -166,7 +237,7 @@ export class PortalController {
         name: user.name,
         status: user.status,
         customerId: user.customerId,
-        customerName,
+        ...partnerData,
       });
     }
 
@@ -178,6 +249,13 @@ export class PortalController {
         phoneNumber,
         customerId: partner.id,
         customerName: partner.name,
+        address: partner.address ?? null,
+        deliveryAddress: partner.deliveryAddress ?? null,
+        latitude: partner.latitude ?? null,
+        longitude: partner.longitude ?? null,
+        googleMapsUrl: partner.googleMapsUrl ?? null,
+        wazeUrl: partner.wazeUrl ?? null,
+        email: partner.email ?? null,
       });
     } catch {
       // Not found anywhere
@@ -190,6 +268,8 @@ export class PortalController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get the authenticated user profile' })
+  @ApiResponse({ status: 200, description: 'Authenticated user profile' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async getMe(@Request() req: { user: { id: number; sub: number } }) {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
@@ -220,6 +300,8 @@ export class PortalController {
 
   @Get('me/data-export')
   @ApiOperation({ summary: 'Export own personal data (GDPR)' })
+  @ApiResponse({ status: 200, description: 'User personal data export' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async exportMyData(@Request() req: { user: { id: number; sub: number } }) {
     const userId = req.user.sub ?? req.user.id;
     const data = await this.portalService.exportUserData(userId);
@@ -231,6 +313,8 @@ export class PortalController {
 
   @Delete('me/account')
   @ApiOperation({ summary: 'Delete own account and personal data (GDPR)' })
+  @ApiResponse({ status: 200, description: 'Account and data deleted' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async deleteMyAccount(@Request() req: { user: { id: number; sub: number } }) {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
@@ -245,6 +329,8 @@ export class PortalController {
 
   @Get('me/orders')
   @ApiOperation({ summary: "List authenticated customer's orders" })
+  @ApiResponse({ status: 200, description: "Customer's orders" })
+  @ApiResponse({ status: 403, description: 'Account not linked to customer' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiQuery({ name: 'orderNumber', required: false, type: String })
@@ -279,6 +365,9 @@ export class PortalController {
 
   @Get('me/orders/:id')
   @ApiOperation({ summary: "Get a specific order by ID (must belong to authenticated customer)" })
+  @ApiResponse({ status: 200, description: 'Order details' })
+  @ApiResponse({ status: 403, description: 'Access denied or account not linked' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
   async getMyOrder(
     @Request() req: { user: { id: number; sub: number } },
     @Param('id', ParseIntPipe) id: number,
@@ -302,6 +391,8 @@ export class PortalController {
 
   @Get('me/invoices')
   @ApiOperation({ summary: "List authenticated customer's sales invoices" })
+  @ApiResponse({ status: 200, description: "Customer's invoices" })
+  @ApiResponse({ status: 403, description: 'Account not linked to customer' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
@@ -336,6 +427,9 @@ export class PortalController {
 
   @Get('me/invoices/:id')
   @ApiOperation({ summary: "Get a specific invoice by ID (must belong to authenticated customer)" })
+  @ApiResponse({ status: 200, description: 'Invoice details' })
+  @ApiResponse({ status: 403, description: 'Access denied or account not linked' })
+  @ApiResponse({ status: 404, description: 'Invoice not found' })
   async getMyInvoice(
     @Request() req: { user: { id: number; sub: number } },
     @Param('id', ParseIntPipe) id: number,
@@ -357,6 +451,8 @@ export class PortalController {
 
   @Get('me/quotes')
   @ApiOperation({ summary: "List authenticated customer's quotes (devis)" })
+  @ApiResponse({ status: 200, description: "Customer's quotes" })
+  @ApiResponse({ status: 403, description: 'Account not linked to customer' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
@@ -391,6 +487,9 @@ export class PortalController {
 
   @Get('me/quotes/:id')
   @ApiOperation({ summary: "Get a specific quote by ID (must belong to authenticated customer)" })
+  @ApiResponse({ status: 200, description: 'Quote details' })
+  @ApiResponse({ status: 403, description: 'Access denied or account not linked' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
   async getMyQuote(
     @Request() req: { user: { id: number; sub: number } },
     @Param('id', ParseIntPipe) id: number,
@@ -416,6 +515,7 @@ export class PortalController {
   @UseGuards(RolesGuard)
   @Roles('isAdmin')
   @ApiOperation({ summary: 'List portal users (admin only)' })
+  @ApiResponse({ status: 200, description: 'List of portal users' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: ['pending', 'approved', 'rejected'] })
@@ -439,6 +539,8 @@ export class PortalController {
   @UseGuards(RolesGuard)
   @Roles('isAdmin')
   @ApiOperation({ summary: 'Approve a portal user account (admin only)' })
+  @ApiResponse({ status: 200, description: 'User approved' })
+  @ApiResponse({ status: 404, description: 'Portal user not found' })
   async adminApproveUser(
     @Param('id', ParseIntPipe) id: number,
   ) {
@@ -453,6 +555,8 @@ export class PortalController {
   @UseGuards(RolesGuard)
   @Roles('isAdmin')
   @ApiOperation({ summary: 'Reject a portal user account (admin only)' })
+  @ApiResponse({ status: 200, description: 'User rejected' })
+  @ApiResponse({ status: 404, description: 'Portal user not found' })
   async adminRejectUser(
     @Param('id', ParseIntPipe) id: number,
   ) {
@@ -473,6 +577,7 @@ export class PortalController {
   @Public()
   @Get('config/company')
   @ApiOperation({ summary: 'Get public company information' })
+  @ApiResponse({ status: 200, description: 'Company configuration' })
   async getCompanyConfig() {
     const config = await this.configurationsService.findByEntity('my_company');
     return ApiRes(PRT.CONFIG_COMPANY, config);
@@ -481,6 +586,8 @@ export class PortalController {
   @Public()
   @Get('config/:entity')
   @ApiOperation({ summary: 'Get a specific public configuration (taxes, currencies, uom, payment_terms)' })
+  @ApiResponse({ status: 200, description: 'Configuration entity' })
+  @ApiResponse({ status: 400, description: 'Unknown or restricted config entity' })
   async getConfig(@Param('entity') entity: string) {
     if (!PortalController.ALLOWED_CONFIG_ENTITIES.has(entity)) {
       throw new BadRequestException(
@@ -495,6 +602,7 @@ export class PortalController {
 
   @Get('categories')
   @ApiOperation({ summary: 'List product categories (portal)' })
+  @ApiResponse({ status: 200, description: 'List of product categories' })
   async getCategories() {
     const categories = await this.categoriesService.findAll('product');
     return ApiRes(PRT.CATEGORIES_LIST, categories);

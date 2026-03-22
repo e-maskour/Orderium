@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { StatisticsService } from './statistics.service';
 import { ApiRes } from '../../common/api-response';
 import { STT } from '../../common/response-codes';
@@ -11,6 +11,7 @@ export class StatisticsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all statistics' })
+  @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
   async getStatistics(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -23,6 +24,7 @@ export class StatisticsController {
 
   @Get('orders')
   @ApiOperation({ summary: 'Get order statistics' })
+  @ApiResponse({ status: 200, description: 'Order statistics retrieved successfully' })
   async getOrderStatistics(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -35,6 +37,7 @@ export class StatisticsController {
 
   @Get('daily')
   @ApiOperation({ summary: 'Get daily statistics' })
+  @ApiResponse({ status: 200, description: 'Daily statistics retrieved successfully' })
   async getDailyStats(@Query('days') days?: string) {
     const daysNum = Math.min(365, Math.max(1, parseInt(days ?? '7', 10) || 7));
     const stats = await this.statisticsService.getDailyStats(daysNum);
@@ -43,6 +46,7 @@ export class StatisticsController {
 
   @Get('top-products')
   @ApiOperation({ summary: 'Get top selling products' })
+  @ApiResponse({ status: 200, description: 'Top products retrieved successfully' })
   async getTopProducts(@Query('limit') limit?: string) {
     const limitNum = Math.min(
       100,
@@ -54,6 +58,7 @@ export class StatisticsController {
 
   @Get('comprehensive')
   @ApiOperation({ summary: 'Get comprehensive statistics' })
+  @ApiResponse({ status: 200, description: 'Comprehensive statistics retrieved successfully' })
   async getComprehensiveStats(@Query('days') days?: string) {
     const daysNum = Math.min(365, Math.max(1, parseInt(days ?? '7', 10) || 7));
     const stats = await this.statisticsService.getComprehensiveStats(daysNum);
@@ -62,6 +67,7 @@ export class StatisticsController {
 
   @Get('recent-activities')
   @ApiOperation({ summary: 'Get recent activities' })
+  @ApiResponse({ status: 200, description: 'Recent activities retrieved successfully' })
   async getRecentActivities(@Query('limit') limit?: string) {
     const limitNum = Math.min(
       100,

@@ -2,7 +2,6 @@ import { PrimeReactProvider } from 'primereact/api';
 import clientConfig from './theme-preset';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Toaster as SileoToaster } from 'sileo';
-import 'sileo/styles.css';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/context/LanguageContext";
@@ -40,7 +39,11 @@ const App = () => (
       <LanguageProvider>
         <AuthProvider>
           <CartProvider>
-            <SileoToaster position="top-center" theme="system" />
+            <SileoToaster
+              position="top-center"
+              theme="light"
+              options={{ fill: '#ffffff', roundness: 14 }}
+            />
             <BrowserRouter
               future={{
                 v7_startTransition: true,

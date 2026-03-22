@@ -32,7 +32,17 @@ export interface AuthResponse {
 
 export interface PhoneCheckResponse {
   exists: boolean;
+  id?: number;
+  phoneNumber?: string;
+  name?: string;
   customerName?: string;
   customerId?: number;
   status?: string;
+  address?: string;
+  deliveryAddress?: string;
+  latitude?: number;
+  longitude?: number;
+  googleMapsUrl?: string;
+  wazeUrl?: string;
+  email?: string;
 }
