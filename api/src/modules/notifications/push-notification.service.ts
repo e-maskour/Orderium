@@ -1,5 +1,4 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
@@ -10,6 +9,7 @@ import {
 } from './entities/device-token.entity';
 import { RegisterDeviceTokenDto } from './dto/device-token.dto';
 import { Portal } from '../portal/entities/portal.entity';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 export interface PushNotificationPayload {
   title: string;
@@ -32,18 +32,23 @@ export class PushNotificationService implements OnModuleInit {
   private firebaseApp: admin.app.App | null = null;
 
   constructor(
-    @InjectRepository(DeviceToken)
-    private readonly deviceTokenRepository: Repository<DeviceToken>,
-    @InjectRepository(Portal)
-    private readonly portalRepository: Repository<Portal>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
-  async onModuleInit() {
-    await this.initializeFirebase();
+  private get deviceTokenRepository(): Repository<DeviceToken> {
+    return this.tenantConnService.getRepository(DeviceToken);
   }
 
-  private async initializeFirebase() {
+  private get portalRepository(): Repository<Portal> {
+    return this.tenantConnService.getRepository(Portal);
+  }
+
+  onModuleInit() {
+    this.initializeFirebase();
+  }
+
+  private initializeFirebase() {
     try {
       const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
       const clientEmail = this.configService.get<string>(
@@ -193,12 +198,11 @@ export class PushNotificationService implements OnModuleInit {
 
   /**
    * Get user ID by delivery person ID
+   * Delivery persons register device tokens with their own ID as userId,
+   * so we just return the deliveryId directly.
    */
   async getUserIdByDeliveryId(deliveryId: number): Promise<number | null> {
-    const portal = await this.portalRepository.findOne({
-      where: { deliveryId, isActive: true },
-    });
-    return portal?.id || null;
+    return deliveryId;
   }
 
   /**
@@ -228,67 +232,67 @@ export class PushNotificationService implements OnModuleInit {
 
     const message: admin.messaging.MulticastMessage = options?.dataOnlyWeb
       ? {
-          tokens,
-          data: {
-            ...(payload.data || {}),
-            title: payload.title,
-            body: payload.body,
-            clickAction: payload.clickAction || '/',
+        tokens,
+        data: {
+          ...(payload.data || {}),
+          title: payload.title,
+          body: payload.body,
+          clickAction: payload.clickAction || '/',
+        },
+        webpush: {
+          fcmOptions: {
+            link: payload.clickAction || '/',
           },
-          webpush: {
-            fcmOptions: {
-              link: payload.clickAction || '/',
-            },
-          },
-        }
+        },
+      }
       : {
-          tokens,
+        tokens,
+        notification: {
+          title: payload.title,
+          body: payload.body,
+          ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+        },
+        data: payload.data || {},
+        webpush: {
           notification: {
             title: payload.title,
             body: payload.body,
+            icon: '/Eo_circle_deep-orange_white_letter-o.svg',
+            badge: '/Eo_circle_deep-orange_white_letter-o.svg',
+            ...(payload.imageUrl && { image: payload.imageUrl }),
+          },
+          fcmOptions: {
+            link: payload.clickAction || '/',
+          },
+        },
+        android: {
+          notification: {
+            title: payload.title,
+            body: payload.body,
+            icon: 'notification_icon',
+            color: '#FF6B00',
+            channelId: 'orderium_notifications',
+            clickAction: payload.clickAction || 'OPEN_APP',
             ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
           },
-          data: payload.data || {},
-          webpush: {
-            notification: {
-              title: payload.title,
-              body: payload.body,
-              icon: '/Eo_circle_deep-orange_white_letter-o.svg',
-              badge: '/Eo_circle_deep-orange_white_letter-o.svg',
-              ...(payload.imageUrl && { image: payload.imageUrl }),
-            },
-            fcmOptions: {
-              link: payload.clickAction || '/',
-            },
-          },
-          android: {
-            notification: {
-              title: payload.title,
-              body: payload.body,
-              icon: 'notification_icon',
-              color: '#FF6B00',
-              channelId: 'orderium_notifications',
-              clickAction: payload.clickAction || 'OPEN_APP',
-              ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
-            },
-            priority: 'high',
-          },
-          apns: {
-            payload: {
-              aps: {
-                alert: {
-                  title: payload.title,
-                  body: payload.body,
-                },
-                badge: 1,
-                sound: 'default',
+          priority: 'high',
+        },
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                title: payload.title,
+                body: payload.body,
               },
-            },
-            fcmOptions: {
-              ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+              badge: 1,
+              sound: 'default',
             },
           },
-        };
+          fcmOptions: {
+            ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+          },
+        },
+      };
 
     try {
       const response = await admin.messaging().sendEachForMulticast(message);
@@ -353,7 +357,8 @@ export class PushNotificationService implements OnModuleInit {
 
     const tokens = deviceTokens.map((dt) => dt.token);
     const isBackofficeOnly =
-      options.appTypes?.length === 1 && options.appTypes[0] === AppType.BACKOFFICE;
+      options.appTypes?.length === 1 &&
+      options.appTypes[0] === AppType.BACKOFFICE;
     const result = await this.sendToTokens(tokens, payload, {
       dataOnlyWeb: isBackofficeOnly,
     });

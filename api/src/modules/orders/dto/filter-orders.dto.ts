@@ -1,4 +1,12 @@
-import { IsOptional, IsString, IsDateString, IsNumber, IsBoolean } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsNumber,
+  IsBoolean,
+  IsArray,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class FilterOrdersDto {
@@ -18,10 +26,22 @@ export class FilterOrdersDto {
   @IsDateString()
   endDate?: string;
 
-  @ApiProperty({ required: false, description: 'Delivery status filter' })
+  @ApiProperty({
+    required: false,
+    description: 'Delivery status filter',
+    type: [String],
+  })
   @IsOptional()
-  @IsString()
-  deliveryStatus?: string;
+  @Transform(({ value }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return [value];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return value;
+  })
+  @IsArray()
+  @IsString({ each: true })
+  deliveryStatus?: string[];
 
   @ApiProperty({ required: false, description: 'Order number filter' })
   @IsOptional()
@@ -43,7 +63,10 @@ export class FilterOrdersDto {
   @IsNumber()
   deliveryPersonId?: number;
 
-  @ApiProperty({ required: false, description: 'Filter by order source - client app or local' })
+  @ApiProperty({
+    required: false,
+    description: 'Filter by order source - client app or local',
+  })
   @IsOptional()
   @IsBoolean()
   fromClient?: boolean;

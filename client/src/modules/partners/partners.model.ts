@@ -30,8 +30,9 @@ export class Partner implements IPartner {
     public longitude?: number,
     public googleMapsUrl?: string,
     public wazeUrl?: string,
+    public deliveryAddress?: string,
     public totalOrders?: number
-  ) {}
+  ) { }
 
   get displayName(): string {
     return this.name;
@@ -94,37 +95,38 @@ export class Partner implements IPartner {
     return cleaned.length >= 10;
   }
 
-  static fromApiResponse(data: any): Partner {
+  static fromApiResponse(data: Record<string, unknown>): Partner {
     return new Partner(
-      data.id,
-      data.name,
-      data.isEnabled,
-      data.isCustomer,
-      data.isSupplier,
-      data.dueDatePeriod || 0,
-      data.dateCreated,
-      data.dateUpdated,
-      data.isTaxExempt || false,
-      data.code,
-      data.taxNumber,
-      data.address,
-      data.postalCode,
-      data.city,
-      data.countryId,
-      data.email,
-      data.phoneNumber,
-      data.streetName,
-      data.additionalStreetName,
-      data.buildingNumber,
-      data.plotIdentification,
-      data.citySubdivisionName,
-      data.countrySubentity,
-      data.priceListId,
-      data.latitude ? parseFloat(data.latitude) : undefined,
-      data.longitude ? parseFloat(data.longitude) : undefined,
-      data.googleMapsUrl,
-      data.wazeUrl,
-      data.totalOrders ? parseInt(data.totalOrders) : undefined
+      data.id as number,
+      data.name as string,
+      data.isEnabled as boolean,
+      data.isCustomer as boolean,
+      data.isSupplier as boolean,
+      (data.dueDatePeriod as number) || 0,
+      data.dateCreated as string,
+      data.dateUpdated as string,
+      (data.isTaxExempt as boolean) || false,
+      data.code as string | undefined,
+      data.taxNumber as string | undefined,
+      data.address as string | undefined,
+      data.postalCode as string | undefined,
+      data.city as string | undefined,
+      data.countryId as number | undefined,
+      data.email as string | undefined,
+      data.phoneNumber as string | undefined,
+      data.streetName as string | undefined,
+      data.additionalStreetName as string | undefined,
+      data.buildingNumber as string | undefined,
+      data.plotIdentification as string | undefined,
+      data.citySubdivisionName as string | undefined,
+      data.countrySubentity as string | undefined,
+      data.priceListId as number | undefined,
+      data.latitude ? parseFloat(String(data.latitude)) : undefined,
+      data.longitude ? parseFloat(String(data.longitude)) : undefined,
+      data.googleMapsUrl as string | undefined,
+      data.wazeUrl as string | undefined,
+      data.deliveryAddress as string | undefined,
+      data.totalOrders ? parseInt(String(data.totalOrders)) : undefined
     );
   }
 

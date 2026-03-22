@@ -1,0 +1,29 @@
+{
+    "name": "@orderium/ui",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "main": "src/index.ts",
+    "types": "src/index.ts",
+    "exports": {
+        ".": "./src/index.ts",
+        "./theme": "./src/theme.ts",
+        "./styles": "./src/styles.css",
+        "./notifications.css": "./src/notifications.css"
+    },
+    "dependencies": {
+        "lucide-react": "^0.462.0",
+        "primereact": "^10.8.5",
+        "primeicons": "^7.0.0",
+        "primeflex": "^3.3.1"
+    },
+    "devDependencies": {
+        "@types/react": "^18.3.0",
+        "@types/react-dom": "^18.3.0"
+    },
+    "peerDependencies": {
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0"
+    },
+    "scripts": {}
+}

@@ -14,6 +14,13 @@ class ImagesService {
     const response = await apiClient.upload<any>(API_ROUTES.IMAGES.UPLOAD, formData, config);
     return UploadedImage.fromApiResponse(response.data);
   }
+
+  /**
+   * Delete an image from storage by its publicId.
+   */
+  async delete(publicId: string): Promise<void> {
+    await apiClient.delete(`${API_ROUTES.IMAGES.DELETE}?publicId=${encodeURIComponent(publicId)}`);
+  }
 }
 
 export const imagesService = new ImagesService();

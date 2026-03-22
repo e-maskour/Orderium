@@ -7,11 +7,11 @@ export class PartnersService {
     const response = await http<PartnerSearchResponse>(
       `/api/partners/search?phone=${encodeURIComponent(phone)}`
     );
-    
-    if (response.partners) {
-      return response.partners.map((p: any) => Partner.fromApiResponse(p));
+
+    if (response.data) {
+      return response.data.map((p) => Partner.fromApiResponse(p as Record<string, unknown>));
     }
-    
+
     return [];
   }
 
@@ -19,7 +19,12 @@ export class PartnersService {
     const response = await http<PartnerResponse>(
       `/api/partners/phone/${encodeURIComponent(phone)}`
     );
-    return Partner.fromApiResponse(response.partner);
+    return Partner.fromApiResponse(response.data as Record<string, unknown>);
+  }
+
+  async getById(id: number): Promise<Partner> {
+    const response = await http<PartnerResponse>(`/api/partners/${id}`);
+    return Partner.fromApiResponse(response.data as Record<string, unknown>);
   }
 
   async upsert(data: PartnerFormData & { portalPhoneNumber?: string }): Promise<Partner> {
@@ -27,7 +32,7 @@ export class PartnersService {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    return Partner.fromApiResponse(response.partner);
+    return Partner.fromApiResponse(response.data as Record<string, unknown>);
   }
 
   async incrementOrderCount(phone: string): Promise<void> {

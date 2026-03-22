@@ -87,4 +87,5 @@ export interface CreateOrderDTO {
   items: Omit<IOrderItem, 'id' | 'orderId'>[];
 }
 
-export interface UpdateOrderDTO extends Partial<CreateOrderDTO> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface UpdateOrderDTO extends Partial<CreateOrderDTO> { }

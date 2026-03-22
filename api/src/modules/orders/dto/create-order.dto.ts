@@ -106,7 +106,9 @@ export class CreateOrderDto {
   @IsString()
   supplierPhone?: string;
 
-  @ApiPropertyOptional({ description: 'Supplier address (for purchase orders)' })
+  @ApiPropertyOptional({
+    description: 'Supplier address (for purchase orders)',
+  })
   @IsOptional()
   @IsString()
   supplierAddress?: string;

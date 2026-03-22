@@ -17,8 +17,10 @@ import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { ApiRes } from '../../common/api-response';
 import { PTR } from '../../common/response-codes';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Partners')
+@PortalRoute()
 @Controller('partners')
 export class PartnersController {
   constructor(private readonly partnersService: PartnersService) { }
@@ -58,7 +60,10 @@ export class PartnersController {
     @Query('offset') offset?: string,
     @Query('search') search?: string,
   ) {
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '100', 10) || 100));
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit ?? '100', 10) || 100),
+    );
     const offsetNum = Math.max(0, parseInt(offset ?? '0', 10) || 0);
 
     const { partners, total } = await this.partnersService.findAll(

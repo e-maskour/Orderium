@@ -13,7 +13,7 @@ export default {
   'invoice.payment': 'الدفع',
   'invoice.actions': 'الإجراءات',
   'invoice.noInvoices': 'لا توجد فواتير',
-  
+
   // Search & Filters
   'invoice.searchPlaceholder': 'ابحث برقم الفاتورة أو العميل...',
   'invoice.filterStatus': 'تصفية حسب الحالة',
@@ -21,12 +21,12 @@ export default {
   'invoice.allStatuses': 'كل الحالات',
   'invoice.allPayments': 'كل المدفوعات',
   'invoice.clearFilters': 'مسح الفلاتر',
-  
+
   // Selection
   'invoice.selectedCount': '{count} محدد',
   'invoice.deleteSelected': 'حذف المحدد',
   'invoice.clearSelection': 'مسح التحديد',
-  
+
   // Items
   'invoice.items': 'العناصر',
   'invoice.product': 'المنتج',
@@ -39,13 +39,13 @@ export default {
   'invoice.remaining': 'المتبقي',
   'invoice.note': 'ملاحظة',
   'invoice.terms': 'الشروط',
-  
+
   // Details
   'invoice.viewDetails': 'عرض تفاصيل الفاتورة',
   'invoice.customerInfo': 'معلومات العميل',
   'invoice.invoiceInfo': 'معلومات الفاتورة',
   'invoice.download': 'تحميل',
-  
+
   // Payment
   'invoice.recordPayment': 'تسجيل دفعة',
   'invoice.paymentAmount': 'مبلغ الدفع',
@@ -61,33 +61,33 @@ export default {
   'invoice.payments': 'المدفوعات',
   'invoice.noPayments': 'لا توجد مدفوعات',
   'invoice.noMethod': 'لا توجد طريقة',
-  
+
   // Delete
   'invoice.deleteSuccess': 'تم حذف الفاتورة بنجاح',
   'invoice.deleteError': 'فشل حذف الفاتورة',
   'invoice.confirmBulkDelete': 'هل أنت متأكد من حذف {count} فاتورة؟',
   'invoice.deleteConfirm': 'تأكيد الحذف',
   'invoice.deleteConfirmMessage': 'هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء.',
-  
+
   // Status Updates
   'invoice.statusUpdated': 'تم تحديث الحالة بنجاح',
   'invoice.statusError': 'فشل تحديث الحالة',
   'invoice.markAsSent': 'تحديد كمرسلة',
   'invoice.markAsPaid': 'تحديد كمدفوعة',
   'invoice.cancel': 'إلغاء',
-  
+
   // Status Values
   'invoice.status.draft': 'مسودة',
   'invoice.status.sent': 'مرسلة',
   'invoice.status.paid': 'مدفوعة',
   'invoice.status.overdue': 'متأخرة',
   'invoice.status.cancelled': 'ملغاة',
-  
+
   // Payment Status Values
   'invoice.paymentStatus.unpaid': 'غير مدفوعة',
   'invoice.paymentStatus.partial': 'مدفوعة جزئياً',
   'invoice.paymentStatus.paid': 'مدفوعة',
-  
+
   // Statistics
   'invoice.stats.total': 'إجمالي الفواتير',
   'invoice.stats.totalAmount': 'المبلغ الإجمالي',
@@ -95,7 +95,7 @@ export default {
   'invoice.stats.unpaid': 'غير المدفوع',
   'invoice.stats.overdue': 'المتأخر',
   'invoice.overdue': 'متأخرة',
-  
+
   // Document KPIs
   totalQuotes: 'إجمالي الأسعار',
   acceptedQuotes: 'الأسعار المقبولة',
@@ -109,7 +109,7 @@ export default {
   unpaidAmount: 'المبلغ غير المدفوع',
   delivered: 'مسلم',
   inProgress: 'قيد التنفيذ',
-    // Chart Analysis
+  // Chart Analysis
   invoiceAnalysis: 'تحليل الفواتير',
   quoteAnalysis: 'تحليل عروض الأسعار',
   deliveryAnalysis: 'تحليل وصولات التسليم',
@@ -123,7 +123,7 @@ export default {
   invoices: 'فواتير',
   quotes: 'عروض أسعار',
   deliveries: 'مذكرات',
-  
+
   // Status labels for charts
   draft: 'مسودة',
   unpaid: 'غير مدفوعة',
@@ -135,7 +135,7 @@ export default {
   invoiced: 'تمت الفوترة',
   validated: 'معتمد',
   cancelled: 'ملغى',
-  
+
   // Month names
   january: 'يناير',
   february: 'فبراير',
@@ -149,7 +149,7 @@ export default {
   october: 'أكتوبر',
   november: 'نوفمبر',
   december: 'ديسمبر',
-    // Document Filter Fields
+  // Document Filter Fields
   quoteNumber: 'رقم عرض السعر',
   deliveryNumber: 'رقم سند التسليم',
   invoiceNumber: 'رقم الفاتورة',
@@ -157,7 +157,7 @@ export default {
   noPartnerFound: 'لا يوجد {partner}',
   quoteDate: 'تاريخ عرض السعر',
   deliveryDate: 'تاريخ التسليم',
-  
+
   // Additional Fields
   'invoice.createdAt': 'تاريخ الإنشاء',
   'invoice.issueDate': 'تاريخ الإصدار',
@@ -166,7 +166,7 @@ export default {
   'invoice.information': 'معلومات الفاتورة',
   'invoice.noCustomer': 'لا يوجد عميل',
   'invoice.noItems': 'لا توجد عناصر',
-  
+
   // Create/Edit Invoice
   'invoice.customerRequired': 'العميل مطلوب',
   'invoice.validItemsRequired': 'عناصر صالحة مطلوبة',
@@ -189,10 +189,10 @@ export default {
   'invoice.edit': 'تعديل الفاتورة',
   'invoice.editSubtitle': 'تعديل تفاصيل الفاتورة',
   'invoice.totalHT': 'المجموع ب.ض',
-  
+
   // Customer Info
   'customer.information': 'معلومات العميل',
-  
+
   // Form Labels
   'invoice.partnerNamePlaceholder': 'اسم {partner}',
   'invoice.phoneLabel': 'هاتف:',
@@ -224,7 +224,7 @@ export default {
   'invoice.globalTax': 'الضريبة الإجمالية',
   'invoice.globalTaxPlaceholder': 'الضريبة (%)',
   'invoice.notesLabel': 'ملاحظات',
-  'invoice.supplier': 'المورد',  
+  'invoice.supplier': 'المورد',
   // Payment Modal
   'invoice.editPayment': 'تعديل الدفع',
   'invoice.addPayment': 'إضافة دفع',
@@ -239,7 +239,7 @@ export default {
   'invoice.additionalNotes': 'ملاحظات إضافية',
   'invoice.notesPlaceholder2': 'ملاحظات إضافية...',
   'invoice.productCatalogue': 'كتالوج المنتجات',
-  
+
   // Document Edit/Create Messages
   errorLoadingDocument: 'خطأ في تحميل المستند',
   pleaseAddAtLeastOneItem: 'الرجاء إضافة عنصر واحد على الأقل',
@@ -262,7 +262,7 @@ export default {
   quoteRejectedClosed: 'تم رفض وإغلاق عرض السعر',
   errorValidatingDocument: 'خطأ في التحقق من المستند',
   errorDevalidatingDocument: 'خطأ في إلغاء التحقق',
-  
+
   // Document Action Titles
   validateDocumentTitle: 'التحقق من المستند',
   devalidateDocumentTitle: 'إلغاء التحقق',
@@ -273,13 +273,13 @@ export default {
   markAsDeliveredTitle: 'تحديد كمسلم',
   cancelDeliveryNoteTitle: 'إلغاء وصل التسليم',
   additionalNotesPlaceholder: 'ملاحظات إضافية...',
-  
+
   // Document Status Labels
   signedToInvoice: 'موقع (للفوترة)',
   unsignedClosed: 'غير موقع (مغلق)',
   toDeliver: 'للتسليم',
   invoicedStatus: 'تم الفوترة',
-  
+
   // Confirmation Messages
   confirmValidateDocument: 'هل أنت متأكد من أنك تريد التحقق من هذا المستند؟ لن يمكن تعديله بعد ذلك.',
   confirmDevalidateDocument: 'هل أنت متأكد من أنك تريد إلغاء التحقق من هذا المستند؟',
@@ -292,16 +292,16 @@ export default {
   confirmDeleteDocument: 'هل أنت متأكد من أنك تريد حذف هذا المستند؟ هذا الإجراء لا رجعة فيه.',
   confirmValidate: 'هل أنت متأكد من أنك تريد التحقق من هذا المستند؟',
   confirmDevalidate: 'هل أنت متأكد من أنك تريد إلغاء التحقق من هذا المستند؟',
-  
+
   // Success Messages
   success: 'نجاح',
   documentValidated: 'تم التحقق من المستند بنجاح',
   documentDevalidated: 'تم إلغاء التحقق من المستند بنجاح',
-  
+
   // Error Messages
   errorDevalidatingInList: 'خطأ عند إلغاء التحقق من المستند',
   unsupportedDocumentType: 'نوع مستند غير مدعوم',
-  
+
   // Additional Labels
   totalRevenue: 'الإيرادات',
   totalExpenses: 'المصروفات',
@@ -315,6 +315,7 @@ export default {
   signedByPlaceholder: 'اسمك الكامل',
   validateDocument: 'تحقق',
   devalidateDocument: 'إلغاء التحقق',
+  pdfGenerated: 'تم إنشاء PDF',
   markAsDelivered: 'وضع علامة كتم التسليم',
   signQuote: 'توقيع',
   rejectQuote: 'رفض',
@@ -329,7 +330,7 @@ export default {
   generateSecureLink: 'إنشاء رابط مشاركة آمن للسماح لعميلك بالاطلاع والتوقيع على عرض السعر هذا.',
   downloadPDF: 'تحميل PDF',
   errorGeneratingPDF: 'خطأ في إنشاء ملف PDF',
-  
+
   // Document Create Page
   pleaseSelect: 'يرجى اختيار',
   createdSuccessfully: 'تم الإنشاء بنجاح',
@@ -342,7 +343,7 @@ export default {
   subtotalHT: 'المجموع الفرعي (قبل الضريبة)',
   totalTVA: 'إجمالي الضريبة',
   totalTTC: 'المجموع الإجمالي (شامل الضريبة)',
-  
+
   // Document List Page
   listOf: 'قائمة',
   manageYour: 'إدارة',
@@ -357,7 +358,7 @@ export default {
   error: 'خطأ',
   deletionImpossible: 'لا يمكن الحذف',
   errorDeletingDocument: 'خطأ عند حذف المستند',
-  
+
   // Document Types & Titles
   salesInvoices: 'فواتير المبيعات',
   salesInvoice: 'فاتورة عميل',
@@ -368,7 +369,7 @@ export default {
   deliveryNote: 'وصل تسليم',
   client: 'عميل',
   supplier: 'مورد',
-  
+
   // DocumentTable
   columns: 'الأعمدة',
   showColumns: 'عرض الأعمدة',
@@ -391,27 +392,27 @@ export default {
   on: 'من',
   previous: 'السابق',
   next: 'التالي',
-  
+
   // Status Labels - Payment
   statusPaid: 'مدفوع',
   statusPartial: 'جزئي',
   statusUnpaid: 'غير مدفوع',
   statusDraft: 'مسودة',
-  
+
   // Status Labels - Quote
   statusOpen: 'مفتوح',
   statusSigned: 'موقع (للفوترة)',
   statusClosed: 'غير موقع (مغلق)',
   statusDelivered: 'للتسليم',
   statusInvoiced: 'تم إصدار فاتورة',
-  
+
   // Status Labels - Delivery Note
   statusValidated: 'تم التحقق',
   statusInProgress: 'جاري',
   statusDeliveredBon: 'تم التسليم',
   statusCancelled: 'ملغى',
   statusInvoicedBon: 'تم الفوترة',
-  
+
   // Additional Success Messages
   successUpdated: 'تم التحديث بنجاح',
   successValidated: 'تم التحقق بنجاح',
@@ -424,14 +425,14 @@ export default {
   successLinkGenerated: 'تم إنشاء رابط المشاركة',
   successQuoteSigned: 'تم توقيع العرض بنجاح',
   successQuoteRejected: 'تم رفض العرض وإغلاقه',
-  
+
   // Additional Error Messages
   errorUnsigning: 'خطأ في إلغاء التوقيع',
   errorUpdatingDocument: 'خطأ في التحديث',
   errorDelivering: 'خطأ في التسليم',
-  
+
   // Additional Edit/Create messages
-  
+
   // Document Edit UI
   editDocument: 'تعديل',
   notValidated: 'لم يتم التحقق',
@@ -456,7 +457,7 @@ export default {
   createDeliveryNote: 'إنشاء وصل تسليم',
   save: 'حفظ',
   saving: 'جارٍ الحفظ...',
-  
+
   // Payment Modal & History
   errorPaymentExceedsInvoice: 'لا يمكن أن يتجاوز إجمالي المدفوعات إجمالي الفاتورة',
   errorOccurred: 'حدث خطأ',
@@ -477,7 +478,7 @@ export default {
   delete: 'حذف',
   edit: 'تعديل',
   add: 'إضافة',
-  
+
   // Payment Pages
   purchasePayments: 'مدفوعات المشتريات',
   managePurchasePayments: 'إدارة مدفوعات الموردين',

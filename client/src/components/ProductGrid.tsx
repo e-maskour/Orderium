@@ -2,8 +2,6 @@ import { Product, ProductFilters } from '@/types/database';
 import { ProductCard } from './ProductCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { Package, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useMemo } from 'react';
-import { Button } from './ui/button';
 
 interface ProductGridProps {
   products: Product[];
@@ -13,47 +11,31 @@ interface ProductGridProps {
   totalPages: number;
   totalCount: number;
   onPageChange: (page: number) => void;
-  viewMode?: 'grid' | 'list';
-  onViewModeChange?: (mode: 'grid' | 'list') => void;
 }
 
-export const ProductGrid = ({ 
-  products, 
-  filters, 
-  isLoading, 
-  currentPage, 
-  totalPages, 
-  totalCount,
+export const ProductGrid = ({
+  products,
+  filters,
+  isLoading,
+  currentPage,
+  totalPages,
   onPageChange,
-  viewMode = 'grid',
-  onViewModeChange
 }: ProductGridProps) => {
-  const { language, t, dir } = useLanguage();
+  const { t, dir } = useLanguage();
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      onPageChange(currentPage - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  const handlePrev = () => { if (currentPage > 1) { onPageChange(currentPage - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
+  const handleNext = () => { if (currentPage < totalPages) { onPageChange(currentPage + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      onPageChange(currentPage + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
+  // Skeleton
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3" dir={dir}>
+      <div className="cl-product-grid" dir={dir}>
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
-            <div className="aspect-square bg-gray-200" />
-            <div className="p-2 space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-3/4" />
-              <div className="h-4 bg-gray-200 rounded w-1/2" />
-              <div className="h-8 bg-gray-200 rounded" />
+          <div key={i} style={{ borderRadius: '0.75rem', overflow: 'hidden', background: 'white', border: '1.5px solid #e5e7eb' }}>
+            <div className="cl-skeleton" style={{ aspectRatio: '4/3' }} />
+            <div style={{ padding: '0.5rem 0.625rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              <div className="cl-skeleton" style={{ height: '0.75rem', width: '80%' }} />
+              <div className="cl-skeleton" style={{ height: '0.875rem', width: '50%' }} />
             </div>
           </div>
         ))}
@@ -61,134 +43,69 @@ export const ProductGrid = ({
     );
   }
 
-  if (!isLoading && products.length === 0) {
+  // Empty state
+  if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center" dir={dir}>
-        <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
-          {filters.search ? (
-            <Search className="w-12 h-12 text-gray-300" />
-          ) : (
-            <Package className="w-12 h-12 text-gray-300" />
-          )}
+      <div className="cl-empty" dir={dir}>
+        <div className="cl-empty-icon">
+          {filters.search
+            ? <Search style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} />
+            : <Package style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} />
+          }
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.125rem', color: 'var(--text-color)' }}>
           {filters.search ? t('noResults') : t('noProductsInCategory')}
         </h3>
-        <p className="text-gray-500 max-w-md">
+        <p style={{ margin: '0.5rem 0 0', color: 'var(--text-color-secondary)', fontSize: '0.9375rem', maxWidth: '24rem' }}>
           {filters.search ? t('noResultsMessage') : t('tryDifferentCategory')}
         </p>
       </div>
     );
   }
 
+  // Page numbers helper
+  const pageNums = (() => {
+    const total = Math.min(5, totalPages);
+    const arr: number[] = [];
+    let start = 1;
+    if (totalPages > 5) {
+      if (currentPage <= 3) start = 1;
+      else if (currentPage >= totalPages - 2) start = totalPages - 4;
+      else start = currentPage - 2;
+    }
+    for (let i = 0; i < total; i++) arr.push(start + i);
+    return arr;
+  })();
+
   return (
-    <div className="space-y-4 sm:space-y-6" dir={dir}>
-      {/* Product Grid/List */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
-          {products.map((product, index) => (
-            <div
-              key={`${product.id}-${index}`}
-              style={{ animationDelay: `${index * 20}ms` }}
-              className="animate-fade-in"
+    <div dir={dir} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Grid */}
+      <div className="cl-product-grid">
+        {products.map((p, i) => <ProductCard key={`${p.id}-${i}`} product={p} />)}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="cl-pagination" dir={dir}>
+          <button className="cl-page-btn" onClick={handlePrev} disabled={currentPage === 1} aria-label={t('previous')}>
+            {dir === 'rtl' ? <ChevronRight style={{ width: '1rem', height: '1rem' }} /> : <ChevronLeft style={{ width: '1rem', height: '1rem' }} />}
+          </button>
+
+          {pageNums.map(n => (
+            <button
+              key={n}
+              className={`cl-page-btn${n === currentPage ? ' active' : ''}`}
+              onClick={() => { onPageChange(n); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
-              <ProductCard product={product} />
-            </div>
+              {n}
+            </button>
           ))}
-        </div>
-      ) : (
-        <div className="space-y-2 sm:space-y-3">
-          {products.map((product, index) => (
-            <div
-              key={`${product.id}-${index}`}
-              style={{ animationDelay: `${index * 20}ms` }}
-              className="animate-fade-in"
-            >
-              <ProductCard product={product} viewMode="list" />
-            </div>
-          ))}
+
+          <button className="cl-page-btn" onClick={handleNext} disabled={currentPage === totalPages} aria-label={t('next')}>
+            {dir === 'rtl' ? <ChevronLeft style={{ width: '1rem', height: '1rem' }} /> : <ChevronRight style={{ width: '1rem', height: '1rem' }} />}
+          </button>
         </div>
       )}
-
-      {/* Pagination Controls - Show info even with 1 page */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 border-t border-gray-200 pt-4 sm:pt-6 pb-2">
-        {totalPages > 1 && (
-          <>
-            {/* Previous Button */}
-            <button
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-              type="button"
-              className="flex items-center gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-5 rounded-lg text-sm sm:text-base font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all min-w-[80px] sm:min-w-0 justify-center"
-            >
-              {dir === 'rtl' ? (
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              ) : (
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              )}
-              <span className="hidden xs:inline">{t('previous')}</span>
-            </button>
-
-            {/* Page Numbers */}
-            <div className="flex items-center gap-2">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                
-                return (
-                  <button
-                    key={pageNum}
-                    type="button"
-                    onClick={() => {
-                      onPageChange(pageNum);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base font-semibold transition-all ${
-                      currentPage === pageNum
-                        ? 'bg-primary text-white shadow-md'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:border-primary hover:bg-gray-50'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Next Button */}
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-              type="button"
-              className="flex items-center gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-5 rounded-lg text-sm sm:text-base font-medium bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all min-w-[80px] sm:min-w-0 justify-center"
-            >
-              <span className="hidden xs:inline">{t('next')}</span>
-              {dir === 'rtl' ? (
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              ) : (
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              )}
-            </button>
-          </>
-        )}
-        
-        {/* Product count info */}
-        <div className="text-sm text-gray-500">
-          {totalCount > 0 && (
-            language === 'ar' 
-              ? `${totalCount} منتج`
-              : `${totalCount} produits`
-          )}
-        </div>
-      </div>
     </div>
   );
 };

@@ -27,6 +27,7 @@ export interface Partner {
   longitude?: number;
   googleMapsUrl?: string;
   wazeUrl?: string;
+  deliveryAddress?: string;
   totalOrders?: number;
 }
 
@@ -45,9 +46,9 @@ export interface PartnerFormData {
 }
 
 export interface PartnerSearchResponse {
-  partners: Partner[];
+  data: Partner[];
 }
 
 export interface PartnerResponse {
-  partner: Partner;
+  data: Partner;
 }

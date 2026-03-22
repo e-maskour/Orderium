@@ -1,5 +1,6 @@
-import { X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { Dialog } from 'primereact/dialog';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 interface PDFPreviewModalProps {
   isOpen: boolean;
@@ -10,55 +11,87 @@ interface PDFPreviewModalProps {
 
 export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewModalProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const prevBlobUrl = useRef<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-    }
+    if (!isOpen || !pdfUrl) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    setBlobUrl(null);
+
+    const token = localStorage.getItem('adminToken');
+    fetch(pdfUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        const url = URL.createObjectURL(blob);
+        // Revoke previous blob URL to free memory
+        if (prevBlobUrl.current) URL.revokeObjectURL(prevBlobUrl.current);
+        prevBlobUrl.current = url;
+        setBlobUrl(url);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message);
+        setIsLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, [isOpen, pdfUrl]);
 
-  if (!isOpen) return null;
+  // Cleanup blob URL when modal closes
+  useEffect(() => {
+    if (!isOpen && prevBlobUrl.current) {
+      URL.revokeObjectURL(prevBlobUrl.current);
+      prevBlobUrl.current = null;
+      setBlobUrl(null);
+    }
+  }, [isOpen]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-7xl mx-4 h-[95vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 rounded-t-xl">
-          <h2 className="text-lg font-bold text-slate-800">Aperçu {title}</h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <Dialog
+      visible={isOpen}
+      onHide={onClose}
+      header={`Aperçu ${title}`}
+      modal
+      dismissableMask
+      maximizable
+      style={{ width: '90vw', maxWidth: '80rem' }}
+      breakpoints={{ '960px': '90vw', '640px': '95vw' }}
+      contentStyle={{ height: '80vh', padding: 0, position: 'relative', background: '#f1f5f9', overflow: 'hidden' }}
+    >
+      {isLoading && (
+        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: '#f1f5f9', zIndex: 1 }}>
+          <div className="text-center">
+            <ProgressSpinner style={{ width: '3rem', height: '3rem' }} />
+            <p className="font-medium mt-3" style={{ color: '#475569' }}>Chargement du PDF...</p>
+          </div>
         </div>
+      )}
 
-        {/* PDF Content */}
-        <div className="flex-1 overflow-hidden relative bg-slate-100">
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
-              <div className="text-center">
-                <div className="inline-block w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-                <p className="text-slate-600 font-medium">Chargement du PDF...</p>
-              </div>
-            </div>
-          )}
-          
-          <iframe
-            src={pdfUrl}
-            className="w-full h-full border-0"
-            title={title}
-            onLoad={() => setIsLoading(false)}
-          />
+      {error && (
+        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: '#f1f5f9', zIndex: 1 }}>
+          <p style={{ color: '#ef4444', fontWeight: 600 }}>Erreur: {error}</p>
         </div>
-      </div>
-    </div>
+      )}
+
+      {blobUrl && (
+        <iframe
+          src={blobUrl}
+          style={{ width: '100%', height: '100%', border: 'none' }}
+          title={title}
+        />
+      )}
+    </Dialog>
   );
 }

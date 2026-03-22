@@ -3,13 +3,17 @@ import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { ClipboardCheck, Plus, Search, Filter, Eye, Play, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { NativeSelect } from '../components/ui/native-select';
+import { ClipboardCheck, Plus, Search, Eye, Play, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Dropdown } from 'primereact/dropdown';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjustments.service';
 import { InventoryAdjustment } from '../modules/inventory/inventory.model';
 import { toastSuccess, toastValidated, toastDeleted, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
+import { MobileList } from '../components/MobileList';
+import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function InventoryAdjustments() {
   const { dir, t } = useLanguage();
@@ -18,6 +22,7 @@ export default function InventoryAdjustments() {
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAdjustment, setSelectedAdjustment] = useState<InventoryAdjustment | null>(null);
+  const [selectedRows, setSelectedRows] = useState<InventoryAdjustment[]>([]);
 
   const queryClient = useQueryClient();
 
@@ -79,195 +84,181 @@ export default function InventoryAdjustments() {
     adj.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const clearSelection = () => setSelectedRows([]);
+  const toggleSelectAll = () =>
+    selectedRows.length === filteredAdjustments.length
+      ? setSelectedRows([])
+      : setSelectedRows(filteredAdjustments);
+
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      draft: { label: t('draft'), color: 'bg-slate-100 text-slate-700' },
-      in_progress: { label: t('inProgress'), color: 'bg-blue-100 text-blue-700' },
-      done: { label: t('validated'), color: 'bg-emerald-100 text-emerald-700' },
-      cancelled: { label: t('cancelled'), color: 'bg-red-100 text-red-700' },
+    const statusConfig: Record<string, { label: string; cls: string }> = {
+      draft: { label: t('draft'), cls: 'erp-badge erp-badge--draft' },
+      in_progress: { label: t('inProgress'), cls: 'erp-badge erp-badge--active' },
+      done: { label: t('validated'), cls: 'erp-badge erp-badge--paid' },
+      cancelled: { label: t('cancelled'), cls: 'erp-badge erp-badge--unpaid' },
     };
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return (
-      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${config.color}`}>
-        {config.label}
-      </span>
-    );
+    const config = statusConfig[status] || statusConfig.draft;
+    return <span className={config.cls}>{config.label}</span>;
   };
 
   return (
     <AdminLayout>
-      <PageHeader
-        icon={ClipboardCheck}
-        title={t('inventoryAdjustments')}
-        subtitle={t('manageInventoryAdjustments')}
-      />
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+        <PageHeader
+          icon={ClipboardCheck}
+          title={t('inventoryAdjustments')}
+          subtitle={t('manageInventoryAdjustments')}
+        />
 
-      {/* Filters and Actions Bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <Input
-              id="search-adjustments"
-              type="text"
-              placeholder={t('searchByReference')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              leadingIcon={Search}
-              fullWidth
-              aria-label={t('searchByReference')}
-            />
+        {/* Filters and Actions Bar */}
+        <div style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', padding: '1rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+            {/* Search */}
+            <div style={{ flex: 1 }}>
+              <span style={{ position: 'relative', display: 'block', width: '100%' }}>
+                <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+                <InputText id="search-adjustments" type="text" placeholder={t('searchByReference')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label={t('searchByReference')} style={{ width: '100%', paddingLeft: '2.5rem' }} />
+              </span>
+            </div>
+
+            {/* Status Filter */}
+            <Dropdown value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={[{ label: 'Tous les statuts', value: 'all' }, { label: 'Brouillon', value: 'draft' }, { label: 'En cours', value: 'in_progress' }, { label: 'Validé', value: 'done' }, { label: 'Annulé', value: 'cancelled' }]} optionLabel="label" optionValue="value" style={{ minWidth: '12rem' }} />
+
+            {/* Create Button */}
+            <Button icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label={t('newAdjustment')} onClick={() => setShowCreateModal(true)} />
           </div>
-
-          {/* Status Filter */}
-          <NativeSelect
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">Tous les statuts</option>
-            <option value="draft">Brouillon</option>
-            <option value="in_progress">En cours</option>
-            <option value="done">Validé</option>
-            <option value="cancelled">Annulé</option>
-          </NativeSelect>
-
-          {/* Create Button */}
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            leadingIcon={Plus}
-          >
-            {t('newAdjustment')}
-          </Button>
         </div>
-      </div>
 
-      {/* Adjustments List */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
-            <p className="text-slate-600 mt-4">Chargement...</p>
-          </div>
-        ) : filteredAdjustments.length === 0 ? (
-          <div className="p-12 text-center">
-            <ClipboardCheck className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-600 mb-2">{t('noAdjustmentsFound')}</p>
-            <p className="text-sm text-slate-500">{t('createFirstAdjustment')}</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Référence
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Nom
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Entrepôt
-                  </th>
-                  <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Lignes
-                  </th>
-                  <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredAdjustments.map((adjustment) => (
-                  <tr key={adjustment.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-mono text-sm font-semibold text-slate-800">
-                        {adjustment.reference}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-sm text-slate-700">{adjustment.name}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-sm text-slate-600">{adjustment.warehouseName || `Entrepôt ${adjustment.warehouseId}`}</span>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="text-sm text-slate-600">
-                        {adjustment.adjustmentDate
-                          ? new Date(adjustment.adjustmentDate).toLocaleDateString('fr-FR')
-                          : '-'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      {getStatusBadge(adjustment.status)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="inline-flex items-center justify-center bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-lg text-sm">
-                        {adjustment.lines?.length || 0}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {adjustment.status === 'draft' && (
-                          <button
-                            onClick={() => startCountingMutation.mutate(adjustment.id)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title={t('start')}
-                          >
-                            <Play className="w-4 h-4" />
-                          </button>
-                        )}
-                        {adjustment.status === 'in_progress' && (
-                          <button
-                            onClick={() => setSelectedAdjustment(adjustment)}
-                            className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title={t('validate')}
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setSelectedAdjustment(adjustment)}
-                          className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                          title={t('details')}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {adjustment.status === 'draft' && (
-                          <>
-                            <button
-                              onClick={() => cancelMutation.mutate(adjustment.id)}
-                              className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                              title={t('cancel')}
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                toastConfirm(t('confirmDeleteAdjustment'), () => {
-                                  deleteMutation.mutate(adjustment.id);
-                                });
-                              }}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title={t('delete')}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* Adjustments List */}
+        <div className="responsive-table-mobile">
+          <MobileList
+            items={filteredAdjustments}
+            keyExtractor={(adj: InventoryAdjustment) => adj.id}
+            loading={isLoading}
+            totalCount={filteredAdjustments.length}
+            countLabel="ajustements"
+            emptyMessage="Aucun ajustement trouvé"
+            config={{
+              topLeft: (adj: InventoryAdjustment) => adj.reference,
+              topRight: (adj: InventoryAdjustment) => adj.warehouseName || `Entrepôt ${adj.warehouseId}`,
+              bottomLeft: (adj: InventoryAdjustment) => adj.notes || adj.adjustmentDate || '',
+              bottomRight: (adj: InventoryAdjustment) => getStatusBadge(adj.status),
+            }}
+          />
+        </div>
+        <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <DataTable
+            className="ia-datatable"
+            value={filteredAdjustments}
+            selection={selectedRows}
+            onSelectionChange={(e) => setSelectedRows(e.value as InventoryAdjustment[])}
+            selectionMode="checkbox"
+            dataKey="id"
+            paginator
+            paginatorPosition="top"
+            rows={25}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            removableSort
+            loading={isLoading}
+            emptyMessage={
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                <ClipboardCheck style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
+                {t('noAdjustmentsFound')}
+              </div>
+            }
+            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            currentPageReportTemplate="{first}-{last} of {totalRecords}"
+          >
+            <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+            <Column field="reference" header="Référence" sortable body={(adj: InventoryAdjustment) => (
+              <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{adj.reference}</span>
+            )} />
+            <Column field="name" header="Nom" sortable body={(adj: InventoryAdjustment) => (
+              <span style={{ fontSize: '0.875rem', color: '#334155' }}>{adj.name}</span>
+            )} />
+            <Column field="warehouseName" header="Entrepôt" sortable body={(adj: InventoryAdjustment) => (
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>{adj.warehouseName || `Entrepôt ${adj.warehouseId}`}</span>
+            )} />
+            <Column field="adjustmentDate" header="Date" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                {adj.adjustmentDate ? new Date(adj.adjustmentDate).toLocaleDateString('fr-FR') : '-'}
+              </span>
+            )} />
+            <Column field="status" header="Statut" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => getStatusBadge(adj.status)} />
+            <Column header="Lignes" align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#334155', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
+                {adj.lines?.length || 0}
+              </span>
+            )} />
+          </DataTable>
+        </div>
+
+        <FloatingActionBar
+          selectedCount={selectedRows.length}
+          onClearSelection={clearSelection}
+          onSelectAll={toggleSelectAll}
+          isAllSelected={selectedRows.length === filteredAdjustments.length && filteredAdjustments.length > 0}
+          totalCount={filteredAdjustments.length}
+          itemLabel="ajustement"
+          actions={(() => {
+            const adj = selectedRows.length === 1 ? selectedRows[0] : null;
+            const acts: any[] = [];
+            if (adj) {
+              if (adj.status === 'draft') {
+                acts.push({
+                  id: 'start',
+                  label: t('start'),
+                  icon: <Play style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => startCountingMutation.mutate(adj.id),
+                  variant: 'primary' as const,
+                });
+              }
+              if (adj.status === 'in_progress') {
+                acts.push({
+                  id: 'validate',
+                  label: t('validate'),
+                  icon: <CheckCircle2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => setSelectedAdjustment(adj),
+                  variant: 'primary' as const,
+                });
+              }
+              acts.push({
+                id: 'view',
+                label: t('details'),
+                icon: <Eye style={{ width: '0.875rem', height: '0.875rem' }} />,
+                onClick: () => setSelectedAdjustment(adj),
+              });
+              if (adj.status === 'draft') {
+                acts.push({
+                  id: 'cancel',
+                  label: t('cancel'),
+                  icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => cancelMutation.mutate(adj.id),
+                  variant: 'secondary' as const,
+                });
+                acts.push({
+                  id: 'delete',
+                  label: t('delete'),
+                  icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => toastConfirm(t('confirmDeleteAdjustment'), () => { deleteMutation.mutate(adj.id); clearSelection(); }),
+                  variant: 'danger' as const,
+                });
+              }
+            } else {
+              const draftSelected = selectedRows.filter(r => r.status === 'draft');
+              if (draftSelected.length > 0) {
+                acts.push({
+                  id: 'delete',
+                  label: `${t('delete')} (${draftSelected.length})`,
+                  icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => toastConfirm(t('confirmDeleteAdjustment'), () => { draftSelected.forEach(r => deleteMutation.mutate(r.id)); clearSelection(); }),
+                  variant: 'danger' as const,
+                });
+              }
+            }
+            return acts;
+          })()}
+        />
       </div>
     </AdminLayout>
   );

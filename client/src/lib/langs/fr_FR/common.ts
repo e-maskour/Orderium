@@ -103,6 +103,16 @@ export default {
   emailInvalid: 'Email invalide',
   addressRequired: 'Adresse requise',
 
+  // Navigation labels
+  catalog: 'Catalogue',
+  myProfile: 'Mon profil',
+  language: 'Langue',
+  settings: 'Paramètres',
+
+  // Greeting
+  hello: 'Bonjour',
+  chooseProducts: '🛍️ Commandez maintenant',
+
   // Language Toggle
   switchToFrench: 'Changer en français',
   switchToArabic: 'التبديل للعربية',

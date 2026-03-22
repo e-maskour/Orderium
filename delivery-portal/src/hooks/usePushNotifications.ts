@@ -12,7 +12,7 @@ import {
   getPlatform,
 } from '../services/firebase';
 
-const API_URL = '/api';
+const API_URL = '';
 
 export type NotificationPermissionStatus = NotificationPermission | 'unsupported' | 'loading';
 

@@ -103,6 +103,16 @@ export default {
   emailInvalid: 'البريد الإلكتروني غير صالح',
   addressRequired: 'العنوان مطلوب',
 
+  // Navigation labels
+  catalog: 'الكتالوج',
+  myProfile: 'ملفي الشخصي',
+  language: 'اللغة',
+  settings: 'الإعدادات',
+
+  // Greeting
+  hello: 'مرحبًا',
+  chooseProducts: '🛍️ اطلب الآن',
+
   // Language Toggle
   switchToFrench: 'Changer en français',
   switchToArabic: 'التبديل للعربية',

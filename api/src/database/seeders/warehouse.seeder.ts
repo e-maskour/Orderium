@@ -15,7 +15,9 @@ export async function seedWarehouses(dataSource: DataSource) {
   });
 
   if (!existing) {
-    await warehouseRepository.save(warehouseRepository.create(defaultWarehouse));
+    await warehouseRepository.save(
+      warehouseRepository.create(defaultWarehouse),
+    );
     console.log(`✓ Created default warehouse: ${defaultWarehouse.name}`);
   } else {
     console.log(`- Warehouse already exists: ${defaultWarehouse.name}`);

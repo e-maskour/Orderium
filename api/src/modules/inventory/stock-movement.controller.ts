@@ -25,7 +25,7 @@ import { MOV } from '../../common/response-codes';
 @ApiTags('Inventory - Stock Movements')
 @Controller('inventory/movements')
 export class StockMovementController {
-  constructor(private readonly stockService: StockService) { }
+  constructor(private readonly stockService: StockService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new stock movement (draft)' })
@@ -76,7 +76,10 @@ export class StockMovementController {
   @Post('validate')
   @ApiOperation({ summary: 'Validate/execute a stock movement' })
   @ApiResponse({ status: 200, description: 'Movement validated successfully' })
-  @ApiResponse({ status: 400, description: 'Insufficient stock or already validated' })
+  @ApiResponse({
+    status: 400,
+    description: 'Insufficient stock or already validated',
+  })
   @ApiResponse({ status: 404, description: 'Movement not found' })
   async validate(@Body() validateDto: ValidateMovementDto) {
     const movement = await this.stockService.validateMovement(validateDto);
@@ -86,7 +89,10 @@ export class StockMovementController {
   @Post('transfer')
   @ApiOperation({ summary: 'Create and execute internal transfer' })
   @ApiResponse({ status: 201, description: 'Transfer completed successfully' })
-  @ApiResponse({ status: 400, description: 'Insufficient stock or invalid warehouses' })
+  @ApiResponse({
+    status: 400,
+    description: 'Insufficient stock or invalid warehouses',
+  })
   async internalTransfer(@Body() transferDto: InternalTransferDto) {
     const movement = await this.stockService.internalTransfer(transferDto);
     return ApiRes(MOV.TRANSFERRED, movement);
@@ -97,7 +103,10 @@ export class StockMovementController {
   @ApiResponse({ status: 200, description: 'Movement updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update validated movement' })
   @ApiResponse({ status: 404, description: 'Movement not found' })
-  async update(@Param('id') id: string, @Body() updateDto: UpdateStockMovementDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateStockMovementDto,
+  ) {
     const movement = await this.stockService.updateMovement(+id, updateDto);
     return ApiRes(MOV.UPDATED, movement);
   }

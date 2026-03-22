@@ -7,15 +7,43 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@orderium/ui': path.resolve(__dirname, '../shared/ui/src'),
+      '@shared-logo': path.resolve(__dirname, '../shared/logo'),
+    },
+  },
+  // @ts-expect-error - vitest config lives alongside vite config
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/modules/**/*.ts'],
+      exclude: ['src/modules/**/index.ts'],
     },
   },
   server: {
     port: 3001,
     host: '0.0.0.0',
+    fs: {
+      allow: ['..'],
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            // Extract tenant slug from subdomain and forward as X-Tenant-ID header.
+            // e.g. acme-admin.localhost:3001  →  X-Tenant-ID: acme
+            const host = (req.headers['host'] as string) ?? '';
+            const match = host.match(/^([a-z0-9-]+)\.(localhost|.+\..+?)(:\d+)?$/i);
+            if (match) {
+              const slug = match[1].replace(/-(admin|app|delivery)$/i, '');
+              proxyReq.setHeader('X-Tenant-ID', slug);
+            }
+          });
+        },
       },
     },
   },
@@ -38,12 +66,7 @@ export default defineConfig({
             '@tanstack/react-query',
           ],
           'ui': [
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-scroll-area',
-            '@radix-ui/react-slot',
             'lucide-react',
-            'cmdk',
           ],
         },
       },

@@ -74,6 +74,9 @@ export class Order extends BaseDocument {
   @Column({ type: 'date', nullable: true })
   validationDate: Date | null;
 
+  @Column({ type: 'text', nullable: true })
+  pdfUrl: string | null;
+
   @Column({ type: 'int', nullable: true })
   convertedToInvoiceId: number | null; // Reference to invoice if converted
 

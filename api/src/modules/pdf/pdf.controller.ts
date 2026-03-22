@@ -1,19 +1,14 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  Res,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PDFService } from './pdf.service';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
+@ApiTags('PDF')
+@PortalRoute()
 @Controller('pdf')
 export class PDFController {
-  constructor(
-    private readonly pdfService: PDFService,
-  ) {}
+  constructor(private readonly pdfService: PDFService) { }
 
   /**
    * Generate PDF for invoice
@@ -21,6 +16,10 @@ export class PDFController {
    * @param mode - 'preview' (inline) or 'download' (attachment)
    */
   @Get('invoice/:invoiceId')
+  @ApiOperation({ summary: 'Generate PDF for invoice' })
+  @ApiResponse({ status: 200, description: 'Invoice PDF generated' })
+  @ApiResponse({ status: 404, description: 'Invoice not found' })
+  @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
   async generateInvoicePDF(
     @Param('invoiceId') invoiceId: string,
     @Query('mode') mode: 'preview' | 'download' = 'download',
@@ -55,6 +54,10 @@ export class PDFController {
    * @param mode - 'preview' (inline) or 'download' (attachment)
    */
   @Get('quote/:quoteId')
+  @ApiOperation({ summary: 'Generate PDF for quote' })
+  @ApiResponse({ status: 200, description: 'Quote PDF generated' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
+  @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
   async generateQuotePDF(
     @Param('quoteId') quoteId: string,
     @Query('mode') mode: 'preview' | 'download' = 'download',
@@ -89,6 +92,10 @@ export class PDFController {
    * @param mode - 'preview' (inline) or 'download' (attachment)
    */
   @Get('delivery-note/:orderId')
+  @ApiOperation({ summary: 'Generate PDF for delivery note' })
+  @ApiResponse({ status: 200, description: 'Delivery note PDF generated' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
   async generateDeliveryNotePDF(
     @Param('orderId') orderId: string,
     @Query('mode') mode: 'preview' | 'download' = 'download',
@@ -122,6 +129,10 @@ export class PDFController {
    * @param orderId - Order ID
    */
   @Get('receipt/:orderId')
+  @ApiOperation({ summary: 'Generate receipt PDF' })
+  @ApiResponse({ status: 200, description: 'Receipt PDF generated' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  @ApiQuery({ name: 'mode', required: false, enum: ['preview', 'download'] })
   async generateReceipt(
     @Param('orderId') orderId: string,
     @Query('mode') mode: 'preview' | 'download' = 'download',

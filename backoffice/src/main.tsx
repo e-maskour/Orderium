@@ -1,7 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import './index.css';
+import '@orderium/ui/styles.css';
+import '@orderium/ui/notifications.css';
+import './theme.css';
+import './GlobalOverlayPanel.css';
+import './DataTableTheme.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

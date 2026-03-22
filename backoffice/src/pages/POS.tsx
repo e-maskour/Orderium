@@ -1,40 +1,42 @@
 import { useState, useEffect, useRef } from 'react';
+import orderiumLogo from '../assets/logo-backoffice.svg';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Search, ShoppingBag, Trash2, User, MapPin, Package, ArrowLeft, Tag } from 'lucide-react';
+import { Search, ShoppingBag, Trash2, User, Package, ArrowLeft, Tag, ShoppingCart, X, ChevronRight } from 'lucide-react';
 import { toastError } from '../services/toast.service';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Badge } from 'primereact/badge';
+import { Skeleton } from 'primereact/skeleton';
 import { ProductQuantityModal } from '../components/ProductQuantityModal';
 import { PriceConfirmModal } from '../components/PriceConfirmModal';
 import { CustomerSelectionModal } from '../components/CustomerSelectionModal';
 import { DiscountModal } from '../components/DiscountModal';
 import { posService, IPosProduct as Product, IPosCustomer as Customer, IPosCartItem as CartItem } from '../modules/pos';
+import { formatCurrency } from '@orderium/ui';
 
 export default function POS() {
   const { t, language, dir } = useLanguage();
   const navigate = useNavigate();
 
-  // Get API base URL from environment or use window origin
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-
-  // Helper to convert relative image paths to full URLs
   const getImageUrl = (imageUrl?: string): string | undefined => {
     if (!imageUrl) return undefined;
-    if (imageUrl.startsWith('http')) return imageUrl; // Already full URL
-    if (imageUrl.startsWith('orderium/')) {
-      // Cloudinary
-      return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
-    }
-    // Relative path - add API base URL
-    return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+    // Full URL (MinIO or any absolute URL): use directly
+    if (imageUrl.startsWith('http')) return imageUrl;
+    // Legacy fallback: construct from MinIO public URL
+    const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
+    return `${minioPublicUrl}/orderium-media/${imageUrl}`;
   };
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const hasSetDefaultCustomer = useRef(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(() => {
+    try { return JSON.parse(localStorage.getItem('pos_customer') || 'null'); } catch { return null; }
+  });
+  const hasSetDefaultCustomer = useRef(selectedCustomer !== null);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try { return JSON.parse(localStorage.getItem('pos_cart') || '[]'); } catch { return []; }
+  });
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,16 +44,28 @@ export default function POS() {
   const [confirmedPrice, setConfirmedPrice] = useState<number | null>(null);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
-  const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
-  const [isResizing, setIsResizing] = useState(false);
+  const sidebarWidth = 320;
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const formatCurrency = (price: number) => {
-    return language === 'ar'
-      ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م.`
-      : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
-  };
+  useEffect(() => {
+    try { localStorage.setItem('pos_cart', JSON.stringify(cart)); } catch { /* empty */ }
+  }, [cart]);
 
-  // Fetch products
+  useEffect(() => {
+    try {
+      if (selectedCustomer) localStorage.setItem('pos_customer', JSON.stringify(selectedCustomer));
+      else localStorage.removeItem('pos_customer');
+    } catch { /* empty */ }
+  }, [selectedCustomer]);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => posService.getProducts(),
@@ -59,19 +73,28 @@ export default function POS() {
 
   const products: Product[] = productsData || [];
 
-  // Fetch all partners to find "Client Comptoir"
   const { data: partnersData } = useQuery({
     queryKey: ['partners-all'],
     queryFn: () => posService.getCustomers(),
   });
 
-  // Set "Client Comptoir" as default customer on initial load
   useEffect(() => {
-    if (!hasSetDefaultCustomer.current && partnersData && partnersData.length > 0) {
-      const comptoirClient = partnersData.find((p: Customer) => p.name === 'Client Comptoir');
-      if (comptoirClient) {
-        setSelectedCustomer(comptoirClient);
-        hasSetDefaultCustomer.current = true;
+    if (partnersData && partnersData.length > 0) {
+      // Validate cached customer still exists in the database
+      if (selectedCustomer) {
+        const stillExists = partnersData.find((p: Customer) => p.id === selectedCustomer.id);
+        if (!stillExists) {
+          setSelectedCustomer(null);
+          localStorage.removeItem('pos_customer');
+        }
+      }
+
+      if (!hasSetDefaultCustomer.current) {
+        const comptoirClient = partnersData.find((p: Customer) => p.name === 'Client Comptoir');
+        if (comptoirClient) {
+          setSelectedCustomer(comptoirClient);
+          hasSetDefaultCustomer.current = true;
+        }
       }
     }
   }, [partnersData]);
@@ -86,12 +109,9 @@ export default function POS() {
 
   const openQuantityModal = (product: Product) => {
     setSelectedProduct(product);
-
-    // If price change is allowed, show price confirmation modal first
     if (product.isPriceChangeAllowed) {
       setIsPriceModalOpen(true);
     } else {
-      // Otherwise, go directly to quantity modal
       setConfirmedPrice(product.price);
       setIsModalOpen(true);
     }
@@ -105,11 +125,8 @@ export default function POS() {
 
   const handleAddToCart = (quantity: number) => {
     if (!selectedProduct) return;
-
-    // Use confirmed price if available, otherwise use product's original price
     const finalPrice = confirmedPrice !== null ? confirmedPrice : selectedProduct.price;
     const productWithPrice = { ...selectedProduct, price: finalPrice };
-
     const existing = cart.find(item => item.product.id === selectedProduct.id);
     if (existing) {
       setCart(cart.map(item =>
@@ -120,18 +137,15 @@ export default function POS() {
     } else {
       setCart([...cart, { product: productWithPrice, quantity, discount: 0, discountType: 0 }]);
     }
-
-    // Reset confirmed price
     setConfirmedPrice(null);
+    if (isMobile) setIsMobileCartOpen(true);
   };
 
   const removeFromCart = (productId: number) => {
     setCart(cart.filter(item => item.product.id !== productId));
   };
 
-  const clearCart = () => {
-    setCart([]);
-  };
+  const clearCart = () => { setCart([]); };
 
   const openDiscountModal = (item: CartItem) => {
     setSelectedCartItem(item);
@@ -140,13 +154,11 @@ export default function POS() {
 
   const handleApplyDiscount = (discount: number, discountType: number) => {
     if (!selectedCartItem) return;
-
     setCart(cart.map(item =>
       item.product.id === selectedCartItem.product.id
         ? { ...item, discount, discountType }
         : item
     ));
-
     setSelectedCartItem(null);
     setIsDiscountModalOpen(false);
   };
@@ -165,532 +177,648 @@ export default function POS() {
     onSuccess: (data: any) => {
       const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
       const orderId = data?.order?.id || data?.id;
+      localStorage.removeItem('pos_cart');
       navigate('/checkout/success', {
         state: {
-          orderNumber: orderNumber,
-          orderId: orderId,
-          customer: {
-            id: selectedCustomer?.id || 0,
-            name: selectedCustomer?.name || '',
-            phone: selectedCustomer?.phoneNumber || '',
-            address: selectedCustomer?.address,
-          },
-          items: cart,
-          total: total,
-          paidAmount: total,
-          change: 0,
-          orderDate: new Date(),
+          orderNumber, orderId,
+          customer: { id: selectedCustomer?.id || 0, name: selectedCustomer?.name || '', phone: selectedCustomer?.phoneNumber || '', address: selectedCustomer?.address },
+          items: cart, total, paidAmount: total, change: 0, orderDate: new Date(),
         }
       });
     },
-    onError: (error: any) => {
-      toastError(error.message || t('error'));
-    },
+    onError: (error: any) => { toastError(error.message || t('error')); },
   });
 
   const handleCheckout = () => {
-    if (!selectedCustomer) {
-      toastError(t('selectCustomer'));
-      return;
-    }
-
-    if (cart.length === 0) {
-      toastError(t('cartEmpty'));
-      return;
-    }
-
-    // Navigate to checkout page with cart and customer data
+    if (!selectedCustomer) { toastError(t('selectCustomer')); return; }
+    if (cart.length === 0) { toastError(t('cartEmpty')); return; }
+    localStorage.removeItem('pos_cart');
     navigate('/checkout', {
       state: {
-        cart: cart,
-        customer: {
-          id: selectedCustomer.id,
-          name: selectedCustomer.name,
-          phone: selectedCustomer.phoneNumber,
-          address: selectedCustomer.address
-        }
+        cart,
+        customer: { id: selectedCustomer.id, name: selectedCustomer.name, phone: selectedCustomer.phoneNumber, address: selectedCustomer.address }
       }
     });
   };
 
   const handleConfirmCash = () => {
-    if (!selectedCustomer) {
-      toastError(t('selectCustomer'));
-      return;
-    }
-
-    if (cart.length === 0) {
-      toastError(t('cartEmpty'));
-      return;
-    }
-
+    if (!selectedCustomer) { toastError(t('selectCustomer')); return; }
+    if (cart.length === 0) { toastError(t('cartEmpty')); return; }
     const items = cart.map(item => {
       const quantity = item.quantity;
       const unitPrice = item.product.price;
       const itemSubtotal = quantity * unitPrice;
-      const itemDiscountAmount = item.discountType === 1
-        ? (itemSubtotal * item.discount) / 100
-        : item.discount;
+      const itemDiscountAmount = item.discountType === 1 ? (itemSubtotal * item.discount) / 100 : item.discount;
       const tax = 0;
       const itemTotal = itemSubtotal - itemDiscountAmount;
-
-      return {
-        productId: item.product.id,
-        description: item.product.name || '',
-        quantity: quantity,
-        unitPrice: unitPrice,
-        discount: itemDiscountAmount,
-        discountType: item.discountType,
-        tax: tax,
-        total: itemTotal
-      };
+      return { productId: item.product.id, description: item.product.name || '', quantity, unitPrice, discount: itemDiscountAmount, discountType: item.discountType, tax, total: itemTotal };
     });
-
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const totalTax = 0;
-    const totalAmount = subtotal;
-
     const orderData = {
-      customerId: selectedCustomer.id,
-      fromPortal: true,
-      fromClient: false,
-      deliveryStatus: 'pending',
-      date: new Date().toISOString(),
-      subtotal: subtotal,
-      tax: totalTax,
-      discount: 0,
-      discountType: 0,
-      total: totalAmount,
-      notes: '',
-      items: items
+      customerId: selectedCustomer.id, fromPortal: true, fromClient: false, deliveryStatus: 'pending',
+      date: new Date().toISOString(), subtotal, tax: 0, discount: 0, discountType: 0, total: subtotal, notes: '', items
     };
-
     createOrderMutation.mutate(orderData);
   };
 
-  const handleSelectCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-  };
+  const handleSelectCustomer = (customer: Customer) => { setSelectedCustomer(customer); };
 
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  };
-
-  const stopResizing = () => {
-    setIsResizing(false);
-  };
-
-  const resize = (e: MouseEvent) => {
-    if (!isResizing) return;
-
-    e.preventDefault();
-    const newWidth = dir === 'rtl'
-      ? window.innerWidth - e.clientX
-      : e.clientX;
-    // Min 280px, Max 600px or 50% of window width
-    const minWidth = 280;
-    const maxWidth = Math.min(600, window.innerWidth * 0.5);
-    setSidebarWidth(Math.max(minWidth, Math.min(newWidth, maxWidth)));
-  };
-
-  useEffect(() => {
-    if (isResizing) {
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-
-      window.addEventListener('mousemove', resize);
-      window.addEventListener('mouseup', stopResizing);
-
-      return () => {
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        window.removeEventListener('mousemove', resize);
-        window.removeEventListener('mouseup', stopResizing);
-      };
-    }
-  }, [isResizing, dir]);
-
-  return (
-    <div className="min-h-screen bg-slate-50" dir={dir}>
-      {/* Header with Back Button */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-full px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className={`w-4 h-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-                <span>{t('back')}</span>
-              </button>
-              <div className="h-8 w-px bg-slate-200"></div>
-              <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <ShoppingBag className="w-6 h-6 text-primary" />
-                {t('pointOfSale')}
-              </h1>
-            </div>
-
-            {/* Customer Selection in Header */}
+  // ── Shared Cart Panel Content (used by desktop aside + mobile overlay) ──
+  const renderCartContent = () => (
+    <>
+      {/* ── Cart Header ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        padding: '0 1rem',
+        height: '4rem',
+        display: 'flex',
+        alignItems: 'center',
+        flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', width: '100%' }}>
+          <div style={{
+            width: '2rem', height: '2rem', borderRadius: '0.5rem',
+            background: 'rgba(35,90,228,0.25)', border: '1px solid rgba(35,90,228,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <ShoppingCart style={{ width: '1rem', height: '1rem', color: '#93b4f8' }} strokeWidth={2} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '-0.01em' }}>
+              {t('cart')}
+            </h2>
+            {cart.length > 0 && (
+              <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', margin: 0, fontWeight: 500 }}>
+                {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
+                <span style={{ margin: '0 0.3rem', opacity: 0.4 }}>·</span>
+                {cart.length} {cart.length === 1 ? t('cartProduct') : t('cartProducts')}
+              </p>
+            )}
+          </div>
+          {cart.length > 0 && (
             <button
-              onClick={() => setShowCustomerModal(true)}
-              className="flex items-center gap-2 hover:bg-slate-50 rounded-lg px-3 py-2 transition-colors"
+              onClick={clearCart}
+              className="pos-cart-clear-btn"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '2rem', height: '2rem', borderRadius: '0.5rem',
+                background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.25)',
+                color: '#fca5a5',
+                cursor: 'pointer', flexShrink: 0,
+              }}
             >
-              {selectedCustomer ? (
-                <div className="flex items-center gap-2">
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-emerald-600" />
-                      <div>
-                        <p className="font-semibold text-emerald-900 text-sm">{selectedCustomer.name}</p>
-                        <p className="text-xs text-emerald-700">{selectedCustomer.phoneNumber}</p>
-                      </div>
+              <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Items List ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0.625rem 0.75rem', background: '#f8fafc' }}>
+        {cart.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 1rem', textAlign: 'center' }}>
+            <div style={{
+              width: '4rem', height: '4rem', borderRadius: '1rem',
+              background: '#fff', border: '1.5px solid #e2e8f0',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.875rem',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            }}>
+              <ShoppingCart style={{ width: '1.75rem', height: '1.75rem', color: '#cbd5e1' }} strokeWidth={1.5} />
+            </div>
+            <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#374151', margin: '0 0 0.25rem' }}>{t('cartEmpty')}</p>
+            <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>{t('emptyCartMessage')}</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {cart.map((item, index) => {
+              const itemSubtotal = item.product.price * item.quantity;
+              const itemDiscountAmount = item.discountType === 1 ? (itemSubtotal * item.discount) / 100 : item.discount;
+              const itemTotal = itemSubtotal - itemDiscountAmount;
+              const hasDiscount = item.discount > 0;
+
+              return (
+                <div
+                  key={item.product.id}
+                  className="pos-cart-item"
+                  style={{
+                    background: '#fff',
+                    borderRadius: '0.75rem',
+                    border: '1.5px solid #e2e8f0',
+                    overflow: 'hidden',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  {/* Row: index + thumb + name + delete */}
+                  <div
+                    onClick={() => openQuantityModal(item.product)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.625rem 0.625rem 0.5rem', cursor: 'pointer' }}
+                  >
+                    {/* Index badge */}
+                    <span style={{
+                      width: '1.375rem', height: '1.375rem', borderRadius: '0.375rem', flexShrink: 0,
+                      background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+                      color: 'rgba(255,255,255,0.6)', fontSize: '0.5625rem', fontWeight: 800,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {index + 1}
+                    </span>
+
+                    {/* Thumbnail */}
+                    <div style={{
+                      width: '2.75rem', height: '2.75rem', borderRadius: '0.5rem', flexShrink: 0,
+                      background: '#f8fafc', border: '1px solid #f1f5f9',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                    }}>
+                      {item.product.imageUrl ? (
+                        <img src={getImageUrl(item.product.imageUrl)} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      ) : (
+                        <Package style={{ width: '1.125rem', height: '1.125rem', color: '#cbd5e1' }} />
+                      )}
+                    </div>
+
+                    {/* Name */}
+                    <p style={{
+                      flex: 1, minWidth: 0,
+                      fontWeight: 600, color: '#0f172a', fontSize: '0.8125rem', lineHeight: 1.3,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0,
+                    }}>
+                      {item.product.name}
+                    </p>
+
+                    {/* Remise */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openDiscountModal(item); }}
+                      className="pos-disc-btn"
+                      style={{
+                        flexShrink: 0,
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.2rem 0.5rem', borderRadius: '0.375rem',
+                        background: hasDiscount ? 'rgba(35,90,228,0.08)' : '#f1f5f9',
+                        border: hasDiscount ? '1px solid rgba(35,90,228,0.2)' : '1px solid #e2e8f0',
+                        color: hasDiscount ? '#235ae4' : '#94a3b8',
+                        fontSize: '0.625rem', fontWeight: 700, cursor: 'pointer',
+                      }}
+                    >
+                      <Tag style={{ width: '0.5625rem', height: '0.5625rem' }} />
+                      {hasDiscount
+                        ? (item.discountType === 1 ? `−${item.discount}%` : `−${formatCurrency(item.discount, language as 'fr' | 'ar')}`)
+                        : (t('discount'))}
+                    </button>
+
+                    {/* Delete */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeFromCart(item.product.id); }}
+                      className="pos-cart-del-btn"
+                      style={{
+                        flexShrink: 0, width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem',
+                        background: '#fef2f2', border: '1px solid #fee2e2',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <X style={{ width: '0.625rem', height: '0.625rem', color: '#f87171' }} />
+                    </button>
+                  </div>
+
+                  {/* Row: qty × price → total */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.375rem 0.625rem',
+                    background: '#f8fafc', borderTop: '1px solid #f1f5f9',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer' }} onClick={() => openQuantityModal(item.product)}>
+                      <span style={{
+                        minWidth: '1.75rem', height: '1.5rem', padding: '0 0.375rem', borderRadius: '0.375rem',
+                        background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                        color: '#fff', fontSize: '0.6875rem', fontWeight: 800,
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 2px 6px rgba(35,90,228,0.3)',
+                      }}>
+                        {item.quantity}
+                      </span>
+                      <span style={{ fontSize: '0.6875rem', color: '#64748b' }}>× {formatCurrency(item.product.price, language as 'fr' | 'ar')}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
+                        {formatCurrency(itemTotal, language as 'fr' | 'ar')}
+                      </span>
+                      {hasDiscount && (
+                        <span style={{ display: 'block', fontSize: '0.625rem', color: '#94a3b8', textDecoration: 'line-through', lineHeight: 1 }}>
+                          {formatCurrency(itemSubtotal, language as 'fr' | 'ar')}
+                        </span>
+                      )}
                     </div>
                   </div>
+
                 </div>
-              ) : (
-                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                  <User className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-600">{t('selectCustomer')}</span>
-                </div>
-              )}
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Footer: Summary + Actions ── */}
+      {cart.length > 0 && (
+        <div style={{
+          background: '#fff',
+          borderTop: '1.5px solid #e2e8f0',
+          padding: '0.875rem 1rem 1rem',
+          display: 'flex', flexDirection: 'column', gap: '0.625rem', flexShrink: 0,
+        }}>
+          {/* Summary panel */}
+          <div style={{
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            borderRadius: '0.875rem',
+            padding: '0.875rem 1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.625rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                {t('total')}
+              </p>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '1.5rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {formatCurrency(total, language as 'fr' | 'ar')}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ margin: 0, fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+                {cart.length} {cart.length === 1 ? t('cartProduct') : t('cartProducts')}
+              </p>
+              <p style={{ margin: '0.1rem 0 0', fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+                {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
+              </p>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button
+              label={t('confirmCash') || 'Cash'}
+              icon={<ShoppingBag style={{ width: '0.875rem', height: '0.875rem' }} strokeWidth={2.5} />}
+              onClick={handleConfirmCash}
+              disabled={!selectedCustomer || cart.length === 0 || createOrderMutation.isPending}
+              loading={createOrderMutation.isPending}
+              style={{
+                flex: 1, height: '2.75rem',
+                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                border: 'none', borderRadius: '0.75rem',
+                fontSize: '0.8125rem', fontWeight: 700, color: '#fff',
+                boxShadow: (!selectedCustomer || cart.length === 0) ? 'none' : '0 4px 12px rgba(34,197,94,0.30)',
+              }}
+            />
+            <Button
+              label={t('payment') || 'Pay'}
+              icon={<ChevronRight style={{ width: '0.875rem', height: '0.875rem' }} strokeWidth={2.5} />}
+              onClick={handleCheckout}
+              disabled={!selectedCustomer || cart.length === 0}
+              style={{
+                flex: 1, height: '2.75rem',
+                background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                border: 'none', borderRadius: '0.75rem',
+                fontSize: '0.8125rem', fontWeight: 700, color: '#fff',
+                boxShadow: (!selectedCustomer || cart.length === 0) ? 'none' : '0 4px 12px rgba(35,90,228,0.30)',
+              }}
+            />
+          </div>
+
+          {!selectedCustomer && (
+            <button
+              onClick={() => setShowCustomerModal(true)}
+              style={{
+                width: '100%', padding: '0.5rem', borderRadius: '0.625rem',
+                background: 'rgba(35,90,228,0.08)', border: '1px dashed rgba(35,90,228,0.4)',
+                color: '#235ae4', fontSize: '0.6875rem', fontWeight: 600,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+              }}
+            >
+              <User style={{ width: '0.75rem', height: '0.75rem' }} />
+              {t('selectCustomer')}
             </button>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6' }} dir={dir}>
+      {/* ─── POS Global Styles ─── */}
+      <style>{`
+        .pos-product-card { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+        .pos-product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(35,90,228,0.14) !important; }
+        .pos-cart-item { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+        .pos-cart-item:hover { border-color: #bfdbfe !important; box-shadow: 0 2px 10px rgba(35,90,228,0.10) !important; }
+        .pos-cart-clear-btn { transition: background 0.12s, border-color 0.12s; }
+        .pos-cart-clear-btn:hover { background: rgba(239,68,68,0.22) !important; }
+        .pos-cart-del-btn { transition: background 0.12s; }
+        .pos-cart-del-btn:hover { background: #fee2e2 !important; }
+        .pos-disc-btn { transition: background 0.12s; }
+        .pos-disc-btn:hover { background: rgba(35,90,228,0.14) !important; }
+        .pos-keypad-btn { transition: transform 0.1s ease, background 0.1s ease; }
+        .pos-keypad-btn:active { transform: scale(0.95); }
+        .pos-search-input:focus { border-color: #235ae4 !important; box-shadow: 0 0 0 3px rgba(35,90,228,0.14) !important; }
+        .pos-mobile-overlay { animation: slideUp 0.28s cubic-bezier(0.34,1.36,0.64,1); }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @media (max-width: 767px) {
+          .pos-desktop-cart { display: none !important; }
+          .pos-desktop-resize { display: none !important; }
+        }
+        @media (min-width: 768px) {
+          .pos-mobile-fab { display: none !important; }
+        }
+      `}</style>
+
+      {/* ═══ HEADER ═══ */}
+      <header style={{
+        background: 'linear-gradient(135deg, #1e1e2d 0%, #16213e 100%)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
+      }}>
+        <div style={{ padding: '0 1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '3.75rem' }}>
+            {/* Left: back + branding */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+              <button
+                onClick={() => navigate('/dashboard')}
+                title={t('back')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0.375rem', fontSize: '0.8125rem',
+                  color: 'rgba(255,255,255,0.85)', borderRadius: '0.5rem',
+                  border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)',
+                  cursor: 'pointer',
+                }}
+              >
+                <ArrowLeft style={{ width: '0.875rem', height: '0.875rem', transform: dir === 'rtl' ? 'rotate(180deg)' : undefined }} />
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <img
+                  src={orderiumLogo}
+                  alt="Orderium"
+                  style={{ width: '2.25rem', height: '2.25rem' }}
+                />
+                <div>
+                  <h1 style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.01em' }}>
+                    {t('pointOfSale')}
+                  </h1>
+                  <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.45)', margin: 0, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Orderium POS
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: customer selector */}
+            <Button
+              onClick={() => setShowCustomerModal(true)}
+              icon={<User style={{ width: selectedCustomer ? '0.75rem' : '0.875rem', height: selectedCustomer ? '0.75rem' : '0.875rem', color: selectedCustomer ? '#fff' : 'rgba(255,255,255,0.5)' }} />}
+              label={selectedCustomer ? selectedCustomer.name : t('selectCustomer')}
+              style={selectedCustomer ? {
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                padding: '0.375rem 0.75rem',
+                background: 'rgba(34,197,94,0.12)',
+                border: '1px solid rgba(34,197,94,0.25)',
+                borderRadius: '2rem', color: '#fff', fontSize: '0.8125rem', fontWeight: 700,
+              } : {
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                padding: '0.375rem 0.75rem',
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '2rem', color: 'rgba(255,255,255,0.6)',
+                fontSize: '0.8125rem', fontWeight: 500,
+              }}
+            />
           </div>
         </div>
       </header>
 
-      {/* Customer Selection Modal */}
-      <CustomerSelectionModal
-        isOpen={showCustomerModal}
-        onClose={() => setShowCustomerModal(false)}
-        onSelectCustomer={handleSelectCustomer}
-        selectedCustomer={selectedCustomer}
-        t={(key: string) => t(key as any)}
-        dir={dir}
-      />
+      {/* ═══ MODALS ═══ */}
+      <CustomerSelectionModal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} onSelectCustomer={handleSelectCustomer} selectedCustomer={selectedCustomer} t={(key: string) => t(key as any)} dir={dir} />
+      <PriceConfirmModal product={selectedProduct} isOpen={isPriceModalOpen} onClose={() => setIsPriceModalOpen(false)} onConfirm={handlePriceConfirm} language={language} t={(key: string) => t(key as any)} />
+      <ProductQuantityModal product={selectedProduct} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onAddToCart={handleAddToCart} initialQuantity={cart.find(item => item.product.id === selectedProduct?.id)?.quantity || 0} language={language} t={(key: string) => t(key as any)} />
+      <DiscountModal productName={selectedCartItem?.product.name || ''} quantity={selectedCartItem?.quantity || 0} unitPrice={selectedCartItem?.product.price || 0} currentDiscount={selectedCartItem?.discount || 0} currentDiscountType={selectedCartItem?.discountType || 0} isOpen={isDiscountModalOpen} onClose={() => { setIsDiscountModalOpen(false); setSelectedCartItem(null); }} onApply={handleApplyDiscount} t={(key: string) => t(key as any)} />
 
-      {/* Price Confirmation Modal */}
-      <PriceConfirmModal
-        product={selectedProduct}
-        isOpen={isPriceModalOpen}
-        onClose={() => setIsPriceModalOpen(false)}
-        onConfirm={handlePriceConfirm}
-        language={language}
-        t={(key: string) => t(key as any)}
-      />
+      {/* ═══ MAIN LAYOUT ═══ */}
+      <div style={{ display: 'flex', height: 'calc(100vh - 3.75rem)', overflow: 'hidden' }}>
 
-      {/* Product Quantity Modal */}
-      <ProductQuantityModal
-        product={selectedProduct}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAddToCart={handleAddToCart}
-        initialQuantity={cart.find(item => item.product.id === selectedProduct?.id)?.quantity || 0}
-        language={language}
-        t={(key: string) => t(key as any)}
-      />
-
-      {/* Discount Modal */}
-      <DiscountModal
-        productName={selectedCartItem?.product.name || ''}
-        quantity={selectedCartItem?.quantity || 0}
-        unitPrice={selectedCartItem?.product.price || 0}
-        currentDiscount={selectedCartItem?.discount || 0}
-        currentDiscountType={selectedCartItem?.discountType || 0}
-        isOpen={isDiscountModalOpen}
-        onClose={() => {
-          setIsDiscountModalOpen(false);
-          setSelectedCartItem(null);
-        }}
-        onApply={handleApplyDiscount}
-        t={(key: string) => t(key as any)}
-      />
-
-      {/* Main Layout - matching client 2-column layout */}
-      <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-        {/* Desktop Cart Panel - Left Side */}
+        {/* ── DESKTOP CART PANEL ── */}
         <aside
-          className={`hidden lg:flex lg:flex-col bg-white ${dir === 'rtl' ? 'border-s' : 'border-e'} border-gray-200 h-full overflow-hidden relative`}
-          style={{ width: `${sidebarWidth}px` }}
+          className="pos-desktop-cart"
+          style={{
+            display: 'flex', flexDirection: 'column',
+            backgroundColor: '#fff',
+            height: '100%', overflow: 'hidden', position: 'relative',
+            width: `${sidebarWidth}px`,
+            flexShrink: 0,
+            borderRight: dir === 'rtl' ? undefined : '1px solid #e5e7eb',
+            borderLeft: dir === 'rtl' ? '1px solid #e5e7eb' : undefined,
+          }}
         >
-          {/* Cart */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Cart Header */}
-            <div className="p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <ShoppingBag className="w-4 h-4 text-primary" />
-                  {t('cart')}
-                </h2>
-                {cart.length > 0 && (
-                  <button
-                    onClick={clearCart}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50 h-7 w-7 rounded-md flex items-center justify-center transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-              {cart.length > 0 && (
-                <p className="text-xs text-gray-500">
-                  {cart.length} {cart.length === 1 ? t('cartProduct') : t('cartProducts')} - {cartTotalItems} {cartTotalItems === 1 ? t('piece') : t('pieces')}
-                </p>
+          {renderCartContent()}
+        </aside>
+
+        {/* ── MAIN CONTENT (Products) ── */}
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', minWidth: 0 }}>
+          {/* Search Bar */}
+          <div style={{
+            backgroundColor: '#fff',
+            borderBottom: '1px solid #e5e7eb',
+            padding: '0 1rem',
+            height: '4rem',
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: 0,
+          }}>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <Search style={{
+                width: '1rem', height: '1rem',
+                position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                color: '#9ca3af', pointerEvents: 'none', zIndex: 1,
+              }} />
+              <InputText
+                type="text"
+                placeholder={t('searchProducts')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pos-search-input"
+                style={{
+                  width: '100%', paddingLeft: '2.375rem', paddingRight: searchQuery ? '2.375rem' : undefined,
+                  height: '2.5rem', borderRadius: '0.625rem',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: 'none',
+                  fontSize: '0.875rem',
+                  transition: 'border-color 0.18s, box-shadow 0.18s',
+                }}
+              />
+              {searchQuery && (
+                <Button
+                  icon={<X style={{ width: '0.625rem', height: '0.625rem', color: '#6b7280' }} />}
+                  onClick={() => setSearchQuery('')}
+                  rounded text
+                  style={{
+                    position: 'absolute', right: '0.625rem', top: '50%', transform: 'translateY(-50%)',
+                    background: '#e5e7eb',
+                    width: '1.25rem', height: '1.25rem', padding: 0,
+                  }}
+                />
               )}
             </div>
+          </div>
 
-            {/* Cart Items - Scrollable */}
-            <div className="flex-1 px-3 sm:px-4 overflow-y-auto">
-              {cart.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                    <ShoppingBag className="w-8 h-8 text-gray-300" />
+          {/* Products Grid */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
+            {productsLoading ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.75rem' }}>
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} style={{ backgroundColor: '#fff', borderRadius: '0.875rem', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+                    <Skeleton height="7rem" borderRadius="0" />
+                    <div style={{ padding: '0.625rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                      <Skeleton width="75%" height="0.75rem" />
+                      <Skeleton width="50%" height="0.75rem" />
+                    </div>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">{t('cartEmpty')}</h3>
-                  <p className="text-xs text-gray-500">{t('emptyCartMessage')}</p>
+                ))}
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 0', textAlign: 'center' }}>
+                <div style={{
+                  width: '5rem', height: '5rem', borderRadius: '1.25rem',
+                  background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem',
+                }}>
+                  <Package style={{ width: '2.25rem', height: '2.25rem', color: '#9ca3af' }} />
                 </div>
-              ) : (
-                <div className="py-2">
-                  {cart.map((item) => (
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827', marginBottom: '0.375rem' }}>{t('noProductsFound')}</h3>
+                <p style={{ color: '#6b7280', maxWidth: '24rem', margin: 0, fontSize: '0.875rem' }}>
+                  {searchQuery ? t('noResultsMessage') : t('noProductsInCategory')}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.75rem' }}>
+                {filteredProducts.map((product: Product) => {
+                  const cartItem = cart.find(item => item.product.id === product.id);
+                  const quantity = cartItem?.quantity || 0;
+                  const inCart = quantity > 0;
+
+                  return (
                     <div
-                      key={item.product.id}
-                      onClick={() => openQuantityModal(item.product)}
-                      className="flex gap-2 py-1.5 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors rounded-md cursor-pointer"
+                      key={product.id}
+                      onClick={() => openQuantityModal(product)}
+                      className="pos-product-card"
+                      style={{
+                        position: 'relative',
+                        backgroundColor: '#fff',
+                        borderRadius: '0.875rem',
+                        overflow: 'hidden',
+                        border: inCart ? '2px solid #235ae4' : '1px solid #e5e7eb',
+                        boxShadow: inCart ? '0 0 0 3px rgba(35,90,228,0.12)' : '0 1px 3px rgba(0,0,0,0.05)',
+                        display: 'flex', flexDirection: 'column',
+                        cursor: 'pointer',
+                      }}
                     >
                       {/* Image */}
-                      <div className="w-10 h-10 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
-                        {item.product.imageUrl ? (
-                          <img
-                            src={getImageUrl(item.product.imageUrl)}
-                            alt={item.product.name}
-                            className="w-full h-full object-contain"
-                          />
+                      <div style={{ position: 'relative', aspectRatio: '4/3', backgroundColor: '#f8fafc', overflow: 'hidden' }}>
+                        {product.imageUrl ? (
+                          <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} loading="lazy" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-4 h-4 text-gray-300" />
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)' }}>
+                            <Package style={{ width: '2rem', height: '2rem', color: '#cbd5e1' }} />
+                          </div>
+                        )}
+                        {inCart && (
+                          <div style={{
+                            position: 'absolute', top: '0.375rem',
+                            [dir === 'rtl' ? 'left' : 'right']: '0.375rem',
+                            minWidth: '1.375rem', height: '1.375rem', padding: '0 0.3rem',
+                            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                            color: '#fff', borderRadius: '2rem',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: 800, fontSize: '0.6875rem',
+                            boxShadow: '0 2px 8px rgba(35,90,228,0.40)',
+                          }}>
+                            {quantity}
                           </div>
                         )}
                       </div>
 
-                      {/* Details */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-0.5">
-                          <h4 className="font-medium text-gray-900 line-clamp-1 leading-tight text-xs">
-                            {item.product.name}
-                          </h4>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeFromCart(item.product.id);
-                            }}
-                            className="h-5 w-5 -mt-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0 rounded flex items-center justify-center"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                            {formatCurrency(item.product.price)} ×
-                            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-primary text-white rounded-full text-[8px] font-bold">
-                              {item.quantity}
-                            </span>
-                          </p>
-
-                          <span className="font-bold text-gray-900 text-xs">
-                            {(() => {
-                              const itemSubtotal = item.product.price * item.quantity;
-                              const itemDiscountAmount = item.discountType === 1
-                                ? (itemSubtotal * item.discount) / 100
-                                : item.discount;
-                              const itemTotal = itemSubtotal - itemDiscountAmount;
-                              return formatCurrency(itemTotal);
-                            })()}
-                          </span>
-                        </div>
-
-                        {/* Discount info and button */}
-                        <div className="flex items-center justify-between mt-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openDiscountModal(item);
-                            }}
-                            className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors ${item.discount > 0
-                              ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                              }`}
-                          >
-                            <Tag className="h-2.5 w-2.5" />
-                            {item.discount > 0
-                              ? `${item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount)}`
-                              : t('discount')
-                            }
-                          </button>
-
-                          {item.discount > 0 && (
-                            <span className="text-[9px] text-gray-400 line-through">
-                              {formatCurrency(item.product.price * item.quantity)}
-                            </span>
-                          )}
-                        </div>
+                      {/* Info */}
+                      <div style={{ padding: '0.5rem 0.625rem 0.625rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <p style={{
+                          fontWeight: 600, color: '#111827',
+                          fontSize: '0.8125rem', lineHeight: 1.3,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          margin: 0,
+                        }}>
+                          {product.name}
+                        </p>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 800, color: '#1e1e2d', margin: 0 }}>
+                          {formatCurrency(product.price, language as 'fr' | 'ar')}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Cart Summary - Fixed at Bottom */}
-            {cart.length > 0 && (
-              <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-50 space-y-3 flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-900">{t('total')}</span>
-                  <span className="text-lg font-bold text-primary">
-                    {formatCurrency(total)}
-                  </span>
-                </div>
-
-                <Button
-                  onClick={handleConfirmCash}
-                  disabled={!selectedCustomer || cart.length === 0 || createOrderMutation.isPending}
-                  variant="success"
-                  loading={createOrderMutation.isPending}
-                  loadingText={t('loading')}
-                  className="w-full h-11"
-                >
-                  Confirm / Cash
-                </Button>
-                <Button
-                  onClick={handleCheckout}
-                  disabled={!selectedCustomer || cart.length === 0}
-                  className="w-full h-11"
-                >
-                  Payment
-                </Button>
+                  );
+                })}
               </div>
             )}
           </div>
-
-          {/* Resize Handle */}
-          {!showCustomerModal && !isPriceModalOpen && !isModalOpen && !isDiscountModalOpen && (
-            <div
-              onMouseDown={startResizing}
-              className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-0 bottom-0 w-2 hover:w-3 cursor-col-resize transition-all z-50 group`}
-              style={{
-                background: isResizing ? 'rgba(37, 99, 235, 0.2)' : 'transparent',
-              }}
-            >
-              <div
-                className={`absolute inset-y-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-px bg-gray-300 group-hover:bg-primary group-hover:w-0.5 transition-all`}
-              />
-            </div>
-          )}
-        </aside>
-
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden">
-          {/* Search Bar */}
-          <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
-            <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder={t('searchProducts')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  leadingIcon={Search}
-                  fullWidth
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Products Grid - Scrollable */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-              {productsLoading ? (
-                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
-                      <div className="aspect-[4/3] bg-gray-200" />
-                      <div className="p-1.5 sm:p-2 space-y-2">
-                        <div className="h-3 bg-gray-200 rounded w-3/4" />
-                        <div className="h-3 bg-gray-200 rounded w-1/2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : filteredProducts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
-                    <Package className="w-12 h-12 text-gray-300" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {t('noProductsFound')}
-                  </h3>
-                  <p className="text-gray-500 max-w-md">
-                    {searchQuery ? t('noResultsMessage') : t('noProductsInCategory')}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
-                  {filteredProducts.map((product: Product, index: number) => {
-                    const cartItem = cart.find(item => item.product.id === product.id);
-                    const quantity = cartItem?.quantity || 0;
-
-                    return (
-                      <div
-                        key={product.id}
-                        style={{ animationDelay: `${index * 20}ms` }}
-                        onClick={() => openQuantityModal(product)}
-                        className={`group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer active:scale-[0.98] animate-fade-in ${quantity > 0 ? 'ring-2 ring-primary bg-primary/5' : ''
-                          }`}
-                      >
-                        {/* Image */}
-                        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                          {product.imageUrl ? (
-                            <img
-                              src={getImageUrl(product.imageUrl)}
-                              alt={product.name}
-                              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                              <Package className="w-8 h-8 text-gray-300" />
-                            </div>
-                          )}
-
-                          {/* Quantity badge when in cart */}
-                          {quantity > 0 && (
-                            <div className={`absolute top-1 ${dir === 'rtl' ? 'left-1' : 'right-1'} min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md`}>
-                              {quantity}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
-                          <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
-                            {product.name}
-                          </h3>
-
-                          <div className="mt-auto">
-                            <span className="text-[11px] sm:text-xs font-bold text-primary">
-                              {formatCurrency(product.price)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
         </main>
       </div>
+
+      {/* ═══ MOBILE: Floating Cart Button ═══ */}
+      {cart.length > 0 && (
+        <Button
+          className="pos-mobile-fab"
+          onClick={() => setIsMobileCartOpen(true)}
+          icon={<ShoppingCart style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} strokeWidth={2.2} />}
+          badge={String(cartTotalItems)}
+          style={{
+            position: 'fixed',
+            bottom: '1.25rem',
+            [dir === 'rtl' ? 'left' : 'right']: '1.25rem',
+            zIndex: 60,
+            width: '3.5rem', height: '3.5rem',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+            border: 'none',
+            boxShadow: '0 6px 20px rgba(35,90,228,0.45)',
+          }}
+        />
+      )}
+
+      {/* ═══ MOBILE: Cart Overlay ═══ */}
+      {isMobile && isMobileCartOpen && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex', alignItems: 'flex-end',
+          }}
+          onClick={() => setIsMobileCartOpen(false)}
+        >
+          <div
+            className="pos-mobile-overlay"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxHeight: '88vh',
+              background: '#fff',
+              borderRadius: '1.25rem 1.25rem 0 0',
+              display: 'flex', flexDirection: 'column',
+              overflow: 'hidden',
+              boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+            }}
+          >
+            <div style={{ padding: '0.75rem 1rem 0', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '2.5rem', height: '0.25rem', borderRadius: '2px', background: '#d1d5db' }} />
+            </div>
+            {renderCartContent()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

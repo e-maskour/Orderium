@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = async () => {
-    if (!user?.phoneNumber) return;
+    if (!user?.id) return;
 
     try {
       const token = localStorage.getItem('orderium_token');
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
-      const response = await fetch(`${apiBase}/api/portal/user/${user.phoneNumber}`, { headers });
+      const response = await fetch(`${apiBase}/api/portal/me`, { headers });
       const data = await response.json();
 
       if (data.success && data.data) {

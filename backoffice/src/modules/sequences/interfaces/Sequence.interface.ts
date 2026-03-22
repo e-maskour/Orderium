@@ -18,7 +18,7 @@ export interface ISequence {
   nextDocumentNumber?: string; // Next actual document number (e.g., "DV 2026-01-0011")
 }
 
-export type SequenceEntityType = 
+export type SequenceEntityType =
   | 'invoice_sale'      // Facture de vente
   | 'invoice_purchase'  // Facture d'achat
   | 'quote'            // Devis
@@ -42,7 +42,8 @@ export interface CreateSequenceDTO {
   trimesterInPrefix: boolean;
 }
 
-export interface UpdateSequenceDTO extends Partial<CreateSequenceDTO> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface UpdateSequenceDTO extends Partial<CreateSequenceDTO> { }
 
 export interface SequencePreview {
   example: string;

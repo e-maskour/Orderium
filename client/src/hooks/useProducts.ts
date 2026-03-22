@@ -24,22 +24,16 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
 
   useEffect(() => {
     setLoading(true);
-    
-    productsService.getAll({
-      page,
-      pageSize,
-      ...(search && { search }),
-    })
-      .then(data => {
-        // productsService.getAll returns Product[]
-        setProducts(data);
-        setTotalCount(data.length);
+    productsService.getAll({ page, pageSize, ...(search && { search }) })
+      .then(({ products: items, total }) => {
+        setProducts(items);
+        setTotalCount(total ?? items.length);
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [page, pageSize, search]);
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return { products, loading, error, totalCount, totalPages };
 }

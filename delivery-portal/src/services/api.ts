@@ -8,14 +8,15 @@ const getAuthHeaders = (): Record<string, string> => {
 };
 
 interface LoginResponse {
-  success: boolean;
-  deliveryPerson: {
-    Id: number;
-    Name: string;
-    PhoneNumber: string;
-    Email?: string;
+  data: {
+    deliveryPerson: {
+      id: number;
+      name: string;
+      phoneNumber: string;
+      email?: string;
+    };
+    token: string;
   };
-  token: string;
 }
 
 interface OrdersResponse {
@@ -52,7 +53,7 @@ export const deliveryService = {
     }
 
     const data: LoginResponse = await response.json();
-    return data.deliveryPerson;
+    return data.data.deliveryPerson;
   },
 
   async getMyOrders(deliveryPersonId: number, filters: OrderFilters = {}): Promise<OrdersResponse> {
@@ -74,8 +75,19 @@ export const deliveryService = {
       }),
     });
     if (!response.ok) throw new Error('Failed to fetch orders');
-    const data: OrdersResponse = await response.json();
-    return data;
+    const json = await response.json();
+    // API wraps response as { data: Order[], metadata: { total, limit, offset, ... } }
+    const orders: Order[] = json.data ?? [];
+    const total: number = json.metadata?.total ?? orders.length;
+    const totalPages = Math.ceil(total / (filters.pageSize ?? 50));
+    return {
+      success: true,
+      orders,
+      total,
+      page: filters.page ?? 1,
+      pageSize: filters.pageSize ?? 50,
+      totalPages,
+    };
   },
 
   async updateOrderStatus(orderId: number, status: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled', deliveryPersonId: number): Promise<void> {

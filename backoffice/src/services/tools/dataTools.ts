@@ -284,7 +284,7 @@ export const aggregateDataTool: ToolDefinition = {
           };
           break;
 
-        case 'average':
+        case 'average': {
           if (!params.field) {
             return {
               tool_call_id: '',
@@ -295,8 +295,9 @@ export const aggregateDataTool: ToolDefinition = {
           const sum = items.reduce((acc: number, item: any) => acc + (parseFloat(item[params.field]) || 0), 0);
           result = { average: items.length > 0 ? sum / items.length : 0 };
           break;
+        }
 
-        case 'group_by':
+        case 'group_by': {
           if (!params.groupBy) {
             return {
               tool_call_id: '',
@@ -318,6 +319,7 @@ export const aggregateDataTool: ToolDefinition = {
             })),
           };
           break;
+        }
 
         default:
           return {

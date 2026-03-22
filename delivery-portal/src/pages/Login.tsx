@@ -2,30 +2,31 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Loader2, LogIn, Truck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { LanguageToggle } from '@/components/LanguageToggle';
+import { Truck, Phone, Lock, Eye, EyeOff, AlertTriangle, Zap } from 'lucide-react';
+import orderiumLogo from '../assets/logo-delivery.svg';
+import { LanguageToggle } from '../components/LanguageToggle';
+
+const PRI = '#df7817';
+const PRI_DARK = '#b86314';
+const PRI_DEEP = '#7c420d';
 
 export default function Login() {
   const [credentials, setCredentials] = useState({ phoneNumber: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
-  const { t } = useLanguage();
+  const { t, dir } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     try {
       await login(credentials);
       navigate('/orders');
-    } catch (err) {
+    } catch {
       setError(t('invalidCredentials'));
     } finally {
       setIsLoading(false);
@@ -33,106 +34,233 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
-      <div className="absolute top-4 right-4">
-        <LanguageToggle />
-      </div>
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-4 text-center">
-          {/* Professional Delivery Logo */}
-          <div className="mx-auto relative w-32 h-32">
-            {/* Animated route path background */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-full h-1 bg-gradient-to-r from-transparent via-orange-300 to-transparent rounded-full opacity-40"></div>
-              <div className="absolute w-2 h-2 bg-orange-400 rounded-full animate-ping" style={{left: '20%'}}></div>
-              <div className="absolute w-2 h-2 bg-orange-500 rounded-full animate-pulse" style={{right: '20%'}}></div>
-            </div>
-            
-            {/* Main Orderium O Logo */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-2xl flex items-center justify-center relative overflow-hidden">
-                {/* Subtle shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
-                {/* Large O */}
-                <span className="text-5xl font-bold text-white relative z-10">O</span>
+    <>
+      <style>{`
+        @keyframes dlv-spin { to { transform: rotate(360deg); } }
+        .dlv-field-input:focus { border-color: ${PRI} !important; box-shadow: 0 0 0 3px rgba(223,120,23,0.14) !important; outline: none; }
+        .dlv-submit-btn:active:not(:disabled) { transform: scale(0.97); }
+        * { box-sizing: border-box; }
+        html, body { overflow: hidden; height: 100%; margin: 0; }
+      `}</style>
+
+      <div dir={dir} style={{
+        height: '100dvh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#ffffff',
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+      }}>
+        {/* ── Top brand section ── */}
+        <div style={{
+          background: `linear-gradient(160deg, ${PRI_DEEP} 0%, ${PRI_DARK} 48%, ${PRI} 100%)`,
+          padding: '3.5rem 1.5rem 5.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          {/* Language toggle */}
+          <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 2 }}>
+            <LanguageToggle />
+          </div>
+
+          {/* Decorative blobs */}
+          <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '220px', height: '220px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: '20px', left: '-60px', width: '180px', height: '180px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
+
+          {/* Logo icon */}
+          <img
+            src={orderiumLogo}
+            alt="Orderium"
+            style={{
+              width: '90px',
+              height: '90px',
+              marginBottom: '1.25rem',
+              position: 'relative',
+              zIndex: 1,
+              filter: 'drop-shadow(0 8px 30px rgba(0,0,0,0.22))',
+            }}
+          />
+
+          <h1 style={{ color: '#fff', fontSize: '2.4rem', fontWeight: 900, margin: '0', letterSpacing: '-0.5px', lineHeight: 1.05, position: 'relative', zIndex: 1 }}>
+            Orderium
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.78)', margin: '0.5rem 0 0', fontSize: '1.05rem', fontWeight: 500, position: 'relative', zIndex: 1 }}>
+            {t('deliveryPortal')}
+          </p>
+
+          {/* Wave cutout */}
+          <div style={{ position: 'absolute', bottom: -1, left: 0, right: 0 }}>
+            <svg viewBox="0 0 390 54" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '54px' }}>
+              <path d="M0,28 C120,58 270,2 390,28 L390,54 L0,54 Z" fill="#ffffff" />
+            </svg>
+          </div>
+        </div>
+
+        {/* ── Form section ── */}
+        <div style={{
+          flex: 1,
+          padding: '2rem 1.5rem 2.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          maxWidth: '480px',
+          width: '100%',
+          margin: '0 auto',
+          boxSizing: 'border-box',
+        }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: '0 0 0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {t('welcomeBack')} <Zap size={22} color={PRI} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+          </h2>
+          <p style={{ color: '#6b7280', margin: '0 0 2rem', fontSize: '0.95rem', lineHeight: 1.55 }}>
+            {t('loginSignInDesc')}
+          </p>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Phone number */}
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, color: '#374151', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                {t('phoneNumber')}
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Phone size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+                <input
+                  className="dlv-field-input"
+                  type="tel"
+                  autoComplete="tel"
+                  value={credentials.phoneNumber}
+                  onChange={e => { setCredentials(p => ({ ...p, phoneNumber: e.target.value })); setError(''); }}
+                  placeholder={t('enterPhoneNumber')}
+                  required
+                  disabled={isLoading}
+                  style={{
+                    width: '100%',
+                    height: '56px',
+                    paddingLeft: '2.875rem',
+                    paddingRight: '1rem',
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '14px',
+                    background: '#f9fafb',
+                    color: '#111827',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.18s',
+                  }}
+                />
               </div>
             </div>
-            
-            {/* Delivery Truck Icon Badge */}
-            <div className="absolute bottom-0 right-0 w-12 h-12 bg-white rounded-xl shadow-lg border-2 border-orange-100 flex items-center justify-center">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                <Truck className="w-5 h-5 text-white" />
+
+            {/* Password */}
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, color: '#374151', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                {t('password')}
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+                <input
+                  className="dlv-field-input"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={credentials.password}
+                  onChange={e => { setCredentials(p => ({ ...p, password: e.target.value })); setError(''); }}
+                  placeholder={t('enterPassword')}
+                  required
+                  disabled={isLoading}
+                  style={{
+                    width: '100%',
+                    height: '56px',
+                    paddingLeft: '2.875rem',
+                    paddingRight: '3.5rem',
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '14px',
+                    background: '#f9fafb',
+                    color: '#111827',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.18s',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  style={{
+                    position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', padding: '0.375rem',
+                    cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
-          </div>
-          
-          <div>
-            <CardTitle className="text-3xl font-bold text-gray-900">{t('appName')}</CardTitle>
-            <CardDescription className="text-base mt-1">{t('tagline')}</CardDescription>
-          </div>
-          <CardDescription>{t('welcomeBack')}</CardDescription>
-        </CardHeader>
-        <CardContent>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">{t('phoneNumber')}</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder={t('enterPhoneNumber')}
-                value={credentials.phoneNumber}
-                onChange={(e) => {
-                  setCredentials({ ...credentials, phoneNumber: e.target.value });
-                  setError('');
-                }}
-                className={error ? 'border-destructive' : ''}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('password')}</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder={t('enterPassword')}
-                value={credentials.password}
-                onChange={(e) => {
-                  setCredentials({ ...credentials, password: e.target.value });
-                  setError('');
-                }}
-                className={error ? 'border-destructive' : ''}
-                disabled={isLoading}
-              />
-            </div>
-
+            {/* Error message */}
             {error && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm text-destructive">{error}</p>
+              <div style={{
+                background: '#fef2f2', border: '1px solid #fecaca',
+                color: '#dc2626', padding: '0.875rem 1rem',
+                borderRadius: '12px', fontSize: '0.9rem', fontWeight: 500,
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+              }}>
+                <AlertTriangle size={16} strokeWidth={2} style={{ flexShrink: 0 }} /> {error}
               </div>
             )}
 
-            <Button
+            {/* Submit button */}
+            <button
               type="submit"
-              className="w-full"
               disabled={isLoading}
+              className="dlv-submit-btn"
+              style={{
+                height: '58px',
+                width: '100%',
+                background: isLoading
+                  ? 'rgba(223,120,23,0.55)'
+                  : `linear-gradient(135deg, ${PRI} 0%, ${PRI_DARK} 100%)`,
+                color: '#fff',
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                border: 'none',
+                borderRadius: '16px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.625rem',
+                boxShadow: isLoading ? 'none' : '0 4px 20px rgba(223,120,23,0.4)',
+                transition: 'box-shadow 0.18s, transform 0.15s',
+                marginTop: '0.5rem',
+                WebkitTapHighlightColor: 'transparent',
+                letterSpacing: '0.02em',
+              }}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span style={{
+                    width: '22px', height: '22px', borderRadius: '50%',
+                    border: '2.5px solid rgba(255,255,255,0.35)',
+                    borderTopColor: '#fff',
+                    animation: 'dlv-spin 0.75s linear infinite',
+                    display: 'inline-block', flexShrink: 0,
+                  }} />
                   {t('loading')}
                 </>
               ) : (
                 <>
-                  <LogIn className="mr-2 h-4 w-4" />
+                  <Truck size={22} strokeWidth={2.5} />
                   {t('login')}
                 </>
               )}
-            </Button>
+            </button>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }

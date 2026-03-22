@@ -10,18 +10,7 @@ export const translations = {
 
 export type TranslationKey = keyof typeof translations.ar;
 
-export const formatCurrency = (amount: number | undefined | null, lang: Language): string => {
-  const safeAmount = amount ?? 0;
-  const formatted = safeAmount.toLocaleString('fr-MA', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  
-  if (lang === 'ar') {
-    return `${formatted} د.م`;
-  }
-  return `${formatted} DH`;
-};
+export { formatCurrency } from '@orderium/ui';
 
 export const formatPhone = (phone: string): string => {
   // Moroccan phone format: 06 XX XX XX XX or +212 6 XX XX XX XX

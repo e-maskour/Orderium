@@ -1,9 +1,9 @@
 /**
- * Professional INotification Bell Component
+ * Professional Notification Bell Component
  * Inspired by SAP Fiori, Odoo, and Microsoft Dynamics 365
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell,
@@ -24,23 +24,17 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { toastSuccess, toastArchived } from '../services/toast.service';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from './ui/popover';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from 'primereact/button';
+import { OverlayPanel } from 'primereact/overlaypanel';
+import { TabView, TabPanel } from 'primereact/tabview';
+import { Divider } from 'primereact/divider';
+import { Badge } from 'primereact/badge';
 import {
   notificationsService,
   type INotification,
   NotificationType,
   NotificationPriority,
 } from '../modules/notifications';
-import { cn } from '../lib/utils';
 import { useLanguage } from '../context/LanguageContext';
 
 export function NotificationBellPro() {
@@ -49,14 +43,17 @@ export function NotificationBellPro() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'unread'>('unread');
+  const [activeTab, setActiveTab] = useState(0); // 0 = unread, 1 = all
+  const opRef = useRef<OverlayPanel>(null);
+
+  const activeTabKey = activeTab === 0 ? 'unread' : 'all';
 
   // Fetch notifications
   const { data: notificationsData } = useQuery({
-    queryKey: ['notifications', activeTab],
+    queryKey: ['notifications', activeTabKey],
     queryFn: () =>
       notificationsService.getNotifications(
-        { isRead: activeTab === 'unread' ? false : undefined },
+        { isRead: activeTabKey === 'unread' ? false : undefined },
         { page: 1, limit: 20, sortBy: 'dateCreated', sortOrder: 'DESC' }
       ),
     enabled: !!admin && isOpen,
@@ -100,51 +97,43 @@ export function NotificationBellPro() {
     },
   });
 
-  const getNotificationIcon = (type: NotificationType, priority: NotificationPriority) => {
-    const iconSize = 'w-5 h-5';
+  const getNotificationIconStyle = (type: NotificationType): React.CSSProperties => {
+    const colorMap: Record<NotificationType, { bg: string; color: string }> = {
+      [NotificationType.NEW_ORDER]: { bg: '#dcfce7', color: '#15803d' },
+      [NotificationType.ORDER_ASSIGNED]: { bg: '#dbeafe', color: '#1d4ed8' },
+      [NotificationType.ORDER_STATUS_CHANGED]: { bg: '#fef3c7', color: '#b45309' },
+      [NotificationType.DELIVERY_STATUS_UPDATE]: { bg: '#f3e8ff', color: '#7c3aed' },
+      [NotificationType.ORDER_CANCELLED]: { bg: '#fef2f2', color: '#b91c1c' },
+      [NotificationType.PAYMENT_RECEIVED]: { bg: '#d1fae5', color: '#047857' },
+      [NotificationType.LOW_STOCK]: { bg: '#ffedd5', color: '#c2410c' },
+      [NotificationType.SYSTEM]: { bg: '#f3f4f6', color: '#374151' },
+      [NotificationType.INFO]: { bg: '#e0f2fe', color: '#0369a1' },
+      [NotificationType.WARNING]: { bg: '#fef9c3', color: '#a16207' },
+      [NotificationType.ERROR]: { bg: '#ffe4e6', color: '#be123c' },
+    };
+    const c = colorMap[type];
+    return { padding: '0.625rem', borderRadius: '0.5rem', background: c.bg, color: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+  };
+
+  const getNotificationIcon = (type: NotificationType) => {
+    const s = { width: 20, height: 20 };
     const iconMap: Record<NotificationType, JSX.Element> = {
-      [NotificationType.NEW_ORDER]: <Package className={iconSize} />,
-      [NotificationType.ORDER_ASSIGNED]: <TruckIcon className={iconSize} />,
-      [NotificationType.ORDER_STATUS_CHANGED]: <Clock className={iconSize} />,
-      [NotificationType.DELIVERY_STATUS_UPDATE]: <TruckIcon className={iconSize} />,
-      [NotificationType.ORDER_CANCELLED]: <XOctagon className={iconSize} />,
-      [NotificationType.PAYMENT_RECEIVED]: <DollarSign className={iconSize} />,
-      [NotificationType.LOW_STOCK]: <AlertTriangle className={iconSize} />,
-      [NotificationType.SYSTEM]: <Settings className={iconSize} />,
-      [NotificationType.INFO]: <Info className={iconSize} />,
-      [NotificationType.WARNING]: <AlertTriangle className={iconSize} />,
-      [NotificationType.ERROR]: <AlertCircle className={iconSize} />,
+      [NotificationType.NEW_ORDER]: <Package style={s} />,
+      [NotificationType.ORDER_ASSIGNED]: <TruckIcon style={s} />,
+      [NotificationType.ORDER_STATUS_CHANGED]: <Clock style={s} />,
+      [NotificationType.DELIVERY_STATUS_UPDATE]: <TruckIcon style={s} />,
+      [NotificationType.ORDER_CANCELLED]: <XOctagon style={s} />,
+      [NotificationType.PAYMENT_RECEIVED]: <DollarSign style={s} />,
+      [NotificationType.LOW_STOCK]: <AlertTriangle style={s} />,
+      [NotificationType.SYSTEM]: <Settings style={s} />,
+      [NotificationType.INFO]: <Info style={s} />,
+      [NotificationType.WARNING]: <AlertTriangle style={s} />,
+      [NotificationType.ERROR]: <AlertCircle style={s} />,
     };
-
-    const colorMap: Record<NotificationType, string> = {
-      [NotificationType.NEW_ORDER]: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      [NotificationType.ORDER_ASSIGNED]: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      [NotificationType.ORDER_STATUS_CHANGED]: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      [NotificationType.DELIVERY_STATUS_UPDATE]: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      [NotificationType.ORDER_CANCELLED]: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      [NotificationType.PAYMENT_RECEIVED]: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      [NotificationType.LOW_STOCK]: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      [NotificationType.SYSTEM]: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
-      [NotificationType.INFO]: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-      [NotificationType.WARNING]: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      [NotificationType.ERROR]: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
-    };
-
-    return (
-      <div className={cn('p-2.5 rounded-lg', colorMap[type])}>
-        {iconMap[type]}
-      </div>
-    );
+    return iconMap[type];
   };
 
   const getPriorityBadge = (priority: NotificationPriority) => {
-    const variantMap: Record<NotificationPriority, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      [NotificationPriority.LOW]: 'secondary',
-      [NotificationPriority.MEDIUM]: 'default',
-      [NotificationPriority.HIGH]: 'outline',
-      [NotificationPriority.URGENT]: 'destructive',
-    };
-
     const labelMap: Record<NotificationPriority, string> = {
       [NotificationPriority.LOW]: t('priority.low' as any),
       [NotificationPriority.MEDIUM]: t('priority.medium' as any),
@@ -154,10 +143,16 @@ export function NotificationBellPro() {
 
     if (priority === NotificationPriority.LOW) return null;
 
+    const severityMap: Record<string, 'info' | 'success' | 'warning' | 'danger'> = {
+      [NotificationPriority.MEDIUM]: 'info',
+      [NotificationPriority.HIGH]: 'warning',
+      [NotificationPriority.URGENT]: 'danger',
+    };
+
     return (
-      <Badge variant={variantMap[priority]} className="text-[10px] px-1.5 py-0 h-4">
+      <span style={{ fontSize: '0.625rem', padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontWeight: 600, background: priority === NotificationPriority.URGENT ? '#fef2f2' : priority === NotificationPriority.HIGH ? '#fffbeb' : '#eff6ff', color: priority === NotificationPriority.URGENT ? '#b91c1c' : priority === NotificationPriority.HIGH ? '#b45309' : '#1d4ed8' }}>
         {labelMap[priority]}
-      </Badge>
+      </span>
     );
   };
 
@@ -170,9 +165,7 @@ export function NotificationBellPro() {
     const key = `notification.message.${notification.type.toLowerCase()}`;
     let message = t(key as any);
 
-    // Interpolate placeholders with data
     const replacements: Record<string, string> = {};
-
     if (notification.data) {
       Object.entries(notification.data).forEach(([key, value]) => {
         if (typeof value === 'string' || typeof value === 'number') {
@@ -180,25 +173,14 @@ export function NotificationBellPro() {
         }
       });
     }
-
-    if (notification.orderNumber && !replacements.orderNumber) {
-      replacements.orderNumber = String(notification.orderNumber);
-    }
-    if (notification.customerName && !replacements.customerName) {
-      replacements.customerName = String(notification.customerName);
-    }
-
+    if (notification.orderNumber && !replacements.orderNumber) replacements.orderNumber = String(notification.orderNumber);
+    if (notification.customerName && !replacements.customerName) replacements.customerName = String(notification.customerName);
     Object.entries(replacements).forEach(([key, value]) => {
       message = message.replaceAll(`{{${key}}}`, value);
     });
-
-    // Remove any remaining placeholders that weren't replaced
     message = message.replace(/\{\{\w+\}\}/g, '');
-
-    // Cleanup trailing connectors when data is missing
     message = message.replace(/\s{2,}/g, ' ').trim();
     message = message.replace(/\sde\s*$/i, '').replace(/\sمن\s*$/i, '').trim();
-
     return message;
   };
 
@@ -221,10 +203,9 @@ export function NotificationBellPro() {
     if (!notification.isRead) {
       markAsReadMutation.mutate(notification.id);
     }
-
-    // Navigate to related resource
     if (notification.orderId) {
       navigate(`/orders/${notification.orderId}`);
+      opRef.current?.hide();
       setIsOpen(false);
     }
   };
@@ -233,223 +214,141 @@ export function NotificationBellPro() {
     (n: INotification) => !n.isRead && n.priority === NotificationPriority.URGENT
   );
 
+  const isRtl = dir === 'rtl';
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t('notifications')}
-          className={cn(
-            'relative hover:bg-accent transition-all duration-200',
-            hasUrgentNotifications && 'animate-pulse'
-          )}
-        >
-          <Bell className={cn('h-5 w-5', hasUrgentNotifications && 'text-red-500')} />
-          {unreadCount > 0 && (
-            <span
-              className={cn(
-                'absolute -top-1 -right-1 h-5 min-w-[20px] px-1 rounded-full text-[10px] font-semibold flex items-center justify-center shadow-lg ring-2 ring-background',
-                hasUrgentNotifications
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : 'bg-primary text-primary-foreground'
-              )}
-            >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        dir={dir}
-        className={cn(
-          'w-[420px] p-0 shadow-2xl',
-          dir === 'rtl' ? 'text-right' : 'text-left'
+    <>
+      <Button
+        text
+        rounded
+        aria-label={t('notifications')}
+        className={hasUrgentNotifications ? 'animate-pulse' : ''}
+        style={{ position: 'relative' }}
+        onClick={(e) => { setIsOpen(true); opRef.current?.toggle(e); }}
+      >
+        <Bell style={{ width: 20, height: 20, color: hasUrgentNotifications ? '#ef4444' : undefined }} />
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute', top: -4, right: -4, height: 20, minWidth: 20, padding: '0 4px',
+            borderRadius: '9999px', fontSize: '0.625rem', fontWeight: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2), 0 0 0 2px #fff',
+            background: hasUrgentNotifications ? '#ef4444' : '#235ae4', color: '#fff',
+          }}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
         )}
-        align="end"
-        sideOffset={8}
+      </Button>
+
+      <OverlayPanel
+        ref={opRef}
+        onHide={() => setIsOpen(false)}
+        style={{ width: '26rem', padding: 0 }}
+        dir={dir}
       >
         {/* Header */}
-        <div
-          className={cn(
-            'flex items-center justify-between px-4 py-3 border-b bg-muted/30',
-            dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'
-          )}
-        >
-          <div
-            className={cn(
-              'flex items-center gap-2',
-              dir === 'rtl' ? 'flex-row-reverse justify-end' : 'flex-row'
-            )}
-          >
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-semibold text-sm">{t('notifications')}</h3>
+        <div className="flex align-items-center justify-content-between" style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', background: '#f9fafb', flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+          <div className="flex align-items-center gap-2" style={{ flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+            <Bell style={{ width: 16, height: 16, color: '#6b7280' }} />
+            <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t('notifications')}</span>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                {unreadCount}
-              </Badge>
+              <Badge value={unreadCount} severity="info" style={{ fontSize: '0.625rem' }} />
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex align-items-center gap-1">
             {unreadCount > 0 && (
               <Button
-                variant="ghost"
-                size="sm"
+                text
+                size="small"
                 onClick={() => markAllAsReadMutation.mutate()}
-                className="h-7 px-2 text-xs hover:bg-accent"
+                style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
               >
-                <CheckCheck className="h-3.5 w-3.5 mr-1" />
+                <CheckCheck style={{ width: 14, height: 14, marginRight: 4 }} />
                 {t('markAllRead')}
               </Button>
             )}
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                navigate('/notifications');
-                setIsOpen(false);
-              }}
-              className="h-7 w-7"
+              text
+              rounded
+              size="small"
+              onClick={() => { navigate('/notifications'); opRef.current?.hide(); setIsOpen(false); }}
               aria-label={t('settings')}
+              style={{ width: 28, height: 28 }}
             >
-              <Settings className="h-3.5 w-3.5" />
+              <Settings style={{ width: 14, height: 14 }} />
             </Button>
           </div>
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as 'all' | 'unread')} className="w-full">
-          <TabsList className="w-full rounded-none border-b bg-transparent p-0 h-10">
-            <TabsTrigger
-              value="unread"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              {t('unread')}
-              {unreadCount > 0 && (
-                <span className="ml-1.5 text-[10px] font-semibold">({unreadCount})</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger
-              value="all"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              {t('all')}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value={activeTab} className="m-0">
-            <ScrollArea className="h-[480px]">
+        <TabView activeIndex={activeTab} onTabChange={(e) => setActiveTab(e.index)}>
+          <TabPanel header={unreadCount > 0 ? `${t('unread')} (${unreadCount})` : t('unread')}>
+            <div style={{ maxHeight: '30rem', overflowY: 'auto' }}>
               {notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                    <Bell className="h-8 w-8 text-muted-foreground" />
+                <div className="flex flex-column align-items-center justify-content-center" style={{ padding: '3rem 1rem', textAlign: 'center' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                    <Bell style={{ width: 32, height: 32, color: '#9ca3af' }} />
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    {activeTab === 'unread' ? t('noUnreadNotifications' as any) : t('noNotificationsYet' as any)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {activeTab === 'unread'
-                      ? t('allCaughtUp' as any)
-                      : t('notifyWhenSomethingHappens' as any)}
-                  </p>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#6b7280', marginBottom: '0.25rem' }}>
+                    {t('noUnreadNotifications' as any)}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                    {t('allCaughtUp' as any)}
+                  </span>
                 </div>
               ) : (
-                <div className="divide-y">
+                <div>
                   {notifications.map((notification: INotification) => (
                     <div
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}
-                      className={cn(
-                        'group relative px-4 py-3 hover:bg-accent/50 cursor-pointer transition-all duration-200',
-                        !notification.isRead && 'bg-accent/20'
-                      )}
+                      style={{
+                        position: 'relative', padding: '0.75rem 1rem', cursor: 'pointer',
+                        borderBottom: '1px solid #f3f4f6',
+                        background: !notification.isRead ? '#f0f9ff' : 'transparent',
+                      }}
                     >
-                      {/* Unread indicator */}
                       {!notification.isRead && (
-                        <div
-                          className={cn(
-                            'absolute top-0 bottom-0 w-1 bg-primary',
-                            dir === 'rtl' ? 'right-0' : 'left-0'
-                          )}
-                        />
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, width: 3, background: '#235ae4', ...(isRtl ? { right: 0 } : { left: 0 }) }} />
                       )}
-
-                      <div
-                        className={cn(
-                          'flex items-start gap-3',
-                          dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'
-                        )}
-                      >
-                        {/* Icon */}
-                        {getNotificationIcon(notification.type, notification.priority)}
-
-                        {/* Content */}
-                        <div className={cn('flex-1 min-w-0 space-y-1', dir === 'rtl' ? 'text-right' : 'text-left')}>
-                          <div
-                            className={cn(
-                              'flex items-start justify-between gap-2',
-                              dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'
-                            )}
-                          >
-                            <p
-                              className={cn(
-                                'text-sm font-medium leading-tight',
-                                !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
-                              )}
-                            >
-                              {getNotificationTitle(notification)}
-                            </p>
+                      <div className="flex align-items-start gap-3" style={{ flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+                        <div style={getNotificationIconStyle(notification.type)}>
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0, textAlign: isRtl ? 'right' : 'left' }}>
+                          <div style={{ fontSize: '0.875rem', fontWeight: !notification.isRead ? 500 : 400, color: !notification.isRead ? '#111827' : '#6b7280', lineHeight: 1.3 }}>
+                            {getNotificationTitle(notification)}
                           </div>
-
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          <div className="line-clamp-2" style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.5, marginTop: '0.125rem' }}>
                             {getNotificationMessage(notification)}
-                          </p>
-
-                          <div
-                            className={cn(
-                              'flex items-center justify-between pt-1',
-                              dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'
-                            )}
-                          >
-                            <div
-                              className={cn(
-                                'flex items-center gap-2 text-[11px] text-muted-foreground',
-                                dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'
-                              )}
-                            >
-                              <Clock className="h-3 w-3" />
+                          </div>
+                          <div className="flex align-items-center justify-content-between" style={{ marginTop: '0.25rem', flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+                            <div className="flex align-items-center gap-1" style={{ fontSize: '0.6875rem', color: '#9ca3af', flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+                              <Clock style={{ width: 12, height: 12 }} />
                               <span>{formatDate(notification.dateCreated)}</span>
                             </div>
-
-                            {/* Quick actions */}
-                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex align-items-center gap-1">
                               {!notification.isRead && (
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    markAsReadMutation.mutate(notification.id);
-                                  }}
-                                  className="h-7 w-7"
-                                  title={t('markAsRead')}
+                                  text
+                                  rounded
+                                  size="small"
+                                  onClick={(e) => { e.stopPropagation(); markAsReadMutation.mutate(notification.id); }}
                                   aria-label={t('markAsRead')}
+                                  style={{ width: 28, height: 28 }}
                                 >
-                                  <Check className="h-3.5 w-3.5" />
+                                  <Check style={{ width: 14, height: 14 }} />
                                 </Button>
                               )}
                               <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  archiveMutation.mutate(notification.id);
-                                }}
-                                className="h-7 w-7"
-                                title={t('archive')}
+                                text
+                                rounded
+                                size="small"
+                                onClick={(e) => { e.stopPropagation(); archiveMutation.mutate(notification.id); }}
                                 aria-label={t('archive')}
+                                style={{ width: 28, height: 28 }}
                               >
-                                <Archive className="h-3.5 w-3.5" />
+                                <Archive style={{ width: 14, height: 14 }} />
                               </Button>
                             </div>
                           </div>
@@ -459,30 +358,104 @@ export function NotificationBellPro() {
                   ))}
                 </div>
               )}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
+            </div>
+          </TabPanel>
+          <TabPanel header={t('all')}>
+            <div style={{ maxHeight: '30rem', overflowY: 'auto' }}>
+              {notifications.length === 0 ? (
+                <div className="flex flex-column align-items-center justify-content-center" style={{ padding: '3rem 1rem', textAlign: 'center' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                    <Bell style={{ width: 32, height: 32, color: '#9ca3af' }} />
+                  </div>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#6b7280', marginBottom: '0.25rem' }}>
+                    {t('noNotificationsYet' as any)}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                    {t('notifyWhenSomethingHappens' as any)}
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  {notifications.map((notification: INotification) => (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      style={{
+                        position: 'relative', padding: '0.75rem 1rem', cursor: 'pointer',
+                        borderBottom: '1px solid #f3f4f6',
+                        background: !notification.isRead ? '#f0f9ff' : 'transparent',
+                      }}
+                    >
+                      {!notification.isRead && (
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, width: 3, background: '#235ae4', ...(isRtl ? { right: 0 } : { left: 0 }) }} />
+                      )}
+                      <div className="flex align-items-start gap-3" style={{ flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+                        <div style={getNotificationIconStyle(notification.type)}>
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0, textAlign: isRtl ? 'right' : 'left' }}>
+                          <div style={{ fontSize: '0.875rem', fontWeight: !notification.isRead ? 500 : 400, color: !notification.isRead ? '#111827' : '#6b7280', lineHeight: 1.3 }}>
+                            {getNotificationTitle(notification)}
+                          </div>
+                          <div className="line-clamp-2" style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.5, marginTop: '0.125rem' }}>
+                            {getNotificationMessage(notification)}
+                          </div>
+                          <div className="flex align-items-center justify-content-between" style={{ marginTop: '0.25rem', flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+                            <div className="flex align-items-center gap-1" style={{ fontSize: '0.6875rem', color: '#9ca3af', flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+                              <Clock style={{ width: 12, height: 12 }} />
+                              <span>{formatDate(notification.dateCreated)}</span>
+                            </div>
+                            <div className="flex align-items-center gap-1">
+                              {!notification.isRead && (
+                                <Button
+                                  text
+                                  rounded
+                                  size="small"
+                                  onClick={(e) => { e.stopPropagation(); markAsReadMutation.mutate(notification.id); }}
+                                  aria-label={t('markAsRead')}
+                                  style={{ width: 28, height: 28 }}
+                                >
+                                  <Check style={{ width: 14, height: 14 }} />
+                                </Button>
+                              )}
+                              <Button
+                                text
+                                rounded
+                                size="small"
+                                onClick={(e) => { e.stopPropagation(); archiveMutation.mutate(notification.id); }}
+                                aria-label={t('archive')}
+                                style={{ width: 28, height: 28 }}
+                              >
+                                <Archive style={{ width: 14, height: 14 }} />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabPanel>
+        </TabView>
 
         {/* Footer */}
         {notifications.length > 0 && (
           <>
-            <Separator />
-            <div className="p-2">
+            <Divider style={{ margin: 0 }} />
+            <div style={{ padding: '0.5rem' }}>
               <Button
-                variant="ghost"
-                className="w-full h-9 text-sm font-medium hover:bg-accent"
-                onClick={() => {
-                  navigate('/notifications');
-                  setIsOpen(false);
-                }}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                {t('viewAllNotifications' as any)}
-              </Button>
+                text
+                label={t('viewAllNotifications' as any)}
+                icon={<Eye style={{ width: 16, height: 16, marginRight: 8 }} />}
+                onClick={() => { navigate('/notifications'); opRef.current?.hide(); setIsOpen(false); }}
+                style={{ width: '100%', fontSize: '0.875rem', fontWeight: 500, justifyContent: 'center' }}
+              />
             </div>
           </>
         )}
-      </PopoverContent>
-    </Popover>
+      </OverlayPanel>
+    </>
   );
 }

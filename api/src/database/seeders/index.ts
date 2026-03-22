@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { DataSource } from 'typeorm';
 import { seedConfigurations } from './configurations.seeder';
 import { seedWarehouses } from './warehouse.seeder';
@@ -15,10 +14,31 @@ export async function runSeeders(dataSource: DataSource) {
     await seedPartners(dataSource);
     await seedPortal(dataSource);
     await seedConfigurations(dataSource);
-    
+
     console.log('\n✅ All seeders completed successfully');
   } catch (error) {
     console.error('\n❌ Error running seeders:', error);
+    throw error;
+  }
+}
+
+/**
+ * Run seeders for a freshly-provisioned tenant database.
+ * Portal/user seeders are intentionally excluded — tenant users are
+ * created through the normal onboarding flow.
+ */
+export async function runTenantSeeders(dataSource: DataSource) {
+  console.log('🌱 Running tenant seeders...\n');
+
+  try {
+    await seedWarehouses(dataSource);
+    await seedUnitOfMeasures(dataSource);
+    await seedPartners(dataSource);
+    await seedConfigurations(dataSource);
+
+    console.log('\n✅ Tenant seeders completed successfully');
+  } catch (error) {
+    console.error('\n❌ Error running tenant seeders:', error);
     throw error;
   }
 }

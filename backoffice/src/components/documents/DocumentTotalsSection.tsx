@@ -1,6 +1,7 @@
 import { useDocumentCalculation } from '../../modules/documents/hooks';
 import { DocumentItem } from '../../modules/documents/types';
 import { useLanguage } from '../../context/LanguageContext';
+import { formatAmount } from '@orderium/ui';
 
 interface DocumentTotalsSectionProps {
   items: DocumentItem[];
@@ -13,48 +14,88 @@ export function DocumentTotalsSection({
 }: DocumentTotalsSectionProps) {
   const { t, language } = useLanguage();
   const { totalHT, totalTVA, totalTTC, taxByRate } = useDocumentCalculation(items);
-  
+
   return (
-    <div className="max-w-md ml-auto">
-      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 shadow-sm border border-slate-200">
-        <div className="space-y-3">
-          {/* Subtotal HT */}
-          <div className="flex justify-between items-center pb-3 border-b border-slate-200">
-            <span className="text-sm font-medium text-slate-600">{t('subtotalHT')}</span>
-            <span className="text-base font-semibold text-slate-900">{totalHT.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
+    <>
+      <style>{`
+      .doc-totals-outer { max-width: 28rem; margin-left: auto; width: 100%; }
+      @media (max-width: 768px) { .doc-totals-outer { max-width: 100%; margin-left: 0; } }
+    `}</style>
+      <div className="doc-totals-outer">
+        <div style={{
+          borderRadius: '1rem',
+          overflow: 'hidden',
+          border: '1.5px solid #e2e8f0',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        }}>
+          {/* Totals header */}
+          <div style={{
+            padding: '0.75rem 1.25rem',
+            background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+            borderBottom: '1.5px solid #e2e8f0',
+            display: 'flex', alignItems: 'center', gap: '0.5rem'
+          }}>
+            <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #235ae4, #1a47b8)', borderRadius: '2px' }} />
+            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              {t('totalTTC')}
+            </span>
           </div>
 
-          {/* Tax breakdown by rate */}
-          {displayMode === 'detailed' && Object.entries(taxByRate).length > 0 && (
-            <div className="space-y-2 py-2">
-              {Object.entries(taxByRate).map(([rate, amount]) => (
-                <div key={rate} className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">TVA {rate}%</span>
-                  <span className="text-sm font-medium text-slate-700">{amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-                </div>
-              ))}
+          <div style={{ background: 'linear-gradient(to bottom, #f8fafc, #ffffff)', padding: '1rem 1.25rem' }}>
+            {/* Subtotal HT */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: '1px solid #e8edf2' }}>
+              <span style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 500 }}>{t('subtotalHT')}</span>
+              <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
+                {formatAmount(totalHT, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+              </span>
             </div>
-          )}
 
-          {/* Total TVA */}
-          {Object.keys(taxByRate).length > 0 && (
-            <div className="flex justify-between items-center py-2 border-t border-slate-200">
-              <span className="text-sm font-semibold text-slate-700">{t('totalTVA')}</span>
-            <span className="text-base font-semibold text-slate-800">{totalTVA.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-            </div>
-          )}
+            {/* Tax breakdown */}
+            {displayMode === 'detailed' && Object.entries(taxByRate).length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.75rem 0', borderBottom: '1px solid #e8edf2' }}>
+                {Object.entries(taxByRate).map(([rate, amount]) => (
+                  <div key={rate} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem', background: '#fffbeb', borderRadius: '0.25rem', fontSize: '0.6875rem', fontWeight: 700, color: '#92400e' }}>%</span>
+                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>TVA {rate}%</span>
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
+                      {formatAmount(amount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Total TVA */}
+            {Object.keys(taxByRate).length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid #e8edf2' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('totalTVA')}</span>
+                <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#334155' }}>
+                  {formatAmount(totalTVA, 2)} {language === 'ar' ? 'د.م' : 'DH'}
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* Total TTC - Prominent */}
-          <div className="mt-4 pt-4 border-t-2 border-slate-300">
-            <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg p-4 shadow-md">
-              <div className="flex justify-between items-center">
-                <span className="text-white font-bold text-base">{t('totalTTC')}</span>
-                <span className="text-white font-bold text-2xl">{totalTTC.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-              </div>
+          <div style={{
+            background: 'linear-gradient(135deg, #235ae4 0%, #1a47b8 100%)',
+            padding: '1rem 1.25rem',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700, fontSize: '1rem' }}>{t('totalTTC')}</span>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ color: '#ffffff', fontWeight: 800, fontSize: '1.375rem', display: 'block', letterSpacing: '-0.02em' }}>
+                {formatAmount(totalTTC, 2)}
+              </span>
+              <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.75rem', fontWeight: 600 }}>
+                {language === 'ar' ? 'د.م' : 'DH'}
+              </span>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

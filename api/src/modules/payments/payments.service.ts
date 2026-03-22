@@ -1,18 +1,25 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Payment } from './payment.entity';
 import { Invoice, InvoiceStatus } from '../invoices/entities/invoice.entity';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class PaymentsService {
   constructor(
-    @InjectRepository(Payment)
-    private paymentsRepository: Repository<Payment>,
-    @InjectRepository(Invoice)
-    private invoicesRepository: Repository<Invoice>,
-  ) {}
+    private readonly tenantConnService: TenantConnectionService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) { }
+
+  private get paymentsRepository(): Repository<Payment> {
+    return this.tenantConnService.getRepository(Payment);
+  }
+
+  private get invoicesRepository(): Repository<Invoice> {
+    return this.tenantConnService.getRepository(Invoice);
+  }
 
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
     // Verify invoice exists
@@ -21,7 +28,9 @@ export class PaymentsService {
     });
 
     if (!invoice) {
-      throw new NotFoundException(`Invoice with ID ${createPaymentDto.invoiceId} not found`);
+      throw new NotFoundException(
+        `Invoice with ID ${createPaymentDto.invoiceId} not found`,
+      );
     }
 
     const payment = this.paymentsRepository.create(createPaymentDto);
@@ -60,9 +69,12 @@ export class PaymentsService {
     return payment;
   }
 
-  async update(id: number, updatePaymentDto: UpdatePaymentDto): Promise<Payment> {
+  async update(
+    id: number,
+    updatePaymentDto: UpdatePaymentDto,
+  ): Promise<Payment> {
     const payment = await this.findOne(id);
-    
+
     Object.assign(payment, updatePaymentDto);
     const updatedPayment = await this.paymentsRepository.save(payment);
 
@@ -77,7 +89,7 @@ export class PaymentsService {
   async remove(id: number): Promise<void> {
     const payment = await this.findOne(id);
     const invoiceId = payment.invoiceId;
-    
+
     await this.paymentsRepository.remove(payment);
 
     // Update invoice paid status after deletion
@@ -99,7 +111,6 @@ export class PaymentsService {
   private async updateInvoicePaidStatus(invoiceId: number): Promise<void> {
     const invoice = await this.invoicesRepository.findOne({
       where: { id: invoiceId },
-      relations: ['items'],
     });
 
     if (!invoice) return;
@@ -107,25 +118,25 @@ export class PaymentsService {
     const totalPaid = await this.getTotalPaid(invoiceId);
     const total = parseFloat(invoice.total.toString());
 
-    let status = InvoiceStatus.DRAFT;
-
-    // Determine status based on items and payments
-    if (!invoice.items || invoice.items.length === 0) {
-      // No items = draft
+    // Determine status based on validation state and payments
+    let status: InvoiceStatus;
+    if (!invoice.isValidated) {
       status = InvoiceStatus.DRAFT;
     } else if (totalPaid === 0) {
-      // Has items but no payments = unpaid
       status = InvoiceStatus.UNPAID;
     } else if (totalPaid >= total) {
-      // Fully paid
       status = InvoiceStatus.PAID;
     } else {
-      // Partial payment
       status = InvoiceStatus.PARTIAL;
     }
 
     invoice.status = status;
+    invoice.paidAmount = totalPaid;
+    invoice.remainingAmount = Math.max(total - totalPaid, 0);
 
     await this.invoicesRepository.save(invoice);
+
+    // Invalidate invoice cache so fresh data is returned
+    await this.cacheManager.del(`invoice:${invoiceId}`);
   }
 }

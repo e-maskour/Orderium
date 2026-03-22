@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import { PieChart } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 interface OrdersDistributionChartProps {
@@ -93,13 +94,35 @@ export const OrdersDistributionChart: React.FC<OrdersDistributionChartProps> = (
 
   const series = [data.pending, data.inDelivery, data.delivered, data.cancelled];
 
+  const total = series.reduce((a, b) => a + b, 0);
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-slate-800">{t('ordersDistribution')}</h3>
-        <p className="text-sm text-slate-500 mt-1">{t('byStatus')}</p>
+    <div className="db-chart-card">
+      <div className="db-chart-header">
+        <div className="db-chart-header-left">
+          <div className="db-chart-icon" style={{
+            background: 'linear-gradient(135deg,#f59e0b,#d97706)',
+            boxShadow: '0 4px 10px rgba(217,119,6,0.28)',
+          }}>
+            <PieChart style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="db-chart-title">{t('ordersDistribution')}</h3>
+            <p className="db-chart-subtitle">{t('byStatus')}</p>
+          </div>
+        </div>
+        <span className="db-chart-badge" style={{
+          background: '#fffbeb', color: '#d97706',
+          border: '1px solid #fde68a',
+        }}>
+          {total} {t('orders').toLowerCase()}
+        </span>
       </div>
-      <ReactApexChart options={chartOptions} series={series} type="donut" height={280} />
+      <div className="db-chart-body">
+        {Object.keys(chartOptions).length > 0 && (
+          <ReactApexChart options={chartOptions} series={series} type="donut" height={280} />
+        )}
+      </div>
     </div>
   );
 };

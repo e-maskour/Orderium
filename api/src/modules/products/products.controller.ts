@@ -35,8 +35,10 @@ import { ProductResponseDto } from './dto/product-response.dto';
 import { ProductImageResponseDto } from '../images/dto/product-image.dto';
 import { ApiRes } from '../../common/api-response';
 import { PRD } from '../../common/response-codes';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Products')
+@PortalRoute()
 @Controller('products')
 export class ProductsController {
   private readonly logger = new Logger(ProductsController.name);
@@ -73,9 +75,12 @@ export class ProductsController {
     @Query('perPage') perPage?: string,
   ) {
     const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
-    const perPageNum = Math.min(100, Math.max(1, parseInt(perPage ?? '50', 10) || 50));
+    const perPageNum = Math.min(
+      100,
+      Math.max(1, parseInt(perPage ?? '50', 10) || 50),
+    );
 
-    const { products, count, totalCount } = await this.productsService.findAll(
+    const { products, totalCount } = await this.productsService.findAll(
       pageNum,
       perPageNum,
       filterDto.search,
@@ -122,7 +127,10 @@ export class ProductsController {
     @Query('categoryIds') categoryIds?: string,
     @Query('isService') isService?: string,
   ) {
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit ?? '50', 10) || 50),
+    );
     const offsetNum = Math.max(0, parseInt(offset ?? '0', 10) || 0);
     const categoryIdsArray = categoryIds
       ? categoryIds.split(',').map((id) => parseInt(id, 10))
@@ -204,18 +212,44 @@ export class ProductsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     // Verify product exists
-    await this.productsService.findOne(productId);
+    const existingProduct = await this.productsService.findOne(productId);
 
     if (!file) {
       throw new BadRequestException('No image file provided');
     }
 
-    // Upload image
+    // Delete old image from MinIO before uploading the new one.
+    // Prefer the stored publicId; fall back to extracting the key from the URL
+    // for legacy products where imagePublicId was never persisted.
+    const oldPublicId =
+      existingProduct.imagePublicId ??
+      (() => {
+        if (!existingProduct.imageUrl) return null;
+        try {
+          const parsed = new URL(existingProduct.imageUrl);
+          return parsed.pathname.replace(/^\/[^/]+\//, '') || null;
+        } catch {
+          return null;
+        }
+      })();
+    if (oldPublicId) {
+      try {
+        await this.imageService.deleteImage(oldPublicId);
+      } catch (error) {
+        this.logger.warn(
+          'Failed to delete old image from MinIO',
+          (error as Error)?.message,
+        );
+      }
+    }
+
+    // Upload new image
     const imageResult = await this.imageService.uploadImage(file, `products`);
 
-    // Update product with new image URL
+    // Update product with new image URL and public ID
     const product = await this.productsService.update(productId, {
       imageUrl: imageResult.url,
+      imagePublicId: imageResult.publicId,
     });
 
     return ApiRes(PRD.IMAGE_UPLOADED, {
@@ -249,15 +283,18 @@ export class ProductsController {
     // Verify product exists
     const product = await this.productsService.findOne(productId);
 
-    // Get the public ID from query or product's imageUrl
-    let imagePublicId = publicId;
+    // Get the object key: prefer explicit query param, then DB-stored publicId
+    let imagePublicId = publicId ?? product.imagePublicId ?? undefined;
 
     if (!imagePublicId && product.imageUrl) {
-      // Try to extract public ID from known CDN providers
-      // For Cloudinary: extract from URL
-      // For S3: might be stored separately
-      // This is a fallback - ideally publicId should be stored in DB
-      imagePublicId = product.imageUrl;
+      // Last-resort fallback: extract object key from full MinIO URL
+      // e.g. http://localhost:9000/orderium-media/products/uuid.webp → products/uuid.webp
+      try {
+        const parsed = new URL(product.imageUrl);
+        imagePublicId = parsed.pathname.replace(/^\/[^/]+\//, '');
+      } catch {
+        imagePublicId = undefined;
+      }
     }
 
     if (!imagePublicId) {
@@ -314,7 +351,10 @@ export class ProductsController {
       height: height ? parseInt(height, 10) : undefined,
     });
 
-    return ApiRes(PRD.IMAGE_OPTIMIZED, { url: optimizedUrl, originalUrl: product.imageUrl });
+    return ApiRes(PRD.IMAGE_OPTIMIZED, {
+      url: optimizedUrl,
+      originalUrl: product.imageUrl,
+    });
   }
 
   @Get('export/xlsx')
@@ -362,8 +402,8 @@ export class ProductsController {
     status: 200,
     description: 'Template downloaded successfully',
   })
-  async getImportTemplate(@Res() res: Response) {
-    const buffer = await this.productsService.getImportTemplate();
+  getImportTemplate(@Res() res: Response) {
+    const buffer = this.productsService.getImportTemplate();
     res.send(buffer);
   }
 }

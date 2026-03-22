@@ -28,7 +28,7 @@ const loadCartFromStorage = (): CartItem[] => {
     if (!stored) return [];
 
     const cartData: CartData = JSON.parse(stored);
-    
+
     // Check if cart has expired
     if (Date.now() > cartData.expiresAt) {
       localStorage.removeItem(CART_STORAGE_KEY);
@@ -55,6 +55,9 @@ interface CartContextType {
   getItemQuantity: (productId: number) => number;
   subtotal: number;
   itemCount: number;
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -64,6 +67,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // Initialize from localStorage on mount
     return loadCartFromStorage();
   });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
   // Save to localStorage whenever items change
   useEffect(() => {
@@ -97,7 +104,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeItem(productId);
       return;
     }
-    
+
     setItems(prev =>
       prev.map(item =>
         item.product.id === productId
@@ -117,7 +124,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items]);
 
   const subtotal = items.reduce(
-    (sum, item) => sum + (Number(item.product.price) || 0) * item.quantity,
+    (sum, item) => sum + (item.product.price || 0) * item.quantity,
     0
   );
 
@@ -134,6 +141,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         getItemQuantity,
         subtotal,
         itemCount,
+        isCartOpen,
+        openCart,
+        closeCart,
       }}
     >
       {children}

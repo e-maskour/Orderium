@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Loader, CheckCircle, AlertCircle, Image as ImageIcon, Link } from 'lucide-react';
+import { Upload, X, Loader, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { productsService } from '../modules/products';
 import { imagesService } from '../modules/images';
+import { Button } from 'primereact/button';
 
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, imagePublicId?: string) => void;
@@ -14,7 +15,6 @@ interface ImageUploadProps {
   isLoading?: boolean;
   disabled?: boolean;
   showPreview?: boolean;
-  onModeChange?: (mode: 'file' | 'url') => void;
 }
 
 interface UploadStatus {
@@ -39,34 +39,17 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   isLoading: externalLoading,
   disabled,
   showPreview = true,
-  onModeChange,
 }) => {
   const { t } = useLanguage();
-  // Get environment-based URLs
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-  const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
-  const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
 
-  // Helper function to convert relative path to full URL
   const getFullImageUrl = (imagePath?: string): string | null => {
     if (!imagePath) return null;
-
-    if (imagePath.startsWith('http')) {
-      return imagePath; // Already a full URL
-    }
-
-    if (imagePath.startsWith('orderium/')) {
-      // Cloudinary URL
-      return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imagePath}`;
-    }
-
-    if (imagePath.startsWith('s3://')) {
-      // S3 URL
-      return `${s3BaseUrl}/${imagePath.replace('s3://', '')}`;
-    }
-
-    // Relative path (LOCAL provider) - construct with API base URL
-    return `${apiBaseUrl}/uploads/images/${imagePath}`;
+    // Full URL (MinIO or any absolute URL): use directly
+    if (imagePath.startsWith('http')) return imagePath;
+    // Legacy fallback: construct from MinIO public URL
+    const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
+    return `${minioPublicUrl}/orderium-media/${imagePath}`;
   };
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({ state: 'idle' });
@@ -74,15 +57,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
-  const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
-
-  const handleModeChange = (mode: 'file' | 'url') => {
-    setUploadMode(mode);
-    if (onModeChange) {
-      onModeChange(mode);
-    }
-  };
-
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -93,149 +67,114 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const validateFile = (file: File): string | null => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      return t('invalidFileType');
-    }
-
+    if (!allowedTypes.includes(file.type)) return t('invalidFileType');
     const maxBytes = maxSizeMB * 1024 * 1024;
-    if (file.size > maxBytes) {
-      return `${t('fileSizeExceeds')} ${maxSizeMB}MB`;
-    }
-
+    if (file.size > maxBytes) return `${t('fileSizeExceeds')} ${maxSizeMB}MB`;
     return null;
   };
 
   const handleUpload = async (file: File) => {
     const validationError = validateFile(file);
     if (validationError) {
-      setUploadStatus({
-        state: 'error',
-        message: validationError,
-      });
+      setUploadStatus({ state: 'error', message: validationError });
       return;
     }
 
     setUploadStatus({ state: 'uploading', progress: 0 });
 
-    // Show local preview
     const reader = new FileReader();
-    reader.onload = (e) => {
-      setLocalPreview(e.target?.result as string);
-    };
+    reader.onload = (e) => setLocalPreview(e.target?.result as string);
     reader.readAsDataURL(file);
 
     try {
       let imageData: { url: string; publicId: string; size?: number; format?: string };
-
       if (productId) {
+        // Server handles deleting the old image before uploading the new one
         const result = await productsService.uploadImage(productId, file);
         imageData = { url: result.imageUrl ?? '', publicId: result.publicId };
       } else {
+        // Delete the previous image from storage before uploading the new one
+        const previousPublicId = uploadStatus.imageData?.publicId;
+        if (previousPublicId) {
+          try { await imagesService.delete(previousPublicId); } catch { /* non-fatal */ }
+        }
         const result = await imagesService.upload(file, folder);
         imageData = { url: result.url, publicId: result.publicId, size: result.size, format: result.format };
       }
 
       const relativePath = imageData.url;
       const imagePublicId = imageData.publicId;
+      const fullImageUrl = getFullImageUrl(relativePath);
+      if (!fullImageUrl) throw new Error(t('failedToConstructImageUrl'));
 
-      // Construct full API URL by using the helper function
-      let fullImageUrl = getFullImageUrl(relativePath);
-      if (!fullImageUrl) {
-        throw new Error(t('failedToConstructImageUrl'));
-      }
-
-      // Update local preview with actual uploaded image
       setLocalPreview(fullImageUrl);
-
       setUploadStatus({
         state: 'success',
         message: t('imageUploadedSuccessfully'),
-        imageData: {
-          url: fullImageUrl,
-          publicId: imagePublicId,
-          size: imageData.size ?? 0,
-          format: imageData.format || 'image',
-        },
+        imageData: { url: fullImageUrl, publicId: imagePublicId, size: imageData.size ?? 0, format: imageData.format || 'image' },
       });
-
-      // Call callback with full URL
       onImageUpload(fullImageUrl, imagePublicId);
     } catch (error: any) {
-      setUploadStatus({
-        state: 'error',
-        message: error.message || `${t('uploadFailed')}. ${t('pleaseTryAgain')}.`,
-      });
+      setUploadStatus({ state: 'error', message: error.message || `${t('uploadFailed')}. ${t('pleaseTryAgain')}.` });
     }
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      await handleUpload(files[0]);
-    }
+    if (files && files.length > 0) await handleUpload(files[0]);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
     if (disabled || externalLoading || uploadStatus.state === 'uploading') return;
-
     const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      await handleUpload(files[0]);
-    }
+    if (files && files.length > 0) await handleUpload(files[0]);
   };
 
   const handleRemoveImage = async () => {
     if (!productId) return;
-
-    // Check if there's anything to remove (either uploaded or existing)
     if (!localPreview && !currentImage) return;
-
     try {
       await productsService.deleteImage(productId);
-
-      // Clear all image states
       setLocalPreview(null);
       setUploadStatus({ state: 'idle' });
       setImageLoadError(false);
-
-      if (onImageRemove) {
-        onImageRemove();
-      }
+      if (onImageRemove) onImageRemove();
     } catch (error: any) {
-      setUploadStatus({
-        state: 'error',
-        message: t('failedToRemoveImage'),
-      });
+      setUploadStatus({ state: 'error', message: t('failedToRemoveImage') });
     }
   };
 
   const isLoading = externalLoading || uploadStatus.state === 'uploading';
   const displayImage = localPreview || getFullImageUrl(currentImage);
 
+  const getDropZoneStyle = (): React.CSSProperties => {
+    const base: React.CSSProperties = { position: 'relative', borderRadius: '0.5rem', transition: 'all 0.2s', height: '148px' };
+    if (displayImage) {
+      return { ...base, border: '2px solid #cbd5e1', background: '#fff', overflow: 'hidden' };
+    }
+    if (disabled || isLoading) {
+      return { ...base, border: '2px dashed #e2e8f0', background: '#f8fafc', opacity: 0.5, cursor: 'not-allowed' };
+    }
+    if (dragActive) {
+      return { ...base, border: '2px dashed #235ae4', background: '#eff6ff' };
+    }
+    return { ...base, border: '2px dashed #cbd5e1', cursor: 'pointer' };
+  };
+
   return (
-    <div className="w-full h-full">
+    <div style={{ width: '100%' }}>
       {/* Upload Area / Preview Card */}
       <div
-        onDragEnter={displayImage || uploadMode === 'url' ? undefined : handleDrag}
-        onDragLeave={displayImage || uploadMode === 'url' ? undefined : handleDrag}
-        onDragOver={displayImage || uploadMode === 'url' ? undefined : handleDrag}
-        onDrop={displayImage || uploadMode === 'url' ? undefined : handleDrop}
-        className={`relative border-2 rounded-lg transition-all ${displayImage
-          ? 'border-solid border-slate-300 bg-white overflow-hidden h-64'
-          : `border-dashed p-6 ${disabled || isLoading
-            ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200'
-            : dragActive
-              ? 'border-amber-500 bg-amber-50'
-              : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50 cursor-pointer'
-          }`
-          }`}
+        onDragEnter={displayImage ? undefined : handleDrag}
+        onDragLeave={displayImage ? undefined : handleDrag}
+        onDragOver={displayImage ? undefined : handleDrag}
+        onDrop={displayImage ? undefined : handleDrop}
+        style={getDropZoneStyle()}
         onClick={() => {
-          if (displayImage) return; // Don't open file picker when showing image
-          if (uploadMode === 'url') return; // Don't open file picker in URL mode
+          if (displayImage) return;
           if (!disabled && !isLoading) fileInputRef.current?.click();
         }}
       >
@@ -245,17 +184,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           accept="image/jpeg,image/png,image/webp"
           onChange={handleFileSelect}
           disabled={disabled || isLoading}
-          className="hidden"
+          style={{ display: 'none' }}
         />
 
         {displayImage ? (
-          // Preview in card
-          <div className="relative w-full h-full bg-slate-100">
+          <div style={{ position: 'relative', width: '100%', height: '100%', background: '#f1f5f9', overflow: 'visible' }}>
             {!imageLoadError ? (
               <img
                 src={displayImage}
                 alt={t('productPreview')}
-                className="w-full h-full object-contain"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 onLoad={() => setImageLoadError(false)}
                 onError={() => {
                   console.error('Failed to load image:', displayImage);
@@ -263,116 +201,56 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 }}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-slate-200">
-                <div className="text-center">
-                  <ImageIcon className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                  <p className="text-xs text-slate-500">Failed to load image</p>
-                  <p className="text-xs text-slate-400 mt-1">{displayImage}</p>
-                </div>
+              <div className="flex flex-column align-items-center justify-content-center" style={{ width: '100%', height: '100%', background: '#e2e8f0' }}>
+                <ImageIcon style={{ width: 32, height: 32, color: '#94a3b8', marginBottom: '0.5rem' }} />
+                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Failed to load image</span>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>{displayImage}</span>
               </div>
             )}
 
             {/* Remove button overlay */}
             {!isLoading && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRemoveImage();
-                }}
-                className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors shadow-md z-10"
+              <Button
+                text
+                onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
+                style={{ position: 'absolute', top: 8, right: 8, padding: '0.375rem', background: '#ef4444', color: '#fff', borderRadius: '0.5rem', zIndex: 50, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}
                 title={t('removeImage')}
               >
-                <X className="w-4 h-4" />
-              </button>
+                <X style={{ width: 16, height: 16 }} />
+              </Button>
             )}
 
             {/* Image info overlay */}
             {uploadStatus.imageData?.size && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 z-10">
-                <p className="text-xs text-white">
-                  {(uploadStatus.imageData.size / 1024 / 1024).toFixed(2)}MB
-                </p>
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)', padding: '0.5rem', zIndex: 10 }}>
+                <span style={{ fontSize: '0.75rem', color: '#fff' }}>{(uploadStatus.imageData.size / 1024 / 1024).toFixed(2)}MB</span>
               </div>
             )}
 
-            {/* Click to change image hint - only on hover */}
+            {/* Click to change image hint */}
             {!imageLoadError && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer pointer-events-none hover:pointer-events-auto z-20"
+                className="flex align-items-center justify-content-center"
+                style={{ position: 'absolute', inset: 0, background: 'transparent', cursor: 'pointer', zIndex: 20, opacity: 0 }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(0,0,0,0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; e.currentTarget.style.background = 'transparent'; }}
               >
-                <span className="text-white text-sm font-medium">Click to change image</span>
+                <span style={{ color: '#fff', fontSize: '0.875rem', fontWeight: 500 }}>Click to change image</span>
               </div>
             )}
           </div>
         ) : (
-          // Upload UI
-          <div className="flex flex-col items-center justify-center gap-3">
+          <div className="flex flex-column align-items-center justify-content-center gap-2" style={{ width: '100%', height: '100%' }}>
             {isLoading ? (
               <>
-                <Loader className="w-8 h-8 text-amber-500 animate-spin" />
-                <p className="text-sm font-medium text-slate-700">Uploading...</p>
+                <Loader className="animate-spin" style={{ width: 24, height: 24, color: '#235ae4' }} />
+                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>Uploading...</span>
               </>
             ) : (
               <>
-                {/* Mode Toggle */}
-                <div className="flex gap-2 mb-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleModeChange('file');
-                    }}
-                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${uploadMode === 'file'
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                  >
-                    <Upload className="w-3 h-3 inline mr-1" />
-                    Upload File
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleModeChange('url');
-                    }}
-                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${uploadMode === 'url'
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                  >
-                    <Link className="w-3 h-3 inline mr-1" />
-                    Paste URL
-                  </button>
-                </div>
-
-                {uploadMode === 'file' && (
-                  <>
-                    <Upload className="w-8 h-8 text-slate-400" />
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-slate-900">
-                        Drag and drop your image here
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        or click to browse (Max {maxSizeMB}MB)
-                      </p>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-2">
-                      Supported formats: JPEG, PNG, WebP
-                    </p>
-                  </>
-                )}
-
-                {uploadMode === 'url' && (
-                  <div className="text-center">
-                    <Link className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-slate-900">
-                      Paste URL mode active
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Use the input field below product code
-                    </p>
-                  </div>
-                )}
+                <Upload style={{ width: 24, height: 24, color: '#94a3b8' }} />
+                <span style={{ fontSize: '0.6875rem', color: '#64748b', textAlign: 'center' }}>Click or drag</span>
               </>
             )}
           </div>
@@ -381,16 +259,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {/* Status Messages */}
       {uploadStatus.state === 'success' && uploadStatus.message && (
-        <div className="mt-3 flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <CheckCircle className="w-4 h-4 text-green-600" />
-          <p className="text-sm text-green-700">{uploadStatus.message}</p>
+        <div className="flex align-items-center gap-2" style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '0.5rem' }}>
+          <CheckCircle style={{ width: 16, height: 16, color: '#059669' }} />
+          <span style={{ fontSize: '0.875rem', color: '#047857' }}>{uploadStatus.message}</span>
         </div>
       )}
 
       {uploadStatus.state === 'error' && uploadStatus.message && (
-        <div className="mt-3 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-red-600" />
-          <p className="text-sm text-red-700">{uploadStatus.message}</p>
+        <div className="flex align-items-center gap-2" style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem' }}>
+          <AlertCircle style={{ width: 16, height: 16, color: '#dc2626' }} />
+          <span style={{ fontSize: '0.875rem', color: '#b91c1c' }}>{uploadStatus.message}</span>
         </div>
       )}
     </div>

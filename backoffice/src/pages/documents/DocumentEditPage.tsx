@@ -2,9 +2,10 @@ import { AdminLayout } from '../../components/AdminLayout';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import { useDocumentCalculation } from '../../modules/documents/hooks';
 import { Save, X, CheckCircle, XCircle, ChevronDown, FileText, Truck, ArrowLeft, DollarSign, Clock, AlertCircle, Share2, PenTool, Ban, Receipt, History } from 'lucide-react';
 import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
-import { Partner, IPartner, partnersService } from '../../modules/partners';
+import { Partner, IPartner } from '../../modules/partners';
 import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
 import { ShareQuoteDialog } from '../../components/documents/ShareQuoteDialog';
 import { invoicesService } from '../../modules/invoices/invoices.service';
@@ -15,10 +16,11 @@ import PDFActionButtons from '../../components/PDFActionButtons';
 import { pdfService } from '../../services/pdf.service';
 import { toastSuccess, toastError, toastValidated, toastDevalidated, toastDelivered, toastCancelled, toastDocument, toastLinked, toastConfirm } from '../../services/toast.service';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
-import { Textarea } from '../../components/ui/textarea';
-import { FormField } from '../../components/ui/form-field';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Calendar } from 'primereact/calendar';
+import { formatAmount } from '@orderium/ui';
 
 interface DocumentEditPageProps {
   documentType: DocumentType;
@@ -64,6 +66,16 @@ export default function DocumentEditPage({
 
   const isVente = direction === 'vente';
 
+  const totalTTC = items.reduce((sum, item) => {
+    const itemTotal = item.quantity * item.unitPrice;
+    const discountAmount = item.discountType === 1
+      ? itemTotal * (item.discount / 100)
+      : item.discount;
+    const afterDiscount = itemTotal - discountAmount;
+    const tax = afterDiscount * (item.tax / 100);
+    return sum + afterDiscount + tax;
+  }, 0);
+
   // Helper function to get payment status badge configuration
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
@@ -71,37 +83,37 @@ export default function DocumentEditPage({
         return {
           icon: CheckCircle,
           label: t('statusPaid'),
-          gradient: 'from-green-50 to-emerald-50',
-          border: 'border-green-200',
-          iconBg: 'bg-green-500',
-          textColor: 'text-green-700'
+          gradient: 'linear-gradient(to right, #f0fdf4, #ecfdf5)',
+          borderColor: '#bbf7d0',
+          iconBgColor: '#22c55e',
+          textColor: '#15803d'
         };
       case 'partial':
         return {
           icon: Clock,
           label: t('statusPartial'),
-          gradient: 'from-blue-50 to-cyan-50',
-          border: 'border-blue-200',
-          iconBg: 'bg-blue-500',
-          textColor: 'text-blue-700'
+          gradient: 'linear-gradient(to right, #eff6ff, #ecfeff)',
+          borderColor: '#bfdbfe',
+          iconBgColor: '#3b82f6',
+          textColor: '#1d4ed8'
         };
       case 'unpaid':
         return {
           icon: AlertCircle,
           label: t('statusUnpaid'),
-          gradient: 'from-red-50 to-rose-50',
-          border: 'border-red-200',
-          iconBg: 'bg-red-500',
-          textColor: 'text-red-700'
+          gradient: 'linear-gradient(to right, #fef2f2, #fff1f2)',
+          borderColor: '#fecaca',
+          iconBgColor: '#ef4444',
+          textColor: '#b91c1c'
         };
       default: // draft
         return {
           icon: FileText,
           label: t('statusDraft'),
-          gradient: 'from-slate-50 to-gray-50',
-          border: 'border-slate-300',
-          iconBg: 'bg-slate-500',
-          textColor: 'text-slate-700'
+          gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
+          borderColor: '#cbd5e1',
+          iconBgColor: '#64748b',
+          textColor: '#334155'
         };
     }
   };
@@ -113,55 +125,55 @@ export default function DocumentEditPage({
         return {
           icon: FileText,
           label: t('statusOpen'),
-          gradient: 'from-blue-50 to-sky-50',
-          border: 'border-blue-200',
-          iconBg: 'bg-blue-500',
-          textColor: 'text-blue-700'
+          gradient: 'linear-gradient(to right, #eff6ff, #f0f9ff)',
+          borderColor: '#bfdbfe',
+          iconBgColor: '#3b82f6',
+          textColor: '#1d4ed8'
         };
       case 'signed':
         return {
           icon: CheckCircle,
           label: t('statusSigned'),
-          gradient: 'from-green-50 to-emerald-50',
-          border: 'border-green-200',
-          iconBg: 'bg-green-500',
-          textColor: 'text-green-700'
+          gradient: 'linear-gradient(to right, #f0fdf4, #ecfdf5)',
+          borderColor: '#bbf7d0',
+          iconBgColor: '#22c55e',
+          textColor: '#15803d'
         };
       case 'closed':
         return {
           icon: XCircle,
           label: t('statusClosed'),
-          gradient: 'from-red-50 to-rose-50',
-          border: 'border-red-200',
-          iconBg: 'bg-red-500',
-          textColor: 'text-red-700'
+          gradient: 'linear-gradient(to right, #fef2f2, #fff1f2)',
+          borderColor: '#fecaca',
+          iconBgColor: '#ef4444',
+          textColor: '#b91c1c'
         };
       case 'delivered':
         return {
           icon: Truck,
           label: t('statusDelivered'),
-          gradient: 'from-orange-50 to-amber-50',
-          border: 'border-orange-200',
-          iconBg: 'bg-orange-500',
-          textColor: 'text-orange-700'
+          gradient: 'linear-gradient(to right, #fff7ed, #fffbeb)',
+          borderColor: '#fed7aa',
+          iconBgColor: '#f97316',
+          textColor: '#c2410c'
         };
       case 'invoiced':
         return {
           icon: DollarSign,
           label: t('statusInvoiced'),
-          gradient: 'from-purple-50 to-violet-50',
-          border: 'border-purple-200',
-          iconBg: 'bg-purple-500',
-          textColor: 'text-purple-700'
+          gradient: 'linear-gradient(to right, #faf5ff, #f5f3ff)',
+          borderColor: '#e9d5ff',
+          iconBgColor: '#a855f7',
+          textColor: '#7e22ce'
         };
       default: // draft
         return {
           icon: FileText,
           label: t('statusDraft'),
-          gradient: 'from-slate-50 to-gray-50',
-          border: 'border-slate-300',
-          iconBg: 'bg-slate-500',
-          textColor: 'text-slate-700'
+          gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
+          borderColor: '#cbd5e1',
+          iconBgColor: '#64748b',
+          textColor: '#334155'
         };
     }
   };
@@ -173,55 +185,55 @@ export default function DocumentEditPage({
         return {
           icon: CheckCircle,
           label: t('statusValidated'),
-          gradient: 'from-sky-50 to-blue-50',
-          border: 'border-sky-200',
-          iconBg: 'bg-sky-500',
-          textColor: 'text-sky-700'
+          gradient: 'linear-gradient(to right, #f0f9ff, #eff6ff)',
+          borderColor: '#bae6fd',
+          iconBgColor: '#0ea5e9',
+          textColor: '#0369a1'
         };
       case 'in_progress':
         return {
           icon: Truck,
           label: t('statusInProgress'),
-          gradient: 'from-cyan-50 to-teal-50',
-          border: 'border-cyan-200',
-          iconBg: 'bg-cyan-500',
-          textColor: 'text-cyan-700'
+          gradient: 'linear-gradient(to right, #ecfeff, #f0fdfa)',
+          borderColor: '#a5f3fc',
+          iconBgColor: '#06b6d4',
+          textColor: '#0e7490'
         };
       case 'delivered':
         return {
           icon: Truck,
           label: t('statusDeliveredBon'),
-          gradient: 'from-teal-50 to-emerald-50',
-          border: 'border-teal-200',
-          iconBg: 'bg-teal-500',
-          textColor: 'text-teal-700'
+          gradient: 'linear-gradient(to right, #f0fdfa, #ecfdf5)',
+          borderColor: '#99f6e4',
+          iconBgColor: '#14b8a6',
+          textColor: '#0f766e'
         };
       case 'cancelled':
         return {
           icon: XCircle,
           label: t('statusCancelled'),
-          gradient: 'from-rose-50 to-red-50',
-          border: 'border-rose-200',
-          iconBg: 'bg-rose-500',
-          textColor: 'text-rose-700'
+          gradient: 'linear-gradient(to right, #fff1f2, #fef2f2)',
+          borderColor: '#fecdd3',
+          iconBgColor: '#f43f5e',
+          textColor: '#be123c'
         };
       case 'invoiced':
         return {
           icon: DollarSign,
           label: t('statusInvoicedBon'),
-          gradient: 'from-purple-50 to-violet-50',
-          border: 'border-purple-200',
-          iconBg: 'bg-purple-500',
-          textColor: 'text-purple-700'
+          gradient: 'linear-gradient(to right, #faf5ff, #f5f3ff)',
+          borderColor: '#e9d5ff',
+          iconBgColor: '#a855f7',
+          textColor: '#7e22ce'
         };
       default: // draft
         return {
           icon: FileText,
           label: t('statusDraft'),
-          gradient: 'from-slate-50 to-gray-50',
-          border: 'border-slate-300',
-          iconBg: 'bg-slate-500',
-          textColor: 'text-slate-700'
+          gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
+          borderColor: '#cbd5e1',
+          iconBgColor: '#64748b',
+          textColor: '#334155'
         };
     }
   };
@@ -301,8 +313,8 @@ export default function DocumentEditPage({
 
       // Load payment data for invoices
       if (documentType === 'facture') {
-        setPaidAmount(parseFloat(doc.paidAmount?.toString() || '0'));
-        setRemainingAmount(parseFloat(doc.remainingAmount?.toString() || '0'));
+        setPaidAmount(doc.paidAmount ?? 0);
+        setRemainingAmount(doc.remainingAmount ?? 0);
       }
 
       // Load share token and signature data for devis
@@ -314,92 +326,42 @@ export default function DocumentEditPage({
         setClientNotes((doc as any).clientNotes || '');
       }
 
-      // Set partner - fetch full partner details from partnersService
+      // Set partner from document data
       const customerId = doc.customerId || doc.customer?.id;
       const customerName = doc.customerName || doc.customer?.name;
       const customerPhone = doc.customerPhone || doc.customer?.phone || doc.customer?.phoneNumber;
       const customerAddress = doc.customerAddress || doc.customer?.address;
 
       if (isVente && customerId) {
-        try {
-          const partnerData = await partnersService.getById(customerId);
-          if (partnerData) {
-            setPartner(partnerData);
-          } else {
-            // Fallback to document data if partner not found
-            setPartner({
-              id: customerId,
-              name: customerName || '',
-              phoneNumber: customerPhone || '',
-              ice: doc.customerIce || null,
-              address: customerAddress || null,
-              deliveryAddress: '',
-              isCompany: false,
-              isEnabled: true,
-              isCustomer: true,
-              isSupplier: false,
-              dateCreated: '',
-              dateUpdated: ''
-            });
-          }
-        } catch (error) {
-          console.error('Error loading partner:', error);
-          // Fallback to document data
-          setPartner({
-            id: customerId,
-            name: customerName || '',
-            phoneNumber: customerPhone || '',
-            ice: doc.customerIce || null,
-            address: customerAddress || null,
-            deliveryAddress: '',
-            isCompany: false,
-            isEnabled: true,
-            isCustomer: true,
-            isSupplier: false,
-            dateCreated: '',
-            dateUpdated: ''
-          });
-        }
+        setPartner({
+          id: customerId,
+          name: customerName || '',
+          phoneNumber: customerPhone || '',
+          ice: doc.customerIce || null,
+          address: customerAddress || null,
+          deliveryAddress: '',
+          isCompany: false,
+          isEnabled: true,
+          isCustomer: true,
+          isSupplier: false,
+          dateCreated: '',
+          dateUpdated: ''
+        });
       } else if (!isVente && doc.supplierId) {
-        try {
-          const partnerData = await partnersService.getById(doc.supplierId);
-          if (partnerData) {
-            setPartner(partnerData);
-          } else {
-            // Fallback to document data if partner not found
-            setPartner({
-              id: doc.supplierId,
-              name: doc.supplierName || '',
-              phoneNumber: doc.supplierPhone || '',
-              ice: doc.supplierIce || null,
-              address: doc.supplierAddress || null,
-              deliveryAddress: '',
-              isCompany: false,
-              isEnabled: true,
-              isCustomer: false,
-              isSupplier: true,
-              dateCreated: '',
-              dateUpdated: ''
-            });
-          }
-        } catch (error) {
-          console.error('Error loading partner:', error);
-          // Fallback to document data
-          setPartner({
-            id: doc.supplierId,
-            name: doc.supplierName || '',
-            phoneNumber: doc.supplierPhone || '',
-            ice: doc.supplierIce || null,
-            address: doc.supplierAddress || null,
-            deliveryAddress: '',
-            isCompany: false,
-            isEnabled: true,
-            isCustomer: false,
-            isSupplier: true,
-            dateCreated: '',
-            dateUpdated: ''
-          });
-        }
+        setPartner({
+          id: doc.supplierId,
+          name: doc.supplierName || '',
+          phoneNumber: doc.supplierPhone || '',
+          ice: doc.supplierIce || null,
+          address: doc.supplierAddress || null,
+          deliveryAddress: '',
+          isCompany: false,
+          isEnabled: true,
+          isCustomer: false,
+          isSupplier: true,
+          dateCreated: '',
+          dateUpdated: ''
+        });
       }
 
       // Set items
@@ -408,12 +370,12 @@ export default function DocumentEditPage({
         id: String(item.id),
         productId: item.productId,
         description: item.product?.name || item.description || '',
-        quantity: parseFloat(item.quantity || 0),
-        unitPrice: parseFloat(item.unitPrice || item.price || item.priceBeforeTax || 0),
-        discount: parseFloat(item.discount || 0),
+        quantity: item.quantity || 0,
+        unitPrice: item.unitPrice || item.price || item.priceBeforeTax || 0,
+        discount: item.discount || 0,
         discountType: item.discountType || 0,
-        tax: parseFloat(item.tax || item.saleTax || 0),
-        total: parseFloat(item.total || 0)
+        tax: item.tax || item.saleTax || 0,
+        total: item.total || 0
       }));
       setItems(mappedItems);
 
@@ -474,7 +436,11 @@ export default function DocumentEditPage({
         customerId: isVente ? partner.id : undefined,
         supplierId: isVente ? undefined : partner.id,
         customerName: isVente ? partner.name : undefined,
+        customerPhone: isVente ? partner.phoneNumber : undefined,
+        customerAddress: isVente ? partner.address : undefined,
         supplierName: isVente ? undefined : partner.name,
+        supplierPhone: isVente ? undefined : partner.phoneNumber,
+        supplierAddress: isVente ? undefined : partner.address,
         subtotal,
         tax: totalTax,
         discount: 0,
@@ -493,7 +459,7 @@ export default function DocumentEditPage({
           const itemTotal = itemSubtotal - discountAmount;
 
           return {
-            id: Number(item.id),
+            id: item.id.startsWith('new_') ? undefined : Number(item.id),
             productId: item.productId,
             description: item.description,
             quantity: item.quantity,
@@ -825,9 +791,18 @@ export default function DocumentEditPage({
   if (loading) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-slate-500">{t('loading')}</div>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '20rem', gap: '1rem' }}>
+            <div style={{
+              width: '3rem', height: '3rem',
+              background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+              borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(35,90,228,0.3)',
+              animation: 'pulse 1.5s ease-in-out infinite'
+            }}>
+              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
+            </div>
+            <p style={{ color: '#64748b', fontWeight: 500, fontSize: '0.9375rem' }}>{t('loading')}</p>
           </div>
         </div>
       </AdminLayout>
@@ -836,202 +811,249 @@ export default function DocumentEditPage({
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
-        {/* Simplified Header with Back Button */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-start sm:items-center gap-2 sm:gap-3">
-            <button
-              onClick={() => navigate(listRoute)}
-              className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0"
-            >
-              <ArrowLeft className="w-4 sm:w-5 h-4 sm:h-5 text-slate-600" />
-            </button>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">
-                    {config.titleShort} {invoiceNumber}
-                  </h1>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{t('editDocument')} {config.titleShort.toLowerCase()}</p>
-                </div>
-                {/* Status badges - positioned to the right */}
-                <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-end w-full sm:w-auto">
-                  {/* Validation status badge */}
-                  {config.features.hasValidation && (
-                    isValidated ? (
-                      <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 shadow-sm whitespace-nowrap">
-                        <div className="flex items-center justify-center w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-emerald-500 shadow-sm flex-shrink-0">
-                          <CheckCircle className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 text-white" strokeWidth={2.5} />
-                        </div>
-                        <span className="font-semibold text-xs sm:text-sm text-emerald-700">{t('validated')}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 shadow-sm whitespace-nowrap">
-                        <div className="flex items-center justify-center w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-amber-500 shadow-sm flex-shrink-0">
-                          <XCircle className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 text-white" strokeWidth={2.5} />
-                        </div>
-                        <span className="font-semibold text-xs sm:text-sm text-amber-700">{t('notValidated')}</span>
-                      </div>
-                    )
-                  )}
-
-                  {/* Document status badge - different for each document type */}
-                  {documentType === 'facture' && (() => {
-                    const statusConfig = getPaymentStatusBadge(status);
-                    const StatusIcon = statusConfig.icon;
-                    return (
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${statusConfig.gradient} border ${statusConfig.border} shadow-sm`}>
-                        <div className={`flex items-center justify-center w-5 h-5 rounded-full ${statusConfig.iconBg} shadow-sm`}>
-                          <StatusIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                        </div>
-                        <span className={`font-semibold text-sm ${statusConfig.textColor}`}>{statusConfig.label}</span>
-                      </div>
-                    );
-                  })()}
-
-                  {documentType === 'devis' && (() => {
-                    const statusConfig = getDevisStatusBadge(status);
-                    const StatusIcon = statusConfig.icon;
-                    return (
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${statusConfig.gradient} border ${statusConfig.border} shadow-sm`}>
-                        <div className={`flex items-center justify-center w-5 h-5 rounded-full ${statusConfig.iconBg} shadow-sm`}>
-                          <StatusIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                        </div>
-                        <span className={`font-semibold text-sm ${statusConfig.textColor}`}>{statusConfig.label}</span>
-                      </div>
-                    );
-                  })()}
-
-                  {documentType === 'bon_livraison' && (() => {
-                    const statusConfig = getBonStatusBadge(status);
-                    const StatusIcon = statusConfig.icon;
-                    return (
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${statusConfig.gradient} border ${statusConfig.border} shadow-sm`}>
-                        <div className={`flex items-center justify-center w-5 h-5 rounded-full ${statusConfig.iconBg} shadow-sm`}>
-                          <StatusIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                        </div>
-                        <span className={`font-semibold text-sm ${statusConfig.textColor}`}>{statusConfig.label}</span>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
+      <style>{`
+        .doc-edit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-top: 1.5px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 40; }
+        .doc-field-label { display: block; font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.375rem; }
+        .doc-cal { position: relative !important; display: block !important; }
+        .doc-cal .p-inputtext { padding-right: 2.5rem !important; width: 100% !important; border-top-right-radius: var(--orderium-radius-md, 6px) !important; border-bottom-right-radius: var(--orderium-radius-md, 6px) !important; }
+        .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
+        .doc-cal .p-datepicker-trigger:hover { color: var(--form-input-border-focus) !important; background: transparent !important; }
+        .doc-notes-totals { display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-top: 1.5rem; align-items: flex-start; }
+        @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } .doc-notes-totals { grid-template-columns: 1fr !important; gap: 1rem !important; } }
+        /* ── Document detail header – responsive ── */
+        .doc-detail-hdr { display: flex; align-items: center; gap: 0.875rem; flex-wrap: nowrap; position: relative; margin-bottom: 1.5rem; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.72); backdrop-filter: blur(8px); border-radius: 1rem; border: 1px solid rgba(226,232,240,0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; }
+        .doc-detail-hdr__icon { width: 3rem; height: 3rem; flex-shrink: 0; background: linear-gradient(135deg, #235ae4 0%, #818cf8 100%); border-radius: 0.875rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(35,90,228,0.35); }
+        .doc-detail-hdr__body { flex: 1; min-width: 0; overflow: hidden; }
+        .doc-detail-hdr__crumb { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.2rem; }
+        .doc-detail-hdr__title { margin: 0; font-size: 1.25rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .doc-detail-hdr__badges { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        @media (max-width: 599px) {
+          .doc-detail-hdr { padding: 0.625rem 0.75rem; gap: 0.5rem; border-radius: 0.875rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+          .doc-detail-hdr__icon { display: none !important; }
+          .doc-detail-hdr__title { display: none !important; }
+          .doc-detail-hdr__crumb { margin-bottom: 0; }
+          .doc-detail-hdr__badges { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 0.4375rem; width: 100%; }
+          .doc-detail-hdr__badges::-webkit-scrollbar { display: none; }
+        }
+      `}</style>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
+        {/* ── Page Header ── */}
+        <div className="doc-detail-hdr">
+          {/* Back button */}
+          <Button
+            icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
+            onClick={() => navigate(listRoute)}
+            style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+          />
+          {/* Desktop only: document icon */}
+          <div className="doc-detail-hdr__icon">
+            {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
+          </div>
+          {/* Title + breadcrumb */}
+          <div className="doc-detail-hdr__body">
+            <div className="doc-detail-hdr__crumb">
+              <span
+                onClick={() => navigate(listRoute)}
+                style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', cursor: 'pointer' }}
+              >{config.titleShort}</span>
+              <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>›</span>
+              <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#235ae4', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{invoiceNumber}</span>
             </div>
+            <h1 className="doc-detail-hdr__title">
+              <span style={{ color: '#235ae4' }}>{invoiceNumber}</span>
+            </h1>
+          </div>
+          {/* Status badges */}
+          <div className="doc-detail-hdr__badges">
+            {config.features.hasValidation && (
+              isValidated ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #ecfdf5, #f0fdfa)', border: '1.5px solid #a7f3d0', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: '#10b981', flexShrink: 0 }} strokeWidth={2.5} />
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#047857', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('validated')}</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #fffbeb, #fff7ed)', border: '1.5px solid #fcd34d', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <Clock style={{ width: '0.875rem', height: '0.875rem', color: '#f59e0b', flexShrink: 0 }} strokeWidth={2.5} />
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('notValidated')}</span>
+                </div>
+              )
+            )}
+            {documentType === 'facture' && (() => {
+              const statusConfig = getPaymentStatusBadge(status);
+              const StatusIcon = statusConfig.icon;
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
+                </div>
+              );
+            })()}
+            {documentType === 'devis' && (() => {
+              const statusConfig = getDevisStatusBadge(status);
+              const StatusIcon = statusConfig.icon;
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
+                </div>
+              );
+            })()}
+            {documentType === 'bon_livraison' && (() => {
+              const statusConfig = getBonStatusBadge(status);
+              const StatusIcon = statusConfig.icon;
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
-        {/* Payment Summary Section - Only for validated invoices */}
+        {/* ── Payment Summary – validated invoices only ── */}
         {documentType === 'facture' && isValidated && status !== 'draft' && (
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg sm:rounded-lg shadow-sm border border-blue-200 p-3 sm:p-4 mb-4 sm:mb-6">
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <div className="flex items-center justify-center w-5 sm:w-6 h-5 sm:h-6 rounded-full bg-blue-500 shadow-sm flex-shrink-0">
-                <Receipt className="w-3 sm:w-4 h-3 sm:h-4 text-white" />
+          <div style={{ borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1.5px solid #bfdbfe', marginBottom: '1.5rem' }}>
+            <div style={{
+              padding: '0.75rem 1.25rem',
+              background: 'linear-gradient(to right, #eff6ff, #eef2ff)',
+              borderBottom: '1.5px solid #bfdbfe',
+              display: 'flex', alignItems: 'center', gap: '0.625rem'
+            }}>
+              <div style={{ width: '1.75rem', height: '1.75rem', background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Receipt style={{ width: '1rem', height: '1rem', color: '#ffffff' }} />
               </div>
-              <h3 className="text-xs sm:text-sm font-bold text-blue-900">{t('paymentDetails')}</h3>
+              <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e40af' }}>{t('paymentDetails')}</h3>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-              {/* Total Amount */}
-              <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-blue-100 shadow-sm">
-                <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('totalAmount')}</p>
-                <p className="text-base sm:text-xl font-bold text-slate-900 truncate">
-                  {items.reduce((sum, item) => sum + (item.total || 0), 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', background: 'linear-gradient(to right, #eff6ff, #eef2ff)' }}>
+              <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid #dbeafe' }}>
+                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('totalAmount')}</p>
+                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
+                  {formatAmount(totalTTC, 2)} <span style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
                 </p>
               </div>
-
-              {/* Paid Amount */}
-              <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-green-100 shadow-sm">
-                <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('paidAmount')}</p>
-                <p className="text-base sm:text-xl font-bold text-green-600 truncate">
-                  {paidAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid #dcfce7', background: 'linear-gradient(135deg, rgba(240,253,244,0.7), rgba(236,253,245,0.7))' }}>
+                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('paidAmount')}</p>
+                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#15803d', letterSpacing: '-0.01em' }}>
+                  {formatAmount(paidAmount, 2)} <span style={{ fontSize: '0.875rem', color: '#16a34a', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
                 </p>
               </div>
-
-              {/* Remaining Amount */}
-              <div className="bg-white rounded-lg p-2.5 sm:p-3 border border-orange-100 shadow-sm">
-                <p className="text-xs font-medium text-slate-600 mb-0.5 sm:mb-1">{t('remainingAmount')}</p>
-                <p className="text-base sm:text-xl font-bold text-orange-600 truncate">
-                  {remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}
+              <div style={{ padding: '1rem 1.25rem', background: remainingAmount > 0 ? 'linear-gradient(135deg, rgba(255,237,213,0.7), rgba(254,242,242,0.7))' : 'transparent' }}>
+                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: remainingAmount > 0 ? '#ea580c' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('remainingAmount')}</p>
+                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: remainingAmount > 0 ? '#c2410c' : '#16a34a', letterSpacing: '-0.01em' }}>
+                  {formatAmount(remainingAmount, 2)} <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        <div className="bg-white rounded-lg sm:rounded-lg shadow-sm border border-slate-200 p-3 sm:p-6">
-          {/* Two column layout: Partner on left, Document info on right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-            {/* Partner section - Left */}
-            <div>
-              <DocumentPartnerBox
-                direction={direction}
-                partnerId={partner?.id}
-                partnerName={partner?.name}
-                partnerPhone={partner?.phoneNumber}
-                partnerAddress={partner?.address || undefined}
-                partnerIce={partner?.ice || undefined}
-                deliveryAddress={partner?.deliveryAddress || undefined}
-                onPartnerChange={(updatedPartner) => {
-                  if ('id' in updatedPartner && 'name' in updatedPartner && 'phoneNumber' in updatedPartner) {
-                    // Full partner object selected from dropdown
-                    setPartner(updatedPartner as IPartner);
-                  } else {
-                    // Partial update (typing in field)
-                    setPartner(prev => prev ? { ...prev, ...updatedPartner } : null);
-                  }
-                }}
-                readOnly={isValidated || (documentType === 'devis' && status === 'closed')}
-              />
-            </div>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '1rem', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', border: '1.5px solid #e2e8f0', overflow: 'hidden' }}>
+          {/* Top accent bar */}
+          <div style={{ height: '3px', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }} />
+          <div style={{ padding: '1.5rem' }}>
+            {/* Two column layout: Partner on left, Document info on right */}
+            <div className="doc-edit-grid">
+              {/* Partner section - Left */}
+              <div>
+                <DocumentPartnerBox
+                  direction={direction}
+                  partnerId={partner?.id}
+                  partnerName={partner?.name}
+                  partnerPhone={partner?.phoneNumber}
+                  partnerAddress={partner?.address || undefined}
+                  partnerIce={partner?.ice || undefined}
+                  deliveryAddress={partner?.deliveryAddress || undefined}
+                  onPartnerChange={(updatedPartner) => {
+                    if ('id' in updatedPartner && 'name' in updatedPartner && 'phoneNumber' in updatedPartner) {
+                      // Full partner object selected from dropdown
+                      setPartner(updatedPartner as IPartner);
+                    } else {
+                      // Partial update (typing in field)
+                      setPartner(prev => prev ? { ...prev, ...updatedPartner } : null);
+                    }
+                  }}
+                  readOnly={isValidated || (documentType === 'devis' && status === 'closed')}
+                />
+              </div>
 
-            {/* Document information - Right */}
-            <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4">
-              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 sm:mb-3">
-                {t('documentInformation')}
-              </h3>
-
-              <div className="space-y-2 sm:space-y-3">
-                <FormField label={documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}>
-                  <Input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                    inputSize="sm"
-                    fullWidth
-                  />
-                </FormField>
-
-                {config.features.expirationDate && (
-                  <FormField label={t('expirationDate')}>
-                    <Input
-                      type="date"
-                      value={expirationDate}
-                      onChange={(e) => setExpirationDate(e.target.value)}
-                      disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                      inputSize="sm"
-                      fullWidth
+              {/* Document information - Right */}
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
+                <div style={{ padding: '0.875rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                  <div style={{
+                    width: '2rem', height: '2rem',
+                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                    borderRadius: '0.5rem', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(35,90,228,0.4)'
+                  }}>
+                    <FileText style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>{t('documentInformation')}</h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                      {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ padding: '1rem 1.125rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                  <div>
+                    <label className="doc-field-label">{documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}</label>
+                    <Calendar
+                      value={date ? new Date(date) : null}
+                      onChange={(e) => setDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                      readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                      disabled={false}
+                      dateFormat="dd/mm/yy"
+                      showIcon
+                      className="doc-cal"
+                      style={{ width: '100%' }}
+                      inputStyle={{ height: '2.5rem', width: '100%' }}
                     />
-                  </FormField>
-                )}
+                  </div>
 
-                {/* Due Date - Show for all document types */}
-                <FormField label={t('dueDate')}>
-                  <Input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                    inputSize="sm"
-                    fullWidth
-                  />
-                </FormField>
+                  {config.features.expirationDate && (
+                    <div>
+                      <label className="doc-field-label">{t('expirationDate')}</label>
+                      <Calendar
+                        value={expirationDate ? new Date(expirationDate) : null}
+                        onChange={(e) => setExpirationDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                        readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                        disabled={false}
+                        dateFormat="dd/mm/yy"
+                        showIcon
+                        className="doc-cal"
+                        style={{ width: '100%' }}
+                        inputStyle={{ height: '2.5rem', width: '100%' }}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="doc-field-label">{t('dueDate')}</label>
+                    <Calendar
+                      value={dueDate ? new Date(dueDate) : null}
+                      onChange={(e) => setDueDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                      readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                      disabled={false}
+                      dateFormat="dd/mm/yy"
+                      showIcon
+                      className="doc-cal"
+                      style={{ width: '100%' }}
+                      inputStyle={{ height: '2.5rem', width: '100%' }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Items table */}
-          <div className="mt-2">
+            {/* Items Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.5rem 0 1rem' }}>
+              <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, #e2e8f0, transparent)' }} />
+            </div>
+
+            {/* Items table */}
             <DocumentItemsTable
               items={items}
               direction={direction}
@@ -1042,285 +1064,272 @@ export default function DocumentEditPage({
               showTotalColumn={!(documentType === 'devis' && direction === 'achat')}
               readOnly={isValidated || (documentType === 'devis' && status === 'closed')}
             />
-          </div>
 
-          {/* Notes */}
-          <div className="mt-2">
-            <FormField label={t('notes')}>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder={t('additionalNotes')}
-                disabled={isValidated || (documentType === 'devis' && status === 'closed')}
-                className="w-full"
-              />
-            </FormField>
-          </div>
+            {/* Notes + Totals Row */}
+            <div className="doc-notes-totals">
+              {/* Notes - 60% */}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                  <div style={{ padding: '0.75rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #eff6ff)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #235ae4, #1a47b8)', borderRadius: '2px', flexShrink: 0 }} />
+                    <FileText style={{ width: '0.9375rem', height: '0.9375rem', color: '#3b82f6', flexShrink: 0 }} />
+                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('notes')}</h3>
+                  </div>
+                  <div style={{ padding: '1rem 1.125rem' }}>
+                    <InputTextarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={3}
+                      placeholder={t('additionalNotes')}
+                      disabled={isValidated || (documentType === 'devis' && status === 'closed')}
+                      style={{ width: '100%', resize: 'vertical', minHeight: '7rem' }}
+                    />
+                  </div>
+                </div>
 
-          {/* Signature Details and Totals section */}
-          <div className="mt-8">
-            {documentType === 'devis' ? (
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Signature Details - Left Side */}
-                <div className="flex-1">
-                  {status === 'signed' && signedBy && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                        <h4 className="font-bold text-green-900">{t('signature')}</h4>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-green-800">
-                          <span className="font-medium">{t('signedBy')}</span> {signedBy}
-                        </p>
+                {/* Signature card (devis only) */}
+                {documentType === 'devis' && status === 'signed' && signedBy && (
+                  <div style={{ marginTop: '1rem', backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 2px 10px rgba(22,163,74,0.1)' }}>
+                    <div style={{ padding: '0.625rem 1rem', background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', borderBottom: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle style={{ width: '1rem', height: '1rem', color: '#16a34a' }} /><h4 style={{ margin: 0, fontWeight: 700, color: '#14532d', fontSize: '0.875rem' }}>{t('signature')}</h4></div>
+                    <div style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: '#166534' }}><span style={{ fontWeight: 500 }}>{t('signedBy')}</span> {signedBy}</p>
                         {signedDate && (
-                          <p className="text-sm text-green-700">
-                            <span className="font-medium">{t('dateLabel')}</span>{' '}
-                            {new Date(signedDate).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                          <p style={{ fontSize: '0.875rem', color: '#15803d' }}>
+                            <span style={{ fontWeight: 500 }}>{t('dateLabel')}</span>{' '}
+                            {new Date(signedDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </p>
                         )}
                         {clientNotes && (
-                          <div className="mt-3 pt-3 border-t border-green-200">
-                            <p className="text-xs text-green-700 font-medium mb-1">{t('comment')}</p>
-                            <p className="text-sm text-slate-700">{clientNotes}</p>
+                          <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #bbf7d0' }}>
+                            <p style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 500, marginBottom: '0.25rem' }}>{t('comment')}</p>
+                            <p style={{ fontSize: '0.875rem', color: '#334155' }}>{clientNotes}</p>
                           </div>
                         )}
                       </div>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Totals - 40% */}
+              <div style={{ minWidth: 0 }}>
+                <DocumentTotalsSection items={items} />
+              </div>
+            </div>
+          </div>
+
+          {/* Sticky Bottom Action Bar */}
+          <div className="doc-sticky-bar">
+            <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                {/* Left side - Payment History button for invoices */}
+                <div>
+                  {documentType === 'facture' && isValidated && status !== 'draft' && (
+                    <Button
+                      icon={<History style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('paymentHistory')}
+                      onClick={() => setShowPaymentHistory(true)}
+                      severity="info"
+                    />
                   )}
                 </div>
-                {/* Totals - Right Side */}
-                <div className="w-full md:w-96">
-                  <DocumentTotalsSection items={items} />
-                </div>
-              </div>
-            ) : (
-              <DocumentTotalsSection items={items} />
-            )}
-          </div>
-        </div>
 
-        {/* Sticky Bottom Action Bar */}
-        <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 shadow-lg z-40">
-          <div className="max-w-7xl mx-auto px-6 py-3">
-            <div className="flex items-center justify-between">
-              {/* Left side - Payment History button for invoices */}
-              <div>
-                {documentType === 'facture' && isValidated && status !== 'draft' && (
-                  <button
-                    onClick={() => setShowPaymentHistory(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all shadow-sm"
-                  >
-                    <History className="w-4 h-4" />
-                    <span>{t('paymentHistory')}</span>
-                  </button>
-                )}
-              </div>
+                {/* Right side - Action buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {/* Validation actions */}
+                  {config.features.hasValidation && (
+                    isValidated ? (
+                      <Button
+                        icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('devalidateDocument')}
+                        onClick={() => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') })}
+                        severity="secondary"
+                      />
+                    ) : (
+                      <Button
+                        icon={<CheckCircle style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('validateDocument')}
+                        onClick={() => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') })}
+                        severity="success"
+                      />
+                    )
+                  )}
 
-              {/* Right side - Action buttons */}
-              <div className="flex items-center gap-3">
-                {/* Validation actions */}
-                {config.features.hasValidation && (
-                  isValidated ? (
-                    <button
-                      onClick={() => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') })}
-                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2 font-medium"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      {t('devalidateDocument')}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') })}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      {t('validateDocument')}
-                    </button>
-                  )
-                )}
+                  {/* Deliver and Cancel buttons for bon_livraison */}
+                  {documentType === 'bon_livraison' && status === 'in_progress' && (
+                    <>
+                      <Button
+                        icon={<Truck style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('markAsDelivered')}
+                        onClick={() => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') })}
+                        severity="info"
+                      />
+                      <Button
+                        icon={<Ban style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('cancel')}
+                        onClick={() => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') })}
+                        severity="danger"
+                      />
+                    </>
+                  )}
 
-                {/* Deliver and Cancel buttons for bon_livraison */}
-                {documentType === 'bon_livraison' && status === 'in_progress' && (
-                  <>
-                    <button
-                      onClick={() => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') })}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                    >
-                      <Truck className="w-4 h-4" />
-                      {t('markAsDelivered')}
-                    </button>
-                    <button
-                      onClick={() => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') })}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                    >
-                      <Ban className="w-4 h-4" />
-                      {t('cancel')}
-                    </button>
-                  </>
-                )}
-
-                {/* Actions menu for bon_livraison */}
-                {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
-                  <div className="relative" ref={actionsMenuRef}>
-                    <button
-                      onClick={() => setShowActionsMenu(!showActionsMenu)}
-                      className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                    >
-                      {t('actions')}
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                    {showActionsMenu && (
-                      <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
-                        {/* Create Invoice from Bon */}
-                        <button
-                          onClick={() => {
-                            setShowActionsMenu(false);
-                            toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
-                          }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-lg"
-                        >
-                          <FileText className="w-4 h-4 text-amber-600" />
-                          <span className="text-sm font-medium text-slate-700">{t('convertToInvoice')}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Sign/Unsign buttons for devis */}
-                {documentType === 'devis' && isValidated && status !== 'closed' && (
-                  <>
-                    <button
-                      onClick={() => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') })}
-                      disabled={status === 'signed'}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <PenTool className="w-4 h-4" />
-                      {t('signQuote')}
-                    </button>
-                    <button
-                      onClick={() => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') })}
-                      disabled={status !== 'signed'}
-                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      {t('rejectQuote')}
-                    </button>
-                  </>
-                )}
-
-                {/* Actions menu for devis */}
-                {documentType === 'devis' && status === 'signed' && (
-                  <div className="relative" ref={actionsMenuRef}>
-                    <button
-                      onClick={() => setShowActionsMenu(!showActionsMenu)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
-                    >
-                      {t('actions')}
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                    {showActionsMenu && (
-                      <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50 divide-y divide-slate-100">
-                        {/* Share Quote */}
-                        {isValidated && (
-                          <button
+                  {/* Actions menu for bon_livraison */}
+                  {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
+                    <div style={{ position: 'relative' }} ref={actionsMenuRef}>
+                      <Button
+                        icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
+                        iconPos="right"
+                        label={t('actions')}
+                        onClick={() => setShowActionsMenu(!showActionsMenu)}
+                        style={{ backgroundColor: '#235ae4', borderColor: '#235ae4' }}
+                      />
+                      {showActionsMenu && (
+                        <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
+                          {/* Create Invoice from Bon */}
+                          <Button
                             onClick={() => {
                               setShowActionsMenu(false);
-                              setShowShareDialog(true);
+                              toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
                             }}
-                            className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-t-lg"
-                          >
-                            <Share2 className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-medium text-slate-700">{t('shareWithClient')}</span>
-                          </button>
-                        )}
+                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />}
+                            iconPos="left"
+                            label={t('convertToInvoice')}
+                            text
+                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderRadius: '0.5rem' }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                        {/* Create Invoice */}
-                        <button
-                          onClick={() => {
-                            setShowActionsMenu(false);
-                            toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
-                          }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3"
-                        >
-                          <FileText className="w-4 h-4 text-amber-600" />
-                          <span className="text-sm font-medium text-slate-700">{t('createAnInvoice')}</span>
-                        </button>
+                  {/* Sign/Unsign buttons for devis */}
+                  {documentType === 'devis' && isValidated && status !== 'closed' && (
+                    <>
+                      <Button
+                        icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('signQuote')}
+                        onClick={() => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') })}
+                        disabled={status === 'signed'}
+                        severity="success"
+                      />
+                      <Button
+                        icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
+                        label={t('rejectQuote')}
+                        onClick={() => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') })}
+                        disabled={status !== 'signed'}
+                        severity="warning"
+                      />
+                    </>
+                  )}
 
-                        {/* Create Bon de Livraison */}
-                        <button
-                          onClick={() => {
-                            setShowActionsMenu(false);
-                            toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') });
-                          }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 rounded-b-lg"
-                        >
-                          <Truck className="w-4 h-4 text-emerald-600" />
-                          <span className="text-sm font-medium text-slate-700">{t('createDeliveryNote')}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  {/* Actions menu for devis */}
+                  {documentType === 'devis' && status === 'signed' && (
+                    <div style={{ position: 'relative' }} ref={actionsMenuRef}>
+                      <Button
+                        icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
+                        iconPos="right"
+                        label={t('actions')}
+                        onClick={() => setShowActionsMenu(!showActionsMenu)}
+                        severity="info"
+                      />
+                      {showActionsMenu && (
+                        <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
+                          {/* Share Quote */}
+                          {isValidated && (
+                            <Button
+                              onClick={() => {
+                                setShowActionsMenu(false);
+                                setShowShareDialog(true);
+                              }}
+                              icon={<Share2 style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />}
+                              iconPos="left"
+                              label={t('shareWithClient')}
+                              text
+                              style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTopLeftRadius: '0.5rem', borderTopRightRadius: '0.5rem' }}
+                            />
+                          )}
 
-                {/* PDF Action Buttons - Show when validated and not draft */}
-                {isValidated && status !== 'draft' && id && (
-                  <PDFActionButtons
-                    documentType={getPDFDocumentType(documentType)}
-                    documentId={Number(id)}
+                          {/* Create Invoice */}
+                          <Button
+                            onClick={() => {
+                              setShowActionsMenu(false);
+                              toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
+                            }}
+                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />}
+                            iconPos="left"
+                            label={t('createAnInvoice')}
+                            text
+                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTop: '1px solid #f1f5f9' }}
+                          />
+
+                          {/* Create Bon de Livraison */}
+                          <Button
+                            onClick={() => {
+                              setShowActionsMenu(false);
+                              toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') });
+                            }}
+                            icon={<Truck style={{ width: '1rem', height: '1rem', color: '#059669' }} />}
+                            iconPos="left"
+                            label={t('createDeliveryNote')}
+                            text
+                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', borderTop: '1px solid #f1f5f9' }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* PDF Action Buttons - Show when validated and not draft */}
+                  {isValidated && status !== 'draft' && id && (
+                    <PDFActionButtons
+                      documentType={getPDFDocumentType(documentType)}
+                      documentId={Number(id)}
+                    />
+                  )}
+
+                  {/* Save button */}
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
+                    loading={saving}
+                    icon={<Save style={{ width: '1rem', height: '1rem' }} />}
+                    label={t('save')}
+                    style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none', fontWeight: 700, boxShadow: '0 4px 12px rgba(35,90,228,0.35)' }}
                   />
-                )}
-
-                {/* Save button */}
-                <Button
-                  onClick={handleSave}
-                  disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
-                  loading={saving}
-                  loadingText={t('saving')}
-                  leadingIcon={Save}
-                >
-                  {t('save')}
-                </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+
+
+        {documentType === 'devis' && (
+          <ShareQuoteDialog
+            isOpen={showShareDialog}
+            onClose={() => setShowShareDialog(false)}
+            quoteNumber={invoiceNumber}
+            shareToken={shareToken}
+            expiresAt={shareTokenExpiry}
+            onGenerateLink={handleGenerateShareLink}
+          />
+        )}
+
+
+
+        {documentType === 'facture' && (
+          <PaymentHistoryModal
+            isOpen={showPaymentHistory}
+            onClose={() => setShowPaymentHistory(false)}
+            invoiceId={Number(id)}
+            invoiceNumber={invoiceNumber}
+            invoiceTotal={totalTTC}
+            customerId={partner?.id}
+            onPaymentUpdate={loadDocument}
+          />
+        )}
       </div>
-
-
-
-      {documentType === 'devis' && (
-        <ShareQuoteDialog
-          isOpen={showShareDialog}
-          onClose={() => setShowShareDialog(false)}
-          quoteNumber={invoiceNumber}
-          shareToken={shareToken}
-          expiresAt={shareTokenExpiry}
-          onGenerateLink={handleGenerateShareLink}
-        />
-      )}
-
-
-
-      {documentType === 'facture' && (
-        <PaymentHistoryModal
-          isOpen={showPaymentHistory}
-          onClose={() => setShowPaymentHistory(false)}
-          invoiceId={Number(id)}
-          invoiceNumber={invoiceNumber}
-          invoiceTotal={items.reduce((sum, item) => sum + (item.total || 0), 0)}
-          customerId={partner?.id}
-          onPaymentUpdate={loadDocument}
-        />
-      )}
     </AdminLayout>
   );
 }

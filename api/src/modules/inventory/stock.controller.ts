@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { StockService } from './stock.service';
 import { ApiRes } from '../../common/api-response';
@@ -14,7 +7,7 @@ import { STK } from '../../common/response-codes';
 @ApiTags('Inventory - Stock')
 @Controller('inventory/stock')
 export class StockController {
-  constructor(private readonly stockService: StockService) { }
+  constructor(private readonly stockService: StockService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all stock (aggregated across warehouses)' })
@@ -25,7 +18,9 @@ export class StockController {
   }
 
   @Get('product/:productId')
-  @ApiOperation({ summary: 'Get stock for a specific product (all warehouses)' })
+  @ApiOperation({
+    summary: 'Get stock for a specific product (all warehouses)',
+  })
   @ApiResponse({ status: 200, description: 'Product stock by warehouse' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async getProductStock(@Param('productId') productId: string) {
@@ -49,7 +44,10 @@ export class StockController {
     @Param('productId') productId: string,
     @Param('warehouseId') warehouseId: string,
   ) {
-    const stock = await this.stockService.getStockAtWarehouse(+productId, +warehouseId);
+    const stock = await this.stockService.getStockAtWarehouse(
+      +productId,
+      +warehouseId,
+    );
     return ApiRes(STK.AT_WAREHOUSE, stock);
   }
 
@@ -58,7 +56,9 @@ export class StockController {
   @ApiResponse({ status: 200, description: 'Products with low stock' })
   @ApiQuery({ name: 'threshold', required: false, type: Number })
   async getLowStockProducts(@Query('threshold') threshold?: string) {
-    const products = await this.stockService.getLowStockProducts(threshold ? +threshold : 10);
+    const products = await this.stockService.getLowStockProducts(
+      threshold ? +threshold : 10,
+    );
     return ApiRes(STK.LOW_STOCK, products);
   }
 

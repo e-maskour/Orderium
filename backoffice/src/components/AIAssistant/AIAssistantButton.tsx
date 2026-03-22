@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { Button } from 'primereact/button';
 import { MessageSquare } from 'lucide-react';
 
 interface AIAssistantButtonProps {
@@ -12,15 +13,32 @@ interface AIAssistantButtonProps {
 
 export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ onClick }) => {
   return (
-    <button
-      onClick={onClick}
-      className="fixed bottom-4 right-4 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all z-40 flex items-center justify-center group"
-      title="AI Assistant (Cmd+K)"
-    >
-      <MessageSquare className="w-6 h-6" />
-      
+    <div style={{ position: 'fixed', bottom: '1rem', right: '1rem', zIndex: 40 }}>
+      <Button
+        onClick={onClick}
+        rounded
+        style={{
+          width: '3.5rem',
+          height: '3.5rem',
+          backgroundColor: '#2563eb',
+          border: 'none',
+          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+        }}
+        tooltip="AI Assistant (Cmd+K)"
+        icon={<MessageSquare style={{ width: '1.5rem', height: '1.5rem' }} />}
+      />
       {/* Pulse animation */}
-      <span className="absolute inset-0 rounded-full bg-blue-600 animate-ping opacity-20 group-hover:opacity-0" />
-    </button>
+      <span
+        className="animate-pulse"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: '50%',
+          backgroundColor: '#2563eb',
+          opacity: 0.2,
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
   );
 };

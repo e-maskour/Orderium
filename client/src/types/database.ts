@@ -3,8 +3,6 @@ export type { Product, GetProductsParams, ProductsResponse } from '@/modules/pro
 
 // Additional database-related types can be added here
 export type ProductFilters = {
-  category: string;
+  categoryId: number | null;
   search: string;
 };
-
-export type ProductCategory = 'all' | 'products' | 'services';

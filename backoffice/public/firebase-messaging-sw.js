@@ -2,9 +2,9 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
-// Firebase configuration - Replace with your actual values
+// Firebase configuration - Must match the values in .env
 const firebaseConfig = {
-  apiKey: "",
+  apiKey: "AIzaSyD1r4pCQDBE0xyWj62u9QGorFTp2DyVLDE",
   authDomain: "orderium-9df24.firebaseapp.com",
   projectId: "orderium-9df24",
   storageBucket: "orderium-9df24.firebasestorage.app",

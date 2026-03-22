@@ -20,8 +20,9 @@ export class Product implements IProduct {
       name: string;
       code: string;
       category: string;
-    }
-  ) {}
+    },
+    public categories?: { id: number; name: string }[]
+  ) { }
 
   get displayPrice(): string {
     return `$${this.price.toFixed(2)}`;
@@ -90,27 +91,31 @@ export class Product implements IProduct {
     return this.price * (1 - discountPercentage / 100);
   }
 
-  static fromApiResponse(data: any): Product {
+  static fromApiResponse(data: Record<string, unknown>): Product {
+    const uom = data.saleUnitOfMeasure as Record<string, unknown> | undefined;
     return new Product(
-      data.id,
-      data.name,
-      parseFloat(data.price) || 0,
-      parseFloat(data.cost) || 0,
-      data.isService || false,
+      data.id as number,
+      data.name as string,
+      data.price as number || 0,
+      data.cost as number || 0,
+      (data.isService as boolean) || false,
       data.isEnabled !== false,
-      data.dateCreated,
-      data.dateUpdated,
-      data.code || null,
-      data.description || null,
-      data.stock !== undefined ? (data.stock !== null ? parseInt(data.stock) : null) : undefined,
-      data.isPriceChangeAllowed,
-      data.imageUrl,
-      data.saleUnitOfMeasure ? {
-        id: data.saleUnitOfMeasure.id,
-        name: data.saleUnitOfMeasure.name,
-        code: data.saleUnitOfMeasure.code,
-        category: data.saleUnitOfMeasure.category
-      } : undefined
+      data.dateCreated as string,
+      data.dateUpdated as string,
+      (data.code as string) || null,
+      (data.description as string) || null,
+      data.stock !== undefined ? (data.stock !== null ? parseInt(String(data.stock)) : null) : undefined,
+      data.isPriceChangeAllowed as boolean | undefined,
+      data.imageUrl as string | undefined,
+      uom ? {
+        id: uom.id as number,
+        name: uom.name as string,
+        code: uom.code as string,
+        category: uom.category as string
+      } : undefined,
+      Array.isArray(data.categories)
+        ? (data.categories as Record<string, unknown>[]).map((c) => ({ id: c.id as number, name: c.name as string }))
+        : undefined
     );
   }
 
@@ -130,6 +135,7 @@ export class Product implements IProduct {
       isPriceChangeAllowed: this.isPriceChangeAllowed,
       imageUrl: this.imageUrl,
       saleUnitOfMeasure: this.saleUnitOfMeasure,
+      categories: this.categories,
     };
   }
 }

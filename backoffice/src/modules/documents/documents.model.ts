@@ -1,4 +1,5 @@
 import { DocumentItem } from './services/documents.service';
+import { formatAmount } from '@orderium/ui';
 
 export class DocumentListItem implements DocumentItem {
     id: number;
@@ -38,17 +39,11 @@ export class DocumentListItem implements DocumentItem {
     }
 
     get formattedSubtotal(): string {
-        return this.subtotal.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+        return formatAmount(this.subtotal, 2);
     }
 
     get formattedTax(): string {
-        return this.tax.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+        return formatAmount(this.tax, 2);
     }
 
     get formattedDate(): string {
@@ -78,17 +73,11 @@ export class DocumentListItem implements DocumentItem {
     }
 
     get formattedTotal(): string {
-        return this.total.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+        return formatAmount(this.total, 2);
     }
 
     get formattedRemaining(): string {
-        return this.remainingAmount.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+        return formatAmount(this.remainingAmount, 2);
     }
 
     get paymentProgress(): number {
@@ -122,11 +111,11 @@ export class DocumentListItem implements DocumentItem {
             dueDate: data.dueDate,
             validationDate: data.validationDate,
             partnerName: data.partnerName ?? '',
-            subtotal: parseFloat(data.subtotal) || 0,
-            tax: parseFloat(data.tax) || 0,
-            total: parseFloat(data.total) || 0,
-            paidAmount: parseFloat(data.paidAmount) || 0,
-            remainingAmount: parseFloat(data.remainingAmount) || 0,
+            subtotal: data.subtotal || 0,
+            tax: data.tax || 0,
+            total: data.total || 0,
+            paidAmount: data.paidAmount || 0,
+            remainingAmount: data.remainingAmount || 0,
             status: data.status ?? 'draft',
             isValidated: data.isValidated ?? false,
             itemsCount: data.itemsCount ?? 0,

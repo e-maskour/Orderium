@@ -325,6 +325,11 @@ export default {
   quoteNotFound: 'Devis introuvable',
   no: 'Non',
 
+  // Document action bar
+  moreActions: "Plus d'actions",
+  confirmDeleteDocument: 'Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.',
+  documentDeleted: 'Document supprimé avec succès',
+
   // Accessibility
   refresh: 'Actualiser',
   moreOptions: 'Plus d\'options',

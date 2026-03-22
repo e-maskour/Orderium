@@ -5,7 +5,6 @@ import {
   Logger,
   Inject,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import * as XLSX from 'xlsx';
@@ -14,53 +13,32 @@ import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
-
-interface CreateQuoteItemDTO {
-  productId?: number;
-  description: string;
-  quantity: number;
-  unitPrice?: number | null; // Optional for demande de prix
-  discount: number;
-  discountType: number;
-  tax?: number;
-  total?: number | null; // Optional for demande de prix
-}
-
-interface CreateQuoteDTO {
-  customerId?: number;
-  customerName?: string;
-  customerPhone?: string;
-  customerAddress?: string;
-  supplierId?: number; // For demande de prix (achat)
-  supplierName?: string;
-  supplierPhone?: string;
-  supplierAddress?: string;
-  date: string;
-  dueDate?: string;
-  expirationDate?: string;
-  items: CreateQuoteItemDTO[];
-  subtotal?: number;
-  tax: number;
-  discount: number;
-  discountType: number;
-  total?: number;
-  notes?: string;
-}
+import { PDFService } from '../pdf/pdf.service';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { CreateQuoteDto, QuoteItemDto } from './dto/quote.dto';
 
 @Injectable()
 export class QuotesService {
   private readonly logger = new Logger(QuotesService.name);
 
   constructor(
-    @InjectRepository(Quote)
-    private readonly quoteRepository: Repository<Quote>,
-    @InjectRepository(QuoteItem)
-    private readonly quoteItemRepository: Repository<QuoteItem>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
+    private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly pdfService: PDFService,
   ) { }
+
+  private get quoteRepository(): Repository<Quote> {
+    return this.tenantConnService.getRepository(Quote);
+  }
+
+  private get quoteItemRepository(): Repository<QuoteItem> {
+    return this.tenantConnService.getRepository(QuoteItem);
+  }
+
+  private get productRepository(): Repository<Product> {
+    return this.tenantConnService.getRepository(Product);
+  }
 
   private async getOrCreateSequence(
     entityType: string,
@@ -111,7 +89,7 @@ export class QuotesService {
       await this.syncSequenceWithDatabase(sequence, documentDate);
 
       return sequence;
-    } catch (error) {
+    } catch {
       // Fallback to default if configurations service fails
       let prefix = 'DV'; // Default for quote
       if (entityType === 'price_request') {
@@ -184,7 +162,10 @@ export class QuotesService {
       const maxNumber = Math.max(...numbers);
       sequence.nextNumber = maxNumber + 1;
     } catch (error) {
-      this.logger.error('Failed to sync sequence with database', (error as Error)?.stack);
+      this.logger.error(
+        'Failed to sync sequence with database',
+        (error as Error)?.stack,
+      );
       // Keep existing nextNumber if sync fails
     }
   }
@@ -210,7 +191,7 @@ export class QuotesService {
             : '10';
 
     let pattern = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push(year.toString());
@@ -241,7 +222,7 @@ export class QuotesService {
 
   private buildFormatPattern(sequence: SequenceConfig): string {
     let result = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push('YYYY');
@@ -274,7 +255,9 @@ export class QuotesService {
     return result;
   }
 
-  private enrichSequenceForResponse(sequence: SequenceConfig): SequenceConfig & { format: string; nextDocumentNumber: string } {
+  private enrichSequenceForResponse(
+    sequence: SequenceConfig,
+  ): SequenceConfig & { format: string; nextDocumentNumber: string } {
     return {
       ...sequence,
       format: this.buildFormatPattern(sequence),
@@ -303,7 +286,7 @@ export class QuotesService {
             : '10';
 
     let result = sequence.prefix || '';
-    let dateComponents: string[] = [];
+    const dateComponents: string[] = [];
 
     if (sequence.yearInPrefix) {
       dateComponents.push(year.toString());
@@ -358,7 +341,10 @@ export class QuotesService {
         });
       }
     } catch (error) {
-      this.logger.error('Failed to update sequence next number', (error as Error)?.stack);
+      this.logger.error(
+        'Failed to update sequence next number',
+        (error as Error)?.stack,
+      );
     }
   }
 
@@ -445,7 +431,7 @@ export class QuotesService {
 
     const quote = await this.quoteRepository.findOne({
       where: { id },
-      relations: ['customer', 'items'],
+      relations: ['customer', 'supplier', 'items'],
     });
     if (quote) {
       await this.cacheManager.set(cacheKey, quote, 300_000);
@@ -453,7 +439,7 @@ export class QuotesService {
     return quote;
   }
 
-  async create(createQuoteDto: CreateQuoteDTO): Promise<Quote> {
+  async create(createQuoteDto: CreateQuoteDto): Promise<Quote> {
     // Generate simple provisional quote number: PROV1, PROV2, PROV3, etc.
     const lastProvisional = await this.quoteRepository
       .createQueryBuilder('quote')
@@ -479,7 +465,7 @@ export class QuotesService {
   }
 
   private async createQuoteWithNumber(
-    createQuoteDto: CreateQuoteDTO,
+    createQuoteDto: CreateQuoteDto,
     quoteNumber: string,
   ): Promise<Quote> {
     // Use values from frontend directly (no recalculation)
@@ -573,7 +559,7 @@ export class QuotesService {
 
   async update(
     id: number,
-    updateQuoteDto: Partial<CreateQuoteDTO>,
+    updateQuoteDto: Partial<CreateQuoteDto>,
   ): Promise<Quote> {
     const quote = await this.findOne(id);
     if (!quote) {
@@ -660,7 +646,8 @@ export class QuotesService {
         await this.quoteItemRepository.save(quoteItems);
 
         // Prepare quote update data (exclude items)
-        const { items: _, ...quoteUpdateData } = updateQuoteDto;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { items: _items, ...quoteUpdateData } = updateQuoteDto;
 
         // Update quote with values from frontend
         await this.quoteRepository.update(id, {
@@ -678,7 +665,8 @@ export class QuotesService {
         });
       } else {
         // Update quote without items - exclude items from the update
-        const { items: _, ...quoteUpdateData } = updateQuoteDto;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { items: _items, ...quoteUpdateData } = updateQuoteDto;
         await this.quoteRepository.update(id, {
           ...quoteUpdateData,
           direction,
@@ -693,12 +681,11 @@ export class QuotesService {
       }
 
       // Return the updated quote
+      await this.invalidateQuoteCache(id);
       const result = await this.findOne(id);
       if (!result) {
         throw new NotFoundException('Quote not found after update');
       }
-
-      await this.invalidateQuoteCache(id);
       return result;
     } catch (error) {
       this.logger.error(`Error updating quote ${id}`, (error as Error)?.stack);
@@ -719,6 +706,7 @@ export class QuotesService {
     }
 
     await this.quoteItemRepository.delete({ quoteId: id });
+    await this.pdfService.deletePDF(quote.pdfUrl);
     await this.quoteRepository.delete(id);
     await this.invalidateQuoteCache(id);
   }
@@ -758,11 +746,17 @@ export class QuotesService {
       status: QuoteStatus.OPEN,
     });
 
+    // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
+    const pdfUrl = await this.pdfService.generateAndUploadPDF('quote', id);
+    if (pdfUrl) {
+      await this.quoteRepository.update(id, { pdfUrl });
+    }
+
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after validation');
     }
-    await this.invalidateQuoteCache(id);
     return result;
   }
 
@@ -826,7 +820,10 @@ export class QuotesService {
         });
       }
     } catch (error) {
-      this.logger.error('Error updating sequence during devalidation', (error as Error)?.stack);
+      this.logger.error(
+        'Error updating sequence during devalidation',
+        (error as Error)?.stack,
+      );
       // Continue with devalidation even if sequence update fails
     }
 
@@ -859,18 +856,20 @@ export class QuotesService {
     }
 
     // Update quote back to draft status with new provisional number
+    await this.pdfService.deletePDF(quote.pdfUrl);
     await this.quoteRepository.update(id, {
       documentNumber: nextProvNumber,
       isValidated: false,
       validationDate: null,
       status: QuoteStatus.DRAFT,
+      pdfUrl: null,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after devalidation');
     }
-    await this.invalidateQuoteCache(id);
     return result;
   }
 
@@ -888,6 +887,7 @@ export class QuotesService {
       status: QuoteStatus.SIGNED,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after acceptance');
@@ -909,6 +909,7 @@ export class QuotesService {
       status: QuoteStatus.CLOSED,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after rejection');
@@ -1046,6 +1047,7 @@ export class QuotesService {
       status: newStatus,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after conversion');
@@ -1072,6 +1074,7 @@ export class QuotesService {
       status: QuoteStatus.INVOICED,
     });
 
+    await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);
     if (!result) {
       throw new Error('Quote not found after conversion');
@@ -1276,7 +1279,10 @@ export class QuotesService {
         : 'Devis et Demandes';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    const buffer = XLSX.write(wb, {
+      type: 'buffer',
+      bookType: 'xlsx',
+    }) as Buffer;
     return buffer;
   }
 

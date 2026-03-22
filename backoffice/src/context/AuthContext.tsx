@@ -9,6 +9,9 @@ interface Admin {
   isCustomer: boolean;
   isDelivery: boolean;
   isAdmin: boolean;
+  roleId?: number | null;
+  isSuperAdmin?: boolean;
+  permissions?: string[];
 }
 
 const normalizeAdmin = (raw: any): Admin | null => {
@@ -27,6 +30,9 @@ const normalizeAdmin = (raw: any): Admin | null => {
     isAdmin: Boolean(isAdmin),
     isCustomer: Boolean(isCustomer),
     isDelivery: Boolean(isDelivery),
+    roleId: raw.roleId ?? null,
+    isSuperAdmin: Boolean(raw.isSuperAdmin),
+    permissions: Array.isArray(raw.permissions) ? raw.permissions : [],
   };
 };
 
@@ -36,6 +42,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasPermission: (key: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,27 +80,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (credentials: { phoneNumber: string; password: string }) => {
-    try {
-      const data = await apiClient.post<any>(
-        API_ROUTES.AUTH.LOGIN,
-        { phoneNumber: credentials.phoneNumber, password: credentials.password },
-        { skipAuth: true },
-      );
+    const data = await apiClient.post<any>(
+      API_ROUTES.AUTH.LOGIN,
+      { phoneNumber: credentials.phoneNumber, password: credentials.password },
+      { skipAuth: true },
+    );
 
-      const normalized = normalizeAdmin(data.data?.user);
+    const normalized = normalizeAdmin(data.data?.user);
 
-      // Verify it's an admin account
-      if (!normalized?.isAdmin) {
-        throw new Error('Access denied: Admin credentials required');
-      }
-
-      setAdmin(normalized);
-      setIsAuthenticated(true);
-      localStorage.setItem('admin', JSON.stringify(normalized));
-      localStorage.setItem('adminToken', data.data?.token);
-    } catch (error) {
-      throw error;
+    // Verify it's an admin account
+    if (!normalized?.isAdmin) {
+      throw new Error('Access denied: Admin credentials required');
     }
+
+    setAdmin(normalized);
+    setIsAuthenticated(true);
+    localStorage.setItem('admin', JSON.stringify(normalized));
+    localStorage.setItem('adminToken', data.data?.token);
   };
 
   const logout = () => {
@@ -103,8 +106,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('adminToken');
   };
 
+  const hasPermission = (key: string): boolean => {
+    if (!admin) return false;
+    if (admin.isSuperAdmin) return true;
+    return admin.permissions?.includes(key) ?? false;
+  };
+
   return (
-    <AuthContext.Provider value={{ admin, login, logout, isAuthenticated, isLoading }}>
+    <AuthContext.Provider value={{ admin, login, logout, isAuthenticated, isLoading, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

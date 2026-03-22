@@ -9,7 +9,8 @@ export class AddImagePublicIdToProducts1737950000001 implements MigrationInterfa
         type: 'varchar',
         length: '500',
         isNullable: true,
-        comment: 'Public ID from CDN provider (Cloudinary, S3, etc) for image management',
+        comment:
+          'Public ID from CDN provider (Cloudinary, S3, etc) for image management',
       }),
     );
   }

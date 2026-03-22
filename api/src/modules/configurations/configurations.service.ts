@@ -4,20 +4,23 @@ import {
   ConflictException,
   Inject,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Configuration } from './entities/configuration.entity';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class ConfigurationsService {
   constructor(
-    @InjectRepository(Configuration)
-    private readonly configRepository: Repository<Configuration>,
+    private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) { }
+
+  private get configRepository(): Repository<Configuration> {
+    return this.tenantConnService.getRepository(Configuration);
+  }
 
   async findAll(): Promise<Configuration[]> {
     const cacheKey = 'configurations:all';
@@ -78,6 +81,20 @@ export class ConfigurationsService {
           legalStructure: '',
           capital: 0,
           fiscalYearStartMonth: 1,
+        },
+      });
+    }
+
+    // Create inventory entity with defaults if it doesn't exist
+    if (!config && entity === 'inventory') {
+      config = await this.create({
+        entity: 'inventory',
+        values: {
+          defaultWarehouseId: null,
+          incrementStockOnInvoiceAchat: false,
+          decrementStockOnInvoiceVente: false,
+          incrementStockOnOrderAchat: false,
+          decrementStockOnOrderVente: false,
         },
       });
     }

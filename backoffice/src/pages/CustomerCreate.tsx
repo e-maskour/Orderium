@@ -5,6 +5,7 @@ import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
 import { PartnerForm } from '../components/PartnerForm';
 import { Users, ArrowLeft } from 'lucide-react';
+import { Button } from 'primereact/button';
 import { toastCreated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -35,31 +36,32 @@ export default function CustomerCreate() {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         {/* Compact Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Button
+                text
+                rounded
                 onClick={() => navigate('/customers')}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-amber-600" />
+                icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />}
+                style={{ padding: '0.5rem' }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#235ae4' }} />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-slate-900">{t('newCustomer')}</h1>
-                  <p className="text-sm text-slate-500">{t('addCustomer')}</p>
+                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{t('newCustomer')}</h1>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('addCustomer')}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
           <PartnerForm
             type="customer"
             onSubmit={handleSubmit}

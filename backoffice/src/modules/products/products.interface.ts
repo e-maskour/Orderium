@@ -38,6 +38,8 @@ export interface GetProductsParams {
   stockFilter?: 'negative' | 'zero' | 'positive';
   categoryIds?: number[];
   isService?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
   page?: number;
   limit?: number;
 }

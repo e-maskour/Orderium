@@ -3,7 +3,6 @@ import {
   Post,
   Delete,
   Get,
-  Param,
   UploadedFile,
   UseInterceptors,
   Query,
@@ -12,14 +11,15 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiQuery } from '@nestjs/swagger';
-import { ImageService } from '../services/image.service';
 import {
-  UploadImageDto,
-  ImageResponseDto,
-  DeleteImageDto,
-  GetOptimizedImageDto,
-} from '../dto/image.dto';
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ImageService } from '../services/image.service';
+import { ImageResponseDto } from '../dto/image.dto';
 import { ApiRes } from '../../../common/api-response';
 import { IMG } from '../../../common/response-codes';
 
@@ -59,9 +59,7 @@ export class ImagesController {
   @ApiOperation({ summary: 'Delete an image by public ID' })
   @ApiResponse({ status: 200, description: 'Image deleted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid public ID' })
-  async deleteImage(
-    @Query('publicId') publicId?: string,
-  ) {
+  async deleteImage(@Query('publicId') publicId?: string) {
     if (!publicId) {
       throw new BadRequestException('publicId query parameter is required');
     }
@@ -103,7 +101,7 @@ export class ImagesController {
     const optimizedUrl = this.imageService.transformUrl(url, {
       width: width ? parseInt(width, 10) : undefined,
       height: height ? parseInt(height, 10) : undefined,
-      crop: (crop as any) || undefined,
+      crop: (crop as 'fill' | 'fit' | 'scale') || undefined,
     });
 
     return ApiRes(IMG.OPTIMIZED, { url: optimizedUrl });
@@ -122,10 +120,7 @@ export class ImagesController {
       },
     },
   })
-  getThumbnailUrl(
-    @Query('url') url?: string,
-    @Query('size') size?: string,
-  ) {
+  getThumbnailUrl(@Query('url') url?: string, @Query('size') size?: string) {
     if (!url) {
       throw new BadRequestException('url query parameter is required');
     }

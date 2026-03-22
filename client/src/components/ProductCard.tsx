@@ -2,9 +2,7 @@ import { Product } from '@/types/database';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
-import { Button } from '@/components/ui/button';
-import { Plus, Minus, Package } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Package, Plus, Check } from 'lucide-react';
 import { useState } from 'react';
 import { ProductQuantityModal } from './ProductQuantityModal';
 
@@ -13,184 +11,187 @@ interface ProductCardProps {
   viewMode?: 'grid' | 'list';
 }
 
+const getImageUrl = (imageUrl?: string): string | undefined => {
+  if (!imageUrl) return undefined;
+  if (imageUrl.startsWith('http')) return imageUrl;
+  const base = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
+  return `${base}/orderium-media/${imageUrl}`;
+};
+
 export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) => {
-  const { language, t, dir } = useLanguage();
-  const { addItem, removeItem, getItemQuantity, updateQuantity } = useCart();
+  const { language, dir } = useLanguage();
+  const { getItemQuantity } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Get API base URL from environment or use window origin
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-  const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
-  const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
 
-  // Helper to convert relative image paths to full URLs - supports multiple CDN providers
-  const getImageUrl = (imageUrl?: string): string | undefined => {
-    if (!imageUrl) return undefined;
-    
-    // Already a full URL
-    if (imageUrl.startsWith('http')) return imageUrl;
-    
-    // Cloudinary (orderium/)
-    if (imageUrl.startsWith('orderium/')) {
-      return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
-    }
-    
-    // S3 URL
-    if (imageUrl.startsWith('s3://')) {
-      return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
-    }
-    
-    // Cloudflare (cf://)
-    if (imageUrl.startsWith('cf://')) {
-      return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
-    }
-    // Relative path (LOCAL provider) - construct with API base URL
-    return `${apiBaseUrl}/uploads/images/${imageUrl}`;
-  };
-  
   const quantity = getItemQuantity(product.id);
-  
-  const displayName = product.name;
+  const inCart = quantity > 0;
 
-  const handleAddToCart = () => {
-    addItem(product);
-  };
-
-  const handleIncrement = () => {
-    updateQuantity(product.id, quantity + 1);
-  };
-
-  const handleDecrement = () => {
-    if (quantity > 1) {
-      updateQuantity(product.id, quantity - 1);
-    } else {
-      removeItem(product.id);
-    }
-  };
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Don't open modal if clicking on quantity controls
-    if ((e.target as HTMLElement).closest('button')) {
-      return;
-    }
+  const handleClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
     setIsModalOpen(true);
   };
 
-  // List view layout
+  /* ── LIST view ── */
   if (viewMode === 'list') {
     return (
       <>
-        <ProductQuantityModal 
-          product={product}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          initialQuantity={quantity}
-        />
-        
-        <div 
-          onClick={handleCardClick}
-          className={cn(
-            "group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex gap-2 sm:gap-3 p-2 sm:p-2.5",
-            "cursor-pointer active:scale-[0.99]",
-            quantity > 0 && "ring-2 ring-primary bg-primary/5"
-          )}
+        <ProductQuantityModal product={product} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialQuantity={quantity} />
+        <div
+          onClick={handleClick}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.625rem',
+            padding: '0.625rem 0.75rem',
+            background: '#ffffff',
+            borderRadius: '0.875rem',
+            border: inCart ? '1.5px solid #059669' : '1.5px solid #f3f4f6',
+            boxShadow: inCart ? '0 0 0 3px rgba(5,150,105,0.08)' : '0 1px 4px rgba(0,0,0,0.05)',
+            cursor: 'pointer',
+            transition: 'border-color 0.15s, box-shadow 0.15s',
+            WebkitTapHighlightColor: 'transparent',
+          }}
           dir={dir}
         >
           {/* Image */}
-          <div className="relative w-16 h-16 sm:w-18 sm:h-18 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-            {product.imageUrl ? (
-              <img
-                src={getImageUrl(product.imageUrl)}
-                alt={displayName}
-                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                <Package className="w-4 h-4 text-gray-300" />
-              </div>
-            )}
+          <div style={{
+            width: '3.5rem',
+            height: '3.5rem',
+            borderRadius: '0.625rem',
+            overflow: 'hidden',
+            background: '#f8fafc',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            {product.imageUrl
+              ? <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} loading="lazy" />
+              : <Package size={20} color="#d1d5db" />
+            }
           </div>
 
-          {/* Content */}
-          <div className="flex-1 flex flex-col justify-between min-w-0">
-            <div>
-              <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight mb-1.5 text-sm sm:text-base">
-                {displayName}
-              </h3>
-              <div className="flex items-center gap-2">
-                <p className="text-sm sm:text-base font-bold text-primary">
-                  {formatCurrency(product.price ?? 0, language)}
-                </p>
-                {quantity > 0 && (
-                  <span className="px-2 py-0.5 bg-primary text-white text-xs font-semibold rounded-full">
-                    {quantity}
-                  </span>
-                )}
-              </div>
-            </div>
+          {/* Info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.825rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {product.name}
+            </p>
+            <p style={{ margin: '0.15rem 0 0', fontWeight: 800, fontSize: '0.9rem', color: '#059669' }}>
+              {formatCurrency(product.price ?? 0, language)}
+            </p>
           </div>
+
+          {/* Qty badge / add button */}
+          {inCart ? (
+            <div style={{
+              minWidth: '2.25rem', height: '2.25rem', borderRadius: '9999px',
+              background: '#059669', color: 'white',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 800, fontSize: '0.875rem', flexShrink: 0, gap: '0.125rem',
+              padding: '0 0.5rem',
+            }}>
+              <Check size={12} />
+              {quantity}
+            </div>
+          ) : (
+            <div style={{
+              width: '2.25rem', height: '2.25rem', borderRadius: '9999px',
+              background: '#f0fdf4', border: '1.5px solid #059669',
+              color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Plus size={16} />
+            </div>
+          )}
         </div>
       </>
     );
   }
 
-  // Grid view layout (existing)
-
+  /* ── GRID view ── */
   return (
     <>
-      <ProductQuantityModal 
-        product={product}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        initialQuantity={quantity}
-      />
-      
-      <div 
-        onClick={handleCardClick}
-        className={cn(
-          "group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col",
-          "cursor-pointer active:scale-[0.98]",
-          quantity > 0 && "ring-2 ring-primary bg-primary/5"
-        )}
+      <ProductQuantityModal product={product} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialQuantity={quantity} />
+      <div
+        onClick={handleClick}
+        style={{
+          background: '#ffffff',
+          borderRadius: '0.875rem',
+          border: inCart ? '1.5px solid #059669' : '1.5px solid #f0f0f0',
+          boxShadow: inCart
+            ? '0 0 0 3px rgba(5,150,105,0.10), 0 2px 8px rgba(0,0,0,0.05)'
+            : '0 2px 8px rgba(0,0,0,0.05)',
+          overflow: 'hidden',
+          cursor: 'pointer',
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'border-color 0.15s, box-shadow 0.15s, transform 0.1s',
+          WebkitTapHighlightColor: 'transparent',
+          position: 'relative',
+        }}
+        onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.97)')}
+        onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}
         dir={dir}
       >
-      {/* Image */}
-      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-        {product.imageUrl ? (
-          <img
-            src={getImageUrl(product.imageUrl)}
-            alt={displayName}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-            <Package className="w-8 h-8 text-gray-300" />
-          </div>
-        )}
-
-        {/* Quantity badge when in cart */}
-        {quantity > 0 && (
-          <div className={`absolute top-1 ${dir === 'rtl' ? 'left-1' : 'right-1'} min-w-[20px] h-5 px-1 bg-primary text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-md`}>
-            {quantity}
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-1.5 sm:p-2 flex flex-col">
-        <h3 className="font-medium text-gray-900 line-clamp-2 sm:line-clamp-1 leading-tight mb-1 text-[11px] sm:text-xs">
-          {displayName}
-        </h3>
-
-        <div className="mt-auto">
-          <span className="text-[11px] sm:text-xs font-bold text-primary">
-            {formatCurrency(product.price ?? 0, language)}
-          </span>
+        {/* Image area */}
+        <div style={{ aspectRatio: '1 / 1', background: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
+          {product.imageUrl
+            ? <img
+                src={getImageUrl(product.imageUrl)}
+                alt={product.name}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                loading="lazy"
+              />
+            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f3f4f6, #e9ecef)' }}>
+                <Package size={28} color="#d1d5db" />
+              </div>
+          }
+          {/* Cart qty badge */}
+          {inCart && (
+            <div style={{
+              position: 'absolute',
+              top: '0.5rem',
+              right: '0.5rem',
+              minWidth: '1.625rem',
+              height: '1.625rem',
+              padding: '0 0.375rem',
+              borderRadius: '9999px',
+              background: '#059669',
+              color: 'white',
+              fontSize: '0.6875rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(5,150,105,0.4)',
+            }}>
+              {quantity}
+            </div>
+          )}
         </div>
+
+        {/* Info */}
+        <div style={{ padding: '0.4rem 0.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+          <p style={{
+            margin: 0, fontWeight: 600, fontSize: '0.75rem', color: '#0f172a',
+            lineHeight: 1.3, overflow: 'hidden',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+          }}>
+            {product.name}
+          </p>
+          <p style={{ margin: 0, fontWeight: 800, fontSize: '0.875rem', color: '#059669', marginTop: 'auto', paddingTop: '0.15rem' }}>
+            {formatCurrency(product.price ?? 0, language)}
+          </p>
+        </div>
+
+        {/* Add/In-cart indicator strip at bottom */}
+        <div style={{
+          height: '3px',
+          background: inCart ? '#059669' : 'transparent',
+          transition: 'background 0.2s',
+        }} />
       </div>
-    </div>
     </>
+
   );
 };

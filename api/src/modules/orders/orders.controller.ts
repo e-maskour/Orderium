@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -20,8 +21,10 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrdersDto } from './dto/filter-orders.dto';
 import { ApiRes } from '../../common/api-response';
 import { ORD } from '../../common/response-codes';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Orders')
+@PortalRoute()
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) { }
@@ -62,11 +65,11 @@ export class OrdersController {
     const endDateObj = filterDto.endDate
       ? new Date(filterDto.endDate)
       : undefined;
-    const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const pageNum = page ? parseInt(page, 10) || 1 : 1;
     // Allowed page sizes capped at 100 for standard queries
     const allowedPageSizes = [10, 50, 100];
-    const pageSizeNum = Math.max(1, parseInt(perPage ?? '50', 10) || 50);
-    const pageSize = allowedPageSizes.includes(pageSizeNum) ? pageSizeNum : 50;
+    const parsedPerPage = perPage ? parseInt(perPage, 10) || 50 : 50;
+    const pageSize = allowedPageSizes.includes(parsedPerPage) ? parsedPerPage : 50;
 
     const result = await this.ordersService.filterOrders(
       startDateObj,
@@ -112,7 +115,10 @@ export class OrdersController {
     @Query('endDate') endDate?: string,
     @Query('direction') direction?: string,
   ) {
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit ?? '50', 10) || 50),
+    );
     const fromPortalBool =
       fromPortal !== undefined ? fromPortal === 'true' : undefined;
     const fromClientBool =
@@ -163,10 +169,13 @@ export class OrdersController {
       limitNum,
     );
 
-    return ApiRes(ORD.SEARCH_NUMBERS, orderNumbers.map((num: string) => ({
-      value: num,
-      label: num,
-    })));
+    return ApiRes(
+      ORD.SEARCH_NUMBERS,
+      orderNumbers.map((num: string) => ({
+        value: num,
+        label: num,
+      })),
+    );
   }
 
   @Get('number/:orderNumber')
@@ -174,6 +183,7 @@ export class OrdersController {
   @ApiQuery({ name: 'customerId', required: true, type: Number })
   @ApiResponse({ status: 200, description: 'Order retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
+  @ApiResponse({ status: 400, description: 'Customer ID is required' })
   async findByNumber(
     @Param('orderNumber') orderNumber: string,
     @Query('customerId') customerId?: string,
@@ -220,7 +230,10 @@ export class OrdersController {
     @Query('endDate') endDate?: string,
   ) {
     const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
-    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize ?? '10', 10) || 10));
+    const pageSizeNum = Math.min(
+      100,
+      Math.max(1, parseInt(pageSize ?? '10', 10) || 10),
+    );
 
     const result = await this.ordersService.getCustomerOrders(
       customerId,
@@ -248,6 +261,7 @@ export class OrdersController {
     status: 200,
     description: 'Order analytics retrieved successfully',
   })
+  @ApiResponse({ status: 400, description: 'Invalid direction parameter' })
   async getAnalytics(
     @Param('direction') direction: 'vente' | 'achat',
     @Query('year') year?: string,
@@ -266,7 +280,7 @@ export class OrdersController {
     return ApiRes(ORD.DETAIL, order);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update an order' })
   @ApiResponse({ status: 200, description: 'Order updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update a validated order' })
@@ -345,8 +359,13 @@ export class OrdersController {
   }
 
   @Get('export/xlsx')
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  @ApiOperation({ summary: 'Export orders (bon de livraison / bon d\'achat) to XLSX file' })
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
+  @ApiOperation({
+    summary: "Export orders (bon de livraison / bon d'achat) to XLSX file",
+  })
   async exportToXlsx(
     @Query('supplierId') supplierId?: string,
     @Res() res?: Response,
@@ -354,9 +373,12 @@ export class OrdersController {
     const supplierIdNum = supplierId ? parseInt(supplierId, 10) : undefined;
     const buffer = await this.ordersService.exportToXlsx(supplierIdNum);
 
-    const filename = supplierIdNum !== undefined
-      ? (supplierIdNum ? 'bons-achat.xlsx' : 'bons-livraison.xlsx')
-      : 'bons.xlsx';
+    const filename =
+      supplierIdNum !== undefined
+        ? supplierIdNum
+          ? 'bons-achat.xlsx'
+          : 'bons-livraison.xlsx'
+        : 'bons.xlsx';
 
     if (res) {
       res.setHeader('Content-Disposition', `attachment; filename=${filename}`);

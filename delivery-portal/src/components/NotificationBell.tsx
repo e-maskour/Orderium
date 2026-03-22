@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import { Bell, Check, CheckCheck } from 'lucide-react';
+import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { toastSuccess } from '../services/toast.service';
+import { Button } from 'primereact/button';
+import { Badge } from 'primereact/badge';
+import { OverlayPanel } from 'primereact/overlaypanel';
+
 interface Notification {
   Id: number;
   Title: string;
@@ -19,9 +22,8 @@ export function NotificationBell() {
   const { deliveryPerson } = useAuth();
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
+  const op = useRef<any>(null);
 
-  // Fetch notifications
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', 'delivery', deliveryPerson?.id],
     queryFn: async () => {
@@ -30,13 +32,13 @@ export function NotificationBell() {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       const response = await fetch(`/api/notifications?userType=delivery&userId=${deliveryPerson?.id}`, { headers });
       if (!response.ok) throw new Error('Failed to fetch notifications');
-      return response.json();
+      const json = await response.json();
+      return json.data || [];
     },
     enabled: !!deliveryPerson,
     refetchInterval: 30000,
   });
 
-  // Fetch unread count
   const { data: unreadData } = useQuery({
     queryKey: ['notifications', 'delivery', deliveryPerson?.id, 'unread-count'],
     queryFn: async () => {
@@ -45,7 +47,8 @@ export function NotificationBell() {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       const response = await fetch(`/api/notifications/unread-count?userId=${deliveryPerson?.id}`, { headers });
       if (!response.ok) throw new Error('Failed to fetch unread count');
-      return response.json();
+      const json = await response.json();
+      return json.data || {};
     },
     enabled: !!deliveryPerson,
     refetchInterval: 10000,
@@ -53,7 +56,6 @@ export function NotificationBell() {
 
   const unreadCount = unreadData?.count || 0;
 
-  // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: number) => {
       const token = localStorage.getItem('authToken');
@@ -69,7 +71,6 @@ export function NotificationBell() {
     },
   });
 
-  // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       const token = localStorage.getItem('authToken');
@@ -101,23 +102,16 @@ export function NotificationBell() {
   };
 
   const getNotificationIcon = (type: string) => {
-    const iconClass = "w-10 h-10 rounded-full flex items-center justify-center text-white text-lg";
     switch (type) {
-      case 'order_created':
-        return <div className={`${iconClass} bg-green-500`}>🆕</div>;
-      case 'order_assigned':
-        return <div className={`${iconClass} bg-blue-500`}>📦</div>;
-      case 'order_status_changed':
-        return <div className={`${iconClass} bg-yellow-500`}>🔄</div>;
-      case 'order_cancelled':
-        return <div className={`${iconClass} bg-red-500`}>❌</div>;
-      default:
-        return <div className={`${iconClass} bg-gray-500`}>📬</div>;
+      case 'order_created': return '🆕';
+      case 'order_assigned': return '📦';
+      case 'order_status_changed': return '🔄';
+      case 'order_cancelled': return '❌';
+      default: return '📬';
     }
   };
 
   const translateNotification = (notification: Notification) => {
-    // Map old English titles to translation keys
     const titleMap: Record<string, string> = {
       'New Order': 'notifications.newOrder',
       'Order Assigned': 'notifications.orderAssigned',
@@ -132,24 +126,21 @@ export function NotificationBell() {
     const titleKey = titleMap[notification.Title] || notification.Title;
     const title = t(titleKey as any) || notification.Title;
 
-    // Parse message - handle both old and new formats
-    let orderNumber = notification.Message;
+    let orderNumber = notification.Message ?? '';
     let statusKey = '';
 
-    // Check if message contains '|' (new format: "orderNumber|statusKey")
-    if (notification.Message.includes('|')) {
-      const parts = notification.Message.split('|');
+    if ((notification.Message ?? '').includes('|')) {
+      const parts = (notification.Message ?? '').split('|');
       orderNumber = parts[0];
       statusKey = parts[1] || '';
     } else {
-      // Extract order number from old format messages like "Order 26-200-000001 has been..."
-      const orderMatch = notification.Message.match(/\d{2}-\d{3}-\d{6}/);
+      const orderMatch = (notification.Message ?? '').match(/\d{2}-\d{3}-\d{6}/);
       if (orderMatch) {
         orderNumber = orderMatch[0];
       }
     }
 
-    let message = '';
+    let message: string;
     if (statusKey) {
       const status = t(statusKey as any) || statusKey;
       message = language === 'ar'
@@ -164,102 +155,76 @@ export function NotificationBell() {
     return { title, message };
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    if (!notification.IsRead) {
-      markAsReadMutation.mutate(notification.Id);
-    }
-  };
-
   return (
     <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+      <Button
+        icon="pi pi-bell"
+        rounded
+        text
+        severity="secondary"
+        onClick={(e) => op.current?.toggle(e)}
+        className="p-overlay-badge"
+        style={{ color: '#fff' }}
       >
-        <Bell className="h-6 w-6 text-gray-600" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+          <Badge value={unreadCount > 9 ? '9+' : String(unreadCount)} severity="danger" />
         )}
-      </button>
+      </Button>
 
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute end-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg z-50 border">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-semibold">{t('notifications') || 'Notifications'}</h3>
-              {unreadCount > 0 && (
-                <button
-                  onClick={() => markAllAsReadMutation.mutate()}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+      <OverlayPanel ref={op} style={{ width: '20rem' }}>
+        <div className="flex align-items-center justify-content-between mb-3">
+          <span className="font-bold">{t('notifications') || 'Notifications'}</span>
+          {unreadCount > 0 && (
+            <Button
+              icon="pi pi-check-circle"
+              label={t('markAllRead') || 'Mark all read'}
+              text
+              size="small"
+              severity="info"
+              onClick={() => markAllAsReadMutation.mutate()}
+            />
+          )}
+        </div>
+
+        <div style={{ maxHeight: '400px', overflow: 'auto' }} className="orderium-scrollbar">
+          {notifications.length === 0 ? (
+            <div className="text-center py-5" style={{ color: 'var(--orderium-text-muted)' }}>
+              {t('noNotifications') || 'No notifications'}
+            </div>
+          ) : (
+            notifications.map((notification: Notification, idx: number) => {
+              const { title, message } = translateNotification(notification);
+              return (
+                <div
+                  key={notification.Id ?? idx}
+                  onClick={() => {
+                    if (!notification.IsRead) markAsReadMutation.mutate(notification.Id);
+                  }}
+                  className="p-3 cursor-pointer border-round mb-1"
+                  style={{
+                    background: notification.IsRead ? 'transparent' : '#eff6ff',
+                    borderLeft: notification.IsRead ? '3px solid transparent' : '3px solid #3b82f6',
+                  }}
                 >
-                  <CheckCheck className="h-4 w-4" />
-                  {t('markAllRead') || 'Mark all read'}
-                </button>
-              )}
-            </div>
-            <div className="max-h-[400px] overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  {t('noNotifications') || 'No notifications'}
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {notifications.map((notification: Notification) => {
-                    const { title, message } = translateNotification(notification);
-                    return (
-                      <div
-                        key={notification.Id}
-                        onClick={() => handleNotificationClick(notification)}
-                        className={`p-4 hover:bg-gray-50 cursor-pointer transition-all ${!notification.IsRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
-                          }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {getNotificationIcon(notification.Type)}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <p className={`text-sm font-semibold ${!notification.IsRead ? 'text-gray-900' : 'text-gray-600'}`}>
-                                {title}
-                              </p>
-                              {!notification.IsRead && (
-                                <span className="h-2.5 w-2.5 rounded-full bg-blue-500 flex-shrink-0 animate-pulse" />
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {message}
-                            </p>
-                            <div className="flex items-center justify-between">
-                              <p className="text-xs text-gray-500">
-                                {formatDate(notification.DateCreated)}
-                              </p>
-                              {!notification.IsRead && (
-                                <button
-                                  className="text-xs text-blue-600 hover:text-blue-700 p-1"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    markAsReadMutation.mutate(notification.Id);
-                                  }}
-                                >
-                                  <Check className="h-3.5 w-3.5" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                  <div className="flex align-items-start gap-2">
+                    <span className="text-xl">{getNotificationIcon(notification.Type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex align-items-center justify-content-between gap-2 mb-1">
+                        <span className="font-semibold text-sm">{title}</span>
+                        {!notification.IsRead && (
+                          <span className="border-circle" style={{ width: '8px', height: '8px', background: '#3b82f6', flexShrink: 0 }} />
+                        )}
                       </div>
-                    );
-                  })}
+                      <p className="text-sm m-0 mb-1" style={{ color: 'var(--orderium-text-secondary)' }}>{message}</p>
+                      <span className="text-xs" style={{ color: 'var(--orderium-text-muted)' }}>{formatDate(notification.DateCreated)}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
+              );
+            })
+          )}
+        </div>
+      </OverlayPanel>
     </div>
   );
 }

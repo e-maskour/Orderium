@@ -6,29 +6,42 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
-import { Order, DeliveryStatus, OrderStatus } from '../orders/entities/order.entity';
+import {
+  Order,
+  DeliveryStatus,
+  OrderStatus,
+} from '../orders/entities/order.entity';
 import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
 import { OrderNotificationService } from '../notifications/order-notification.service';
 import * as bcrypt from 'bcrypt';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class DeliveryService {
   private readonly logger = new Logger(DeliveryService.name);
 
   constructor(
-    @InjectRepository(DeliveryPerson)
-    private readonly deliveryPersonRepository: Repository<DeliveryPerson>,
-    @InjectRepository(OrderDelivery)
-    private readonly orderDeliveryRepository: Repository<OrderDelivery>,
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
+    private readonly tenantConnService: TenantConnectionService,
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
+    private readonly jwtService: JwtService,
   ) { }
+
+  private get deliveryPersonRepository(): Repository<DeliveryPerson> {
+    return this.tenantConnService.getRepository(DeliveryPerson);
+  }
+
+  private get orderDeliveryRepository(): Repository<OrderDelivery> {
+    return this.tenantConnService.getRepository(OrderDelivery);
+  }
+
+  private get orderRepository(): Repository<Order> {
+    return this.tenantConnService.getRepository(Order);
+  }
 
   async getAllDeliveryPersons(): Promise<DeliveryPerson[]> {
     return this.deliveryPersonRepository.find({
@@ -36,7 +49,10 @@ export class DeliveryService {
     });
   }
 
-  async login(phoneNumber: string, password: string): Promise<DeliveryPerson> {
+  async login(
+    phoneNumber: string,
+    password: string,
+  ): Promise<{ deliveryPerson: Omit<DeliveryPerson, 'password'>; token: string }> {
     const person = await this.deliveryPersonRepository.findOne({
       where: { phoneNumber },
     });
@@ -54,7 +70,17 @@ export class DeliveryService {
       throw new NotFoundException('Invalid phone number or password');
     }
 
-    return person;
+    const { password: _, ...personData } = person;
+
+    const token = this.jwtService.sign({
+      sub: personData.id,
+      phoneNumber: personData.phoneNumber,
+      isAdmin: false,
+      isCustomer: false,
+      scope: 'portal',
+    });
+
+    return { deliveryPerson: personData, token };
   }
 
   async getDeliveryPersonById(id: number): Promise<DeliveryPerson> {
@@ -73,12 +99,14 @@ export class DeliveryService {
     createDto: CreateDeliveryPersonDto,
   ): Promise<DeliveryPerson> {
     // Check if email already exists
-    const existing = await this.deliveryPersonRepository.findOne({
-      where: { email: createDto.email },
-    });
+    if (createDto.email) {
+      const existing = await this.deliveryPersonRepository.findOne({
+        where: { email: createDto.email },
+      });
 
-    if (existing) {
-      throw new ConflictException('Email already exists');
+      if (existing) {
+        throw new ConflictException('Email already exists');
+      }
     }
 
     // Hash password
@@ -146,8 +174,9 @@ export class DeliveryService {
       .leftJoinAndSelect('ord.items', 'items')
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('ord.customer', 'customer')
-      .where('orderDelivery.deliveryPersonId = :deliveryPersonId', { deliveryPersonId })
-      .andWhere('ord.fromClient = :fromClient', { fromClient: true }); // Only fromClient orders
+      .where('orderDelivery.deliveryPersonId = :deliveryPersonId', {
+        deliveryPersonId,
+      });
 
     // Apply filters
     if (orderNumber) {
@@ -169,7 +198,9 @@ export class DeliveryService {
     if (endDate) {
       const endOfDay = new Date(endDate);
       endOfDay.setHours(23, 59, 59, 999);
-      queryBuilder.andWhere('ord.dateCreated <= :endDate', { endDate: endOfDay });
+      queryBuilder.andWhere('ord.dateCreated <= :endDate', {
+        endDate: endOfDay,
+      });
     }
 
     const total = await queryBuilder.getCount();
@@ -218,7 +249,8 @@ export class DeliveryService {
       await this.orderRepository.save(order);
     }
 
-    const savedDelivery = await this.orderDeliveryRepository.save(orderDelivery);
+    const savedDelivery =
+      await this.orderDeliveryRepository.save(orderDelivery);
 
     // RULE 2: When admin assigns order, notify customer and delivery person
     if (order) {
@@ -226,13 +258,14 @@ export class DeliveryService {
         where: { id: deliveryPersonId },
       });
       if (deliveryPerson) {
-        this.orderNotificationService.notifyOrderAssigned(
-          order,
-          deliveryPersonId,
-          deliveryPerson.name,
-        ).catch((err) => {
-          this.logger.error('Failed to send order assignment notification', (err as Error)?.stack);
-        });
+        this.orderNotificationService
+          .notifyOrderAssigned(order, deliveryPersonId, deliveryPerson.name)
+          .catch((err) => {
+            this.logger.error(
+              'Failed to send order assignment notification',
+              (err as Error)?.stack,
+            );
+          });
       }
     }
 
@@ -374,13 +407,14 @@ export class DeliveryService {
       await this.orderRepository.save(order);
 
       // RULE 3: When delivery status changes, notify customer
-      this.orderNotificationService.notifyDeliveryStatusChanged(
-        order,
-        oldStatus,
-        status,
-      ).catch((err) => {
-        this.logger.error('Failed to send delivery status notification', (err as Error)?.stack);
-      });
+      this.orderNotificationService
+        .notifyDeliveryStatusChanged(order, oldStatus, status)
+        .catch((err) => {
+          this.logger.error(
+            'Failed to send delivery status notification',
+            (err as Error)?.stack,
+          );
+        });
     }
   }
 }

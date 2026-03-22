@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ReactNode } from 'react';
+import { TenantStatusGuard } from './TenantStatusGuard';
 
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated, isLoading, admin } = useAuth();
@@ -9,8 +10,8 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">{t('loading')}</div>
+      <div className="flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+        <span style={{ color: '#64748b' }}>{t('loading')}</span>
       </div>
     );
   }
@@ -19,5 +20,5 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return <TenantStatusGuard>{children}</TenantStatusGuard>;
 };

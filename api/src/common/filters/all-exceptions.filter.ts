@@ -59,6 +59,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : exception,
     );
 
+    // For validation errors, log the individual field messages so they appear in server logs
+    if (exception instanceof HttpException && status === 400) {
+      const body = exception.getResponse();
+      if (typeof body === 'object' && body !== null && Array.isArray((body as Record<string, unknown>)['message'])) {
+        this.logger.error(
+          `Validation errors: ${((body as Record<string, unknown>)['message'] as string[]).join(' | ')}`,
+        );
+      }
+    }
+
     response.status(status).json(errorResponse);
   }
 }

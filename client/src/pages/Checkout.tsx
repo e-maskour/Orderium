@@ -4,44 +4,19 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency, validateMoroccanPhone } from '@/lib/i18n';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ArrowLeft, ArrowRight, Package, Loader2 } from 'lucide-react';
-import { toastError } from '@/services/toast.service';
-import { cn } from '@/lib/utils';
-import { partnersService, ordersService, Partner } from '@/modules';
+import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { ArrowLeft, ArrowRight, Package, ShoppingBag, User, Phone, MapPin, FileText } from 'lucide-react';
+import { notify } from '@orderium/ui';
+import { partnersService, ordersService } from '@/modules';
+import { authService } from '@/modules/auth';
 import { AddressInput } from '@/components/AddressInput';
 
-// Get API base URL from environment or use window origin
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-const s3BaseUrl = import.meta.env.VITE_S3_BASE_URL || '';
-const cloudflareBaseUrl = import.meta.env.VITE_CLOUDFLARE_BASE_URL || '';
-
-// Helper to convert relative image paths to full URLs - supports multiple CDN providers
 const getImageUrl = (imageUrl?: string): string | undefined => {
   if (!imageUrl) return undefined;
-
-  // Already a full URL
   if (imageUrl.startsWith('http')) return imageUrl;
-
-  // Cloudinary (orderium/)
-  if (imageUrl.startsWith('orderium/')) {
-    return `https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/${imageUrl}`;
-  }
-
-  // S3 URL
-  if (imageUrl.startsWith('s3://')) {
-    return `${s3BaseUrl}/${imageUrl.replace('s3://', '')}`;
-  }
-
-  // Cloudflare (cf://)
-  if (imageUrl.startsWith('cf://')) {
-    return `${cloudflareBaseUrl}/${imageUrl.replace('cf://', '')}`;
-  }
-
-  // Relative path (LOCAL provider) - construct with API base URL
-  return `${apiBaseUrl}/uploads/images/${imageUrl}`;
+  const minioPublicUrl = import.meta.env.VITE_MINIO_PUBLIC_URL || '';
+  return `${minioPublicUrl}/orderium-media/${imageUrl}`;
 };
 
 interface FormData {
@@ -67,7 +42,7 @@ const Checkout = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
-  const [existingCustomer, setExistingCustomer] = useState<Partner | null>(null);
+  const [existingCustomerId, setExistingCustomerId] = useState<number | null>(null);
   const [mapsLink, setMapsLink] = useState<string | null>(null);
   const [wazeLink, setWazeLink] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -80,432 +55,321 @@ const Checkout = () => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
-  // Check if form is valid
   const isFormValid =
     formData.name.trim().length > 0 &&
     formData.phone.trim().length > 0 &&
     validateMoroccanPhone(formData.phone) &&
     formData.address.trim().length > 0;
 
+  const isCustomerInfoComplete =
+    formData.name.trim().length > 0 &&
+    formData.address.trim().length > 0 &&
+    (mapsLink != null || wazeLink != null || (formData.latitude != null && formData.longitude != null));
+
   const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
-  // Search customer by phone
-  const searchCustomerByPhone = useCallback(async (phone: string) => {
-    const cleanPhone = phone.replace(/[\s\-()]/g, '');
-
-    // Only search if we have at least 10 digits (full Moroccan phone)
-    if (cleanPhone.length < 10) {
-      setExistingCustomer(null);
-      return;
-    }
-
+  const loadCustomerInfo = useCallback(async (portalUserId: number) => {
     setIsSearchingCustomer(true);
     try {
-      const result = await partnersService.searchByPhone(cleanPhone);
-
-      if (result && result.length > 0) {
-        const customer = result[0];
-        setExistingCustomer(customer);
-
-        // Auto-fill form with customer data
-        setFormData(prev => ({
-          ...prev,
-          name: customer.name,
-          address: customer.address || '',
-          note: '',
-          latitude: customer.latitude,
-          longitude: customer.longitude,
-        }));
-
-        // Set map links if available
-        if (customer.googleMapsUrl) setMapsLink(customer.googleMapsUrl);
-        if (customer.wazeUrl) setWazeLink(customer.wazeUrl);
-
-        // Clear errors
+      const result = await authService.getPortalUserById(portalUserId);
+      if (result && (result.exists || result.customerId)) {
+        setExistingCustomerId(result.customerId ?? null);
+        setFormData(prev => ({ ...prev, name: result.name || result.customerName || '', address: result.deliveryAddress || result.address || '', note: '', latitude: result.latitude, longitude: result.longitude }));
+        if (result.googleMapsUrl) setMapsLink(result.googleMapsUrl);
+        if (result.wazeUrl) setWazeLink(result.wazeUrl);
         setErrors({});
       } else {
-        // New customer - clear fields
-        setExistingCustomer(null);
-
-        // Clear form fields for new customer
-        setFormData(prev => ({
-          ...prev,
-          name: '',
-          address: '',
-          note: '',
-          latitude: undefined,
-          longitude: undefined,
-        }));
-
-        // Clear map links
-        setMapsLink(null);
-        setWazeLink(null);
+        setExistingCustomerId(null);
       }
-    } catch (error) {
-      console.error('Customer search failed:', error);
-      setExistingCustomer(null);
+    } catch {
+      setExistingCustomerId(null);
     } finally {
       setIsSearchingCustomer(false);
     }
   }, []);
 
-  // Auto-search customer on mount if user phone is available
   useEffect(() => {
-    if (user?.phoneNumber) {
-      searchCustomerByPhone(user.phoneNumber);
-    }
-  }, [user?.phoneNumber, searchCustomerByPhone]);
+    if (user?.id) loadCustomerInfo(user.id);
+  }, [user?.id, loadCustomerInfo]);
 
   const handleAddressChange = (address: string, latitude?: number, longitude?: number) => {
-    setFormData(prev => ({
-      ...prev,
-      address,
-      latitude,
-      longitude,
-    }));
-    if (errors.address) {
-      setErrors(prev => ({ ...prev, address: undefined }));
-    }
+    setFormData(prev => ({ ...prev, address, latitude, longitude }));
+    if (errors.address) setErrors(prev => ({ ...prev, address: undefined }));
   };
 
   const handleMapsLinksChange = (googleMaps: string | null, waze: string | null) => {
-    setMapsLink(googleMaps);
-    setWazeLink(waze);
+    setMapsLink(googleMaps); setWazeLink(waze);
   };
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = t('nameRequired');
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = t('phoneRequired');
-    } else if (!validateMoroccanPhone(formData.phone)) {
-      newErrors.phone = t('phoneInvalid');
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = t('addressRequired');
-    }
-
+    if (!formData.name.trim()) newErrors.name = t('nameRequired');
+    if (!formData.phone.trim()) newErrors.phone = t('phoneRequired');
+    else if (!validateMoroccanPhone(formData.phone)) newErrors.phone = t('phoneInvalid');
+    if (!formData.address.trim()) newErrors.address = t('addressRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) return;
-    if (items.length === 0) return;
-
+    if (!validateForm() || items.length === 0) return;
     setIsSubmitting(true);
-
     try {
-      // 1. Save or update partner in database
-      let customerId: number | undefined;
-      try {
-        const partnerResult = await partnersService.upsert({
-          phoneNumber: formData.phone,
-          name: formData.name,
-          deliveryAddress: formData.address,
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-          googleMapsUrl: mapsLink || undefined,
-          wazeUrl: wazeLink || undefined,
-          portalPhoneNumber: user?.phoneNumber, // Link to portal account
-        });
-        customerId = partnerResult.id;
-      } catch (error) {
-        console.error('Failed to save partner:', error);
-        // Continue with order even if partner save fails
+      let customerId: number | undefined = existingCustomerId ?? undefined;
+      if (!customerId) {
+        try {
+          const partnerResult = await partnersService.upsert({ phoneNumber: formData.phone, name: formData.name, deliveryAddress: formData.address, latitude: formData.latitude, longitude: formData.longitude, googleMapsUrl: mapsLink || undefined, wazeUrl: wazeLink || undefined, portalPhoneNumber: user?.phoneNumber });
+          customerId = partnerResult.id;
+        } catch { /* non-critical */ }
       }
 
-      // 2. Create order in database with calculated totals
-      const orderItems = items.map(item => {
-        const itemSubtotal = item.quantity * item.product.price;
-        const itemDiscount = 0; // No item-level discount in current implementation
-        const itemTotal = itemSubtotal - itemDiscount;
-
-        return {
-          productId: item.product.id,
-          description: item.product.name || '',
-          quantity: item.quantity,
-          unitPrice: item.product.price,
-          discount: itemDiscount,
-          discountType: 0,
-          tax: 0, // No tax in current implementation
-          total: itemTotal,
-        };
-      });
-
-      const orderSubtotal = subtotal; // Already calculated by cart context
-      const orderTax = 0; // No tax in current implementation
-      const orderDiscount = 0; // No order-level discount in current implementation
-      const orderTotal = orderSubtotal + orderTax - orderDiscount;
+      const orderItems = items.map(item => ({
+        productId: item.product.id, description: item.product.name || '',
+        quantity: item.quantity, unitPrice: item.product.price, discount: 0,
+        discountType: 0, tax: 0, total: item.quantity * item.product.price,
+      }));
 
       const orderResult = await ordersService.create({
-        customerId: customerId,
-        customerPhone: formData.phone,
-        items: orderItems,
-        note: formData.note,
-        subtotal: orderSubtotal,
-        tax: orderTax,
-        discount: orderDiscount,
-        discountType: 0,
-        total: orderTotal,
-        fromPortal: true,
-        fromClient: true,
-        deliveryStatus: 'pending',
+        customerId, customerPhone: formData.phone,
+        items: orderItems, note: formData.note,
+        subtotal, tax: 0, discount: 0, discountType: 0, total: subtotal,
+        fromPortal: true, fromClient: true, deliveryStatus: 'pending',
       });
 
-      // 3. Navigate to success with order data (before clearing cart)
-      navigate('/success', {
-        state: {
-          orderNumber: orderResult.documentNumber,
-          orderId: orderResult.order.id,
-          total: subtotal,
-          customerName: formData.name,
-          customerPhone: formData.phone,
-          customerAddress: formData.address,
-          items: items,
-        }
-      });
-
-      // 4. Clear cart after navigation
+      navigate('/success', { state: { orderNumber: orderResult.data.orderNumber, orderId: orderResult.data.id, total: subtotal, customerName: formData.name, customerPhone: formData.phone, customerAddress: formData.address, items } });
       clearCart();
-
-    } catch (error) {
-      console.error('Order creation failed:', error);
-      toastError(t('orderCreationError'));
+    } catch {
+      notify.error(t('orderCreationError'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const updateField = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field as keyof FormErrors]) setErrors(prev => ({ ...prev, [field]: undefined }));
   };
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir={dir}>
-        <div className="text-center">
-          <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
-            <Package className="w-10 h-10 text-muted-foreground" />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#f8fafc' }} dir={dir}>
+        <div style={{ textAlign: 'center', maxWidth: '24rem' }}>
+          <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+            <Package size={32} color="#d1d5db" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">{t('emptyCart')}</h2>
-          <p className="text-muted-foreground mb-6">{t('emptyCartMessage')}</p>
-          <Button variant="gold" asChild>
-            <Link to="/">{t('continueShopping')}</Link>
-          </Button>
+          <h2 style={{ fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>{t('emptyCart')}</h2>
+          <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>{t('emptyCartMessage')}</p>
+          <Link to="/">
+            <button style={{ padding: '0.9375rem 2rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #059669, #047857)', color: 'white', fontWeight: 700, cursor: 'pointer' }}>
+              {t('continueShopping')}
+            </button>
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background" dir={dir}>
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center gap-3 sm:gap-4">
-          <Button variant="ghost" size="icon" asChild className="h-9 w-9 sm:h-10 sm:w-10" aria-label={t('goBack')}>
-            <Link to="/">
-              <BackIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Link>
-          </Button>
-          <h1 className="text-lg sm:text-xl font-bold text-foreground">{t('checkoutTitle')}</h1>
+    <div style={{ minHeight: '100vh', background: '#f8fafc' }} dir={dir}>
+      {/* Sticky header */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 40, background: 'white', borderBottom: '1px solid #e5e7eb', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0 1rem', height: '3.75rem' }}>
+          <Link to="/">
+            <button style={{ width: '2.25rem', height: '2.25rem', borderRadius: '50%', border: 'none', background: '#f3f4f6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151' }}>
+              <BackIcon size={18} />
+            </button>
+          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ShoppingBag size={20} color="#059669" />
+            <h1 style={{ margin: 0, fontWeight: 800, fontSize: '1.125rem', color: '#0f172a' }}>{t('checkoutTitle')}</h1>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
-          {/* Form */}
-          <div className="order-1 lg:order-1">
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card">
-                <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">{t('customerInfo')}</h2>
+      <main style={{ padding: '1rem', maxWidth: '72rem', margin: '0 auto' }}>
+        <div className="grid">
+          {/* Form column */}
+          <div className="col-12 lg:col-6">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
 
-                <div className="space-y-4">
-                  {/* Phone - Always visible */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="phone">{t('phone')} *</Label>
-                      {isSearchingCustomer && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          {t('searching')}
-                        </span>
-                      )}
-                      {existingCustomer && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                          {t('existingCustomer')}
-                        </span>
-                      )}
+              {/* Customer info card */}
+              {!isCustomerInfoComplete && (
+                <div style={{ background: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+                  <h2 style={{ margin: '0 0 1.125rem', fontWeight: 700, fontSize: '1rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <User size={16} color="#059669" /> {t('customerInfo')}
+                  </h2>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                    {/* Phone */}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <label htmlFor="phone" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                          <Phone size={13} color="#059669" /> {t('phone')}
+                        </label>
+                        {isSearchingCustomer && <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('searching')}…</span>}
+                        {existingCustomerId && (
+                          <span style={{ fontSize: '0.75rem', background: '#d1fae5', color: '#059669', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontWeight: 700 }}>
+                            {t('existingCustomer')}
+                          </span>
+                        )}
+                      </div>
+                      <InputText
+                        id="phone" type="tel"
+                        value={formData.phone}
+                        onChange={e => updateField('phone', e.target.value)}
+                        placeholder={t('phonePlaceholder')}
+                        className={`w-full${errors.phone ? ' p-invalid' : ''}`}
+                        style={{ height: '3.25rem', fontSize: '1rem', borderColor: existingCustomerId ? '#059669' : undefined }}
+                        dir="ltr" disabled
+                      />
+                      {errors.phone && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.phone}</p>}
                     </div>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
-                      placeholder={t('phonePlaceholder')}
-                      className={cn(
-                        'h-12 bg-gray-100',
-                        errors.phone && 'border-destructive focus-visible:ring-destructive',
-                        existingCustomer && 'border-green-500'
-                      )}
-                      dir="ltr"
-                      autoFocus
-                      disabled
-                    />
-                    {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone}</p>
-                    )}
-                  </div>
 
-                  {/* Name - Always visible */}
-                  <div className="space-y-2">
-                    <Label htmlFor="name">{t('name')} *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => updateField('name', e.target.value)}
-                      placeholder={t('namePlaceholder')}
-                      className={cn(
-                        'h-12',
-                        errors.name && 'border-destructive focus-visible:ring-destructive'
-                      )}
-                      required
-                    />
-                    {errors.name && (
-                      <p className="text-sm text-destructive">{errors.name}</p>
-                    )}
-                  </div>
+                    {/* Name */}
+                    <div>
+                      <label htmlFor="name" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <User size={13} color="#059669" /> {t('name')} <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <InputText
+                        id="name" value={formData.name}
+                        onChange={e => updateField('name', e.target.value)}
+                        placeholder={t('namePlaceholder')}
+                        className={`w-full${errors.name ? ' p-invalid' : ''}`}
+                        style={{ height: '3.25rem', fontSize: '1rem' }}
+                        required
+                      />
+                      {errors.name && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.name}</p>}
+                    </div>
 
-                  {/* Address - Always visible */}
-                  <div className="space-y-2">
-                    <Label htmlFor="address">{t('address')} *</Label>
-                    <AddressInput
-                      value={formData.address}
-                      onChange={handleAddressChange}
-                      onMapsLinksChange={handleMapsLinksChange}
-                      error={errors.address}
-                      placeholder={t('addressPlaceholder')}
-                      googleMapsUrl={mapsLink}
-                      wazeUrl={wazeLink}
-                    />
-                  </div>
+                    {/* Address */}
+                    <div>
+                      <label htmlFor="address" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <MapPin size={13} color="#059669" /> {t('address')} <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <AddressInput value={formData.address} onChange={handleAddressChange} onMapsLinksChange={handleMapsLinksChange} error={errors.address} placeholder={t('addressPlaceholder')} googleMapsUrl={mapsLink} wazeUrl={wazeLink} />
+                      {errors.address && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.address}</p>}
+                    </div>
 
-                  {/* Note - Optional */}
-                  <div className="space-y-2">
-                    <Label htmlFor="note">{t('note')}</Label>
-                    <textarea
-                      id="note"
-                      value={formData.note}
-                      onChange={(e) => updateField('note', e.target.value)}
+                    {/* Note */}
+                    <div>
+                      <label htmlFor="note" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <FileText size={13} color="#059669" /> {t('note')}
+                      </label>
+                      <InputTextarea
+                        id="note" value={formData.note}
+                        onChange={e => updateField('note', e.target.value)}
+                        placeholder={t('notePlaceholder')}
+                        rows={3} autoResize className="w-full"
+                        style={{ fontSize: '0.9375rem', resize: 'vertical' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Note card (shown when customer info is hidden) */}
+              {isCustomerInfoComplete && (
+                <div style={{ background: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+                  <div>
+                    <label htmlFor="note" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      <FileText size={13} color="#059669" /> {t('note')}
+                    </label>
+                    <InputTextarea
+                      id="note" value={formData.note}
+                      onChange={e => updateField('note', e.target.value)}
                       placeholder={t('notePlaceholder')}
-                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                      rows={3}
+                      rows={3} autoResize className="w-full"
+                      style={{ fontSize: '0.9375rem', resize: 'vertical' }}
                     />
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Submit button (mobile) */}
+              {/* Submit (mobile only) */}
               <div className="lg:hidden">
-                <Button
+                <button
                   type="submit"
-                  variant="cart"
-                  size="touchLg"
-                  className="w-full h-12 sm:h-14 text-sm sm:text-base"
                   disabled={isSubmitting || !isFormValid}
+                  style={{
+                    width: '100%', padding: '1.0625rem',
+                    borderRadius: '0.875rem', border: 'none',
+                    background: (isSubmitting || !isFormValid) ? '#9ca3af' : 'linear-gradient(135deg, #059669, #047857)',
+                    color: 'white', fontWeight: 800, fontSize: '1.0625rem',
+                    cursor: (isSubmitting || !isFormValid) ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    boxShadow: (isSubmitting || !isFormValid) ? 'none' : '0 4px 16px rgba(5,150,105,0.4)',
+                  }}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                      <span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
                       {t('processing')}
                     </>
                   ) : (
-                    <>
-                      {t('placeOrder')}
-                      <span className="font-bold ml-2">{formatCurrency(subtotal, language)}</span>
-                    </>
+                    <>{t('placeOrder')} · <strong>{formatCurrency(subtotal, language)}</strong></>
                   )}
-                </Button>
+                </button>
               </div>
             </form>
           </div>
 
-          {/* Order summary */}
-          <div className="order-2 lg:order-2">
-            <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card lg:sticky lg:top-24">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">{t('orderSummary')}</h2>
+          {/* Order summary column */}
+          <div className="col-12 lg:col-6">
+            <div style={{ background: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0', position: 'sticky', top: '5rem' }}>
+              <h2 style={{ margin: '0 0 1rem', fontWeight: 700, fontSize: '1rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ShoppingBag size={16} color="#059669" /> {t('orderSummary')}
+              </h2>
 
-              <div className="space-y-2 sm:space-y-3 max-h-[250px] sm:max-h-[300px] overflow-y-auto">
-                {items.map((item) => {
-                  const displayName = item.product.name;
-
-                  return (
-                    <div key={item.product.id} className="flex gap-2 sm:gap-3 py-2">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
-                        {item.product.imageUrl ? (
-                          <img
-                            src={getImageUrl(item.product.imageUrl)}
-                            alt={displayName}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground/40" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground line-clamp-1 text-sm sm:text-base">{displayName}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          {item.quantity} × {formatCurrency(item.product.price, language)}
-                        </p>
-                      </div>
-                      <span className="font-semibold text-foreground text-sm sm:text-base">
-                        {formatCurrency(item.product.price * item.quantity, language)}
-                      </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', maxHeight: '18rem', overflowY: 'auto' }}>
+                {items.map(item => (
+                  <div key={item.product.id} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <div style={{ flexShrink: 0, width: '3.25rem', height: '3.25rem', borderRadius: '0.75rem', overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {item.product.imageUrl
+                        ? <img src={getImageUrl(item.product.imageUrl)} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        : <Package size={16} color="#d1d5db" />
+                      }
                     </div>
-                  );
-                })}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: '0 0 0.125rem', fontWeight: 600, fontSize: '0.875rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.product.name}</p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280' }}>{item.quantity} × {formatCurrency(item.product.price, language)}</p>
+                    </div>
+                    <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a', flexShrink: 0 }}>{formatCurrency(item.product.price * item.quantity, language)}</span>
+                  </div>
+                ))}
               </div>
 
-              <div className="border-t border-border mt-3 sm:mt-4 pt-3 sm:pt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-base sm:text-lg">{t('total')}</span>
-                  <span className="text-xl sm:text-2xl font-bold text-foreground">
-                    {formatCurrency(subtotal, language)}
-                  </span>
-                </div>
+              {/* Total */}
+              <div style={{ marginTop: '1rem', padding: '0.875rem', background: '#f0fdf4', borderRadius: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ color: '#374151', fontWeight: 700 }}>{t('total')}</span>
+                <span style={{ fontWeight: 900, fontSize: '1.5rem', color: '#059669', letterSpacing: '-0.02em' }}>{formatCurrency(subtotal, language)}</span>
               </div>
 
-              {/* Submit button (desktop) */}
-              <div className="hidden lg:block mt-6">
-                <Button
-                  type="submit"
-                  variant="cart"
-                  size="touchLg"
-                  className="w-full"
-                  disabled={isSubmitting || !isFormValid}
+              {/* Submit (desktop) */}
+              <div className="hidden lg:block" style={{ marginTop: '1.125rem' }}>
+                <button
+                  type="button"
                   onClick={handleSubmit}
+                  disabled={isSubmitting || !isFormValid}
+                  style={{
+                    width: '100%', padding: '1rem',
+                    borderRadius: '0.875rem', border: 'none',
+                    background: (isSubmitting || !isFormValid) ? '#9ca3af' : 'linear-gradient(135deg, #059669, #047857)',
+                    color: 'white', fontWeight: 800, fontSize: '1rem',
+                    cursor: (isSubmitting || !isFormValid) ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    boxShadow: (isSubmitting || !isFormValid) ? 'none' : '0 4px 16px rgba(5,150,105,0.35)',
+                  }}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
                       {t('processing')}
                     </>
                   ) : (
-                    t('placeOrder')
+                    <>{t('placeOrder')} · {formatCurrency(subtotal, language)}</>
                   )}
-                </Button>
+                </button>
               </div>
             </div>
           </div>

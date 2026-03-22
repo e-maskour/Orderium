@@ -27,10 +27,20 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <p className="text-lg font-medium mb-2">Hi! How can I help you today?</p>
-          <p className="text-sm">
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+        }}
+      >
+        <div style={{ textAlign: 'center', color: '#6b7280' }}>
+          <p style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+            Hi! How can I help you today?
+          </p>
+          <p style={{ fontSize: '0.875rem' }}>
             I can help you with inventory, orders, products, and more.
           </p>
         </div>
@@ -41,7 +51,14 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
   return (
     <div
       ref={scrollRef}
-      className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+      }}
     >
       {messages.map((message) => (
         <MessageBubble key={message.id} message={message} />

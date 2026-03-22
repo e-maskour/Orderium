@@ -369,7 +369,7 @@ export async function seedUnitOfMeasures(dataSource: DataSource) {
   for (const category of categories) {
     // First, create base units
     const baseUnits: Record<string, UnitOfMeasure> = {};
-    
+
     for (const unitData of category.units) {
       const existing = await uomRepository.findOne({
         where: { code: unitData.code },
@@ -378,15 +378,17 @@ export async function seedUnitOfMeasures(dataSource: DataSource) {
       if (!existing) {
         const unit = uomRepository.create(unitData);
         const savedUnit = await uomRepository.save(unit);
-        
+
         if (unitData.isBaseUnit) {
           baseUnits[category.name] = savedUnit;
         }
-        
+
         console.log(`✓ Created UOM: ${unitData.name} (${unitData.code})`);
       } else {
-        console.log(`- UOM already exists: ${unitData.name} (${unitData.code})`);
-        
+        console.log(
+          `- UOM already exists: ${unitData.name} (${unitData.code})`,
+        );
+
         if (unitData.isBaseUnit) {
           baseUnits[category.name] = existing;
         }
@@ -401,7 +403,7 @@ export async function seedUnitOfMeasures(dataSource: DataSource) {
           const unit = await uomRepository.findOne({
             where: { code: unitData.code },
           });
-          
+
           if (unit && !unit.baseUnit) {
             unit.baseUnit = baseUnit;
             await uomRepository.save(unit);

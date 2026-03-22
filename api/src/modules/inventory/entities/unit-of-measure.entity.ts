@@ -8,6 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
 @Entity('unit_of_measures')
 @Index(['name'])
@@ -25,7 +26,7 @@ export class UnitOfMeasure {
   @Column({ type: 'varchar', length: 100 })
   category: string; // Weight, Volume, Length, Unit, etc.
 
-  @Column({ type: 'decimal', precision: 18, scale: 6, default: 1 })
+  @Column({ type: 'decimal', precision: 18, scale: 6, default: 1, transformer: numericTransformer })
   ratio: number; // Conversion ratio to base unit
 
   @Column({ type: 'varchar', length: 10, nullable: true })

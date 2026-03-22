@@ -9,29 +9,23 @@ export class OrdersService {
       body: JSON.stringify(data),
     });
 
-    if (response.order) {
-      response.order = Order.fromApiResponse(response.order);
+    if (response.data) {
+      response.data = Order.fromApiResponse(response.data as unknown as Record<string, unknown>);
     }
 
     return response;
   }
 
   async getById(id: number): Promise<Order> {
-    const response = await http<{ success: boolean; order: any }>(`/api/orders/${id}`);
-    // API returns { Order: {...}, Items: [...] }
-    const orderData = response.order.Order || response.order;
-    const items = response.order.Items || orderData.items || [];
-    return Order.fromApiResponse({ ...orderData, items });
+    const response = await http<OrderResponse>(`/api/orders/${id}`);
+    return Order.fromApiResponse(response.data as unknown as Record<string, unknown>);
   }
 
   async getByOrderNumber(orderNumber: string, customerId: number): Promise<Order> {
-    const response = await http<{ success: boolean; order: any }>(
+    const response = await http<OrderResponse>(
       `/api/orders/number/${orderNumber}?customerId=${customerId}`
     );
-    // API returns { Order: {...}, Items: [...] }
-    const orderData = response.order.Order || response.order;
-    const items = response.order.Items || orderData.items || [];
-    return Order.fromApiResponse({ ...orderData, items });
+    return Order.fromApiResponse(response.data as unknown as Record<string, unknown>);
   }
 
   async getCustomerOrders(
@@ -55,8 +49,8 @@ export class OrdersService {
       `/api/orders/customer/${customerId}?${params.toString()}`
     );
 
-    if (response.orders) {
-      response.orders = response.orders.map((order: any) => Order.fromApiResponse(order));
+    if (response.data) {
+      response.data = response.data.map((order) => Order.fromApiResponse(order as unknown as Record<string, unknown>));
     }
 
     return response;

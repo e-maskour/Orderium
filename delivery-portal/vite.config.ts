@@ -7,11 +7,20 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@orderium/ui': path.resolve(__dirname, '../shared/ui/src'),
+      '@shared-logo': path.resolve(__dirname, '../shared/logo'),
     },
   },
   server: {
     port: 3003,
     host: '0.0.0.0',
+    fs: {
+      allow: [
+        path.resolve(__dirname, '.'),
+        path.resolve(__dirname, '../shared/ui'),
+        path.resolve(__dirname, '../shared/logo'),
+      ],
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000',

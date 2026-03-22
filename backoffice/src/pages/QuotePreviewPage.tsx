@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, Calendar, User, Phone, MapPin, CreditCard, CheckCircle, XCircle, AlertCircle, PenTool } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { Textarea } from '../components/ui/textarea';
-import { FormField } from '../components/ui/form-field';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { quotesService } from '../modules/quotes/quotes.service';
 import { QuoteWithDetails } from '../modules/quotes/quotes.model';
 import { toastError, toastConfirm } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
+import { formatAmount } from '@orderium/ui';
 
 export default function QuotePreviewPage() {
   const { t } = useLanguage();
@@ -83,10 +85,10 @@ export default function QuotePreviewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Chargement du devis...</p>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="animate-spin" style={{ borderRadius: '9999px', height: '3rem', width: '3rem', borderBottom: '2px solid #2563eb', margin: '0 auto 1rem' }}></div>
+          <p style={{ color: '#475569' }}>Chargement du devis...</p>
         </div>
       </div>
     );
@@ -94,11 +96,11 @@ export default function QuotePreviewPage() {
 
   if (error || !quote) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Erreur</h2>
-          <p className="text-slate-600 mb-6">{error || 'Devis introuvable'}</p>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '2rem', maxWidth: '28rem', width: '100%', textAlign: 'center' }}>
+          <AlertCircle style={{ width: '4rem', height: '4rem', color: '#ef4444', margin: '0 auto 1rem' }} />
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>Erreur</h2>
+          <p style={{ color: '#475569', marginBottom: '1.5rem' }}>{error || 'Devis introuvable'}</p>
         </div>
       </div>
     );
@@ -107,18 +109,18 @@ export default function QuotePreviewPage() {
   const q = quote.quote;
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', padding: '2rem 1rem' }}>
+      <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <FileText className="w-6 h-6 text-blue-600" />
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ padding: '0.75rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem' }}>
+                <FileText style={{ width: '1.5rem', height: '1.5rem', color: '#2563eb' }} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Devis {q.quoteNumber}</h1>
-                <p className="text-sm text-slate-500">
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Devis {q.quoteNumber}</h1>
+                <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
                   {new Date(q.date).toLocaleDateString('fr-FR', {
                     day: 'numeric',
                     month: 'long',
@@ -129,18 +131,17 @@ export default function QuotePreviewPage() {
             </div>
 
             {/* Status Badge */}
-            <div className={`px-4 py-2 rounded-full ${q.status === 'signed'
-              ? 'bg-green-50 border border-green-200'
-              : q.status === 'closed'
-                ? 'bg-red-50 border border-red-200'
-                : 'bg-blue-50 border border-blue-200'
-              }`}>
-              <span className={`text-sm font-semibold ${q.status === 'signed'
-                ? 'text-green-700'
-                : q.status === 'closed'
-                  ? 'text-red-700'
-                  : 'text-blue-700'
-                }`}>
+            <div style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '9999px',
+              backgroundColor: q.status === 'signed' ? '#f0fdf4' : q.status === 'closed' ? '#fef2f2' : '#eff6ff',
+              border: `1px solid ${q.status === 'signed' ? '#bbf7d0' : q.status === 'closed' ? '#fecaca' : '#bfdbfe'}`,
+            }}>
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: q.status === 'signed' ? '#15803d' : q.status === 'closed' ? '#b91c1c' : '#1d4ed8',
+              }}>
                 {q.status === 'signed'
                   ? t('signedStatus')
                   : q.status === 'closed'
@@ -152,8 +153,8 @@ export default function QuotePreviewPage() {
 
           {/* Expiration Date */}
           {q.expirationDate && (
-            <div className="flex items-center gap-2 text-sm text-slate-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <Calendar className="w-4 h-4 text-amber-600" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', padding: '0.75rem' }}>
+              <Calendar style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
               <span>
                 Valable jusqu'au{' '}
                 {new Date(q.expirationDate).toLocaleDateString('fr-FR', {
@@ -167,78 +168,82 @@ export default function QuotePreviewPage() {
         </div>
 
         {/* Customer Info */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Informations Client</h3>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-slate-400 mt-0.5" />
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Informations Client</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <User style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8', marginTop: '0.125rem' }} />
               <div>
-                <p className="font-semibold text-slate-900">{q.customerName}</p>
+                <p style={{ fontWeight: 600, color: '#0f172a', margin: 0 }}>{q.customerName}</p>
               </div>
             </div>
             {q.customerPhone && (
-              <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-slate-400" />
-                <p className="text-slate-700">{q.customerPhone}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Phone style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8' }} />
+                <p style={{ color: '#334155', margin: 0 }}>{q.customerPhone}</p>
               </div>
             )}
             {q.customerAddress && (
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-slate-400 mt-0.5" />
-                <p className="text-slate-700">{q.customerAddress}</p>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                <MapPin style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8', marginTop: '0.125rem' }} />
+                <p style={{ color: '#334155', margin: 0 }}>{q.customerAddress}</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Items Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Articles</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Description</th>
-                  <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700">Quantité</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Prix unitaire</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {quote.items.map((item, index) => (
-                  <tr key={index} className="border-b border-slate-100">
-                    <td className="py-3 px-4 text-sm text-slate-900">{item.description}</td>
-                    <td className="py-3 px-4 text-sm text-slate-700 text-center">{item.quantity}</td>
-                    <td className="py-3 px-4 text-sm text-slate-700 text-right">
-                      {item.unitPrice.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
-                    </td>
-                    <td className="py-3 px-4 text-sm font-semibold text-slate-900 text-right">
-                      {item.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Articles</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <DataTable value={quote.items} size="small" tableStyle={{ width: '100%' }}>
+              <Column
+                field="description"
+                header="Description"
+                headerStyle={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#0f172a' }}
+              />
+              <Column
+                field="quantity"
+                header="Quantité"
+                headerStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155' }}
+              />
+              <Column
+                field="unitPrice"
+                header="Prix unitaire"
+                headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155' }}
+                body={(item: any) => `${formatAmount(item.unitPrice, 2)} DH`}
+              />
+              <Column
+                field="total"
+                header="Total"
+                headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}
+                body={(item: any) => `${formatAmount(item.total, 2)} DH`}
+              />
+            </DataTable>
           </div>
 
           {/* Signature Details and Totals Side by Side */}
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            <div className="flex flex-col md:flex-row gap-6 justify-between">
+          <div style={{ marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', justifyContent: 'space-between' }}>
               {/* Signature Details or Status - Left Side */}
-              <div className="flex-1">
+              <div style={{ flex: 1 }}>
                 {q.status === 'signed' && q.signedBy && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <h4 className="font-bold text-green-900">Signature</h4>
+                  <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.5rem', padding: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: '#16a34a' }} />
+                      <h4 style={{ fontWeight: 700, color: '#14532d', margin: 0 }}>Signature</h4>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-green-800">
-                        <span className="font-medium">{t('signedByLabel')}</span> {q.signedBy}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <p style={{ fontSize: '0.875rem', color: '#166534', margin: 0 }}>
+                        <span style={{ fontWeight: 500 }}>{t('signedByLabel')}</span> {q.signedBy}
                       </p>
                       {q.signedDate && (
-                        <p className="text-sm text-green-700">
-                          <span className="font-medium">{t('dateLabel')}</span>{' '}
+                        <p style={{ fontSize: '0.875rem', color: '#15803d', margin: 0 }}>
+                          <span style={{ fontWeight: 500 }}>{t('dateLabel')}</span>{' '}
                           {new Date(q.signedDate).toLocaleDateString('fr-FR', {
                             day: 'numeric',
                             month: 'long',
@@ -249,34 +254,34 @@ export default function QuotePreviewPage() {
                         </p>
                       )}
                       {(q as any).clientNotes && (
-                        <div className="mt-2 pt-2 border-t border-green-200">
-                          <p className="text-xs text-green-700 font-medium mb-1">Commentaire:</p>
-                          <p className="text-sm text-slate-700">{(q as any).clientNotes}</p>
+                        <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #bbf7d0' }}>
+                          <p style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 500, marginBottom: '0.25rem' }}>Commentaire:</p>
+                          <p style={{ fontSize: '0.875rem', color: '#334155', margin: 0 }}>{(q as any).clientNotes}</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
                 {q.status === 'closed' && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <XCircle className="w-5 h-5 text-red-600" />
-                      <h4 className="font-bold text-red-900">Devis fermé</h4>
+                  <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', padding: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <XCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
+                      <h4 style={{ fontWeight: 700, color: '#991b1b', margin: 0 }}>Devis fermé</h4>
                     </div>
-                    <p className="text-sm text-red-800">
+                    <p style={{ fontSize: '0.875rem', color: '#991b1b', margin: 0 }}>
                       Ce devis a été refusé et ne peut plus être modifié.
                     </p>
                   </div>
                 )}
                 {q.status !== 'signed' && q.status !== 'closed' && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <PenTool className="w-5 h-5 text-blue-600" />
-                      <h4 className="font-bold text-blue-900">Détails de signature</h4>
+                  <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', padding: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                      <PenTool style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
+                      <h4 style={{ fontWeight: 700, color: '#1e3a5a', margin: 0 }}>Détails de signature</h4>
                     </div>
-                    <div className="space-y-3">
-                      <p className="text-sm text-blue-800">
-                        <span className="font-medium">Date:</span>{' '}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <p style={{ fontSize: '0.875rem', color: '#1e40af', margin: 0 }}>
+                        <span style={{ fontWeight: 500 }}>Date:</span>{' '}
                         {new Date().toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'long',
@@ -284,25 +289,28 @@ export default function QuotePreviewPage() {
                         })}
                       </p>
                       <div>
-                        <FormField label={t('signedByLabel')}>
-                          <Input
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('signedByLabel')}</label>
+                          <InputText
                             type="text"
                             value={signedBy}
                             onChange={(e) => setSignedBy(e.target.value)}
                             placeholder={t('signedByPlaceholder')}
-                            fullWidth
+                            style={{ width: '100%' }}
                           />
-                        </FormField>
+                        </div>
                       </div>
                       <div>
-                        <FormField label="Note:">
-                          <Textarea
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Note:</label>
+                          <InputTextarea
                             value={clientNotes}
                             onChange={(e) => setClientNotes(e.target.value)}
                             rows={3}
                             placeholder="Commentaire (optionnel)"
+                            style={{ width: '100%' }}
                           />
-                        </FormField>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -310,23 +318,23 @@ export default function QuotePreviewPage() {
               </div>
 
               {/* Totals - Right Side */}
-              <div className="space-y-2 w-full md:w-80">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Sous-total HT:</span>
-                  <span className="font-semibold text-slate-900">
-                    {q.subtotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', maxWidth: '20rem', marginLeft: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <span style={{ color: '#475569' }}>Sous-total HT:</span>
+                  <span style={{ fontWeight: 600, color: '#0f172a' }}>
+                    {formatAmount(q.subtotal, 2)} DH
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">TVA:</span>
-                  <span className="font-semibold text-slate-900">
-                    {q.tax.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <span style={{ color: '#475569' }}>TVA:</span>
+                  <span style={{ fontWeight: 600, color: '#0f172a' }}>
+                    {formatAmount(q.tax, 2)} DH
                   </span>
                 </div>
-                <div className="flex justify-between text-lg border-t border-slate-200 pt-2">
-                  <span className="font-bold text-slate-900">Total TTC:</span>
-                  <span className="font-bold text-blue-600">
-                    {q.total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} DH
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.125rem', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>Total TTC:</span>
+                  <span style={{ fontWeight: 700, color: '#2563eb' }}>
+                    {formatAmount(q.total, 2)} DH
                   </span>
                 </div>
               </div>
@@ -336,37 +344,33 @@ export default function QuotePreviewPage() {
 
         {/* Notes */}
         {q.notes && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-3">Notes</h3>
-            <p className="text-slate-700 whitespace-pre-wrap">{q.notes}</p>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.75rem' }}>Notes</h3>
+            <p style={{ color: '#334155', whiteSpace: 'pre-wrap', margin: 0 }}>{q.notes}</p>
           </div>
         )}
 
-        {/* Action Buttons - Show when quote can still be signed or refused */}
+        {/* Action Buttons */}
         {q.status !== 'signed' && q.status !== 'closed' && q.status !== 'delivered' && q.status !== 'invoiced' && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <div className="flex flex-col sm:flex-row gap-3">
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <Button
+                label={signing ? 'Signature...' : 'Signer le devis'}
+                icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
                 onClick={handleSign}
                 disabled={signing || !signedBy.trim()}
                 loading={signing}
-                loadingText="Signature..."
-                leadingIcon={PenTool}
-                className="flex-1"
-              >
-                Signer le devis
-              </Button>
+                style={{ flex: 1 }}
+              />
               <Button
+                label={rejecting ? 'Refus...' : 'Refuser le devis'}
+                icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
                 onClick={handleReject}
                 disabled={rejecting || !signedBy.trim()}
-                variant="destructive"
+                severity="danger"
                 loading={rejecting}
-                loadingText="Refus..."
-                leadingIcon={XCircle}
-                className="flex-1"
-              >
-                Refuser le devis
-              </Button>
+                style={{ flex: 1 }}
+              />
             </div>
           </div>
         )}

@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
+import { nullableNumericTransformer } from '../../../common/transformers/numeric.transformer';
 
 @Entity('warehouses')
 @Index(['name'])
@@ -26,10 +27,10 @@ export class Warehouse {
   @Column({ type: 'varchar', length: 100, nullable: true })
   city: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true, transformer: nullableNumericTransformer })
   latitude: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true, transformer: nullableNumericTransformer })
   longitude: number;
 
   @Column({ type: 'varchar', length: 50, nullable: true })

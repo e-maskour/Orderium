@@ -1,190 +1,163 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { ProductFilters, ProductCategory } from '@/types/database';
+import { ProductFilters } from '@/types/database';
 import { useProducts } from "@/hooks/useProducts";
+import { useCategories } from '@/hooks/useCategories';
 import { Header } from '@/components/Header';
 import { SearchBar } from '@/components/SearchBar';
 import { CategoryChips } from '@/components/CategoryChips';
 import { ProductGrid } from '@/components/ProductGrid';
 import { CartDrawer } from '@/components/CartDrawer';
-import { FloatingCartButton } from '@/components/FloatingCartButton';
+import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
-import { Button } from '@/components/ui/button';
-import { Grid3x3, List, Plus } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 const Index = () => {
   const { t, dir } = useLanguage();
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
+  const { user } = useAuth();
+  const { isCartOpen, closeCart, itemCount } = useCart();
+  const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filters, setFilters] = useState<ProductFilters>({
-    category: 'all',
-    search: '',
-  });
+  const [filters, setFilters] = useState<ProductFilters>({ categoryId: null, search: '' });
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const handleCategoryChange = (category: ProductCategory) => {
-    setFilters((prev) => ({ ...prev, category }));
-    setCurrentPage(1); // Reset to page 1 when category changes
-    window.scrollTo({ top: 200, behavior: 'smooth' });
+  const handleCategoryChange = (categoryId: number | null) => {
+    setFilters(prev => ({ ...prev, categoryId }));
+    setCurrentPage(1);
   };
 
   const handleSearchChange = (search: string) => {
-    setFilters((prev) => ({ ...prev, search }));
-    setCurrentPage(1); // Reset to page 1 when search changes
+    setFilters(prev => ({ ...prev, search }));
+    setCurrentPage(1);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  };
-
-  const stopResizing = () => {
-    setIsResizing(false);
-  };
+  const startResizing = (e: React.MouseEvent) => { e.preventDefault(); setIsResizing(true); };
+  const stopResizing = () => setIsResizing(false);
 
   const resize = (e: MouseEvent) => {
     if (!isResizing) return;
-    
     e.preventDefault();
-    const newWidth = dir === 'rtl' 
-      ? window.innerWidth - e.clientX 
-      : e.clientX;
-    // Min 280px, Max 600px or 50% of window width
-    const minWidth = 280;
-    const maxWidth = Math.min(600, window.innerWidth * 0.5);
-    setSidebarWidth(Math.max(minWidth, Math.min(newWidth, maxWidth)));
+    const newWidth = dir === 'rtl' ? window.innerWidth - e.clientX : e.clientX;
+    setSidebarWidth(Math.max(280, Math.min(newWidth, Math.min(600, window.innerWidth * 0.5))));
   };
 
   useEffect(() => {
-    if (isResizing) {
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-      
-      window.addEventListener('mousemove', resize);
-      window.addEventListener('mouseup', stopResizing);
-      
-      return () => {
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        window.removeEventListener('mousemove', resize);
-        window.removeEventListener('mouseup', stopResizing);
-      };
-    }
+    if (!isResizing) return;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', resize);
+    window.addEventListener('mouseup', stopResizing);
+    return () => {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
   }, [isResizing, dir]);
 
-  // Pass pagination params to useProducts
+  const { categories } = useCategories();
+
   const { products, loading, error, totalCount, totalPages } = useProducts({
     page: currentPage,
     pageSize: 24,
     search: filters.search,
   });
 
-  // Filter products by category on client side (since category filtering is simple)
-  const filteredProducts = products.filter((product) => {
-    if (filters.category === 'products' && product.isService) return false;
-    if (filters.category === 'services' && !product.isService) return false;
-    return true;
-  });
+  const filteredProducts = filters.categoryId === null
+    ? products
+    : products.filter(p =>
+        Array.isArray(p.categories) && p.categories.some(c => c.id === filters.categoryId)
+      );
 
-  const { itemCount } = useCart();
-  
+  const greeting = user?.customerName
+    ? `${t('hello') || 'Bonjour'}, ${user.customerName.split(' ')[0]}! 👋`
+    : `${t('hello') || 'Bonjour'} 👋`;
+
   return (
-    <div className="min-h-screen bg-gray-50" dir={dir}>
-      <Header onCartClick={() => setIsCartOpen(true)} />
+    <div style={{ minHeight: '100vh', background: '#f3f4f6', fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif" }} dir={dir}>
+      <Header />
 
-      {/* Desktop: 2-column layout | Mobile: single column with drawer */}
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Cart Panel - Left Side */}
-        <aside 
-          className={`hidden lg:block bg-white ${dir === 'rtl' ? 'border-s' : 'border-e'} border-gray-200 sticky top-16 h-[calc(100vh-4rem)] overflow-hidden relative`}
-          style={{ width: `${sidebarWidth}px` }}
+      <div className="flex" style={{ minHeight: 'calc(100vh - 3.75rem)' }}>
+        {/* ── Desktop Cart Panel ── */}
+        <aside
+          className="hidden lg:flex flex-column"
+          style={{
+            width: `${sidebarWidth}px`,
+            position: 'sticky',
+            top: '3.75rem',
+            height: 'calc(100vh - 3.75rem)',
+            flexShrink: 0,
+            background: 'white',
+            borderInlineEnd: '1px solid #e5e7eb',
+            boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
+          }}
         >
-          <CartDrawer 
-            isOpen={true} 
-            onClose={() => {}} 
-            isPanelMode={true}
-          />
-          
-          {/* Resize Handle */}
+          <CartDrawer isOpen={true} onClose={() => {}} isPanelMode={true} />
           <div
             onMouseDown={startResizing}
-            className={`absolute ${dir === 'rtl' ? 'left-0' : 'right-0'} top-0 bottom-0 w-2 hover:w-3 cursor-col-resize transition-all z-50 group`}
-            style={{ 
-              background: isResizing ? 'rgba(37, 99, 235, 0.2)' : 'transparent',
+            style={{
+              position: 'absolute',
+              [dir === 'rtl' ? 'left' : 'right']: 0,
+              top: 0, bottom: 0, width: '6px',
+              cursor: 'col-resize', zIndex: 50,
+              background: isResizing ? 'rgba(5,150,105,0.12)' : 'transparent',
+              transition: 'background 0.2s',
             }}
-          >
-            <div 
-              className={`absolute inset-y-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-px bg-gray-300 group-hover:bg-primary group-hover:w-0.5 transition-all`}
-            />
-          </div>
+          />
         </aside>
 
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden">
-          {/* Search Bar */}
-          <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
-            <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-              <SearchBar value={filters.search} onChange={handleSearchChange} />
+        {/* ── Main Content ── */}
+        <main className="flex-1 flex flex-column" style={{ minWidth: 0, overflow: 'hidden' }}>
+          {/* Greeting strip — visible on mobile only */}
+          <div
+            className="lg:hidden"
+            style={{
+              background: 'linear-gradient(135deg, #047857 0%, #059669 60%, #10b981 100%)',
+              padding: '0.75rem 1.25rem 1.75rem',
+              flexShrink: 0,
+            }}
+          >
+            <p style={{ margin: '0 0 0.75rem', fontWeight: 900, fontSize: '1.4rem', color: 'white', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+              {greeting}
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {itemCount > 0 && (
+                <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, borderRadius: '999px', padding: '0.3rem 0.75rem' }}>
+                  🛒 {itemCount}
+                </span>
+              )}
+              <span style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', color: 'rgba(255,255,255,0.9)', fontSize: '0.8rem', fontWeight: 600, borderRadius: '999px', padding: '0.3rem 0.75rem' }}>
+                {t('chooseProducts') || '🛍️ Commandez maintenant'}
+              </span>
             </div>
           </div>
 
-          {/* Header Section */}
-          <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 flex-shrink-0">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              {/* Category Chips */}
-              <CategoryChips
-                activeCategory={filters.category}
-                onCategoryChange={handleCategoryChange}
-              />
-
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    viewMode === 'grid'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Grid3x3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    viewMode === 'list'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+          {/* Search strip — white card lifts over gradient on mobile */}
+          <div className="cl-search-strip" style={{ background: 'white', borderBottom: '1px solid #f3f4f6', padding: '0.75rem 1rem', flexShrink: 0, borderRadius: '18px 18px 0 0', position: 'relative', zIndex: 1, marginTop: '-1.25rem' }}>
+            <SearchBar value={filters.search} onChange={handleSearchChange} />
           </div>
 
-          {/* Product Grid - Scrollable */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          {/* Category strip */}
+          <div style={{ background: 'white', borderBottom: '1px solid #f3f4f6', padding: '0.5rem 1rem', flexShrink: 0 }}>
+            <CategoryChips categories={categories} activeCategoryId={filters.categoryId} onCategoryChange={handleCategoryChange} />
+          </div>
+
+          {/* Product area */}
+          <div className="flex-1 overflow-y-auto cl-pb-nav" style={{ padding: '0.875rem 1rem' }}>
             {loading && (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-muted-foreground">{t('loading')}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 0', gap: '1rem' }}>
+                <ProgressSpinner style={{ width: '2rem', height: '2rem' }} strokeWidth="4" />
+                <p style={{ color: '#6b7280', margin: 0 }}>{t('loading')}</p>
               </div>
             )}
-            
-            {error && (
-              <div className="text-center py-12">
-                <p className="text-red-500 mb-4">{error}</p>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  className="text-primary hover:underline"
+
+            {error && !loading && (
+              <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{ color: '#059669', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9375rem' }}
                 >
                   {t('retry')}
                 </button>
@@ -192,35 +165,30 @@ const Index = () => {
             )}
 
             {!loading && !error && (
-              <ProductGrid 
-                products={filteredProducts} 
+              <ProductGrid
+                products={filteredProducts}
                 filters={filters}
                 currentPage={currentPage}
                 totalPages={totalPages}
                 totalCount={totalCount}
-                onPageChange={handlePageChange}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
+                onPageChange={setCurrentPage}
               />
             )}
-            </div>
           </div>
         </main>
       </div>
 
-      {/* Mobile Cart Drawer */}
+      {/* ── Mobile Cart Drawer ── */}
       <div className="lg:hidden">
-        <CartDrawer 
-          isOpen={isCartOpen} 
-          onClose={() => setIsCartOpen(false)} 
-          isPanelMode={false}
-        />
+        <CartDrawer isOpen={isCartOpen} onClose={closeCart} isPanelMode={false} />
       </div>
 
-      {/* Floating Cart Button (mobile only) */}
-      <FloatingCartButton onClick={() => setIsCartOpen(true)} />
+      {/* ── Mobile Bottom Tab Bar ── */}
+      <BottomNav />
     </div>
   );
 };
 
 export default Index;
+
+

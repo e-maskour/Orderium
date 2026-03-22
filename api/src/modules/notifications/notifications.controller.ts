@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   Controller,
   Get,
@@ -11,17 +10,21 @@ import {
   ParseIntPipe,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { PushNotificationService } from './push-notification.service';
 import { Notification } from './entities/notification.entity';
-import { DeviceToken } from './entities/device-token.entity';
-import { RegisterDeviceTokenDto, UnregisterDeviceTokenDto } from './dto/device-token.dto';
+import {
+  RegisterDeviceTokenDto,
+  UnregisterDeviceTokenDto,
+} from './dto/device-token.dto';
 import { ApiRes } from '../../common/api-response';
 import { NOT } from '../../common/response-codes';
+import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 
 @ApiTags('Notifications')
 @Controller('notifications')
+@PortalRoute()
 export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
@@ -30,6 +33,7 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get notifications with filters and pagination' })
+  @ApiResponse({ status: 200, description: 'Notifications retrieved successfully' })
   async getNotifications(
     @Query('userType') userType?: string,
     @Query('customerId') customerId?: string,
@@ -46,7 +50,11 @@ export class NotificationsController {
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
   ) {
-    const userIdNum = userId ? Number(userId) : customerId ? Number(customerId) : undefined;
+    const userIdNum = userId
+      ? Number(userId)
+      : customerId
+        ? Number(customerId)
+        : undefined;
 
     const result = await this.notificationsService.findAll({
       userId: userIdNum,
@@ -77,17 +85,23 @@ export class NotificationsController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get notification statistics' })
+  @ApiResponse({ status: 200, description: 'Notification statistics retrieved successfully' })
   async getStats(
     @Query('userId') userId?: string,
     @Query('customerId') customerId?: string,
   ) {
-    const userIdNum = userId ? Number(userId) : customerId ? Number(customerId) : undefined;
+    const userIdNum = userId
+      ? Number(userId)
+      : customerId
+        ? Number(customerId)
+        : undefined;
     const stats = await this.notificationsService.getStats(userIdNum);
     return ApiRes(NOT.STATS, stats);
   }
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notifications count' })
+  @ApiResponse({ status: 200, description: 'Unread count retrieved successfully' })
   async getUnreadCount(
     @Query('userType') userType?: string,
     @Query('customerId') customerId?: string,
@@ -99,14 +113,14 @@ export class NotificationsController {
         ? Number(customerId)
         : 0;
 
-    const count: number = await this.notificationsService.getUnreadCount(
-      userIdNum,
-    );
+    const count: number =
+      await this.notificationsService.getUnreadCount(userIdNum);
     return ApiRes(NOT.UNREAD_COUNT, { count });
   }
 
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get user notifications' })
+  @ApiResponse({ status: 200, description: 'User notifications retrieved successfully' })
   async findByUser(
     @Param('userId', ParseIntPipe) userId: number,
     @Query('limit') limit?: string,
@@ -121,9 +135,9 @@ export class NotificationsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get notification by ID' })
-  async getNotification(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  @ApiResponse({ status: 200, description: 'Notification retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Notification not found' })
+  async getNotification(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.findOne(id);
     if (!notification) {
       throw new NotFoundException('Notification not found');
@@ -133,6 +147,7 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark notification as read' })
+  @ApiResponse({ status: 200, description: 'Notification marked as read' })
   async markAsRead(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.markAsRead(id);
     return ApiRes(NOT.MARKED_READ, notification);
@@ -140,6 +155,7 @@ export class NotificationsController {
 
   @Patch('mark-many-read')
   @ApiOperation({ summary: 'Mark multiple notifications as read' })
+  @ApiResponse({ status: 200, description: 'Notifications marked as read' })
   async markManyAsRead(@Body('ids') ids: number[]) {
     const updated = await this.notificationsService.markManyAsRead(ids);
     return ApiRes(NOT.MARKED_MANY_READ, { updated });
@@ -147,17 +163,23 @@ export class NotificationsController {
 
   @Patch('mark-all-read')
   @ApiOperation({ summary: 'Mark all notifications as read' })
+  @ApiResponse({ status: 200, description: 'All notifications marked as read' })
   async markAllAsRead(
     @Query('userId') userId?: string,
     @Query('customerId') customerId?: string,
   ) {
-    const userIdNum = userId ? Number(userId) : customerId ? Number(customerId) : 0;
+    const userIdNum = userId
+      ? Number(userId)
+      : customerId
+        ? Number(customerId)
+        : 0;
     const updated = await this.notificationsService.markAllAsRead(userIdNum);
     return ApiRes(NOT.MARKED_ALL_READ, { updated });
   }
 
   @Patch(':id/archive')
   @ApiOperation({ summary: 'Archive notification' })
+  @ApiResponse({ status: 200, description: 'Notification archived' })
   async archive(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.archive(id);
     return ApiRes(NOT.ARCHIVED, notification);
@@ -165,6 +187,7 @@ export class NotificationsController {
 
   @Patch('archive-many')
   @ApiOperation({ summary: 'Archive multiple notifications' })
+  @ApiResponse({ status: 200, description: 'Notifications archived' })
   async archiveMany(@Body('ids') ids: number[]) {
     const updated = await this.notificationsService.archiveMany(ids);
     return ApiRes(NOT.ARCHIVED_MANY, { updated });
@@ -172,6 +195,7 @@ export class NotificationsController {
 
   @Delete('delete-many')
   @ApiOperation({ summary: 'Delete multiple notifications' })
+  @ApiResponse({ status: 200, description: 'Notifications deleted' })
   async deleteMany(@Body('ids') ids: number[]) {
     const deleted = await this.notificationsService.deleteMany(ids);
     return ApiRes(NOT.DELETED_MANY, { deleted });
@@ -179,6 +203,7 @@ export class NotificationsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete notification' })
+  @ApiResponse({ status: 200, description: 'Notification deleted' })
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.notificationsService.delete(id);
     return ApiRes(NOT.DELETED, null);
@@ -186,7 +211,8 @@ export class NotificationsController {
 
   @Get('preferences')
   @ApiOperation({ summary: 'Get notification preferences' })
-  async getPreferences() {
+  @ApiResponse({ status: 200, description: 'Notification preferences retrieved' })
+  getPreferences() {
     // Placeholder - implement user preferences later
     return ApiRes(NOT.PREFS_DETAIL, {
       emailNotifications: true,
@@ -206,13 +232,15 @@ export class NotificationsController {
 
   @Patch('preferences')
   @ApiOperation({ summary: 'Update notification preferences' })
-  async updatePreferences(@Body() preferences: Record<string, boolean>) {
+  @ApiResponse({ status: 200, description: 'Notification preferences updated' })
+  updatePreferences(@Body() preferences: Record<string, boolean>) {
     // Placeholder - implement user preferences later
     return ApiRes(NOT.PREFS_UPDATED, preferences);
   }
 
   @Post('test')
   @ApiOperation({ summary: 'Send test notification' })
+  @ApiResponse({ status: 200, description: 'Test notification sent' })
   async sendTestNotification() {
     // Send a test notification
     await this.notificationsService.create({
@@ -230,37 +258,38 @@ export class NotificationsController {
 
   @Post('device-token/:userId')
   @ApiOperation({ summary: 'Register device token for push notifications' })
+  @ApiResponse({ status: 200, description: 'Device token registered' })
   async registerDeviceToken(
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: RegisterDeviceTokenDto,
   ) {
-    const deviceToken = await this.pushNotificationService.registerDeviceToken(userId, dto);
+    const deviceToken = await this.pushNotificationService.registerDeviceToken(
+      userId,
+      dto,
+    );
     return ApiRes(NOT.TOKEN_REGISTERED, deviceToken);
   }
 
   @Delete('device-token')
   @ApiOperation({ summary: 'Unregister device token' })
-  async unregisterDeviceToken(
-    @Body() dto: UnregisterDeviceTokenDto,
-  ) {
+  @ApiResponse({ status: 200, description: 'Device token unregistered' })
+  async unregisterDeviceToken(@Body() dto: UnregisterDeviceTokenDto) {
     await this.pushNotificationService.unregisterDeviceToken(dto.token);
     return ApiRes(NOT.TOKEN_UNREGISTERED, null);
   }
 
   @Get('device-token/:userId')
   @ApiOperation({ summary: 'Get user registered devices' })
-  async getUserDevices(
-    @Param('userId', ParseIntPipe) userId: number,
-  ) {
+  @ApiResponse({ status: 200, description: 'User devices retrieved' })
+  async getUserDevices(@Param('userId', ParseIntPipe) userId: number) {
     const devices = await this.pushNotificationService.getUserDevices(userId);
     return ApiRes(NOT.TOKEN_LIST, devices);
   }
 
   @Patch('device-token/:token/refresh')
   @ApiOperation({ summary: 'Refresh device token last used timestamp' })
-  async refreshDeviceToken(
-    @Param('token') token: string,
-  ) {
+  @ApiResponse({ status: 200, description: 'Device token refreshed' })
+  async refreshDeviceToken(@Param('token') token: string) {
     await this.pushNotificationService.updateLastUsed(token);
     return ApiRes(NOT.TOKEN_REFRESHED, null);
   }

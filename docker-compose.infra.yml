@@ -1,0 +1,129 @@
+# ==================================
+# Orderium — Shared Infrastructure
+# ==================================
+# Manages the three stateful services shared across all deployments:
+#   • PostgreSQL  – tenant databases (orderium_master + orderium_{slug})
+#   • Redis       – shared cache  (keys namespaced per tenant)
+#   • MinIO       – object storage (buckets namespaced per tenant: orderium-{slug})
+#
+# Usage:
+#   Start:   docker compose -f docker-compose.infra.yml up -d
+#   Stop:    docker compose -f docker-compose.infra.yml down
+#   Destroy: docker compose -f docker-compose.infra.yml down -v   ← deletes all data
+#
+# After starting infra, run the app stack:
+#   Prod:  docker compose up -d --build
+#   Dev:   docker compose -f docker-compose.dev.yml up -d --build
+# ==================================
+name: orderium-infra
+services:
+
+  # ────────────────────────────────────────────────────────
+  # PostgreSQL
+  # ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: orderium-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_password}
+      # Default DB (first tenant or legacy DB — kept for backward compat)
+      POSTGRES_DB: ${DB_NAME:-orderium_db}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Creates orderium_master on first boot (idempotent)
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
+    ports:
+      - "${POSTGRES_EXPOSED_PORT:-5432}:5432"
+
+    networks:
+      - orderium-network
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres_user} -d ${DB_NAME:-orderium_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ────────────────────────────────────────────────────────
+  # Redis
+  # ────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: orderium-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+    volumes:
+      - redis_data:/data
+
+    ports:
+      - "${REDIS_EXPOSED_PORT:-6379}:6379"
+
+    networks:
+      - orderium-network
+
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ────────────────────────────────────────────────────────
+  # MinIO  (S3-compatible object storage)
+  # ────────────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: orderium-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+
+    volumes:
+      - minio_data:/data
+
+    ports:
+      - "${MINIO_EXPOSED_PORT:-9000}:9000" # S3-compatible API
+      - "${MINIO_CONSOLE_PORT:-9001}:9001" # Web console →  http://localhost:9001
+
+    networks:
+      - orderium-network
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+# ────────────────────────────────────────────────────────
+# Shared network  (app stacks attach to it as external)
+# ────────────────────────────────────────────────────────
+networks:
+  orderium-network:
+    external: true
+    name: orderium-network
+
+# ────────────────────────────────────────────────────────
+# Persistent volumes
+# ────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    external: true
+    name: orderium_postgres_data
+
+  redis_data:
+    external: true
+    name: orderium_redis_data
+
+  minio_data:
+    external: true
+    name: orderium_minio_data

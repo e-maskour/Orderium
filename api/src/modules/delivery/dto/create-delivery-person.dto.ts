@@ -1,4 +1,10 @@
-import { IsString, IsEmail, IsOptional, IsBoolean, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsBoolean,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDeliveryPersonDto {
@@ -6,9 +12,10 @@ export class CreateDeliveryPersonDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ example: 'john.doe@example.com' })
-  @IsEmail()
-  email: string;
+  @ApiProperty({ example: 'john.doe@example.com', required: false })
+  @IsOptional()
+  @IsEmail({}, { message: 'email must be a valid email' })
+  email?: string;
 
   @ApiProperty({ example: 'password123' })
   @IsString()

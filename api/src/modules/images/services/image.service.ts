@@ -1,79 +1,22 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { fromBuffer } from 'file-type';
 import {
-  IImageStorageProvider,
   ImageUploadResult,
   ImageTransformOptions,
 } from '../interfaces/image-storage.interface';
-import { CloudinaryProvider } from '../providers/cloudinary.provider';
-import { S3Provider } from '../providers/s3.provider';
-import { LocalProvider } from '../providers/local.provider';
-
-export type StorageProvider = 'CLOUDINARY' | 'AWS_S3' | 'LOCAL';
+import { MinioProvider } from '../providers/minio.provider';
 
 @Injectable()
 export class ImageService {
   private readonly logger = new Logger(ImageService.name);
-  private provider: IImageStorageProvider;
-  private activeProvider: StorageProvider;
 
-  // Allowed file types
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  private readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-  constructor(
-    private configService: ConfigService,
-    private cloudinaryProvider: CloudinaryProvider,
-    private s3Provider: S3Provider,
-    private localProvider: LocalProvider,
-  ) {
-    this.initializeProvider();
-  }
-
-  private initializeProvider(): void {
-    const providerName = this.configService
-      .get<string>('STORAGE_PROVIDER', 'LOCAL')
-      .toUpperCase() as StorageProvider;
-
-    this.activeProvider = providerName;
-
-    switch (providerName) {
-      case 'CLOUDINARY':
-        if (!this.cloudinaryProvider.isConfigured()) {
-          this.logger.warn(
-            '⚠️ Cloudinary not configured, falling back to LOCAL',
-          );
-          this.provider = this.localProvider;
-          this.activeProvider = 'LOCAL';
-        } else {
-          this.provider = this.cloudinaryProvider;
-        }
-        break;
-
-      case 'AWS_S3':
-        if (!this.s3Provider.isConfigured()) {
-          this.logger.warn('⚠️ AWS S3 not configured, falling back to LOCAL');
-          this.provider = this.localProvider;
-          this.activeProvider = 'LOCAL';
-        } else {
-          this.provider = this.s3Provider;
-        }
-        break;
-
-      case 'LOCAL':
-      default:
-        this.provider = this.localProvider;
-        this.activeProvider = 'LOCAL';
-    }
-
-    this.logger.log(
-      `✅ Active storage provider: ${this.provider.getProviderName()}`,
-    );
-  }
+  constructor(private readonly minioProvider: MinioProvider) {}
 
   /**
-   * Validate uploaded file
+   * Validate an uploaded file by checking MIME type, magic bytes, and size.
    */
   async validateFile(file: Express.Multer.File): Promise<void> {
     if (!file) {
@@ -102,30 +45,27 @@ export class ImageService {
   }
 
   /**
-   * Upload image file
+   * Upload an image to MinIO after validation and optimisation.
+   * Returns the full public URL and the object key (publicId).
    */
   async uploadImage(
     file: Express.Multer.File,
-    folder?: string,
+    folder = 'general',
   ): Promise<ImageUploadResult> {
     await this.validateFile(file);
 
     try {
-      const result = await this.provider.upload(file, folder);
-
-      this.logger.log(
-        `✅ Image uploaded successfully: ${result.publicId} (${result.size} bytes)`,
-      );
-
+      const result = await this.minioProvider.upload(file, folder);
+      this.logger.log(`✅ Image uploaded: ${result.publicId}`);
       return result;
     } catch (error) {
-      this.logger.error('❌ Image upload failed:', error);
+      this.logger.error('❌ Image upload failed', error);
       throw new BadRequestException('Failed to upload image');
     }
   }
 
   /**
-   * Delete image by public ID
+   * Delete an image from MinIO by its object key (publicId).
    */
   async deleteImage(publicId: string): Promise<void> {
     if (!publicId) {
@@ -133,49 +73,49 @@ export class ImageService {
     }
 
     try {
-      await this.provider.delete(publicId);
+      await this.minioProvider.delete(publicId);
       this.logger.log(`✅ Image deleted: ${publicId}`);
     } catch (error) {
-      this.logger.error('❌ Image deletion failed:', error);
+      this.logger.error('❌ Image deletion failed', error);
       throw new BadRequestException('Failed to delete image');
     }
   }
 
   /**
-   * Transform image URL with optimization options
+   * Transform an image URL.  MinIO does not support runtime transforms,
+   * so the original URL is returned unchanged.
    */
   transformUrl(url: string, options: ImageTransformOptions): string {
     if (!url) return '';
-    return this.provider.transformUrl(url, options);
+    return this.minioProvider.transformUrl(url, options);
   }
 
   /**
-   * Get optimized image URL
+   * Return an optimised URL.  MinIO does not support dynamic resizing,
+   * so the original URL is returned unchanged.
    */
   getOptimizedUrl(url: string, width?: number, height?: number): string {
     if (!url) return '';
-    return this.provider.getOptimizedUrl(url, width, height);
+    return this.minioProvider.getOptimizedUrl(url, width, height);
   }
 
   /**
-   * Get thumbnail URL (common use case)
+   * Return a thumbnail URL.  MinIO stores pre-optimised images; the same
+   * URL is used for all sizes.
    */
-  getThumbnailUrl(url: string, size: number = 300): string {
-    return this.getOptimizedUrl(url, size, size);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getThumbnailUrl(url: string, _size = 300): string {
+    return url;
   }
 
   /**
-   * Get provider information
+   * Return information about the active storage provider.
    */
-  getProviderInfo(): {
-    provider: string;
-    name: string;
-    configured: boolean;
-  } {
+  getProviderInfo(): { provider: string; name: string; configured: boolean } {
     return {
-      provider: this.activeProvider,
-      name: this.provider.getProviderName(),
-      configured: this.provider.isConfigured(),
+      provider: 'MINIO',
+      name: this.minioProvider.getProviderName(),
+      configured: this.minioProvider.isConfigured(),
     };
   }
 }

@@ -1,4 +1,4 @@
-import { Package, TrendingUp } from 'lucide-react';
+import { Package, TrendingUp, TrendingDown, Award } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../lib/formatters';
 
@@ -13,10 +13,13 @@ interface TopProductsWidgetProps {
   products?: Product[];
 }
 
+const rankClass = (i: number) =>
+  i === 0 ? 'db-rank-1' : i === 1 ? 'db-rank-2' : i === 2 ? 'db-rank-3' : 'db-rank-n';
+
 export const TopProductsWidget: React.FC<TopProductsWidgetProps> = ({ products }) => {
   const { t, language } = useLanguage();
 
-  const defaultProducts: Product[] = products || [
+  const items: Product[] = products && products.length > 0 ? products : [
     { name: 'Product A', sales: 245, revenue: 12450, trend: 12 },
     { name: 'Product B', sales: 198, revenue: 9890, trend: -5 },
     { name: 'Product C', sales: 167, revenue: 8350, trend: 8 },
@@ -24,57 +27,101 @@ export const TopProductsWidget: React.FC<TopProductsWidgetProps> = ({ products }
     { name: 'Product E', sales: 132, revenue: 6600, trend: 3 },
   ];
 
+  const maxSales = Math.max(...items.map((p) => p.sales), 1);
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-bold text-slate-800">{t('topProducts')}</h3>
-          <p className="text-sm text-slate-500 mt-1">{t('bestSellers')}</p>
+    <div className="db-chart-card">
+      {/* Header */}
+      <div className="db-chart-header">
+        <div className="db-chart-header-left">
+          <div className="db-chart-icon" style={{
+            background: 'linear-gradient(135deg,#f59e0b,#d97706)',
+            boxShadow: '0 4px 10px rgba(217,119,6,0.28)',
+          }}>
+            <Award style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="db-chart-title">{t('topProducts')}</h3>
+            <p className="db-chart-subtitle">{t('bestSellers')}</p>
+          </div>
         </div>
-        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-          <Package className="w-5 h-5 text-blue-600" />
-        </div>
+        <span className="db-chart-badge" style={{
+          background: '#fffbeb', color: '#d97706',
+          border: '1px solid #fde68a',
+        }}>
+          Top {items.length}
+        </span>
       </div>
 
-      <div className="space-y-3">
-        {defaultProducts.map((product, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50/50 transition-colors group"
-          >
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                {index + 1}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+      {/* Product rows */}
+      <div style={{ padding: '0.5rem 0 0.5rem' }}>
+        {items.map((product, index) => (
+          <div key={index} className="db-product-row">
+            {/* Rank badge */}
+            <div
+              className={rankClass(index)}
+              style={{
+                width: '1.625rem', height: '1.625rem', borderRadius: '0.4375rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.6875rem', fontWeight: 800, flexShrink: 0,
+              }}
+            >
+              {index + 1}
+            </div>
+
+            {/* Name + sales bar */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <p style={{
+                  fontSize: '0.8125rem', fontWeight: 600, color: '#1e293b',
+                  margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
                   {product.name}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, flexShrink: 0 }}>
                   {product.sales} {t('sales').toLowerCase()}
-                </p>
+                </span>
+              </div>
+              {/* Progress bar */}
+              <div className="db-product-bar" style={{ marginTop: '0.375rem' }}>
+                <div
+                  className="db-product-bar-fill"
+                  style={{
+                    width: `${(product.sales / maxSales) * 100}%`,
+                    background: index === 0
+                      ? 'linear-gradient(90deg,#f59e0b,#d97706)'
+                      : index === 1
+                        ? 'linear-gradient(90deg,#94a3b8,#64748b)'
+                        : index === 2
+                          ? 'linear-gradient(90deg,#fb923c,#ea580c)'
+                          : 'linear-gradient(90deg,#235ae4,#1a47b8)',
+                  }}
+                />
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm font-bold text-slate-800">
-                  {formatCurrency(product.revenue, language)}
-                </p>
-                <div className="flex items-center justify-end gap-1 mt-0.5">
-                  <TrendingUp
-                    className={`w-3 h-3 ${
-                      product.trend >= 0 ? 'text-green-600' : 'text-red-600 rotate-180'
-                    }`}
-                  />
-                  <span
-                    className={`text-xs font-semibold ${
-                      product.trend >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    {product.trend >= 0 ? '+' : ''}{product.trend}%
-                  </span>
-                </div>
+            {/* Revenue + trend */}
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <p style={{
+                fontSize: '0.8125rem', fontWeight: 700, color: '#0f172a',
+                margin: 0, fontVariantNumeric: 'tabular-nums',
+              }}>
+                {formatCurrency(product.revenue, language)}
+              </p>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                gap: '0.2rem', marginTop: '0.125rem',
+              }}>
+                {product.trend >= 0
+                  ? <TrendingUp style={{ width: '0.6875rem', height: '0.6875rem', color: '#16a34a' }} strokeWidth={2.5} />
+                  : <TrendingDown style={{ width: '0.6875rem', height: '0.6875rem', color: '#dc2626' }} strokeWidth={2.5} />
+                }
+                <span style={{
+                  fontSize: '0.6875rem', fontWeight: 700,
+                  color: product.trend >= 0 ? '#16a34a' : '#dc2626',
+                }}>
+                  {product.trend >= 0 ? '+' : ''}{product.trend}%
+                </span>
               </div>
             </div>
           </div>

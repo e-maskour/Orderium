@@ -3,10 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, ShoppingBag, Tag, DollarSign, Percent, CreditCard, Banknote, CheckCircle2, User, Phone, MapPin } from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
 import { posService, IPosCartItem as CartItem, ICheckoutCustomer as Customer, ICheckoutState } from '../modules/pos';
+import { formatCurrency } from '@orderium/ui';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -15,8 +16,31 @@ export default function CheckoutPage() {
   const state = location.state as ICheckoutState;
 
   const [globalDiscount, setGlobalDiscount] = useState(0);
-  const [globalDiscountType, setGlobalDiscountType] = useState(0); // 0 = amount, 1 = percentage
+  const [globalDiscountType, setGlobalDiscountType] = useState(0);
   const [paidAmount, setPaidAmount] = useState('');
+
+  const createOrderMutation = useMutation({
+    mutationFn: (orderData: any) => posService.createOrder(orderData),
+    onSuccess: (data: any) => {
+      const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
+      const orderId = data?.order?.id || data?.id;
+      navigate('/checkout/success', {
+        state: {
+          orderNumber,
+          orderId,
+          customer: state?.customer,
+          items: state?.cart,
+          total,
+          paidAmount: paid,
+          change,
+          orderDate: new Date(),
+        }
+      });
+    },
+    onError: (error: any) => {
+      toastError(error.message || t('error'));
+    },
+  });
 
   useEffect(() => {
     if (!state || !state.cart || !state.customer) {
@@ -28,13 +52,6 @@ export default function CheckoutPage() {
     return null;
   }
 
-  const formatCurrency = (price: number) => {
-    return language === 'ar'
-      ? `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} د.م.`
-      : `${price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
-  };
-
-  // Calculate items subtotal (with individual discounts)
   const itemsSubtotal = state.cart.reduce((sum, item) => {
     const itemSubtotal = item.product.price * item.quantity;
     const itemDiscount = item.discountType === 1
@@ -43,46 +60,16 @@ export default function CheckoutPage() {
     return sum + (itemSubtotal - itemDiscount);
   }, 0);
 
-  // Calculate global discount amount
   const globalDiscountAmount = globalDiscountType === 1
     ? (itemsSubtotal * globalDiscount) / 100
     : globalDiscount;
 
-  // Total after all discounts
   const total = itemsSubtotal - globalDiscountAmount;
-
-  // Total items count
   const totalItemsCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-
-  // Paid amount
   const paid = parseFloat(paidAmount) || 0;
   const change = paid - total;
 
-  const createOrderMutation = useMutation({
-    mutationFn: (orderData: any) => posService.createOrder(orderData),
-    onSuccess: (data: any) => {
-      const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
-      const orderId = data?.order?.id || data?.id;
-      navigate('/checkout/success', {
-        state: {
-          orderNumber: orderNumber,
-          orderId: orderId,
-          customer: state.customer,
-          items: state.cart,
-          total: total,
-          paidAmount: paid,
-          change: change,
-          orderDate: new Date(),
-        }
-      });
-    },
-    onError: (error: any) => {
-      toastError(error.message || t('error'));
-    },
-  });
-
   const handleConfirmOrder = () => {
-    // Calculate items with proper structure
     const items = state.cart.map(item => {
       const quantity = item.quantity;
       const unitPrice = item.product.price;
@@ -96,16 +83,15 @@ export default function CheckoutPage() {
       return {
         productId: item.product.id,
         description: item.product.name || '',
-        quantity: quantity,
-        unitPrice: unitPrice,
+        quantity,
+        unitPrice,
         discount: itemDiscountAmount,
         discountType: item.discountType,
-        tax: tax,
+        tax,
         total: itemTotal
       };
     });
 
-    // Calculate order-level totals
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const totalTax = 0;
     const totalAmount = subtotal - globalDiscountAmount;
@@ -116,59 +102,59 @@ export default function CheckoutPage() {
       fromClient: false,
       deliveryStatus: 'pending',
       date: new Date().toISOString(),
-      subtotal: subtotal,
+      subtotal,
       tax: totalTax,
       discount: globalDiscountAmount,
       discountType: globalDiscountType,
       total: totalAmount,
       notes: '',
-      items: items
+      items
     };
 
     createOrderMutation.mutate(orderData);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button
+      <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '1rem 1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <Button
+              icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />}
               onClick={() => navigate('/pos')}
-              className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-700" />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900">{t('cart')}</h1>
-              <p className="text-sm text-gray-500">Review and confirm order</p>
+              text rounded
+              style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#f3f4f6' }}
+            />
+            <div style={{ flex: 1 }}>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', margin: 0 }}>{t('cart')}</h1>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>{t('reviewAndConfirmOrder')}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
           {/* Left Column - Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Customer Info */}
-            <p className="text-sm text-gray-700 flex flex-wrap items-center gap-3">
-              <span className="flex items-center gap-1">
-                <User className="w-4 h-4 text-gray-400" />
-                <span className="font-medium">{state.customer.name}</span>
+            <p style={{ fontSize: '0.875rem', color: '#374151', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <User style={{ width: '1rem', height: '1rem', color: '#9ca3af' }} />
+                <span style={{ fontWeight: 500 }}>{state.customer.name}</span>
               </span>
-              <span className="text-gray-300">•</span>
-              <span className="flex items-center gap-1">
-                <Phone className="w-4 h-4 text-gray-400" />
+              <span style={{ color: '#d1d5db' }}>•</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Phone style={{ width: '1rem', height: '1rem', color: '#9ca3af' }} />
                 <span>{state.customer.phone}</span>
               </span>
               {state.customer.address && (
                 <>
-                  <span className="text-gray-300">•</span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4 text-gray-400" />
+                  <span style={{ color: '#d1d5db' }}>•</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <MapPin style={{ width: '1rem', height: '1rem', color: '#9ca3af' }} />
                     <span>{state.customer.address}</span>
                   </span>
                 </>
@@ -176,18 +162,18 @@ export default function CheckoutPage() {
             </p>
 
             {/* Cart Items */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-primary" />
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                  <ShoppingBag style={{ width: '1.25rem', height: '1.25rem' }} />
                   {t('items')}
                 </h2>
-                <span className="text-sm text-gray-500">
+                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                   {totalItemsCount} {totalItemsCount === 1 ? t('piece') : t('pieces')}
                 </span>
               </div>
 
-              <div className="space-y-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {state.cart.map((item) => {
                   const itemSubtotal = item.product.price * item.quantity;
                   const itemDiscountAmount = item.discountType === 1
@@ -196,23 +182,23 @@ export default function CheckoutPage() {
                   const itemTotal = itemSubtotal - itemDiscountAmount;
 
                   return (
-                    <div key={item.product.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900 mb-1">{item.product.name}</h3>
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <span>{formatCurrency(item.product.price)} × {item.quantity}</span>
+                    <div key={item.product.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', backgroundColor: '#f9fafb', borderRadius: '0.5rem' }}>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ fontWeight: 500, color: '#111827', marginBottom: '0.25rem', margin: 0 }}>{item.product.name}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', color: '#4b5563' }}>
+                          <span>{formatCurrency(item.product.price, language as 'fr' | 'ar')} × {item.quantity}</span>
                           {item.discount > 0 && (
-                            <span className="text-orange-600 flex items-center gap-1">
-                              <Tag className="w-3 h-3" />
-                              -{item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount)}
+                            <span style={{ color: '#ea580c', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Tag style={{ width: '0.75rem', height: '0.75rem' }} />
+                              -{item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount, language as 'fr' | 'ar')}
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-gray-900">{formatCurrency(itemTotal)}</div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 600, color: '#111827' }}>{formatCurrency(itemTotal, language as 'fr' | 'ar')}</div>
                         {item.discount > 0 && (
-                          <div className="text-xs text-gray-400 line-through">{formatCurrency(itemSubtotal)}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#9ca3af', textDecoration: 'line-through' }}>{formatCurrency(itemSubtotal, language as 'fr' | 'ar')}</div>
                         )}
                       </div>
                     </div>
@@ -220,116 +206,113 @@ export default function CheckoutPage() {
                 })}
               </div>
             </div>
-
-
           </div>
 
           {/* Right Column - Summary & Payment */}
-          <div className="space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Order Summary */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
-              <h2 className="text-lg font-semibold text-gray-900">Order Summary</h2>
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', padding: '1.5rem', position: 'sticky', top: '6rem' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', margin: '0 0 1rem 0' }}>{t('orderSummary')}</h2>
 
               {/* Global Discount */}
-              <div className="pt-4 pb-4 border-b border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Tag className="w-5 h-5 text-orange-500" />
+              <div style={{ paddingTop: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #e5e7eb' }}>
+                <h3 style={{ fontWeight: 600, color: '#111827', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Tag style={{ width: '1.25rem', height: '1.25rem', color: '#f97316' }} />
                   {t('discount')}
                 </h3>
 
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setGlobalDiscountType(0);
-                        setGlobalDiscount(0);
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Button
+                      icon={<DollarSign style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('amount')}
+                      onClick={() => { setGlobalDiscountType(0); setGlobalDiscount(0); }}
+                      style={{
+                        flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem',
+                        backgroundColor: globalDiscountType === 0 ? '#f97316' : '#f3f4f6',
+                        borderColor: globalDiscountType === 0 ? '#f97316' : '#f3f4f6',
+                        color: globalDiscountType === 0 ? '#ffffff' : '#374151',
                       }}
-                      className={`flex-1 h-9 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${globalDiscountType === 0
-                        ? 'bg-orange-500 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                        }`}
-                    >
-                      <DollarSign className="w-4 h-4" />
-                      Amount
-                    </button>
-                    <button
-                      onClick={() => {
-                        setGlobalDiscountType(1);
-                        setGlobalDiscount(0);
+                    />
+                    <Button
+                      icon={<Percent style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('percentage')}
+                      onClick={() => { setGlobalDiscountType(1); setGlobalDiscount(0); }}
+                      style={{
+                        flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem',
+                        backgroundColor: globalDiscountType === 1 ? '#f97316' : '#f3f4f6',
+                        borderColor: globalDiscountType === 1 ? '#f97316' : '#f3f4f6',
+                        color: globalDiscountType === 1 ? '#ffffff' : '#374151',
                       }}
-                      className={`flex-1 h-9 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${globalDiscountType === 1
-                        ? 'bg-orange-500 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                        }`}
-                    >
-                      <Percent className="w-4 h-4" />
-                      Percentage
-                    </button>
+                    />
                   </div>
 
-                  <div className="relative">
-                    <Input
+                  <div>
+                    <InputText
                       type="number"
-                      value={globalDiscount || ''}
+                      value={String(globalDiscount || '')}
                       onChange={(e) => {
                         const value = parseFloat(e.target.value) || 0;
                         const max = globalDiscountType === 1 ? 100 : itemsSubtotal;
                         setGlobalDiscount(Math.min(value, max));
                       }}
                       placeholder={`${t('discount')} ${globalDiscountType === 1 ? '(%)' : `(${t('currency')})`}`}
-                      fullWidth
+                      style={{ width: '100%' }}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 mb-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
                 {globalDiscount > 0 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{t('discount')}</span>
-                    <span className="font-medium text-orange-600">-{formatCurrency(globalDiscountAmount)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                    <span style={{ color: '#4b5563' }}>{t('discount')}</span>
+                    <span style={{ fontWeight: 500, color: '#ea580c' }}>-{formatCurrency(globalDiscountAmount, language as 'fr' | 'ar')}</span>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">{t('subtotal')}</span>
-                  <span className="font-medium text-gray-900">{formatCurrency(itemsSubtotal)}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <span style={{ color: '#4b5563' }}>{t('subtotal')}</span>
+                  <span style={{ fontWeight: 500, color: '#111827' }}>{formatCurrency(itemsSubtotal, language as 'fr' | 'ar')}</span>
                 </div>
 
-                <div className="pt-3 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-gray-900">{t('total')}</span>
-                    <span className="text-2xl font-bold text-primary">{formatCurrency(total)}</span>
+                <div style={{ paddingTop: '0.75rem', borderTop: '1px solid #e5e7eb' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 600, color: '#111827' }}>{t('total')}</span>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>{formatCurrency(total, language as 'fr' | 'ar')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Payment Section */}
-              <div className="pt-4 border-t border-gray-200 space-y-4">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-primary" />
+              <div style={{ paddingTop: '1rem', borderTop: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <h3 style={{ fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                  <CreditCard style={{ width: '1.25rem', height: '1.25rem' }} />
                   {t('payment')}
                 </h3>
 
-                <div className="space-y-3">
-                  <div className="relative">
-                    <Input
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ position: 'relative' }}>
+                    <Banknote style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none', zIndex: 1 }} />
+                    <InputText
                       type="number"
-                      value={paidAmount}
+                      value={String(paidAmount)}
                       onChange={(e) => setPaidAmount(e.target.value)}
-                      placeholder="Paid Amount"
-                      leadingIcon={Banknote}
-                      inputSize="lg"
-                      fullWidth
+                      placeholder={t('paidAmount')}
+                      style={{ width: '100%', paddingLeft: '2.5rem', fontSize: '1.125rem' }}
                     />
                   </div>
 
                   {paid > 0 && (
-                    <div className={`p-3 rounded-lg ${change >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">{t('change')}</span>
-                        <span className={`font-semibold ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(Math.abs(change))}
+                    <div style={{
+                      padding: '0.75rem', borderRadius: '0.5rem',
+                      backgroundColor: change >= 0 ? '#f0fdf4' : '#fef2f2',
+                      border: `1px solid ${change >= 0 ? '#bbf7d0' : '#fecaca'}`,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                        <span style={{ color: '#4b5563' }}>{t('change')}</span>
+                        <span style={{ fontWeight: 600, color: change >= 0 ? '#16a34a' : '#dc2626' }}>
+                          {formatCurrency(Math.abs(change), language as 'fr' | 'ar')}
                         </span>
                       </div>
                     </div>
@@ -339,15 +322,13 @@ export default function CheckoutPage() {
 
               {/* Confirm Button */}
               <Button
+                label={createOrderMutation.isPending ? (t('loading') || 'Loading...') : (t('confirm') || 'Confirm Order')}
+                icon={<CheckCircle2 style={{ width: '1rem', height: '1rem' }} />}
                 onClick={handleConfirmOrder}
                 disabled={createOrderMutation.isPending || paid < total}
                 loading={createOrderMutation.isPending}
-                loadingText={t('loading')}
-                leadingIcon={CheckCircle2}
-                className="w-full mt-6 h-12 shadow-lg"
-              >
-                {t('confirm') || 'Confirm Order'}
-              </Button>
+                style={{ width: '100%', marginTop: '1.5rem', height: '3rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+              />
             </div>
           </div>
         </div>

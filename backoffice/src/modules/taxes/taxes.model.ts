@@ -26,7 +26,7 @@ export class TaxRate implements ITaxRate {
   static fromApiResponse(data: any): TaxRate {
     return new TaxRate({
       name: data.name,
-      rate: parseFloat(data.rate) || 0,
+      rate: data.rate || 0,
       isDefault: data.isDefault || false,
     });
   }
@@ -70,7 +70,7 @@ export class TaxesConfiguration {
 
   static fromApiResponse(data: any): TaxesConfiguration {
     return new TaxesConfiguration({
-      defaultRate: parseFloat(data.defaultRate) || 0,
+      defaultRate: data.defaultRate || 0,
       rates: (data.rates || []).map((r: any) => TaxRate.fromApiResponse(r)),
     });
   }

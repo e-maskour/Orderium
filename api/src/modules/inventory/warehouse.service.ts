@@ -1,16 +1,26 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, In } from 'typeorm';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { Repository, DataSource } from 'typeorm';
 import { Warehouse } from './entities/warehouse.entity';
 import { CreateWarehouseDto, UpdateWarehouseDto } from './dto/warehouse.dto';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class WarehouseService {
   constructor(
-    @InjectRepository(Warehouse)
-    private readonly warehouseRepository: Repository<Warehouse>,
-    private readonly dataSource: DataSource,
-  ) {}
+    private readonly tenantConnService: TenantConnectionService,
+  ) { }
+
+  private get warehouseRepository(): Repository<Warehouse> {
+    return this.tenantConnService.getRepository(Warehouse);
+  }
+
+  private get dataSource(): DataSource {
+    return this.tenantConnService.getCurrentDataSource();
+  }
 
   async create(createDto: CreateWarehouseDto): Promise<Warehouse> {
     // Check if code already exists
@@ -19,7 +29,9 @@ export class WarehouseService {
     });
 
     if (existing) {
-      throw new BadRequestException(`Warehouse with code '${createDto.code}' already exists`);
+      throw new BadRequestException(
+        `Warehouse with code '${createDto.code}' already exists`,
+      );
     }
 
     const warehouse = this.warehouseRepository.create(createDto);
@@ -54,7 +66,9 @@ export class WarehouseService {
         where: { code: updateDto.code },
       });
       if (existing) {
-        throw new BadRequestException(`Warehouse with code '${updateDto.code}' already exists`);
+        throw new BadRequestException(
+          `Warehouse with code '${updateDto.code}' already exists`,
+        );
       }
     }
 
@@ -64,7 +78,7 @@ export class WarehouseService {
 
   async remove(id: number): Promise<void> {
     const warehouse = await this.findOne(id);
-    
+
     // Soft delete by setting isActive to false
     warehouse.isActive = false;
     await this.warehouseRepository.save(warehouse);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import { Activity } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 interface OrdersTimelineChartProps {
@@ -118,12 +119,32 @@ export const OrdersTimelineChart: React.FC<OrdersTimelineChartProps> = ({ data }
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-slate-800">{t('ordersTimeline')}</h3>
-        <p className="text-sm text-slate-500 mt-1">{t('dailyOrdersFlow')}</p>
+    <div className="db-chart-card">
+      <div className="db-chart-header">
+        <div className="db-chart-header-left">
+          <div className="db-chart-icon" style={{
+            background: 'linear-gradient(135deg,#10b981,#059669)',
+            boxShadow: '0 4px 10px rgba(16,185,129,0.28)',
+          }}>
+            <Activity style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="db-chart-title">{t('ordersTimeline')}</h3>
+            <p className="db-chart-subtitle">{t('dailyOrdersFlow')}</p>
+          </div>
+        </div>
+        <span className="db-chart-badge" style={{
+          background: '#ecfdf5', color: '#059669',
+          border: '1px solid #a7f3d0',
+        }}>
+          {t('newOrders')} · {t('delivered')} · {t('cancelled')}
+        </span>
       </div>
-      <ReactApexChart options={chartOptions} series={series} type="line" height={280} />
+      <div className="db-chart-body">
+        {Object.keys(chartOptions).length > 0 && (
+          <ReactApexChart options={chartOptions} series={series} type="line" height={280} />
+        )}
+      </div>
     </div>
   );
 };

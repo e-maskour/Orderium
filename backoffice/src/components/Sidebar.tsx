@@ -1,403 +1,286 @@
 import { Link, useLocation } from 'react-router-dom';
+import orderiumLogo from '../assets/logo-backoffice.svg';
 import { useLanguage } from '../context/LanguageContext';
-import { useState, useEffect } from 'react';
+import { Tooltip } from 'primereact/tooltip';
+import { Badge } from 'primereact/badge';
+import { Ripple } from 'primereact/ripple';
 import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  UserCircle,
-  Truck,
-  CreditCard,
-  FileText,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  TrendingUp,
-  TrendingDown,
-  FileCheck,
-  PackageCheck,
-  Receipt,
-  ShoppingBag,
-  DollarSign,
-  Wallet,
-  Settings,
-  Building2,
-  FolderTree,
+    LayoutDashboard,
+    Package,
+    ShoppingCart,
+    Settings,
+    HardDrive,
+    UsersRound,
+    TrendingUp,
+    TrendingDown,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 
 interface SidebarProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
+    isCollapsed: boolean;
+    setIsCollapsed: (value: boolean) => void;
+    isMobileDrawer?: boolean;
 }
 
-export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
-  const location = useLocation();
-  const { t, language } = useLanguage();
-  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
-
-  // Auto-expand menu when a submenu item is active
-  useEffect(() => {
-    const menuItems = [
-      {
-        key: 'ventes',
-        submenu: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'],
-      },
-      {
-        key: 'achats',
-        submenu: ['/demande-prix', '/bon-achat', '/factures/achat', '/paiements-achat', '/fournisseurs'],
-      },
-      {
-        key: 'products',
-        submenu: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'],
-      },
-    ];
-
-    menuItems.forEach(menu => {
-      if (menu.submenu.some(path => location.pathname.startsWith(path))) {
-        if (!expandedMenus.includes(menu.key)) {
-          setExpandedMenus(prev => [...prev, menu.key]);
-        }
-      }
-    });
-  }, [location.pathname]);
-
-  const toggleMenu = (menuKey: string) => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-    }
-    setExpandedMenus(prev => 
-      prev.includes(menuKey) 
-        ? prev.filter(key => key !== menuKey)
-        : [...prev, menuKey]
-    );
-  };
-
-  const handleSidebarItemClick = () => {
-    // Close mobile drawer when clicking on a menu item (but not on expand/collapse buttons)
-    // This will be triggered by link navigation in mobile drawer context
-  };
-
-  const menuItems = [
+const NAV_ITEMS = [
     {
-      path: '/dashboard',
-      icon: LayoutDashboard,
-      label: t('dashboard'),
+        id: 'sb-dashboard',
+        to: '/dashboard',
+        icon: LayoutDashboard,
+        label: 'Tableau de bord',
+        activePaths: ['/dashboard'],
+        exactFirst: true,
     },
     {
-      key: 'ventes',
-      icon: TrendingUp,
-      label: t('sales'),
-      submenu: [
-        {
-          path: '/devis',
-          icon: FileCheck,
-          label: t('quote'),
-        },
-        {
-          path: '/bons-livraison',
-          icon: PackageCheck,
-          label: t('deliveryNote'),
-        },
-        {
-          path: '/factures/vente',
-          icon: FileText,
-          label: t('salesInvoice'),
-        },
-        {
-          path: '/paiements-vente',
-          icon: Wallet,
-          label: t('payments'),
-        },
-        {
-          path: '/customers',
-          icon: UserCircle,
-          label: t('clients'),
-        },
-      ],
+        id: 'sb-commandes',
+        to: '/orders',
+        icon: ShoppingCart,
+        label: 'Commandes',
+        activePaths: ['/orders', '/pos', '/checkout'],
+        exactFirst: false,
     },
     {
-      key: 'achats',
-      icon: TrendingDown,
-      label: t('purchases'),
-      submenu: [
-        {
-          path: '/demande-prix',
-          icon: DollarSign,
-          label: t('priceRequest'),
-        },
-        {
-          path: '/bon-achat',
-          icon: ShoppingBag,
-          label: t('purchaseOrder'),
-        },
-        {
-          path: '/factures/achat',
-          icon: Receipt,
-          label: t('purchaseInvoice'),
-        },
-        {
-          path: '/paiements-achat',
-          icon: Wallet,
-          label: t('payments'),
-        },
-        {
-          path: '/fournisseurs',
-          icon: Truck,
-          label: t('suppliers'),
-        },
-      ],
+        id: 'sb-ventes',
+        to: '/devis',
+        icon: TrendingUp,
+        label: 'Ventes',
+        activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'],
+        exactFirst: false,
     },
     {
-      path: '/orders',
-      icon: ShoppingCart,
-      label: t('orders'),
+        id: 'sb-achats',
+        to: '/demande-prix',
+        icon: TrendingDown,
+        label: 'Achats',
+        activePaths: ['/demande-prix', '/bon-achat', '/factures/achat', '/paiements-achat', '/fournisseurs'],
+        exactFirst: false,
     },
     {
-      key: 'products',
-      icon: Package,
-      label: t('products'),
-      submenu: [
-        {
-          path: '/products',
-          icon: Package,
-          label: t('products'),
-        },
-        {
-          path: '/categories',
-          icon: FolderTree,
-          label: t('categories'),
-        },
-        {
-          path: '/warehouses',
-          icon: Building2,
-          label: t('warehouses'),
-        },
-        {
-          path: '/stock-movements',
-          icon: TrendingUp,
-          label: t('stockMovements'),
-        },
-        {
-          path: '/inventory-adjustments',
-          icon: FileCheck,
-          label: t('inventoryAdjustments'),
-        },
-      ],
+        id: 'sb-stock',
+        to: '/products',
+        icon: Package,
+        label: 'Stock',
+        activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'],
+        exactFirst: false,
     },
     {
-      path: '/delivery-persons',
-      icon: Users,
-      label: t('deliveryPersons'),
+        id: 'sb-drive',
+        to: '/drive',
+        icon: HardDrive,
+        label: 'Drive',
+        activePaths: ['/drive'],
+        exactFirst: false,
     },
     {
-      path: '/pos',
-      icon: CreditCard,
-      label: t('pointOfSale'),
+        id: 'sb-admin',
+        to: '/users',
+        icon: UsersRound,
+        label: 'Équipe',
+        activePaths: ['/users', '/roles', '/delivery-persons'],
+        exactFirst: false,
     },
     {
-      path: '/configurations',
-      icon: Settings,
-      label: t('configurations'),
+        id: 'sb-config',
+        to: '/configurations',
+        icon: Settings,
+        label: 'Paramètres',
+        activePaths: ['/configurations'],
+        exactFirst: false,
     },
-  ];
+] as const;
 
-  return (
-    <aside
-      className={`fixed top-0 ${language === 'ar' ? 'right-0' : 'left-0'} h-screen bg-white transition-all duration-300 z-20 flex flex-col
-        ${isCollapsed ? 'w-16 sm:w-20' : 'w-64'}
-        ${language === 'ar' ? 'border-l' : 'border-r'} border-slate-200`}
-    >
-      {/* Logo Section */}
-      <div className="h-16 flex items-center justify-between px-2 sm:px-4 border-b border-slate-200 flex-shrink-0">
-        {!isCollapsed && (
-          <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-            <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg shadow-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{background: 'linear-gradient(to bottom right, #dd7c1a, #c86b14)'}}>
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
-              <span className="text-lg sm:text-xl font-bold text-white relative z-10">O</span>
-            </div>
-            <span className="font-bold text-base sm:text-lg text-slate-800">Orderium</span>
-          </div>
-        )}
-        {isCollapsed && (
-          <div className="w-full flex justify-center">
-            <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg shadow-lg flex items-center justify-center relative overflow-hidden flex-shrink-0" style={{background: 'linear-gradient(to bottom right, #dd7c1a, #c86b14)'}}>
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
-              <span className="text-lg sm:text-xl font-bold text-white relative z-10">O</span>
-            </div>
-          </div>
-        )}
-      </div>
+export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }: SidebarProps) => {
+    const location = useLocation();
+    const { language } = useLanguage();
+    const isRtl = language === 'ar';
 
-      {/* Toggle Button - Hide on mobile */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`hidden sm:flex absolute ${language === 'ar' ? '-left-3' : '-right-3'} top-20 w-6 h-6 bg-white border border-slate-200 rounded-full items-center justify-center hover:bg-slate-50 transition-colors shadow-sm`}
-      >
-        {language === 'ar' ? (
-          isCollapsed ? (
-            <ChevronLeft className="w-4 h-4 text-slate-600" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-slate-600" />
-          )
-        ) : (
-          isCollapsed ? (
-            <ChevronRight className="w-4 h-4 text-slate-600" />
-          ) : (
-            <ChevronLeft className="w-4 h-4 text-slate-600" />
-          )
-        )}
-      </button>
+    const isActive = (item: typeof NAV_ITEMS[number]) => {
+        if (item.exactFirst) return location.pathname === item.activePaths[0];
+        return item.activePaths.some(
+            (p) => location.pathname === p || location.pathname.startsWith(p + '/')
+        );
+    };
 
-      {/* Navigation Menu */}
-      <nav className="mt-4 sm:mt-6 px-2 sm:px-3 flex-1 overflow-y-auto">
-        <ul className="space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            
-            // Handle menu items with submenu
-            if ('submenu' in item && item.submenu) {
-              const isExpanded = expandedMenus.includes(item.key);
-              const hasActiveChild = item.submenu.some(sub => location.pathname.startsWith(sub.path));
-
-              return (
-                <li key={item.key}>
-                  <button
-                    onClick={() => toggleMenu(item.key)}
-                    className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-2 sm:gap-3'} px-2 sm:px-3 py-2 sm:py-3 rounded-lg transition-all group ${
-                      hasActiveChild
-                        ? 'bg-amber-50 text-amber-600'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                    title={isCollapsed ? item.label : undefined}
-                  >
-                    {language !== 'ar' && (
-                      <Icon
-                        className={`flex-shrink-0 ${isCollapsed ? 'w-5 sm:w-6 h-5 sm:h-6' : 'w-4 sm:w-5 h-4 sm:h-5'} ${
-                          hasActiveChild ? 'text-amber-600' : 'text-slate-500 group-hover:text-slate-700'
-                        }`}
-                      />
-                    )}
+    return (
+        <aside
+            className="sidebar-enterprise"
+            style={{
+                position: isMobileDrawer ? 'relative' : 'fixed',
+                top: isMobileDrawer ? undefined : 0,
+                [isRtl ? 'right' : 'left']: isMobileDrawer ? undefined : 0,
+                height: isMobileDrawer ? '100%' : '100vh',
+                width: isMobileDrawer ? '100%' : (isCollapsed ? '4.5rem' : '14rem'),
+                background: 'linear-gradient(195deg, #0f172a 0%, #111827 50%, #0f1e3c 100%)',
+                transition: isMobileDrawer ? 'none' : 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                zIndex: isMobileDrawer ? undefined : 20,
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: isMobileDrawer ? 'none' : '4px 0 32px rgba(0,0,0,0.22)',
+                overflow: 'hidden',
+            }}
+        >
+            {/* ── Logo bar ─────────────────────────────────── */}
+            <div style={{
+                height: '4.25rem',
+                padding: isCollapsed ? '0 0.75rem' : '0 0.875rem 0 1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+                borderBottom: '1px solid rgba(255,255,255,0.07)',
+                flexShrink: 0,
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <img
+                        src={orderiumLogo}
+                        alt="Orderium"
+                        style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+                    />
                     {!isCollapsed && (
-                      <>
-                        <span className={`font-medium text-xs sm:text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{item.label}</span>
-                        <ChevronDown
-                          className={`w-3 sm:w-4 h-3 sm:h-4 transition-transform flex-shrink-0 ${
-                            language === 'ar'
-                              ? (isExpanded ? 'rotate-0' : '-rotate-90')
-                              : (isExpanded ? 'rotate-180' : 'rotate-0')
-                          }`}
-                        />
-                      </>
+                        <div>
+                            <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Orderium</div>
+                            <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'rgba(255,255,255,0.32)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Enterprise</div>
+                        </div>
                     )}
-                    {language === 'ar' && (
-                      <Icon
-                        className={`flex-shrink-0 ${isCollapsed ? 'w-5 sm:w-6 h-5 sm:h-6' : 'w-4 sm:w-5 h-4 sm:h-5'} ${
-                          hasActiveChild ? 'text-amber-600' : 'text-slate-500 group-hover:text-slate-700'
-                        }`}
-                      />
-                    )}
-                  </button>
-                  
-                  {/* Submenu */}
-                  {!isCollapsed && isExpanded && (
-                    <ul className={`mt-1 ${language === 'ar' ? 'mr-2 sm:mr-4 border-r-2' : 'ml-2 sm:ml-4 border-l-2'} space-y-1 border-slate-200 ${language === 'ar' ? 'pr-2 sm:pr-4' : 'pl-2 sm:pl-4'}`}>
-                      {item.submenu.map((subItem) => {
-                        const SubIcon = subItem.icon;
-                        const isActive = location.pathname.startsWith(subItem.path);
-                        
+                </div>
+            </div>
+
+            {/* ── Navigation ───────────────────────────────── */}
+            <nav style={{
+                flex: 1,
+                padding: isCollapsed ? '0.75rem 0.5rem' : '0.75rem 0.625rem',
+                overflowY: 'auto', overflowX: 'hidden',
+                scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent',
+            }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
+                    {NAV_ITEMS.map((item) => {
+                        const active = isActive(item);
+                        const Icon = item.icon;
                         return (
-                          <li key={subItem.path}>
-                            <Link
-                              to={subItem.path}
-                              className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all group text-xs sm:text-sm ${
-                                isActive
-                                  ? 'bg-amber-50 text-amber-600'
-                                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                              }`}
-                            >
-                              {language !== 'ar' && (
-                                <SubIcon
-                                  className={`flex-shrink-0 w-3 sm:w-4 h-3 sm:h-4 ${
-                                    isActive ? 'text-amber-600' : 'text-slate-400 group-hover:text-slate-600'
-                                  }`}
-                                />
-                              )}
-                              <span className={`font-medium flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{subItem.label}</span>
-                              {isActive && (
-                                <div className="flex-shrink-0 w-1 sm:w-1.5 h-1 sm:h-1.5 bg-amber-600 rounded-full"></div>
-                              )}
-                              {language === 'ar' && (
-                                <SubIcon
-                                  className={`flex-shrink-0 w-3 sm:w-4 h-3 sm:h-4 ${
-                                    isActive ? 'text-amber-600' : 'text-slate-400 group-hover:text-slate-600'
-                                  }`}
-                                />
-                              )}
-                            </Link>
-                          </li>
+                            <li key={item.id}>
+                                <Link
+                                    to={item.to}
+                                    id={item.id}
+                                    className={`sb-link p-ripple ${active ? 'sb-link--active' : ''}`}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: isCollapsed ? 0 : '0.75rem',
+                                        justifyContent: isCollapsed ? 'center' : 'flex-start',
+                                        padding: isCollapsed ? '0.6875rem' : '0.5625rem 0.625rem',
+                                        background: active ? 'rgba(35,90,228,0.18)' : 'transparent',
+                                        color: active ? '#ffffff' : 'rgba(255,255,255,0.65)',
+                                        fontWeight: active ? 600 : 450,
+                                        fontSize: '0.8125rem',
+                                        borderRadius: '0.5rem',
+                                        transition: 'all 0.15s ease',
+                                        position: 'relative',
+                                        textDecoration: 'none',
+                                    }}
+                                >
+                                    {active && (
+                                        <span style={{
+                                            position: 'absolute',
+                                            [isRtl ? 'right' : 'left']: '-0.625rem',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            width: '0.1875rem',
+                                            height: '1.25rem',
+                                            borderRadius: '0 0.25rem 0.25rem 0',
+                                            background: '#235ae4',
+                                            boxShadow: '0 0 8px rgba(35,90,228,0.6)',
+                                        }} />
+                                    )}
+                                    <span style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: '1.875rem', height: '1.875rem',
+                                        borderRadius: '0.4375rem', flexShrink: 0,
+                                        background: active ? 'rgba(35,90,228,0.22)' : 'transparent',
+                                    }}>
+                                        <Icon style={{ width: 16, height: 16 }} strokeWidth={active ? 2.25 : 1.75} />
+                                    </span>
+                                    {!isCollapsed && (
+                                        <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {item.label}
+                                        </span>
+                                    )}
+                                    <Ripple />
+                                </Link>
+                            </li>
                         );
-                      })}
-                    </ul>
-                  )}
-                </li>
-              );
-            }
+                    })}
+                </ul>
+            </nav>
 
-            // Handle regular menu items
-            const isActive = location.pathname === item.path;
+            {/* Tooltip for collapsed mode */}
+            {isCollapsed && (
+                <Tooltip
+                    target={NAV_ITEMS.map((i) => `#${i.id}`).join(',')}
+                    position={isRtl ? 'left' : 'right'}
+                />
+            )}
 
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2 sm:gap-3'} px-2 sm:px-3 py-2 sm:py-3 rounded-lg transition-all group ${
-                    isActive
-                      ? 'bg-amber-50 text-amber-600'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                  title={isCollapsed ? item.label : undefined}
+            {/* ── Version badge ─────────────────────────────── */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: isCollapsed ? '0.625rem 0.375rem' : '0.625rem 0.75rem', flexShrink: 0 }}>
+                {!isCollapsed ? (
+                    <div style={{
+                        padding: '0.625rem 0.75rem', borderRadius: '0.5rem',
+                        background: 'rgba(35,90,228,0.07)', border: '1px solid rgba(35,90,228,0.14)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    }}>
+                        <div>
+                            <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>Orderium ERP</div>
+                            <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)' }}>v2.0.0 PRO</div>
+                        </div>
+                        <Badge value="PRO" severity="info" style={{ fontSize: '0.5rem' }} />
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <Badge value="P" severity="info" style={{ fontSize: '0.5rem' }} />
+                    </div>
+                )}
+            </div>
+
+            {/* ── Collapse button ───────────────────────────── */}
+            <div className="hidden lg:flex" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: isCollapsed ? '0.5rem 0.375rem' : '0.5rem 0.625rem', flexShrink: 0 }}>
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="sb-collapse-btn sb-collapse-bottom"
+                    title={isCollapsed ? 'Expand' : 'Collapse'}
+                    style={{
+                        display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'flex-start',
+                        gap: '0.5rem',
+                        width: '100%', padding: isCollapsed ? '0.5rem' : '0.5rem 0.625rem',
+                        borderRadius: '0.5rem',
+                        background: 'transparent', border: 'none',
+                        color: 'rgba(255,255,255,0.4)', cursor: 'pointer',
+                        fontSize: '0.75rem', fontWeight: 500,
+                        transition: 'all 0.15s ease',
+                    }}
                 >
-                  {language !== 'ar' && (
-                    <Icon
-                      className={`flex-shrink-0 ${isCollapsed ? 'w-5 sm:w-6 h-5 sm:h-6' : 'w-4 sm:w-5 h-4 sm:h-5'} ${
-                        isActive ? 'text-amber-600' : 'text-slate-500 group-hover:text-slate-700'
-                      }`}
-                    />
-                  )}
-                  {!isCollapsed && (
-                    <>
-                      <span className={`font-medium text-xs sm:text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{item.label}</span>
-                      {isActive && (
-                        <div className="flex-shrink-0 w-1 sm:w-1.5 h-1 sm:h-1.5 bg-amber-600 rounded-full"></div>
-                      )}
-                    </>
-                  )}
-                  {language === 'ar' && (
-                    <Icon
-                      className={`flex-shrink-0 ${isCollapsed ? 'w-5 sm:w-6 h-5 sm:h-6' : 'w-4 sm:w-5 h-4 sm:h-5'} ${
-                        isActive ? 'text-amber-600' : 'text-slate-500 group-hover:text-slate-700'
-                      }`}
-                    />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                    <span style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem',
+                        border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0,
+                    }}>
+                        {isCollapsed
+                            ? (isRtl ? <ChevronLeft style={{ width: '0.75rem', height: '0.75rem' }} /> : <ChevronRight style={{ width: '0.75rem', height: '0.75rem' }} />)
+                            : (isRtl ? <ChevronRight style={{ width: '0.75rem', height: '0.75rem' }} /> : <ChevronLeft style={{ width: '0.75rem', height: '0.75rem' }} />)
+                        }
+                    </span>
+                    {!isCollapsed && <span style={{ whiteSpace: 'nowrap' }}>Réduire</span>}
+                </button>
+            </div>
 
-      {/* Bottom Section - Optional */}
-      {!isCollapsed && (
-        <div className={`flex-shrink-0 p-2 sm:p-4 border-t border-slate-200 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-2 sm:p-3">
-            <p className="text-xs font-semibold text-amber-900 mb-1">
-              {t('adminBackoffice')}
-            </p>
-            <p className="text-xs text-amber-700">v2.0.0</p>
-          </div>
-        </div>
-      )}
-    </aside>
-  );
+            <style>{`
+                .sb-link:hover { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.92) !important; }
+                .sb-link--active:hover { background: rgba(35,90,228,0.22) !important; }
+                .sb-collapse-btn:hover { background: rgba(255,255,255,0.08) !important; color: rgba(255,255,255,0.7) !important; }
+                .sb-collapse-bottom:hover { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.7) !important; }
+                .sidebar-enterprise nav::-webkit-scrollbar { width: 3px; }
+                .sidebar-enterprise nav::-webkit-scrollbar-track { background: transparent; }
+                .sidebar-enterprise nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+            `}</style>
+        </aside>
+    );
 };

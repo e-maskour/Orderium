@@ -1,131 +1,166 @@
-import { Clock, TrendingUp, Package, Users } from 'lucide-react';
+import { Clock, TrendingUp, Package, Users, ShoppingBag, Bell } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../lib/formatters';
 import type { IRecentActivity as Activity } from '../../modules/statistics/statistics.interface';
 
 interface RecentActivityProps {
-  activities?: Activity[];
+    activities?: Activity[];
+}
+
+const iconConfig: Record<string, { bg: string; color: string; shadow: string }> = {
+    order: { bg: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff', shadow: 'rgba(59,130,246,0.22)' },
+    customer: { bg: 'linear-gradient(135deg,#a855f7,#9333ea)', color: '#fff', shadow: 'rgba(168,85,247,0.22)' },
+    product: { bg: 'linear-gradient(135deg,#0ea5e9,#0284c7)', color: '#fff', shadow: 'rgba(14,165,233,0.22)' },
+    revenue: { bg: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', shadow: 'rgba(34,197,94,0.22)' },
+    default: { bg: 'linear-gradient(135deg,#64748b,#475569)', color: '#fff', shadow: 'rgba(100,116,139,0.22)' },
+};
+
+const typeBadgeConfig: Record<string, { bg: string; color: string; border: string; label: string }> = {
+    order: { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label: 'Order' },
+    customer: { bg: '#faf5ff', color: '#9333ea', border: '#e9d5ff', label: 'Customer' },
+    product: { bg: '#f0f9ff', color: '#0284c7', border: '#bae6fd', label: 'Product' },
+    revenue: { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0', label: 'Revenue' },
+};
+
+function getIcon(type: string) {
+    switch (type) {
+        case 'order': return ShoppingBag;
+        case 'customer': return Users;
+        case 'product': return Package;
+        case 'revenue': return TrendingUp;
+        default: return Bell;
+    }
 }
 
 export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
-  const { t, language } = useLanguage();
+    const { t, language } = useLanguage();
 
-  // Helper function to format relative time
-  const formatRelativeTime = (timestamp: string): string => {
-    const now = new Date();
-    const activityTime = new Date(timestamp);
-    const diffInSeconds = Math.floor((now.getTime() - activityTime.getTime()) / 1000);
+    const formatRelativeTime = (timestamp: string): string => {
+        const now = new Date();
+        const diff = Math.floor((now.getTime() - new Date(timestamp).getTime()) / 1000);
+        if (diff < 60) return `${diff} ${t('secondsAgo') || 's ago'}`;
+        if (diff < 3600) return `${Math.floor(diff / 60)} ${t('minutesAgo') || 'min ago'}`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('hoursAgo') || 'h ago'}`;
+        return `${Math.floor(diff / 86400)} ${t('daysAgo') || 'd ago'}`;
+    };
 
-    if (diffInSeconds < 60) {
-      return `${diffInSeconds} ${t('secondsAgo') || 'seconds ago'}`;
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} ${t('minutesAgo') || 'min ago'}`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} ${t('hoursAgo') || 'hours ago'}`;
-    } else {
-      const days = Math.floor(diffInSeconds / 86400);
-      return `${days} ${t('daysAgo') || 'days ago'}`;
-    }
-  };
-
-  // If no activities, show empty state
-  if (!activities || activities.length === 0) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-        <div className="mb-4">
-          <h3 className="text-lg font-bold text-slate-800">{t('recentActivity')}</h3>
-          <p className="text-sm text-slate-500 mt-1">{t('latestUpdates')}</p>
+    const header = (
+        <div className="db-chart-header">
+            <div className="db-chart-header-left">
+                <div className="db-chart-icon" style={{
+                    background: 'linear-gradient(135deg,#235ae4,#1a47b8)',
+                    boxShadow: '0 4px 10px rgba(35,90,228,0.28)',
+                }}>
+                    <Bell style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+                </div>
+                <div>
+                    <h3 className="db-chart-title">{t('recentActivity')}</h3>
+                    <p className="db-chart-subtitle">{t('latestUpdates')}</p>
+                </div>
+            </div>
+            <span className="db-chart-badge" style={{
+                background: '#f0fdf4', color: '#16a34a',
+                border: '1px solid #bbf7d0',
+            }}>
+                <span className="db-live-dot" />Live
+            </span>
         </div>
-        <div className="text-center py-12">
-          <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm text-slate-500">{t('noRecentActivity') || 'No recent activity'}</p>
-        </div>
-      </div>
     );
-  }
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'order':
-        return Package;
-      case 'customer':
-        return Users;
-      case 'product':
-        return Package;
-      case 'revenue':
-        return TrendingUp;
-      default:
-        return Clock;
-    }
-  };
-
-  const getIconColor = (type: string) => {
-    switch (type) {
-      case 'order':
-        return 'bg-blue-50 text-blue-600';
-      case 'customer':
-        return 'bg-purple-50 text-purple-600';
-      case 'product':
-        return 'bg-orange-50 text-orange-600';
-      case 'revenue':
-        return 'bg-green-50 text-green-600';
-      default:
-        return 'bg-slate-50 text-slate-600';
-    }
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-slate-800">{t('recentActivity')}</h3>
-        <p className="text-sm text-slate-500 mt-1">{t('latestUpdates')}</p>
-      </div>
-
-      <div className="space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {activities.map((activity, index) => {
-            const Icon = getIcon(activity.type);
-            const iconColor = getIconColor(activity.type);
-
-            return (
-              <div
-                key={index}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 border border-slate-100 transition-colors group cursor-pointer"
-              >
-                <div className={`w-9 h-9 rounded-lg ${iconColor} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-                  <Icon className="w-4 h-4" strokeWidth={2} />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
-                        {activity.title}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5 truncate">
-                        {activity.description}
-                      </p>
+    if (!activities || activities.length === 0) {
+        return (
+            <div className="db-chart-card">
+                {header}
+                <div className="db-empty-state">
+                    <div className="db-empty-state__icon">
+                        <Clock style={{ width: '1.5rem', height: '1.5rem', color: '#9ca3af' }} />
                     </div>
-                    {activity.value !== undefined && (
-                      <span className="text-xs font-bold text-slate-800 whitespace-nowrap">
-                        {formatCurrency(activity.value, language)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 mt-1.5">
-                    <Clock className="w-3 h-3 text-slate-400" />
-                    <span className="text-xs text-slate-400 font-medium">
-                      {formatRelativeTime(activity.timestamp)}
-                    </span>
-                  </div>
+                    <p className="db-empty-state__text">
+                        {t('noRecentActivity') || 'No recent activity'}
+                    </p>
                 </div>
-              </div>
-            );
-          })}
+            </div>
+        );
+    }
+
+    return (
+        <div className="db-chart-card">
+            {header}
+            <div className="db-activity-timeline" style={{ paddingTop: '0.25rem' }}>
+                {activities.map((activity, index) => {
+                    const Icon = getIcon(activity.type);
+                    const cfg = iconConfig[activity.type] || iconConfig.default;
+                    const badge = typeBadgeConfig[activity.type];
+
+                    return (
+                        <div key={index} className="db-activity-item">
+                            {/* Icon */}
+                            <div style={{
+                                width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem',
+                                background: cfg.bg, boxShadow: `0 3px 8px ${cfg.shadow}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                            }}>
+                                <Icon style={{ width: '1rem', height: '1rem', color: '#fff' }} strokeWidth={2} />
+                            </div>
+
+                            {/* Content */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        {/* Type badge + title row */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.1875rem', flexWrap: 'wrap' }}>
+                                            {badge && (
+                                                <span style={{
+                                                    fontSize: '0.625rem', fontWeight: 700,
+                                                    padding: '0.125rem 0.4375rem',
+                                                    borderRadius: '9999px',
+                                                    background: badge.bg, color: badge.color,
+                                                    border: `1px solid ${badge.border}`,
+                                                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                                                    flexShrink: 0,
+                                                }}>
+                                                    {badge.label}
+                                                </span>
+                                            )}
+                                            <p style={{
+                                                fontSize: '0.8125rem', fontWeight: 700, color: '#1e293b',
+                                                margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                            }}>
+                                                {activity.title}
+                                            </p>
+                                        </div>
+                                        <p style={{
+                                            fontSize: '0.75rem', color: '#64748b', margin: 0,
+                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                        }}>
+                                            {activity.description}
+                                        </p>
+                                    </div>
+
+                                    {/* Value + time */}
+                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                        {activity.value !== undefined && (
+                                            <p style={{
+                                                fontSize: '0.8125rem', fontWeight: 700, color: '#0f172a',
+                                                margin: '0 0 0.125rem', fontVariantNumeric: 'tabular-nums',
+                                            }}>
+                                                {formatCurrency(activity.value, language)}
+                                            </p>
+                                        )}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'flex-end' }}>
+                                            <Clock style={{ width: '0.625rem', height: '0.625rem', color: '#cbd5e1' }} />
+                                            <span style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 500 }}>
+                                                {formatRelativeTime(activity.timestamp)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };

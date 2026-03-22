@@ -1,267 +1,262 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Plus, Pencil, Trash2, Calendar, Search } from 'lucide-react';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
-import { Checkbox } from '../../components/ui/checkbox';
-import { FormField } from '../../components/ui/form-field';
-import { Link } from 'react-router-dom';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Checkbox } from 'primereact/checkbox';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Link, useNavigate } from 'react-router-dom';
 import { paymentTermsService, PaymentTerm, IPaymentTerm, CreatePaymentTermDTO, UpdatePaymentTermDTO } from '../../modules/payment-terms';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
+import { MobileList } from '../../components/MobileList';
 
 export default function PaymentTerms() {
-  const { t } = useLanguage();
-  const queryClient = useQueryClient();
-  const [showModal, setShowModal] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [formData, setFormData] = useState<IPaymentTerm>({
-    key: '',
-    label: '',
-    days: 0,
-    isDefault: false,
-  });
-
-  const { data: config, isLoading } = useQuery({
-    queryKey: ['payment-terms', 'configuration'],
-    queryFn: () => paymentTermsService.getConfiguration(),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (data: CreatePaymentTermDTO) => paymentTermsService.createTerm(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payment-terms'] });
-      closeModal();
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ index, data }: { index: number; data: UpdatePaymentTermDTO }) =>
-      paymentTermsService.updateTerm(index, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payment-terms'] });
-      closeModal();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (index: number) => paymentTermsService.deleteTerm(index),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payment-terms'] });
-    },
-  });
-
-  const terms: PaymentTerm[] = config?.terms || [];
-  const defaultTerm = config?.default || '';
-
-  const generateSlug = (label: string) => {
-    return label
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-      .replace(/\s+/g, '_'); // Replace spaces with underscores
-  };
-
-  const openCreateModal = () => {
-    setEditingIndex(null);
-    setFormData({ key: '', label: '', days: 0, isDefault: false });
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingIndex(null);
-    setFormData({ key: '', label: '', days: 0, isDefault: false });
-  };
-
-  const openEditModal = (index: number) => {
-    setEditingIndex(index);
-    setFormData(terms[index]);
-    setShowModal(true);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (editingIndex !== null) {
-      updateMutation.mutate({ index: editingIndex, data: formData });
-    } else {
-      createMutation.mutate(formData);
-    }
-  };
-
-  const handleDelete = (index: number) => {
-    toastConfirm(t('confirmDeletePaymentTerm'), () => {
-      deleteMutation.mutate(index);
+    const { t } = useLanguage();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const [showModal, setShowModal] = useState(false);
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    const [selectedRows, setSelectedRows] = useState<(PaymentTerm & { _idx: number })[]>([]);
+    const [formData, setFormData] = useState<IPaymentTerm>({
+        key: '',
+        label: '',
+        days: 0,
+        isDefault: false,
     });
-  };
 
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="p-6 flex items-center justify-center h-64">
-          <div className="text-slate-600">{t('loading')}</div>
-        </div>
-      </AdminLayout>
-    );
-  }
+    const { data: config, isLoading } = useQuery({
+        queryKey: ['payment-terms', 'configuration'],
+        queryFn: () => paymentTermsService.getConfiguration(),
+    });
 
-  return (
-    <AdminLayout>
-      <PageHeader
-        icon={Calendar}
-        title={t('paymentTerms')}
-        subtitle={t('configurePaymentTermsAndDueDates')}
-        actions={
-          <Link
-            to="/configurations"
-            className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('retour')}
-          </Link>
+    const createMutation = useMutation({
+        mutationFn: (data: CreatePaymentTermDTO) => paymentTermsService.createTerm(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['payment-terms'] });
+            closeModal();
+        },
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: ({ index, data }: { index: number; data: UpdatePaymentTermDTO }) =>
+            paymentTermsService.updateTerm(index, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['payment-terms'] });
+            closeModal();
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (index: number) => paymentTermsService.deleteTerm(index),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['payment-terms'] });
+        },
+    });
+
+    const terms: PaymentTerm[] = config?.terms || [];
+    const defaultTerm = config?.default || '';
+
+    const generateSlug = (label: string) => {
+        return label
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s]/g, '')
+            .replace(/\s+/g, '_');
+    };
+
+    const openCreateModal = () => {
+        setEditingIndex(null);
+        setFormData({ key: '', label: '', days: 0, isDefault: false });
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setEditingIndex(null);
+        setFormData({ key: '', label: '', days: 0, isDefault: false });
+    };
+
+    const openEditModal = (index: number) => {
+        setEditingIndex(index);
+        setFormData(terms[index]);
+        setShowModal(true);
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (editingIndex !== null) {
+            updateMutation.mutate({ index: editingIndex, data: formData });
+        } else {
+            createMutation.mutate(formData);
         }
-      />
+    };
 
-      <div className="bg-white rounded-lg border border-slate-200">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Input
-              type="text"
-              placeholder={t('searchPaymentTerms')}
-              leadingIcon={Search}
-              className="w-64"
+    const handleDelete = (index: number) => {
+        toastConfirm(t('confirmDeletePaymentTerm'), () => {
+            deleteMutation.mutate(index);
+        });
+    };
+
+    if (isLoading) {
+        return (
+            <AdminLayout>
+                <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
+                    <div style={{ color: '#475569' }}>{t('loading')}</div>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    return (
+        <AdminLayout>
+            <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+            <PageHeader
+                icon={Calendar}
+                title={t('paymentTerms')}
+                subtitle={t('configurePaymentTermsAndDueDates')}
+                actions={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Button
+                            onClick={openCreateModal}
+                            icon={<Plus style={{ width: 16, height: 16 }} />}
+                            label={t('addPaymentTerm')}
+                            size="small"
+                        />
+                    </div>
+                }
             />
-          </div>
-          <Button onClick={openCreateModal} leadingIcon={Plus}>
-            {t('addPaymentTerm')}
-          </Button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('label')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('key')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('days')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {terms.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                    {t('noPaymentTermsConfigured')}
-                  </td>
-                </tr>
-              ) : (
-                terms.map((term, index) => (
-                  <tr key={index} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-800">{term.label}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{term.key}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{term.days} {t('daysLabel')}</td>
-                    <td className="px-6 py-4">
-                      {term.isDefault && (
-                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                          {t('default')}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => openEditModal(index)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      {/* Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={closeModal}
-        title={editingIndex !== null ? t('editPaymentTerm') : t('addPaymentTerm')}
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label={t('label')} required>
-            <Input
-              type="text"
-              value={formData.label}
-              onChange={(e) => {
-                const newLabel = e.target.value;
-                setFormData({
-                  ...formData,
-                  label: newLabel,
-                  key: editingIndex === null ? generateSlug(newLabel) : formData.key
-                });
-              }}
-              placeholder={t('paymentTermLabelPlaceholder')}
-              required
-              fullWidth
-            />
-          </FormField>
+            <div className="responsive-table-mobile">
+                <MobileList
+                    items={terms}
+                    keyExtractor={(term: PaymentTerm) => term.key}
+                    loading={isLoading}
+                    totalCount={terms.length}
+                    countLabel="conditions"
+                    emptyMessage="Aucune condition configurée"
+                    config={{
+                        topLeft: (term: PaymentTerm) => term.label,
+                        topRight: (term: PaymentTerm) => `${term.days} ${t('daysLabel')}`,
+                        bottomLeft: (term: PaymentTerm) => term.key,
+                        bottomRight: (term: PaymentTerm) => term.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null,
+                    }}
+                />
+            </div>
+            <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <DataTable
+                    className="pt-datatable"
+                    value={terms.map((t2, i) => ({ ...t2, _idx: i }))}
+                    selection={selectedRows}
+                    onSelectionChange={(e) => setSelectedRows(e.value as (PaymentTerm & { _idx: number })[])}
+                    selectionMode="checkbox"
+                    dataKey="_idx"
+                    paginator
+                    paginatorPosition="top"
+                    rows={25}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    removableSort
+                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noPaymentTermsConfigured')}</div>}
+                    paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                >
+                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                    <Column field="label" header={t('label')} sortable body={(row) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.label}</span>} />
+                    <Column field="key" header={t('key')} sortable body={(row) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.key}</span>} />
+                    <Column field="days" header={t('days')} sortable body={(row) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.days} {t('daysLabel')}</span>} />
+                    <Column field="isDefault" header={t('status')} body={(row) => row.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null} />
+                    <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row) => (
+                        <div style={{ textAlign: 'right' }}>
+                            <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row._idx)} text rounded severity="info" />
+                            <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row._idx)} text rounded severity="danger" />
+                        </div>
+                    )} />
+                </DataTable>
+            </div>
 
-          <FormField label={t('key')} hint={editingIndex === null ? t('autoGeneratedFromLabel') : t('lowercaseWithUnderscores')} required>
-            <Input
-              type="text"
-              value={formData.key}
-              onChange={(e) => setFormData({ ...formData, key: generateSlug(e.target.value) })}
-              placeholder={t('paymentTermKeyPlaceholder')}
-              readOnly={editingIndex === null}
-              required
-              fullWidth
-              className={editingIndex === null ? 'bg-slate-50' : ''}
-            />
-          </FormField>
-
-          <FormField label={t('days')} hint={t('numberOfDaysUntilDue')} required>
-            <Input
-              type="number"
-              min="0"
-              value={formData.days}
-              onChange={(e) => setFormData({ ...formData, days: parseInt(e.target.value) })}
-              required
-              fullWidth
-            />
-          </FormField>
-
-          <Checkbox
-            checked={formData.isDefault}
-            onChange={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
-            label={t('setAsDefaultPaymentTerm')}
-          />
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={closeModal}>
-              {t('cancel')}
-            </Button>
-            <Button
-              type="submit"
-              loading={updateMutation.isPending}
-              loadingText={t('saving')}
+            <Modal
+                isOpen={showModal}
+                onClose={closeModal}
+                title={editingIndex !== null ? t('editPaymentTerm') : t('addPaymentTerm')}
+                footer={
+                    <div className="flex justify-content-end gap-2">
+                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
+                        <Button
+                            form="payment-terms-modal-form"
+                            type="submit"
+                            loading={updateMutation.isPending}
+                            label={t('save')}
+                        />
+                    </div>
+                }
             >
-              {t('save')}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-    </AdminLayout>
-  );
+                <form id="payment-terms-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('label')} <span style={{ color: '#ef4444' }}>*</span></label>
+                        <InputText
+                            type="text"
+                            value={formData.label}
+                            onChange={(e) => {
+                                const newLabel = e.target.value;
+                                setFormData({
+                                    ...formData,
+                                    label: newLabel,
+                                    key: editingIndex === null ? generateSlug(newLabel) : formData.key
+                                });
+                            }}
+                            placeholder={t('paymentTermLabelPlaceholder')}
+                            required
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                            {t('key')} <span style={{ color: '#ef4444' }}>*</span>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '0.5rem' }}>{editingIndex === null ? t('autoGeneratedFromLabel') : t('lowercaseWithUnderscores')}</span>
+                        </label>
+                        <InputText
+                            type="text"
+                            value={formData.key}
+                            onChange={(e) => setFormData({ ...formData, key: generateSlug(e.target.value) })}
+                            placeholder={t('paymentTermKeyPlaceholder')}
+                            readOnly={editingIndex === null}
+                            required
+                            style={{ width: '100%', ...(editingIndex === null ? { background: '#f8fafc' } : {}) }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
+                            {t('days')} <span style={{ color: '#ef4444' }}>*</span>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '0.5rem' }}>{t('numberOfDaysUntilDue')}</span>
+                        </label>
+                        <InputText
+                            type="number"
+                            min="0"
+                            value={String(formData.days)}
+                            onChange={(e) => setFormData({ ...formData, days: parseInt(e.target.value) })}
+                            required
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Checkbox
+                            checked={formData.isDefault}
+                            onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
+                        />
+                        <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('setAsDefaultPaymentTerm')}</label>
+                    </div>
+
+                </form>
+            </Modal>
+            </div>
+        </AdminLayout>
+    );
 }

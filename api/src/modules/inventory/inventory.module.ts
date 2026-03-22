@@ -1,16 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-
-// Entities
-import { Warehouse } from './entities/warehouse.entity';
-import { UnitOfMeasure } from './entities/unit-of-measure.entity';
-import { StockQuant } from './entities/stock-quant.entity';
-import { StockMovement } from './entities/stock-movement.entity';
-import {
-  InventoryAdjustment,
-  AdjustmentLine,
-} from './entities/inventory-adjustment.entity';
-import { Product } from '../products/entities/product.entity';
+import { TenantModule } from '../tenant/tenant.module';
 
 // Services
 import { WarehouseService } from './warehouse.service';
@@ -26,17 +15,7 @@ import { StockMovementController } from './stock-movement.controller';
 import { InventoryAdjustmentController } from './inventory-adjustment.controller';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Warehouse,
-      UnitOfMeasure,
-      StockQuant,
-      StockMovement,
-      InventoryAdjustment,
-      AdjustmentLine,
-      Product,
-    ]),
-  ],
+  imports: [TenantModule],
   controllers: [
     WarehouseController,
     UnitOfMeasureController,
@@ -57,4 +36,4 @@ import { InventoryAdjustmentController } from './inventory-adjustment.controller
     InventoryAdjustmentService,
   ],
 })
-export class InventoryModule {}
+export class InventoryModule { }

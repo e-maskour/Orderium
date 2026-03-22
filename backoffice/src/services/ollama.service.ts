@@ -115,7 +115,7 @@ export class OllamaService {
 
     const decoder = new TextDecoder();
     let buffer = '';
-    let toolCallsDetected: ToolCall[] = [];
+    const toolCallsDetected: ToolCall[] = [];
 
     while (true) {
       const { done, value } = await reader.read();

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import { TrendingUp } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-import { formatCurrency, formatNumber } from '../../lib/formatters';
+import { formatCurrency } from '../../lib/formatters';
 
 interface RevenueChartProps {
   data: {
@@ -45,7 +46,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
           stops: [0, 90, 100],
         },
       },
-      colors: ['#10b981', '#3b82f6'],
+      colors: ['#235ae4', '#a855f7'],
       xaxis: {
         categories: data.dates,
         labels: {
@@ -156,14 +157,32 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-bold text-slate-800">{t('revenueTrend')}</h3>
-          <p className="text-sm text-slate-500 mt-1">{t('last7Days')}</p>
+    <div className="db-chart-card">
+      <div className="db-chart-header">
+        <div className="db-chart-header-left">
+          <div className="db-chart-icon" style={{
+            background: 'linear-gradient(135deg,#235ae4,#1a47b8)',
+            boxShadow: '0 4px 10px rgba(35,90,228,0.28)',
+          }}>
+            <TrendingUp style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="db-chart-title">{t('revenue')} & {t('orders')}</h3>
+            <p className="db-chart-subtitle">{t('last7Days')}</p>
+          </div>
         </div>
+        <span className="db-chart-badge" style={{
+          background: '#f0fdf4', color: '#16a34a',
+          border: '1px solid #bbf7d0',
+        }}>
+          <span className="db-live-dot" />{t('last7Days')}
+        </span>
       </div>
-      <ReactApexChart options={chartOptions} series={series} type="area" height={280} />
+      <div className="db-chart-body">
+        {Object.keys(chartOptions).length > 0 && (
+          <ReactApexChart options={chartOptions} series={series} type="area" height={280} />
+        )}
+      </div>
     </div>
   );
 };

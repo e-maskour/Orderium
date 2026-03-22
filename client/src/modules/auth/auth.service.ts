@@ -8,42 +8,98 @@ const USER_KEY = 'orderium_user';
 export class AuthService {
   async checkPhoneExists(phoneNumber: string): Promise<PhoneCheckResponse> {
     try {
-      // Check if phone exists in Portal table
-      const portalResponse = await http<{ success: boolean; user?: any }>(`/api/portal/user/${phoneNumber}`);
-      if (portalResponse.success && portalResponse.user) {
-        return {
-          exists: true,
-          customerName: portalResponse.user.customerName,
-          customerId: portalResponse.user.customerId,
+      const response = await http<{
+        data: {
+          exists: boolean;
+          id?: number;
+          phoneNumber?: string;
+          name?: string;
+          customerId?: number;
+          customerName?: string;
+          status?: string;
+          address?: string;
+          deliveryAddress?: string;
+          latitude?: number;
+          longitude?: number;
+          googleMapsUrl?: string;
+          wazeUrl?: string;
+          email?: string;
         };
-      }
-      
-      // If not in Portal, check Partner table
-      try {
-        const partnerResponse = await http<{ partner?: { id: number; name: string; phoneNumber: string } }>(`/api/partners/${phoneNumber}`);
-        if (partnerResponse.partner) {
-          return {
-            exists: false, // Not in Portal, but exists as partner
-            customerName: partnerResponse.partner.name,
-            customerId: partnerResponse.partner.id,
-          };
-        }
-      } catch {
-        // Partner not found either
-      }
-      
+      }>(`/api/portal/user/${encodeURIComponent(phoneNumber)}`);
+
+      const d = response.data;
+      return {
+        exists: d.exists,
+        id: d.id ?? undefined,
+        phoneNumber: d.phoneNumber ?? undefined,
+        name: d.name ?? d.customerName ?? undefined,
+        customerName: d.customerName ?? undefined,
+        customerId: d.customerId ?? undefined,
+        status: d.status ?? undefined,
+        address: d.address ?? undefined,
+        deliveryAddress: d.deliveryAddress ?? undefined,
+        latitude: d.latitude ?? undefined,
+        longitude: d.longitude ?? undefined,
+        googleMapsUrl: d.googleMapsUrl ?? undefined,
+        wazeUrl: d.wazeUrl ?? undefined,
+        email: d.email ?? undefined,
+      };
+    } catch {
       return { exists: false };
-    } catch (error) {
+    }
+  }
+
+  async getPortalUserById(id: number): Promise<PhoneCheckResponse> {
+    try {
+      const response = await http<{
+        data: {
+          exists: boolean;
+          id?: number;
+          phoneNumber?: string;
+          name?: string;
+          customerId?: number;
+          customerName?: string;
+          status?: string;
+          address?: string;
+          deliveryAddress?: string;
+          latitude?: number;
+          longitude?: number;
+          googleMapsUrl?: string;
+          wazeUrl?: string;
+          email?: string;
+        };
+      }>(`/api/portal/user/id/${id}`);
+
+      const d = response.data;
+      return {
+        exists: d.exists,
+        id: d.id ?? undefined,
+        phoneNumber: d.phoneNumber ?? undefined,
+        name: d.name ?? d.customerName ?? undefined,
+        customerName: d.customerName ?? undefined,
+        customerId: d.customerId ?? undefined,
+        status: d.status ?? undefined,
+        address: d.address ?? undefined,
+        deliveryAddress: d.deliveryAddress ?? undefined,
+        latitude: d.latitude ?? undefined,
+        longitude: d.longitude ?? undefined,
+        googleMapsUrl: d.googleMapsUrl ?? undefined,
+        wazeUrl: d.wazeUrl ?? undefined,
+        email: d.email ?? undefined,
+      };
+    } catch {
       return { exists: false };
     }
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await http<AuthResponse>('/api/portal/login', {
+    const raw = await http<{ data: AuthResponse }>('/api/portal/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    
+
+    const response = raw.data ?? (raw as unknown as AuthResponse);
+
     // Transform user to model
     if (response.user) {
       const userModel = PortalUser.fromApiResponse(response.user);
@@ -51,28 +107,30 @@ export class AuthService {
         ...response,
         user: userModel,
       };
-      
+
       // Save token and user to localStorage
       if (response.token) {
         localStorage.setItem(TOKEN_KEY, response.token);
         localStorage.setItem(USER_KEY, JSON.stringify(userModel.toJSON()));
       }
-      
+
       return enhancedResponse;
     }
-    
+
     return response;
   }
 
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await http<AuthResponse>('/api/portal/register', {
+    const raw = await http<{ data: AuthResponse }>('/api/portal/register', {
       method: 'POST',
       body: JSON.stringify({
         ...data,
         isCustomer: data.isCustomer ?? true,
       }),
     });
-    
+
+    const response = raw.data ?? (raw as unknown as AuthResponse);
+
     // Transform user to model
     if (response.user) {
       const userModel = PortalUser.fromApiResponse(response.user);
@@ -80,16 +138,16 @@ export class AuthService {
         ...response,
         user: userModel,
       };
-      
+
       // Save token and user to localStorage
       if (response.token) {
         localStorage.setItem(TOKEN_KEY, response.token);
         localStorage.setItem(USER_KEY, JSON.stringify(userModel.toJSON()));
       }
-      
+
       return enhancedResponse;
     }
-    
+
     return response;
   }
 
@@ -105,7 +163,7 @@ export class AuthService {
   getUser(): PortalUser | null {
     const userStr = localStorage.getItem(USER_KEY);
     if (!userStr) return null;
-    
+
     try {
       const userData = JSON.parse(userStr);
       return PortalUser.fromApiResponse(userData);

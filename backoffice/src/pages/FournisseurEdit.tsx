@@ -7,6 +7,7 @@ import { PartnerForm } from '../components/PartnerForm';
 import { Users, ArrowLeft } from 'lucide-react';
 import { toastUpdated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
+import { Button } from 'primereact/button';
 
 export default function FournisseurEdit() {
   const { id } = useParams<{ id: string }>();
@@ -50,9 +51,9 @@ export default function FournisseurEdit() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
+            <div className="animate-spin" style={{ borderRadius: '9999px', height: '2rem', width: '2rem', borderBottom: '2px solid #235ae4' }}></div>
           </div>
         </div>
       </AdminLayout>
@@ -62,9 +63,9 @@ export default function FournisseurEdit() {
   if (!partner) {
     return (
       <AdminLayout>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-8">
-            <p className="text-slate-500">{t('supplierNotFound')}</p>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+            <p style={{ color: '#64748b' }}>{t('supplierNotFound')}</p>
           </div>
         </div>
       </AdminLayout>
@@ -73,31 +74,27 @@ export default function FournisseurEdit() {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* Compact Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/fournisseurs')}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-semibold text-slate-900">{t('editSupplier')}</h1>
-                  <p className="text-sm text-slate-500">{`${t('edit')} ${partner.name}`}</p>
-                </div>
-              </div>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+        {/* Page Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <Button
+              icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
+              onClick={() => navigate('/fournisseurs')}
+              text rounded
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+            />
+            <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #1e1e2d, #16213e)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(30,30,45,0.25)' }}>
+              <Users style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
+            </div>
+            <div>
+              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>{t('editSupplier')}</h1>
+              <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem', fontWeight: 500 }}>{partner.name}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
           <PartnerForm
             partner={partner}
             type="supplier"

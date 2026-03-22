@@ -1,0 +1,91 @@
+export default {
+    // Drive — Navigation
+    drive: 'Drive',
+    myDrive: 'ملفاتي',
+    sharedWithMe: 'مشاركة معي',
+    trash: 'سلة المهملات',
+    starred: 'المفضلة',
+    recentFiles: 'الملفات الأخيرة',
+    allFiles: 'جميع الملفات',
+
+    // Drive — Actions
+    uploadFile: 'رفع ملف',
+    newFolder: 'مجلد جديد',
+    createFolder: 'إنشاء مجلد',
+    folderName: 'اسم المجلد',
+    downloadFile: 'تحميل',
+    shareFile: 'مشاركة',
+    renameFile: 'إعادة التسمية',
+    moveToTrash: 'نقل إلى المهملات',
+    restoreFile: 'استعادة',
+    deleteForever: 'حذف نهائي',
+    openFolder: 'فتح',
+    viewDetails: 'عرض التفاصيل',
+    viewVersions: 'سجل الإصدارات',
+    viewActivity: 'سجل النشاط',
+
+    // Drive — States
+    driveEmpty: 'لا توجد ملفات هنا',
+    driveEmptyDesc: 'ارفع أول ملفاتك أو أنشئ مجلداً جديداً',
+    trashEmpty: 'سلة المهملات فارغة',
+    trashEmptyDesc: 'ستظهر العناصر المحذوفة هنا',
+    sharedEmpty: 'لا توجد مشاركات',
+    sharedEmptyDesc: 'العناصر المشاركة معك ستظهر هنا',
+    searchEmpty: 'لا توجد نتائج',
+    searchEmptyDesc: 'جرّب كلمات مفتاحية مختلفة',
+
+    // Drive — Labels
+    fileName: 'اسم الملف',
+    fileSize: 'الحجم',
+    fileType: 'النوع',
+    owner: 'المالك',
+    lastModified: 'آخر تعديل',
+    uploadedAt: 'تاريخ الرفع',
+    version: 'الإصدار',
+    versions: 'الإصدارات',
+    currentVersion: 'الإصدار الحالي',
+    versionNumber: 'إصدار رقم',
+    versionComment: 'تعليق الإصدار',
+    permission: 'الصلاحية',
+    viewer: 'مشاهد',
+    editor: 'محرر',
+    shareWith: 'مشاركة مع',
+    shareLink: 'رابط المشاركة',
+    expiresAt: 'ينتهي في',
+    sharedBy: 'تمت المشاركة بواسطة',
+    activity: 'النشاط',
+    tags: 'الوسوم',
+    noTags: 'لا توجد وسوم',
+
+    // Drive — Upload
+    uploadDrop: 'اسحب وأفلت ملفاتك هنا',
+    uploadOr: 'أو',
+    uploadBrowse: 'تصفح الملفات',
+    uploading: 'جاري الرفع...',
+    uploadSuccess: 'تم رفع الملف بنجاح',
+    uploadError: 'فشل في رفع الملف',
+    uploadProgress: 'التقدم',
+
+    // Drive — Confirmation
+    confirmTrash: 'نقل إلى المهملات',
+    confirmTrashDesc: 'سيتم نقل هذا العنصر إلى المهملات. يمكنك استعادته لاحقاً.',
+    confirmDeleteForever: 'حذف نهائي',
+    confirmDeleteForeverDesc: 'سيتم حذف هذا العنصر نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    emptyTrash: 'إفراغ المهملات',
+    emptyTrashDesc: 'سيتم حذف جميع عناصر المهملات نهائياً.',
+
+    // Drive — Stats
+    storageUsed: 'المساحة المستخدمة',
+    totalFiles: 'إجمالي الملفات',
+    totalFolders: 'المجلدات',
+    sharedCount: 'مشارَك',
+
+    // Drive — View mode
+    gridView: 'عرض شبكي',
+    listView: 'عرض قائمة',
+    sortBy: 'ترتيب حسب',
+    sortByName: 'الاسم',
+    sortByDate: 'التاريخ',
+    sortBySize: 'الحجم',
+    sortByType: 'النوع',
+};

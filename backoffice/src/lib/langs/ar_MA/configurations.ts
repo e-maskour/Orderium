@@ -247,4 +247,20 @@ export default {
   rounding: 'التقريب',
   roundingPrecision: 'دقة التقريب',
   allCategories: 'جميع الفئات',
+
+  // Inventory Settings
+  inventorySettings: 'إعدادات المخزون',
+  inventorySettingsSubtitle: 'تكوين حركات المخزون التلقائية',
+  incrementStock: 'زيادة المخزون',
+  decrementStock: 'تخفيض المخزون',
+  noAutomaticMovement: 'لا توجد حركة تلقائية',
+  defaultWarehouse: 'المستودع الافتراضي',
+  selectDefaultWarehouse: 'اختر مستودعاً افتراضياً',
+  stockMovementAutomation: 'أتمتة حركات المخزون',
+  incrementOnInvoiceAchat: 'زيادة المخزون عند التحقق من فاتورة شراء',
+  decrementOnInvoiceVente: 'تخفيض المخزون عند التحقق من فاتورة بيع',
+  incrementOnOrderAchat: 'زيادة المخزون عند التحقق من أمر شراء',
+  decrementOnOrderVente: 'تخفيض المخزون عند التحقق من وصل تسليم',
+  inventorySettingsSaved: 'تم حفظ إعدادات المخزون',
+  noWarehouseConfigured: 'لم يتم تكوين مستودع افتراضي. لن يتم إنشاء حركات المخزون.',
 };

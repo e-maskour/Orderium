@@ -10,6 +10,8 @@ export class ProductsService {
       stockFilter,
       categoryIds = [],
       isService,
+      minPrice,
+      maxPrice,
       page = 1,
       limit = 50
     } = params;
@@ -20,6 +22,8 @@ export class ProductsService {
     if (stockFilter) filterBody.stockFilter = stockFilter;
     if (categoryIds.length > 0) filterBody.categoryIds = categoryIds;
     if (isService !== undefined) filterBody.isService = isService;
+    if (minPrice !== undefined) filterBody.minPrice = minPrice;
+    if (maxPrice !== undefined) filterBody.maxPrice = maxPrice;
 
     const response = await apiClient.post<Product[]>(API_ROUTES.PRODUCTS.FILTER, filterBody, {
       params: { page, perPage: limit },
@@ -98,8 +102,8 @@ export class ProductsService {
     const response = await apiClient.upload<any>(API_ROUTES.PRODUCTS.IMAGE_UPLOAD(productId), formData);
     return {
       product: Product.fromApiResponse(response.data.product),
-      imageUrl: response.data.imageUrl,
-      publicId: response.data.publicId,
+      imageUrl: response.data.image?.url ?? '',
+      publicId: response.data.image?.publicId ?? '',
     };
   }
 

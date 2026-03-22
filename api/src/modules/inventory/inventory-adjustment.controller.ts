@@ -24,7 +24,7 @@ import { ADJ } from '../../common/response-codes';
 @ApiTags('Inventory - Adjustments')
 @Controller('inventory/adjustments')
 export class InventoryAdjustmentController {
-  constructor(private readonly adjustmentService: InventoryAdjustmentService) { }
+  constructor(private readonly adjustmentService: InventoryAdjustmentService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new inventory adjustment' })
@@ -65,7 +65,8 @@ export class InventoryAdjustmentController {
   })
   @ApiResponse({ status: 404, description: 'Warehouse not found' })
   async generateCountingList(@Param('warehouseId') warehouseId: string) {
-    const list = await this.adjustmentService.generateCountingList(+warehouseId);
+    const list =
+      await this.adjustmentService.generateCountingList(+warehouseId);
     return ApiRes(ADJ.COUNTING_LIST, list);
   }
 

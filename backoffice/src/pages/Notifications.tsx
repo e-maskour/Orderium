@@ -3,7 +3,7 @@
  * Inspired by enterprise ERP systems (SAP, Odoo, Dynamics 365)
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -33,25 +33,12 @@ import {
 import { toastSuccess, toastDeleted, toastArchived, toastConfirm } from '../services/toast.service';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { Dropdown } from 'primereact/dropdown';
+import { TabView, TabPanel } from 'primereact/tabview';
+import { Menu } from 'primereact/menu';
+import { Checkbox } from 'primereact/checkbox';
 import {
   notificationsService,
   type INotification,
@@ -59,14 +46,17 @@ import {
   NotificationType,
   NotificationPriority,
 } from '../modules/notifications';
-import { cn } from '../lib/utils';
 import { useLanguage } from '../context/LanguageContext';
 
+const tabMapping: Record<string, number> = { unread: 0, all: 1, archived: 2 };
+const tabValues = ['unread', 'all', 'archived'] as const;
 
 export default function Notifications() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, dir } = useLanguage();
+  const menuRef = useRef<Menu>(null);
+  const [menuNotification, setMenuNotification] = useState<INotification | null>(null);
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,38 +137,39 @@ export default function Notifications() {
   });
 
   // Helpers
+  const iconStyle = { width: '1.25rem', height: '1.25rem' };
   const getNotificationIcon = (type: NotificationType) => {
     const iconMap: Record<NotificationType, JSX.Element> = {
-      [NotificationType.NEW_ORDER]: <Package className="w-5 h-5" />,
-      [NotificationType.ORDER_ASSIGNED]: <TruckIcon className="w-5 h-5" />,
-      [NotificationType.ORDER_STATUS_CHANGED]: <Clock className="w-5 h-5" />,
-      [NotificationType.DELIVERY_STATUS_UPDATE]: <TruckIcon className="w-5 h-5" />,
-      [NotificationType.ORDER_CANCELLED]: <XOctagon className="w-5 h-5" />,
-      [NotificationType.PAYMENT_RECEIVED]: <DollarSign className="w-5 h-5" />,
-      [NotificationType.LOW_STOCK]: <AlertTriangle className="w-5 h-5" />,
-      [NotificationType.SYSTEM]: <Settings className="w-5 h-5" />,
-      [NotificationType.INFO]: <Info className="w-5 h-5" />,
-      [NotificationType.WARNING]: <AlertTriangle className="w-5 h-5" />,
-      [NotificationType.ERROR]: <AlertCircle className="w-5 h-5" />,
+      [NotificationType.NEW_ORDER]: <Package style={iconStyle} />,
+      [NotificationType.ORDER_ASSIGNED]: <TruckIcon style={iconStyle} />,
+      [NotificationType.ORDER_STATUS_CHANGED]: <Clock style={iconStyle} />,
+      [NotificationType.DELIVERY_STATUS_UPDATE]: <TruckIcon style={iconStyle} />,
+      [NotificationType.ORDER_CANCELLED]: <XOctagon style={iconStyle} />,
+      [NotificationType.PAYMENT_RECEIVED]: <DollarSign style={iconStyle} />,
+      [NotificationType.LOW_STOCK]: <AlertTriangle style={iconStyle} />,
+      [NotificationType.SYSTEM]: <Settings style={iconStyle} />,
+      [NotificationType.INFO]: <Info style={iconStyle} />,
+      [NotificationType.WARNING]: <AlertTriangle style={iconStyle} />,
+      [NotificationType.ERROR]: <AlertCircle style={iconStyle} />,
     };
     return iconMap[type];
   };
 
-  const getNotificationColor = (type: NotificationType) => {
-    const colorMap: Record<NotificationType, string> = {
-      [NotificationType.NEW_ORDER]: 'bg-green-100 text-green-700',
-      [NotificationType.ORDER_ASSIGNED]: 'bg-blue-100 text-blue-700',
-      [NotificationType.ORDER_STATUS_CHANGED]: 'bg-amber-100 text-amber-700',
-      [NotificationType.DELIVERY_STATUS_UPDATE]: 'bg-purple-100 text-purple-700',
-      [NotificationType.ORDER_CANCELLED]: 'bg-red-100 text-red-700',
-      [NotificationType.PAYMENT_RECEIVED]: 'bg-emerald-100 text-emerald-700',
-      [NotificationType.LOW_STOCK]: 'bg-orange-100 text-orange-700',
-      [NotificationType.SYSTEM]: 'bg-gray-100 text-gray-700',
-      [NotificationType.INFO]: 'bg-sky-100 text-sky-700',
-      [NotificationType.WARNING]: 'bg-yellow-100 text-yellow-700',
-      [NotificationType.ERROR]: 'bg-rose-100 text-rose-700',
+  const getNotificationClassName = (type: NotificationType): string => {
+    const classMap: Record<NotificationType, string> = {
+      [NotificationType.NEW_ORDER]:              'notif-icon notif-icon--new_order',
+      [NotificationType.ORDER_ASSIGNED]:         'notif-icon notif-icon--order_assigned',
+      [NotificationType.ORDER_STATUS_CHANGED]:   'notif-icon notif-icon--order_status_changed',
+      [NotificationType.DELIVERY_STATUS_UPDATE]: 'notif-icon notif-icon--delivery_status_update',
+      [NotificationType.ORDER_CANCELLED]:        'notif-icon notif-icon--order_cancelled',
+      [NotificationType.PAYMENT_RECEIVED]:       'notif-icon notif-icon--payment_received',
+      [NotificationType.LOW_STOCK]:              'notif-icon notif-icon--low_stock',
+      [NotificationType.SYSTEM]:                 'notif-icon notif-icon--system',
+      [NotificationType.INFO]:                   'notif-icon notif-icon--info',
+      [NotificationType.WARNING]:                'notif-icon notif-icon--warning',
+      [NotificationType.ERROR]:                  'notif-icon notif-icon--error',
     };
-    return colorMap[type];
+    return classMap[type] || 'notif-icon notif-icon--info';
   };
 
   const formatDate = (dateString: string) => {
@@ -259,16 +250,210 @@ export default function Notifications() {
     }
   };
 
+  const getNotificationMenuItems = (notification: INotification) => {
+    const items: any[] = [];
+    if (!notification.isRead) {
+      items.push({
+        label: t('markAsRead'),
+        command: () => markAsReadMutation.mutate(notification.id),
+      });
+    }
+    items.push({
+      label: t('archive'),
+      command: () => archiveMutation.mutate(notification.id),
+    });
+    items.push({ separator: true });
+    items.push({
+      label: t('delete'),
+      command: () =>
+        toastConfirm(
+          t('deleteNotifications'),
+          () => deleteManyMutation.mutate([notification.id]),
+          { description: t('confirmDeleteMessage').replace('{{count}}', '1') }
+        ),
+    });
+    return items;
+  };
+
+  const typeOptions = [
+    { label: t('allTypes'), value: 'all' },
+    { label: t('newOrders'), value: NotificationType.NEW_ORDER },
+    { label: t('assigned'), value: NotificationType.ORDER_ASSIGNED },
+    { label: t('statusChanged'), value: NotificationType.ORDER_STATUS_CHANGED },
+    { label: t('payments'), value: NotificationType.PAYMENT_RECEIVED },
+  ];
+
+  const priorityOptions = [
+    { label: t('allPriority'), value: 'all' },
+    { label: t('urgent'), value: NotificationPriority.URGENT },
+    { label: t('high'), value: NotificationPriority.HIGH },
+    { label: t('medium'), value: NotificationPriority.MEDIUM },
+    { label: t('low'), value: NotificationPriority.LOW },
+  ];
+
+  const notificationListContent = isLoading ? (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
+      <RefreshCw className="animate-spin" style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} />
+    </div>
+  ) : notifications.length === 0 ? (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
+      <Bell style={{ width: '4rem', height: '4rem', color: '#9ca3af', marginBottom: '1rem' }} />
+      <p style={{ fontSize: '1.125rem', fontWeight: 500, color: '#6b7280' }}>{t('noNotificationsFound')}</p>
+      <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+        {activeTab === 'unread' ? t('allCaughtUp') : t('tryAdjustingFilters')}
+      </p>
+    </div>
+  ) : (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      {/* Select All */}
+      <div style={{ display: 'flex', alignItems: 'center', padding: '0.5rem 1rem', borderBottom: '1px solid #e5e7eb' }}>
+        <Checkbox
+          checked={selectedNotifications.length === notifications.length}
+          onChange={toggleSelectAll}
+        />
+        <span style={{ marginLeft: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>{t('selectAll')}</span>
+      </div>
+
+      {/* Notification List */}
+      <div>
+        {notifications.map((notification: INotification) => (
+          <div
+            key={notification.id}
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '1rem',
+              padding: '1rem',
+              cursor: 'pointer',
+              borderBottom: '1px solid #e5e7eb',
+              ...(!notification.isRead ? { background: 'rgba(0,0,0,0.03)' } : {}),
+            }}
+            onClick={() => handleNotificationClick(notification)}
+          >
+            {/* Checkbox */}
+            <Checkbox
+              checked={selectedNotifications.includes(notification.id)}
+              onChange={(e) => {
+                e.originalEvent?.stopPropagation();
+                toggleSelectNotification(notification.id);
+              }}
+              style={{ marginTop: '0.25rem' }}
+            />
+
+            {/* Icon */}
+            <div className={getNotificationClassName(notification.type)}>
+              {getNotificationIcon(notification.type)}
+            </div>
+
+            {/* Content */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem',
+                  flexDirection: dir === 'rtl' ? 'row-reverse' : 'row',
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <p style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: !notification.isRead ? '#111827' : '#6b7280',
+                  }}>
+                    {getNotificationTitle(notification)}
+                  </p>
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                    {getNotificationMessage(notification)}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                    {formatDate(notification.dateCreated)}
+                  </p>
+                </div>
+
+                {/* Priority Badge */}
+                {notification.priority !== NotificationPriority.LOW && (
+                  <span style={{
+                    fontSize: '0.75rem',
+                    padding: '0.125rem 0.5rem',
+                    borderRadius: '9999px',
+                    fontWeight: 500,
+                    ...(notification.priority === NotificationPriority.URGENT
+                      ? { background: '#fef2f2', color: '#dc2626' }
+                      : notification.priority === NotificationPriority.HIGH
+                        ? { background: '#ffffff', color: '#374151', border: '1px solid #d1d5db' }
+                        : { background: '#f3f4f6', color: '#374151' }),
+                  }}>
+                    {t(notification.priority as any)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <Button
+              text
+              icon={<MoreVertical style={{ width: '1rem', height: '1rem' }} />}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                setMenuNotification(notification);
+                menuRef.current?.toggle(e as any);
+              }}
+              aria-label={t('moreOptions')}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+            {t('showing')} {((currentPage - 1) * pageSize) + 1} {t('to')}{' '}
+            {Math.min(currentPage * pageSize, total)} {t('of')}{' '}
+            {total} {t('results')}
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Button
+              outlined
+              size="small"
+              label={t('previous')}
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            />
+            <span style={{ fontSize: '0.875rem' }}>
+              {t('page')} {currentPage} {t('of')} {totalPages}
+            </span>
+            <Button
+              outlined
+              size="small"
+              label={t('next')}
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <AdminLayout>
+      <Menu ref={menuRef} model={menuNotification ? getNotificationMenuItems(menuNotification) : []} popup />
       <div
         dir={dir}
-        className={cn(
-          'min-h-[calc(100vh-64px)] flex flex-col max-w-7xl mx-auto w-full',
-          dir === 'rtl' ? 'text-right' : 'text-left'
-        )}
+        style={{
+          minHeight: 'calc(100vh - 64px)',
+          display: 'flex',
+          flexDirection: 'column',
+          maxWidth: '1600px',
+          margin: '0 auto',
+          width: '100%',
+          textAlign: dir === 'rtl' ? 'right' : 'left',
+        }}
       >
-        <div className="flex-shrink-0">
+        <div style={{ flexShrink: 0 }}>
           <PageHeader
             icon={Bell}
             title={t('notifications')}
@@ -276,328 +461,143 @@ export default function Notifications() {
           />
         </div>
 
-        <div className="p-2 space-y-3">
+        <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-white border border-slate-200 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardDescription>{t('totalNotifications')}</CardDescription>
-                <CardTitle className="text-3xl">{stats?.total || 0}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card className="bg-white border border-slate-200 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardDescription>{t('unread')}</CardDescription>
-                <CardTitle className="text-3xl text-primary">{stats?.unread || 0}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card className="bg-white border border-slate-200 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardDescription>{t('today')}</CardDescription>
-                <CardTitle className="text-3xl">{stats?.today || 0}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card className="bg-white border border-slate-200 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardDescription>{t('thisWeek')}</CardDescription>
-                <CardTitle className="text-3xl">{stats?.thisWeek || 0}</CardTitle>
-              </CardHeader>
-            </Card>
+          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.5rem' }}>
+              <div style={{ padding: '1.5rem', paddingBottom: '0.5rem' }}>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('totalNotifications')}</p>
+                <p style={{ fontSize: '1.875rem', fontWeight: 700 }}>{stats?.total || 0}</p>
+              </div>
+            </div>
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.5rem' }}>
+              <div style={{ padding: '1.5rem', paddingBottom: '0.5rem' }}>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('unread')}</p>
+                <p style={{ fontSize: '1.875rem', fontWeight: 700, color: '#235ae4' }}>{stats?.unread || 0}</p>
+              </div>
+            </div>
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.5rem' }}>
+              <div style={{ padding: '1.5rem', paddingBottom: '0.5rem' }}>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('today')}</p>
+                <p style={{ fontSize: '1.875rem', fontWeight: 700 }}>{stats?.today || 0}</p>
+              </div>
+            </div>
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.5rem' }}>
+              <div style={{ padding: '1.5rem', paddingBottom: '0.5rem' }}>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('thisWeek')}</p>
+                <p style={{ fontSize: '1.875rem', fontWeight: 700 }}>{stats?.thisWeek || 0}</p>
+              </div>
+            </div>
           </div>
 
           {/* Main Content */}
-          <Card className="bg-white border border-slate-200 shadow-sm">
-            <CardHeader>
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.5rem' }}>
+            {/* Header */}
+            <div style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
                 <div>
-                  <CardTitle>{t('allNotifications')}</CardTitle>
-                  <CardDescription>{t('viewAndManageHistory')}</CardDescription>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>{t('allNotifications')}</h3>
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('viewAndManageHistory')}</p>
                 </div>
 
                 {/* Toolbar */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <label htmlFor="search-notifications" className="sr-only">{t('searchNotifications')}</label>
-                    <Input
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+                    <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#9ca3af' }} />
+                    <label htmlFor="search-notifications" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>{t('searchNotifications')}</label>
+                    <InputText
                       id="search-notifications"
                       placeholder={t('searchNotifications')}
-                      value={searchTerm}
+                      value={String(searchTerm)}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                      className="pl-9"
+                      style={{ width: '100%', paddingLeft: '2.25rem' }}
                     />
                   </div>
 
-                  <Select value={selectedType} onValueChange={setSelectedType}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder={t('allTypes')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t('allTypes')}</SelectItem>
-                      <SelectItem value={NotificationType.NEW_ORDER}>{t('newOrders')}</SelectItem>
-                      <SelectItem value={NotificationType.ORDER_ASSIGNED}>{t('assigned')}</SelectItem>
-                      <SelectItem value={NotificationType.ORDER_STATUS_CHANGED}>{t('statusChanged')}</SelectItem>
-                      <SelectItem value={NotificationType.PAYMENT_RECEIVED}>{t('payments')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Dropdown
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.value)}
+                    options={typeOptions}
+                    style={{ width: '150px' }}
+                  />
 
-                  <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-                    <SelectTrigger className="w-[130px]">
-                      <SelectValue placeholder="Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t('allPriority')}</SelectItem>
-                      <SelectItem value={NotificationPriority.URGENT}>{t('urgent')}</SelectItem>
-                      <SelectItem value={NotificationPriority.HIGH}>{t('high')}</SelectItem>
-                      <SelectItem value={NotificationPriority.MEDIUM}>{t('medium')}</SelectItem>
-                      <SelectItem value={NotificationPriority.LOW}>{t('low')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Dropdown
+                    value={selectedPriority}
+                    onChange={(e) => setSelectedPriority(e.value)}
+                    options={priorityOptions}
+                    style={{ width: '130px' }}
+                  />
 
-                  <Button variant="outline" size="icon" onClick={() => refetch()} aria-label={t('refresh')}>
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                  <Button
+                    outlined
+                    icon={<RefreshCw style={{ width: '1rem', height: '1rem' }} />}
+                    onClick={() => refetch()}
+                    aria-label={t('refresh')}
+                  />
                 </div>
               </div>
-            </CardHeader>
+            </div>
 
-            <CardContent>
+            {/* Content */}
+            <div style={{ padding: '0 1.5rem 1.5rem' }}>
               {/* Bulk Actions */}
               {selectedNotifications.length > 0 && (
-                <div className="flex items-center justify-between p-4 mb-4 bg-muted rounded-lg">
-                  <span className="text-sm font-medium">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', marginBottom: '1rem', background: '#f3f4f6', borderRadius: '0.5rem' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
                     {selectedNotifications.length} {t('selected')}
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Button
-                      variant="outline"
-                      size="sm"
+                      outlined
+                      size="small"
+                      label={t('markAsRead')}
+                      icon={<CheckCheck style={{ width: '1rem', height: '1rem' }} />}
                       onClick={() => markManyAsReadMutation.mutate(selectedNotifications)}
-                    >
-                      <CheckCheck className="h-4 w-4 mr-2" />
-                      {t('markAsRead')}
-                    </Button>
+                    />
                     <Button
-                      variant="outline"
-                      size="sm"
+                      outlined
+                      size="small"
+                      label={t('archive')}
+                      icon={<Archive style={{ width: '1rem', height: '1rem' }} />}
                       onClick={() => archiveManyMutation.mutate(selectedNotifications)}
-                    >
-                      <Archive className="h-4 w-4 mr-2" />
-                      {t('archive')}
-                    </Button>
+                    />
                     <Button
-                      variant="destructive"
-                      size="sm"
+                      severity="danger"
+                      size="small"
+                      label={t('delete')}
+                      icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
                       onClick={() => toastConfirm(
                         t('deleteNotifications'),
                         () => deleteManyMutation.mutate(selectedNotifications),
                         { description: t('confirmDeleteMessage').replace('{{count}}', String(selectedNotifications.length)) }
                       )}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {t('delete')}
-                    </Button>
+                    />
                     <Button
-                      variant="ghost"
-                      size="sm"
+                      text
+                      icon={<X style={{ width: '1rem', height: '1rem' }} />}
                       onClick={() => setSelectedNotifications([])}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    />
                   </div>
                 </div>
               )}
 
               {/* Tabs */}
-              <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="unread">
-                    {t('unread')} {stats?.unread ? `(${stats.unread})` : ''}
-                  </TabsTrigger>
-                  <TabsTrigger value="all">{t('all')}</TabsTrigger>
-                  <TabsTrigger value="archived">{t('archived')}</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value={activeTab} className="mt-6">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : notifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12">
-                      <Bell className="h-16 w-16 text-muted-foreground mb-4" />
-                      <p className="text-lg font-medium text-muted-foreground">{t('noNotificationsFound')}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {activeTab === 'unread' ? t('allCaughtUp') : t('tryAdjustingFilters')}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {/* Select All */}
-                      <div className="flex items-center px-4 py-2 border-b">
-                        <input
-                          type="checkbox"
-                          checked={selectedNotifications.length === notifications.length}
-                          onChange={toggleSelectAll}
-                          className="h-4 w-4 rounded border-gray-300"
-                        />
-                        <span className="ml-3 text-sm text-muted-foreground">{t('selectAll')}</span>
-                      </div>
-
-                      {/* INotification List */}
-                      <div className="divide-y">
-                        {notifications.map((notification: INotification) => (
-                          <div
-                            key={notification.id}
-                            className={cn(
-                              'group flex items-start gap-4 p-4 hover:bg-accent/50 cursor-pointer transition-all',
-                              !notification.isRead && 'bg-accent/20'
-                            )}
-                            onClick={() => handleNotificationClick(notification)}
-                          >
-                            {/* Checkbox */}
-                            <input
-                              type="checkbox"
-                              checked={selectedNotifications.includes(notification.id)}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                toggleSelectNotification(notification.id);
-                              }}
-                              className="mt-1 h-4 w-4 rounded border-gray-300"
-                            />
-
-                            {/* Icon */}
-                            <div className={cn('p-2.5 rounded-lg', getNotificationColor(notification.type))}>
-                              {getNotificationIcon(notification.type)}
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div
-                                className={cn(
-                                  'flex items-start justify-between gap-2',
-                                  dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'
-                                )}
-                              >
-                                <div className="flex-1">
-                                  <p className={cn(
-                                    'text-sm font-semibold',
-                                    !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
-                                  )}>
-                                    {getNotificationTitle(notification)}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {getNotificationMessage(notification)}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                    {formatDate(notification.dateCreated)}
-                                  </p>
-                                </div>
-
-                                {/* Priority Badge */}
-                                {notification.priority !== NotificationPriority.LOW && (
-                                  <Badge
-                                    variant={
-                                      notification.priority === NotificationPriority.URGENT
-                                        ? 'destructive'
-                                        : notification.priority === NotificationPriority.HIGH
-                                          ? 'outline'
-                                          : 'default'
-                                    }
-                                    className="text-xs"
-                                  >
-                                    {t(notification.priority as any)}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Actions */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100" aria-label={t('moreOptions')}>
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {!notification.isRead && (
-                                  <DropdownMenuItem
-                                    onClick={(e: React.MouseEvent) => {
-                                      e.stopPropagation();
-                                      markAsReadMutation.mutate(notification.id);
-                                    }}
-                                  >
-                                    <Check className="h-4 w-4 mr-2" />
-                                    {t('markAsRead')}
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={(e: React.MouseEvent) => {
-                                    e.stopPropagation();
-                                    archiveMutation.mutate(notification.id);
-                                  }}
-                                >
-                                  <Archive className="h-4 w-4 mr-2" />
-                                  {t('archive')}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={(e: React.MouseEvent) => {
-                                    e.stopPropagation();
-                                    toastConfirm(
-                                      t('deleteNotifications'),
-                                      () => deleteManyMutation.mutate([notification.id]),
-                                      { description: t('confirmDeleteMessage').replace('{{count}}', '1') }
-                                    );
-                                  }}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  {t('delete')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Pagination */}
-                      {totalPages > 1 && (
-                        <div className="flex items-center justify-between pt-4 border-t">
-                          <p className="text-sm text-muted-foreground">
-                            {t('showing')} {((currentPage - 1) * pageSize) + 1} {t('to')}{' '}
-                            {Math.min(currentPage * pageSize, total)} {t('of')}{' '}
-                            {total} {t('results')}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={currentPage === 1}
-                              onClick={() => setCurrentPage((p) => p - 1)}
-                            >
-                              {t('previous')}
-                            </Button>
-                            <span className="text-sm">
-                              {t('page')} {currentPage} {t('of')} {totalPages}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={currentPage === totalPages}
-                              onClick={() => setCurrentPage((p) => p + 1)}
-                            >
-                              {t('next')}
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+              <TabView
+                activeIndex={tabMapping[activeTab]}
+                onTabChange={(e) => setActiveTab(tabValues[e.index] as any)}
+              >
+                <TabPanel header={`${t('unread')} ${stats?.unread ? `(${stats.unread})` : ''}`}>
+                  {notificationListContent}
+                </TabPanel>
+                <TabPanel header={t('all')}>
+                  {notificationListContent}
+                </TabPanel>
+                <TabPanel header={t('archived')}>
+                  {notificationListContent}
+                </TabPanel>
+              </TabView>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -10,6 +10,10 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { invoicesService } from '../modules/invoices';
 import PDFActionButtons from '../components/PDFActionButtons';
+import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { formatAmount } from '@orderium/ui';
 
 export default function InvoiceDetailExample() {
   const { invoiceId } = useParams<{ invoiceId: string }>();
@@ -45,12 +49,13 @@ export default function InvoiceDetailExample() {
       {/* Header with PDF Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <button
+          <Button
+            text
+            rounded
+            icon={<ArrowLeft size={20} />}
             onClick={() => navigate('/invoices')}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </button>
+            className="p-button-plain"
+          />
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
               Facture {invoice.invoiceNumber}
@@ -72,33 +77,34 @@ export default function InvoiceDetailExample() {
             showDownload={true}
           />
 
-          <button className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
-            <Edit size={16} />
-            Modifier
-          </button>
+          <Button
+            outlined
+            label="Modifier"
+            icon={<Edit size={16} />}
+            className="p-button-secondary"
+          />
         </div>
       </div>
 
       {/* Status Badge */}
       <div className="mb-6">
         <span
-          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-            invoice.status === 'paid'
-              ? 'bg-green-100 text-green-700'
-              : invoice.status === 'partial'
+          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${invoice.status === 'paid'
+            ? 'bg-green-100 text-green-700'
+            : invoice.status === 'partial'
               ? 'bg-yellow-100 text-yellow-700'
               : invoice.status === 'unpaid'
-              ? 'bg-orange-100 text-orange-700'
-              : 'bg-slate-100 text-slate-700'
-          }`}
+                ? 'bg-orange-100 text-orange-700'
+                : 'bg-slate-100 text-slate-700'
+            }`}
         >
           {invoice.status === 'paid'
             ? '✓ Payée'
             : invoice.status === 'partial'
-            ? '◐ Partiellement payée'
-            : invoice.status === 'unpaid'
-            ? '○ Impayée'
-            : '✎ Brouillon'}
+              ? '◐ Partiellement payée'
+              : invoice.status === 'unpaid'
+                ? '○ Impayée'
+                : '✎ Brouillon'}
         </span>
       </div>
 
@@ -146,48 +152,35 @@ export default function InvoiceDetailExample() {
         <div className="p-4 bg-slate-50 border-b border-slate-200">
           <h2 className="text-lg font-bold text-slate-900">Articles</h2>
         </div>
-        <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">
-                Description
-              </th>
-              <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700">
-                Quantité
-              </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">
-                Prix Unitaire
-              </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">
-                Total
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {items.map((item: any, index: number) => (
-              <tr key={index}>
-                <td className="py-3 px-4 text-slate-900">
-                  {item.description || item.product?.name || 'N/A'}
-                </td>
-                <td className="py-3 px-4 text-center font-semibold text-slate-900">
-                  {item.quantity}
-                </td>
-                <td className="py-3 px-4 text-right text-slate-700">
-                  {Number(item.unitPrice).toLocaleString('de-DE', {
-                    minimumFractionDigits: 2,
-                  })}{' '}
-                  DH
-                </td>
-                <td className="py-3 px-4 text-sm font-semibold text-slate-900 text-right">
-                  {Number(item.total).toLocaleString('de-DE', {
-                    minimumFractionDigits: 2,
-                  })}{' '}
-                  DH
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable value={items} size="small" tableStyle={{ width: '100%' }}>
+          <Column
+            field="description"
+            header="Description"
+            headerStyle={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ padding: '0.75rem 1rem', color: '#0f172a' }}
+            body={(item: any) => item.description || item.product?.name || 'N/A'}
+          />
+          <Column
+            field="quantity"
+            header="Quantité"
+            headerStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontWeight: 600, color: '#0f172a' }}
+          />
+          <Column
+            field="unitPrice"
+            header="Prix Unitaire"
+            headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', color: '#334155' }}
+            body={(item: any) => `${NumberformatAmount(item.unitPrice, 2)} DH`}
+          />
+          <Column
+            field="total"
+            header="Total"
+            headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontWeight: 600, color: '#0f172a' }}
+            body={(item: any) => `${NumberformatAmount(item.total, 2)} DH`}
+          />
+        </DataTable>
       </div>
 
       {/* Totals Card */}
@@ -196,27 +189,21 @@ export default function InvoiceDetailExample() {
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">Sous-total HT:</span>
             <span className="font-semibold text-slate-900">
-              {Number(invoice.subtotal).toLocaleString('de-DE', {
-                minimumFractionDigits: 2,
-              })}{' '}
+              {formatAmount(Number(invoice.subtotal), 2)}{' '}
               DH
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">TVA (20%):</span>
             <span className="font-semibold text-slate-900">
-              {Number(invoice.tax).toLocaleString('de-DE', {
-                minimumFractionDigits: 2,
-              })}{' '}
+              {formatAmount(Number(invoice.tax), 2)}{' '}
               DH
             </span>
           </div>
           <div className="flex justify-between pt-3 border-t border-slate-200">
             <span className="font-bold text-slate-900">Total TTC:</span>
             <span className="font-bold text-xl text-blue-600">
-              {Number(invoice.total).toLocaleString('de-DE', {
-                minimumFractionDigits: 2,
-              })}{' '}
+              {formatAmount(Number(invoice.total), 2)}{' '}
               DH
             </span>
           </div>
@@ -225,18 +212,14 @@ export default function InvoiceDetailExample() {
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Montant payé:</span>
                 <span className="font-semibold text-green-600">
-                  {Number(invoice.paidAmount || 0).toLocaleString('de-DE', {
-                    minimumFractionDigits: 2,
-                  })}{' '}
+                  {formatAmount(Number(invoice.paidAmount || 0), 2)}{' '}
                   DH
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Montant restant:</span>
                 <span className="font-semibold text-orange-600">
-                  {Number(invoice.remainingAmount || invoice.total).toLocaleString('de-DE', {
-                    minimumFractionDigits: 2,
-                  })}{' '}
+                  {formatAmount(Number(invoice.remainingAmount || invoice.total), 2)}{' '}
                   DH
                 </span>
               </div>
@@ -255,10 +238,12 @@ export default function InvoiceDetailExample() {
 
       {/* Action Buttons at Bottom */}
       <div className="flex justify-between items-center">
-        <button className="px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2">
-          <Trash2 size={16} />
-          Supprimer
-        </button>
+        <Button
+          severity="danger"
+          outlined
+          label="Supprimer"
+          icon={<Trash2 size={16} />}
+        />
 
         {/* Alternative: Large PDF Buttons at bottom */}
         <PDFActionButtons

@@ -23,4 +23,5 @@ export interface ICompany {
   fiscalYearStartMonth?: number;
 }
 
-export interface UpdateCompanyDTO extends Partial<ICompany> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface UpdateCompanyDTO extends Partial<ICompany> { }

@@ -9,8 +9,11 @@ import {
   BeforeUpdate,
 } from 'typeorm';
 import { Partner } from '../../partners/entities/partner.entity';
-import { Product } from '../../products/entities/product.entity';
-import { BaseDocument, BaseStandardItem } from '../../../common/entities/base-document.entity';
+import {
+  BaseDocument,
+  BaseStandardItem,
+} from '../../../common/entities/base-document.entity';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
 export enum InvoiceStatus {
   DRAFT = 'draft',
@@ -68,10 +71,13 @@ export class Invoice extends BaseDocument {
   @Column({ type: 'date', nullable: true })
   validationDate: Date | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  @Column({ type: 'text', nullable: true })
+  pdfUrl: string | null;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   paidAmount: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   remainingAmount: number;
 
   // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
@@ -101,7 +107,6 @@ export class Invoice extends BaseDocument {
 @Index(['invoiceId'])
 @Index(['productId'])
 export class InvoiceItem extends BaseStandardItem {
-
   @ManyToOne(() => Invoice, (invoice) => invoice.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'invoiceId' })
   invoice: Invoice;

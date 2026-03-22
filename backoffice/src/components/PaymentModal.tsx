@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, CreditCard, FileText, Hash } from 'lucide-react';
+import { CreditCard, FileText, Hash, Banknote, Building2, Smartphone, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Payment, CreatePaymentDTO, UpdatePaymentDTO, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import { useLanguage } from '../context/LanguageContext';
-import { Input } from './ui/input';
-import { NativeSelect } from './ui/native-select';
-import { Textarea } from './ui/textarea';
-import { FormField } from './ui/form-field';
-import { Button } from './ui/button';
+import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Calendar } from 'primereact/calendar';
+import { Dropdown } from 'primereact/dropdown';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { Message } from 'primereact/message';
+import { formatAmount } from '@orderium/ui';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -31,14 +35,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 }) => {
   const { t, language } = useLanguage();
   const [formData, setFormData] = useState<{
-    amount: string;
-    paymentDate: string;
+    amount: number | null;
+    paymentDate: Date;
     paymentType: 'cash' | 'check' | 'bank_transfer' | 'credit_card' | 'mobile_payment' | 'other';
     notes: string;
     referenceNumber: string;
   }>({
-    amount: '',
-    paymentDate: new Date().toISOString().split('T')[0],
+    amount: null,
+    paymentDate: new Date(),
     paymentType: 'cash',
     notes: '',
     referenceNumber: '',
@@ -51,16 +55,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     if (isOpen) {
       if (payment) {
         setFormData({
-          amount: payment.amount.toString(),
-          paymentDate: payment.paymentDate,
+          amount: payment.amount,
+          paymentDate: new Date(payment.paymentDate + 'T00:00:00'),
           paymentType: payment.paymentType,
           notes: payment.notes || '',
           referenceNumber: payment.referenceNumber || '',
         });
       } else {
         setFormData({
-          amount: '',
-          paymentDate: new Date().toISOString().split('T')[0],
+          amount: null,
+          paymentDate: new Date(),
           paymentType: 'cash',
           notes: '',
           referenceNumber: '',
@@ -85,24 +89,25 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setLoading(true);
 
     try {
-      const amount = parseFloat(formData.amount);
+      const amount = formData.amount ?? 0;
 
-      // Validate amount
-      if (isNaN(amount) || amount <= 0) {
+      if (amount <= 0) {
         throw new Error(t('invoice.amountMustBeGreaterThanZero'));
       }
 
-      // Check if total would exceed invoice total (only for new payments)
       if (!payment) {
         const newTotal = totalPaid + amount;
         if (newTotal > invoiceTotal) {
-          throw new Error(`${t('errorPaymentExceedsInvoice')} (${newTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'} > ${invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${language === 'ar' ? 'د.م' : 'DH'})`);
+          throw new Error(`${t('errorPaymentExceedsInvoice')} (${formatAmount(newTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'} > ${formatAmount(invoiceTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'})`);
         }
       }
 
+      const d = formData.paymentDate;
+      const paymentDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
       const paymentData = {
         amount,
-        paymentDate: formData.paymentDate,
+        paymentDate: paymentDateStr,
         paymentType: formData.paymentType,
         notes: formData.notes || undefined,
         referenceNumber: formData.referenceNumber || undefined,
@@ -128,148 +133,211 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   const remainingAmount = invoiceTotal - totalPaid;
+  const paidPercent = invoiceTotal > 0 ? Math.min(100, (totalPaid / invoiceTotal) * 100) : 0;
+  const currency = language === 'ar' ? 'د.م' : 'DH';
+  const isFullyPaid = remainingAmount <= 0;
+
+  const PAYMENT_METHOD_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
+    cash: { color: '#15803d', icon: Banknote },
+    check: { color: '#a16207', icon: FileText },
+    bank_transfer: { color: '#1d4ed8', icon: Building2 },
+    credit_card: { color: '#7e22ce', icon: CreditCard },
+    mobile_payment: { color: '#4338ca', icon: Smartphone },
+    other: { color: '#475569', icon: CreditCard },
+  };
+
+  const paymentTypeOptions = Object.entries(PAYMENT_TYPE_LABELS).map(([value, label]) => ({
+    label: label as string,
+    value,
+  }));
+
+  const footerContent = (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.625rem', padding: '0.5rem 0 0' }}>
+      <Button label={t('cancel')} outlined onClick={onClose} style={{ borderRadius: '0.5rem' }} />
+      <Button
+        label={payment ? t('edit') : t('add')}
+        loading={loading}
+        onClick={handleSubmit}
+        style={{ borderRadius: '0.5rem', background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none' }}
+      />
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-slate-800">
-            {payment ? t('invoice.editPayment') : t('invoice.addPayment')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
+    <Dialog
+      visible={isOpen}
+      onHide={onClose}
+      header={
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: 'linear-gradient(135deg, #235ae4, #1a47b8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CreditCard style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+          </div>
+          <span>{payment ? t('invoice.editPayment') : t('invoice.addPayment')}</span>
         </div>
+      }
+      footer={footerContent}
+      modal
+      style={{ width: '95vw', maxWidth: '42rem' }}
+      breakpoints={{ '960px': '75vw', '640px': '95vw' }}
+      contentStyle={{ overflowY: 'auto', padding: '1.25rem 1.5rem' }}
+    >
+      <form onSubmit={handleSubmit} className="flex flex-column gap-4">
+        {error && <Message severity="error" text={error} style={{ width: '100%', borderRadius: '0.5rem' }} />}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
+        {/* Payment Progress Card */}
+        <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderRadius: '0.875rem', padding: '1.25rem', color: '#fff', position: 'relative', overflow: 'hidden' }}>
+          {/* Decorative blob */}
+          <div style={{ position: 'absolute', top: '-1.5rem', right: '-1.5rem', width: '6rem', height: '6rem', borderRadius: '50%', background: 'rgba(35,90,228,0.12)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: '-1rem', left: '30%', width: '4rem', height: '4rem', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
+
+          {/* Three stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('invoice.totalInvoice')}</div>
+              <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#f1f5f9' }}>
+                {formatAmount(invoiceTotal, 2)}
+                <span style={{ fontSize: '0.6875rem', color: '#64748b', marginLeft: '0.25rem' }}>{currency}</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('invoice.totalPaid')}</div>
+              <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#34d399' }}>
+                {formatAmount(totalPaid, 2)}
+                <span style={{ fontSize: '0.6875rem', color: '#64748b', marginLeft: '0.25rem' }}>{currency}</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t('invoice.remaining')}</div>
+              <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: isFullyPaid ? '#34d399' : '#fbbf24' }}>
+                {formatAmount(remainingAmount, 2)}
+                <span style={{ fontSize: '0.6875rem', color: '#64748b', marginLeft: '0.25rem' }}>{currency}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+              <span style={{ fontSize: '0.6875rem', color: '#94a3b8' }}>{t('invoice.totalPaid')}</span>
+              <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: isFullyPaid ? '#34d399' : '#fbbf24' }}>{paidPercent.toFixed(0)}%</span>
+            </div>
+            <div style={{ height: '0.375rem', background: 'rgba(255,255,255,0.1)', borderRadius: '9999px', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${paidPercent}%`,
+                background: isFullyPaid ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                borderRadius: '9999px',
+                transition: 'width 0.4s ease',
+              }} />
+            </div>
+          </div>
+
+          {isFullyPaid && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.75rem', color: '#34d399', fontSize: '0.8125rem', fontWeight: 600 }}>
+              <CheckCircle2 style={{ width: '0.875rem', height: '0.875rem' }} />
+              Facture entièrement payée
             </div>
           )}
+        </div>
 
-          {/* Payment Summary */}
-          <div className="bg-slate-50 p-4 rounded-lg space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600">{t('invoice.totalInvoice')}:</span>
-              <span className="font-semibold text-slate-900">{invoiceTotal.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600">{t('invoice.totalPaid')}:</span>
-              <span className="font-semibold text-emerald-600">{totalPaid.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-            </div>
-            <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
-              <span className="text-slate-600 font-medium">{t('invoice.remaining')}:</span>
-              <span className="font-semibold text-amber-600">{remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'}</span>
-            </div>
+        {/* Amount */}
+        <div className="flex flex-column gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <label style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{t('invoice.paymentAmount')} *</label>
+            {remainingAmount > 0 && !payment && (
+              <Button
+                type="button"
+                onClick={() => setFormData({ ...formData, amount: remainingAmount })}
+                icon={<AlertCircle style={{ width: '0.625rem', height: '0.625rem' }} />}
+                label={`Payer le reste (${formatAmount(remainingAmount, 2)} ${currency})`}
+                pt={{ root: { style: { background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', borderRadius: '9999px', padding: '0.1875rem 0.625rem', fontSize: '0.6875rem', fontWeight: 700, gap: '0.25rem' } } }}
+                text
+                size="small"
+              />
+            )}
           </div>
-
-          {/* Amount */}
-          <FormField label={`${t('invoice.paymentAmount')} *`} htmlFor="payment-amount">
-            <div className="flex items-center justify-between mb-1">
-              {remainingAmount > 0 && !payment && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, amount: remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}
-                  className="text-xs bg-amber-100 text-amber-700 hover:bg-amber-200"
-                >
-                  {t('invoice.payRemainingAmount')} ({remainingAmount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {language === 'ar' ? 'د.م' : 'DH'})
-                </Button>
-              )}
-            </div>
-            <Input
-              id="payment-amount"
-              type="number"
-              step="0.01"
-              required
+          <div style={{ position: 'relative', width: '100%' }}>
+            <CreditCard style={{ width: 15, height: 15, position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b', zIndex: 1, pointerEvents: 'none' }} />
+            <InputNumber
               value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              leadingIcon={<CreditCard className="h-5 w-5" />}
-              trailingIcon={<span className="text-slate-500 text-sm">{language === 'ar' ? 'د.م' : 'DH'}</span>}
+              onValueChange={(e) => setFormData({ ...formData, amount: e.value ?? null })}
+              mode="decimal"
+              minFractionDigits={2}
+              maxFractionDigits={2}
+              min={0}
               placeholder="0.00"
+              inputStyle={{ width: '100%', paddingLeft: '2.5rem', fontWeight: 600, fontSize: '1rem' }}
+              style={{ width: '100%' }}
             />
-          </FormField>
+          </div>
+        </div>
 
+        {/* Date + Payment Type side by side */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           {/* Payment Date */}
-          <FormField label={`${t('invoice.paymentDate')} *`} htmlFor="payment-date">
-            <Input
-              id="payment-date"
-              type="date"
-              required
+          <div className="flex flex-column gap-2">
+            <label style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{t('invoice.paymentDate')} *</label>
+            <Calendar
               value={formData.paymentDate}
-              onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
-              leadingIcon={<Calendar className="h-5 w-5" />}
+              onChange={(e) => setFormData({ ...formData, paymentDate: e.value as Date })}
+              dateFormat="dd/mm/yy"
+              showIcon
+              style={{ width: '100%' }}
+              inputStyle={{ width: '100%' }}
+              showButtonBar
+              touchUI={false}
             />
-          </FormField>
+          </div>
 
           {/* Payment Type */}
-          <FormField label={`${t('invoice.paymentMethod')} *`} htmlFor="payment-type">
-            <NativeSelect
-              id="payment-type"
-              required
+          <div className="flex flex-column gap-2">
+            <label style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{t('invoice.paymentMethod')} *</label>
+            <Dropdown
               value={formData.paymentType}
-              onChange={(e) => setFormData({ ...formData, paymentType: e.target.value as any })}
-            >
-              {Object.entries(PAYMENT_TYPE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-          </FormField>
+              options={paymentTypeOptions}
+              onChange={(e) => setFormData({ ...formData, paymentType: e.value })}
+              style={{ width: '100%' }}
+              itemTemplate={(option) => {
+                const cfg = PAYMENT_METHOD_CONFIG[option.value];
+                const Icon = cfg?.icon || CreditCard;
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Icon style={{ width: '0.875rem', height: '0.875rem', color: cfg?.color || '#475569' }} />
+                    {option.label}
+                  </div>
+                );
+              }}
+            />
+          </div>
+        </div>
 
-          {/* Reference Number */}
-          <FormField
-            label={t('invoice.referenceNumber')}
-            htmlFor="payment-ref"
-            hint={t('referenceNumberHint')}
-          >
-            <Input
-              id="payment-ref"
-              type="text"
+        {/* Reference Number */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{t('invoice.referenceNumber')} <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '0.75rem' }}>— {t('referenceNumberHint')}</span></label>
+          <span className="p-input-icon-left" style={{ width: '100%' }}>
+            <InputText
               value={formData.referenceNumber}
               onChange={(e) => setFormData({ ...formData, referenceNumber: e.target.value })}
-              leadingIcon={<Hash className="h-5 w-5" />}
               placeholder={t('referenceNumberPlaceholder')}
+              style={{ width: '100%', fontFamily: 'monospace' }}
             />
-          </FormField>
+          </span>
+        </div>
 
-          {/* Notes */}
-          <FormField label={t('invoice.additionalNotes')} htmlFor="payment-notes">
-            <Textarea
-              id="payment-notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              leadingIcon={<FileText className="h-5 w-5" />}
-              placeholder={t('invoice.notesPlaceholder2')}
-            />
-          </FormField>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              {t('cancel')}
-            </Button>
-            <Button
-              type="submit"
-              loading={loading}
-              loadingText={t('saving')}
-            >
-              {payment ? t('edit') : t('add')}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Notes */}
+        <div className="flex flex-column gap-2">
+          <label style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{t('invoice.additionalNotes')}</label>
+          <InputTextarea
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            rows={3}
+            placeholder={t('invoice.notesPlaceholder2')}
+            style={{ width: '100%', resize: 'none' }}
+          />
+        </div>
+      </form>
+    </Dialog>
   );
 };
 

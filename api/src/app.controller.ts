@@ -13,7 +13,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     @InjectConnection() private readonly connection: Connection,
-  ) { }
+  ) {}
 
   @Public()
   @Get()

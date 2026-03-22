@@ -18,6 +18,7 @@ export interface Product {
     code: string;
     category: string;
   };
+  categories?: { id: number; name: string }[];
 }
 
 export interface GetProductsParams {

@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useRef, KeyboardEvent } from 'react';
+import { Button } from 'primereact/button';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { Send, StopCircle } from 'lucide-react';
 
 interface InputAreaProps {
@@ -57,43 +59,73 @@ export const InputArea: React.FC<InputAreaProps> = ({
   };
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
-      <div className="flex items-end gap-2">
-        <textarea
+    <div
+      style={{
+        borderTop: '1px solid #e5e7eb',
+        padding: '1rem',
+        backgroundColor: '#f9fafb',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
+        <InputTextarea
           ref={textareaRef}
           value={input}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           placeholder={disabled ? 'Waiting for response...' : 'Ask me anything...'}
           disabled={disabled}
-          className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           rows={1}
-          style={{ minHeight: '40px', maxHeight: '120px' }}
+          autoResize
+          style={{
+            flex: 1,
+            padding: '0.5rem 0.75rem',
+            backgroundColor: '#ffffff',
+            border: '1px solid #d1d5db',
+            borderRadius: '0.5rem',
+            resize: 'none',
+            outline: 'none',
+            minHeight: '40px',
+            maxHeight: '120px',
+            fontFamily: 'inherit',
+            fontSize: 'inherit',
+            opacity: disabled ? 0.5 : 1,
+            cursor: disabled ? 'not-allowed' : 'text',
+          }}
         />
 
         {disabled && onCancel ? (
-          <button
+          <Button
             onClick={onCancel}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-            title="Cancel (ESC)"
-          >
-            <StopCircle className="w-4 h-4" />
-            <span>Stop</span>
-          </button>
+            severity="danger"
+            label="Stop"
+            icon={<StopCircle style={{ width: '1rem', height: '1rem' }} />}
+            tooltip="Cancel (ESC)"
+            style={{ borderRadius: '0.5rem' }}
+          />
         ) : (
-          <button
+          <Button
             onClick={handleSend}
             disabled={disabled || !input.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            title="Send (Cmd+Enter)"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+            icon={<Send style={{ width: '1rem', height: '1rem' }} />}
+            tooltip="Send (Cmd+Enter)"
+            style={{ borderRadius: '0.5rem' }}
+          />
         )}
       </div>
 
-      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-        Press <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Cmd+Enter</kbd> to send
+      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
+        Press{' '}
+        <kbd
+          style={{
+            padding: '0.125rem 0.375rem',
+            backgroundColor: '#e5e7eb',
+            borderRadius: '0.25rem',
+            fontSize: '0.75rem',
+          }}
+        >
+          Cmd+Enter
+        </kbd>{' '}
+        to send
       </p>
     </div>
   );

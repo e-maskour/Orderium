@@ -1,55 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, Check } from 'lucide-react';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-
-// Keyframe animations for Apple-style entrance
-const backdropAnimation = `
-  @keyframes backdropFadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-`;
-
-const modalAnimation = `
-  @keyframes modalSlideUp {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-`;
-
-const contentAnimation = `
-  @keyframes contentFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(5px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-// Inject keyframes
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = backdropAnimation + modalAnimation + contentAnimation;
-  if (!document.head.querySelector('[data-price-modal-animations]')) {
-    styleSheet.setAttribute('data-price-modal-animations', 'true');
-    document.head.appendChild(styleSheet);
-  }
-}
+import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { DollarSign, X, TrendingDown } from 'lucide-react';
+import { formatAmount } from '@orderium/ui';
 
 interface Product {
   id: number;
@@ -78,57 +30,49 @@ export const PriceConfirmModal = ({
 }: PriceConfirmModalProps) => {
   const [price, setPrice] = useState('');
   const [decimalMode, setDecimalMode] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen && product) {
-      setPrice(product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setPrice(formatAmount(product.price, 2));
       setDecimalMode(false);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
     }
   }, [isOpen, product]);
 
-  // Keep focus on input
   useEffect(() => {
     if (isOpen) {
-      const interval = setInterval(() => {
-        if (document.activeElement !== inputRef.current) {
-          inputRef.current?.focus();
-        }
-      }, 100);
-      return () => clearInterval(interval);
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
     }
   }, [isOpen]);
 
-  if (!product || !isOpen) return null;
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') handleClose();
+  }, [isOpen]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  if (!isOpen || !product) return null;
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
-      setPrice('');
-      setDecimalMode(false);
+      setPrice(''); setDecimalMode(false);
     } else if (num === '.') {
-      if (!price.includes('.')) {
-        setPrice((price || '0') + '.');
-        setDecimalMode(true);
-      }
+      if (!price.includes('.')) { setPrice((price || '0') + '.'); setDecimalMode(true); }
     } else {
       const newValue = price === '' || price === '0' ? num : price + num;
-      // Limit to 2 decimal places
       if (newValue.includes('.')) {
         const parts = newValue.split('.');
         if (parts[1] && parts[1].length > 2) return;
       }
       setPrice(newValue);
     }
-    // Restore focus after button click
-    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow numbers and one decimal point
     if (/^\d*\.?\d{0,2}$/.test(value) || value === '') {
       setPrice(value);
       setDecimalMode(value.includes('.'));
@@ -136,132 +80,223 @@ export const PriceConfirmModal = ({
   };
 
   const handleConfirm = () => {
-    const priceValue = parseFloat(price);
-    if (priceValue > 0) {
-      onConfirm(priceValue);
-      setPrice('');
-      setDecimalMode(false);
-      onClose();
-    }
+    const pv = parseFloat(price);
+    if (pv > 0) { onConfirm(pv); setPrice(''); setDecimalMode(false); onClose(); }
   };
 
-  const handleClose = () => {
-    setPrice('');
-    setDecimalMode(false);
-    onClose();
-  };
+  const handleClose = () => { setPrice(''); setDecimalMode(false); onClose(); };
 
   const hasValidPrice = price !== '' && parseFloat(price) > 0;
-  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'C'];
+  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
+  const priceValue = parseFloat(price) || 0;
+  const isBelowCost = product.cost != null && priceValue > 0 && priceValue < product.cost;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-        style={{
-          animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
-        }}
-      />
+  const modal = (
+    <div
+      className="pos-modal-overlay"
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        display: 'flex', justifyContent: 'center',
+        background: 'rgba(15, 23, 42, 0.6)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+        animation: 'posOverlayIn 0.18s ease',
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+    >
+      <style>{`
+        @keyframes posOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes posModalIn { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes posSheetIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+        .pos-modal-overlay { padding: 1rem; align-items: center; }
+        .pos-modal-card { max-width: 34rem; border-radius: 1.25rem; overflow: hidden; }
+        @media (max-width: 640px) {
+          .pos-modal-overlay { padding: 0; align-items: flex-end; }
+          .pos-modal-card { max-width: 100%; border-radius: 1.25rem 1.25rem 0 0; max-height: 92vh; overflow-y: auto; animation: posSheetIn 0.28s cubic-bezier(0.32,0.72,0,1) !important; }
+        }
+        .pos-key { transition: background 0.1s, transform 0.08s, box-shadow 0.1s; cursor: pointer; border: none; user-select: none; }
+        .pos-key:hover:not(:disabled) { filter: brightness(0.92); }
+        .pos-key:active:not(:disabled) { transform: scale(0.93); }
+        .pos-price-field:focus { outline: none; border-color: #235ae4 !important; box-shadow: 0 0 0 3px rgba(35,90,228,0.16) !important; }
+        .pos-confirm-btn { transition: filter 0.15s, transform 0.1s, box-shadow 0.15s; }
+        .pos-confirm-btn:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 6px 20px rgba(35,90,228,0.45) !important; }
+        .pos-confirm-btn:active:not(:disabled) { transform: scale(0.98); }
+      `}</style>
 
-      {/* Modal */}
       <div
-        className="relative bg-white rounded-2xl shadow-xl max-w-lg w-[95vw] mx-4 overflow-hidden"
+        className="pos-modal-card"
         style={{
-          animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+          background: '#ffffff',
+          width: '100%',
+          boxShadow: '0 25px 60px rgba(15,23,42,0.22), 0 0 0 1px rgba(15,23,42,0.06)',
+          animation: 'posModalIn 0.22s cubic-bezier(0.34,1.36,0.64,1)',
+          display: 'flex',
+          flexDirection: 'column',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="relative bg-gradient-to-br from-primary/10 to-primary/5 p-3 sm:p-4 border-b border-gray-200">
+        {/* ── Header ── */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          padding: '1.25rem 1.25rem 1rem',
+          position: 'relative',
+        }}>
           <button
             onClick={handleClose}
-            className="absolute top-3 sm:top-4 right-3 sm:right-4 w-8 h-8 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center shadow-sm transition-all hover:scale-110"
+            className="pos-key"
+            style={{
+              position: 'absolute', top: '0.875rem', right: '0.875rem',
+              width: '1.875rem', height: '1.875rem', borderRadius: '50%',
+              background: 'rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
           >
-            <X className="w-4 h-4 text-gray-700" />
+            <X style={{ width: '0.9rem', height: '0.9rem', color: 'rgba(255,255,255,0.7)' }} />
           </button>
 
-          <div className="space-y-1.5 sm:space-y-2 pr-10 sm:pr-12">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
-              {t('confirmPrice')}
-            </h2>
-            <p className="text-sm text-gray-600">{product.name}</p>
-            {product.code && (
-              <p className="text-xs text-gray-500">
-                {t('code')}: {product.code}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', paddingRight: '2rem' }}>
+            <div style={{
+              width: '3rem', height: '3rem', borderRadius: '0.875rem', flexShrink: 0,
+              background: 'rgba(35,90,228,0.25)',
+              border: '1px solid rgba(35,90,228,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <DollarSign style={{ width: '1.375rem', height: '1.375rem', color: '#93b4f8' }} strokeWidth={2} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 0.2rem' }}>
+                {t('confirmPrice')}
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div
-          className="p-3 sm:p-4 space-y-3 sm:space-y-4"
-          style={{
-            animation: 'contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards'
-          }}
-        >
-          {/* Price Input */}
-          <div className="space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-gray-700 block">
-              {t('price')} ({t('currency')})
-            </label>
-            <Input
-              ref={inputRef}
-              type="text"
-              inputMode="decimal"
-              value={price}
-              onChange={handleInputChange}
-              className="h-12 sm:h-14 text-2xl sm:text-3xl font-bold text-center"
-              fullWidth
-            />
-            <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
-              <span>
-                {t('originalPrice')}: {product.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-              </span>
-              {product.cost != null && (
-                <span className="text-amber-600 font-medium">
-                  {t('cost')}: {product.cost.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('currency')}
-                </span>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {product.name}
+              </h2>
+              {product.code && (
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>#{product.code}</p>
               )}
             </div>
           </div>
 
-          {/* Numeric Keypad */}
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-            {numbers.map((num) => (
-              <button
-                key={num}
-                onClick={() => handleNumberClick(num)}
-                className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-all active:scale-95 ${num === 'C'
-                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
-                  }`}
-              >
-                {num === 'C' ? (
-                  <span className="text-xs sm:text-sm">{t('clear')}</span>
-                ) : (
-                  num
-                )}
-              </button>
-            ))}
+          {/* Reference prices */}
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.875rem' }}>
+            <div style={{
+              flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.625rem',
+              background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <p style={{ margin: 0, fontSize: '0.625rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('originalPrice')}</p>
+              <p style={{ margin: '0.2rem 0 0', fontSize: '0.9rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
+                {formatAmount(product.price, 2)} {t('currency')}
+              </p>
+            </div>
+            {product.cost != null && (
+              <div style={{
+                flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.625rem',
+                background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)',
+              }}>
+                <p style={{ margin: 0, fontSize: '0.625rem', fontWeight: 600, color: 'rgba(252,165,165,0.8)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('cost')}</p>
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.9rem', fontWeight: 700, color: '#fca5a5' }}>
+                  {formatAmount(product.cost, 2)} {t('currency')}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div style={{ padding: '1.25rem', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          {/* Display */}
+          <div style={{
+            background: '#fff',
+            border: isBelowCost ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
+            borderRadius: '0.875rem',
+            padding: '0.75rem 1rem',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+          }}>
+            <p style={{ margin: '0 0 0.25rem', fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              {t('price')} ({t('currency')})
+            </p>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={price}
+              onChange={handleInputChange}
+              placeholder="0.00"
+              className="pos-price-field"
+              style={{
+                fontSize: '2.5rem', fontWeight: 800,
+                color: hasValidPrice ? (isBelowCost ? '#dc2626' : '#0f172a') : '#cbd5e1',
+                background: 'transparent', border: 'none',
+                width: '100%', outline: 'none', padding: 0,
+                letterSpacing: '-0.03em', lineHeight: 1, fontFamily: 'inherit',
+              }}
+            />
+            {isBelowCost && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.375rem' }}>
+                <TrendingDown style={{ width: '0.75rem', height: '0.75rem', color: '#dc2626' }} />
+                <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#dc2626' }}>
+                  {t('belowCostWarning')}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Confirm Button */}
-          {hasValidPrice && (
-            <Button
-              onClick={handleConfirm}
-              className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02]"
-              leadingIcon={Check}
-              style={{
-                animation: 'contentFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards'
-              }}
-            >
-              {t('confirm')}
-            </Button>
-          )}
+          {/* Keypad */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+            {numbers.map((num) => {
+              const isClear = num === 'C';
+              const isDot = num === '.';
+              return (
+                <button
+                  key={num}
+                  onClick={() => handleNumberClick(num)}
+                  className="pos-key"
+                  style={{
+                    height: '3.25rem',
+                    fontSize: isClear ? '0.75rem' : isDot ? '1.75rem' : '1.375rem',
+                    fontWeight: isClear ? 700 : 600,
+                    borderRadius: '0.75rem',
+                    fontFamily: 'inherit',
+                    background: isClear ? '#fee2e2' : isDot ? '#dbeafe' : '#fff',
+                    color: isClear ? '#dc2626' : isDot ? '#1d4ed8' : '#0f172a',
+                    border: isClear ? '1.5px solid #fca5a5' : isDot ? '1.5px solid #93c5fd' : '1.5px solid #e2e8f0',
+                    boxShadow: isClear ? '0 1px 3px rgba(220,38,38,0.1)' : isDot ? '0 1px 3px rgba(29,78,216,0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {isClear ? t('clear') : num}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Footer ── */}
+        <div style={{ padding: '0 1.25rem 1.25rem', background: '#f8fafc' }}>
+          <button
+            onClick={handleConfirm}
+            disabled={!hasValidPrice}
+            className="pos-confirm-btn"
+            style={{
+              width: '100%', height: '3rem',
+              background: hasValidPrice
+                ? 'linear-gradient(135deg, #235ae4 0%, #1a47b8 100%)'
+                : '#e2e8f0',
+              border: 'none', borderRadius: '0.875rem',
+              fontSize: '0.9375rem', fontWeight: 700,
+              color: hasValidPrice ? '#fff' : '#94a3b8',
+              cursor: hasValidPrice ? 'pointer' : 'default',
+              boxShadow: hasValidPrice ? '0 4px 14px rgba(35,90,228,0.35)' : 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              fontFamily: 'inherit', letterSpacing: '-0.01em',
+            }}
+          >
+            <DollarSign style={{ width: '1rem', height: '1rem' }} strokeWidth={2.5} />
+            {t('confirm')}
+          </button>
         </div>
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 };

@@ -1,4 +1,10 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+  TableIndex,
+} from 'typeorm';
 
 export class CreateDeviceTokensTable1738800000000 implements MigrationInterface {
   name = 'CreateDeviceTokensTable1738800000000';
@@ -8,7 +14,7 @@ export class CreateDeviceTokensTable1738800000000 implements MigrationInterface 
     await queryRunner.query(`
       CREATE TYPE "device_platform_enum" AS ENUM ('web', 'android', 'ios')
     `);
-    
+
     await queryRunner.query(`
       CREATE TYPE "app_type_enum" AS ENUM ('client', 'backoffice', 'delivery')
     `);
@@ -147,7 +153,10 @@ export class CreateDeviceTokensTable1738800000000 implements MigrationInterface 
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop foreign key
-    await queryRunner.dropForeignKey('device_tokens', 'FK_device_tokens_portal');
+    await queryRunner.dropForeignKey(
+      'device_tokens',
+      'FK_device_tokens_portal',
+    );
 
     // Drop indexes
     await queryRunner.dropIndex('device_tokens', 'IDX_device_tokens_isActive');

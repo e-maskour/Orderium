@@ -61,15 +61,15 @@ export class Statistics implements IStatistics {
   // Static factory method
   static fromApiResponse(data: any): Statistics {
     return new Statistics({
-      TotalRevenue: data.totalRevenue !== undefined ? parseFloat(data.totalRevenue) : undefined,
-      TotalOrders: data.totalOrders !== undefined ? parseInt(data.totalOrders.toString()) : undefined,
-      TotalCustomers: data.totalCustomers !== undefined ? parseInt(data.totalCustomers.toString()) : undefined,
-      AverageOrderValue: data.averageOrderValue !== undefined ? parseFloat(data.averageOrderValue) : undefined,
-      PendingOrders: data.pendingOrders !== undefined ? parseInt(data.pendingOrders.toString()) : undefined,
-      InDeliveryOrders: data.inDeliveryOrders !== undefined ? parseInt(data.inDeliveryOrders.toString()) : undefined,
-      DeliveredOrders: data.deliveredOrders !== undefined ? parseInt(data.deliveredOrders.toString()) : undefined,
-      CancelledOrders: data.cancelledOrders !== undefined ? parseInt(data.cancelledOrders.toString()) : undefined,
-      ActiveDeliveryPersons: data.activeDeliveryPersons !== undefined ? parseInt(data.activeDeliveryPersons.toString()) : undefined,
+      TotalRevenue: data.totalRevenue,
+      TotalOrders: data.totalOrders,
+      TotalCustomers: data.totalCustomers,
+      AverageOrderValue: data.averageOrderValue,
+      PendingOrders: data.pendingOrders,
+      InDeliveryOrders: data.inDeliveryOrders,
+      DeliveredOrders: data.deliveredOrders,
+      CancelledOrders: data.cancelledOrders,
+      ActiveDeliveryPersons: data.activeDeliveryPersons,
       ...data,
     });
   }

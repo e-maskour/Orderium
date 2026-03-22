@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class RemoveIsConvertedFromOrders1769451473000
-  implements MigrationInterface
-{
+export class RemoveIsConvertedFromOrders1769451473000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Drop isConverted column from orders table
     // convertedToInvoiceId already serves this purpose

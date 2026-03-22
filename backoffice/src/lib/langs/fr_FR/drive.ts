@@ -1,0 +1,91 @@
+export default {
+    // Drive — Navigation
+    drive: 'Drive',
+    myDrive: 'Mon Drive',
+    sharedWithMe: 'Partagé avec moi',
+    trash: 'Corbeille',
+    starred: 'Favoris',
+    recentFiles: 'Fichiers récents',
+    allFiles: 'Tous les fichiers',
+
+    // Drive — Actions
+    uploadFile: 'Téléverser un fichier',
+    newFolder: 'Nouveau dossier',
+    createFolder: 'Créer un dossier',
+    folderName: 'Nom du dossier',
+    downloadFile: 'Télécharger',
+    shareFile: 'Partager',
+    renameFile: 'Renommer',
+    moveToTrash: 'Déplacer vers la corbeille',
+    restoreFile: 'Restaurer',
+    deleteForever: 'Supprimer définitivement',
+    openFolder: 'Ouvrir',
+    viewDetails: 'Voir les détails',
+    viewVersions: 'Historique des versions',
+    viewActivity: 'Journal d\'activité',
+
+    // Drive — States
+    driveEmpty: 'Aucun fichier ici',
+    driveEmptyDesc: 'Téléversez vos premiers fichiers ou créez un dossier',
+    trashEmpty: 'La corbeille est vide',
+    trashEmptyDesc: 'Les éléments supprimés apparaîtront ici',
+    sharedEmpty: 'Aucun partage',
+    sharedEmptyDesc: 'Les éléments partagés avec vous apparaîtront ici',
+    searchEmpty: 'Aucun résultat',
+    searchEmptyDesc: 'Essayez d\'autres mots-clés',
+
+    // Drive — Labels
+    fileName: 'Nom du fichier',
+    fileSize: 'Taille',
+    fileType: 'Type',
+    owner: 'Propriétaire',
+    lastModified: 'Dernière modification',
+    uploadedAt: 'Date de téléversement',
+    version: 'Version',
+    versions: 'Versions',
+    currentVersion: 'Version actuelle',
+    versionNumber: 'Version n°',
+    versionComment: 'Commentaire de version',
+    permission: 'Permission',
+    viewer: 'Lecteur',
+    editor: 'Éditeur',
+    shareWith: 'Partager avec',
+    shareLink: 'Lien de partage',
+    expiresAt: 'Expire le',
+    sharedBy: 'Partagé par',
+    activity: 'Activité',
+    tags: 'Étiquettes',
+    noTags: 'Aucune étiquette',
+
+    // Drive — Upload
+    uploadDrop: 'Glissez-déposez vos fichiers ici',
+    uploadOr: 'ou',
+    uploadBrowse: 'Parcourir les fichiers',
+    uploading: 'Téléversement en cours...',
+    uploadSuccess: 'Fichier téléversé avec succès',
+    uploadError: 'Échec du téléversement',
+    uploadProgress: 'Progression',
+
+    // Drive — Confirmation
+    confirmTrash: 'Déplacer vers la corbeille',
+    confirmTrashDesc: 'Cet élément sera déplacé vers la corbeille. Vous pouvez le restaurer plus tard.',
+    confirmDeleteForever: 'Supprimer définitivement',
+    confirmDeleteForeverDesc: 'Cet élément sera supprimé définitivement. Cette action est irréversible.',
+    emptyTrash: 'Vider la corbeille',
+    emptyTrashDesc: 'Tous les éléments de la corbeille seront supprimés définitivement.',
+
+    // Drive — Stats
+    storageUsed: 'Espace utilisé',
+    totalFiles: 'Fichiers totaux',
+    totalFolders: 'Dossiers',
+    sharedCount: 'Partagés',
+
+    // Drive — View mode
+    gridView: 'Vue grille',
+    listView: 'Vue liste',
+    sortBy: 'Trier par',
+    sortByName: 'Nom',
+    sortByDate: 'Date',
+    sortBySize: 'Taille',
+    sortByType: 'Type',
+};

@@ -4,6 +4,7 @@ import { pdfService, DocumentType, PDFMode } from '../services/pdf.service';
 import { toastExported, toastError } from '../services/toast.service';
 import { PDFPreviewModal } from './PDFPreviewModal';
 import { useLanguage } from '../context/LanguageContext';
+import { Button } from 'primereact/button';
 
 interface PDFActionButtonsProps {
   documentType: DocumentType;
@@ -22,7 +23,6 @@ export default function PDFActionButtons({
   showPreview = true,
   showDownload = true,
   className = '',
-  size = 'md',
 }: PDFActionButtonsProps) {
   const { t } = useLanguage();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -31,18 +31,11 @@ export default function PDFActionButtons({
   const handlePDFAction = async (mode: PDFMode) => {
     try {
       if (mode === 'preview') {
-        // Get PDF URL and show in modal
         const url = pdfService.getPDFUrl(documentType, documentId, 'preview');
         setPdfUrl(url);
         setShowPreviewModal(true);
       } else {
-        // Download PDF
-        await pdfService.download({
-          documentType,
-          documentId,
-          mode,
-        });
-
+        await pdfService.download({ documentType, documentId, mode });
         toastExported(
           `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloaded')}`
         );
@@ -53,58 +46,29 @@ export default function PDFActionButtons({
     }
   };
 
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'sm':
-        return 'px-2 py-1 text-xs';
-      case 'lg':
-        return 'px-4 py-2.5 text-base';
-      default:
-        return 'px-3 py-2 text-sm';
-    }
-  };
-
-  const getIconSize = () => {
-    switch (size) {
-      case 'sm':
-        return 14;
-      case 'lg':
-        return 20;
-      default:
-        return 16;
-    }
-  };
-
-  const iconSize = getIconSize();
-  const sizeClasses = getSizeClasses();
-
   return (
     <>
       <div className={`flex gap-2 ${className}`}>
         {showPreview && (
-          <button
+          <Button
+            icon={<Eye size={16} />}
+            label="Prévisualiser"
             onClick={() => handlePDFAction('preview')}
-            className={`${sizeClasses} bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm flex items-center gap-2`}
-            title={`Prévisualiser ${pdfService.getDocumentLabel(documentType)}`}
-          >
-            <Eye size={iconSize} />
-            <span>Prévisualiser</span>
-          </button>
+            style={{ background: '#2563eb', borderColor: '#2563eb' }}
+            size="small"
+          />
         )}
-
         {showDownload && (
-          <button
+          <Button
+            icon={<FileDown size={16} />}
+            label={t('download')}
             onClick={() => handlePDFAction('download')}
-            className={`${sizeClasses} bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm flex items-center gap-2`}
-            title={`Télécharger ${pdfService.getDocumentLabel(documentType)}`}
-          >
-            <FileDown size={iconSize} />
-            <span>{t('download')}</span>
-          </button>
+            severity="success"
+            size="small"
+          />
         )}
       </div>
 
-      {/* PDF Preview Modal */}
       <PDFPreviewModal
         isOpen={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}
@@ -115,7 +79,6 @@ export default function PDFActionButtons({
   );
 }
 
-// Compact version with icon-only buttons
 export function PDFIconButtons({
   documentType,
   documentId,
@@ -131,18 +94,11 @@ export function PDFIconButtons({
   const handlePDFAction = async (mode: PDFMode) => {
     try {
       if (mode === 'preview') {
-        // Get PDF URL and show in modal
         const url = pdfService.getPDFUrl(documentType, documentId, 'preview');
         setPdfUrl(url);
         setShowPreviewModal(true);
       } else {
-        // Download PDF
-        await pdfService.download({
-          documentType,
-          documentId,
-          mode,
-        });
-
+        await pdfService.download({ documentType, documentId, mode });
         toastExported(
           `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloadedShort')}`
         );
@@ -157,27 +113,27 @@ export function PDFIconButtons({
     <>
       <div className={`flex gap-1 ${className}`}>
         {showPreview && (
-          <button
+          <Button
+            icon={<Eye size={16} />}
+            text
+            rounded
             onClick={() => handlePDFAction('preview')}
-            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-            title={`Prévisualiser ${pdfService.getDocumentLabel(documentType)}`}
-          >
-            <Eye size={16} />
-          </button>
+            style={{ color: '#2563eb' }}
+            tooltip={`Prévisualiser ${pdfService.getDocumentLabel(documentType)}`}
+          />
         )}
-
         {showDownload && (
-          <button
+          <Button
+            icon={<FileDown size={16} />}
+            text
+            rounded
+            severity="success"
             onClick={() => handlePDFAction('download')}
-            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-            title={`Télécharger ${pdfService.getDocumentLabel(documentType)}`}
-          >
-            <FileDown size={16} />
-          </button>
+            tooltip={`Télécharger ${pdfService.getDocumentLabel(documentType)}`}
+          />
         )}
       </div>
 
-      {/* PDF Preview Modal */}
       <PDFPreviewModal
         isOpen={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}

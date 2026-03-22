@@ -117,6 +117,16 @@ async function executeRequest<T>(options: RequestOptions, baseUrl: string): Prom
         ...headers,
     };
 
+    // Inject tenant slug from subdomain so nginx-served builds work without a proxy.
+    // e.g. acme-admin.localhost:3001 → X-Tenant-ID: acme
+    if (typeof window !== 'undefined') {
+        const tenantMatch = window.location.hostname.match(/^([a-z0-9-]+)\.(localhost|.+\..+)$/i);
+        if (tenantMatch) {
+            const slug = tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase();
+            requestHeaders['X-Tenant-ID'] = slug;
+        }
+    }
+
     // Inject auth token
     if (!skipAuth) {
         const token = tokenManager.getAccessToken();

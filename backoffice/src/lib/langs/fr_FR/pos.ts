@@ -3,7 +3,7 @@ export default {
   pos: 'Point de vente',
   pointOfSale: 'Point de vente',
   createOrders: 'Créer des commandes',
-  
+
   // Cart
   cart: 'Panier',
   cartEmpty: 'Le panier est vide',
@@ -28,7 +28,14 @@ export default {
   updateQty: 'Modifier la quantité',
   confirmPrice: 'Confirmer le prix',
   originalPrice: 'Prix original',
-  
+  applyDiscount: 'Appliquer une remise',
+  percentage: 'Pourcentage',
+  belowCostWarning: 'Vente en dessous du prix de revient',
+  confirmCash: 'Encaissement',
+  orderSummary: 'Résumé de la commande',
+  reviewAndConfirmOrder: 'Vérifier et confirmer la commande',
+  backToPOS: 'Retour à la caisse',
+
   // Documents
   downloadDocuments: 'Téléchargez les documents ci-dessous',
   receipt: 'Reçu',

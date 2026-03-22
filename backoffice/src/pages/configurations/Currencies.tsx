@@ -1,255 +1,244 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Plus, Pencil, Trash2, DollarSign } from 'lucide-react';
-import { Input } from '../../components/ui/input';
-import { Checkbox } from '../../components/ui/checkbox';
-import { FormField } from '../../components/ui/form-field';
-import { Button } from '../../components/ui/button';
-import { Link } from 'react-router-dom';
+import { InputText } from 'primereact/inputtext';
+import { Checkbox } from 'primereact/checkbox';
+import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Link, useNavigate } from 'react-router-dom';
 import { currenciesService, Currency, ICurrency, CreateCurrencyDTO, UpdateCurrencyDTO } from '../../modules/currencies';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 import { useLanguage } from '../../context/LanguageContext';
 import { toastConfirm } from '../../services/toast.service';
+import { MobileList } from '../../components/MobileList';
 
 export default function Currencies() {
-  const { t } = useLanguage();
-  const queryClient = useQueryClient();
-  const [showModal, setShowModal] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [formData, setFormData] = useState<ICurrency>({
-    code: '',
-    name: '',
-    symbol: '',
-    isDefault: false,
-  });
-
-  const { data: config, isLoading } = useQuery({
-    queryKey: ['currencies', 'configuration'],
-    queryFn: () => currenciesService.getConfiguration(),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (data: CreateCurrencyDTO) => currenciesService.createCurrency(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currencies'] });
-      closeModal();
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ index, data }: { index: number; data: UpdateCurrencyDTO }) =>
-      currenciesService.updateCurrency(index, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currencies'] });
-      closeModal();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (index: number) => currenciesService.deleteCurrency(index),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currencies'] });
-    },
-  });
-
-  const currencies: Currency[] = config?.currencies || [];
-  const defaultCurrency = config?.default || '';
-
-  const openCreateModal = () => {
-    setEditingIndex(null);
-    setFormData({ code: '', name: '', symbol: '', isDefault: false });
-    setShowModal(true);
-  };
-
-  const openEditModal = (index: number) => {
-    setEditingIndex(index);
-    setFormData(currencies[index]);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingIndex(null);
-    setFormData({ code: '', name: '', symbol: '', isDefault: false });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (editingIndex !== null) {
-      updateMutation.mutate({ index: editingIndex, data: formData });
-    } else {
-      createMutation.mutate(formData);
-    }
-  };
-
-  const handleDelete = (index: number) => {
-    toastConfirm(t('confirmDeleteCurrency'), () => {
-      deleteMutation.mutate(index);
+    const { t } = useLanguage();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const [showModal, setShowModal] = useState(false);
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    const [selectedRows, setSelectedRows] = useState<(Currency & { _idx: number })[]>([]);
+    const [formData, setFormData] = useState<ICurrency>({
+        code: '',
+        name: '',
+        symbol: '',
+        isDefault: false,
     });
-  };
 
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="p-6 flex items-center justify-center h-64">
-          <div className="text-slate-600">{t('loading')}</div>
-        </div>
-      </AdminLayout>
-    );
-  }
+    const { data: config, isLoading } = useQuery({
+        queryKey: ['currencies', 'configuration'],
+        queryFn: () => currenciesService.getConfiguration(),
+    });
 
-  return (
-    <AdminLayout>
-      <PageHeader
-        icon={DollarSign}
-        title={t('currencies')}
-        subtitle={t('manageSupportedCurrencies')}
-        actions={
-          <Link
-            to="/configurations"
-            className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('retour')}
-          </Link>
+    const createMutation = useMutation({
+        mutationFn: (data: CreateCurrencyDTO) => currenciesService.createCurrency(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['currencies'] });
+            closeModal();
+        },
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: ({ index, data }: { index: number; data: UpdateCurrencyDTO }) =>
+            currenciesService.updateCurrency(index, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['currencies'] });
+            closeModal();
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (index: number) => currenciesService.deleteCurrency(index),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['currencies'] });
+        },
+    });
+
+    const currencies: Currency[] = config?.currencies || [];
+    const defaultCurrency = config?.default || '';
+
+    const openCreateModal = () => {
+        setEditingIndex(null);
+        setFormData({ code: '', name: '', symbol: '', isDefault: false });
+        setShowModal(true);
+    };
+
+    const openEditModal = (index: number) => {
+        setEditingIndex(index);
+        setFormData(currencies[index]);
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setEditingIndex(null);
+        setFormData({ code: '', name: '', symbol: '', isDefault: false });
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (editingIndex !== null) {
+            updateMutation.mutate({ index: editingIndex, data: formData });
+        } else {
+            createMutation.mutate(formData);
         }
-      />
+    };
 
-      <div className="bg-white rounded-lg border border-slate-200">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Input
-              type="text"
-              placeholder={t('searchCurrencies')}
-              className="w-64"
+    const handleDelete = (index: number) => {
+        toastConfirm(t('confirmDeleteCurrency'), () => {
+            deleteMutation.mutate(index);
+        });
+    };
+
+    if (isLoading) {
+        return (
+            <AdminLayout>
+                <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
+                    <div style={{ color: '#475569' }}>{t('loading')}</div>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    return (
+        <AdminLayout>
+            <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+            <PageHeader
+                icon={DollarSign}
+                title={t('currencies')}
+                subtitle={t('manageSupportedCurrencies')}
+                actions={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Button
+                            onClick={openCreateModal}
+                            icon={<Plus style={{ width: 16, height: 16 }} />}
+                            label={t('addCurrency')}
+                            size="small"
+                        />
+                    </div>
+                }
             />
-          </div>
-          <Button variant="warning" onClick={openCreateModal} leadingIcon={<Plus className="w-4 h-4" />}>
-            {t('addCurrency')}
-          </Button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('code')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('name')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('symbol')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {currencies.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                    {t('noCurrenciesConfigured')}
-                  </td>
-                </tr>
-              ) : (
-                currencies.map((currency, index) => (
-                  <tr key={index} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-800">{currency.code}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{currency.name}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{currency.symbol}</td>
-                    <td className="px-6 py-4">
-                      {currency.isDefault && (
-                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                          {t('default')}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => openEditModal(index)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      {/* Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={closeModal}
-        title={editingIndex !== null ? t('editCurrency') : t('addCurrency')}
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label={t('code')} htmlFor="curr-code">
-            <Input
-              id="curr-code"
-              type="text"
-              value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-              placeholder={t('currencyCodePlaceholder')}
-              maxLength={3}
-              required
-            />
-          </FormField>
+            <div className="responsive-table-mobile">
+                <MobileList
+                    items={currencies}
+                    keyExtractor={(c: Currency) => c.code}
+                    loading={isLoading}
+                    totalCount={currencies.length}
+                    countLabel="devises"
+                    emptyMessage="Aucune devise configurée"
+                    config={{
+                        topLeft: (c: Currency) => `${c.code} ${c.symbol}`,
+                        topRight: (c: Currency) => c.name,
+                        bottomRight: (c: Currency) => c.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null,
+                    }}
+                />
+            </div>
+            <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <DataTable
+                    className="curr-datatable"
+                    value={currencies.map((c, i) => ({ ...c, _idx: i }))}
+                    selection={selectedRows}
+                    onSelectionChange={(e) => setSelectedRows(e.value as (Currency & { _idx: number })[])}
+                    selectionMode="checkbox"
+                    dataKey="_idx"
+                    paginator
+                    paginatorPosition="top"
+                    rows={25}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    removableSort
+                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCurrenciesConfigured')}</div>}
+                    paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                >
+                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                    <Column field="code" header={t('code')} sortable body={(row) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.code}</span>} />
+                    <Column field="name" header={t('name')} sortable body={(row) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.name}</span>} />
+                    <Column field="symbol" header={t('symbol')} sortable body={(row) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.symbol}</span>} />
+                    <Column field="isDefault" header={t('status')} body={(row) => row.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null} />
+                    <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row) => (
+                        <div style={{ textAlign: 'right' }}>
+                            <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row._idx)} text rounded severity="info" />
+                            <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row._idx)} text rounded severity="danger" />
+                        </div>
+                    )} />
+                </DataTable>
+            </div>
 
-          <FormField label={t('name')} htmlFor="curr-name">
-            <Input
-              id="curr-name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder={t('currencyNamePlaceholder')}
-              required
-            />
-          </FormField>
-
-          <FormField label={t('symbol')} htmlFor="curr-symbol">
-            <Input
-              id="curr-symbol"
-              type="text"
-              value={formData.symbol}
-              onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
-              placeholder={t('currencySymbolPlaceholder')}
-              required
-            />
-          </FormField>
-
-          <Checkbox
-            id="isDefault"
-            checked={formData.isDefault}
-            onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-            label={t('setAsDefaultCurrency')}
-          />
-
-          <div className="flex justify-end gap-2 pt-4">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+            <Modal
+                isOpen={showModal}
+                onClose={closeModal}
+                title={editingIndex !== null ? t('editCurrency') : t('addCurrency')}
+                footer={
+                    <div className="flex justify-content-end gap-2">
+                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
+                        <Button
+                            form="currencies-modal-form"
+                            type="submit"
+                            loading={updateMutation.isPending}
+                            label={t('save')}
+                        />
+                    </div>
+                }
             >
-              {t('cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
-            >
-              {updateMutation.isPending ? t('saving') : t('save')}
-            </button>
-          </div>
-        </form>
-      </Modal>
-    </AdminLayout>
-  );
+                <form id="currencies-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('code')}</label>
+                        <InputText
+                            id="curr-code"
+                            type="text"
+                            value={formData.code}
+                            onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                            placeholder={t('currencyCodePlaceholder')}
+                            maxLength={3}
+                            required
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')}</label>
+                        <InputText
+                            id="curr-name"
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            placeholder={t('currencyNamePlaceholder')}
+                            required
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('symbol')}</label>
+                        <InputText
+                            id="curr-symbol"
+                            type="text"
+                            value={formData.symbol}
+                            onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+                            placeholder={t('currencySymbolPlaceholder')}
+                            required
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Checkbox
+                            inputId="isDefault"
+                            checked={formData.isDefault}
+                            onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
+                        />
+                        <label htmlFor="isDefault" style={{ fontSize: '0.875rem', color: '#334155' }}>{t('setAsDefaultCurrency')}</label>
+                    </div>
+
+                </form>
+            </Modal>
+            </div>
+        </AdminLayout>
+    );
 }

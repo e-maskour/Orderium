@@ -71,6 +71,9 @@ export class Quote extends BaseDocument {
   @Column({ type: 'date', nullable: true })
   validationDate: Date | null;
 
+  @Column({ type: 'text', nullable: true })
+  pdfUrl: string | null;
+
   // isValidated and notes inherited from BaseDocument
 
   @Column({ type: 'text', nullable: true })

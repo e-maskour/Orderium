@@ -1,34 +1,30 @@
 import { http } from '@/services/httpClient';
-import { GetProductsParams } from './products.interface';
+import { GetProductsParams, ProductsResponse } from './products.interface';
 import { Product } from './products.model';
 
 export class ProductsService {
-  async getAll(params?: GetProductsParams): Promise<Product[]> {
+  async getAll(params?: GetProductsParams): Promise<ProductsResponse> {
     const { page = 1, pageSize = 50, search } = params ?? {};
     const offset = (page - 1) * pageSize;
-    
-    // Build query params for pagination
+
     const queryParams = new URLSearchParams();
     queryParams.append('offset', offset.toString());
     queryParams.append('limit', pageSize.toString());
-    
-    // Build request body for filters
-    const filterBody: any = {};
+
+    const filterBody: Record<string, string> = {};
     if (search) filterBody.search = search;
 
-    const response = await http<{ success: boolean; products: any[]; total: number }>(
+    const response = await http<{ code: string; status: number; message: string; data: Record<string, unknown>[]; metadata?: { total: number; limit: number; offset: number } | null }>(
       `/api/products/filter?${queryParams.toString()}`,
       {
         method: 'POST',
         body: JSON.stringify(filterBody),
       }
     );
-    
-    if (response.products && Array.isArray(response.products)) {
-      return response.products.map((p: any) => Product.fromApiResponse(p));
-    }
-    
-    return [];
+
+    const items = Array.isArray(response.data) ? response.data.map((p) => Product.fromApiResponse(p)) : [];
+    const total = response.metadata?.total ?? items.length;
+    return { products: items, total };
   }
 }
 

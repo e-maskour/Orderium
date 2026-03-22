@@ -9,9 +9,15 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Plus, Filter } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
 import { invoicesService } from '../modules/invoices';
 import PDFActionButtons, { PDFIconButtons } from '../components/PDFActionButtons';
+import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Tag } from 'primereact/tag';
+import { formatAmount } from '@orderium/ui';
 
 export default function InvoicesListExample() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,125 +44,99 @@ export default function InvoicesListExample() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Factures</h1>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-          <Plus size={20} />
-          Nouvelle facture
-        </button>
+        <Button
+          label="Nouvelle facture"
+          icon={<Plus size={20} />}
+        />
       </div>
 
       {/* Search and Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
         <div className="flex gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-            <input
-              type="text"
-              placeholder="Rechercher par numéro ou client..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <span className="p-input-icon-left w-full">
+              <i className="pi pi-search" />
+              <InputText
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Rechercher par numéro ou client..."
+                className="w-full"
+              />
+            </span>
           </div>
-          <button className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
-            <Filter size={20} />
-            Filtres
-          </button>
+          <Button
+            outlined
+            label="Filtres"
+            icon={<Filter size={20} />}
+            className="p-button-secondary"
+          />
         </div>
       </div>
 
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">N° Facture</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Client</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Date</th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Montant</th>
-              <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700">Statut</th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Actions PDF</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="text-center py-8 text-slate-500">
-                  Chargement...
-                </td>
-              </tr>
-            ) : filteredInvoices.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-8 text-slate-500">
-                  Aucune facture trouvée
-                </td>
-              </tr>
-            ) : (
-              filteredInvoices.map((item: any) => {
-                const invoice = item.invoice;
-                return (
-                  <tr key={invoice.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4 font-medium text-slate-900">
-                      {invoice.invoiceNumber}
-                    </td>
-                    <td className="py-3 px-4 text-slate-700">
-                      {invoice.customerName || invoice.customer?.name || 'N/A'}
-                    </td>
-                    <td className="py-3 px-4 text-slate-600">
-                      {new Date(invoice.date).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="py-3 px-4 text-right font-semibold text-slate-900">
-                      {Number(invoice.total).toLocaleString('de-DE', {
-                        minimumFractionDigits: 2,
-                      })}{' '}
-                      DH
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          invoice.status === 'paid'
-                            ? 'bg-green-100 text-green-700'
-                            : invoice.status === 'partial'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : invoice.status === 'unpaid'
-                            ? 'bg-orange-100 text-orange-700'
-                            : 'bg-slate-100 text-slate-700'
-                        }`}
-                      >
-                        {invoice.status === 'paid'
-                          ? 'Payée'
-                          : invoice.status === 'partial'
-                          ? 'Partiel'
-                          : invoice.status === 'unpaid'
-                          ? 'Impayée'
-                          : 'Brouillon'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex justify-end">
-                        {/* METHOD 1: Using Icon Buttons (Recommended for tables) */}
-                        <PDFIconButtons
-                          documentType="invoice"
-                          documentId={invoice.id}
-                          documentNumber={invoice.invoiceNumber}
-                        />
-
-                        {/* METHOD 2: Using Full Buttons (Alternative, takes more space) */}
-                        {/* 
-                        <PDFActionButtons
-                          documentType="invoice"
-                          documentId={invoice.id}
-                          documentNumber={invoice.invoiceNumber}
-                          size="sm"
-                        />
-                        */}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+        <DataTable
+          value={filteredInvoices}
+          loading={isLoading}
+          size="small"
+          emptyMessage="Aucune facture trouvée"
+          tableStyle={{ width: '100%' }}
+        >
+          <Column
+            field="invoice.invoiceNumber"
+            header="N° Facture"
+            headerStyle={{ padding: '0.75rem 1rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#0f172a' }}
+            body={(item: any) => item.invoice.invoiceNumber}
+          />
+          <Column
+            field="invoice.customerName"
+            header="Client"
+            headerStyle={{ padding: '0.75rem 1rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ padding: '0.75rem 1rem', color: '#334155' }}
+            body={(item: any) => item.invoice.customerName || item.invoice.customer?.name || 'N/A'}
+          />
+          <Column
+            field="invoice.date"
+            header="Date"
+            headerStyle={{ padding: '0.75rem 1rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ padding: '0.75rem 1rem', color: '#475569' }}
+            body={(item: any) => new Date(item.invoice.date).toLocaleDateString('fr-FR')}
+          />
+          <Column
+            field="invoice.total"
+            header="Montant"
+            headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontWeight: 600, color: '#0f172a' }}
+            body={(item: any) => `${NumberformatAmount(item.invoice.total, 2)} DH`}
+          />
+          <Column
+            field="invoice.status"
+            header="Statut"
+            headerStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ textAlign: 'center', padding: '0.75rem 1rem' }}
+            body={(item: any) => {
+              const status = item.invoice.status;
+              const severity = status === 'paid' ? 'success' : status === 'partial' ? 'warning' : status === 'unpaid' ? 'danger' : 'secondary';
+              const label = status === 'paid' ? 'Payée' : status === 'partial' ? 'Partiel' : status === 'unpaid' ? 'Impayée' : 'Brouillon';
+              return <Tag severity={severity} value={label} />;
+            }}
+          />
+          <Column
+            header="Actions PDF"
+            headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontWeight: 600, color: '#334155' }}
+            bodyStyle={{ padding: '0.75rem 1rem' }}
+            body={(item: any) => (
+              <div className="flex justify-content-end">
+                <PDFIconButtons
+                  documentType="invoice"
+                  documentId={item.invoice.id}
+                  documentNumber={item.invoice.invoiceNumber}
+                />
+              </div>
             )}
-          </tbody>
-        </table>
+          />
+        </DataTable>
       </div>
 
       {/* Summary Stats */}
@@ -180,9 +160,8 @@ export default function InvoicesListExample() {
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
           <div className="text-sm text-slate-600 mb-1">Montant Total</div>
           <div className="text-2xl font-bold text-blue-600">
-            {invoices
-              .reduce((sum: number, i: any) => sum + Number(i.invoice.total), 0)
-              .toLocaleString('de-DE', { minimumFractionDigits: 2 })}{' '}
+            {formatAmount(invoices
+              .reduce((sum: number, i: any) => sum + Number(i.invoice.total), 0), 2)}{' '}
             DH
           </div>
         </div>
