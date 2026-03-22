@@ -7,4 +7,6 @@ export default {
   saveChanges: 'Enregistrer les modifications',
   profileUpdated: 'Vos informations ont été mises à jour',
   updateFailed: 'Échec de mise à jour',
+  customerName: 'Nom du client',
+  deliveryAddress: 'Adresse de livraison',
 };

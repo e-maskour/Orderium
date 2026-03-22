@@ -5,11 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
-  ManyToOne,
-  JoinColumn,
   Unique,
 } from 'typeorm';
-import { Portal } from '../../portal/entities/portal.entity';
 
 export enum DevicePlatform {
   WEB = 'web',
@@ -32,10 +29,6 @@ export enum AppType {
 export class DeviceToken {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(() => Portal, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
-  user: Portal;
 
   @Column({ type: 'int' })
   userId: number;

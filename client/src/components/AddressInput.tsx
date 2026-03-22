@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { InputText } from 'primereact/inputtext';
 import { notify } from '@orderium/ui';
@@ -30,6 +30,14 @@ export function AddressInput({
   const [mapsLink, setMapsLink] = useState<string | null>(googleMapsUrl || null);
   const [wazeLink, setWazeLink] = useState<string | null>(wazeUrl || null);
   const [coordinates, setCoordinates] = useState<{ lat: number; lon: number } | null>(null);
+
+  useEffect(() => {
+    if (googleMapsUrl) setMapsLink(googleMapsUrl);
+  }, [googleMapsUrl]);
+
+  useEffect(() => {
+    if (wazeUrl) setWazeLink(wazeUrl);
+  }, [wazeUrl]);
 
   const handleDetectLocation = async () => {
     if (!navigator.geolocation) {
@@ -161,11 +169,13 @@ export function AddressInput({
       </div>
       {error && <small className="p-error">{error}</small>}
       {coordinates && (
+        <p className="text-xs text-color-secondary flex align-items-center gap-1 m-0 mt-1">
+          <MapPin style={{ width: '0.75rem', height: '0.75rem' }} />
+          {`${t('coordinates')}: ${coordinates.lat.toFixed(6)}, ${coordinates.lon.toFixed(6)}`}
+        </p>
+      )}
+      {(mapsLink || wazeLink) && (
         <div className="flex flex-column gap-2 mt-1">
-          <p className="text-xs text-color-secondary flex align-items-center gap-1 m-0">
-            <MapPin style={{ width: '0.75rem', height: '0.75rem' }} />
-            {`${t('coordinates')}: ${coordinates.lat.toFixed(6)}, ${coordinates.lon.toFixed(6)}`}
-          </p>
           <div className="flex align-items-center gap-2">
             {mapsLink && (
               <a

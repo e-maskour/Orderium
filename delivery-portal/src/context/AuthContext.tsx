@@ -29,7 +29,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (storedPerson && storedToken) {
       try {
-        setDeliveryPerson(JSON.parse(storedPerson));
+        const parsed = JSON.parse(storedPerson);
+        // Normalise legacy PascalCase keys to camelCase
+        const normalised: DeliveryPerson = {
+          id: parsed.id ?? parsed.Id,
+          name: parsed.name ?? parsed.Name,
+          phoneNumber: parsed.phoneNumber ?? parsed.PhoneNumber,
+          email: parsed.email ?? parsed.Email,
+        };
+        if (!normalised.id) throw new Error('Missing delivery person id');
+        setDeliveryPerson(normalised);
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Failed to parse stored session:', error);
@@ -58,12 +67,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const responseBody = await response.json();
     const data = responseBody.data;
 
-    // Transform PascalCase to camelCase
+    const dp = data.deliveryPerson;
     const deliveryPersonData = {
-      id: data.deliveryPerson.Id,
-      name: data.deliveryPerson.Name,
-      phoneNumber: data.deliveryPerson.PhoneNumber,
-      email: data.deliveryPerson.Email,
+      id: dp.id ?? dp.Id,
+      name: dp.name ?? dp.Name,
+      phoneNumber: dp.phoneNumber ?? dp.PhoneNumber,
+      email: dp.email ?? dp.Email,
     };
 
     setDeliveryPerson(deliveryPersonData);

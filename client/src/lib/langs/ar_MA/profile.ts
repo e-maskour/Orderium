@@ -7,4 +7,6 @@ export default {
   saveChanges: 'حفظ التغييرات',
   profileUpdated: 'تم تحديث معلوماتك بنجاح',
   updateFailed: 'فشل تحديث المعلومات',
+  customerName: 'اسم العميل',
+  deliveryAddress: 'عنوان التوصيل',
 };

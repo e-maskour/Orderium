@@ -27,6 +27,7 @@ export interface Partner {
   longitude?: number;
   googleMapsUrl?: string;
   wazeUrl?: string;
+  deliveryAddress?: string;
   totalOrders?: number;
 }
 

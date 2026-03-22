@@ -12,7 +12,6 @@ export interface JwtUserWithPermissions {
     phoneNumber: string;
     isAdmin: boolean;
     isCustomer: boolean;
-    isDelivery: boolean;
     scope: 'portal' | 'admin';
     roleId?: number | null;
     isSuperAdmin?: boolean;

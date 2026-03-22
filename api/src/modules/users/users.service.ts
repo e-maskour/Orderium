@@ -105,7 +105,6 @@ export class UsersService {
             userType: dto.userType,
             isAdmin: dto.userType === UserType.ADMIN || dto.isAdmin === true,
             isCustomer: dto.userType === UserType.CLIENT || dto.isCustomer === true,
-            isDelivery: false,
             status: 'approved',
             roleId: role?.id ?? null,
         } as Partial<Portal>);

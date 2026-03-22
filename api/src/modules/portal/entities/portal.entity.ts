@@ -9,7 +9,6 @@ import {
   Index,
 } from 'typeorm';
 import { Partner } from '../../partners/entities/partner.entity';
-import { DeliveryPerson } from '../../delivery/entities/delivery.entity';
 import { Role } from '../../roles/entities/role.entity';
 
 @Entity('portal')
@@ -36,9 +35,6 @@ export class Portal {
   @Column({ type: 'boolean', default: false })
   isCustomer: boolean;
 
-  @Column({ type: 'boolean', default: false })
-  isDelivery: boolean;
-
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
@@ -57,13 +53,6 @@ export class Portal {
 
   @Column({ type: 'int', nullable: true })
   customerId: number | null;
-
-  @ManyToOne(() => DeliveryPerson, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'deliveryId' })
-  deliveryPerson: DeliveryPerson;
-
-  @Column({ type: 'int', nullable: true })
-  deliveryId: number | null;
 
   /** User type discriminator: 'admin' = backoffice user, 'client' = portal client */
   @Column({ type: 'varchar', length: 20, default: 'client' })

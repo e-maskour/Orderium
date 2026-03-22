@@ -30,6 +30,7 @@ export class Partner implements IPartner {
     public longitude?: number,
     public googleMapsUrl?: string,
     public wazeUrl?: string,
+    public deliveryAddress?: string,
     public totalOrders?: number
   ) { }
 
@@ -124,6 +125,7 @@ export class Partner implements IPartner {
       data.longitude ? parseFloat(String(data.longitude)) : undefined,
       data.googleMapsUrl as string | undefined,
       data.wazeUrl as string | undefined,
+      data.deliveryAddress as string | undefined,
       data.totalOrders ? parseInt(String(data.totalOrders)) : undefined
     );
   }

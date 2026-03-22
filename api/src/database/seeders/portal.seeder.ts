@@ -28,7 +28,6 @@ export async function seedPortal(dataSource: DataSource) {
     email: 'admin@orderium.com',
     isAdmin: true,
     isCustomer: false,
-    isDelivery: false,
     isActive: true,
   });
 

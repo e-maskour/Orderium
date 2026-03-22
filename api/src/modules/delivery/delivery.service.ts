@@ -77,7 +77,6 @@ export class DeliveryService {
       phoneNumber: personData.phoneNumber,
       isAdmin: false,
       isCustomer: false,
-      isDelivery: true,
       scope: 'portal',
     });
 

@@ -198,12 +198,11 @@ export class PushNotificationService implements OnModuleInit {
 
   /**
    * Get user ID by delivery person ID
+   * Delivery persons register device tokens with their own ID as userId,
+   * so we just return the deliveryId directly.
    */
   async getUserIdByDeliveryId(deliveryId: number): Promise<number | null> {
-    const portal = await this.portalRepository.findOne({
-      where: { deliveryId, isActive: true },
-    });
-    return portal?.id || null;
+    return deliveryId;
   }
 
   /**

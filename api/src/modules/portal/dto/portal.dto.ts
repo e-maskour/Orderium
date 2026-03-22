@@ -52,8 +52,4 @@ export class RegisterDto {
   @IsBoolean()
   isCustomer?: boolean;
 
-  @ApiProperty({ required: false, description: 'Is delivery account' })
-  @IsOptional()
-  @IsBoolean()
-  isDelivery?: boolean;
 }

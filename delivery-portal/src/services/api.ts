@@ -10,10 +10,10 @@ const getAuthHeaders = (): Record<string, string> => {
 interface LoginResponse {
   data: {
     deliveryPerson: {
-      Id: number;
-      Name: string;
-      PhoneNumber: string;
-      Email?: string;
+      id: number;
+      name: string;
+      phoneNumber: string;
+      email?: string;
     };
     token: string;
   };

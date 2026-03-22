@@ -23,6 +23,7 @@ export default function Profile() {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
+    deliveryAddress: '',
     latitude: undefined as number | undefined,
     longitude: undefined as number | undefined,
   });
@@ -36,7 +37,7 @@ export default function Profile() {
     try {
       const partner = await partnersService.getById(user.customerId);
       if (partner) {
-        setFormData({ name: partner.name || '', address: partner.address || '', latitude: partner.latitude, longitude: partner.longitude });
+        setFormData({ name: partner.name || '', address: partner.address || '', deliveryAddress: partner.deliveryAddress || '', latitude: partner.latitude, longitude: partner.longitude });
         if (partner.googleMapsUrl) setMapsLink(partner.googleMapsUrl);
         else if (partner.latitude && partner.longitude) setMapsLink(`https://www.google.com/maps?q=${partner.latitude},${partner.longitude}`);
         if (partner.wazeUrl) setWazeLink(partner.wazeUrl);
@@ -48,7 +49,7 @@ export default function Profile() {
   };
 
   const handleAddressChange = (address: string, latitude?: number, longitude?: number) => {
-    setFormData(prev => ({ ...prev, address, latitude, longitude }));
+    setFormData(prev => ({ ...prev, deliveryAddress: address, latitude, longitude }));
   };
 
   const handleMapsLinksChange = (googleMaps: string | null, waze: string | null) => {
@@ -64,7 +65,7 @@ export default function Profile() {
     try {
       const mapsLinkToSave = formData.latitude && formData.longitude ? `https://www.google.com/maps?q=${formData.latitude},${formData.longitude}` : undefined;
       const wazeLinkToSave = formData.latitude && formData.longitude ? `https://waze.com/ul?ll=${formData.latitude},${formData.longitude}&navigate=yes` : undefined;
-      await partnersService.upsert({ phoneNumber: user.phoneNumber, name: formData.name, address: formData.address, latitude: formData.latitude || undefined, longitude: formData.longitude || undefined, googleMapsUrl: mapsLinkToSave, wazeUrl: wazeLinkToSave, portalPhoneNumber: user.phoneNumber });
+      await partnersService.upsert({ phoneNumber: user.phoneNumber, name: formData.name, address: formData.address, deliveryAddress: formData.deliveryAddress, latitude: formData.latitude || undefined, longitude: formData.longitude || undefined, googleMapsUrl: mapsLinkToSave, wazeUrl: wazeLinkToSave, portalPhoneNumber: user.phoneNumber });
       await refreshUser();
       notify.success(t('profileUpdated'));
     } catch (error) {
@@ -172,7 +173,7 @@ export default function Profile() {
             />
           </div>
 
-          {/* Address */}
+          {/* Delivery Address */}
           <div style={{
             background: 'white', borderRadius: '18px',
             padding: '1.125rem 1.25rem',
@@ -182,10 +183,10 @@ export default function Profile() {
               <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <MapPin size={18} color="#059669" />
               </div>
-              <label htmlFor="address" style={{ fontSize: '0.72rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('address')}</label>
+              <label htmlFor="deliveryAddress" style={{ fontSize: '0.72rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('deliveryAddress')}</label>
             </div>
             <AddressInput
-              value={formData.address}
+              value={formData.deliveryAddress}
               onChange={handleAddressChange}
               onMapsLinksChange={handleMapsLinksChange}
               googleMapsUrl={mapsLink}

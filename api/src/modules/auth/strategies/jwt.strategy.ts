@@ -8,7 +8,6 @@ export interface JwtPayload {
   phoneNumber: string;
   isAdmin: boolean;
   isCustomer: boolean;
-  isDelivery: boolean;
   /** 'portal' = client/delivery app token; 'admin' = backoffice token */
   scope: 'portal' | 'admin';
   /** Role ID for permission checks */
@@ -35,7 +34,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       phoneNumber: payload.phoneNumber,
       isAdmin: payload.isAdmin,
       isCustomer: payload.isCustomer,
-      isDelivery: payload.isDelivery,
       scope: payload.scope ?? 'admin',
       roleId: payload.roleId ?? null,
       isSuperAdmin: payload.isSuperAdmin ?? false,

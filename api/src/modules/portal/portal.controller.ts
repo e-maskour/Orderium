@@ -80,7 +80,6 @@ export class PortalController {
       phoneNumber: user.phoneNumber,
       isAdmin: user.isAdmin,
       isCustomer: user.isCustomer,
-      isDelivery: user.isDelivery,
       // admin users (isAdmin) get an 'admin' scope so they can access backoffice resources
       scope: user.isAdmin ? 'admin' : 'portal',
       roleId: user.roleId ?? null,
@@ -98,8 +97,6 @@ export class PortalController {
         customerName: user.name,
         isAdmin: user.isAdmin,
         isCustomer: user.isCustomer,
-        isDelivery: user.isDelivery,
-        deliveryId: user.deliveryId,
         roleId: user.roleId,
         isSuperAdmin: user.role?.isSuperAdmin ?? false,
         permissions: user.role?.permissions?.map((p) => p.key) ?? [],
@@ -136,7 +133,6 @@ export class PortalController {
       name: body.fullName,
       customerId: partner.id,
       isCustomer: body.isCustomer ?? true,
-      isDelivery: body.isDelivery ?? false,
       isAdmin: false, // Never allow self-registration as admin
       status: 'pending',
     });
@@ -148,7 +144,6 @@ export class PortalController {
         name: user.name,
         customerId: user.customerId,
         isCustomer: user.isCustomer,
-        isDelivery: user.isDelivery,
         isAdmin: user.isAdmin,
         status: user.status,
       },
@@ -293,8 +288,6 @@ export class PortalController {
       customerName,
       isAdmin: user.isAdmin,
       isCustomer: user.isCustomer,
-      isDelivery: user.isDelivery,
-      deliveryId: user.deliveryId,
     });
   }
 

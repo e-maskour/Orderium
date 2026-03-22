@@ -209,7 +209,7 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
               type="button"
               onClick={handleAddToCart}
               className="cl-btn-primary"
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.875rem 1.5rem', fontSize: '1rem', animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}
             >
               <ShoppingCart style={{ width: '1.125rem', height: '1.125rem' }} />
               {currentCartQuantity > 0 ? t('updateQty') : t('addToCart')}

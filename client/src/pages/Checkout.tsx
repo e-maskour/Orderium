@@ -61,6 +61,11 @@ const Checkout = () => {
     validateMoroccanPhone(formData.phone) &&
     formData.address.trim().length > 0;
 
+  const isCustomerInfoComplete =
+    formData.name.trim().length > 0 &&
+    formData.address.trim().length > 0 &&
+    (mapsLink != null || wazeLink != null || (formData.latitude != null && formData.longitude != null));
+
   const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
   const loadCustomerInfo = useCallback(async (portalUserId: number) => {
@@ -69,7 +74,7 @@ const Checkout = () => {
       const result = await authService.getPortalUserById(portalUserId);
       if (result && (result.exists || result.customerId)) {
         setExistingCustomerId(result.customerId ?? null);
-        setFormData(prev => ({ ...prev, name: result.name || result.customerName || '', address: result.address || '', note: '', latitude: result.latitude, longitude: result.longitude }));
+        setFormData(prev => ({ ...prev, name: result.name || result.customerName || '', address: result.deliveryAddress || result.address || '', note: '', latitude: result.latitude, longitude: result.longitude }));
         if (result.googleMapsUrl) setMapsLink(result.googleMapsUrl);
         if (result.wazeUrl) setWazeLink(result.wazeUrl);
         setErrors({});
@@ -189,63 +194,83 @@ const Checkout = () => {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
 
               {/* Customer info card */}
-              <div style={{ background: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
-                <h2 style={{ margin: '0 0 1.125rem', fontWeight: 700, fontSize: '1rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <User size={16} color="#059669" /> {t('customerInfo')}
-                </h2>
+              {!isCustomerInfoComplete && (
+                <div style={{ background: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+                  <h2 style={{ margin: '0 0 1.125rem', fontWeight: 700, fontSize: '1rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <User size={16} color="#059669" /> {t('customerInfo')}
+                  </h2>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-                  {/* Phone */}
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <label htmlFor="phone" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <Phone size={13} color="#059669" /> {t('phone')}
-                      </label>
-                      {isSearchingCustomer && <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('searching')}…</span>}
-                      {existingCustomerId && (
-                        <span style={{ fontSize: '0.75rem', background: '#d1fae5', color: '#059669', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontWeight: 700 }}>
-                          {t('existingCustomer')}
-                        </span>
-                      )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                    {/* Phone */}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <label htmlFor="phone" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                          <Phone size={13} color="#059669" /> {t('phone')}
+                        </label>
+                        {isSearchingCustomer && <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{t('searching')}…</span>}
+                        {existingCustomerId && (
+                          <span style={{ fontSize: '0.75rem', background: '#d1fae5', color: '#059669', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontWeight: 700 }}>
+                            {t('existingCustomer')}
+                          </span>
+                        )}
+                      </div>
+                      <InputText
+                        id="phone" type="tel"
+                        value={formData.phone}
+                        onChange={e => updateField('phone', e.target.value)}
+                        placeholder={t('phonePlaceholder')}
+                        className={`w-full${errors.phone ? ' p-invalid' : ''}`}
+                        style={{ height: '3.25rem', fontSize: '1rem', borderColor: existingCustomerId ? '#059669' : undefined }}
+                        dir="ltr" disabled
+                      />
+                      {errors.phone && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.phone}</p>}
                     </div>
-                    <InputText
-                      id="phone" type="tel"
-                      value={formData.phone}
-                      onChange={e => updateField('phone', e.target.value)}
-                      placeholder={t('phonePlaceholder')}
-                      className={`w-full${errors.phone ? ' p-invalid' : ''}`}
-                      style={{ height: '3.25rem', fontSize: '1rem', borderColor: existingCustomerId ? '#059669' : undefined }}
-                      dir="ltr" disabled
-                    />
-                    {errors.phone && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.phone}</p>}
-                  </div>
 
-                  {/* Name */}
-                  <div>
-                    <label htmlFor="name" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                      <User size={13} color="#059669" /> {t('name')} <span style={{ color: '#ef4444' }}>*</span>
-                    </label>
-                    <InputText
-                      id="name" value={formData.name}
-                      onChange={e => updateField('name', e.target.value)}
-                      placeholder={t('namePlaceholder')}
-                      className={`w-full${errors.name ? ' p-invalid' : ''}`}
-                      style={{ height: '3.25rem', fontSize: '1rem' }}
-                      required
-                    />
-                    {errors.name && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.name}</p>}
-                  </div>
+                    {/* Name */}
+                    <div>
+                      <label htmlFor="name" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <User size={13} color="#059669" /> {t('name')} <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <InputText
+                        id="name" value={formData.name}
+                        onChange={e => updateField('name', e.target.value)}
+                        placeholder={t('namePlaceholder')}
+                        className={`w-full${errors.name ? ' p-invalid' : ''}`}
+                        style={{ height: '3.25rem', fontSize: '1rem' }}
+                        required
+                      />
+                      {errors.name && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.name}</p>}
+                    </div>
 
-                  {/* Address */}
-                  <div>
-                    <label htmlFor="address" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                      <MapPin size={13} color="#059669" /> {t('address')} <span style={{ color: '#ef4444' }}>*</span>
-                    </label>
-                    <AddressInput value={formData.address} onChange={handleAddressChange} onMapsLinksChange={handleMapsLinksChange} error={errors.address} placeholder={t('addressPlaceholder')} googleMapsUrl={mapsLink} wazeUrl={wazeLink} />
-                    {errors.address && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.address}</p>}
-                  </div>
+                    {/* Address */}
+                    <div>
+                      <label htmlFor="address" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <MapPin size={13} color="#059669" /> {t('address')} <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <AddressInput value={formData.address} onChange={handleAddressChange} onMapsLinksChange={handleMapsLinksChange} error={errors.address} placeholder={t('addressPlaceholder')} googleMapsUrl={mapsLink} wazeUrl={wazeLink} />
+                      {errors.address && <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#ef4444' }}>{errors.address}</p>}
+                    </div>
 
-                  {/* Note */}
+                    {/* Note */}
+                    <div>
+                      <label htmlFor="note" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <FileText size={13} color="#059669" /> {t('note')}
+                      </label>
+                      <InputTextarea
+                        id="note" value={formData.note}
+                        onChange={e => updateField('note', e.target.value)}
+                        placeholder={t('notePlaceholder')}
+                        rows={3} autoResize className="w-full"
+                        style={{ fontSize: '0.9375rem', resize: 'vertical' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Note card (shown when customer info is hidden) */}
+              {isCustomerInfoComplete && (
+                <div style={{ background: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
                   <div>
                     <label htmlFor="note" style={{ fontWeight: 700, fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                       <FileText size={13} color="#059669" /> {t('note')}
@@ -259,7 +284,7 @@ const Checkout = () => {
                     />
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Submit (mobile only) */}
               <div className="lg:hidden">

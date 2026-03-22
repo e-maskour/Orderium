@@ -143,7 +143,6 @@ export class OnboardingService {
             password: hashedPassword,
             isAdmin: true,
             isCustomer: false,
-            isDelivery: false,
             isActive: true,
         });
 
@@ -154,7 +153,6 @@ export class OnboardingService {
             phoneNumber: saved.phoneNumber,
             isAdmin: true,
             isCustomer: false,
-            isDelivery: false,
         });
 
         return {
@@ -166,7 +164,6 @@ export class OnboardingService {
                 fullName: saved.name,
                 isAdmin: true,
                 isCustomer: false,
-                isDelivery: false,
             },
             token,
         };

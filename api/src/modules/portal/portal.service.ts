@@ -78,7 +78,7 @@ export class PortalService {
   ): Promise<Record<string, unknown> | null> {
     const user = await this.portalRepository.findOne({
       where: { id: userId },
-      relations: ['customer', 'deliveryPerson'],
+      relations: ['customer'],
     });
     if (!user) return null;
     return {
@@ -87,9 +87,7 @@ export class PortalService {
       name: user.name,
       email: user.email,
       isCustomer: user.isCustomer,
-      isDelivery: user.isDelivery,
       customerId: user.customerId,
-      deliveryId: user.deliveryId,
       dateCreated: user.dateCreated,
       dateUpdated: user.dateUpdated,
     };
