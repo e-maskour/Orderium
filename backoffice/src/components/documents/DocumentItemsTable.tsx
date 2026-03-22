@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, BookOpen, Hash, Package2 } from 'lucide-react';
 import { Dropdown as PrDropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
@@ -232,6 +232,19 @@ export function DocumentItemsTable({
     onItemsChange(newItems);
   };
 
+  // Build dropdown options for a row, injecting the current product as a synthetic
+  // option when it wasn't included in the first page of loaded products.
+  const getDropdownOptions = useCallback(
+    (item: DocumentItem) => {
+      const opts = products.map(p => ({ value: String(p.id), label: p.name }));
+      if (item.productId && !products.some(p => p.id === item.productId)) {
+        opts.unshift({ value: String(item.productId), label: item.description || `#${item.productId}` });
+      }
+      return opts;
+    },
+    [products],
+  );
+
   return (
     <>
       <style>{DIT_STYLES}</style>
@@ -322,7 +335,7 @@ export function DocumentItemsTable({
               ) : (
                 <PrDropdown
                   value={item.productId ? String(item.productId) : null}
-                  options={products.map(p => ({ value: String(p.id), label: p.name }))}
+                  options={getDropdownOptions(item)}
                   onChange={(e) => handleSelectProduct(item.id, e.value)}
                   optionLabel="label" optionValue="value"
                   placeholder={t('invoice.itemDescriptionPlaceholder')}
@@ -529,7 +542,7 @@ export function DocumentItemsTable({
                   <label className="dit-field-label">{t('invoice.descriptionHeader')}</label>
                   <PrDropdown
                     value={item.productId ? String(item.productId) : null}
-                    options={products.map(p => ({ value: String(p.id), label: p.name }))}
+                    options={getDropdownOptions(item)}
                     onChange={(e) => handleSelectProduct(item.id, e.value)}
                     optionLabel="label" optionValue="value"
                     placeholder={t('invoice.itemDescriptionPlaceholder')}
