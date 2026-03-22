@@ -5,7 +5,7 @@ import { authService } from '@/modules/auth';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import orderiumLogo from '../assets/logo-client.svg';
 import { ShoppingCart, Phone, Lock, Eye, EyeOff, Loader2, Clock, ShieldX, HandMetal, AlertTriangle, User } from 'lucide-react';
-import { toastSuccess, toastError } from '@/services/toast.service';
+import { notify } from '@orderium/ui';
 import { useNavigate } from 'react-router-dom';
 
 const PRI = '#059669';
@@ -119,10 +119,10 @@ export default function Login() {
       if (phoneExists === false) {
         await register({ phoneNumber: normalizedPhone, password: formData.password, fullName: formData.fullName.trim(), customerId, isCustomer: true });
         setAccountStatus('pending');
-        toastSuccess(t('accountCreatedPending'));
+        notify.success(t('accountCreatedPending'));
       } else {
         await login({ phoneNumber: normalizedPhone, password: formData.password });
-        toastSuccess(t('loginSuccess'));
+        notify.success(t('loginSuccess'));
       }
     } catch (error: unknown) {
       console.error('Authentication failed:', error);
@@ -143,7 +143,7 @@ export default function Login() {
         } catch { /* couldn't parse, fall through */ }
         setAccountStatus('pending');
       } else {
-        toastError(phoneExists === false ? t('registrationFailed') : t('loginFailed'));
+        notify.error(phoneExists === false ? t('registrationFailed') : t('loginFailed'));
       }
     } finally {
       setIsLoading(false);

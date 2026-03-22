@@ -327,6 +327,11 @@ export default {
   validateDocument: 'تأكيد المستند',
   devalidateDocument: 'إلغاء تأكيد المستند',
 
+  // Document action bar
+  moreActions: 'المزيد من الإجراءات',
+  confirmDeleteDocument: 'هل أنت متأكد من حذف هذا المستند؟ لا يمكن التراجع عن هذا الإجراء.',
+  documentDeleted: 'تم حذف المستند بنجاح',
+
   // Accessibility
   refresh: 'تحديث',
   moreOptions: 'خيارات إضافية',

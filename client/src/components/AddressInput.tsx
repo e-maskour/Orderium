@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { InputText } from 'primereact/inputtext';
-import { toastSuccess, toastError, toastWarning } from '@/services/toast.service';
+import { notify } from '@orderium/ui';
 import { MapPin } from 'lucide-react';
 
 interface AddressInputProps {
@@ -33,7 +33,7 @@ export function AddressInput({
 
   const handleDetectLocation = async () => {
     if (!navigator.geolocation) {
-      toastError(t('geolocationNotSupported'));
+      notify.error(t('geolocationNotSupported'));
       return;
     }
 
@@ -100,11 +100,11 @@ export function AddressInput({
               : data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 
           onChange(formattedAddress, latitude, longitude);
-          toastSuccess(t('locationDetected'));
+          notify.success(t('locationDetected'));
         } catch (error) {
           const fallbackAddress = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
           onChange(fallbackAddress, latitude, longitude);
-          toastWarning(t('coordinatesSaved'));
+          notify.warning(t('coordinatesSaved'));
         } finally {
           setIsDetectingLocation(false);
         }
@@ -128,7 +128,7 @@ export function AddressInput({
             errorMessage = t('locationError');
         }
 
-        toastError(errorMessage);
+        notify.error(errorMessage);
       },
       options
     );

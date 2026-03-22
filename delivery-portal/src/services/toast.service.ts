@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { sileo } from 'sileo';
+import { notify } from '@orderium/ui';
 
 interface ToastOptions {
   description?: ReactNode;
@@ -8,19 +8,19 @@ interface ToastOptions {
 }
 
 export function toastSuccess(message: string, options?: ToastOptions) {
-  sileo.success({ title: message, ...options });
+  notify.success(message, options);
 }
 
 export function toastError(message: string, options?: ToastOptions) {
-  sileo.error({ title: message, ...options });
+  notify.error(message, options);
 }
 
 export function toastWarning(message: string, options?: ToastOptions) {
-  sileo.warning({ title: message, ...options });
+  notify.warning(message, options);
 }
 
 export function toastInfo(message: string, options?: ToastOptions) {
-  sileo.info({ title: message, ...options });
+  notify.info(message, options);
 }
 
 export function toastConfirm(
@@ -28,14 +28,8 @@ export function toastConfirm(
   onConfirm: () => void,
   options?: { confirmLabel?: string; description?: ReactNode; icon?: ReactNode },
 ) {
-  sileo.action({
-    title: message,
+  notify.action(message, options?.confirmLabel ?? 'Confirm', onConfirm, {
     description: options?.description,
     icon: options?.icon,
-    duration: null,
-    button: {
-      title: options?.confirmLabel ?? 'Confirm',
-      onClick: onConfirm,
-    },
   });
 }

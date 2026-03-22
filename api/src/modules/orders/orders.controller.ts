@@ -19,7 +19,6 @@ import type { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrdersDto } from './dto/filter-orders.dto';
-import { PaginationDto } from '../../common/dto/pagination.dto';
 import { ApiRes } from '../../common/api-response';
 import { ORD } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
@@ -48,7 +47,8 @@ export class OrdersController {
   async filterOrders(
     @Body() filterDto: FilterOrdersDto,
     @Query('fromPortal') fromPortal?: string,
-    @Query() pagination?: PaginationDto,
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
     @Query('direction') direction?: string,
   ) {
     const fromPortalBool =
@@ -65,10 +65,11 @@ export class OrdersController {
     const endDateObj = filterDto.endDate
       ? new Date(filterDto.endDate)
       : undefined;
-    const pageNum = pagination?.page ?? 1;
+    const pageNum = page ? parseInt(page, 10) || 1 : 1;
     // Allowed page sizes capped at 100 for standard queries
     const allowedPageSizes = [10, 50, 100];
-    const pageSize = allowedPageSizes.includes(pagination?.perPage ?? 50) ? (pagination?.perPage ?? 50) : 50;
+    const parsedPerPage = perPage ? parseInt(perPage, 10) || 50 : 50;
+    const pageSize = allowedPageSizes.includes(parsedPerPage) ? parsedPerPage : 50;
 
     const result = await this.ordersService.filterOrders(
       startDateObj,

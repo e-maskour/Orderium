@@ -37,11 +37,6 @@ export default function DeliveredOrders() {
     grouped[date].push(order);
   });
 
-  const totalToday = orders.filter((o: Order) => {
-    const today = new Date().toDateString();
-    return new Date(o.deliveredAt ?? o.createdAt).toDateString() === today;
-  }).length;
-
   const totalAmount = orders.reduce((sum: number, o: Order) => sum + (o.totalAmount ?? 0), 0);
 
   return (

@@ -431,7 +431,7 @@ export class QuotesService {
 
     const quote = await this.quoteRepository.findOne({
       where: { id },
-      relations: ['customer', 'items'],
+      relations: ['customer', 'supplier', 'items'],
     });
     if (quote) {
       await this.cacheManager.set(cacheKey, quote, 300_000);

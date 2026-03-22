@@ -30,8 +30,8 @@
   gap: 0.4rem;
 }
 
-/* ─── Sileo Toast: ensure toasts appear above the sticky header ─── */
-[data-sileo-viewport] {
+/* ─── Toast: ensure toasts appear above the sticky header ─── */
+.ord-toaster {
   z-index: 99999 !important;
 }
 

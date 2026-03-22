@@ -42,7 +42,7 @@ export class QuotesService {
   }
 
   async update(id: number, data: UpdateQuoteDTO): Promise<QuoteWithDetails> {
-    const response = await apiClient.put<any>(API_ROUTES.QUOTES.UPDATE(id), data);
+    const response = await apiClient.patch<any>(API_ROUTES.QUOTES.UPDATE(id), data);
     return QuoteWithDetails.fromApiResponse(response.data);
   }
 

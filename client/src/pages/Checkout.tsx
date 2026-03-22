@@ -7,7 +7,7 @@ import { formatCurrency, validateMoroccanPhone } from '@/lib/i18n';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { ArrowLeft, ArrowRight, Package, ShoppingBag, User, Phone, MapPin, FileText } from 'lucide-react';
-import { toastError } from '@/services/toast.service';
+import { notify } from '@orderium/ui';
 import { partnersService, ordersService } from '@/modules';
 import { authService } from '@/modules/auth';
 import { AddressInput } from '@/components/AddressInput';
@@ -135,7 +135,7 @@ const Checkout = () => {
       navigate('/success', { state: { orderNumber: orderResult.data.orderNumber, orderId: orderResult.data.id, total: subtotal, customerName: formData.name, customerPhone: formData.phone, customerAddress: formData.address, items } });
       clearCart();
     } catch {
-      toastError(t('orderCreationError'));
+      notify.error(t('orderCreationError'));
     } finally {
       setIsSubmitting(false);
     }

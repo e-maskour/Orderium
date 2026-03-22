@@ -21,8 +21,7 @@
     "primereact": "^10.8.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "sileo": "^0.1.5"
+    "react-router-dom": "^6.20.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

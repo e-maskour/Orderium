@@ -1,19 +1,20 @@
 import { AdminLayout } from '../../components/AdminLayout';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useDocumentCalculation } from '../../modules/documents/hooks';
-import { Save, X, CheckCircle, XCircle, ChevronDown, FileText, Truck, ArrowLeft, DollarSign, Clock, AlertCircle, Share2, PenTool, Ban, Receipt, History } from 'lucide-react';
+import { Save, CheckCircle, XCircle, FileText, Truck, ArrowLeft, DollarSign, Clock, AlertCircle, Share2, PenTool, Ban, Receipt, History, Eye, Trash2 } from 'lucide-react';
 import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
 import { Partner, IPartner } from '../../modules/partners';
 import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
+import DocumentActionBar from '../../components/documents/DocumentActionBar';
 import { ShareQuoteDialog } from '../../components/documents/ShareQuoteDialog';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import type { CreateInvoiceDTO } from '../../modules/invoices/invoices.interface';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { ordersService } from '../../modules/orders/orders.service';
-import PDFActionButtons from '../../components/PDFActionButtons';
-import { pdfService } from '../../services/pdf.service';
+import { pdfService, DocumentType as PDFDocumentType } from '../../services/pdf.service';
+import { PDFPreviewModal } from '../../components/PDFPreviewModal';
 import { toastSuccess, toastError, toastValidated, toastDevalidated, toastDelivered, toastCancelled, toastDocument, toastLinked, toastConfirm } from '../../services/toast.service';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
 import { InputText } from 'primereact/inputtext';
@@ -40,12 +41,12 @@ export default function DocumentEditPage({
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareTokenExpiry, setShareTokenExpiry] = useState<Date | null>(null);
-  const actionsMenuRef = useRef<HTMLDivElement>(null);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState('');
 
   // Document state
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -256,16 +257,6 @@ export default function DocumentEditPage({
     loadDocument();
   }, [id]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
-        setShowActionsMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const loadDocument = async () => {
     if (!id) return;
 
@@ -331,13 +322,14 @@ export default function DocumentEditPage({
       const customerName = doc.customerName || doc.customer?.name;
       const customerPhone = doc.customerPhone || doc.customer?.phone || doc.customer?.phoneNumber;
       const customerAddress = doc.customerAddress || doc.customer?.address;
+      const customerIce = doc.customer?.ice || null;
 
       if (isVente && customerId) {
         setPartner({
           id: customerId,
           name: customerName || '',
           phoneNumber: customerPhone || '',
-          ice: doc.customerIce || null,
+          ice: customerIce,
           address: customerAddress || null,
           deliveryAddress: '',
           isCompany: false,
@@ -352,7 +344,7 @@ export default function DocumentEditPage({
           id: doc.supplierId,
           name: doc.supplierName || '',
           phoneNumber: doc.supplierPhone || '',
-          ice: doc.supplierIce || null,
+          ice: doc.supplier?.ice || null,
           address: doc.supplierAddress || null,
           deliveryAddress: '',
           isCompany: false,
@@ -788,6 +780,31 @@ export default function DocumentEditPage({
     }
   };
 
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      if (documentType === 'facture') {
+        await invoicesService.delete(Number(id));
+      } else if (documentType === 'devis') {
+        await quotesService.delete(Number(id));
+      } else if (documentType === 'bon_livraison') {
+        await ordersService.delete(Number(id));
+      }
+      toastSuccess(t('documentDeleted'));
+      navigate(listRoute);
+    } catch (error: any) {
+      console.error('Error deleting document:', error);
+      toastError(error.message || t('failedToDelete'));
+    }
+  };
+
+  const handlePreviewPDF = () => {
+    if (!id) return;
+    const url = pdfService.getPDFUrl(getPDFDocumentType(documentType), Number(id), 'preview');
+    setPdfPreviewUrl(url);
+    setShowPDFPreview(true);
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -813,14 +830,13 @@ export default function DocumentEditPage({
     <AdminLayout>
       <style>{`
         .doc-edit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
-        .doc-sticky-bar { position: fixed; bottom: 0; left: 16rem; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-top: 1.5px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 40; }
         .doc-field-label { display: block; font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.375rem; }
         .doc-cal { position: relative !important; display: block !important; }
         .doc-cal .p-inputtext { padding-right: 2.5rem !important; width: 100% !important; border-top-right-radius: var(--orderium-radius-md, 6px) !important; border-bottom-right-radius: var(--orderium-radius-md, 6px) !important; }
         .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
         .doc-cal .p-datepicker-trigger:hover { color: var(--form-input-border-focus) !important; background: transparent !important; }
         .doc-notes-totals { display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-top: 1.5rem; align-items: flex-start; }
-        @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } .doc-notes-totals { grid-template-columns: 1fr !important; gap: 1rem !important; } }
+        @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-notes-totals { grid-template-columns: 1fr !important; gap: 1rem !important; } }
         /* ── Document detail header – responsive ── */
         .doc-detail-hdr { display: flex; align-items: center; gap: 0.875rem; flex-wrap: nowrap; position: relative; margin-bottom: 1.5rem; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.72); backdrop-filter: blur(8px); border-radius: 1rem; border: 1px solid rgba(226,232,240,0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; }
         .doc-detail-hdr__icon { width: 3rem; height: 3rem; flex-shrink: 0; background: linear-gradient(135deg, #235ae4 0%, #818cf8 100%); border-radius: 0.875rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(35,90,228,0.35); }
@@ -1119,191 +1135,207 @@ export default function DocumentEditPage({
             </div>
           </div>
 
-          {/* Sticky Bottom Action Bar */}
-          <div className="doc-sticky-bar">
-            <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.75rem 1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                {/* Left side - Payment History button for invoices */}
-                <div>
-                  {documentType === 'facture' && isValidated && status !== 'draft' && (
-                    <Button
-                      icon={<History style={{ width: '1rem', height: '1rem' }} />}
-                      label={t('paymentHistory')}
-                      onClick={() => setShowPaymentHistory(true)}
-                      severity="info"
-                    />
-                  )}
-                </div>
+          {/* ══ Tiered Action Bar ══ */}
+          <DocumentActionBar
+            primary={(() => {
+              // Primary: Enregistrer (draft / closed-devis that returned to draft)
+              const canSave = !isValidated && !(documentType === 'devis' && status === 'closed');
+              if (!canSave) return null;
+              return {
+                id: 'save',
+                label: t('save'),
+                icon: <Save style={{ width: '1rem', height: '1rem' }} />,
+                onClick: handleSave,
+                disabled: saving,
+                loading: saving,
+              };
+            })()}
+            secondary={(() => {
+              // Secondary: context-dependent
+              if (documentType === 'devis') {
+                if (!isValidated && status !== 'closed') {
+                  // Draft devis → Validate
+                  return {
+                    id: 'validate',
+                    label: t('validateDocument'),
+                    icon: <CheckCircle style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') }),
+                  };
+                }
+                if (isValidated && status === 'open') {
+                  // Validated devis → Sign
+                  return {
+                    id: 'sign',
+                    label: t('signQuote'),
+                    icon: <PenTool style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') }),
+                  };
+                }
+                if (isValidated && status !== 'closed' && status !== 'signed' && status !== 'open') {
+                  // Devalidate for other validated states
+                  return {
+                    id: 'devalidate',
+                    label: t('devalidateDocument'),
+                    icon: <XCircle style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') }),
+                  };
+                }
+                if (status === 'closed') {
+                  // Closed (refused) → Validate again
+                  return {
+                    id: 'validate',
+                    label: t('validateDocument'),
+                    icon: <CheckCircle style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') }),
+                  };
+                }
+                return null;
+              }
+              if (documentType === 'facture') {
+                if (config.features.hasValidation && !isValidated) {
+                  return {
+                    id: 'validate',
+                    label: t('validateDocument'),
+                    icon: <CheckCircle style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') }),
+                  };
+                }
+                if (config.features.hasValidation && isValidated && status === 'unpaid') {
+                  return {
+                    id: 'devalidate',
+                    label: t('devalidateDocument'),
+                    icon: <XCircle style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') }),
+                  };
+                }
+                return null;
+              }
+              if (documentType === 'bon_livraison') {
+                if (!isValidated) {
+                  return {
+                    id: 'validate',
+                    label: t('validateDocument'),
+                    icon: <CheckCircle style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') }),
+                  };
+                }
+                if (status === 'in_progress') {
+                  return {
+                    id: 'deliver',
+                    label: t('markAsDelivered'),
+                    icon: <Truck style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') }),
+                  };
+                }
+                if (isValidated && status !== 'delivered' && status !== 'cancelled') {
+                  return {
+                    id: 'devalidate',
+                    label: t('devalidateDocument'),
+                    icon: <XCircle style={{ width: '1rem', height: '1rem' }} />,
+                    onClick: () => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') }),
+                  };
+                }
+                return null;
+              }
+              return null;
+            })()}
+            overflow={[
+              // Preview PDF
+              {
+                id: 'preview',
+                label: t('previewPDF'),
+                icon: <Eye size={16} style={{ color: '#2563eb' }} />,
+                onClick: handlePreviewPDF,
+                hidden: !(isValidated && status !== 'draft' && id),
+              },
 
-                {/* Right side - Action buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  {/* Validation actions */}
-                  {config.features.hasValidation && (
-                    isValidated ? (
-                      <Button
-                        icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
-                        label={t('devalidateDocument')}
-                        onClick={() => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') })}
-                        severity="secondary"
-                      />
-                    ) : (
-                      <Button
-                        icon={<CheckCircle style={{ width: '1rem', height: '1rem' }} />}
-                        label={t('validateDocument')}
-                        onClick={() => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') })}
-                        severity="success"
-                      />
-                    )
-                  )}
-
-                  {/* Deliver and Cancel buttons for bon_livraison */}
-                  {documentType === 'bon_livraison' && status === 'in_progress' && (
-                    <>
-                      <Button
-                        icon={<Truck style={{ width: '1rem', height: '1rem' }} />}
-                        label={t('markAsDelivered')}
-                        onClick={() => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') })}
-                        severity="info"
-                      />
-                      <Button
-                        icon={<Ban style={{ width: '1rem', height: '1rem' }} />}
-                        label={t('cancel')}
-                        onClick={() => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') })}
-                        severity="danger"
-                      />
-                    </>
-                  )}
-
-                  {/* Actions menu for bon_livraison */}
-                  {documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') && (
-                    <div style={{ position: 'relative' }} ref={actionsMenuRef}>
-                      <Button
-                        icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
-                        iconPos="right"
-                        label={t('actions')}
-                        onClick={() => setShowActionsMenu(!showActionsMenu)}
-                        style={{ backgroundColor: '#235ae4', borderColor: '#235ae4' }}
-                      />
-                      {showActionsMenu && (
-                        <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
-                          {/* Create Invoice from Bon */}
-                          <Button
-                            onClick={() => {
-                              setShowActionsMenu(false);
-                              toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
-                            }}
-                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />}
-                            iconPos="left"
-                            label={t('convertToInvoice')}
-                            text
-                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderRadius: '0.5rem' }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Sign/Unsign buttons for devis */}
-                  {documentType === 'devis' && isValidated && status !== 'closed' && (
-                    <>
-                      <Button
-                        icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
-                        label={t('signQuote')}
-                        onClick={() => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') })}
-                        disabled={status === 'signed'}
-                        severity="success"
-                      />
-                      <Button
-                        icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
-                        label={t('rejectQuote')}
-                        onClick={() => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') })}
-                        disabled={status !== 'signed'}
-                        severity="warning"
-                      />
-                    </>
-                  )}
-
-                  {/* Actions menu for devis */}
-                  {documentType === 'devis' && status === 'signed' && (
-                    <div style={{ position: 'relative' }} ref={actionsMenuRef}>
-                      <Button
-                        icon={<ChevronDown style={{ width: '1rem', height: '1rem' }} />}
-                        iconPos="right"
-                        label={t('actions')}
-                        onClick={() => setShowActionsMenu(!showActionsMenu)}
-                        severity="info"
-                      />
-                      {showActionsMenu && (
-                        <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '0.5rem', width: '14rem', backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0', zIndex: 50 }}>
-                          {/* Share Quote */}
-                          {isValidated && (
-                            <Button
-                              onClick={() => {
-                                setShowActionsMenu(false);
-                                setShowShareDialog(true);
-                              }}
-                              icon={<Share2 style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />}
-                              iconPos="left"
-                              label={t('shareWithClient')}
-                              text
-                              style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTopLeftRadius: '0.5rem', borderTopRightRadius: '0.5rem' }}
-                            />
-                          )}
-
-                          {/* Create Invoice */}
-                          <Button
-                            onClick={() => {
-                              setShowActionsMenu(false);
-                              toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') });
-                            }}
-                            icon={<FileText style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />}
-                            iconPos="left"
-                            label={t('createAnInvoice')}
-                            text
-                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderTop: '1px solid #f1f5f9' }}
-                          />
-
-                          {/* Create Bon de Livraison */}
-                          <Button
-                            onClick={() => {
-                              setShowActionsMenu(false);
-                              toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') });
-                            }}
-                            icon={<Truck style={{ width: '1rem', height: '1rem', color: '#059669' }} />}
-                            iconPos="left"
-                            label={t('createDeliveryNote')}
-                            text
-                            style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.875rem', fontWeight: 500, color: '#334155', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', borderTop: '1px solid #f1f5f9' }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* PDF Action Buttons - Show when validated and not draft */}
-                  {isValidated && status !== 'draft' && id && (
-                    <PDFActionButtons
-                      documentType={getPDFDocumentType(documentType)}
-                      documentId={Number(id)}
-                    />
-                  )}
-
-                  {/* Save button */}
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving || isValidated || (documentType === 'devis' && status === 'closed')}
-                    loading={saving}
-                    icon={<Save style={{ width: '1rem', height: '1rem' }} />}
-                    label={t('save')}
-                    style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none', fontWeight: 700, boxShadow: '0 4px 12px rgba(35,90,228,0.35)' }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+              // Devis-specific: Sign (when validated & open, already shown as secondary, but included when signed for state changes)
+              ...(documentType === 'devis' && isValidated && status === 'signed' ? [
+                {
+                  id: 'reject',
+                  label: t('rejectQuote'),
+                  icon: <XCircle size={16} style={{ color: '#d97706' }} />,
+                  onClick: () => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') }),
+                },
+                {
+                  id: 'share',
+                  label: t('shareWithClient'),
+                  icon: <Share2 size={16} style={{ color: '#2563eb' }} />,
+                  onClick: () => setShowShareDialog(true),
+                },
+                {
+                  id: 'createInvoice',
+                  label: t('createAnInvoice'),
+                  icon: <FileText size={16} style={{ color: '#235ae4' }} />,
+                  onClick: () => toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') }),
+                },
+                {
+                  id: 'createBon',
+                  label: t('createDeliveryNote'),
+                  icon: <Truck size={16} style={{ color: '#059669' }} />,
+                  onClick: () => toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') }),
+                },
+              ] : []),
+              // Devis validated & open: show reject in overflow
+              ...(documentType === 'devis' && isValidated && status === 'open' ? [
+                {
+                  id: 'reject',
+                  label: t('rejectQuote'),
+                  icon: <XCircle size={16} style={{ color: '#d97706' }} />,
+                  onClick: () => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') }),
+                },
+                {
+                  id: 'devalidate',
+                  label: t('devalidateDocument'),
+                  icon: <XCircle size={16} style={{ color: '#64748b' }} />,
+                  onClick: () => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') }),
+                },
+              ] : []),
+              // Bon de livraison: convert to invoice
+              ...(documentType === 'bon_livraison' && (status === 'delivered' || status === 'in_progress') ? [
+                {
+                  id: 'convertToInvoice',
+                  label: t('convertToInvoice'),
+                  icon: <FileText size={16} style={{ color: '#235ae4' }} />,
+                  onClick: () => toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') }),
+                },
+              ] : []),
+              // Bon de livraison: cancel
+              ...(documentType === 'bon_livraison' && status === 'in_progress' ? [
+                {
+                  id: 'cancelBon',
+                  label: t('cancel'),
+                  icon: <Ban size={16} style={{ color: '#dc2626' }} />,
+                  onClick: () => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') }),
+                  destructive: true,
+                },
+              ] : []),
+              // Delete — only when draft or closed
+              {
+                id: 'delete',
+                label: t('delete'),
+                icon: <Trash2 size={16} />,
+                onClick: () => toastConfirm(t('confirmDeleteDocument'), handleDelete, { confirmLabel: t('delete') }),
+                destructive: true,
+                hidden: isValidated && status !== 'draft' && status !== 'closed',
+              },
+            ]}
+            leftAction={documentType === 'facture' && isValidated && status !== 'draft' ? {
+              id: 'paymentHistory',
+              label: t('paymentHistory'),
+              icon: <History style={{ width: '1rem', height: '1rem' }} />,
+              onClick: () => setShowPaymentHistory(true),
+            } : null}
+          />
         </div>
 
-
+        {/* PDF Preview Modal */}
+        <PDFPreviewModal
+          isOpen={showPDFPreview}
+          onClose={() => setShowPDFPreview(false)}
+          pdfUrl={pdfPreviewUrl}
+          title={`${config.titleShort} ${invoiceNumber}`}
+        />
 
         {documentType === 'devis' && (
           <ShareQuoteDialog
@@ -1315,8 +1347,6 @@ export default function DocumentEditPage({
             onGenerateLink={handleGenerateShareLink}
           />
         )}
-
-
 
         {documentType === 'facture' && (
           <PaymentHistoryModal

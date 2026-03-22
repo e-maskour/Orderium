@@ -5,8 +5,8 @@ import deliveryPortalConfig from './theme-preset';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { Toaster as SileoToaster } from 'sileo';
-import 'sileo/styles.css';
+import { Toaster, ConfirmProvider } from '@orderium/ui';
+import { PushNotificationProvider } from './components/PushNotificationProvider';
 import Login from './pages/Login';
 import Orders from './pages/Orders';
 import ActiveOrders from './pages/ActiveOrders';
@@ -33,58 +33,61 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <LanguageProvider>
           <AuthProvider>
-            <SileoToaster position="top-center" theme="system" />
-            <BrowserRouter
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-              }}
-            >
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route
-                  path="/orders"
-                  element={
-                    <ProtectedRoute>
-                      <Orders />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/orders/:orderId"
-                  element={
-                    <ProtectedRoute>
-                      <OrderDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/active"
-                  element={
-                    <ProtectedRoute>
-                      <ActiveOrders />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/delivered"
-                  element={
-                    <ProtectedRoute>
-                      <DeliveredOrders />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/" element={<Navigate to="/orders" replace />} />
-              </Routes>
-            </BrowserRouter>
+            <PushNotificationProvider />
+            <ConfirmProvider>
+              <Toaster position="top-right" />
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route
+                    path="/orders"
+                    element={
+                      <ProtectedRoute>
+                        <Orders />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/orders/:orderId"
+                    element={
+                      <ProtectedRoute>
+                        <OrderDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/active"
+                    element={
+                      <ProtectedRoute>
+                        <ActiveOrders />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/delivered"
+                    element={
+                      <ProtectedRoute>
+                        <DeliveredOrders />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/" element={<Navigate to="/orders" replace />} />
+                </Routes>
+              </BrowserRouter>
+            </ConfirmProvider>
           </AuthProvider>
         </LanguageProvider>
       </QueryClientProvider>

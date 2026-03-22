@@ -13,7 +13,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
 import { Package, MapPin, Calendar as CalendarIcon, FileText, ReceiptText, ChevronLeft, ChevronRight, ArrowLeft, ShoppingBag, ClipboardList } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { toastError } from '@/services/toast.service';
+import { notify } from '@orderium/ui';
 
 const STATUS_CONFIG: Record<string, { label_fr: string; label_ar: string; color: string; bg: string; stripe: string }> = {
   pending: { label_fr: 'En attente', label_ar: 'قيد الانتظار', color: '#1d4ed8', bg: '#eff6ff', stripe: '#3b82f6' },
@@ -69,7 +69,7 @@ export default function MyOrders() {
           setTotalPages(Math.ceil(total / limit));
         }
       } catch {
-        toastError(t('error'));
+        notify.error(t('error'));
       } finally {
         setIsLoading(false);
       }
@@ -103,14 +103,14 @@ export default function MyOrders() {
       const orderDetails = await ordersService.getById(order.id);
       setSelectedOrderItems({ order, items: orderDetails.items || [] });
     } catch {
-      toastError(t('error'));
+      notify.error(t('error'));
     }
   };
 
   const handlePreview = (documentType: 'receipt' | 'invoice') => {
     if (!selectedOrderItems) return;
     const orderId = selectedOrderItems.order.id;
-    if (!orderId) { toastError(t('orderIdMissing')); return; }
+    if (!orderId) { notify.error(t('orderIdMissing')); return; }
     const endpoint = documentType === 'receipt'
       ? `/api/pdf/receipt/${orderId}?mode=preview`
       : `/api/pdf/delivery-note/${orderId}?mode=preview`;

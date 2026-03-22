@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { partnersService } from '@/modules';
 import { InputText } from 'primereact/inputtext';
-import { toastSuccess, toastError } from '@/services/toast.service';
+import { notify } from '@orderium/ui';
 import { useNavigate, Link } from 'react-router-dom';
 import { AddressInput } from '@/components/AddressInput';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -58,7 +58,7 @@ export default function Profile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim()) { toastError(t('nameRequired')); return; }
+    if (!formData.name.trim()) { notify.error(t('nameRequired')); return; }
     if (!user?.phoneNumber) return;
     setIsLoading(true);
     try {
@@ -66,10 +66,10 @@ export default function Profile() {
       const wazeLinkToSave = formData.latitude && formData.longitude ? `https://waze.com/ul?ll=${formData.latitude},${formData.longitude}&navigate=yes` : undefined;
       await partnersService.upsert({ phoneNumber: user.phoneNumber, name: formData.name, address: formData.address, latitude: formData.latitude || undefined, longitude: formData.longitude || undefined, googleMapsUrl: mapsLinkToSave, wazeUrl: wazeLinkToSave, portalPhoneNumber: user.phoneNumber });
       await refreshUser();
-      toastSuccess(t('profileUpdated'));
+      notify.success(t('profileUpdated'));
     } catch (error) {
       console.error('Failed to update profile:', error);
-      toastError(t('updateFailed'));
+      notify.error(t('updateFailed'));
     } finally {
       setIsLoading(false);
     }
