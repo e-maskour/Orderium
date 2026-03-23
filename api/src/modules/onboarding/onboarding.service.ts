@@ -144,6 +144,8 @@ export class OnboardingService {
             isAdmin: true,
             isCustomer: false,
             isActive: true,
+            userType: 'admin',
+            status: 'approved',
         });
 
         const saved = await this.portalRepository.save(portal);

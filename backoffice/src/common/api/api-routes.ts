@@ -12,7 +12,7 @@
 export const API_ROUTES = {
     // ─── Auth ──────────────────────────────────────────────────
     AUTH: {
-        LOGIN: '/api/portal/login',
+        LOGIN: '/api/portal/admin/login',
     },
 
     // ─── Categories ────────────────────────────────────────────

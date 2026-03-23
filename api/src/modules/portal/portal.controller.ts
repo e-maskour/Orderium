@@ -106,6 +106,57 @@ export class PortalController {
   }
 
   @Public()
+  @Throttle({ short: { limit: 5, ttl: 60000 } })
+  @Post('admin/login')
+  @ApiOperation({ summary: 'Admin login (backoffice)' })
+  @ApiResponse({ status: 200, description: 'Login successful with JWT token' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 403, description: 'Not an admin account' })
+  async adminLogin(@Body() body: LoginDto) {
+    const emailOrPhone = body.email || body.phoneNumber;
+    if (!emailOrPhone) {
+      throw new BadRequestException('Email or phone number required');
+    }
+    const user = await this.portalService.validateUser(
+      emailOrPhone,
+      body.password,
+    );
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    if (!user.isAdmin) {
+      throw new ForbiddenException('This login is restricted to admin accounts');
+    }
+    const payload = {
+      sub: user.id,
+      phoneNumber: user.phoneNumber,
+      isAdmin: user.isAdmin,
+      isCustomer: user.isCustomer,
+      scope: 'admin',
+      roleId: user.roleId ?? null,
+      isSuperAdmin: user.role?.isSuperAdmin ?? false,
+      permissions: user.role?.permissions?.map((p) => p.key) ?? [],
+    };
+    const token = this.jwtService.sign(payload);
+    return ApiRes(PRT.LOGIN, {
+      user: {
+        id: user.id,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        name: user.name,
+        customerId: user.customerId,
+        customerName: user.name,
+        isAdmin: user.isAdmin,
+        isCustomer: user.isCustomer,
+        roleId: user.roleId,
+        isSuperAdmin: user.role?.isSuperAdmin ?? false,
+        permissions: user.role?.permissions?.map((p) => p.key) ?? [],
+      },
+      token,
+    });
+  }
+
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Portal registration' })
   @ApiResponse({ status: 200, description: 'Registration successful, pending approval' })
