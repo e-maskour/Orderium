@@ -4,9 +4,12 @@ export class InitialMigration1774300911703 implements MigrationInterface {
     name = 'InitialMigration1774300911703'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TABLE "payments" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tenantId" integer NOT NULL, "amount" numeric(10,2) NOT NULL, "currency" character varying(3) NOT NULL DEFAULT 'MAD', "paymentMethod" character varying(50), "planName" character varying(20) NOT NULL, "billingCycle" character varying(10) NOT NULL, "periodStart" date NOT NULL, "periodEnd" date NOT NULL, "status" character varying(20) NOT NULL DEFAULT 'pending', "validatedBy" character varying(255), "validatedAt" TIMESTAMP WITH TIME ZONE, "rejectionReason" text, "referenceNumber" character varying(100), "receiptUrl" character varying(500), "notes" text, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_98a04cdcbac4f6a2c55c7d1935" ON "payments" ("tenantId") `);
-        await queryRunner.query(`CREATE INDEX "IDX_32b41cdb985a296213e9a928b5" ON "payments" ("status") `);
+        // If the database already has tables (provisioned by previous migrations), skip
+        const existing = await queryRunner.query(`SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename != 'migrations'`);
+        if (existing.length > 0) return;
+
+        await queryRunner.query(`CREATE TYPE "public"."payments_paymenttype_enum" AS ENUM('cash', 'check', 'bank_transfer', 'credit_card', 'mobile_payment', 'other')`);
+        await queryRunner.query(`CREATE TABLE "payments" ("id" SERIAL NOT NULL, "invoiceId" integer, "orderId" integer, "customerId" integer, "supplierId" integer, "amount" numeric(10,2) NOT NULL, "paymentDate" date NOT NULL, "paymentType" "public"."payments_paymenttype_enum" NOT NULL DEFAULT 'cash', "notes" text, "referenceNumber" character varying, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "tenant_activity_log" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tenantId" integer NOT NULL, "action" character varying(50) NOT NULL, "details" jsonb NOT NULL DEFAULT '{}', "performedBy" character varying(100), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_78c02b41527dbfec6f28a499ba7" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_a0db175c3ceea97e92869ef3bd" ON "tenant_activity_log" ("tenantId") `);
         await queryRunner.query(`CREATE TABLE "tenants" ("id" SERIAL NOT NULL, "name" character varying(100) NOT NULL, "slug" character varying(50) NOT NULL, "databaseName" character varying(100) NOT NULL, "databaseHost" character varying(255) NOT NULL DEFAULT 'localhost', "databasePort" integer NOT NULL DEFAULT '5432', "isActive" boolean NOT NULL DEFAULT true, "logoUrl" character varying(500), "primaryColor" character varying(7), "contactName" character varying(100), "contactEmail" character varying(255), "contactPhone" character varying(20), "address" text, "notes" text, "status" character varying(20) NOT NULL DEFAULT 'trial', "previousStatus" character varying(20), "statusChangedAt" TIMESTAMP WITH TIME ZONE, "statusReason" text, "subscriptionPlan" character varying(20) NOT NULL DEFAULT 'trial', "trialDays" integer NOT NULL DEFAULT '30', "trialStartedAt" TIMESTAMP WITH TIME ZONE, "trialEndsAt" TIMESTAMP WITH TIME ZONE, "subscriptionStartedAt" TIMESTAMP WITH TIME ZONE, "subscriptionEndsAt" TIMESTAMP WITH TIME ZONE, "autoRenew" boolean NOT NULL DEFAULT false, "maxUsers" integer NOT NULL DEFAULT '5', "maxProducts" integer NOT NULL DEFAULT '100', "maxOrdersPerMonth" integer NOT NULL DEFAULT '500', "maxStorageMb" integer NOT NULL DEFAULT '500', "settings" jsonb, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "disabledAt" TIMESTAMP WITH TIME ZONE, "archivedAt" TIMESTAMP WITH TIME ZONE, "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "UQ_2310ecc5cb8be427097154b18fc" UNIQUE ("slug"), CONSTRAINT "PK_53be67a04681c66b87ee27c9321" PRIMARY KEY ("id"))`);
@@ -138,48 +141,6 @@ export class InitialMigration1774300911703 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE "product_categories" ("productId" integer NOT NULL, "categoryId" integer NOT NULL, CONSTRAINT "PK_e65c1adebf00d61f1c84a4f3950" PRIMARY KEY ("productId", "categoryId"))`);
         await queryRunner.query(`CREATE INDEX "IDX_6156a79599e274ee9d83b1de13" ON "product_categories" ("productId") `);
         await queryRunner.query(`CREATE INDEX "IDX_fdef3adba0c284fd103d0fd369" ON "product_categories" ("categoryId") `);
-        await queryRunner.query(`DROP INDEX "public"."IDX_98a04cdcbac4f6a2c55c7d1935"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "tenantId"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "currency"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "paymentMethod"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "planName"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "billingCycle"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "periodStart"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "periodEnd"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_32b41cdb985a296213e9a928b5"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "status"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "validatedBy"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "validatedAt"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "rejectionReason"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "receiptUrl"`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "tenantId" integer NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "currency" character varying(3) NOT NULL DEFAULT 'MAD'`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "paymentMethod" character varying(50)`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "planName" character varying(20) NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "billingCycle" character varying(10) NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "periodStart" date NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "periodEnd" date NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "status" character varying(20) NOT NULL DEFAULT 'pending'`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "validatedBy" character varying(255)`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "validatedAt" TIMESTAMP WITH TIME ZONE`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "rejectionReason" text`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "receiptUrl" character varying(500)`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "invoiceId" integer`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "orderId" integer`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "customerId" integer`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "supplierId" integer`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "paymentDate" date NOT NULL`);
-        await queryRunner.query(`CREATE TYPE "public"."payments_paymenttype_enum" AS ENUM('cash', 'check', 'bank_transfer', 'credit_card', 'mobile_payment', 'other')`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "paymentType" "public"."payments_paymenttype_enum" NOT NULL DEFAULT 'cash'`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59"`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "id"`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "id" SERIAL NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id")`);
-        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "referenceNumber"`);
-        await queryRunner.query(`ALTER TABLE "payments" ADD "referenceNumber" character varying`);
-        await queryRunner.query(`CREATE INDEX "IDX_98a04cdcbac4f6a2c55c7d1935" ON "payments" ("tenantId") `);
-        await queryRunner.query(`CREATE INDEX "IDX_32b41cdb985a296213e9a928b5" ON "payments" ("status") `);
-        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_98a04cdcbac4f6a2c55c7d19350" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "tenant_activity_log" ADD CONSTRAINT "FK_a0db175c3ceea97e92869ef3bd4" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "categories" ADD CONSTRAINT "FK_9a6f051e66982b5f0318981bcaa" FOREIGN KEY ("parentId") REFERENCES "categories"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "unit_of_measures" ADD CONSTRAINT "FK_8c45c449f76da9948ded7159dab" FOREIGN KEY ("baseUnitId") REFERENCES "unit_of_measures"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
