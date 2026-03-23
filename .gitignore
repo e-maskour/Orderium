@@ -139,4 +139,18 @@ sketch
 docs
 QA Tests
 playwright
-scripts
+scripts.env
+.env.docker
+.env.local
+.env.production
+**/.env.local
+.env
+.env.docker
+.env.local
+.env.production
+**/.env.local
+.env
+.env.docker
+.env.local
+.env.production
+**/.env.local
