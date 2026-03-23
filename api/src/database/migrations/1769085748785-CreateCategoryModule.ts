@@ -5,10 +5,10 @@ export class CreateCategoryModule1769085748785 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "portal" DROP CONSTRAINT "FK_76c3a13509109c5f1681217a129"`,
+      `ALTER TABLE "portal" DROP CONSTRAINT IF EXISTS "FK_76c3a13509109c5f1681217a129"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "portal" DROP CONSTRAINT "FK_218766a99fd41fcf4424056ab4f"`,
+      `ALTER TABLE "portal" DROP CONSTRAINT IF EXISTS "FK_218766a99fd41fcf4424056ab4f"`,
     );
     await queryRunner.query(
       `CREATE TABLE "categories" ("id" SERIAL NOT NULL, "name" character varying(255) NOT NULL, "code" character varying(100) NOT NULL, "description" text, "type" character varying(50) NOT NULL DEFAULT 'product', "isActive" boolean NOT NULL DEFAULT true, "parentId" integer, "dateCreated" TIMESTAMP NOT NULL DEFAULT now(), "dateUpdated" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_77d7eff8a7aaa05457a12b8007a" UNIQUE ("code"), CONSTRAINT "PK_24dbc6126a28ff948da33e97d3b" PRIMARY KEY ("id"))`,
@@ -32,7 +32,7 @@ export class CreateCategoryModule1769085748785 implements MigrationInterface {
       `CREATE INDEX "IDX_fdef3adba0c284fd103d0fd369" ON "product_categories" ("categoryId") `,
     );
     await queryRunner.query(
-      `ALTER TABLE "orders_delivery" DROP CONSTRAINT "FK_f01dffdb2fd3c0f7e28b309bb39"`,
+      `ALTER TABLE "orders_delivery" DROP CONSTRAINT IF EXISTS "FK_f01dffdb2fd3c0f7e28b309bb39"`,
     );
     await queryRunner.query(
       `ALTER TABLE "orders_delivery" ALTER COLUMN "orderId" SET NOT NULL`,
