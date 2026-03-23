@@ -27,13 +27,9 @@ WORKDIR /app
 # Enable pnpm via corepack
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy shared UI package
 COPY shared/ui /shared/ui
-
-# Copy dependencies
+RUN cd /shared/ui && pnpm install --frozen-lockfile
 COPY --from=dependencies /app/node_modules ./node_modules
-
-# Copy source code
 COPY client/ .
 
 # Build arguments for environment variables (can be overridden at build time)
