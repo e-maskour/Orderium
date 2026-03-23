@@ -41,8 +41,10 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY shared/ui /shared/ui
+RUN cd /shared/ui && pnpm install --frozen-lockfile
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY backoffice/ .
+
 
 ARG VITE_API_BASE_URL=http://localhost:3000
 ARG VITE_FIREBASE_API_KEY

@@ -28,7 +28,7 @@ services:
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME:-orderium_master}
+      DB_NAME: ${DB_NAME:-orderium_db}
       DB_SYNCHRONIZE: "false"
       DB_LOGGING: "false"
       MASTER_DB_NAME: ${MASTER_DB_NAME:-orderium_master}
