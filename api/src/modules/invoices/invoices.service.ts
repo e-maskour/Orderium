@@ -29,7 +29,7 @@ export class InvoicesService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly stockService: StockService,
-  ) {}
+  ) { }
 
   private get invoiceRepository(): Repository<Invoice> {
     return this.tenantConnService.getRepository(Invoice);
