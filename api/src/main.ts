@@ -17,19 +17,42 @@ async function bootstrap() {
   const corsOrigin = configService.get<string[]>('app.corsOrigin') ?? [];
   const nodeEnv = configService.get<string>('app.nodeEnv') ?? 'development';
 
-  // In development allow any *.localhost origin so tenant subdomains work
-  const corsOriginOption =
-    nodeEnv !== 'production'
-      ? (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-        if (!origin || /^https?:\/\/([a-z0-9-]+\.)*localhost(:\d+)?$/.test(origin)) {
-          callback(null, true);
-        } else if (corsOrigin.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
+  // CORS: allow configured origins + wildcard subdomain matching
+  const corsOriginOption = (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ) => {
+    // Allow requests with no origin (server-to-server, curl, health checks)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    // In development, allow any *.localhost origin for tenant subdomains
+    if (
+      nodeEnv !== 'production' &&
+      /^https?:\/\/([a-z0-9-]+\.)*localhost(:\d+)?$/.test(origin)
+    ) {
+      callback(null, true);
+      return;
+    }
+    // Check configured origins (exact match or wildcard subdomains)
+    const allowed = corsOrigin.some((o) => {
+      if (o.startsWith('https://*.') || o.startsWith('http://*.')) {
+        // Convert wildcard pattern to regex: https://*.example.com -> any subdomain
+        const domain = o.replace(/^https?:\/\/\*\./, '');
+        const regex = new RegExp(
+          `^https?://[a-z0-9-]+\\.${domain.replace(/\./g, '\\.')}$`,
+        );
+        return regex.test(origin);
       }
-      : corsOrigin;
+      return o === origin;
+    });
+    if (allowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  };
 
   // Root path handler - redirect to API documentation or health check
   app.use(
