@@ -10,6 +10,9 @@ const proxyConfig = {
 
 export default defineConfig({
     plugins: [react()],
+    resolve: {
+        dedupe: ['react', 'react-dom'],
+    },
     server: {
         port: 4000,
         proxy: proxyConfig,
