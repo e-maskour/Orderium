@@ -29,7 +29,7 @@ export class InvoicesService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly stockService: StockService,
-  ) { }
+  ) {}
 
   private get invoiceRepository(): Repository<Invoice> {
     return this.tenantConnService.getRepository(Invoice);
@@ -492,7 +492,9 @@ export class InvoicesService {
       supplierName: createInvoiceDto.supplierName,
       supplierPhone: createInvoiceDto.supplierPhone,
       supplierAddress: createInvoiceDto.supplierAddress,
-      date: createInvoiceDto.date ? new Date(createInvoiceDto.date) : new Date(),
+      date: createInvoiceDto.date
+        ? new Date(createInvoiceDto.date)
+        : new Date(),
       dueDate: createInvoiceDto.dueDate
         ? new Date(createInvoiceDto.dueDate)
         : undefined,
@@ -512,7 +514,7 @@ export class InvoicesService {
     // Validate minimum prices for items with productId (only for vente documents)
     const isVente = !createInvoiceDto.supplierId;
     if (isVente) {
-      for (const item of createInvoiceDto.items) {
+      for (const item of createInvoiceDto.items ?? []) {
         if (item.productId) {
           const product = await this.productRepository.findOne({
             where: { id: item.productId },

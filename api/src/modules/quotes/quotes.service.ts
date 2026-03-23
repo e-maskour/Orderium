@@ -469,7 +469,7 @@ export class QuotesService {
     quoteNumber: string,
   ): Promise<Quote> {
     // Use values from frontend directly (no recalculation)
-    const items = createQuoteDto.items.map((item) => {
+    const items = (createQuoteDto.items ?? []).map((item) => {
       return {
         ...item,
         total: item.total || 0,
@@ -514,7 +514,7 @@ export class QuotesService {
     // Validate minimum prices for items with productId (only for vente documents)
     const isVente = !createQuoteDto.supplierId;
     if (isVente) {
-      for (const item of createQuoteDto.items) {
+      for (const item of (createQuoteDto.items ?? [])) {
         if (item.productId && item.unitPrice != null) {
           const product = await this.productRepository.findOne({
             where: { id: item.productId },
