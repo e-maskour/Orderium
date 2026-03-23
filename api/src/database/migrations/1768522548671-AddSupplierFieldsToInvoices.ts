@@ -8,7 +8,7 @@ export class AddSupplierFieldsToInvoices1768522548671 implements MigrationInterf
       `ALTER TABLE "portal" DROP CONSTRAINT "FK_portal_customerId"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "portal" DROP CONSTRAINT "FK_portal_deliveryId"`,
+      `ALTER TABLE "portal" DROP CONSTRAINT IF EXISTS "FK_portal_deliveryId"`,
     );
     await queryRunner.query(
       `ALTER TABLE "orders" DROP CONSTRAINT "FK_orders_customerId"`,
