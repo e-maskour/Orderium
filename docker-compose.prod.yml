@@ -73,7 +73,7 @@ services:
       - "traefik.http.middlewares.orderium-cors.headers.accesscontrolalloworiginlistregex=^https://[a-z0-9-]+-(admin|app|delivery)\\.mar-nova\\.com$$"
       - "traefik.http.middlewares.orderium-cors.headers.accesscontrolallowcredentials=true"
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\"" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -200,3 +200,8 @@ services:
       - "traefik.http.routers.tenant-dashboard.tls=true"
       - "traefik.http.routers.tenant-dashboard.tls.certresolver=letsencrypt-dns"
       - "traefik.http.services.tenant-dashboard.loadbalancer.server.port=80"
+
+networks:
+  default:
+    name: dokploy-network
+    external: true
