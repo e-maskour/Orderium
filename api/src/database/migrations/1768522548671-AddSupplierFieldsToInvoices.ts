@@ -162,9 +162,6 @@ export class AddSupplierFieldsToInvoices1768522548671 implements MigrationInterf
       `ALTER TABLE "portal" ADD CONSTRAINT "FK_218766a99fd41fcf4424056ab4f" FOREIGN KEY ("customerId") REFERENCES "partners"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "portal" ADD CONSTRAINT "FK_76c3a13509109c5f1681217a129" FOREIGN KEY ("deliveryId") REFERENCES "delivery_persons"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
       `ALTER TABLE "orders" ADD CONSTRAINT "FK_e5de51ca888d8b1f5ac25799dd1" FOREIGN KEY ("customerId") REFERENCES "partners"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
@@ -204,10 +201,10 @@ export class AddSupplierFieldsToInvoices1768522548671 implements MigrationInterf
       `ALTER TABLE "orders" DROP CONSTRAINT "FK_e5de51ca888d8b1f5ac25799dd1"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "portal" DROP CONSTRAINT "FK_76c3a13509109c5f1681217a129"`,
+      `ALTER TABLE "portal" DROP CONSTRAINT IF EXISTS "FK_76c3a13509109c5f1681217a129"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "portal" DROP CONSTRAINT "FK_218766a99fd41fcf4424056ab4f"`,
+      `ALTER TABLE "portal" DROP CONSTRAINT IF EXISTS "FK_218766a99fd41fcf4424056ab4f"`,
     );
     await queryRunner.query(
       `DROP INDEX "public"."IDX_7fb6895fc8fad9f5200e91abb5"`,
