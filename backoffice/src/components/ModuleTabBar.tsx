@@ -46,19 +46,13 @@ const match = (prefix: string) => (p: string) =>
 const MODULE_CONFIGS: ModuleConf[] = [
     // ── Commandes ──────────────────────────────────────────────
     {
-        triggerFn: (p) => match('/orders')(p) || match('/pos')(p) || match('/checkout')(p),
+        triggerFn: (p) => match('/orders')(p) || match('/checkout')(p),
         tabs: [
             {
                 label: 'Commandes',
                 to: '/orders',
                 icon: ShoppingCart,
                 isActive: match('/orders'),
-            },
-            {
-                label: 'Point de vente',
-                to: '/pos',
-                icon: CreditCard,
-                isActive: (p) => match('/pos')(p) || match('/checkout')(p),
             },
         ],
     },
@@ -70,11 +64,11 @@ const MODULE_CONFIGS: ModuleConf[] = [
                 (prefix) => match(prefix)(p)
             ),
         tabs: [
-            { label: 'Devis',         to: '/devis',            icon: FileCheck,   isActive: match('/devis') },
-            { label: 'Livraisons',    to: '/bons-livraison',   icon: PackageCheck, isActive: match('/bons-livraison') },
-            { label: 'Factures',      to: '/factures/vente',   icon: FileText,    isActive: (p) => p.startsWith('/factures/vente') },
-            { label: 'Paiements',     to: '/paiements-vente',  icon: Wallet,      isActive: match('/paiements-vente') },
-            { label: 'Clients',       to: '/customers',        icon: UserCircle,  isActive: match('/customers') },
+            { label: 'Devis', to: '/devis', icon: FileCheck, isActive: match('/devis') },
+            { label: 'Livraisons', to: '/bons-livraison', icon: PackageCheck, isActive: match('/bons-livraison') },
+            { label: 'Factures', to: '/factures/vente', icon: FileText, isActive: (p) => p.startsWith('/factures/vente') },
+            { label: 'Paiements', to: '/paiements-vente', icon: Wallet, isActive: match('/paiements-vente') },
+            { label: 'Clients', to: '/customers', icon: UserCircle, isActive: match('/customers') },
         ],
     },
 
@@ -85,11 +79,11 @@ const MODULE_CONFIGS: ModuleConf[] = [
                 (prefix) => match(prefix)(p)
             ),
         tabs: [
-            { label: 'Demandes',      to: '/demande-prix',     icon: DollarSign,  isActive: match('/demande-prix') },
-            { label: 'Bons achat',    to: '/bon-achat',        icon: ShoppingBag, isActive: match('/bon-achat') },
-            { label: 'Factures',      to: '/factures/achat',   icon: Receipt,     isActive: (p) => p.startsWith('/factures/achat') },
-            { label: 'Paiements',     to: '/paiements-achat',  icon: Wallet,      isActive: match('/paiements-achat') },
-            { label: 'Fournisseurs',  to: '/fournisseurs',     icon: Truck,       isActive: match('/fournisseurs') },
+            { label: 'Demandes', to: '/demande-prix', icon: DollarSign, isActive: match('/demande-prix') },
+            { label: 'Bons achat', to: '/bon-achat', icon: ShoppingBag, isActive: match('/bon-achat') },
+            { label: 'Factures', to: '/factures/achat', icon: Receipt, isActive: (p) => p.startsWith('/factures/achat') },
+            { label: 'Paiements', to: '/paiements-achat', icon: Wallet, isActive: match('/paiements-achat') },
+            { label: 'Fournisseurs', to: '/fournisseurs', icon: Truck, isActive: match('/fournisseurs') },
         ],
     },
 
@@ -100,22 +94,21 @@ const MODULE_CONFIGS: ModuleConf[] = [
                 (prefix) => match(prefix)(p)
             ),
         tabs: [
-            { label: 'Produits',      to: '/products',              icon: Package,          isActive: match('/products') },
-            { label: 'Catégories',    to: '/categories',            icon: FolderTree,       isActive: match('/categories') },
-            { label: 'Entrepôts',     to: '/warehouses',            icon: Building2,        isActive: match('/warehouses') },
-            { label: 'Mouvements',    to: '/stock-movements',       icon: ArrowLeftRight,   isActive: match('/stock-movements') },
-            { label: 'Ajustements',   to: '/inventory-adjustments', icon: SlidersHorizontal, isActive: match('/inventory-adjustments') },
+            { label: 'Produits', to: '/products', icon: Package, isActive: match('/products') },
+            { label: 'Catégories', to: '/categories', icon: FolderTree, isActive: match('/categories') },
+            { label: 'Entrepôts', to: '/warehouses', icon: Building2, isActive: match('/warehouses') },
+            { label: 'Mouvements', to: '/stock-movements', icon: ArrowLeftRight, isActive: match('/stock-movements') },
+            { label: 'Ajustements', to: '/inventory-adjustments', icon: SlidersHorizontal, isActive: match('/inventory-adjustments') },
         ],
     },
 
     // ── Équipe ─────────────────────────────────────────────────
     {
         triggerFn: (p) =>
-            match('/users')(p) || match('/roles')(p) || match('/delivery-persons')(p),
+            match('/users')(p) || match('/roles')(p),
         tabs: [
-            { label: 'Utilisateurs',  to: '/users',             icon: UsersRound,  isActive: match('/users') },
-            { label: 'Rôles',         to: '/roles',             icon: Shield,      isActive: match('/roles') },
-            { label: 'Livreurs',      to: '/delivery-persons',  icon: Truck,       isActive: match('/delivery-persons') },
+            { label: 'Utilisateurs', to: '/users', icon: UsersRound, isActive: match('/users') },
+            { label: 'Rôles', to: '/roles', icon: Shield, isActive: match('/roles') },
         ],
     },
 
@@ -123,14 +116,14 @@ const MODULE_CONFIGS: ModuleConf[] = [
     {
         triggerFn: (p) => match('/configurations')(p),
         tabs: [
-            { label: 'Aperçu',       to: '/configurations',                  icon: Settings,  isActive: (p) => p === '/configurations' },
-            { label: 'Taxes',        to: '/configurations/taxes',            icon: Percent,   isActive: (p) => p.startsWith('/configurations/taxes') },
-            { label: 'Devises',      to: '/configurations/currencies',       icon: Globe,     isActive: (p) => p.startsWith('/configurations/currencies') },
-            { label: 'Conditions',   to: '/configurations/payment-terms',    icon: Calendar,  isActive: (p) => p.startsWith('/configurations/payment-terms') },
-            { label: 'Séquences',    to: '/configurations/sequences',        icon: Hash,      isActive: (p) => p.startsWith('/configurations/sequences') },
-            { label: 'Unités',       to: '/configurations/uom',              icon: Ruler,     isActive: (p) => p.startsWith('/configurations/uom') },
-            { label: 'Inventaire',   to: '/configurations/inventory',        icon: Archive,   isActive: (p) => p.startsWith('/configurations/inventory') },
-            { label: 'Société',      to: '/configurations/company',          icon: Building,  isActive: (p) => p.startsWith('/configurations/company') },
+            { label: 'Aperçu', to: '/configurations', icon: Settings, isActive: (p) => p === '/configurations' },
+            { label: 'Taxes', to: '/configurations/taxes', icon: Percent, isActive: (p) => p.startsWith('/configurations/taxes') },
+            { label: 'Devises', to: '/configurations/currencies', icon: Globe, isActive: (p) => p.startsWith('/configurations/currencies') },
+            { label: 'Conditions', to: '/configurations/payment-terms', icon: Calendar, isActive: (p) => p.startsWith('/configurations/payment-terms') },
+            { label: 'Séquences', to: '/configurations/sequences', icon: Hash, isActive: (p) => p.startsWith('/configurations/sequences') },
+            { label: 'Unités', to: '/configurations/uom', icon: Ruler, isActive: (p) => p.startsWith('/configurations/uom') },
+            { label: 'Inventaire', to: '/configurations/inventory', icon: Archive, isActive: (p) => p.startsWith('/configurations/inventory') },
+            { label: 'Société', to: '/configurations/company', icon: Building, isActive: (p) => p.startsWith('/configurations/company') },
         ],
     },
 ];
