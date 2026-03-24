@@ -107,17 +107,31 @@ export default function MyOrders() {
     }
   };
 
-  const handlePreview = (documentType: 'receipt' | 'invoice') => {
+  const handlePreview = async (documentType: 'receipt' | 'invoice') => {
     if (!selectedOrderItems) return;
     const orderId = selectedOrderItems.order.id;
     if (!orderId) { notify.error(t('orderIdMissing')); return; }
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const endpoint = documentType === 'receipt'
-      ? `/api/pdf/receipt/${orderId}?mode=preview`
-      : `/api/pdf/delivery-note/${orderId}?mode=preview`;
-    setPdfUrl(endpoint);
-    setPdfTitle(`${documentType === 'receipt' ? t('receipt') : t('deliveryNote')} ${selectedOrderItems.order.orderNumber}`);
+      ? `${apiBaseUrl}/api/pdf/receipt/${orderId}?mode=preview`
+      : `${apiBaseUrl}/api/pdf/delivery-note/${orderId}?mode=preview`;
+    const title = `${documentType === 'receipt' ? t('receipt') : t('deliveryNote')} ${selectedOrderItems.order.orderNumber}`;
     setSelectedOrderItems(null);
-    setShowPDFPreview(true);
+    try {
+      const token = localStorage.getItem('orderium_token');
+      const response = await fetch(endpoint, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+      const blobUrl = URL.createObjectURL(blob);
+      setPdfUrl(blobUrl);
+      setPdfTitle(title);
+      setShowPDFPreview(true);
+    } catch {
+      notify.error(t('documentGenerationFailed'));
+    }
   };
 
   const statusTabs = [
@@ -473,7 +487,7 @@ export default function MyOrders() {
         )}
       </Dialog>
 
-      <PDFPreviewModal isOpen={showPDFPreview} onClose={() => setShowPDFPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
+      <PDFPreviewModal isOpen={showPDFPreview} onClose={() => { setShowPDFPreview(false); if (pdfUrl) { URL.revokeObjectURL(pdfUrl); setPdfUrl(''); } }} pdfUrl={pdfUrl} title={pdfTitle} />
     </div>
   );
 }

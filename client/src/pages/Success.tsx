@@ -8,6 +8,7 @@ import { OrderTracking } from '@/components/OrderTracking';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { CartItem } from '@/context/CartContext';
 import { useState } from 'react';
+import { API_BASE_URL } from '@/services/httpClient';
 
 interface SuccessState {
   orderNumber: string;
@@ -28,6 +29,7 @@ const Success = () => {
   const [showTracking, setShowTracking] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   if (!state?.orderNumber || !state?.items || !state?.orderId) {
     return <Navigate to="/" replace />;
@@ -37,12 +39,35 @@ const Success = () => {
 
   const handlePreview = async (type: 'receipt' | 'invoice') => {
     const endpoint = type === 'receipt'
-      ? `/api/pdf/receipt/${orderId}?mode=preview`
-      : `/api/pdf/delivery-note/${orderId}?mode=preview`;
+      ? `${API_BASE_URL}/api/pdf/receipt/${orderId}?mode=preview`
+      : `${API_BASE_URL}/api/pdf/delivery-note/${orderId}?mode=preview`;
     const title = type === 'receipt' ? t('receipt') : t('deliveryNote');
-    setPdfUrl(endpoint);
-    setPdfTitle(`${title} ${state.orderNumber}`);
-    setShowPreview(true);
+    setPdfLoading(true);
+    try {
+      const token = localStorage.getItem('orderium_token');
+      const response = await fetch(endpoint, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+      const blobUrl = URL.createObjectURL(blob);
+      setPdfUrl(blobUrl);
+      setPdfTitle(`${title} ${state.orderNumber}`);
+      setShowPreview(true);
+    } catch {
+      // silently ignore — user sees nothing happen
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl);
+      setPdfUrl('');
+    }
   };
 
   return (
@@ -100,14 +125,16 @@ const Success = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
           <button
             onClick={() => handlePreview('receipt')}
-            style={{ padding: '1.0625rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #059669, #10b981)', color: 'white', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            disabled={pdfLoading}
+            style={{ padding: '1.0625rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #059669, #10b981)', color: 'white', fontWeight: 700, fontSize: '0.875rem', cursor: pdfLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: pdfLoading ? 0.7 : 1 }}
           >
             <ReceiptIcon size={16} />
             {t('receipt')}
           </button>
           <button
             onClick={() => handlePreview('invoice')}
-            style={{ padding: '1.0625rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #0891b2, #0e7490)', color: 'white', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            disabled={pdfLoading}
+            style={{ padding: '1.0625rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg, #0891b2, #0e7490)', color: 'white', fontWeight: 700, fontSize: '0.875rem', cursor: pdfLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: pdfLoading ? 0.7 : 1 }}
           >
             <FileText size={16} />
             {t('deliveryNote')}
@@ -124,7 +151,7 @@ const Success = () => {
       </div>
 
       {/* PDF Preview */}
-      <PDFPreviewModal isOpen={showPreview} onClose={() => setShowPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
+      <PDFPreviewModal isOpen={showPreview} onClose={handleClosePreview} pdfUrl={pdfUrl} title={pdfTitle} />
 
       {/* Tracking Dialog */}
       <Dialog visible={showTracking} onHide={() => setShowTracking(false)}
