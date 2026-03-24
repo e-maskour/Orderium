@@ -44,19 +44,6 @@ const match = (prefix: string) => (p: string) =>
     p === prefix || p.startsWith(prefix + '/');
 
 const MODULE_CONFIGS: ModuleConf[] = [
-    // ── Commandes ──────────────────────────────────────────────
-    {
-        triggerFn: (p) => match('/orders')(p) || match('/checkout')(p),
-        tabs: [
-            {
-                label: 'Commandes',
-                to: '/orders',
-                icon: ShoppingCart,
-                isActive: match('/orders'),
-            },
-        ],
-    },
-
     // ── Ventes ─────────────────────────────────────────────────
     {
         triggerFn: (p) =>

@@ -67,8 +67,8 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
           }}>
             {product.imageUrl
               ? <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} loading="lazy" />
-              : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #e0e7ff, #dbeafe)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#6366f1', textTransform: 'uppercase' }}>{product.name?.charAt(0) || '?'}</span>
+              : <div style={{ width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>{product.name?.charAt(0) || '?'}</span>
               </div>
             }
           </div>
@@ -144,9 +144,9 @@ export const ProductCard = ({ product, viewMode = 'grid' }: ProductCardProps) =>
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               loading="lazy"
             />
-            : <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #e0e7ff, #dbeafe)', gap: '0.5rem' }}>
-              <Package size={32} color="#818cf8" strokeWidth={1.5} />
-              <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.03em', maxWidth: '80%', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</span>
+            : <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', gap: '0.5rem' }}>
+              <Package size={32} color="#94a3b8" strokeWidth={1.5} />
+              <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', letterSpacing: '0.03em', maxWidth: '80%', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</span>
             </div>
           }
           {/* Cart qty badge */}
