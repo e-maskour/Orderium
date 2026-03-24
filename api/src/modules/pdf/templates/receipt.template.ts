@@ -123,6 +123,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       text-overflow: ellipsis;
+      text-align: left;
     }
     .rcp-item-total {
       font-size: 7.5pt;

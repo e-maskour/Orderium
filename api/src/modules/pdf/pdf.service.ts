@@ -512,7 +512,7 @@ export class PDFService {
           // For demande de prix, only show description and quantity
           return `
               <tr class="table-row">
-                <td dir="auto" class="cell-desc">${item.description}</td>
+                <td class="cell-desc">${item.description}</td>
                 <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
               </tr>
             `;
@@ -520,7 +520,7 @@ export class PDFService {
           // Normal quote/invoice with prices
           return `
               <tr class="table-row">
-                <td dir="auto" class="cell-desc">${item.description}</td>
+                <td class="cell-desc">${item.description}</td>
                 <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
                 <td class="num" style="text-align: right;">${this.formatCurrency(item.unitPrice)}</td>
                 <td class="num" style="text-align: right;">${this.formatCurrency(item.discount)}</td>
@@ -581,7 +581,7 @@ export class PDFService {
         (item) => `
           <div class="rcp-item">
             <div class="rcp-item-top">
-              <div dir="auto" class="rcp-item-desc">${item.description}</div>
+              <div class="rcp-item-desc">${item.description}</div>
               <div class="rcp-item-total">${this.formatCurrency(item.total)} DH</div>
             </div>
             <div class="rcp-item-detail">

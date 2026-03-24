@@ -133,8 +133,7 @@ export function getDocumentStyles(): string {
       }
 
       .table-row .cell-desc {
-        unicode-bidi: plaintext;
-        text-align: start;
+        text-align: left;
       }
 
       /* Number cells: monospace for alignment */
