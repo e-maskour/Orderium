@@ -90,7 +90,7 @@ export default function Configurations() {
                   </p>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ color: '#cbd5e1', flexShrink: 0, marginTop: '0.25rem' }}>
-                  <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </Link>
             );
@@ -115,6 +115,7 @@ export default function Configurations() {
           text-decoration: none;
           transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
           box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+          min-height: 5.5rem;
         }
         .config-module-card:hover {
           transform: translateY(-2px);
