@@ -9,12 +9,13 @@ import {
     Package,
     ShoppingCart,
     Settings,
-    HardDrive,
     UsersRound,
     TrendingUp,
     TrendingDown,
     ChevronLeft,
     ChevronRight,
+    Store,
+    Truck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -37,7 +38,15 @@ const NAV_ITEMS = [
         to: '/orders',
         icon: ShoppingCart,
         label: 'Commandes',
-        activePaths: ['/orders', '/pos', '/checkout'],
+        activePaths: ['/orders', '/checkout'],
+        exactFirst: false,
+    },
+    {
+        id: 'sb-pos',
+        to: '/pos',
+        icon: Store,
+        label: 'Point de vente',
+        activePaths: ['/pos'],
         exactFirst: false,
     },
     {
@@ -65,11 +74,11 @@ const NAV_ITEMS = [
         exactFirst: false,
     },
     {
-        id: 'sb-drive',
-        to: '/drive',
-        icon: HardDrive,
-        label: 'Drive',
-        activePaths: ['/drive'],
+        id: 'sb-livreurs',
+        to: '/delivery-persons',
+        icon: Truck,
+        label: 'Livreurs',
+        activePaths: ['/delivery-persons'],
         exactFirst: false,
     },
     {
@@ -77,7 +86,7 @@ const NAV_ITEMS = [
         to: '/users',
         icon: UsersRound,
         label: 'Équipe',
-        activePaths: ['/users', '/roles', '/delivery-persons'],
+        activePaths: ['/users', '/roles'],
         exactFirst: false,
     },
     {
