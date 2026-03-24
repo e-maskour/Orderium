@@ -126,6 +126,29 @@ export class SequencePreviewDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  name?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @IsIn([
+    'invoice_sale',
+    'invoice_purchase',
+    'quote',
+    'delivery_note',
+    'purchase_order',
+    'payment',
+  ])
+  entityType?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   prefix?: string;
 
   @ApiProperty({ required: false })

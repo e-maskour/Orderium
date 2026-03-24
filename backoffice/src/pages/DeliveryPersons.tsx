@@ -386,6 +386,7 @@ export default function DeliveryPersons() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required={!editingPerson}
                 placeholder={editingPerson ? t('newPasswordOptional') : t('minCharacters')}
+                autoComplete="new-password"
                 style={{ width: '100%' }}
               />
             </div>
