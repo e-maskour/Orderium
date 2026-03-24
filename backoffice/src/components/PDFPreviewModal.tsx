@@ -24,8 +24,15 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
     setBlobUrl(null);
 
     const token = localStorage.getItem('adminToken');
+    const tenantMatch = window.location.hostname.match(/^([a-z0-9-]+)\.(localhost|.+\..+)$/i);
+    const tenantId = tenantMatch
+      ? tenantMatch[1].replace(/-(admin|app|delivery)$/i, '').toLowerCase()
+      : null;
     fetch(pdfUrl, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(tenantId ? { 'X-Tenant-ID': tenantId } : {}),
+      },
     })
       .then((res) => {
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);

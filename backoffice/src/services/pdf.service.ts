@@ -3,7 +3,11 @@
  * Handles PDF preview and download for all document types (invoices, quotes, delivery notes)
  */
 
-const API_URL = '/api';
+import { API_BASE_URL_VALUE } from '../common/api';
+
+// In dev, VITE_API_BASE_URL is not set so this falls back to localhost:3000 (proxied via Vite).
+// In production, VITE_API_BASE_URL is e.g. https://orderium-api.mar-nova.com — used directly.
+const API_URL = API_BASE_URL_VALUE;
 
 export type DocumentType = 'invoice' | 'quote' | 'delivery-note' | 'receipt';
 export type PDFMode = 'preview' | 'download';
@@ -24,7 +28,7 @@ class PDFService {
     mode: PDFMode = 'download'
   ): string {
     const endpoint = this.getEndpoint(documentType);
-    return `${API_URL}/pdf/${endpoint}/${documentId}?mode=${mode}`;
+    return `${API_URL}/api/pdf/${endpoint}/${documentId}?mode=${mode}`;
   }
 
   /**
