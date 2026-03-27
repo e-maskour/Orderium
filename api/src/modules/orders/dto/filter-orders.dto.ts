@@ -43,6 +43,23 @@ export class FilterOrdersDto {
   @IsString({ each: true })
   deliveryStatus?: string[];
 
+  @ApiProperty({
+    required: false,
+    description: 'Order status filter (confirmed, picked_up, delivered, cancelled)',
+    type: [String],
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return [value];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return value;
+  })
+  @IsArray()
+  @IsString({ each: true })
+  status?: string[];
+
   @ApiProperty({ required: false, description: 'Order number filter' })
   @IsOptional()
   @IsString()

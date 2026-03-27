@@ -18,6 +18,8 @@ export enum OrderStatus {
   DRAFT = 'draft', // Brouillon
   VALIDATED = 'validated', // Validée
   IN_PROGRESS = 'in_progress', // En cours
+  CONFIRMED = 'confirmed', // Confirmé
+  PICKED_UP = 'picked_up', // Récupéré
   DELIVERED = 'delivered', // Livrée
   INVOICED = 'invoiced', // Facturée
   CANCELLED = 'cancelled', // Annulée
@@ -146,11 +148,13 @@ export class Order extends BaseDocument {
     // Ensure status is consistent with isValidated field
     // Only enforce rules for non-terminal statuses
     if (!this.isValidated) {
-      // If not validated, status must be DRAFT (unless it's a terminal status)
+      // If not validated, status must be DRAFT (unless it's a terminal or workflow status)
       if (
         this.status !== OrderStatus.INVOICED &&
         this.status !== OrderStatus.CANCELLED &&
-        this.status !== OrderStatus.DELIVERED
+        this.status !== OrderStatus.DELIVERED &&
+        this.status !== OrderStatus.CONFIRMED &&
+        this.status !== OrderStatus.PICKED_UP
       ) {
         this.status = OrderStatus.DRAFT;
       }

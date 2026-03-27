@@ -59,6 +59,7 @@ export const API_ROUTES = {
         EXPORT_XLSX: '/api/orders/export/xlsx',
         SHARE: (id: number) => `/api/orders/${id}/share`,
         SHARED: (token: string) => `/api/orders/shared/${token}`,
+        CHANGE_STATUS: (id: number) => `/api/orders/${id}/status`,
     },
 
     // ─── Invoices ──────────────────────────────────────────────

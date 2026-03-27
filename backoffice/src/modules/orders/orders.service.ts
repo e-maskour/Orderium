@@ -18,6 +18,7 @@ export class OrdersService {
     page: number = 1,
     perPage: number = 50,
     direction?: 'ACHAT' | 'VENTE',
+    status?: string[],
   ): Promise<any> {
     const filters: any = {};
     if (search) {
@@ -35,6 +36,7 @@ export class OrdersService {
     if (startDate) body.startDate = startDate.toISOString();
     if (endDate) body.endDate = endDate.toISOString();
     if (deliveryStatus) body.deliveryStatus = deliveryStatus;
+    if (status) body.status = status;
     if (orderNumber) body.orderNumber = orderNumber;
     if (filters.customerId) body.customerId = filters.customerId;
     if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
@@ -48,10 +50,11 @@ export class OrdersService {
         orders: orders.map((o: any) => Order.fromApiResponse(o)),
         count: (response.metadata as any)?.total || orders.length,
         totalCount: (response.metadata as any)?.total || orders.length,
-        statusCounts: (response.metadata as any)?.statusCounts || {}
+        statusCounts: (response.metadata as any)?.statusCounts || {},
+        orderStatusCounts: (response.metadata as any)?.orderStatusCounts || {},
       };
     }
-    return { orders: [], count: 0, totalCount: 0, statusCounts: {} };
+    return { orders: [], count: 0, totalCount: 0, statusCounts: {}, orderStatusCounts: {} };
   }
 
   async getById(orderId: number): Promise<OrderWithDetails> {
@@ -89,6 +92,11 @@ export class OrdersService {
 
   async cancel(orderId: number): Promise<Order> {
     const response = await apiClient.put<any>(API_ROUTES.ORDERS.CANCEL(orderId));
+    return Order.fromApiResponse(response.data);
+  }
+
+  async changeStatus(orderId: number, status: string): Promise<Order> {
+    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.CHANGE_STATUS(orderId), { status });
     return Order.fromApiResponse(response.data);
   }
 

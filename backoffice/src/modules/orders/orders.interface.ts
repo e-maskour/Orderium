@@ -1,4 +1,4 @@
-export type OrderStatus = 'draft' | 'validated' | 'in_progress' | 'delivered' | 'cancelled';
+export type OrderStatus = 'draft' | 'validated' | 'in_progress' | 'confirmed' | 'picked_up' | 'delivered' | 'cancelled';
 export type DeliveryStatus = 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
 
 export interface IOrder {

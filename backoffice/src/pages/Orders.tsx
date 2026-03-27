@@ -34,6 +34,7 @@ export default function Orders() {
   const [pdfTitle, setPdfTitle] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string[]>([]);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string[]>([]);
   const [fromClientFilter, setFromClientFilter] = useState<'all' | 'locale' | 'client'>('all');
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,6 +44,7 @@ export default function Orders() {
     search: string;
     orderNumber: string;
     deliveryStatus: any;
+    orderStatus: string[];
     fromClient: any;
     dateFilterType: any;
     dateRange: { start: Date | undefined; end: Date | undefined };
@@ -50,6 +52,7 @@ export default function Orders() {
     search: '',
     orderNumber: '',
     deliveryStatus: [] as string[],
+    orderStatus: [] as string[],
     fromClient: 'all' as any,
     dateFilterType: 'custom' as any,
     dateRange: { start: undefined, end: undefined },
@@ -90,18 +93,19 @@ export default function Orders() {
     }
   }, [appliedFilters.dateFilterType, appliedFilters.dateRange]);
 
-  const { data: ordersData = { orders: [], count: 0, totalCount: 0, statusCounts: {} }, isLoading: ordersLoading } = useQuery({
+  const { data: ordersData = { orders: [], count: 0, totalCount: 0, statusCounts: {}, orderStatusCounts: {} }, isLoading: ordersLoading } = useQuery({
     queryKey: ['orders', JSON.stringify(appliedFilters), currentPage, pageSize],
     queryFn: () => ordersService.getAll(
       appliedFilters.search, getDateRange.start, getDateRange.end, true,
       appliedFilters.deliveryStatus?.length > 0 ? appliedFilters.deliveryStatus : undefined,
       appliedFilters.fromClient === 'client' ? true : appliedFilters.fromClient === 'locale' ? false : undefined,
-      appliedFilters.orderNumber, currentPage, pageSize,
+      appliedFilters.orderNumber, currentPage, pageSize, undefined,
+      appliedFilters.orderStatus?.length > 0 ? appliedFilters.orderStatus : undefined,
     ),
   });
 
   const orders = ordersData.orders || [];
-  const deliveryStatusCounts = ordersData.statusCounts || {};
+  const orderStatusCounts = ordersData.orderStatusCounts || {};
   const totalCount = ordersData.totalCount || 0;
 
   const { data: deliveryPersons = [] } = useQuery({ queryKey: ['deliveryPersons'], queryFn: deliveryPersonService.getAll });
@@ -137,6 +141,38 @@ export default function Orders() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastCancelled(t('deliveryCanceled')); clearSelection(); },
     onError: (error: Error) => { toastError(`${t('failedToCancelDelivery')}: ${error.message}`); },
   });
+
+  const changeStatusMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: number; status: string }) => ordersService.changeStatus(orderId, status),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess('Statut mis à jour'); },
+    onError: (error: Error) => { toastError(`Erreur: ${error.message}`); },
+  });
+
+  const ORDER_STATUS_WORKFLOW: Record<string, { value: string; label: string; bg: string; color: string; border: string }[]> = {
+    confirmed: [
+      { value: 'picked_up', label: 'Récupéré', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
+      { value: 'delivered', label: 'Livrée', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+      { value: 'cancelled', label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+    ],
+    picked_up: [
+      { value: 'delivered', label: 'Livrée', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+      { value: 'cancelled', label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+    ],
+    delivered: [
+      { value: 'cancelled', label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+    ],
+    cancelled: [],
+  };
+
+  const getOrderStatusBadge = (status: string | null | undefined) => {
+    const map: Record<string, { label: string; bg: string; color: string; border: string }> = {
+      confirmed: { label: 'Confirmé', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+      picked_up: { label: 'Récupéré', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
+      delivered: { label: 'Livrée', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+      cancelled: { label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+    };
+    return map[status || ''] || { label: status || '—', bg: '#f1f5f9', color: '#334155', border: '#e2e8f0' };
+  };
 
   const handleOrderNumberSearch = async (searchValue: string) => {
     setOrderNumberSearch(searchValue);
@@ -244,8 +280,9 @@ export default function Orders() {
     setOrderNumberSearch(''); setCustomerIdSearch(''); setCustomerPhoneSearch(''); setDeliveryPersonIdSearch('');
     setSearchInput(''); setFromClientFilter('all'); setDateFilterType('custom'); setDateRange({ start: undefined, end: undefined });
     setDeliveryStatusFilter([]);
+    setOrderStatusFilter([]);
     setCurrentPage(1); setPageSize(50);
-    setAppliedFilters({ search: '', orderNumber: '', deliveryStatus: [], fromClient: 'all', dateFilterType: 'custom', dateRange: { start: undefined, end: undefined } });
+    setAppliedFilters({ search: '', orderNumber: '', deliveryStatus: [], orderStatus: [], fromClient: 'all', dateFilterType: 'custom', dateRange: { start: undefined, end: undefined } });
   };
 
   const applyFilters = () => {
@@ -257,7 +294,7 @@ export default function Orders() {
     setCurrentPage(1); setPageSize(50);
     setAppliedFilters({
       search: searchParts.join(' '), orderNumber: orderNumberSearch,
-      deliveryStatus: deliveryStatusFilter, fromClient: fromClientFilter,
+      deliveryStatus: deliveryStatusFilter, orderStatus: orderStatusFilter, fromClient: fromClientFilter,
       dateFilterType: 'custom', dateRange: { start: dateRange.start, end: dateRange.end },
     });
     setFiltersExpanded(false);
@@ -462,6 +499,40 @@ export default function Orders() {
                 style={{ width: '100%' }}
               />
             </div>
+
+            {/* Order Status Filter */}
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CheckCircle style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
+                Statut commande
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {[
+                  { value: 'confirmed', label: 'Confirmé', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+                  { value: 'picked_up', label: 'Récupéré', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
+                  { value: 'delivered', label: 'Livrée', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+                  { value: 'cancelled', label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+                ].map((opt) => {
+                  const isSelected = orderStatusFilter.includes(opt.value);
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setOrderStatusFilter(prev => isSelected ? prev.filter(v => v !== opt.value) : [...prev, opt.value])}
+                      style={{
+                        padding: '0.375rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600,
+                        cursor: 'pointer', transition: 'all 0.15s',
+                        backgroundColor: isSelected ? opt.bg : '#f8fafc',
+                        color: isSelected ? opt.color : '#64748b',
+                        border: isSelected ? `2px solid ${opt.border}` : '2px solid #e2e8f0',
+                      }}
+                    >
+                      {opt.label}{orderStatusCounts[opt.value] !== undefined ? ` (${orderStatusCounts[opt.value]})` : ''}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Panel Footer */}
@@ -491,8 +562,8 @@ export default function Orders() {
               topRight: (o: any) => `${formatAmount(o.total || 0, 2)} ${t('currency')}`,
               bottomLeft: (o: any) => [o.customerName, o.customerPhone].filter(Boolean).join(' · '),
               bottomRight: (o: any) => {
-                const dsb = getDeliveryStatusBadge(o.deliveryStatus);
-                return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '9999px', fontSize: '0.7rem', fontWeight: 600, backgroundColor: dsb.bg, color: dsb.color, border: `1px solid ${dsb.border}` }}>{dsb.label}</span>;
+                const osb = getOrderStatusBadge(o.status);
+                return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '9999px', fontSize: '0.7rem', fontWeight: 600, backgroundColor: osb.bg, color: osb.color, border: `1px solid ${osb.border}` }}>{osb.label}</span>;
               },
             }}
           />
@@ -578,16 +649,34 @@ export default function Orders() {
               <Column
                 header={t('status')}
                 body={(order: any) => {
-                  const dsb = getDeliveryStatusBadge(order.deliveryStatus);
+                  const osb = getOrderStatusBadge(order.status);
                   const sb = getSourceBadge(order);
+                  const nextStatuses = ORDER_STATUS_WORKFLOW[order.status] || [];
                   return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.375rem', backgroundColor: dsb.bg, color: dsb.color, border: `1px solid ${dsb.border}` }}>
-                        {dsb.icon}<span>{dsb.label}</span>
-                      </span>
-                      <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}` }}>
-                        {sb.icon}{sb.label}
-                      </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: osb.bg, color: osb.color, border: `1px solid ${osb.border}` }}>
+                          {osb.label}
+                        </span>
+                        <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}` }}>
+                          {sb.icon}{sb.label}
+                        </span>
+                      </div>
+                      {nextStatuses.length > 0 && (
+                        <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                          {nextStatuses.map(ns => (
+                            <button
+                              key={ns.value}
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); changeStatusMutation.mutate({ orderId: order.id, status: ns.value }); }}
+                              style={{ padding: '0.2rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', backgroundColor: ns.bg, color: ns.color, border: `1px solid ${ns.border}`, transition: 'opacity 0.15s' }}
+                              title={`Changer vers ${ns.label}`}
+                            >
+                              → {ns.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 }}

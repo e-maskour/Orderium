@@ -168,6 +168,8 @@ export const ORD = {
   SHARED_DETAIL: { code: 'ORD200_17', status: 200, message: 'Shared Order Retrieved' },
   /** DELETE /orders/:id/share           → data: null                | metadata: null */
   SHARE_REVOKED: { code: 'ORD200_18', status: 200, message: 'Order Share Link Revoked' },
+  /** PATCH /orders/:id/status           → data: Order               | metadata: null */
+  STATUS_CHANGED: { code: 'ORD200_19', status: 200, message: 'Order Status Changed' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────

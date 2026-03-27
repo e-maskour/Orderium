@@ -193,9 +193,9 @@ export class OrdersService {
         }
       }
 
-      // Orders from POS/Portal are automatically validated and in progress
+      // Orders from POS/Portal are automatically validated and confirmed
       if (createOrderDto.fromPortal) {
-        order.status = OrderStatus.IN_PROGRESS;
+        order.status = OrderStatus.CONFIRMED;
         order.isValidated = true;
       } else {
         order.status = OrderStatus.DRAFT;
@@ -590,11 +590,13 @@ export class OrdersService {
     pageSize: number = 50,
     supplierId?: number,
     direction?: 'ACHAT' | 'VENTE',
+    status?: string[],
   ): Promise<{
     orders: any[];
     count: number;
     totalCount: number;
     statusCounts: any;
+    orderStatusCounts: any;
   }> {
     const offset = (page - 1) * pageSize;
 
@@ -676,6 +678,12 @@ export class OrdersService {
           deliveryStatuses: deliveryStatus,
         });
       }
+    }
+
+    if (status && status.length > 0) {
+      queryBuilder.andWhere('order.status IN (:...orderStatuses)', {
+        orderStatuses: status,
+      });
     }
 
     if (customerId) {
@@ -827,6 +835,7 @@ export class OrdersService {
       count: orders.length,
       totalCount,
       statusCounts,
+      orderStatusCounts,
     };
   }
 
@@ -1825,9 +1834,13 @@ export class OrdersService {
       throw new BadRequestException('Order must be validated before delivery');
     }
 
-    if (order.status !== OrderStatus.IN_PROGRESS) {
+    if (
+      order.status !== OrderStatus.IN_PROGRESS &&
+      order.status !== OrderStatus.CONFIRMED &&
+      order.status !== OrderStatus.PICKED_UP
+    ) {
       throw new BadRequestException(
-        'Order must be in progress to be delivered',
+        'Order must be confirmed or picked up to be delivered',
       );
     }
 
@@ -1881,6 +1894,43 @@ export class OrdersService {
 
     await this.invalidateOrderCache(orderId);
     return await this.getOrderById(orderId);
+  }
+
+  async changeOrderStatus(
+    id: number,
+    newStatus: string,
+  ): Promise<Record<string, unknown>> {
+    const WORKFLOW: Record<string, OrderStatus[]> = {
+      [OrderStatus.CONFIRMED]: [
+        OrderStatus.PICKED_UP,
+        OrderStatus.DELIVERED,
+        OrderStatus.CANCELLED,
+      ],
+      [OrderStatus.PICKED_UP]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
+      [OrderStatus.DELIVERED]: [OrderStatus.CANCELLED],
+      [OrderStatus.CANCELLED]: [],
+    };
+
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const allowed = WORKFLOW[order.status];
+    if (allowed === undefined) {
+      throw new BadRequestException(
+        `Status workflow not supported for current status '${order.status}'`,
+      );
+    }
+    if (!allowed.includes(newStatus as OrderStatus)) {
+      throw new BadRequestException(
+        `Cannot transition from '${order.status}' to '${newStatus}'`,
+      );
+    }
+
+    order.status = newStatus as OrderStatus;
+    await this.orderRepository.save(order);
+
+    await this.invalidateOrderCache(id);
+    return await this.getOrderById(id);
   }
 
   async remove(id: number): Promise<void> {

@@ -218,6 +218,8 @@ export class Order implements IOrder {
       case 'draft': return 'Brouillon';
       case 'validated': return 'Validée';
       case 'in_progress': return 'En cours';
+      case 'confirmed': return 'Confirmé';
+      case 'picked_up': return 'Récupéré';
       case 'delivered': return 'Livrée';
       case 'cancelled': return 'Annulée';
       default: return 'Inconnu';
@@ -235,6 +237,14 @@ export class Order implements IOrder {
 
   get isInProgress(): boolean {
     return this.status === 'in_progress';
+  }
+
+  get isConfirmed(): boolean {
+    return this.status === 'confirmed';
+  }
+
+  get isPickedUp(): boolean {
+    return this.status === 'picked_up';
   }
 
   get isDelivered(): boolean {

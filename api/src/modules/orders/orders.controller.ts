@@ -85,6 +85,7 @@ export class OrdersController {
       pageSize,
       filterDto.supplierId,
       directionValue,
+      filterDto.status,
     );
 
     const offset = (pageNum - 1) * pageSize;
@@ -95,6 +96,7 @@ export class OrdersController {
       hasNext: offset + pageSize < result.totalCount,
       hasPrev: offset > 0,
       statusCounts: result.statusCounts,
+      orderStatusCounts: result.orderStatusCounts,
     });
   }
 
@@ -342,6 +344,19 @@ export class OrdersController {
   async cancel(@Param('id', ParseIntPipe) id: number) {
     const order = await this.ordersService.cancel(id);
     return ApiRes(ORD.CANCELLED, order);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Change order status via workflow (confirmed → picked_up | delivered | cancelled)' })
+  @ApiResponse({ status: 200, description: 'Order status changed successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid status transition' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async changeStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { status: string },
+  ) {
+    const order = await this.ordersService.changeOrderStatus(id, body.status);
+    return ApiRes(ORD.STATUS_CHANGED, order);
   }
 
   @Put(':id/mark-invoiced')
