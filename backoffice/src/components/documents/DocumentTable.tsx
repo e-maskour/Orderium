@@ -77,7 +77,7 @@ export function DocumentTable({
   onPageChange,
   onPageSizeChange,
   onShare,
-  onWhatsApp,}: DocumentTableProps) {
+  onWhatsApp, }: DocumentTableProps) {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const [selectedRows, setSelectedRows] = useState<Document[]>([]);

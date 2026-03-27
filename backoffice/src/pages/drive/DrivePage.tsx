@@ -701,7 +701,7 @@ export default function DrivePage() {
             if (!node.isFolder && activeView !== 'trash') {
                 items.push({
                     label: t('downloadFile') as string, icon: 'pi pi-download',
-                    command: () => driveService.getDownloadUrl(node.id).then(({ url }) => window.open(url, '_blank', 'noopener,noreferrer')).catch(() => {}),
+                    command: () => driveService.getDownloadUrl(node.id).then(({ url }) => window.open(url, '_blank', 'noopener,noreferrer')).catch(() => { }),
                 });
             }
             if (activeView !== 'trash') {

@@ -1034,36 +1034,36 @@ export const ERR = {
 //  PERMISSIONS  (PermissionsController)
 // ─────────────────────────────────────────────────────────────
 export const PERM = {
-  LIST:    { code: 'PERM200_01', status: 200, message: 'Permissions Retrieved' },
-  DETAIL:  { code: 'PERM200_02', status: 200, message: 'Permission Retrieved' },
+  LIST: { code: 'PERM200_01', status: 200, message: 'Permissions Retrieved' },
+  DETAIL: { code: 'PERM200_02', status: 200, message: 'Permission Retrieved' },
   CREATED: { code: 'PERM201_01', status: 201, message: 'Permission Created' },
   UPDATED: { code: 'PERM200_03', status: 200, message: 'Permission Updated' },
   DELETED: { code: 'PERM200_04', status: 200, message: 'Permission Deleted' },
-  SEEDED:  { code: 'PERM200_05', status: 200, message: 'Permissions Seeded' },
+  SEEDED: { code: 'PERM200_05', status: 200, message: 'Permissions Seeded' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
 //  ROLES  (RolesController)
 // ─────────────────────────────────────────────────────────────
 export const ROLE = {
-  LIST:    { code: 'ROLE200_01', status: 200, message: 'Roles Retrieved' },
-  DETAIL:  { code: 'ROLE200_02', status: 200, message: 'Role Retrieved' },
+  LIST: { code: 'ROLE200_01', status: 200, message: 'Roles Retrieved' },
+  DETAIL: { code: 'ROLE200_02', status: 200, message: 'Role Retrieved' },
   CREATED: { code: 'ROLE201_01', status: 201, message: 'Role Created' },
   UPDATED: { code: 'ROLE200_03', status: 200, message: 'Role Updated' },
   DELETED: { code: 'ROLE200_04', status: 200, message: 'Role Deleted' },
-  SEEDED:  { code: 'ROLE200_05', status: 200, message: 'Default Role Seeded' },
+  SEEDED: { code: 'ROLE200_05', status: 200, message: 'Default Role Seeded' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
 //  USERS  (UsersController)
 // ─────────────────────────────────────────────────────────────
 export const USR = {
-  LIST:        { code: 'USR200_01', status: 200, message: 'Users Retrieved' },
-  DETAIL:      { code: 'USR200_02', status: 200, message: 'User Retrieved' },
-  CREATED:     { code: 'USR201_01', status: 201, message: 'User Created' },
-  UPDATED:     { code: 'USR200_03', status: 200, message: 'User Updated' },
-  DELETED:     { code: 'USR200_04', status: 200, message: 'User Deleted' },
-  ACTIVATED:   { code: 'USR200_05', status: 200, message: 'User Activated' },
+  LIST: { code: 'USR200_01', status: 200, message: 'Users Retrieved' },
+  DETAIL: { code: 'USR200_02', status: 200, message: 'User Retrieved' },
+  CREATED: { code: 'USR201_01', status: 201, message: 'User Created' },
+  UPDATED: { code: 'USR200_03', status: 200, message: 'User Updated' },
+  DELETED: { code: 'USR200_04', status: 200, message: 'User Deleted' },
+  ACTIVATED: { code: 'USR200_05', status: 200, message: 'User Activated' },
   DEACTIVATED: { code: 'USR200_06', status: 200, message: 'User Deactivated' },
 } as const satisfies Record<string, ResponseDef>;
 

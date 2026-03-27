@@ -25,7 +25,7 @@ import { Public } from '../auth/decorators/public.decorator';
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(private readonly invoicesService: InvoicesService) { }
 
   @Post('list')
   @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
