@@ -22,6 +22,7 @@ import { FilterOrdersDto } from './dto/filter-orders.dto';
 import { ApiRes } from '../../common/api-response';
 import { ORD } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Orders')
 @PortalRoute()
@@ -356,6 +357,31 @@ export class OrdersController {
   ) {
     const order = await this.ordersService.markAsInvoiced(id, body.invoiceId);
     return ApiRes(ORD.MARKED_INVOICED, order);
+  }
+
+  @Post(':id/share')
+  @ApiOperation({ summary: 'Generate a shareable public link for an order' })
+  @ApiResponse({ status: 200, description: 'Share link generated' })
+  async generateShareLink(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.ordersService.generateShareLink(id);
+    return ApiRes(ORD.SHARED, result);
+  }
+
+  @Public()
+  @Get('shared/:token')
+  @ApiOperation({ summary: 'Get order by share token (public, no auth required)' })
+  @ApiResponse({ status: 200, description: 'Order retrieved' })
+  async getByShareToken(@Param('token') token: string) {
+    const order = await this.ordersService.getByShareToken(token);
+    return ApiRes(ORD.SHARED_DETAIL, order);
+  }
+
+  @Delete(':id/share')
+  @ApiOperation({ summary: 'Revoke share link for an order' })
+  @ApiResponse({ status: 200, description: 'Share link revoked' })
+  async revokeShareLink(@Param('id', ParseIntPipe) id: number) {
+    await this.ordersService.revokeShareLink(id);
+    return ApiRes(ORD.SHARE_REVOKED, null);
   }
 
   @Get('export/xlsx')

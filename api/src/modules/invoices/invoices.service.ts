@@ -1194,4 +1194,61 @@ export class InvoicesService {
     };
     return labels[status] || status;
   }
+
+  // ─── Share Link ───────────────────────────────────────────────────────────
+
+  async generateShareLink(
+    id: number,
+  ): Promise<{ shareToken: string; expiresAt: Date }> {
+    const invoice = await this.findOne(id);
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+
+    if (!invoice.isValidated || invoice.status === InvoiceStatus.DRAFT) {
+      throw new BadRequestException('Only validated invoices can be shared');
+    }
+
+    const shareToken =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15) +
+      Date.now().toString(36);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await this.invoiceRepository.update(id, { shareToken, shareTokenExpiry: expiresAt });
+    await this.invalidateInvoiceCache(id);
+
+    return { shareToken, expiresAt };
+  }
+
+  async getByShareToken(token: string): Promise<Invoice> {
+    const invoice = await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.items', 'items')
+      .leftJoinAndSelect('invoice.customer', 'customer')
+      .leftJoinAndSelect('invoice.supplier', 'supplier')
+      .where('invoice.shareToken = :token', { token })
+      .getOne();
+
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found or link has expired');
+    }
+
+    if (invoice.shareTokenExpiry && new Date() > new Date(invoice.shareTokenExpiry)) {
+      throw new BadRequestException('This invoice link has expired');
+    }
+
+    return invoice;
+  }
+
+  async revokeShareLink(id: number): Promise<void> {
+    const invoice = await this.findOne(id);
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+    await this.invoiceRepository.update(id, { shareToken: null, shareTokenExpiry: null });
+    await this.invalidateInvoiceCache(id);
+  }
 }

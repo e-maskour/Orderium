@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit, Trash2, ChevronDown, ChevronUp, CreditCard, CheckCircle, Eye, FileText } from 'lucide-react';
+import { Edit, Trash2, ChevronDown, ChevronUp, CreditCard, CheckCircle, Eye, FileText, Share2, MessageCircle } from 'lucide-react';
 import { Button } from 'primereact/button'; import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { FloatingActionBar } from '../FloatingActionBar';
@@ -50,6 +50,8 @@ interface DocumentTableProps {
   totalCount: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
+  onShare?: (id: number) => void;
+  onWhatsApp?: (id: number) => void;
 }
 
 export function DocumentTable({
@@ -73,8 +75,9 @@ export function DocumentTable({
   pageSize,
   totalCount,
   onPageChange,
-  onPageSizeChange
-}: DocumentTableProps) {
+  onPageSizeChange,
+  onShare,
+  onWhatsApp,}: DocumentTableProps) {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const [selectedRows, setSelectedRows] = useState<Document[]>([]);
@@ -274,7 +277,31 @@ export function DocumentTable({
                 clearSelection();
               },
               variant: 'danger' as const
-            }
+            },
+            {
+              id: 'share',
+              label: 'Partager',
+              icon: <Share2 style={{ width: '1rem', height: '1rem' }} />,
+              onClick: () => {
+                if (selectedDocuments.length === 1) {
+                  onShare?.(selectedDocuments[0]);
+                  clearSelection();
+                }
+              },
+              hidden: !onShare || selectedDocuments.length !== 1 || selectedDocumentsData.every(d => !d?.isValidated)
+            },
+            {
+              id: 'whatsapp',
+              label: 'WhatsApp',
+              icon: <MessageCircle style={{ width: '1rem', height: '1rem' }} />,
+              onClick: () => {
+                if (selectedDocuments.length === 1) {
+                  onWhatsApp?.(selectedDocuments[0]);
+                  clearSelection();
+                }
+              },
+              hidden: !onWhatsApp || selectedDocuments.length !== 1 || selectedDocumentsData.every(d => !d?.isValidated)
+            },
           ];
         })()}
       />

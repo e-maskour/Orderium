@@ -788,4 +788,53 @@ export class DriveService {
       sharedWithMe: parseInt(sharedWithMeResult?.cnt ?? '0', 10) || 0,
     };
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  //  Raw presigned URL — for system-generated files without a DriveNode
+  // ──────────────────────────────────────────────────────────────────────────
+
+  async getRawPresignedUrl(storageKey: string): Promise<{ url: string }> {
+    const url = await this.storage.getPresignedDownloadUrl(storageKey);
+    return { url };
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  //  MinIO Browse — lists the raw bucket at a given path prefix and enriches
+  //  each file with permission info (canDelete = true when it has a drive node)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  async browseStorage(prefix: string): Promise<{
+    prefix: string;
+    folders: Array<{ prefix: string; name: string }>;
+    files: Array<{
+      key: string;
+      name: string;
+      sizeBytes: number;
+      lastModified: Date;
+      etag: string;
+      canDelete: boolean;
+      driveNodeId: string | null;
+      source: 'user' | 'system';
+    }>;
+  }> {
+    const { folders, files } = await this.storage.listObjects(prefix);
+
+    const enrichedFiles = await Promise.all(
+      files.map(async (f) => {
+        const node = await this.nodeRepo.findOne({
+          where: { storageKey: f.key, isTrashed: false },
+          select: ['id'],
+        });
+        return {
+          ...f,
+          canDelete: !!node,
+          driveNodeId: node?.id ?? null,
+          source: (node ? 'user' : 'system') as 'user' | 'system',
+        };
+      }),
+    );
+
+    return { prefix, folders, files: enrichedFiles };
+  }
 }
+

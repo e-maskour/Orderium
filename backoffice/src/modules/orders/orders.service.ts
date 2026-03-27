@@ -119,6 +119,23 @@ export class OrdersService {
     });
     return raw.blob();
   }
+
+  async generateShareLink(id: number): Promise<{ shareToken: string; expiresAt: Date }> {
+    const result = await apiClient.post<any>(API_ROUTES.ORDERS.SHARE(id));
+    return {
+      shareToken: result.data.shareToken,
+      expiresAt: new Date(result.data.expiresAt),
+    };
+  }
+
+  async getByShareToken(token: string): Promise<any> {
+    const response = await apiClient.get<any>(API_ROUTES.ORDERS.SHARED(token));
+    return response.data;
+  }
+
+  async revokeShareLink(id: number): Promise<void> {
+    await apiClient.delete(API_ROUTES.ORDERS.SHARE(id));
+  }
 }
 
 export const ordersService = new OrdersService();

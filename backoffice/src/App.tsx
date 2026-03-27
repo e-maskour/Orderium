@@ -80,6 +80,7 @@ const FournisseurCreate = lazy(() => import('./pages/FournisseurCreate'));
 const FournisseurEdit = lazy(() => import('./pages/FournisseurEdit'));
 const FournisseurDetail = lazy(() => import('./pages/FournisseurDetail'));
 const QuotePreviewPage = lazy(() => import('./pages/QuotePreviewPage'));
+const SharedDocumentPage = lazy(() => import('./pages/SharedDocumentPage'));
 const DemandePrix = lazy(() => import('./pages/DemandePrix'));
 const BonAchat = lazy(() => import('./pages/BonAchat'));
 const PaiementsVente = lazy(() => import('./pages/PaiementsVente'));
@@ -163,6 +164,8 @@ function App() {
                       <Route path="/onboarding" element={<OnboardingPage />} />
                       <Route path="/login" element={<Login />} />
                       <Route path="/preview/quote/:token" element={<QuotePreviewPage />} />
+                      <Route path="/preview/invoice/:token" element={<SharedDocumentPage />} />
+                      <Route path="/preview/order/:token" element={<SharedDocumentPage />} />
                       <Route
                         path="/dashboard"
                         element={

@@ -16,6 +16,7 @@ import {
     ChevronRight,
     Store,
     Truck,
+    HardDrive,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -87,6 +88,14 @@ const NAV_ITEMS = [
         icon: UsersRound,
         label: 'Équipe',
         activePaths: ['/users', '/roles'],
+        exactFirst: false,
+    },
+    {
+        id: 'sb-drive',
+        to: '/drive',
+        icon: HardDrive,
+        label: 'Drive',
+        activePaths: ['/drive'],
         exactFirst: false,
     },
     {

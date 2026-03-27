@@ -88,6 +88,23 @@ export class InvoicesService {
     });
     return raw.blob();
   }
+
+  async generateShareLink(id: number): Promise<{ shareToken: string; expiresAt: Date }> {
+    const result = await apiClient.post<any>(API_ROUTES.INVOICES.SHARE(id));
+    return {
+      shareToken: result.data.shareToken,
+      expiresAt: new Date(result.data.expiresAt),
+    };
+  }
+
+  async getByShareToken(token: string): Promise<any> {
+    const response = await apiClient.get<any>(API_ROUTES.INVOICES.SHARED(token));
+    return response.data;
+  }
+
+  async revokeShareLink(id: number): Promise<void> {
+    await apiClient.delete(API_ROUTES.INVOICES.SHARE(id));
+  }
 }
 
 export const invoicesService = new InvoicesService();

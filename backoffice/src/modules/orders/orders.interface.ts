@@ -30,6 +30,8 @@ export interface IOrder {
   deliveryStatus?: DeliveryStatus | null; // Delivery lifecycle status
   deliveryPersonId?: number | null; // Business logic field, not in entity
   deliveryPersonName?: string | null; // Business logic field, not in entity
+  shareToken?: string | null;
+  shareTokenExpiry?: string | null;
   dateCreated: string;
   dateUpdated: string;
   items?: IOrderItem[]; // For compatibility with document services

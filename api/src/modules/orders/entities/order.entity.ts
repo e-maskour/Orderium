@@ -129,6 +129,12 @@ export class Order extends BaseDocument {
   @Column({ type: 'timestamp', nullable: true })
   canceledAt: Date | null;
 
+  @Column({ type: 'varchar', length: 100, nullable: true, unique: true })
+  shareToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  shareTokenExpiry: Date | null;
+
   // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
 
   @OneToMany(() => OrderItem, (item) => item.order)

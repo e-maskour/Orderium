@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { CheckCircle, Home, Download, Printer, Eye, FileText, Receipt as ReceiptIcon } from 'lucide-react';
+import { CheckCircle, Home, Download, Printer, Eye, FileText, Receipt as ReceiptIcon, Share2, MessageCircle } from 'lucide-react';
 import { Button } from 'primereact/button';
-import { toastError } from '../services/toast.service';
+import { toastError, toastSuccess } from '../services/toast.service';
 import { IPosCartItem as CartItem, ICheckoutCustomer as Customer, IOrderSuccessState as SuccessState } from '../modules/pos';
 import { formatCurrency } from '@orderium/ui';
+import { ordersService } from '../modules/orders/orders.service';
+import { ShareDocumentDialog } from '../components/documents/ShareDocumentDialog';
 
 export default function OrderSuccessPage() {
   const navigate = useNavigate();
@@ -16,6 +18,9 @@ export default function OrderSuccessPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [resolvedOrderId, setResolvedOrderId] = useState<number | null>(state?.orderId ?? null);
   const [previewType, setPreviewType] = useState<'receipt' | 'delivery-note' | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [shareTokenExpiry, setShareTokenExpiry] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!state || !state.orderNumber) {
@@ -73,6 +78,27 @@ export default function OrderSuccessPage() {
   };
 
   const closePreview = () => setPreviewType(null);
+
+  const handleShare = async () => {
+    try {
+      if (resolvedOrderId && !shareToken) {
+        const result = await ordersService.generateShareLink(resolvedOrderId);
+        setShareToken(result.shareToken);
+        setShareTokenExpiry(result.expiresAt);
+        toastSuccess('Lien de partage généré');
+      }
+      setShowShareDialog(true);
+    } catch (error: any) {
+      toastError(error.message || 'Erreur lors de la génération du lien');
+    }
+  };
+
+  const handleGenerateShareLink = async () => {
+    if (!resolvedOrderId) return;
+    const result = await ordersService.generateShareLink(resolvedOrderId);
+    setShareToken(result.shareToken);
+    setShareTokenExpiry(result.expiresAt);
+  };
 
   const previewUrl = previewType
     ? (previewType === 'receipt'
@@ -226,6 +252,21 @@ export default function OrderSuccessPage() {
                   icon={<Home style={{ width: '1rem', height: '1rem' }} />}
                   style={{ gridColumn: 'span 2', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '3rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                 />
+
+                {/* Share + WhatsApp */}
+                <Button
+                  onClick={handleShare}
+                  icon={<Share2 style={{ width: '1.125rem', height: '1.125rem' }} />}
+                  label="Partager"
+                  outlined
+                  style={{ height: '3.5rem', fontSize: '0.9375rem', fontWeight: 600, borderColor: '#235ae4', color: '#235ae4' }}
+                />
+                <Button
+                  onClick={handleShare}
+                  icon={<MessageCircle style={{ width: '1.125rem', height: '1.125rem' }} />}
+                  label="WhatsApp"
+                  style={{ height: '3.5rem', fontSize: '0.9375rem', fontWeight: 700, background: '#25D366', border: 'none', color: '#fff' }}
+                />
               </div>
             </div>
           </div>
@@ -265,6 +306,21 @@ export default function OrderSuccessPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showShareDialog && (
+        <ShareDocumentDialog
+          isOpen={showShareDialog}
+          onClose={() => setShowShareDialog(false)}
+          documentType="bon_livraison"
+          documentNumber={state.orderNumber}
+          partnerName={state.customer.name}
+          partnerPhone={state.customer.phone}
+          totalAmount={state.total}
+          shareToken={shareToken}
+          expiresAt={shareTokenExpiry}
+          onGenerateLink={handleGenerateShareLink}
+        />
       )}
     </>
   );

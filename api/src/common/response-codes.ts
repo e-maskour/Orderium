@@ -162,6 +162,12 @@ export const ORD = {
   },
   /** GET /orders/export/xlsx            → binary (not wrapped)      | metadata: n/a */
   EXPORTED: { code: 'ORD200_15', status: 200, message: 'Orders Exported' },
+  /** POST /orders/:id/share             → data: { shareToken, expiresAt } | metadata: null */
+  SHARED: { code: 'ORD200_16', status: 200, message: 'Order Share Link Generated' },
+  /** GET /orders/shared/:token (Public) → data: Order               | metadata: null */
+  SHARED_DETAIL: { code: 'ORD200_17', status: 200, message: 'Shared Order Retrieved' },
+  /** DELETE /orders/:id/share           → data: null                | metadata: null */
+  SHARE_REVOKED: { code: 'ORD200_18', status: 200, message: 'Order Share Link Revoked' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -196,6 +202,12 @@ export const INV = {
   },
   /** GET /invoices/export/xlsx          → binary (not wrapped)      | metadata: n/a */
   EXPORTED: { code: 'INV200_09', status: 200, message: 'Invoices Exported' },
+  /** POST /invoices/:id/share            → data: { shareToken, expiresAt } | metadata: null */
+  SHARED: { code: 'INV200_10', status: 200, message: 'Invoice Share Link Generated' },
+  /** GET /invoices/shared/:token (Public) → data: Invoice           | metadata: null */
+  SHARED_DETAIL: { code: 'INV200_11', status: 200, message: 'Shared Invoice Retrieved' },
+  /** DELETE /invoices/:id/share          → data: null               | metadata: null */
+  SHARE_REVOKED: { code: 'INV200_12', status: 200, message: 'Invoice Share Link Revoked' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -972,6 +984,10 @@ export const DRV = {
     status: 200,
     message: 'Shared Nodes Retrieved',
   },
+  /** GET  /drive/browse?prefix=       → data: BrowseResult  | metadata: null */
+  BROWSE_LISTED: { code: 'DRV200_22', status: 200, message: 'Storage Browsed' },
+  /** GET  /drive/raw-url?key=         → data: { url: string } | metadata: null */
+  RAW_URL: { code: 'DRV200_23', status: 200, message: 'Raw presigned URL generated' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────

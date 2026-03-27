@@ -67,6 +67,26 @@ export class DriveController {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
+  //  Raw MinIO Browser
+  // ──────────────────────────────────────────────────────────────────────────
+
+  @Get('browse')
+  @ApiOperation({ summary: 'Browse raw MinIO storage at a given prefix' })
+  @ApiResponse({ status: 200, description: 'Storage contents listed' })
+  async browseStorage(@Query('prefix') prefix = '') {
+    const data = await this.driveService.browseStorage(prefix);
+    return ApiRes(DRV.BROWSE_LISTED, data);
+  }
+
+  @Get('raw-url')
+  @ApiOperation({ summary: 'Get a presigned download URL for a raw storage key' })
+  @ApiResponse({ status: 200, description: 'Presigned URL generated' })
+  async getRawUrl(@Query('key') key: string) {
+    const data = await this.driveService.getRawPresignedUrl(key);
+    return ApiRes(DRV.RAW_URL, data);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
   //  Trash
   // ──────────────────────────────────────────────────────────────────────────
 

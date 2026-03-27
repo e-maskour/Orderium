@@ -2151,4 +2151,92 @@ export class OrdersService {
     };
     return labels[status] || status;
   }
+
+  // ─── Share Link ───────────────────────────────────────────────────────────
+
+  async generateShareLink(
+    id: number,
+  ): Promise<{ shareToken: string; expiresAt: Date }> {
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (!order.isValidated || order.status === OrderStatus.DRAFT) {
+      throw new BadRequestException('Only validated orders can be shared');
+    }
+
+    const shareToken =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15) +
+      Date.now().toString(36);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await this.orderRepository.update(id, { shareToken, shareTokenExpiry: expiresAt });
+    await this.cacheManager.del(`order:${id}`);
+
+    return { shareToken, expiresAt };
+  }
+
+  async getByShareToken(token: string): Promise<Record<string, unknown>> {
+    const order = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.customer', 'customer')
+      .leftJoinAndSelect('order.supplier', 'supplier')
+      .where('order.shareToken = :token', { token })
+      .getOne();
+
+    if (!order) {
+      throw new NotFoundException('Order not found or link has expired');
+    }
+
+    if (order.shareTokenExpiry && new Date() > new Date(order.shareTokenExpiry)) {
+      throw new BadRequestException('This order link has expired');
+    }
+
+    return {
+      id: order.id,
+      orderNumber: order.documentNumber,
+      date: order.date,
+      subtotal: order.subtotal,
+      tax: order.tax,
+      discount: order.discount,
+      discountType: order.discountType,
+      total: order.total,
+      status: order.status,
+      direction: order.direction,
+      isValidated: order.isValidated,
+      notes: order.notes,
+      shareToken: order.shareToken,
+      shareTokenExpiry: order.shareTokenExpiry,
+      customerName: order.customerName ?? order.customer?.name,
+      customerPhone: order.customerPhone ?? order.customer?.['phoneNumber'],
+      customerAddress: order.customerAddress ?? order.customer?.address,
+      supplierName: order.supplierName,
+      supplierPhone: order.supplierPhone,
+      supplierAddress: order.supplierAddress,
+      items: (order.items ?? []).map((item) => ({
+        id: item.id,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        discountType: item.discountType,
+        tax: item.tax,
+        total: item.total,
+      })),
+    };
+  }
+
+  async revokeShareLink(id: number): Promise<void> {
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    await this.orderRepository.update(id, { shareToken: null, shareTokenExpiry: null });
+    await this.cacheManager.del(`order:${id}`);
+  }
 }

@@ -57,6 +57,8 @@ export const API_ROUTES = {
         SEARCH_ORDER_NUMBERS: '/api/orders/search/order-numbers',
         ANALYTICS: (direction: string) => `/api/orders/analytics/${direction}`,
         EXPORT_XLSX: '/api/orders/export/xlsx',
+        SHARE: (id: number) => `/api/orders/${id}/share`,
+        SHARED: (token: string) => `/api/orders/shared/${token}`,
     },
 
     // ─── Invoices ──────────────────────────────────────────────
@@ -72,6 +74,8 @@ export const API_ROUTES = {
         DEVALIDATE: (id: number) => `/api/invoices/${id}/devalidate`,
         ANALYTICS: (direction: string) => `/api/invoices/analytics/${direction}`,
         EXPORT_XLSX: '/api/invoices/export/xlsx',
+        SHARE: (id: number) => `/api/invoices/${id}/share`,
+        SHARED: (token: string) => `/api/invoices/shared/${token}`,
     },
 
     // ─── Quotes ────────────────────────────────────────────────
@@ -265,6 +269,9 @@ export const API_ROUTES = {
         REMOVE_TAG: (nodeId: string, tagId: number) => `/api/drive/nodes/${nodeId}/tags/${tagId}`,
         // Stats
         STATS: '/api/drive/stats',
+        // Raw MinIO browser
+        BROWSE_STORAGE: (prefix?: string) => `/api/drive/browse${prefix ? `?prefix=${encodeURIComponent(prefix)}` : ''}`,
+        RAW_URL: (key: string) => `/api/drive/raw-url?key=${encodeURIComponent(key)}`,
     },
 
     // ─── Onboarding ────────────────────────────────────────────

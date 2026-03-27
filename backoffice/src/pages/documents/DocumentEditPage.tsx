@@ -7,7 +7,7 @@ import { Save, X, CheckCircle, XCircle, ChevronDown, FileText, Truck, ArrowLeft,
 import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
 import { Partner, IPartner } from '../../modules/partners';
 import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
-import { ShareQuoteDialog } from '../../components/documents/ShareQuoteDialog';
+import { ShareDocumentDialog } from '../../components/documents/ShareDocumentDialog';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import type { CreateInvoiceDTO } from '../../modules/invoices/invoices.interface';
 import { quotesService } from '../../modules/quotes/quotes.service';
@@ -317,10 +317,12 @@ export default function DocumentEditPage({
         setRemainingAmount(doc.remainingAmount ?? 0);
       }
 
-      // Load share token and signature data for devis
-      if (documentType === 'devis') {
+      // Load share token for devis, facture, and bon_livraison
+      if (documentType === 'devis' || documentType === 'facture' || documentType === 'bon_livraison') {
         setShareToken((doc as any).shareToken || null);
         setShareTokenExpiry((doc as any).shareTokenExpiry ? new Date((doc as any).shareTokenExpiry) : null);
+      }
+      if (documentType === 'devis') {
         setSignedBy((doc as any).signedBy || '');
         setSignedDate((doc as any).signedDate ? new Date((doc as any).signedDate) : null);
         setClientNotes((doc as any).clientNotes || '');
@@ -752,13 +754,35 @@ export default function DocumentEditPage({
     if (!id) return;
 
     try {
-      const result = await quotesService.generateShareLink(Number(id));
+      let result: { shareToken: string; expiresAt: Date };
+      if (documentType === 'facture') {
+        result = await invoicesService.generateShareLink(Number(id));
+      } else if (documentType === 'bon_livraison') {
+        result = await ordersService.generateShareLink(Number(id));
+      } else {
+        result = await quotesService.generateShareLink(Number(id));
+      }
       setShareToken(result.shareToken);
       setShareTokenExpiry(result.expiresAt);
       toastSuccess(t('successLinkGenerated'));
     } catch (error: any) {
-      console.error('Error generating share link:', error);
       toastError(error.message || t('errorGeneratingLink'));
+    }
+  };
+
+  const handleRevokeShareLink = async () => {
+    if (!id) return;
+    try {
+      if (documentType === 'facture') {
+        await invoicesService.revokeShareLink(Number(id));
+      } else if (documentType === 'bon_livraison') {
+        await ordersService.revokeShareLink(Number(id));
+      }
+      setShareToken(null);
+      setShareTokenExpiry(null);
+      toastSuccess('Lien révoqué avec succès');
+    } catch (error: any) {
+      toastError(error.message || 'Erreur lors de la révocation du lien');
     }
   };
 
@@ -1280,6 +1304,17 @@ export default function DocumentEditPage({
                     </div>
                   )}
 
+                  {/* Share button for facture and bon_livraison */}
+                  {isValidated && (documentType === 'facture' || documentType === 'bon_livraison') && (
+                    <Button
+                      onClick={() => setShowShareDialog(true)}
+                      icon={<Share2 style={{ width: '1rem', height: '1rem' }} />}
+                      label={t('shareWithClient')}
+                      outlined
+                      style={{ borderColor: '#235ae4', color: '#235ae4' }}
+                    />
+                  )}
+
                   {/* PDF Action Buttons - Show when validated and not draft */}
                   {isValidated && status !== 'draft' && id && (
                     <PDFActionButtons
@@ -1305,14 +1340,19 @@ export default function DocumentEditPage({
 
 
 
-        {documentType === 'devis' && (
-          <ShareQuoteDialog
+        {isValidated && (documentType === 'devis' || documentType === 'facture' || documentType === 'bon_livraison') && (
+          <ShareDocumentDialog
             isOpen={showShareDialog}
             onClose={() => setShowShareDialog(false)}
-            quoteNumber={invoiceNumber}
+            documentType={documentType}
+            documentNumber={invoiceNumber}
+            partnerName={partner?.name}
+            partnerPhone={partner?.phoneNumber}
+            totalAmount={totalTTC}
             shareToken={shareToken}
             expiresAt={shareTokenExpiry}
             onGenerateLink={handleGenerateShareLink}
+            onRevokeLink={documentType !== 'devis' ? handleRevokeShareLink : undefined}
           />
         )}
 

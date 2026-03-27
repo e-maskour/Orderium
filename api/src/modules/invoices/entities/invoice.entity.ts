@@ -80,6 +80,12 @@ export class Invoice extends BaseDocument {
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   remainingAmount: number;
 
+  @Column({ type: 'varchar', length: 100, nullable: true, unique: true })
+  shareToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  shareTokenExpiry: Date | null;
+
   // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
 
   @ManyToOne(() => Partner, { nullable: true })

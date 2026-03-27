@@ -176,3 +176,27 @@ export interface DriveStatsResponse {
     totalBytes: number;
     sharedWithMeCount: number;
 }
+
+// ─── Raw MinIO Browse ─────────────────────────────────────────────────────────
+
+export interface IBrowseFolder {
+    prefix: string;
+    name: string;
+}
+
+export interface IBrowseFile {
+    key: string;
+    name: string;
+    sizeBytes: number;
+    lastModified: string;
+    etag: string;
+    canDelete: boolean;
+    driveNodeId: string | null;
+    source: 'user' | 'system';
+}
+
+export interface IBrowseStorageResult {
+    prefix: string;
+    folders: IBrowseFolder[];
+    files: IBrowseFile[];
+}

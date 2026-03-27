@@ -1,0 +1,120 @@
+import { MigrationInterface, QueryRunner } from "typeorm";
+
+export class AddShareTokenToOrders1774570031001 implements MigrationInterface {
+    name = 'AddShareTokenToOrders1774570031001'
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_c93c5c654f9862a026c5249ac6a"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_824be6feda5e655c49c4e0c534b"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_af929a5f2a400fdb6913b4967e1"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_43d19956aeab008b49e0804c145"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "invoiceId"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "orderId"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "customerId"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "supplierId"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "paymentDate"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "paymentType"`);
+        await queryRunner.query(`DROP TYPE "public"."payments_paymenttype_enum"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "tenantId" integer NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "currency" character varying(3) NOT NULL DEFAULT 'MAD'`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "paymentMethod" character varying(50)`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "planName" character varying(20) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "billingCycle" character varying(10) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "periodStart" date NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "periodEnd" date NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "status" character varying(20) NOT NULL DEFAULT 'pending'`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "validatedBy" character varying(255)`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "validatedAt" TIMESTAMP WITH TIME ZONE`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "rejectionReason" text`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "receiptUrl" character varying(500)`);
+        await queryRunner.query(`ALTER TABLE "invoices" ADD "shareToken" character varying(100)`);
+        await queryRunner.query(`ALTER TABLE "invoices" ADD CONSTRAINT "UQ_cdfe7215b223c6264336b50b968" UNIQUE ("shareToken")`);
+        await queryRunner.query(`ALTER TABLE "invoices" ADD "shareTokenExpiry" TIMESTAMP`);
+        await queryRunner.query(`ALTER TABLE "orders" ADD "shareToken" character varying(100)`);
+        await queryRunner.query(`ALTER TABLE "orders" ADD CONSTRAINT "UQ_8b896ad05b8457f011ad29ca06f" UNIQUE ("shareToken")`);
+        await queryRunner.query(`ALTER TABLE "orders" ADD "shareTokenExpiry" TIMESTAMP`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "invoiceId" integer`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "orderId" integer`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "customerId" integer`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "supplierId" integer`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "paymentDate" date NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "paymentType" "public"."payments_paymenttype_enum" NOT NULL DEFAULT 'cash'`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "id"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "id" uuid NOT NULL DEFAULT uuid_generate_v4()`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id")`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "referenceNumber"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "referenceNumber" character varying(100)`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "id"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "id" SERIAL NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id")`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "referenceNumber"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "referenceNumber" character varying`);
+        await queryRunner.query(`CREATE INDEX "IDX_98a04cdcbac4f6a2c55c7d1935" ON "payments" ("tenantId") `);
+        await queryRunner.query(`CREATE INDEX "IDX_32b41cdb985a296213e9a928b5" ON "payments" ("status") `);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_98a04cdcbac4f6a2c55c7d19350" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_43d19956aeab008b49e0804c145" FOREIGN KEY ("invoiceId") REFERENCES "invoices"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_af929a5f2a400fdb6913b4967e1" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_824be6feda5e655c49c4e0c534b" FOREIGN KEY ("customerId") REFERENCES "partners"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_c93c5c654f9862a026c5249ac6a" FOREIGN KEY ("supplierId") REFERENCES "partners"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_c93c5c654f9862a026c5249ac6a"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_824be6feda5e655c49c4e0c534b"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_af929a5f2a400fdb6913b4967e1"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_43d19956aeab008b49e0804c145"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "FK_98a04cdcbac4f6a2c55c7d19350"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_32b41cdb985a296213e9a928b5"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_98a04cdcbac4f6a2c55c7d1935"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "referenceNumber"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "referenceNumber" character varying(100)`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "id"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "id" uuid NOT NULL DEFAULT uuid_generate_v4()`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id")`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "referenceNumber"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "referenceNumber" character varying`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "id"`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "id" SERIAL NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id")`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "paymentType"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "paymentDate"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "supplierId"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "customerId"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "orderId"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "invoiceId"`);
+        await queryRunner.query(`ALTER TABLE "orders" DROP COLUMN "shareTokenExpiry"`);
+        await queryRunner.query(`ALTER TABLE "orders" DROP CONSTRAINT "UQ_8b896ad05b8457f011ad29ca06f"`);
+        await queryRunner.query(`ALTER TABLE "orders" DROP COLUMN "shareToken"`);
+        await queryRunner.query(`ALTER TABLE "invoices" DROP COLUMN "shareTokenExpiry"`);
+        await queryRunner.query(`ALTER TABLE "invoices" DROP CONSTRAINT "UQ_cdfe7215b223c6264336b50b968"`);
+        await queryRunner.query(`ALTER TABLE "invoices" DROP COLUMN "shareToken"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "receiptUrl"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "rejectionReason"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "validatedAt"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "validatedBy"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "status"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "periodEnd"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "periodStart"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "billingCycle"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "planName"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "paymentMethod"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "currency"`);
+        await queryRunner.query(`ALTER TABLE "payments" DROP COLUMN "tenantId"`);
+        await queryRunner.query(`CREATE TYPE "public"."payments_paymenttype_enum" AS ENUM('cash', 'check', 'bank_transfer', 'credit_card', 'mobile_payment', 'other')`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "paymentType" "public"."payments_paymenttype_enum" NOT NULL DEFAULT 'cash'`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "paymentDate" date NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "supplierId" integer`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "customerId" integer`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "orderId" integer`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD "invoiceId" integer`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_43d19956aeab008b49e0804c145" FOREIGN KEY ("invoiceId") REFERENCES "invoices"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_af929a5f2a400fdb6913b4967e1" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_824be6feda5e655c49c4e0c534b" FOREIGN KEY ("customerId") REFERENCES "partners"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payments" ADD CONSTRAINT "FK_c93c5c654f9862a026c5249ac6a" FOREIGN KEY ("supplierId") REFERENCES "partners"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+    }
+
+}

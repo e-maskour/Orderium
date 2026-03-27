@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Clock, CheckCircle, Filter, X, Download } from 'lucide-react';
 import { DocumentTable } from '../../components/documents';
+import { ShareDocumentDialog, ShareDocumentType } from '../../components/documents/ShareDocumentDialog';
 import { documentsService, DocumentItem } from '../../modules/documents/services/documents.service';
 import { partnersService } from '../../modules';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
@@ -19,7 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import { ordersService } from '../../modules/orders/orders.service';
-import { toastExported, toastError, toastConfirm, toastDocument } from '../../services/toast.service';
+import { toastExported, toastError, toastConfirm, toastDocument, toastSuccess } from '../../services/toast.service';
 
 interface DocumentListPageProps {
   documentType: DocumentType;
@@ -40,6 +41,12 @@ export default function DocumentListPage({
   const navigate = useNavigate();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<{ id: number; number: string; total: number } | null>(null);
+
+  // Share dialog state
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [sharingDoc, setSharingDoc] = useState<{ id: number; number: string; partnerName: string } | null>(null);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [shareTokenExpiry, setShareTokenExpiry] = useState<Date | null>(null);
 
   // Filter states
   const [filtersExpanded, setFiltersExpanded] = useState(false);
@@ -161,6 +168,54 @@ export default function DocumentListPage({
         total: doc.total
       });
       setShowPaymentModal(true);
+    }
+  };
+
+  const handleShare = (id: number) => {
+    const doc = documents.find(d => d.id === id);
+    if (!doc) return;
+    setSharingDoc({ id: doc.id, number: doc.number, partnerName: doc.partnerName });
+    setShareToken(null);
+    setShareTokenExpiry(null);
+    setShowShareDialog(true);
+  };
+
+  const handleWhatsApp = (id: number) => {
+    handleShare(id);
+  };
+
+  const handleGenerateShareLink = async () => {
+    if (!sharingDoc) return;
+    try {
+      let result: { shareToken: string; expiresAt: Date };
+      if (documentType === 'facture') {
+        result = await invoicesService.generateShareLink(sharingDoc.id);
+      } else if (documentType === 'bon_livraison') {
+        result = await ordersService.generateShareLink(sharingDoc.id);
+      } else {
+        result = await quotesService.generateShareLink(sharingDoc.id);
+      }
+      setShareToken(result.shareToken);
+      setShareTokenExpiry(result.expiresAt);
+      toastSuccess(t('successLinkGenerated'));
+    } catch (error: any) {
+      toastError(error.message || t('errorGeneratingLink'));
+    }
+  };
+
+  const handleRevokeShareLink = async () => {
+    if (!sharingDoc) return;
+    try {
+      if (documentType === 'facture') {
+        await invoicesService.revokeShareLink(sharingDoc.id);
+      } else if (documentType === 'bon_livraison') {
+        await ordersService.revokeShareLink(sharingDoc.id);
+      }
+      setShareToken(null);
+      setShareTokenExpiry(null);
+      toastSuccess('Lien révoqué avec succès');
+    } catch (error: any) {
+      toastError(error.message || 'Erreur lors de la révocation du lien');
     }
   };
 
@@ -428,6 +483,8 @@ export default function DocumentListPage({
                   onViewPayments={config.features.hasPayments ? handleViewPayments : undefined}
                   onValidate={config.features.hasValidation ? handleValidate : undefined}
                   onDevalidate={config.features.hasValidation ? handleDevalidate : undefined}
+                  onShare={handleShare}
+                  onWhatsApp={handleWhatsApp}
                   loading={loading}
                   showPaymentColumns={config.features.hasPayments}
                   showValidationColumn={config.features.hasValidation}
@@ -453,6 +510,20 @@ export default function DocumentListPage({
           invoiceNumber={selectedInvoice.number}
           invoiceTotal={selectedInvoice.total}
           onPaymentUpdate={refetch}
+        />
+      )}
+
+      {sharingDoc && (
+        <ShareDocumentDialog
+          isOpen={showShareDialog}
+          onClose={() => { setShowShareDialog(false); setSharingDoc(null); }}
+          documentType={documentType as ShareDocumentType}
+          documentNumber={sharingDoc.number}
+          partnerName={sharingDoc.partnerName}
+          shareToken={shareToken}
+          expiresAt={shareTokenExpiry}
+          onGenerateLink={handleGenerateShareLink}
+          onRevokeLink={documentType !== 'devis' ? handleRevokeShareLink : undefined}
         />
       )}
     </AdminLayout>
