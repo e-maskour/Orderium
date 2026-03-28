@@ -56,7 +56,7 @@ export default {
   // Product Details
   noCode: 'لا يوجد رمز',
   saving: 'جاري الحفظ...',
-  saveChanges: 'حفظ التغييرات',
+  saveChanges: 'حفظ',
   creating: 'جاري الإنشاء...',
   createProduct: 'إنشاء منتج',
   newUniqueCodeGenerated: 'تم إنشاء رمز فريد جديد',

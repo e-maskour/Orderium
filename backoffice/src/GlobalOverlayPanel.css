@@ -147,3 +147,23 @@
   color: #6366f1;
   border-bottom-color: #6366f1;
 }
+
+/* ─── Product page: image+fields 2-col grid ─── */
+.product-img-grid {
+  grid-template-columns: 148px 1fr !important;
+}
+
+@media (max-width: 560px) {
+  .product-img-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── Product page: stock buttons – mobile ─── */
+@media (max-width: 599px) {
+  .prod-stock-btns {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    width: 100%;
+  }
+}

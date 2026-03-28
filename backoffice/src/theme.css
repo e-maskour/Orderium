@@ -1715,4 +1715,24 @@ body {
         min-height: 2.75rem;
     }
 }
+
+/* ── Print styles ───────────────────────────────────────── */
+#morocom-receipt {
+    display: none;
+}
+
+@media print {
+    body>*:not(#morocom-receipt) {
+        display: none !important;
+    }
+
+    #morocom-receipt {
+        display: block !important;
+        width: 80mm;
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+}
 }

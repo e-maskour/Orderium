@@ -315,4 +315,20 @@ export const API_ROUTES = {
         APPROVE: (id: number) => `/api/portal/admin/users/${id}/approve`,
         REJECT: (id: number) => `/api/portal/admin/users/${id}/reject`,
     },
+
+    // ─── Printers ──────────────────────────────────────────────
+    PRINTERS: {
+        LIST: '/api/printers',
+        DETAIL: (id: string) => `/api/printers/${id}`,
+        CREATE: '/api/printers',
+        UPDATE: (id: string) => `/api/printers/${id}`,
+        DELETE: (id: string) => `/api/printers/${id}`,
+        PING: (id: string) => `/api/printers/${id}/ping`,
+    },
+
+    // ─── Print Jobs ────────────────────────────────────────────
+    PRINT_JOBS: {
+        LIST: '/api/print-jobs',
+        CREATE: '/api/print-jobs',
+    },
 } as const;

@@ -408,4 +408,5 @@ export default {
   revokeLink: 'إلغاء الرابط',
   backToPOS: 'العودة إلى نقطة البيع',
   orderSummary: 'ملخص الطلب',
+  lines: 'البنود',
 };

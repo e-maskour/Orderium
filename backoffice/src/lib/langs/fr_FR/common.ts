@@ -405,4 +405,5 @@ export default {
   revokeLink: 'Révoquer le lien',
   backToPOS: 'Retour au point de vente',
   orderSummary: 'Récapitulatif de commande',
+  lines: 'Lignes',
 };

@@ -93,6 +93,7 @@ const Sequences = lazy(() => import('./pages/configurations/Sequences'));
 const UnitsOfMeasure = lazy(() => import('./pages/configurations/UnitsOfMeasure'));
 const CompanySettings = lazy(() => import('./pages/configurations/CompanySettings'));
 const InventorySettings = lazy(() => import('./pages/configurations/InventorySettings'));
+const Printers = lazy(() => import('./pages/configurations/Printers'));
 const Warehouses = lazy(() => import('./pages/Warehouses'));
 const StockMovements = lazy(() => import('./pages/StockMovements'));
 const InventoryAdjustments = lazy(() => import('./pages/InventoryAdjustments'));
@@ -541,6 +542,14 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <InventorySettings />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/configurations/printers"
+                        element={
+                          <ProtectedRoute>
+                            <Printers />
                           </ProtectedRoute>
                         }
                       />

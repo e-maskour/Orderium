@@ -1069,6 +1069,34 @@ export const USR = {
   DEACTIVATED: { code: 'USR200_06', status: 200, message: 'User Deactivated' },
 } as const satisfies Record<string, ResponseDef>;
 
+// ─────────────────────────────────────────────────────────────
+//  PRINTERS  (PrintersController)
+// ─────────────────────────────────────────────────────────────
+export const PRI = {
+  /** GET /printers                    → data: Printer[]            | metadata: null */
+  LIST: { code: 'PRI200_01', status: 200, message: 'Printers Retrieved' },
+  /** GET /printers/:id                → data: Printer              | metadata: null */
+  DETAIL: { code: 'PRI200_02', status: 200, message: 'Printer Retrieved' },
+  /** POST /printers                   → data: Printer              | metadata: null */
+  CREATED: { code: 'PRI201_01', status: 201, message: 'Printer Created' },
+  /** PATCH /printers/:id              → data: Printer              | metadata: null */
+  UPDATED: { code: 'PRI200_03', status: 200, message: 'Printer Updated' },
+  /** DELETE /printers/:id             → data: null                 | metadata: null */
+  DELETED: { code: 'PRI200_04', status: 200, message: 'Printer Deleted' },
+  /** POST /printers/:id/ping          → data: null                 | metadata: null */
+  PINGED: { code: 'PRI200_05', status: 200, message: 'Printer Pinged' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  PRINT JOBS  (PrintJobsController)
+// ─────────────────────────────────────────────────────────────
+export const PJB = {
+  /** GET /print-jobs                  → data: PrintJob[]           | metadata: PaginationMeta */
+  LIST: { code: 'PJB200_01', status: 200, message: 'Print Jobs Retrieved' },
+  /** POST /print-jobs                 → data: PrintJob             | metadata: null */
+  CREATED: { code: 'PJB201_01', status: 201, message: 'Print Job Logged' },
+} as const satisfies Record<string, ResponseDef>;
+
 /**
  * Map an HTTP status code to the corresponding ERR entry.
  */

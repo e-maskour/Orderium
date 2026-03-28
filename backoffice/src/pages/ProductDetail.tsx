@@ -298,48 +298,55 @@ export default function ProductDetail() {
 
   return (
     <AdminLayout>
+      <style>{`
+        .prod-detail-hdr { display: flex; align-items: center; gap: 0.875rem; flex-wrap: nowrap; position: relative; margin-bottom: 0.75rem; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.72); backdrop-filter: blur(8px); border-radius: 1rem; border: 1.5px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; }
+        .prod-detail-hdr__icon { width: 2.75rem; height: 2.75rem; flex-shrink: 0; background: linear-gradient(135deg, #235ae4, #1a47b8); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(35,90,228,0.4); }
+        .prod-detail-hdr__body { flex: 1; min-width: 0; overflow: hidden; }
+        .prod-detail-hdr__crumb { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.2rem; }
+        .prod-detail-hdr__title { margin: 0; font-size: 1.125rem; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .prod-detail-hdr__actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        @media (max-width: 599px) {
+          .prod-detail-hdr { padding: 0.625rem 0.75rem; gap: 0.5rem; border-radius: 0.875rem; flex-wrap: wrap; }
+          .prod-detail-hdr__icon { display: none !important; }
+          .prod-detail-hdr__title { display: none !important; }
+          .prod-detail-hdr__crumb { margin-bottom: 0; }
+          .prod-detail-hdr__actions { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 0.4375rem; width: 100%; }
+          .prod-detail-hdr__actions::-webkit-scrollbar { display: none; }
+        }
+      `}</style>
 
       {/* ── Page Header ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: '1rem',
-        marginBottom: '0.75rem',
-        padding: '1.125rem 1.375rem',
-        background: '#ffffff',
-        borderRadius: '1rem',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-        border: '1.5px solid #e2e8f0',
-        flexWrap: 'wrap',
-      }}>
+      <div className="prod-detail-hdr">
         <Button
-          icon={<ArrowLeft style={{ width: '1.125rem', height: '1.125rem' }} />}
+          icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
           onClick={() => navigate('/products')}
-          style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', borderRadius: '0.5rem', padding: 0 }}
+          style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
         />
-        <div style={{ width: '2.75rem', height: '2.75rem', flexShrink: 0, background: 'linear-gradient(135deg, #235ae4, #1a47b8)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(35,90,228,0.4)' }}>
+        <div className="prod-detail-hdr__icon">
           <Package style={{ width: '1.375rem', height: '1.375rem', color: '#fff' }} />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
-                <h1 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' }}>{product.name}</h1>
-                <PTag value={product.isEnabled ? t('active') : t('inactive')} severity={product.isEnabled ? 'success' : 'danger'} />
-                {product.isService && <PTag value="Service" severity="info" />}
-              </div>
-              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0.125rem 0 0', fontFamily: 'monospace', letterSpacing: '0.03em' }}>
-                {product.code || t('noCode')}
-              </p>
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
-              <Button text onClick={() => navigate('/products')} label={t('cancel')} style={{ color: '#64748b' }} />
-              <Button
-                onClick={handleSave}
-                loading={updateMutation.isPending}
-                icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
-                label={t('saveChanges')}
-              />
-            </div>
+        <div className="prod-detail-hdr__body">
+          <div className="prod-detail-hdr__crumb">
+            <span
+              onClick={() => navigate('/products')}
+              style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', cursor: 'pointer' }}
+            >{t('products')}</span>
+            <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>›</span>
+            <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#235ae4', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{product.code || product.name}</span>
           </div>
+          <h1 className="prod-detail-hdr__title">{product.name}</h1>
+        </div>
+        <div className="prod-detail-hdr__actions">
+          <PTag value={product.isEnabled ? t('active') : t('inactive')} severity={product.isEnabled ? 'success' : 'danger'} style={{ flexShrink: 0 }} />
+          {product.isService && <PTag value="Service" severity="info" style={{ flexShrink: 0 }} />}
+          <Button text onClick={() => navigate('/products')} label={t('cancel')} style={{ color: '#64748b', flexShrink: 0 }} />
+          <Button
+            onClick={handleSave}
+            loading={updateMutation.isPending}
+            icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
+            label={t('saveChanges')}
+            style={{ flexShrink: 0 }}
+          />
         </div>
       </div>
 
@@ -367,7 +374,7 @@ export default function ProductDetail() {
                 </div>
 
                 {/* Image + fields */}
-                <div style={{ display: 'grid', gridTemplateColumns: '148px 1fr', gap: '1.25rem', marginBottom: '1.25rem' }} className="product-img-grid">
+                <div style={{ display: 'grid', gap: '1.25rem', marginBottom: '1.25rem' }} className="product-img-grid">
                   <div>
                     {id && (
                       <ImageUpload
@@ -652,7 +659,7 @@ export default function ProductDetail() {
                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>{stockQuants.length} {stockQuants.length === 1 ? 'entrepôt' : 'entrepôts'}</p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.625rem' }}>
+                <div className="prod-stock-btns" style={{ display: 'flex', gap: '0.625rem' }}>
                   <Button
                     onClick={() => setShowStockCorrection(true)}
                     icon={<Plus style={{ width: '0.875rem', height: '0.875rem' }} />}

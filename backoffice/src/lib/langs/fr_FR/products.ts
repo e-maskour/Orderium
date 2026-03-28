@@ -55,7 +55,7 @@ export default {
   // Product Details
   noCode: 'Aucun code',
   saving: 'Enregistrement...',
-  saveChanges: 'Enregistrer les modifications',
+  saveChanges: 'Enregistrer',
   creating: 'Création...',
   createProduct: 'Créer le produit',
   newUniqueCodeGenerated: 'Nouveau code unique généré',

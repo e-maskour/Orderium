@@ -4,7 +4,7 @@ export default {
   phoneCannotBeChanged: 'Le numéro de téléphone ne peut pas être modifié',
   enterYourName: 'Entrez votre nom',
   enterYourAddress: 'Entrez votre adresse',
-  saveChanges: 'Enregistrer les modifications',
+  saveChanges: 'Enregistrer',
   profileUpdated: 'Vos informations ont été mises à jour',
   updateFailed: 'Échec de mise à jour',
   customerName: 'Nom du client',

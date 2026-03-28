@@ -274,6 +274,8 @@ export default {
   inventorySettingsSaved: 'Paramètres d\'inventaire sauvegardés',
   noWarehouseConfigured: 'Aucun entrepôt par défaut configuré. Les mouvements de stock ne seront pas créés.',
 
+  originDestination: 'Origine → Destination',
+
   // Module tab labels
   tabOverview: 'Aperçu',
   tabTeam: 'Équipe',
@@ -281,4 +283,34 @@ export default {
   tabCompany: 'Société',
   units: 'Unités',
   roles: 'Rôles',
+
+  // Printers
+  printers: 'Imprimantes',
+  printersDescription: 'Gérer les imprimantes et historique d\'impression',
+  addPrinter: 'Ajouter une imprimante',
+  editPrinter: 'Modifier l\'imprimante',
+  printerName: 'Nom de l\'imprimante',
+  printerBrand: 'Marque',
+  connectionType: 'Type de connexion',
+  paperWidth: 'Largeur du papier',
+  documentTypes: 'Types de documents',
+  isDefaultPrinter: 'Imprimante par défaut',
+  ipAddress: 'Adresse IP',
+  printerPort: 'Port',
+  printerModel: 'Modèle',
+  testPrint: 'Test d\'impression',
+  printHistory: 'Historique d\'impression',
+  printStatus: 'Statut',
+  printMethod: 'Méthode',
+  printDuration: 'Durée',
+  printedAt: 'Imprimé le',
+  noprinters: 'Aucune imprimante configurée',
+  noPrintJobs: 'Aucun historique d\'impression',
+  printerCreated: 'Imprimante créée avec succès',
+  printerUpdated: 'Imprimante mise à jour avec succès',
+  printerDeleted: 'Imprimante supprimée avec succès',
+  deletePrinterConfirm: 'Êtes-vous sûr de vouloir supprimer cette imprimante ?',
+  platformDetection: 'Détection de la plateforme',
+  recommendedSetup: 'Configuration recommandée',
+  setupGuides: 'Guides de configuration',
 };

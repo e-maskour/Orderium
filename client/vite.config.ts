@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => {
           path.resolve(__dirname, '.'),
           path.resolve(__dirname, '../shared/ui'),
           path.resolve(__dirname, '../shared/logo'),
+          path.resolve(__dirname, '../shared/components'),
         ],
       },
       proxy: {
@@ -35,6 +36,7 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
         "@orderium/ui": path.resolve(__dirname, "../shared/ui/src"),
         "@shared-logo": path.resolve(__dirname, "../shared/logo"),
+        "@shared-print": path.resolve(__dirname, "../shared/components"),
       },
     },
   };

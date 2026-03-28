@@ -267,6 +267,8 @@ export default {
   inventorySettingsSaved: 'تم حفظ إعدادات المخزون',
   noWarehouseConfigured: 'لم يتم تكوين مستودع افتراضي. لن يتم إنشاء حركات المخزون.',
 
+  originDestination: 'المصدر ← الوجهة',
+
   // Module tab labels
   tabOverview: 'نظرة عامة',
   tabTeam: 'الفريق',
@@ -274,4 +276,34 @@ export default {
   tabCompany: 'الشركة',
   units: 'الوحدات',
   roles: 'الأدوار',
+
+  // Printers
+  printers: 'الطابعات',
+  printersDescription: 'إدارة الطابعات وسجل الطباعة',
+  addPrinter: 'إضافة طابعة',
+  editPrinter: 'تعديل الطابعة',
+  printerName: 'اسم الطابعة',
+  printerBrand: 'العلامة التجارية',
+  connectionType: 'نوع الاتصال',
+  paperWidth: 'عرض الورق',
+  documentTypes: 'أنواع المستندات',
+  isDefaultPrinter: 'الطابعة الافتراضية',
+  ipAddress: 'عنوان IP',
+  printerPort: 'المنفذ',
+  printerModel: 'الموديل',
+  testPrint: 'طباعة تجريبية',
+  printHistory: 'سجل الطباعة',
+  printStatus: 'الحالة',
+  printMethod: 'الطريقة',
+  printDuration: 'المدة',
+  printedAt: 'تاريخ الطباعة',
+  noprinters: 'لا توجد طابعات مُعدّة',
+  noPrintJobs: 'لا يوجد سجل طباعة',
+  printerCreated: 'تم إنشاء الطابعة بنجاح',
+  printerUpdated: 'تم تحديث الطابعة بنجاح',
+  printerDeleted: 'تم حذف الطابعة بنجاح',
+  deletePrinterConfirm: 'هل أنت متأكد من حذف هذه الطابعة؟',
+  platformDetection: 'كشف المنصة',
+  recommendedSetup: 'الإعداد الموصى به',
+  setupGuides: 'أدلة الإعداد',
 };

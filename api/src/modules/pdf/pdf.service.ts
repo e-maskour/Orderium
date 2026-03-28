@@ -470,7 +470,8 @@ export class PDFService {
       await page.evaluate(() => (document as any).fonts.ready);
 
       const contentHeight = await page.evaluate(() => {
-        return document.body.scrollHeight;
+        // Add a small buffer so Chromium never triggers a second page
+        return document.body.scrollHeight + 40;
       });
 
       const pdfBuffer = await page.pdf({
@@ -479,6 +480,7 @@ export class PDFService {
         printBackground: true,
         margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
         preferCSSPageSize: false,
+        pageRanges: '1',
         displayHeaderFooter: false,
       });
 
@@ -575,22 +577,27 @@ export class PDFService {
     const hideVAT = data.fromPortal || false;
     const companyLines = this.buildCompanyLines(company);
 
-    // Generate items HTML
+    // Generate items HTML — table rows for the new design
     const itemsHtml = data.items
       .map(
-        (item) => `
-          <div class="rcp-item">
-            <div class="rcp-item-top">
-              <div class="rcp-item-desc">${item.description}</div>
-              <div class="rcp-item-total">${this.formatCurrency(item.total)} DH</div>
-            </div>
-            <div class="rcp-item-detail">
-              ${item.quantity} × ${this.formatCurrency(item.unitPrice)}
-              ${item.discount > 0 ? `<span class="rcp-discount"> · Remise: ${this.formatCurrency(item.discount)} DH</span>` : ''}
-              ${!hideVAT && item.tax > 0 ? `<span class="rcp-discount"> · TVA: ${item.tax}%</span>` : ''}
-            </div>
-          </div>
-        `,
+        (item) => {
+          const discountSub = item.discount > 0
+            ? `Remise: -${this.formatCurrency(item.discount)} DH`
+            : '';
+          const taxSub = !hideVAT && item.tax > 0
+            ? `TVA: ${item.tax}%`
+            : '';
+          const subParts = [discountSub, taxSub].filter(Boolean).join(' · ');
+          return `<tr class="t-item">
+            <td class="t-desc">
+              ${item.description}
+              ${subParts ? `<span class="t-desc-sub">${subParts}</span>` : ''}
+            </td>
+            <td class="t-qty">${item.quantity}</td>
+            <td class="t-price">${this.formatCurrency(item.unitPrice)}</td>
+            <td class="t-total">${this.formatCurrency(item.total)}</td>
+          </tr>`;
+        },
       )
       .join('');
 

@@ -210,46 +210,46 @@ export default function StockMovements() {
             emptyMessage={
               <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
                 <ArrowLeftRight style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
-                Aucun mouvement trouvé
+                {t('noMovementsFound' as any)}
               </div>
             }
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
             currentPageReportTemplate="{first}-{last} of {totalRecords}"
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-            <Column field="reference" header="Référence" sortable body={(mov: StockMovement) => (
+            <Column field="reference" header={t('reference')} sortable body={(mov: StockMovement) => (
               <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{mov.reference}</span>
             )} />
-            <Column field="movementType" header="Type" sortable body={(mov: StockMovement) => (
+            <Column field="movementType" header={t('type')} sortable body={(mov: StockMovement) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {getTypeIcon(mov.movementType)}
                 <span style={{ fontSize: '0.875rem', color: '#334155' }}>{getTypeLabel(mov.movementType)}</span>
               </div>
             )} />
-            <Column field="productName" header="Produit" sortable body={(mov: StockMovement) => (
+            <Column field="productName" header={t('product')} sortable body={(mov: StockMovement) => (
               <div>
-                <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', margin: 0 }}>{mov.productName || `Produit #${mov.productId}`}</p>
+                <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', margin: 0 }}>{mov.productName || `#${mov.productId}`}</p>
                 {mov.productCode && <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>{mov.productCode}</p>}
               </div>
             )} />
-            <Column header="Origine → Destination" body={(mov: StockMovement) => (
+            <Column header={t('originDestination' as any)} body={(mov: StockMovement) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569' }}>
-                <span>{mov.sourceWarehouseName || (mov.sourceWarehouseId ? `Entrepôt ${mov.sourceWarehouseId}` : '-')}</span>
+                <span>{mov.sourceWarehouseName || (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-')}</span>
                 <ArrowLeftRight style={{ width: '0.75rem', height: '0.75rem' }} />
-                <span>{mov.destWarehouseName || (mov.destWarehouseId ? `Entrepôt ${mov.destWarehouseId}` : '-')}</span>
+                <span>{mov.destWarehouseName || (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-')}</span>
               </div>
             )} />
-            <Column field="quantity" header="Quantité" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => (
+            <Column field="quantity" header={t('quantity')} sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => (
               <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
                 {parseFloat(mov.quantity.toString()).toFixed(2)} {mov.unitOfMeasureCode || 'U'}
               </span>
             )} />
-            <Column field="dateDone" header="Date" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => (
+            <Column field="dateDone" header={t('date')} sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => (
               <span style={{ fontSize: '0.875rem', color: '#475569' }}>
                 {mov.dateDone ? new Date(mov.dateDone).toLocaleDateString('fr-FR') : mov.dateScheduled ? new Date(mov.dateScheduled).toLocaleDateString('fr-FR') : '-'}
               </span>
             )} />
-            <Column field="status" header="Statut" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => getStatusBadge(mov.status)} />
+            <Column field="status" header={t('status')} sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => getStatusBadge(mov.status)} />
           </DataTable>
         </div>
 

@@ -868,3 +868,168 @@
         max-width: 100%;
     }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   RTL OVERRIDES — Arabic / right-to-left layout
+   ══════════════════════════════════════════════════════════════ */
+
+/* 1. Header & body cell text alignment */
+[dir="rtl"] .p-datatable.p-component .p-datatable-thead>tr>th {
+    text-align: right;
+}
+
+[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr>td {
+    text-align: right;
+}
+
+/* 2. Column header flex — explicit RTL direction so items flow right-to-left
+       naturally: [text at right-start] [sort-icon to its left].
+       Do NOT use flex-direction:row-reverse — that double-reverses the
+       already-RTL flex axis and pushes content to the left (wrong).           */
+[dir="rtl"] .p-datatable.p-component .p-column-header-content {
+    direction: rtl;
+}
+
+[dir="rtl"] .p-datatable.p-component .p-sortable-column-icon {
+    margin-left: 0;
+    margin-right: 0.4rem;
+}
+
+/* Keep selection/checkbox column centered */
+[dir="rtl"] .p-datatable.p-component .p-selection-column .p-column-header-content {
+    justify-content: center;
+}
+
+/* 3. Row group sub-header text alignment */
+[dir="rtl"] .p-datatable.p-component .p-rowgroup-header>td {
+    text-align: right;
+    padding-right: 1rem;
+    padding-left: 0.75rem;
+}
+
+/* 4. Selected row accent bar — flip from left edge to right edge */
+[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr.p-highlight>td:first-child {
+    box-shadow: none;
+}
+
+[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr.p-highlight>td:last-child {
+    box-shadow: inset -3px 0 0 #235ae4;
+}
+
+/* 5. Paginator — current page report on the right (reading start) */
+[dir="rtl"] .p-datatable.p-component .p-paginator .p-paginator-current {
+    order: unset;
+    margin-right: 0;
+    margin-left: auto;
+}
+
+/* 6. Toolbar layout — search on right, actions on left */
+[dir="rtl"] .dt-toolbar-right {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* 7. Search icon — move from left to right side of input */
+[dir="rtl"] .dt-search-wrapper .dt-search-icon {
+    left: unset;
+    right: 0.75rem;
+}
+
+[dir="rtl"] .dt-search-wrapper .dt-search-input {
+    padding-left: 0.875rem;
+    padding-right: 2.25rem;
+}
+
+/* 8. Frozen column shadow direction */
+[dir="rtl"] .p-datatable.p-component .p-frozen-column {
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.06);
+}
+
+/* 9. Selection column padding — mirror horizontal padding */
+[dir="rtl"] .p-datatable.p-component .p-selection-column {
+    padding-left: 0.75rem;
+    padding-right: 1rem;
+}
+
+/* 10. Flip text-align on th / td with inline headerStyle / bodyStyle / footerStyle.
+        right → left  |  left → right  |  center → center
+   !important is required to override React inline style specificity.
+   For <th>: also flip the inner flex justify-content, because flex containers
+   ignore the parent element's text-align property.                            */
+
+[dir="rtl"] .p-datatable.p-component th[style*="text-align: right"],
+[dir="rtl"] .p-datatable.p-component td[style*="text-align: right"] {
+    text-align: left !important;
+}
+
+/* flex-end in RTL direction = visually LEFT side */
+[dir="rtl"] .p-datatable.p-component th[style*="text-align: right"] .p-column-header-content {
+    justify-content: flex-end !important;
+}
+
+[dir="rtl"] .p-datatable.p-component th[style*="text-align: left"],
+[dir="rtl"] .p-datatable.p-component td[style*="text-align: left"] {
+    text-align: right !important;
+}
+
+/* th[text-align:left] → no justify-content override needed:
+   default flex-start in RTL direction is already visually on the right       */
+
+[dir="rtl"] .p-datatable.p-component th[style*="text-align: center"],
+[dir="rtl"] .p-datatable.p-component td[style*="text-align: center"] {
+    text-align: center !important;
+}
+
+[dir="rtl"] .p-datatable.p-component th[style*="text-align: center"] .p-column-header-content {
+    justify-content: center !important;
+}
+
+/* 11. Flip text-align on inner elements inside body cells
+       (spans, divs rendered by body templates with inline styles)             */
+
+[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr>td [style*="text-align: right"] {
+    text-align: left !important;
+}
+
+[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr>td [style*="text-align: center"] {
+    text-align: center !important;
+}
+
+[dir="rtl"] .p-datatable.p-component .p-datatable-tbody>tr>td [style*="text-align: left"] {
+    text-align: right !important;
+}
+
+/* 12. PrimeReact Column align prop classes
+       align="center" → stays centered
+       align="right" in LTR → becomes left in RTL                             */
+
+[dir="rtl"] .p-datatable.p-component .p-align-center {
+    text-align: center !important;
+}
+
+[dir="rtl"] .p-datatable.p-component .p-align-center .p-column-header-content {
+    justify-content: center !important;
+}
+
+[dir="rtl"] .p-datatable.p-component .p-align-right {
+    text-align: left !important;
+}
+
+/* flex-end in RTL direction = visually LEFT side */
+[dir="rtl"] .p-datatable.p-component .p-align-right .p-column-header-content {
+    justify-content: flex-end !important;
+}
+
+/* 13. Footer row cells (footerStyle prop) — same flip logic */
+
+[dir="rtl"] .p-datatable.p-component tfoot td[style*="text-align: right"] {
+    text-align: left !important;
+}
+
+[dir="rtl"] .p-datatable.p-component tfoot td[style*="text-align: left"] {
+    text-align: right !important;
+}
+
+[dir="rtl"] .p-datatable.p-component tfoot td[style*="text-align: center"] {
+    text-align: center !important;
+}

@@ -42,6 +42,7 @@ import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
+import { PrintersModule } from './modules/printers/printers.module';
 
 // Multi-tenancy
 import { TenantModule, TenantMiddleware } from './modules/tenant/tenant.module';
@@ -137,6 +138,7 @@ import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-ac
     PermissionsModule,
     RolesModule,
     UsersModule,
+    PrintersModule,
   ],
   controllers: [AppController],
   providers: [

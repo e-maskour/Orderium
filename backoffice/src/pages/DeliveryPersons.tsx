@@ -293,17 +293,17 @@ export default function DeliveryPersons() {
                     currentPageReportTemplate="{first}-{last} of {totalRecords}"
                   >
                     <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                    <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (
+                    <Column field="name" header={t('name')} sortable body={(row: DeliveryPerson) => (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
                         <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>
                       </div>
                     )} />
-                    <Column field="phoneNumber" header="Téléphone" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
-                    <Column field="email" header="Email" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
-                    <Column field="isActive" header="Statut" body={(row: DeliveryPerson) => (
+                    <Column field="phoneNumber" header={t('phone')} sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
+                    <Column field="email" header={t('email')} sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                    <Column field="isActive" header={t('status')} body={(row: DeliveryPerson) => (
                       <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
-                        {row.isActive ? 'Actif' : 'Inactif'}
+                        {row.isActive ? t('active') : t('inactive')}
                       </span>
                     )} />
                   </DataTable>

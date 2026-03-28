@@ -4,7 +4,7 @@ export default {
   phoneCannotBeChanged: 'لا يمكن تغيير رقم الهاتف',
   enterYourName: 'أدخل اسمك',
   enterYourAddress: 'أدخل عنوانك',
-  saveChanges: 'حفظ التغييرات',
+  saveChanges: 'حفظ',
   profileUpdated: 'تم تحديث معلوماتك بنجاح',
   updateFailed: 'فشل تحديث المعلومات',
   customerName: 'اسم العميل',
