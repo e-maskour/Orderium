@@ -147,14 +147,14 @@ export default function Customers() {
           {/* Toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
             {/* Search */}
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '24rem' }}>
               <InputText
                 id="search-customers"
                 type="text"
                 placeholder={t('searchCustomers')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: '24rem' }}
+                style={{ width: '100%' }}
                 aria-label={t('searchCustomers')}
               />
               {searchTerm && (

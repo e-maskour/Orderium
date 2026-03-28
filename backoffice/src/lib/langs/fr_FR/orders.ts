@@ -7,6 +7,7 @@ export default {
   orderNumber: 'N° commande',
   total: 'Total',
   noOrdersFound: 'Aucune commande trouvée',
+  ordersSelected: 'commandes sélectionnées',
 
   // Order Status
   unassigned: 'Non assigné',
@@ -15,6 +16,7 @@ export default {
   inProgress: 'En cours',
   delivered: 'Livré',
   canceled: 'Annulé',
+  cancelled: 'Annulé',
   pending: 'En attente',
   assigned: 'Assigné',
   confirmed: 'Confirmé',
@@ -87,4 +89,12 @@ export default {
   // Additional
   previewReceipt: 'Reçu',
   previewDeliveryNote: 'Bon',
+
+  // Status change
+  statusUpdated: 'Statut mis à jour',
+  orderStatus: 'Statut commande',
+
+  // Empty states
+  noOrdersMatchFilter: 'Aucune commande ne correspond à vos critères de recherche. Essayez de modifier les filtres.',
+  noOrdersYet: 'Aucune commande pour le moment. Les nouvelles commandes apparaîtront ici.',
 };

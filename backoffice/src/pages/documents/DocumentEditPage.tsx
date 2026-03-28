@@ -844,7 +844,8 @@ export default function DocumentEditPage({
         .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
         .doc-cal .p-datepicker-trigger:hover { color: var(--form-input-border-focus) !important; background: transparent !important; }
         .doc-notes-totals { display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-top: 1.5rem; align-items: flex-start; }
-        @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-sticky-bar { left: 0 !important; } .doc-notes-totals { grid-template-columns: 1fr !important; gap: 1rem !important; } }
+        @media (max-width: 1023px) { .doc-sticky-bar { left: 0 !important; } }
+        @media (max-width: 768px) { .doc-edit-grid { grid-template-columns: 1fr !important; } .doc-notes-totals { grid-template-columns: 1fr !important; gap: 1rem !important; } }
         /* ── Document detail header – responsive ── */
         .doc-detail-hdr { display: flex; align-items: center; gap: 0.875rem; flex-wrap: nowrap; position: relative; margin-bottom: 1.5rem; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.72); backdrop-filter: blur(8px); border-radius: 1rem; border: 1px solid rgba(226,232,240,0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; }
         .doc-detail-hdr__icon { width: 3rem; height: 3rem; flex-shrink: 0; background: linear-gradient(135deg, #235ae4 0%, #818cf8 100%); border-radius: 0.875rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(35,90,228,0.35); }
@@ -950,7 +951,7 @@ export default function DocumentEditPage({
               </div>
               <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e40af' }}>{t('paymentDetails')}</h3>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', background: 'linear-gradient(to right, #eff6ff, #eef2ff)' }}>
+            <div className="stat-strip-3" style={{ background: 'linear-gradient(to right, #eff6ff, #eef2ff)' }}>
               <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid #dbeafe' }}>
                 <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('totalAmount')}</p>
                 <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>

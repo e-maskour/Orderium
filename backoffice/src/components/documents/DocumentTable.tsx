@@ -280,7 +280,7 @@ export function DocumentTable({
             },
             {
               id: 'share',
-              label: 'Partager',
+              label: t('share'),
               icon: <Share2 style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
                 if (selectedDocuments.length === 1) {

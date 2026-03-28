@@ -15,11 +15,11 @@ const iconConfig: Record<string, { bg: string; color: string; shadow: string }> 
     default: { bg: 'linear-gradient(135deg,#64748b,#475569)', color: '#fff', shadow: 'rgba(100,116,139,0.22)' },
 };
 
-const typeBadgeConfig: Record<string, { bg: string; color: string; border: string; label: string }> = {
-    order: { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label: 'Order' },
-    customer: { bg: '#faf5ff', color: '#9333ea', border: '#e9d5ff', label: 'Customer' },
-    product: { bg: '#f0f9ff', color: '#0284c7', border: '#bae6fd', label: 'Product' },
-    revenue: { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0', label: 'Revenue' },
+const typeBadgeStyles: Record<string, { bg: string; color: string; border: string }> = {
+    order: { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
+    customer: { bg: '#faf5ff', color: '#9333ea', border: '#e9d5ff' },
+    product: { bg: '#f0f9ff', color: '#0284c7', border: '#bae6fd' },
+    revenue: { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
 };
 
 function getIcon(type: string) {
@@ -34,6 +34,13 @@ function getIcon(type: string) {
 
 export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
     const { t, language } = useLanguage();
+
+    const typeBadgeConfig: Record<string, { bg: string; color: string; border: string; label: string }> = {
+        order: { ...typeBadgeStyles.order, label: t('order') },
+        customer: { ...typeBadgeStyles.customer, label: t('customer') },
+        product: { ...typeBadgeStyles.product, label: t('product') },
+        revenue: { ...typeBadgeStyles.revenue, label: t('revenue') },
+    };
 
     const formatRelativeTime = (timestamp: string): string => {
         const now = new Date();

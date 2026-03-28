@@ -410,7 +410,7 @@ export default function ProductCreate() {
               {margin != null && (
                 <div style={{ marginTop: '1.25rem', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
                   <p style={{ margin: '0 0 0.75rem', fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Margin Analysis</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
+                  <div className="margin-grid-3">
                     {[
                       { label: t('marginAmount'), value: `${formatAmount(margin, 2)} ${currency}`, color: margin >= 0 ? '#0f172a' : '#ef4444', border: '#f1f5f9' },
                       { label: t('marginPercent'), value: `${marginPct?.toFixed(1) ?? '—'}%`, color: '#16a34a', border: '#dcfce7' },

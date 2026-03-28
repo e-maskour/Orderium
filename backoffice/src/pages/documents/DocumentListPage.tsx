@@ -320,7 +320,7 @@ export default function DocumentListPage({
           visible={filtersExpanded}
           onHide={() => setFiltersExpanded(false)}
           position="right"
-          style={{ width: '560px' }}
+          style={{ width: '560px', maxWidth: '100vw' }}
           showCloseIcon={false}
           blockScroll
           pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}

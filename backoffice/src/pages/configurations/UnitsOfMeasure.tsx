@@ -182,197 +182,197 @@ export default function UnitsOfMeasure() {
     return (
         <AdminLayout>
             <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-            <PageHeader
-                icon={Ruler}
-                title={t('unitsOfMeasure') || 'Units of Measure'}
-                subtitle={t('manageUomDescription') || 'Manage units of measure for your inventory'}
-                actions={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Button
-                            onClick={openCreateModal}
-                            icon={<Plus style={{ width: 16, height: 16 }} />}
-                            label={t('addUom') || 'Add UOM'}
-                            size="small"
-                        />
-                    </div>
-                }
-            />
-
-            <div className="responsive-table-mobile">
-                <MobileList
-                    items={filteredUoms}
-                    keyExtractor={(uom: IUnitOfMeasure) => uom.id ?? String(uom.code)}
-                    loading={isLoading}
-                    totalCount={filteredUoms.length}
-                    countLabel="unités"
-                    emptyMessage="Aucune unité trouvée"
-                    config={{
-                        topLeft: (uom: IUnitOfMeasure) => uom.name,
-                        topRight: (uom: IUnitOfMeasure) => uom.code,
-                        bottomLeft: (uom: IUnitOfMeasure) => uom.category,
-                        bottomRight: (uom: IUnitOfMeasure) => uom.isActive
-                            ? <span className="erp-badge erp-badge--paid">{t('active')}</span>
-                            : <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>,
-                    }}
+                <PageHeader
+                    icon={Ruler}
+                    title={t('unitsOfMeasure') || 'Units of Measure'}
+                    subtitle={t('manageUomDescription') || 'Manage units of measure for your inventory'}
+                    actions={
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Button
+                                onClick={openCreateModal}
+                                icon={<Plus style={{ width: 16, height: 16 }} />}
+                                label={t('addUom') || 'Add UOM'}
+                                size="small"
+                            />
+                        </div>
+                    }
                 />
-            </div>
-            <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                <DataTable
-                    className="uom-datatable"
-                    value={filteredUoms.slice().sort((a, b) => a.category.localeCompare(b.category))}
-                    selection={selectedRows}
-                    onSelectionChange={(e) => setSelectedRows(e.value as IUnitOfMeasure[])}
-                    selectionMode="checkbox"
-                    dataKey="id"
-                    paginator
-                    paginatorPosition="top"
-                    rows={25}
-                    rowsPerPageOptions={[10, 25, 50, 100]}
-                    removableSort
-                    rowGroupMode="subheader"
-                    groupRowsBy="category"
-                    rowGroupHeaderTemplate={(row: IUnitOfMeasure) => <span>{row.category}</span>}
-                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noUomFound') || 'No units of measure found'}</div>}
-                    paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
-                >
-                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                    <Column field="name" header={t('name')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
-                    <Column field="code" header={t('code')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.code}</span>} />
-                    <Column field="isBaseUnit" header={t('type') || 'Type'} body={(row: IUnitOfMeasure) => row.isBaseUnit ? (
-                        <span className="erp-badge erp-badge--active">{t('baseUnit') || 'Base Unit'}</span>
+
+                <div className="responsive-table-mobile">
+                    <MobileList
+                        items={filteredUoms}
+                        keyExtractor={(uom: IUnitOfMeasure) => uom.id ?? String(uom.code)}
+                        loading={isLoading}
+                        totalCount={filteredUoms.length}
+                        countLabel="unités"
+                        emptyMessage="Aucune unité trouvée"
+                        config={{
+                            topLeft: (uom: IUnitOfMeasure) => uom.name,
+                            topRight: (uom: IUnitOfMeasure) => uom.code,
+                            bottomLeft: (uom: IUnitOfMeasure) => uom.category,
+                            bottomRight: (uom: IUnitOfMeasure) => uom.isActive
+                                ? <span className="erp-badge erp-badge--paid">{t('active')}</span>
+                                : <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>,
+                        }}
+                    />
+                </div>
+                <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                    <DataTable
+                        className="uom-datatable"
+                        value={filteredUoms.slice().sort((a, b) => a.category.localeCompare(b.category))}
+                        selection={selectedRows}
+                        onSelectionChange={(e) => setSelectedRows(e.value as IUnitOfMeasure[])}
+                        selectionMode="checkbox"
+                        dataKey="id"
+                        paginator
+                        paginatorPosition="top"
+                        rows={25}
+                        rowsPerPageOptions={[10, 25, 50, 100]}
+                        removableSort
+                        rowGroupMode="subheader"
+                        groupRowsBy="category"
+                        rowGroupHeaderTemplate={(row: IUnitOfMeasure) => <span>{row.category}</span>}
+                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noUomFound') || 'No units of measure found'}</div>}
+                        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                    >
+                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                        <Column field="name" header={t('name')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
+                        <Column field="code" header={t('code')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.code}</span>} />
+                        <Column field="isBaseUnit" header={t('type') || 'Type'} body={(row: IUnitOfMeasure) => row.isBaseUnit ? (
+                            <span className="erp-badge erp-badge--active">{t('baseUnit') || 'Base Unit'}</span>
                         ) : (
-                        <span style={{ fontSize: '0.75rem', color: '#475569' }}>{t('derived') || 'Derived'}</span>
-                    )} />
-                    <Column field="ratio" header={t('ratio')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.ratio}</span>} />
-                    <Column field="roundingPrecision" header={t('rounding') || 'Rounding'} body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.roundingPrecision || '-'}</span>} />
-                    <Column field="isActive" header={t('status')} body={(row: IUnitOfMeasure) => row.isActive ? (
-                        <span className="erp-badge erp-badge--paid">{t('active')}</span>
-                    ) : (
-                        <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>
-                    )} />
-                    <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: IUnitOfMeasure) => (
-                        <div style={{ textAlign: 'right' }}>
-                            <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row)} text rounded severity="info" />
-                            <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row.id!)} text rounded severity="danger" />
-                        </div>
-                    )} />
-                </DataTable>
-            </div>
-
-            <Modal
-                isOpen={showModal}
-                onClose={closeModal}
-                title={editingUom ? (t('editUom') || 'Edit Unit of Measure') : (t('addUom') || 'Add Unit of Measure')}
-                footer={
-                    <div className="flex justify-content-end gap-2">
-                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
-                        <Button
-                            form="uom-modal-form"
-                            type="submit"
-                            loading={createMutation.isPending || updateMutation.isPending}
-                            label={t('save')}
-                        />
-                    </div>
-                }
-            >
-                <form id="uom-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
-                            <InputText
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                required
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('code')} <span style={{ color: '#ef4444' }}>*</span></label>
-                            <InputText
-                                type="text"
-                                value={formData.code}
-                                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                                required
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('category')} <span style={{ color: '#ef4444' }}>*</span></label>
-                        <Dropdown
-                            value={formData.category}
-                            onChange={(e) => setFormData({ ...formData, category: e.value })}
-                            options={UOM_CATEGORIES.map((cat) => ({ label: cat, value: cat }))}
-                            optionLabel="label"
-                            optionValue="value"
-                            required
-                            style={{ width: '100%' }}
-                        />
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Checkbox
-                            checked={formData.isBaseUnit ?? false}
-                            onChange={(e) => setFormData({ ...formData, isBaseUnit: e.checked ?? false })}
-                        />
-                        <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('isBaseUnit') || 'This is a base unit'}</label>
-                    </div>
-
-                    {!formData.isBaseUnit && (
-                        <>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('baseUnit') || 'Base Unit'}</label>
-                                <Dropdown
-                                    value={formData.baseUnitId || ''}
-                                    onChange={(e) => setFormData({ ...formData, baseUnitId: e.value ? parseInt(e.value) : null })}
-                                    options={[{ label: t('selectBaseUnit') || 'Select a base unit', value: '' }, ...baseUnitsForCategory.map((baseUom: IUnitOfMeasure) => ({ label: `${baseUom.name} (${baseUom.code})`, value: String(baseUom.id) }))]}
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    style={{ width: '100%' }}
-                                />
+                            <span style={{ fontSize: '0.75rem', color: '#475569' }}>{t('derived') || 'Derived'}</span>
+                        )} />
+                        <Column field="ratio" header={t('ratio')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.ratio}</span>} />
+                        <Column field="roundingPrecision" header={t('rounding') || 'Rounding'} body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.roundingPrecision || '-'}</span>} />
+                        <Column field="isActive" header={t('status')} body={(row: IUnitOfMeasure) => row.isActive ? (
+                            <span className="erp-badge erp-badge--paid">{t('active')}</span>
+                        ) : (
+                            <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>
+                        )} />
+                        <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: IUnitOfMeasure) => (
+                            <div style={{ textAlign: 'right' }}>
+                                <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row)} text rounded severity="info" />
+                                <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row.id!)} text rounded severity="danger" />
                             </div>
+                        )} />
+                    </DataTable>
+                </div>
 
+                <Modal
+                    isOpen={showModal}
+                    onClose={closeModal}
+                    title={editingUom ? (t('editUom') || 'Edit Unit of Measure') : (t('addUom') || 'Add Unit of Measure')}
+                    footer={
+                        <div className="flex justify-content-end gap-2">
+                            <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
+                            <Button
+                                form="uom-modal-form"
+                                type="submit"
+                                loading={createMutation.isPending || updateMutation.isPending}
+                                label={t('save')}
+                            />
+                        </div>
+                    }
+                >
+                    <form id="uom-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="form-grid-2">
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{`${t('ratio')} (${t('ratioHelp') || '1 this unit = X base units'})`} <span style={{ color: '#ef4444' }}>*</span></label>
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
                                 <InputText
-                                    type="number"
-                                    step="0.000001"
-                                    min="0"
-                                    value={String(formData.ratio)}
-                                    onChange={(e) => setFormData({ ...formData, ratio: parseFloat(e.target.value) })}
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
                                     style={{ width: '100%' }}
                                 />
                             </div>
-                        </>
-                    )}
 
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('roundingPrecision') || 'Rounding Precision'}</label>
-                        <Dropdown
-                            value={formData.roundingPrecision}
-                            onChange={(e) => setFormData({ ...formData, roundingPrecision: e.value })}
-                            options={[{ label: '1', value: '1' }, { label: '0.1', value: '0.1' }, { label: '0.01', value: '0.01' }, { label: '0.001', value: '0.001' }, { label: '0.0001', value: '0.0001' }]}
-                            optionLabel="label"
-                            optionValue="value"
-                            style={{ width: '100%' }}
-                        />
-                    </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('code')} <span style={{ color: '#ef4444' }}>*</span></label>
+                                <InputText
+                                    type="text"
+                                    value={formData.code}
+                                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                                    required
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                        </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Checkbox
-                            checked={formData.isActive ?? false}
-                            onChange={(e) => setFormData({ ...formData, isActive: e.checked ?? false })}
-                        />
-                        <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('active')}</label>
-                    </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('category')} <span style={{ color: '#ef4444' }}>*</span></label>
+                            <Dropdown
+                                value={formData.category}
+                                onChange={(e) => setFormData({ ...formData, category: e.value })}
+                                options={UOM_CATEGORIES.map((cat) => ({ label: cat, value: cat }))}
+                                optionLabel="label"
+                                optionValue="value"
+                                required
+                                style={{ width: '100%' }}
+                            />
+                        </div>
 
-                </form>
-            </Modal>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Checkbox
+                                checked={formData.isBaseUnit ?? false}
+                                onChange={(e) => setFormData({ ...formData, isBaseUnit: e.checked ?? false })}
+                            />
+                            <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('isBaseUnit') || 'This is a base unit'}</label>
+                        </div>
+
+                        {!formData.isBaseUnit && (
+                            <>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('baseUnit') || 'Base Unit'}</label>
+                                    <Dropdown
+                                        value={formData.baseUnitId || ''}
+                                        onChange={(e) => setFormData({ ...formData, baseUnitId: e.value ? parseInt(e.value) : null })}
+                                        options={[{ label: t('selectBaseUnit') || 'Select a base unit', value: '' }, ...baseUnitsForCategory.map((baseUom: IUnitOfMeasure) => ({ label: `${baseUom.name} (${baseUom.code})`, value: String(baseUom.id) }))]}
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{`${t('ratio')} (${t('ratioHelp') || '1 this unit = X base units'})`} <span style={{ color: '#ef4444' }}>*</span></label>
+                                    <InputText
+                                        type="number"
+                                        step="0.000001"
+                                        min="0"
+                                        value={String(formData.ratio)}
+                                        onChange={(e) => setFormData({ ...formData, ratio: parseFloat(e.target.value) })}
+                                        required
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+                            </>
+                        )}
+
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('roundingPrecision') || 'Rounding Precision'}</label>
+                            <Dropdown
+                                value={formData.roundingPrecision}
+                                onChange={(e) => setFormData({ ...formData, roundingPrecision: e.value })}
+                                options={[{ label: '1', value: '1' }, { label: '0.1', value: '0.1' }, { label: '0.01', value: '0.01' }, { label: '0.001', value: '0.001' }, { label: '0.0001', value: '0.0001' }]}
+                                optionLabel="label"
+                                optionValue="value"
+                                style={{ width: '100%' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Checkbox
+                                checked={formData.isActive ?? false}
+                                onChange={(e) => setFormData({ ...formData, isActive: e.checked ?? false })}
+                            />
+                            <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('active')}</label>
+                        </div>
+
+                    </form>
+                </Modal>
             </div>
         </AdminLayout>
     );

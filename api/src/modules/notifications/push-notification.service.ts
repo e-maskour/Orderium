@@ -331,8 +331,17 @@ export class PushNotificationService implements OnModuleInit {
         failureCount: response.failureCount,
         invalidTokens,
       };
-    } catch (error) {
-      this.logger.error('Failed to send push notification:', error);
+    } catch (error: any) {
+      // Firebase network errors (EAI_AGAIN, ECONNREFUSED) mean the container
+      // cannot reach fcm.googleapis.com — log and degrade gracefully.
+      if (error?.errorInfo?.code === 'app/network-error') {
+        this.logger.warn(
+          'FCM network unreachable (push notifications skipped):',
+          error.message,
+        );
+      } else {
+        this.logger.error('Failed to send push notification:', error);
+      }
       return {
         successCount: 0,
         failureCount: tokens.length,

@@ -32,7 +32,7 @@ export default {
   noProductsFound: 'Aucun produit trouvé',
   noResultsMessage: 'Essayez un autre terme de recherche',
   noProductsInCategory: 'Aucun produit disponible',
-  
+
   // Categories
   categories: 'Catégories',
   category: 'Catégorie',
@@ -51,7 +51,7 @@ export default {
   categoryUpdated: 'Catégorie mise à jour avec succès',
   categoryDeleted: 'Catégorie supprimée avec succès',
   deleteCategoryConfirmation: 'Êtes-vous sûr de vouloir supprimer la catégorie',
-  
+
   // Product Details
   noCode: 'Aucun code',
   saving: 'Enregistrement...',
@@ -62,7 +62,7 @@ export default {
   failedToGenerateUniqueCode: 'Échec de génération du code unique',
   imageUrlSavedSuccessfully: 'URL de l\'image enregistrée avec succès',
   failedToSaveImageUrl: 'Échec de l\'enregistrement de l\'URL de l\'image',
-  
+
   // Product Create/Edit Placeholders
   createNewProduct: 'Créer un nouveau produit',
   addNewProductToInventory: 'Ajouter un nouveau produit à votre inventaire',
@@ -75,7 +75,7 @@ export default {
   mainWarehouse: 'Entrepôt principal',
   cityName: 'Casablanca',
   unit: 'UNIT',
-  
+
   // Product Detail Additions
   add: 'Ajouter',
   remove: 'Supprimer',
@@ -86,7 +86,7 @@ export default {
   transferring: 'En cours...',
   transfer: 'Transférer',
   confirmDeleteProduct: 'Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.',
-  
+
   // Product Create/Edit Additional Keys
   backToProducts: 'Retour aux Produits',
   basicInformation: 'Informations de base',
@@ -118,7 +118,7 @@ export default {
   allowPriceChange: 'Autoriser le changement de prix',
   allowPriceChangeDescription: 'Les utilisateurs peuvent modifier le prix lors de la création de la commande',
   per: 'par',
-  
+
   // Product Detail Additional Keys
   eanBarcodeePlaceholder: 'Code-barres EAN-13',
   imageUrl: 'URL de l\'image',
@@ -146,4 +146,22 @@ export default {
   unitLabel: 'Unité',
   numericPlaceholder: '0.00',
   taxPlaceholder: '20',
+
+  // Stock filter labels
+  negativeStock: 'Stock négatif',
+  zeroStock: 'Stock nul',
+  positiveStock: 'Stock positif',
+  inStock: 'En stock',
+  downloadTemplate: 'Télécharger le modèle',
+  catalogue: 'Catalogue des produits',
+  notFound: 'Produit introuvable',
+
+  // Product Detail / Create panel labels
+  tabInformation: 'Informations',
+  panelBasicSubtitle: 'Nom, code-barres et description',
+  panelPriceSubtitle: 'Prix affiché aux clients',
+  panelCostSubtitle: "Coût d'achat",
+  settingsSection: 'Paramètres',
+  behaviorOptions: 'Options de comportement du produit',
+  warehouseAndCategories: 'Entrepôt et catégories',
 };

@@ -7,10 +7,10 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export type ShareDocumentType = 'devis' | 'facture' | 'bon_livraison';
 
-const DOCUMENT_LABELS: Record<ShareDocumentType, { title: string; fr: string; previewPath: string }> = {
-    devis: { title: 'Partager le devis', fr: 'Devis', previewPath: 'quote' },
-    facture: { title: 'Partager la facture', fr: 'Facture', previewPath: 'invoice' },
-    bon_livraison: { title: 'Partager le bon', fr: 'Bon de livraison', previewPath: 'order' },
+const DOCUMENT_LABELS: Record<ShareDocumentType, { titleKey: string; fr: string; previewPath: string }> = {
+    devis: { titleKey: 'shareQuote', fr: 'Devis', previewPath: 'quote' },
+    facture: { titleKey: 'shareInvoice', fr: 'Facture', previewPath: 'invoice' },
+    bon_livraison: { titleKey: 'shareBL', fr: 'Bon de livraison', previewPath: 'order' },
 };
 
 interface ShareDocumentDialogProps {
@@ -109,7 +109,7 @@ export function ShareDocumentDialog({
                 <Share2 style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
             </div>
             <div>
-                <div style={{ fontWeight: 600, color: '#0f172a' }}>{docInfo.title}</div>
+                <div style={{ fontWeight: 600, color: '#0f172a' }}>{t(docInfo.titleKey as any)}</div>
                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{documentNumber}</div>
             </div>
         </div>
@@ -155,7 +155,7 @@ export function ShareDocumentDialog({
                         {/* Share Link */}
                         <div>
                             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#334155', marginBottom: '0.5rem' }}>
-                                Lien de partage
+                                {t('shareLink')}
                             </label>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <InputText
@@ -167,7 +167,7 @@ export function ShareDocumentDialog({
                                     text
                                     rounded
                                     onClick={handleCopyLink}
-                                    tooltip="Copier"
+                                    tooltip={t('copy')}
                                     icon={copied
                                         ? <Check style={{ width: '1.25rem', height: '1.25rem', color: '#16a34a' }} />
                                         : <Copy style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
@@ -192,7 +192,7 @@ export function ShareDocumentDialog({
                             }}>
                                 <div style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', backgroundColor: '#235ae4', flexShrink: 0 }} />
                                 <span>
-                                    Ce lien expire le{' '}
+                                    {t('linkExpires')}{' '}
                                     {new Date(expiresAt).toLocaleDateString('fr-FR', {
                                         day: 'numeric',
                                         month: 'long',
@@ -206,7 +206,7 @@ export function ShareDocumentDialog({
                         <Button
                             onClick={handleWhatsApp}
                             icon={<MessageCircle style={{ width: '1rem', height: '1rem' }} />}
-                            label="Envoyer par WhatsApp"
+                            label={t('sendWhatsApp')}
                             style={{
                                 background: '#25D366',
                                 border: 'none',
@@ -222,14 +222,14 @@ export function ShareDocumentDialog({
                                 onClick={handleOpenPreview}
                                 outlined
                                 icon={<ExternalLink style={{ width: '1rem', height: '1rem' }} />}
-                                label="Aperçu"
+                                label={t('preview')}
                                 style={{ flex: 1 }}
                             />
                             <Button
                                 onClick={handleEmailShare}
                                 outlined
                                 icon={<Mail style={{ width: '1rem', height: '1rem' }} />}
-                                label="Email"
+                                label={t('email')}
                                 style={{ flex: 1 }}
                             />
                         </div>
@@ -241,7 +241,7 @@ export function ShareDocumentDialog({
                                     onClick={handleRevokeLink}
                                     loading={revoking}
                                     icon={<Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />}
-                                    label="Révoquer le lien"
+                                    label={t('revokeLink')}
                                     text
                                     severity="danger"
                                     style={{ fontSize: '0.8125rem', padding: '0.375rem 0.75rem' }}

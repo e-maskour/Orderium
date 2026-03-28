@@ -25,6 +25,7 @@ export default {
 
   // Common Fields
   name: 'الاسم',
+  code: 'الرمز',
   email: 'البريد الإلكتروني',
   phone: 'الهاتف',
   phoneNumber: 'رقم الهاتف',
@@ -258,6 +259,7 @@ export default {
   failedToDeleteWarehouse: 'فشل في حذف المستودع',
   deleteWarehouseTitle: 'حذف المستودع',
   confirmDeleteWarehouse: 'هل أنت متأكد من حذف هذا المستودع؟ لا يمكن التراجع عن هذا الإجراء.',
+  noWarehousesFound: 'لا توجد مستودعات',
   errorCreatingDocument: 'خطأ أثناء إنشاء المستند',
   errorUpdatingDocument: 'خطأ أثناء تحديث المستند',
   loadingQuote: 'جاري تحميل العرض...',
@@ -345,4 +347,65 @@ export default {
   noItems: 'لا توجد عناصر',
   completed: 'مكتمل',
   type: 'النوع',
+
+  // Search & empty states
+  noResults: 'لا توجد نتائج',
+  resetFilters: 'إعادة تعيين الفلاتر',
+
+  // Common fields (extended)
+  reference: 'المرجع',
+  city: 'المدينة',
+  zipCode: 'الرمز البريدي',
+  select: 'اختر',
+  qty: 'الكمية',
+  totalWithTax: 'المجموع شامل الضريبة',
+
+  // Common actions (extended)
+  import: 'استيراد',
+  export: 'تصدير',
+  print: 'طباعة',
+  share: 'مشاركة',
+  copy: 'نسخ',
+  copied: 'تم النسخ !',
+  copyUrl: 'نسخ الرابط',
+  new: 'جديد',
+
+  // Upload
+  imageLoadError: 'خطأ في تحميل الصورة',
+  clickToChange: 'انقر لتغيير الصورة',
+  clickOrDrag: 'انقر أو اسحب وأفلت',
+
+  // Share
+  shareLinkGenerated: 'تم إنشاء رابط المشاركة',
+  shareLinkError: 'خطأ أثناء إنشاء رابط المشاركة',
+  linkRevoked: 'تم إلغاء الرابط بنجاح',
+  linkRevocationError: 'خطأ أثناء إلغاء الرابط',
+
+  // Paginator
+  paginatorReport: '{first}-{last} من {totalRecords}',
+
+  // Navigation (mobile + sidebar)
+  navMore: 'المزيد',
+  navExpand: 'توسيع',
+  navCollapse: 'طي',
+  navTeam: 'الفريق',
+  navPos: 'نقطة البيع',
+
+  // Stock / inventory
+  negativeStock: 'مخزون سالب',
+  zeroStock: 'مخزون صفري',
+  positiveStock: 'مخزون موجب',
+  inStock: 'في المخزون',
+
+  // Documents
+  shareLink: 'رابط المشاركة',
+  preview: 'معاينة',
+  linkExpires: 'ينتهي صلاحية هذا الرابط بتاريخ',
+  shareQuote: 'مشاركة عرض الأسعار',
+  shareInvoice: 'مشاركة الفاتورة',
+  shareBL: 'مشاركة وصل التسليم',
+  sendWhatsApp: 'إرسال عبر واتساب',
+  revokeLink: 'إلغاء الرابط',
+  backToPOS: 'العودة إلى نقطة البيع',
+  orderSummary: 'ملخص الطلب',
 };

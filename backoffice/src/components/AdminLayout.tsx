@@ -14,22 +14,22 @@ interface AdminLayoutProps {
 interface MobileTab {
     path: string;
     icon: React.ComponentType<{ style?: React.CSSProperties; strokeWidth?: number }>;
-    label: string;
+    labelKey: string;
     activePaths: string[];
     exactMatch?: boolean;
 }
 
 const MOBILE_TABS: MobileTab[] = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil', activePaths: ['/dashboard'], exactMatch: true },
-    { path: '/orders', icon: ShoppingCart, label: 'Commandes', activePaths: ['/orders', '/pos', '/checkout'] },
-    { path: '/devis', icon: TrendingUp, label: 'Ventes', activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'] },
-    { path: '/products', icon: Package, label: 'Stock', activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
+    { path: '/dashboard', icon: LayoutDashboard, labelKey: 'dashboard', activePaths: ['/dashboard'], exactMatch: true },
+    { path: '/orders', icon: ShoppingCart, labelKey: 'orders', activePaths: ['/orders', '/pos', '/checkout'] },
+    { path: '/devis', icon: TrendingUp, labelKey: 'sales', activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'] },
+    { path: '/products', icon: Package, labelKey: 'stock', activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const location = useLocation();
     const dir = language === 'ar' ? 'rtl' : 'ltr';
 
@@ -110,7 +110,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                                 }} />
                             )}
                             <tab.icon style={{ width: 22, height: 22 }} strokeWidth={active ? 2.25 : 1.75} />
-                            <span style={{ fontSize: '0.625rem', fontWeight: active ? 700 : 500 }}>{tab.label}</span>
+                            <span style={{ fontSize: '0.625rem', fontWeight: active ? 700 : 500 }}>{t(tab.labelKey)}</span>
                         </Link>
                     );
                 })}
@@ -123,7 +123,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                     }}
                 >
                     <MoreHorizontal style={{ width: 22, height: 22 }} strokeWidth={1.75} />
-                    <span style={{ fontSize: '0.625rem', fontWeight: 500 }}>Plus</span>
+                    <span style={{ fontSize: '0.625rem', fontWeight: 500 }}>{t('navMore')}</span>
                 </button>
             </nav>
 

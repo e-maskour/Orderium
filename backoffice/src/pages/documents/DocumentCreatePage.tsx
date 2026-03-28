@@ -235,9 +235,9 @@ export default function DocumentCreatePage({
         .doc-cal .p-datepicker-trigger { position: absolute !important; right: 0 !important; top: 0 !important; bottom: 0 !important; height: 100% !important; background: transparent !important; border: none !important; color: #94a3b8 !important; box-shadow: none !important; padding: 0 0.5rem !important; }
         .doc-cal .p-datepicker-trigger:hover { color: var(--form-input-border-focus) !important; background: transparent !important; }
         .doc-notes-totals { display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-top: 1.5rem; align-items: flex-start; }
+        @media (max-width: 1023px) { .doc-sticky-bar { left: 0 !important; } }
         @media (max-width: 768px) {
           .doc-create-grid { grid-template-columns: 1fr !important; }
-          .doc-sticky-bar { left: 0 !important; }
           .doc-notes-totals { grid-template-columns: 1fr !important; gap: 1rem !important; }
         }
         /* ── Document detail header – responsive ── */

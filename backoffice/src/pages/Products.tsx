@@ -305,7 +305,7 @@ export default function Products() {
                 severity="secondary"
                 size="small"
                 icon={<FileSpreadsheet style={{ width: 16, height: 16 }} />}
-                title="Télécharger le modèle"
+                title={t('downloadTemplate')}
               />
               <Button
                 onClick={handleImport}
@@ -313,7 +313,7 @@ export default function Products() {
                 severity="secondary"
                 size="small"
                 icon={<Upload style={{ width: 16, height: 16 }} />}
-                title="Importer"
+                title={t('import')}
               />
               <Button
                 onClick={handleExport}
@@ -321,7 +321,7 @@ export default function Products() {
                 severity="secondary"
                 size="small"
                 icon={<Download style={{ width: 16, height: 16 }} />}
-                title="Exporter"
+                title={t('export')}
               />
 
               {/* Add Product Button */}
@@ -355,9 +355,9 @@ export default function Products() {
                 bottomLeft: (p: IProduct) => [p.code, p.stock != null ? `Stock: ${p.stock}` : null].filter(Boolean).join(' · '),
                 bottomRight: (p: IProduct) => {
                   if (p.stock == null) return null;
-                  if (p.stock < 0) return <span className="erp-badge erp-badge--unpaid">Négatif</span>;
-                  if (p.stock === 0) return <span className="erp-badge erp-badge--draft">Zéro</span>;
-                  return <span className="erp-badge erp-badge--paid">En stock</span>;
+                  if (p.stock < 0) return <span className="erp-badge erp-badge--unpaid">{t('negativeStock')}</span>;
+                  if (p.stock === 0) return <span className="erp-badge erp-badge--draft">{t('zeroStock')}</span>;
+                  return <span className="erp-badge erp-badge--paid">{t('inStock')}</span>;
                 },
               }}
             />

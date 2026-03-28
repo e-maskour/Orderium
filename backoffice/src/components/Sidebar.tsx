@@ -30,7 +30,7 @@ const NAV_ITEMS = [
         id: 'sb-dashboard',
         to: '/dashboard',
         icon: LayoutDashboard,
-        label: 'Tableau de bord',
+        labelKey: 'dashboard' as const,
         activePaths: ['/dashboard'],
         exactFirst: true,
     },
@@ -38,7 +38,7 @@ const NAV_ITEMS = [
         id: 'sb-commandes',
         to: '/orders',
         icon: ShoppingCart,
-        label: 'Commandes',
+        labelKey: 'orders' as const,
         activePaths: ['/orders', '/checkout'],
         exactFirst: false,
     },
@@ -46,7 +46,7 @@ const NAV_ITEMS = [
         id: 'sb-pos',
         to: '/pos',
         icon: Store,
-        label: 'Point de vente',
+        labelKey: 'navPos' as const,
         activePaths: ['/pos'],
         exactFirst: false,
     },
@@ -54,7 +54,7 @@ const NAV_ITEMS = [
         id: 'sb-ventes',
         to: '/devis',
         icon: TrendingUp,
-        label: 'Ventes',
+        labelKey: 'sales' as const,
         activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'],
         exactFirst: false,
     },
@@ -62,7 +62,7 @@ const NAV_ITEMS = [
         id: 'sb-achats',
         to: '/demande-prix',
         icon: TrendingDown,
-        label: 'Achats',
+        labelKey: 'purchases' as const,
         activePaths: ['/demande-prix', '/bon-achat', '/factures/achat', '/paiements-achat', '/fournisseurs'],
         exactFirst: false,
     },
@@ -70,7 +70,7 @@ const NAV_ITEMS = [
         id: 'sb-stock',
         to: '/products',
         icon: Package,
-        label: 'Stock',
+        labelKey: 'stock' as const,
         activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'],
         exactFirst: false,
     },
@@ -78,7 +78,7 @@ const NAV_ITEMS = [
         id: 'sb-livreurs',
         to: '/delivery-persons',
         icon: Truck,
-        label: 'Livreurs',
+        labelKey: 'deliveryPersons' as const,
         activePaths: ['/delivery-persons'],
         exactFirst: false,
     },
@@ -86,7 +86,7 @@ const NAV_ITEMS = [
         id: 'sb-admin',
         to: '/users',
         icon: UsersRound,
-        label: 'Équipe',
+        labelKey: 'navTeam' as const,
         activePaths: ['/users', '/roles'],
         exactFirst: false,
     },
@@ -94,7 +94,8 @@ const NAV_ITEMS = [
         id: 'sb-drive',
         to: '/drive',
         icon: HardDrive,
-        label: 'Drive',
+        labelKey: null as null,
+        staticLabel: 'Drive',
         activePaths: ['/drive'],
         exactFirst: false,
     },
@@ -102,7 +103,7 @@ const NAV_ITEMS = [
         id: 'sb-config',
         to: '/configurations',
         icon: Settings,
-        label: 'Paramètres',
+        labelKey: 'settings' as const,
         activePaths: ['/configurations'],
         exactFirst: false,
     },
@@ -110,7 +111,7 @@ const NAV_ITEMS = [
 
 export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }: SidebarProps) => {
     const location = useLocation();
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const isRtl = language === 'ar';
 
     const isActive = (item: typeof NAV_ITEMS[number]) => {
@@ -219,7 +220,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                                     </span>
                                     {!isCollapsed && (
                                         <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {item.label}
+                                            {'staticLabel' in item ? item.staticLabel : t(item.labelKey)}
                                         </span>
                                     )}
                                     <Ripple />
@@ -264,7 +265,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
                     className="sb-collapse-btn sb-collapse-bottom"
-                    title={isCollapsed ? 'Expand' : 'Collapse'}
+                    title={isCollapsed ? t('navExpand') : t('navCollapse')}
                     style={{
                         display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'flex-start',
                         gap: '0.5rem',
@@ -286,7 +287,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                             : (isRtl ? <ChevronRight style={{ width: '0.75rem', height: '0.75rem' }} /> : <ChevronLeft style={{ width: '0.75rem', height: '0.75rem' }} />)
                         }
                     </span>
-                    {!isCollapsed && <span style={{ whiteSpace: 'nowrap' }}>Réduire</span>}
+                    {!isCollapsed && <span style={{ whiteSpace: 'nowrap' }}>{t('navCollapse')}</span>}
                 </button>
             </div>
 

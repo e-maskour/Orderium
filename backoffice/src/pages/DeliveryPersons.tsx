@@ -219,7 +219,7 @@ export default function DeliveryPersons() {
           {/* Toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
             {/* Search */}
-            <span style={{ position: 'relative', display: 'block', width: '24rem' }}>
+            <span style={{ position: 'relative', display: 'block', width: '100%', maxWidth: '24rem' }}>
               <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
               <InputText
                 id="search-delivery-persons"
@@ -344,7 +344,7 @@ export default function DeliveryPersons() {
         }
       >
         <form id="delivery-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
+          <div className="form-grid-2">
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
               <InputText

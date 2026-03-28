@@ -112,9 +112,9 @@ export default function StockMovements() {
     { label: t('movementTypes.adjustment'), value: 'adjustment' },
     { label: t('movementTypes.productionIn'), value: 'production_in' },
     { label: t('movementTypes.productionOut'), value: 'production_out' },
-    { label: 'Retour client', value: 'return_in' },
-    { label: 'Retour fournisseur', value: 'return_out' },
-    { label: 'Mise au rebut', value: 'scrap' },
+    { label: t('movementTypes.returnIn'), value: 'return_in' },
+    { label: t('movementTypes.returnOut'), value: 'return_out' },
+    { label: t('movementTypes.scrap'), value: 'scrap' },
   ];
 
   const statusOptions = [
@@ -184,7 +184,7 @@ export default function StockMovements() {
             loading={isLoading}
             totalCount={filteredMovements.length}
             countLabel="mouvements"
-            emptyMessage="Aucun mouvement trouvé"
+            emptyMessage={t('noMovementsFound' as any)}
             config={{
               topLeft: (m: StockMovement) => m.reference,
               topRight: (m: StockMovement) => `${parseFloat(m.quantity.toString()).toFixed(2)} ${m.unitOfMeasureCode || 'U'}`,

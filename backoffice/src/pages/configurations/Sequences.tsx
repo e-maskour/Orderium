@@ -177,106 +177,104 @@ export default function Sequences() {
     return (
         <AdminLayout>
             <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-            <PageHeader
-                icon={Hash}
-                title={t('sequences')}
-                subtitle={t('manageDocumentSequences')}
-                actions={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Button
-                            onClick={openCreateModal}
-                            icon={<Plus style={{ width: 16, height: 16 }} />}
-                            label={t('addSequence')}
-                            size="small"
-                        />
-                    </div>
-                }
-            />
-
-            <div className="responsive-table-mobile">
-                <MobileList
-                    items={sequences}
-                    keyExtractor={(seq: Sequence) => seq.id}
-                    loading={isLoading}
-                    totalCount={sequences.length}
-                    countLabel="séquences"
-                    emptyMessage="Aucune séquence configurée"
-                    config={{
-                        topLeft: (seq: Sequence) => seq.name,
-                        topRight: (seq: Sequence) => seq.nextDocumentNumber || 'N/A',
-                        bottomLeft: (seq: Sequence) => seq.format || '',
-                        bottomRight: (seq: Sequence) => seq.isActive
-                            ? <span className="erp-badge erp-badge--active">{t('active')}</span>
-                            : <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>,
-                    }}
+                <PageHeader
+                    icon={Hash}
+                    title={t('sequences')}
+                    subtitle={t('manageDocumentSequences')}
+                    actions={
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Button
+                                onClick={openCreateModal}
+                                icon={<Plus style={{ width: 16, height: 16 }} />}
+                                label={t('addSequence')}
+                                size="small"
+                            />
+                        </div>
+                    }
                 />
-            </div>
-            <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                <DataTable
-                    className="seq-datatable"
-                    value={sequences}
-                    selection={selectedRows}
-                    onSelectionChange={(e) => setSelectedRows(e.value as Sequence[])}
-                    selectionMode="checkbox"
-                    dataKey="id"
-                    paginator
-                    paginatorPosition="top"
-                    rows={25}
-                    rowsPerPageOptions={[10, 25, 50, 100]}
-                    removableSort
-                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noSequencesConfigured')}</div>}
-                    paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
+
+                <div className="responsive-table-mobile">
+                    <MobileList
+                        items={sequences}
+                        keyExtractor={(seq: Sequence) => seq.id}
+                        loading={isLoading}
+                        totalCount={sequences.length}
+                        countLabel="séquences"
+                        emptyMessage="Aucune séquence configurée"
+                        config={{
+                            topLeft: (seq: Sequence) => seq.name,
+                            topRight: (seq: Sequence) => seq.nextDocumentNumber || 'N/A',
+                            bottomLeft: (seq: Sequence) => seq.format || '',
+                            bottomRight: (seq: Sequence) => seq.isActive
+                                ? <span className="erp-badge erp-badge--active">{t('active')}</span>
+                                : <span className="erp-badge erp-badge--unpaid">{t('inactive')}</span>,
+                        }}
+                    />
+                </div>
+                <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                    <DataTable
+                        className="seq-datatable"
+                        value={sequences}
+                        selection={selectedRows}
+                        onSelectionChange={(e) => setSelectedRows(e.value as Sequence[])}
+                        selectionMode="checkbox"
+                        dataKey="id"
+                        paginator
+                        paginatorPosition="top"
+                        rows={25}
+                        rowsPerPageOptions={[10, 25, 50, 100]}
+                        removableSort
+                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noSequencesConfigured')}</div>}
+                        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                    >
+                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                        <Column field="name" header={t('name')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
+                        <Column field="entityType" header={t('entityType')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{entityTypeOptions.find(opt => opt.value === row.entityType)?.label || row.entityType}</span>} />
+                        <Column field="format" header={t('format')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569', fontFamily: 'monospace' }}>{row.format || 'N/A'}</span>} />
+                        <Column field="nextDocumentNumber" header={t('nextDocumentNumber')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#16a34a', fontFamily: 'monospace' }}>{row.nextDocumentNumber || 'N/A'}</span>} />
+                        <Column field="isActive" header={t('status')} body={(row: Sequence) => (
+                            <span className={`erp-badge ${row.isActive ? 'erp-badge--active' : 'erp-badge--unpaid'}`}>
+                                {row.isActive ? t('active') : t('inactive')}
+                            </span>
+                        )} />
+                        <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Sequence) => (
+                            <div style={{ textAlign: 'right' }}>
+                                <Button icon={<RotateCcw style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleReset(row)} text rounded severity="warning" title={t('resetSequence')} />
+                                <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row)} text rounded severity="info" title={t('edit')} />
+                            </div>
+                        )} />
+                    </DataTable>
+                </div>
+
+                {/* Modal */}
+                <Modal
+                    isOpen={showModal}
+                    onClose={closeModal}
+                    title={editingSequence ? t('editSequence') : t('addSequence')}
+                    footer={
+                        <div className="flex justify-content-end gap-2">
+                            <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
+                            <Button
+                                form="sequences-modal-form"
+                                type="submit"
+                                loading={createMutation.isPending || updateMutation.isPending}
+                                disabled={!!editingSequence && editingSequence.nextNumber > 1}
+                                label={t('save')}
+                            />
+                        </div>
+                    }
                 >
-                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                    <Column field="name" header={t('name')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
-                    <Column field="entityType" header={t('entityType')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{entityTypeOptions.find(opt => opt.value === row.entityType)?.label || row.entityType}</span>} />
-                    <Column field="format" header={t('format')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', color: '#475569', fontFamily: 'monospace' }}>{row.format || 'N/A'}</span>} />
-                    <Column field="nextDocumentNumber" header={t('nextDocumentNumber')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#16a34a', fontFamily: 'monospace' }}>{row.nextDocumentNumber || 'N/A'}</span>} />
-                    <Column field="isActive" header={t('status')} body={(row: Sequence) => (
-                        <span className={`erp-badge ${row.isActive ? 'erp-badge--active' : 'erp-badge--unpaid'}`}>
-                            {row.isActive ? t('active') : t('inactive')}
-                        </span>
-                    )} />
-                    <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row: Sequence) => (
-                        <div style={{ textAlign: 'right' }}>
-                            <Button icon={<RotateCcw style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleReset(row)} text rounded severity="warning" title={t('resetSequence')} />
-                            <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row)} text rounded severity="info" title={t('edit')} />
-                        </div>
-                    )} />
-                </DataTable>
-            </div>
+                    <form id="sequences-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {editingSequence && editingSequence.nextNumber > 1 && (
+                            <div style={{ padding: '0.75rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                <p style={{ fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>
+                                    ⚠️ {t('sequenceInUseReadonly')}
+                                </p>
+                            </div>
+                        )}
 
-            {/* Modal */}
-            <Modal
-                isOpen={showModal}
-                onClose={closeModal}
-                title={editingSequence ? t('editSequence') : t('addSequence')}
-                footer={
-                    <div className="flex justify-content-end gap-2">
-                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
-                        <Button
-                            form="sequences-modal-form"
-                            type="submit"
-                            loading={createMutation.isPending || updateMutation.isPending}
-                            disabled={!!editingSequence && editingSequence.nextNumber > 1}
-                            label={t('save')}
-                        />
-                    </div>
-                }
-            >
-                <form id="sequences-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {editingSequence && editingSequence.nextNumber > 1 && (
-                        <div style={{ padding: '0.75rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-                            <p style={{ fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>
-                                ⚠️ {t('sequenceInUseReadonly')}
-                            </p>
-                        </div>
-                    )}
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
+                        <div className="form-grid-2">
                             <InputText
                                 type="text"
                                 value={formData.name}
@@ -303,7 +301,7 @@ export default function Sequences() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
+                    <div className="form-grid-2">
                         <div>
                             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('prefix')}</label>
                             <InputText
@@ -328,7 +326,7 @@ export default function Sequences() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
+                    <div className="form-grid-2">
                         <div>
                             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>
                                 {t('nextNumber')}
@@ -431,7 +429,7 @@ export default function Sequences() {
 
                 </form>
             </Modal>
-            </div>
-        </AdminLayout>
+        </div>
+        </AdminLayout >
     );
 }

@@ -135,9 +135,16 @@ async function bootstrap() {
   // Enable graceful shutdown hooks
   app.enableShutdownHooks();
 
-  // Global unhandled rejection handler
+  // Global unhandled rejection handler — prevents crash on rejected promises with no catch
   process.on('unhandledRejection', (reason, promise) => {
     logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+
+  // Global uncaught exception handler — prevents crash from EventEmitter errors (e.g. Firebase HTTP2 session)
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error.message, error.stack);
+    // Do NOT re-throw or call process.exit() — let the app keep running
+    // Firebase FCM network failures (EAI_AGAIN, ECONNREFUSED) must not crash the server
   });
 
   // Start server

@@ -157,17 +157,17 @@ export default function Notifications() {
 
   const getNotificationClassName = (type: NotificationType): string => {
     const classMap: Record<NotificationType, string> = {
-      [NotificationType.NEW_ORDER]:              'notif-icon notif-icon--new_order',
-      [NotificationType.ORDER_ASSIGNED]:         'notif-icon notif-icon--order_assigned',
-      [NotificationType.ORDER_STATUS_CHANGED]:   'notif-icon notif-icon--order_status_changed',
+      [NotificationType.NEW_ORDER]: 'notif-icon notif-icon--new_order',
+      [NotificationType.ORDER_ASSIGNED]: 'notif-icon notif-icon--order_assigned',
+      [NotificationType.ORDER_STATUS_CHANGED]: 'notif-icon notif-icon--order_status_changed',
       [NotificationType.DELIVERY_STATUS_UPDATE]: 'notif-icon notif-icon--delivery_status_update',
-      [NotificationType.ORDER_CANCELLED]:        'notif-icon notif-icon--order_cancelled',
-      [NotificationType.PAYMENT_RECEIVED]:       'notif-icon notif-icon--payment_received',
-      [NotificationType.LOW_STOCK]:              'notif-icon notif-icon--low_stock',
-      [NotificationType.SYSTEM]:                 'notif-icon notif-icon--system',
-      [NotificationType.INFO]:                   'notif-icon notif-icon--info',
-      [NotificationType.WARNING]:                'notif-icon notif-icon--warning',
-      [NotificationType.ERROR]:                  'notif-icon notif-icon--error',
+      [NotificationType.ORDER_CANCELLED]: 'notif-icon notif-icon--order_cancelled',
+      [NotificationType.PAYMENT_RECEIVED]: 'notif-icon notif-icon--payment_received',
+      [NotificationType.LOW_STOCK]: 'notif-icon notif-icon--low_stock',
+      [NotificationType.SYSTEM]: 'notif-icon notif-icon--system',
+      [NotificationType.INFO]: 'notif-icon notif-icon--info',
+      [NotificationType.WARNING]: 'notif-icon notif-icon--warning',
+      [NotificationType.ERROR]: 'notif-icon notif-icon--error',
     };
     return classMap[type] || 'notif-icon notif-icon--info';
   };
@@ -463,7 +463,7 @@ export default function Notifications() {
 
         <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {/* Stats Cards */}
-          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(12rem, 1fr))' }}>
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '0.5rem' }}>
               <div style={{ padding: '1.5rem', paddingBottom: '0.5rem' }}>
                 <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('totalNotifications')}</p>

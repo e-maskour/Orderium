@@ -243,7 +243,7 @@ export function NotificationBellPro() {
       <OverlayPanel
         ref={opRef}
         onHide={() => setIsOpen(false)}
-        style={{ width: '26rem', padding: 0 }}
+        style={{ width: '26rem', maxWidth: 'calc(100vw - 1rem)', padding: 0 }}
         dir={dir}
       >
         {/* Header */}

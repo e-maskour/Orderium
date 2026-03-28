@@ -1,9 +1,7 @@
-import { Package, Phone, MapPin, Calendar } from 'lucide-react';
+import { Package, Phone, MapPin, X, Hash, Tag, User } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
 import { formatAmount } from '@orderium/ui';
 
 interface OrderDetailsModalProps {
@@ -11,247 +9,296 @@ interface OrderDetailsModalProps {
   onClose: () => void;
 }
 
+const STATUS_CONFIG: Record<string, { label_fr: string; label_ar: string; bg: string; color: string; border: string; dot: string }> = {
+  to_delivery: { label_fr: 'À livrer', label_ar: 'للتوصيل', bg: '#fffbeb', color: '#b45309', border: '#fde68a', dot: '#f59e0b' },
+  in_delivery: { label_fr: 'En livraison', label_ar: 'في التوصيل', bg: '#ecfeff', color: '#0e7490', border: '#a5f3fc', dot: '#06b6d4' },
+  in_progress: { label_fr: 'En cours', label_ar: 'قيد التنفيذ', bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe', dot: '#3b82f6' },
+  pending: { label_fr: 'En attente', label_ar: 'في الانتظار', bg: '#f8fafc', color: '#475569', border: '#e2e8f0', dot: '#94a3b8' },
+  confirmed: { label_fr: 'Confirmé', label_ar: 'مؤكد', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', dot: '#3b82f6' },
+  picked_up: { label_fr: 'Récupéré', label_ar: 'تم الاستلام', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe', dot: '#8b5cf6' },
+  delivered: { label_fr: 'Livré', label_ar: 'تم التوصيل', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0', dot: '#10b981' },
+  canceled: { label_fr: 'Annulé', label_ar: 'ملغى', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca', dot: '#ef4444' },
+  cancelled: { label_fr: 'Annulé', label_ar: 'ملغى', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca', dot: '#ef4444' },
+};
+
 export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language?.startsWith('ar');
 
-  const getStatusStyle = (status: string): React.CSSProperties => {
-    switch (status) {
-      case 'to_delivery': return { background: '#fffbeb', color: '#b45309', border: '1px solid #fcd34d' };
-      case 'in_delivery': return { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #93c5fd' };
-      case 'in_progress': return { background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' };
-      case 'pending': return { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' };
-      case 'delivered': return { background: '#ecfdf5', color: '#047857', border: '1px solid #6ee7b7' };
-      case 'canceled': return { background: '#fef2f2', color: '#b91c1c', border: '1px solid #fca5a5' };
-      default: return { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' };
-    }
-  };
+  const status = order.status || 'pending';
+  const statusCfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+  const statusLabel = isAr ? statusCfg.label_ar : statusCfg.label_fr;
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'to_delivery': return '📋';
-      case 'in_delivery': return '🚚';
-      case 'in_progress': return '🔄';
-      case 'pending': return '⏳';
-      case 'delivered': return '✅';
-      case 'canceled': return '❌';
-      default: return '⏳';
-    }
-  };
+  const items: any[] = order.items || [];
+  const subtotal = items.reduce((s: number, i: any) => s + parseFloat(i.total || 0), 0);
+  const globalDiscount = parseFloat(order.discount || 0);
+  const grandTotal = parseFloat(order.total || 0);
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'to_delivery': return t('toDelivery');
-      case 'in_delivery': return t('inDelivery');
-      case 'in_progress': return t('inProgress');
-      case 'pending': return t('pending');
-      case 'delivered': return t('delivered');
-      case 'canceled': return t('canceled');
-      default: return t('unassigned');
-    }
-  };
-
-  const headerContent = (
-    <div>
-      <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#1e293b' }}>{t('orderDetails')}</div>
-      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.125rem' }}>#{order.orderNumber}</div>
-    </div>
-  );
-
-  const footerContent = (
-    <Button label={t('close')} severity="secondary" onClick={onClose} />
-  );
-
-  const effectiveStatus = order.serviceType === 2 ? 'to_delivery' : order.status || 'unassigned';
+  const orderDate = new Date(order.date || order.dateCreated);
+  const formattedDate = orderDate.toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+  const formattedTime = orderDate.toLocaleTimeString(isAr ? 'ar-MA' : 'fr-FR', {
+    hour: '2-digit', minute: '2-digit',
+  });
 
   return (
     <Dialog
       visible
       onHide={onClose}
-      header={headerContent}
-      footer={footerContent}
       modal
       dismissableMask
-      style={{ width: '95vw', maxWidth: '56rem' }}
-      breakpoints={{ '960px': '75vw', '640px': '95vw' }}
-      contentStyle={{ padding: '1rem', overflowY: 'auto' }}
+      showHeader={false}
+      style={{ width: '100%', maxWidth: '540px', margin: 0, borderRadius: '1rem', overflow: 'hidden' }}
+      breakpoints={{ '640px': '100vw' }}
+      contentStyle={{ padding: 0, borderRadius: '1rem', overflow: 'hidden' }}
+      pt={{ root: { style: { borderRadius: '1rem' } } }}
     >
-      <div className="flex flex-column gap-3">
-        {/* Order and Customer Information */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: '0.75rem' }}>
-          {/* Order Information */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '0.75rem' }}>
-            <h3 className="flex align-items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
-              <Calendar style={{ width: 16, height: 16, color: '#235ae4' }} />
-              {t('orderInformation')}
-            </h3>
-            <div className="flex flex-column gap-2">
-              <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.125rem' }}>{t('orderNumber')}</div>
-                <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>#{order.orderNumber}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.125rem' }}>{t('status')}</div>
-                <span className="flex align-items-center gap-1" style={{ ...getStatusStyle(effectiveStatus), display: 'inline-flex', padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600 }}>
-                  <span>{getStatusIcon(effectiveStatus)}</span>
-                  <span>{getStatusLabel(effectiveStatus)}</span>
-                </span>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.125rem' }}>{t('date')}</div>
-                <div style={{ fontSize: '0.75rem', color: '#334155' }}>
-                  {new Date(order.date || order.dateCreated).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </div>
-              </div>
-              {order.note && (
-                <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.125rem' }}>{t('note')}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#334155', background: '#eff6ff', border: '1px solid rgba(35,90,228,0.2)', borderRadius: '0.5rem', padding: '0.5rem' }}>{order.note}</div>
-                </div>
-              )}
+      {/* ── Header ───────────────────────────────────────────── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1d4ed8, #235ae4)',
+        padding: '1.25rem 1.25rem 1rem',
+      }}>
+        {/* top row */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <div style={{
+              width: '2.5rem', height: '2.5rem',
+              background: 'rgba(255,255,255,0.15)',
+              borderRadius: '0.625rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Package style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>
+                {t('orderDetails')}
+              </p>
+              <p style={{ margin: 0, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>
+                #{order.orderNumber}
+              </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              width: '2rem', height: '2rem', borderRadius: '50%',
+              background: 'rgba(255,255,255,0.15)', border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', flexShrink: 0,
+            }}
+            aria-label="Fermer"
+          >
+            <X style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+          </button>
+        </div>
 
-          {/* Customer Information */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '0.75rem' }}>
-            <h3 className="flex align-items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
-              <Package style={{ width: 16, height: 16, color: '#235ae4' }} />
+        {/* status + date row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+            background: statusCfg.bg, color: statusCfg.color,
+            border: `1px solid ${statusCfg.border}`,
+            padding: '0.3125rem 0.75rem', borderRadius: '9999px',
+            fontSize: '0.8125rem', fontWeight: 700,
+          }}>
+            <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: statusCfg.dot, flexShrink: 0 }} />
+            {statusLabel}
+          </span>
+          <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
+            {formattedDate} · {formattedTime}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Body ─────────────────────────────────────────────── */}
+      <div style={{
+        background: '#f8fafc',
+        overflowY: 'auto',
+        maxHeight: 'calc(90vh - 180px)',
+        display: 'flex', flexDirection: 'column', gap: '0.75rem',
+        padding: '1rem',
+      }}>
+
+        {/* Customer card */}
+        <div style={{ background: '#fff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          {/* section header */}
+          <div style={{ padding: '0.625rem 1rem', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <User style={{ width: '0.875rem', height: '0.875rem', color: '#235ae4' }} />
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {t('customerInformation')}
-            </h3>
-            <div className="flex flex-column gap-2">
-              {order.customerName && (
-                <div className="flex align-items-start gap-2">
-                  <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #235ae4, #1a47b8)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Package style={{ width: 14, height: 14, color: '#fff' }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('customer')}</div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{order.customerName}</div>
-                  </div>
+            </span>
+          </div>
+          <div style={{ padding: '0.875rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+            {order.customerName && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', background: 'linear-gradient(135deg, #235ae4, #1a47b8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <User style={{ width: '0.875rem', height: '0.875rem', color: '#fff' }} />
                 </div>
-              )}
-              {order.customerPhone && (
-                <div className="flex align-items-start gap-2">
-                  <div style={{ width: 28, height: 28, background: '#d1fae5', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Phone style={{ width: 14, height: 14, color: '#059669' }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('phone')}</div>
-                    <a href={`tel:${order.customerPhone}`} style={{ fontSize: '0.875rem', fontWeight: 700, color: '#059669', textDecoration: 'none' }}>
-                      {order.customerPhone}
-                    </a>
-                  </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 500 }}>{t('customer')}</p>
+                  <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a' }}>{order.customerName}</p>
                 </div>
-              )}
-              {order.customerAddress && (
-                <div className="flex align-items-start gap-2">
-                  <div style={{ width: 28, height: 28, background: '#dbeafe', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <MapPin style={{ width: 14, height: 14, color: '#2563eb' }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('address')}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#334155' }}>{order.customerAddress}</div>
-                  </div>
+              </div>
+            )}
+            {order.customerPhone && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Phone style={{ width: '0.875rem', height: '0.875rem', color: '#16a34a' }} />
                 </div>
-              )}
-            </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 500 }}>{t('phone')}</p>
+                  <a href={`tel:${order.customerPhone}`} style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#16a34a', textDecoration: 'none', display: 'block' }}>
+                    {order.customerPhone}
+                  </a>
+                </div>
+              </div>
+            )}
+            {order.customerAddress && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <MapPin style={{ width: '0.875rem', height: '0.875rem', color: '#2563eb' }} />
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 500 }}>{t('address')}</p>
+                  <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{order.customerAddress}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Order Items Table */}
-        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', overflow: 'hidden' }}>
-          <div style={{ padding: '0.75rem', paddingBottom: 0 }}>
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{t('orderItems')}</h3>
+        {/* Note */}
+        {order.note && (
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '0.75rem', padding: '0.75rem 1rem', display: 'flex', gap: '0.625rem', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>📝</span>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>{order.note}</p>
           </div>
+        )}
 
-          <div style={{ maxHeight: '16rem', overflowY: 'auto' }}>
-            <DataTable
-              value={order.items || []}
-              size="small"
-              emptyMessage={
-                <div className="flex flex-column align-items-center" style={{ padding: '2rem 0', color: '#64748b' }}>
-                  <Package style={{ width: 48, height: 48, color: '#cbd5e1', marginBottom: '0.75rem' }} />
-                  <span>{t('noItems') || 'No items found'}</span>
-                </div>
-              }
-              tableStyle={{ width: '100%' }}
-              pt={{ tbody: { style: { background: '#fff' } } }}
-            >
-              <Column
-                field="description"
-                header={t('product')}
-                headerStyle={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
-                bodyStyle={{ padding: '0.5rem 0.75rem' }}
-                body={(item: any) => (
-                  <span style={{ fontWeight: 600, fontSize: '0.75rem', color: '#1e293b' }}>
-                    {item.description || item.product?.name || `Product #${item.productId}`}
-                  </span>
-                )}
-              />
-              <Column
-                field="quantity"
-                header={t('quantity')}
-                headerStyle={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
-                bodyStyle={{ textAlign: 'center', padding: '0.5rem' }}
-                body={(item: any) => (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem' }}>
-                    {parseFloat(item.quantity || 0).toFixed(2)}
-                  </span>
-                )}
-              />
-              <Column
-                field="unitPrice"
-                header={t('unitPrice')}
-                headerStyle={{ textAlign: 'right', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
-                bodyStyle={{ textAlign: 'right', padding: '0.5rem', fontWeight: 600, fontSize: '0.75rem', color: '#334155' }}
-                body={(item: any) => `${formatAmount(parseFloat(item.unitPrice || 0), 2)} ${t('currency')}`}
-              />
-              <Column
-                field="discount"
-                header={t('discount')}
-                headerStyle={{ textAlign: 'right', padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
-                bodyStyle={{ textAlign: 'right', padding: '0.5rem' }}
-                body={(item: any) => parseFloat(item.discount || 0) > 0 ? (
-                  <span style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.75rem' }}>
-                    -{formatAmount(parseFloat(item.discount || 0), 2)} {t('currency')}
-                  </span>
-                ) : (
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>-</span>
-                )}
-              />
-              <Column
-                field="total"
-                header={t('total')}
-                headerStyle={{ textAlign: 'right', padding: '0.5rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}
-                bodyStyle={{ textAlign: 'right', padding: '0.5rem 0.75rem', fontWeight: 700, fontSize: '0.75rem', color: '#1e293b' }}
-                body={(item: any) => `${formatAmount(parseFloat(item.total || 0), 2)} ${t('currency')}`}
-              />
-            </DataTable>
-          </div>
-
-          {/* Order Totals */}
-          <div className="flex flex-column gap-1" style={{ padding: '0.75rem', borderTop: '1px solid #e2e8f0', background: '#fff' }}>
-            <div className="flex justify-content-between align-items-center">
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>{t('subtotal')}</span>
-              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>
-                {formatAmount((order.items || []).reduce((sum: number, item: any) => sum + parseFloat(item.total || 0), 0), 2)} {t('currency')}
+        {/* Items list */}
+        <div style={{ background: '#fff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          {/* section header */}
+          <div style={{ padding: '0.625rem 1rem', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Hash style={{ width: '0.875rem', height: '0.875rem', color: '#235ae4' }} />
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {t('orderItems')}
               </span>
             </div>
-            {parseFloat(order.discount || 0) > 0 && (
-              <div className="flex justify-content-between align-items-center">
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>{t('discount')}</span>
-                <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#dc2626' }}>
-                  -{formatAmount(parseFloat(order.discount || 0), 2)} {t('currency')}
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+              {items.length} {items.length === 1 ? t('piece') || 'article' : t('pieces') || 'articles'}
+            </span>
+          </div>
+
+          {items.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+              <Package style={{ width: '2.5rem', height: '2.5rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
+              <p style={{ margin: 0, fontSize: '0.875rem' }}>{t('noItems') || 'Aucun article'}</p>
+            </div>
+          ) : (
+            <div>
+              {items.map((item: any, idx: number) => {
+                const qty = parseFloat(item.quantity || 0);
+                const unitPrice = parseFloat(item.unitPrice || 0);
+                const disc = parseFloat(item.discount || 0);
+                const lineTotal = parseFloat(item.total || 0);
+                const name = item.description || item.product?.name || `#${item.productId}`;
+
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: '0.875rem 1rem',
+                      borderBottom: idx < items.length - 1 ? '1px solid #f1f5f9' : 'none',
+                      display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    }}
+                  >
+                    {/* qty badge */}
+                    <div style={{
+                      minWidth: '2.25rem', height: '2.25rem',
+                      background: '#fef3c7', borderRadius: '0.5rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#b45309' }}>
+                        {Number.isInteger(qty) ? qty : qty.toFixed(1)}
+                      </span>
+                    </div>
+
+                    {/* name + price detail */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {name}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>
+                        {formatAmount(unitPrice, 2)} × {Number.isInteger(qty) ? qty : qty.toFixed(2)}
+                        {disc > 0 && (
+                          <span style={{ color: '#dc2626', marginLeft: '0.375rem' }}>
+                            − {formatAmount(disc, 2)} {t('currency')}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* line total */}
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a' }}>
+                        {formatAmount(lineTotal, 2)}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 500 }}>{t('currency')}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Totals footer */}
+          <div style={{ borderTop: '2px solid #e2e8f0', background: '#f8fafc', padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>{t('subtotal')}</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
+                {formatAmount(subtotal, 2)} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
+              </span>
+            </div>
+            {globalDiscount > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8125rem', color: '#dc2626', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <Tag style={{ width: '0.75rem', height: '0.75rem' }} />
+                  {t('discount')}
+                </span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#dc2626' }}>
+                  − {formatAmount(globalDiscount, 2)} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
                 </span>
               </div>
             )}
-            <div className="flex justify-content-between align-items-center" style={{ paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('grandTotal')}</span>
-              <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#235ae4' }}>
-                {formatAmount(parseFloat(order.total || 0), 2)} <span style={{ fontSize: '0.875rem' }}>{t('currency')}</span>
+            {/* Grand total highlighted row */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              background: 'linear-gradient(135deg, #1d4ed8, #235ae4)',
+              borderRadius: '0.625rem',
+              padding: '0.75rem 1rem',
+              marginTop: '0.25rem',
+            }}>
+              <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#fff' }}>{t('grandTotal')}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
+                {formatAmount(grandTotal, 2)} <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('currency')}</span>
               </span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Footer ───────────────────────────────────────────── */}
+      <div style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '0.875rem 1rem' }}>
+        <Button
+          label={t('close')}
+          onClick={onClose}
+          style={{ width: '100%', height: '2.75rem', fontWeight: 600, background: '#f1f5f9', border: 'none', color: '#334155', borderRadius: '0.625rem' }}
+        />
       </div>
     </Dialog>
   );

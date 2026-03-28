@@ -11,6 +11,7 @@ import configurations from './configurations';
 import purchases from './purchases';
 import drive from './drive';
 import users from './users';
+import company from './company';
 
 export default {
   ...common,
@@ -26,4 +27,5 @@ export default {
   ...purchases,
   ...drive,
   ...users,
+  ...company,
 };

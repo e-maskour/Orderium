@@ -144,34 +144,34 @@ export default function Orders() {
 
   const changeStatusMutation = useMutation({
     mutationFn: ({ orderId, status }: { orderId: number; status: string }) => ordersService.changeStatus(orderId, status),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess('Statut mis à jour'); },
-    onError: (error: Error) => { toastError(`Erreur: ${error.message}`); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess(t('statusUpdated')); },
+    onError: (error: Error) => { toastError(`${t('error')}: ${error.message}`); },
   });
 
   const ORDER_STATUS_WORKFLOW: Record<string, { value: string; label: string; bg: string; color: string; border: string }[]> = {
     confirmed: [
-      { value: 'picked_up', label: 'Récupéré', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
-      { value: 'delivered', label: 'Livrée', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
-      { value: 'cancelled', label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+      { value: 'picked_up', label: t('pickedUp'), bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
+      { value: 'delivered', label: t('delivered'), bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+      { value: 'cancelled', label: t('cancelled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
     ],
     picked_up: [
-      { value: 'delivered', label: 'Livrée', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
-      { value: 'cancelled', label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+      { value: 'delivered', label: t('delivered'), bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+      { value: 'cancelled', label: t('cancelled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
     ],
     delivered: [
-      { value: 'cancelled', label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+      { value: 'cancelled', label: t('cancelled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
     ],
     cancelled: [],
   };
 
   const getOrderStatusBadge = (status: string | null | undefined) => {
     const map: Record<string, { label: string; bg: string; color: string; border: string }> = {
-      pending: { label: t('pending'), bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
-      in_progress: { label: t('inProgress'), bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },
       confirmed: { label: t('confirmed'), bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
       picked_up: { label: t('pickedUp'), bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
       delivered: { label: t('delivered'), bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
-      cancelled: { label: t('canceled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+      cancelled: { label: t('cancelled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+      pending: { label: t('pending'), bg: '#f8fafc', color: '#334155', border: '#e2e8f0' },
+      in_progress: { label: t('inProgress'), bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
       canceled: { label: t('canceled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
     };
     return map[status || ''] || { label: status || '—', bg: '#f1f5f9', color: '#334155', border: '#e2e8f0' };
@@ -336,7 +336,7 @@ export default function Orders() {
           visible={filtersExpanded}
           onHide={() => setFiltersExpanded(false)}
           position="right"
-          style={{ width: '35rem' }}
+          style={{ width: '35rem', maxWidth: '100vw' }}
           showCloseIcon={false}
           blockScroll
           pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
@@ -507,14 +507,14 @@ export default function Orders() {
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <CheckCircle style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
-                Statut commande
+                {t('orderStatus')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {[
-                  { value: 'confirmed', label: 'Confirmé', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
-                  { value: 'picked_up', label: 'Récupéré', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
-                  { value: 'delivered', label: 'Livrée', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
-                  { value: 'cancelled', label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+                  { value: 'confirmed', label: t('confirmed'), bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+                  { value: 'picked_up', label: t('pickedUp'), bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
+                  { value: 'delivered', label: t('delivered'), bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+                  { value: 'cancelled', label: t('cancelled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
                 ].map((opt) => {
                   const isSelected = orderStatusFilter.includes(opt.value);
                   return (
@@ -598,11 +598,11 @@ export default function Orders() {
               <h3 style={{ marginTop: '1.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{t('noOrdersFound')}</h3>
               <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#64748b', maxWidth: '24rem', textAlign: 'center' }}>
                 {(appliedFilters.search || appliedFilters.orderNumber || appliedFilters.deliveryStatus?.length > 0 || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end)
-                  ? "Aucune commande ne correspond à vos critères de recherche. Essayez de modifier les filtres."
-                  : "Aucune commande pour le moment. Les nouvelles commandes apparaîtront ici."}
+                  ? t('noOrdersMatchFilter')
+                  : t('noOrdersYet')}
               </p>
               {(appliedFilters.search || appliedFilters.orderNumber || appliedFilters.deliveryStatus?.length > 0 || appliedFilters.fromClient !== 'all' || appliedFilters.dateRange.start || appliedFilters.dateRange.end) && (
-                <Button label="Réinitialiser les filtres" onClick={resetFilters} style={{ marginTop: '1.5rem' }} />
+                <Button label={t('resetFilters')} onClick={resetFilters} style={{ marginTop: '1.5rem' }} />
               )}
             </div>
           </div>
@@ -633,7 +633,7 @@ export default function Orders() {
               rowsPerPageOptions={[10, 25, 50, 100]}
               removableSort
               loading={ordersLoading}
-              emptyMessage="Aucune commande trouvée."
+              emptyMessage={t('noOrdersFound')}
               paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
               currentPageReportTemplate="{first}-{last} of {totalRecords}"
             >

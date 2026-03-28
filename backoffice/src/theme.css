@@ -1567,4 +1567,152 @@ body {
     gap: 0.625rem;
     align-items: center;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE GRID UTILITIES
+   .responsive-grid-4 : 4 → 2 → 1
+   .responsive-grid-3 : 3 → 2 → 1
+   .responsive-grid-2 : 2 → 1
+   ═══════════════════════════════════════════════════════════ */
+.responsive-grid-4 {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.responsive-grid-3 {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.responsive-grid-2 {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 899px) {
+    .responsive-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .responsive-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 599px) {
+
+    .responsive-grid-4,
+    .responsive-grid-3,
+    .responsive-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Auto-fill card grid — replaces any repeat(N,1fr) inline grids */
+.responsive-card-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+}
+
+/* ── Form grid inside dialogs/panels — collapses to 1-col on small screens ── */
+.form-grid-2 {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 479px) {
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── 3-column stat strip — used in document edit payment summary ── */
+.stat-strip-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 599px) {
+    .stat-strip-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-strip-3>* {
+        border-right: none !important;
+        border-bottom: 1px solid #dbeafe;
+    }
+
+    .stat-strip-3>*:last-child {
+        border-bottom: none;
+    }
+}
+
+/* ── 3-column margin analysis mini-strip ── */
+.margin-grid-3 {
+    display: grid;
+    gap: 0.625rem;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 479px) {
+    .margin-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SEARCH INPUT — prevent fixed-width overflow on small screens
+   ═══════════════════════════════════════════════════════════ */
+.search-input-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 24rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DIALOG — global mobile safety net
+   Individual Modal.tsx already passes breakpoints; this catches
+   any raw <Dialog> usage that omits breakpoints.
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 599px) {
+    .p-dialog {
+        max-width: 95vw !important;
+        margin: 0.5rem !important;
+    }
+
+    .p-dialog .p-dialog-header {
+        padding: 1rem !important;
+    }
+
+    .p-dialog .p-dialog-content {
+        padding: 1rem !important;
+    }
+
+    .p-dialog .p-dialog-footer {
+        padding: 0.75rem 1rem !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOUCH TARGETS — minimum 44 × 44 px on mobile
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+
+    .p-button.p-button-icon-only,
+    .p-button.p-button-text.p-button-rounded {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    /* DataTable row action buttons */
+    .p-datatable .p-button.p-button-icon-only {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+}
 }

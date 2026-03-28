@@ -7,6 +7,7 @@ export default {
   orderNumber: 'رقم الطلب',
   total: 'المجموع',
   noOrdersFound: 'لا توجد طلبات',
+  ordersSelected: 'طلبات محددة',
 
   // Order Status
   unassigned: 'غير معين',
@@ -15,6 +16,7 @@ export default {
   inProgress: 'جارٍ التنفيذ',
   delivered: 'تم التسليم',
   canceled: 'ملغي',
+  cancelled: 'ملغي',
   pending: 'قيد الانتظار',
   assigned: 'معين',
   confirmed: 'مؤكد',
@@ -87,4 +89,12 @@ export default {
   // Additional
   previewReceipt: 'إيصال',
   previewDeliveryNote: 'وصل',
+
+  // Status change
+  statusUpdated: 'تم تحديث الحالة',
+  orderStatus: 'حالة الطلب',
+
+  // Empty states
+  noOrdersMatchFilter: 'لا توجد طلبات تطابق معايير البحث. حاول تعديل الفلاتر.',
+  noOrdersYet: 'لا توجد طلبات في الوقت الحالي. ستظهر الطلبات الجديدة هنا.',
 };

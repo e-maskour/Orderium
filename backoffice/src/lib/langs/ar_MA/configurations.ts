@@ -201,8 +201,11 @@ export default {
   'movementTypes.productionIn': 'إنتاج (دخول)',
   'movementTypes.productionOut': 'إنتاج (خروج)',
   'movementTypes.scrap': 'التخريد',
+  'movementTypes.returnIn': 'مرتجع من العميل',
+  'movementTypes.returnOut': 'مرتجع للمورد',
   searchByReferenceOrProduct: 'البحث بالمرجع أو المنتج...',
   stockMovementsSubtitle: 'تتبع وإدارة جميع حركات المخزون',
+  noMovementsFound: 'لا توجد حركات',
   validateMovement: 'تأكيد',
   cancelMovement: 'إلغاء',
   movementDetails: 'تفاصيل',
@@ -263,4 +266,12 @@ export default {
   decrementOnOrderVente: 'تخفيض المخزون عند التحقق من وصل تسليم',
   inventorySettingsSaved: 'تم حفظ إعدادات المخزون',
   noWarehouseConfigured: 'لم يتم تكوين مستودع افتراضي. لن يتم إنشاء حركات المخزون.',
+
+  // Module tab labels
+  tabOverview: 'نظرة عامة',
+  tabTeam: 'الفريق',
+  tabInventoryConfig: 'المخزون',
+  tabCompany: 'الشركة',
+  units: 'الوحدات',
+  roles: 'الأدوار',
 };

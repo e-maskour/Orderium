@@ -206,8 +206,11 @@ export default {
   'movementTypes.productionIn': 'Production (entrée)',
   'movementTypes.productionOut': 'Production (sortie)',
   'movementTypes.scrap': 'Mise au rebut',
+  'movementTypes.returnIn': 'Retour client',
+  'movementTypes.returnOut': 'Retour fournisseur',
   searchByReferenceOrProduct: 'Rechercher par référence ou produit...',
   stockMovementsSubtitle: 'Suivre et gérer tous les mouvements de stock',
+  noMovementsFound: 'Aucun mouvement trouvé',
   validateMovement: 'Valider',
   cancelMovement: 'Annuler',
   movementDetails: 'Détails',
@@ -270,4 +273,12 @@ export default {
   decrementOnOrderVente: 'Décrémenter le stock lors de la validation d\'un bon de livraison',
   inventorySettingsSaved: 'Paramètres d\'inventaire sauvegardés',
   noWarehouseConfigured: 'Aucun entrepôt par défaut configuré. Les mouvements de stock ne seront pas créés.',
+
+  // Module tab labels
+  tabOverview: 'Aperçu',
+  tabTeam: 'Équipe',
+  tabInventoryConfig: 'Inventaire',
+  tabCompany: 'Société',
+  units: 'Unités',
+  roles: 'Rôles',
 };

@@ -25,6 +25,7 @@ export default {
 
   // Common Fields
   name: 'Nom',
+  code: 'Code',
   email: 'Email',
   phone: 'Téléphone',
   phoneNumber: 'Numéro de téléphone',
@@ -322,6 +323,7 @@ export default {
   failedToDeleteWarehouse: 'Échec de suppression de l\'entrepôt',
   deleteWarehouseTitle: 'Supprimer l\'entrepôt',
   confirmDeleteWarehouse: 'Êtes-vous sûr de vouloir supprimer cet entrepôt ? Cette action est irréversible.',
+  noWarehousesFound: 'Aucun entrepôt trouvé',
   errorCreatingDocument: 'Erreur lors de la création du document',
   errorUpdatingDocument: 'Erreur lors de la mise à jour du document',
   loadingQuote: 'Chargement du devis...',
@@ -339,7 +341,68 @@ export default {
   moreOptions: 'Plus d\'options',
   settings: 'Paramètres',
   // General
-  noItems: 'Aucun \u00e9l\u00e9ment',
-  completed: 'Termin\u00e9',
+  noItems: 'Aucun élément',
+  completed: 'Terminé',
   type: 'Type',
+
+  // Search & empty states
+  noResults: 'Aucun résultat trouvé',
+  resetFilters: 'Réinitialiser les filtres',
+
+  // Common fields (extended)
+  reference: 'Référence',
+  city: 'Ville',
+  zipCode: 'Code postal',
+  select: 'Sélectionner',
+  qty: 'Qté',
+  totalWithTax: 'Total TTC',
+
+  // Common actions (extended)
+  import: 'Importer',
+  export: 'Exporter',
+  print: 'Imprimer',
+  share: 'Partager',
+  copy: 'Copier',
+  copied: 'Copié !',
+  copyUrl: 'Copier l\'URL',
+  new: 'Nouveau',
+
+  // Upload
+  imageLoadError: 'Erreur de chargement de l\'image',
+  clickToChange: 'Cliquer pour changer l\'image',
+  clickOrDrag: 'Cliquer ou glisser-déposer',
+
+  // Share
+  shareLinkGenerated: 'Lien de partage généré',
+  shareLinkError: 'Erreur lors de la génération du lien',
+  linkRevoked: 'Lien révoqué avec succès',
+  linkRevocationError: 'Erreur lors de la révocation du lien',
+
+  // Paginator
+  paginatorReport: '{first}-{last} sur {totalRecords}',
+
+  // Navigation (mobile + sidebar)
+  navMore: 'Plus',
+  navExpand: 'Développer',
+  navCollapse: 'Réduire',
+  navTeam: 'Équipe',
+  navPos: 'Point de vente',
+
+  // Stock / inventory
+  negativeStock: 'Stock négatif',
+  zeroStock: 'Stock nul',
+  positiveStock: 'Stock positif',
+  inStock: 'En stock',
+
+  // Documents
+  shareLink: 'Lien de partage',
+  preview: 'Aperçu',
+  linkExpires: 'Ce lien expire le',
+  shareQuote: 'Partager le devis',
+  shareInvoice: 'Partager la facture',
+  shareBL: 'Partager le bon',
+  sendWhatsApp: 'Envoyer par WhatsApp',
+  revokeLink: 'Révoquer le lien',
+  backToPOS: 'Retour au point de vente',
+  orderSummary: 'Récapitulatif de commande',
 };
