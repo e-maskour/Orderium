@@ -7,18 +7,19 @@ export default {
   orderNumber: 'رقم الطلب',
   total: 'المجموع',
   noOrdersFound: 'لا توجد طلبات',
-  
+
   // Order Status
   unassigned: 'غير معين',
   toDelivery: 'للتوصيل',
   inDelivery: 'قيد التوصيل',
+  inProgress: 'جارٍ التنفيذ',
   delivered: 'تم التسليم',
   canceled: 'ملغي',
   pending: 'قيد الانتظار',
   assigned: 'معين',
   confirmed: 'مؤكد',
   pickedUp: 'تم الاستلام',
-  
+
   // Order Details
   orderDetails: 'تفاصيل الطلب',
   orderItems: 'المنتجات المطلوبة',
@@ -29,7 +30,7 @@ export default {
   grandTotal: 'المجموع الإجمالي',
   orderInformation: 'معلومات الطلب',
   customerInformation: 'معلومات العميل',
-  
+
   // Order Actions
   assignToDelivery: 'مندوب',
   downloadReceipt: 'تحميل الإيصال',
@@ -43,7 +44,7 @@ export default {
   unassignOrder: 'إلغاء تعيين الطلب',
   unassignOrderConfirm: 'هل أنت متأكد من إلغاء تعيين هذا الطلب؟',
   cancelDelivery: 'إلغاء التوصيل',
-  
+
   // Order Notifications
   orderAssigned: 'تم تعيين الطلب بنجاح',
   orderUnassigned: 'تم إلغاء تعيين الطلب بنجاح',
@@ -57,7 +58,7 @@ export default {
   failedToDelete: 'فشل الحذف',
   deliveryCanceled: 'تم إلغاء التوصيل بنجاح',
   failedToCancelDelivery: 'فشل إلغاء التوصيل',
-  
+
   // Search & Filter
   searchPlaceholder: 'ابحث برقم الطلب، اسم العميل، الهاتف، أو مندوب التوصيل...',
   filterByStatus: 'تصفية حسب الحالة',
@@ -70,19 +71,19 @@ export default {
   client: 'العميل',
   reset: 'إعادة تعيين',
   apply: 'تطبيق',
-  
+
   // KPIs
   totalOrders: 'إجمالي الطلبات',
   ordersToday: 'طلبات اليوم',
   totalRevenue: 'إجمالي الإيرادات',
   revenueToday: 'الإيرادات اليوم',
-  
+
   // Order Actions - Bulk
   deleteOrders: 'حذف الطلبات',
   ordersDeleted: 'تم حذف الطلبات بنجاح',
   confirmDeleteOrders: 'هل أنت متأكد من رغبتك في حذف الطلب(ات)؟ لا يمكن التراجع عن هذا الإجراء.',
   selectOneOrder: 'يرجى تحديد طلب واحد فقط للمعاينة',
-  
+
   // Additional
   previewReceipt: 'إيصال',
   previewDeliveryNote: 'وصل',

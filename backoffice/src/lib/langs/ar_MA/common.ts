@@ -7,6 +7,9 @@ export default {
   dashboard: 'لوحة التحكم',
   welcomeBack: 'مرحباً بعودتك',
   welcome: 'مرحباً',
+  goodMorning: 'صباح الخير',
+  goodAfternoon: 'مساء الخير',
+  goodEvening: 'مساء النور',
 
   // Common Actions
   create: 'إنشاء',
@@ -114,6 +117,7 @@ export default {
   month: 'شهر',
   year: 'سنة',
   custom: 'مخصص',
+  vsPeriod: 'مقارنةً بالفترة السابقة',
 
   // Language Toggle
   switchToFrench: 'Changer en français',

@@ -52,4 +52,8 @@ export default {
     cannotRemoveOwnSuperAdmin: 'Vous ne pouvez pas enlever votre propre rôle super admin',
     superAdminBadge: 'Super Admin',
     moduleName: 'Module',
+    approved: 'Approuvé',
+    rejected: 'Rejeté',
+    userApproved: 'Utilisateur approuvé avec succès',
+    userRejected: 'Utilisateur rejeté avec succès',
 };

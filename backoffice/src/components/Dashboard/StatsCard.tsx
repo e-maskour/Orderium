@@ -1,4 +1,5 @@
 import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface StatsCardProps {
     title: string;
@@ -25,6 +26,7 @@ const colorConfig: Record<string, { gradient: string; shadow: string; light: str
 export const StatsCard: React.FC<StatsCardProps> = ({
     title, value, icon: Icon, trend, color = 'blue', subtitle, onClick, progress,
 }) => {
+    const { t } = useLanguage();
     const c = colorConfig[color] || colorConfig.blue;
     const valStr = String(value);
     const valueFontSize = valStr.length > 12 ? '1.125rem' : valStr.length > 8 ? '1.5rem' : '1.875rem';
@@ -102,7 +104,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
                         {trend.isPositive ? '+' : ''}{trend.value}%
                     </span>
                     <span style={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 500 }}>
-                        vs last period
+                        {t('vsPeriod')}
                     </span>
                 </div>
             )}

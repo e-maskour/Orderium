@@ -166,10 +166,13 @@ export default function Orders() {
 
   const getOrderStatusBadge = (status: string | null | undefined) => {
     const map: Record<string, { label: string; bg: string; color: string; border: string }> = {
-      confirmed: { label: 'Confirmé', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
-      picked_up: { label: 'Récupéré', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
-      delivered: { label: 'Livrée', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
-      cancelled: { label: 'Annulé', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+      pending: { label: t('pending'), bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
+      in_progress: { label: t('inProgress'), bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },
+      confirmed: { label: t('confirmed'), bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+      picked_up: { label: t('pickedUp'), bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
+      delivered: { label: t('delivered'), bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+      cancelled: { label: t('canceled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+      canceled: { label: t('canceled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
     };
     return map[status || ''] || { label: status || '—', bg: '#f1f5f9', color: '#334155', border: '#e2e8f0' };
   };

@@ -18,6 +18,8 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
     switch (status) {
       case 'to_delivery': return { background: '#fffbeb', color: '#b45309', border: '1px solid #fcd34d' };
       case 'in_delivery': return { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #93c5fd' };
+      case 'in_progress': return { background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' };
+      case 'pending': return { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' };
       case 'delivered': return { background: '#ecfdf5', color: '#047857', border: '1px solid #6ee7b7' };
       case 'canceled': return { background: '#fef2f2', color: '#b91c1c', border: '1px solid #fca5a5' };
       default: return { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' };
@@ -28,6 +30,8 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
     switch (status) {
       case 'to_delivery': return '📋';
       case 'in_delivery': return '🚚';
+      case 'in_progress': return '🔄';
+      case 'pending': return '⏳';
       case 'delivered': return '✅';
       case 'canceled': return '❌';
       default: return '⏳';
@@ -38,9 +42,11 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
     switch (status) {
       case 'to_delivery': return t('toDelivery');
       case 'in_delivery': return t('inDelivery');
+      case 'in_progress': return t('inProgress');
+      case 'pending': return t('pending');
       case 'delivered': return t('delivered');
       case 'canceled': return t('canceled');
-      default: return status || t('unassigned');
+      default: return t('unassigned');
     }
   };
 

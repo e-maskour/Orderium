@@ -7,6 +7,9 @@ export default {
   dashboard: 'Tableau de bord',
   welcomeBack: 'Bon retour',
   welcome: 'Bienvenue',
+  goodMorning: 'Bonjour',
+  goodAfternoon: 'Bon après-midi',
+  goodEvening: 'Bonsoir',
 
   // Common Actions
   create: 'Créer',
@@ -114,6 +117,7 @@ export default {
   month: 'mois',
   year: 'année',
   custom: 'personnalisé',
+  vsPeriod: 'vs période précédente',
 
   // Language Toggle
   switchToFrench: 'Changer en français',

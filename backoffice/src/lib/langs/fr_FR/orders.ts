@@ -7,18 +7,19 @@ export default {
   orderNumber: 'N° commande',
   total: 'Total',
   noOrdersFound: 'Aucune commande trouvée',
-  
+
   // Order Status
   unassigned: 'Non assigné',
   toDelivery: 'À livrer',
   inDelivery: 'En livraison',
+  inProgress: 'En cours',
   delivered: 'Livré',
   canceled: 'Annulé',
   pending: 'En attente',
   assigned: 'Assigné',
   confirmed: 'Confirmé',
   pickedUp: 'Récupéré',
-  
+
   // Order Details
   orderDetails: 'Détails de la commande',
   orderItems: 'Produits commandés',
@@ -29,7 +30,7 @@ export default {
   grandTotal: 'Total général',
   orderInformation: 'Informations sur la commande',
   customerInformation: 'Informations client',
-  
+
   // Order Actions
   assignToDelivery: 'Livreur',
   downloadReceipt: 'Télécharger le reçu',
@@ -43,7 +44,7 @@ export default {
   unassignOrder: 'Désassigner la commande',
   unassignOrderConfirm: 'Êtes-vous sûr de vouloir désassigner cette commande ?',
   cancelDelivery: 'Annuler livraison',
-  
+
   // Order Notifications
   orderAssigned: 'Commande assignée avec succès',
   orderUnassigned: 'Commande désassignée avec succès',
@@ -57,7 +58,7 @@ export default {
   failedToDelete: 'Échec de la suppression',
   deliveryCanceled: 'Livraison annulée avec succès',
   failedToCancelDelivery: 'Échec de l\'annulation de la livraison',
-  
+
   // Search & Filter
   searchPlaceholder: 'Rechercher par n° commande, client, téléphone ou livreur...',
   filterByStatus: 'Filtrer par statut',
@@ -70,19 +71,19 @@ export default {
   client: 'Client',
   reset: 'Réinitialiser',
   apply: 'Appliquer',
-  
+
   // KPIs
   totalOrders: 'Total des commandes',
   ordersToday: 'Commandes aujourd\'hui',
   totalRevenue: 'Revenu total',
   revenueToday: 'Revenu aujourd\'hui',
-  
+
   // Order Actions - Bulk
   deleteOrders: 'Supprimer les commandes',
   ordersDeleted: 'Commandes supprimées avec succès',
   confirmDeleteOrders: 'Êtes-vous sûr de vouloir supprimer les commandes ? Cette action ne peut pas être annulée.',
   selectOneOrder: 'Veuillez sélectionner une seule commande pour l\'aperçu',
-  
+
   // Additional
   previewReceipt: 'Reçu',
   previewDeliveryNote: 'Bon',
