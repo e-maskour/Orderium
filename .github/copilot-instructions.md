@@ -1,7 +1,7 @@
-# Orderium — GitHub Copilot Instructions
+# Morocom — GitHub Copilot Instructions
 
 ## Project Overview
-**Orderium** is a multi-tenant SaaS ERP system. The monorepo contains:
+**Morocom** is a multi-tenant SaaS ERP system. The monorepo contains:
 | App | Stack | Purpose |
 |-----|-------|---------|
 | `api/` | NestJS + TypeORM + PostgreSQL | Central REST API (multi-tenant) |

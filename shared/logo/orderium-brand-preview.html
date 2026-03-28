@@ -1,559 +1,864 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Morocom — Logo Suite</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: #0f0f13;
-    color: #ffffff;
-    min-height: 100vh;
-    padding: 60px 40px;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morocom — Logo Suite</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  /* ── Header ── */
-  .header { text-align: center; margin-bottom: 80px; }
-  .header .flag { font-size: 36px; margin-bottom: 16px; }
-  .header h1 {
-    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px;
-    background: linear-gradient(135deg, #ffffff 0%, #8a8a9a 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .header h1 span { -webkit-text-fill-color: #e8323a; }
-  .header p { font-size: 16px; color: #6b6b7b; font-weight: 400; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #0f0f13;
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 60px 40px;
+    }
 
-  /* ── Section title ── */
-  .section-title {
-    text-align: center; font-size: 28px; font-weight: 700;
-    margin-bottom: 48px; color: #ffffff;
-  }
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 80px;
+    }
 
-  /* ── Main logo cards ── */
-  .grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 40px; max-width: 1100px; margin: 0 auto 100px;
-  }
-  .card {
-    background: #18181f; border-radius: 24px; padding: 48px 32px;
-    text-align: center; border: 1px solid #2a2a35;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-  .card svg { width: 120px; height: 120px; margin-bottom: 28px; }
-  .card h3 { font-size: 22px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.5px; }
-  .card h3 .moro { color: #ffffff; }
-  .card h3 .com  { color: #e8323a; }
-  .card .portal-name {
-    font-size: 13px; font-weight: 500; text-transform: uppercase;
-    letter-spacing: 2px; margin-bottom: 20px;
-  }
-  .card .hex {
-    display: inline-block; padding: 6px 16px; border-radius: 100px;
-    font-size: 13px; font-weight: 600; font-family: 'SF Mono', 'Fira Code', monospace;
-  }
-  .card-blue  .portal-name { color: #5b8af0; }
-  .card-blue  .hex { background: rgba(35,90,228,0.15); color: #5b8af0; }
-  .card-green .portal-name { color: #34d399; }
-  .card-green .hex { background: rgba(5,150,105,0.15); color: #34d399; }
-  .card-red   .portal-name { color: #f5a623; }
-  .card-red   .hex { background: rgba(223,120,23,0.15); color: #f5a623; }
+    .header .flag {
+      font-size: 36px;
+      margin-bottom: 16px;
+    }
 
-  /* ── Usage on brand backgrounds ── */
-  .usage-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 32px; max-width: 1100px; margin: 0 auto 100px;
-  }
-  .usage-card { background: #18181f; border-radius: 20px; overflow: hidden; border: 1px solid #2a2a35; }
-  .usage-card .preview {
-    height: 180px; display: flex; align-items: center;
-    justify-content: center; gap: 16px;
-  }
-  .usage-card .preview svg { width: 56px; height: 56px; }
-  .usage-card .preview .brand-text {
-    font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
-  }
-  .brand-text .moro { color: #ffffff; }
-  .brand-text .com  { color: rgba(255,255,255,0.7); }
-  .brand-text-dark .moro { color: #1a1a2e; }
-  .brand-text-dark .com  { color: #e8323a; }
-  .preview-blue   { background: linear-gradient(135deg, #1a3fba 0%, #2b6af0 100%); }
-  .preview-green  { background: linear-gradient(135deg, #047857 0%, #06b57a 100%); }
-  .preview-orange    { background: linear-gradient(135deg, #C06210 0%, #DF7817 100%); }
-  .preview-dark   { background: #0f0f13; }
-  .preview-light  { background: #f0f0f5; }
-  .preview-white  { background: #ffffff; }
-  .usage-card .label { padding: 16px 20px; font-size: 13px; font-weight: 500; color: #8a8a9a; }
+    .header h1 {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #8a8a9a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-  /* ── Sidebar mockups ── */
-  .sidebar-section { max-width: 1100px; margin: 0 auto 100px; }
-  .sidebar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-  .sidebar-mock { background: #18181f; border-radius: 20px; overflow: hidden; border: 1px solid #2a2a35; }
-  .sidebar-inner {
-    padding: 24px; display: flex; align-items: center; gap: 14px;
-  }
-  .sidebar-inner svg { width: 40px; height: 40px; flex-shrink: 0; }
-  .sb-text h4 { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; }
-  .sb-text h4 .moro { color: #fff; }
-  .sb-text h4 .com  { color: #e8323a; }
-  .sb-text span { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
-  .sb-dark        { background: #0c1023; }
-  .sb-dark        .sb-text span { color: #5b8af0; }
-  .sb-green-dark  { background: #0a1f18; }
-  .sb-green-dark  .sb-text span { color: #34d399; }
-  .sb-red-dark    { background: #1a0e00; }
-  .sb-red-dark    .sb-text span { color: #f5a623; }
-  .sidebar-mock .label { padding: 14px 20px; font-size: 13px; font-weight: 500; color: #8a8a9a; border-top: 1px solid #2a2a35; }
+    .header h1 span {
+      -webkit-text-fill-color: #e8323a;
+    }
 
-  /* ── Standalone SVG exports ── */
-  .export-section { max-width: 1100px; margin: 0 auto 60px; }
-  .export-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-  .export-card {
-    background: #18181f; border-radius: 16px; padding: 32px 20px;
-    text-align: center; border: 1px solid #2a2a35;
-  }
-  .export-card svg { width: 80px; height: 80px; margin-bottom: 16px; }
-  .export-card .exp-label { font-size: 12px; font-weight: 500; color: #6b6b7b; text-transform: uppercase; letter-spacing: 1.5px; }
+    .header p {
+      font-size: 16px;
+      color: #6b6b7b;
+      font-weight: 400;
+    }
 
-  @media (max-width: 768px) {
-    body { padding: 40px 20px; }
-    .header h1 { font-size: 28px; }
-    .grid, .usage-grid, .sidebar-grid, .export-grid { grid-template-columns: 1fr; gap: 24px; }
-  }
-</style>
+    /* ── Section title ── */
+    .section-title {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 48px;
+      color: #ffffff;
+    }
+
+    /* ── Main logo cards ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      max-width: 1100px;
+      margin: 0 auto 100px;
+    }
+
+    .card {
+      background: #18181f;
+      border-radius: 24px;
+      padding: 48px 32px;
+      text-align: center;
+      border: 1px solid #2a2a35;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .card svg {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 28px;
+    }
+
+    .card h3 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .card h3 .moro {
+      color: #ffffff;
+    }
+
+    .card h3 .com {
+      color: #e8323a;
+    }
+
+    .card .portal-name {
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .card .hex {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .card-blue .portal-name {
+      color: #5b8af0;
+    }
+
+    .card-blue .hex {
+      background: rgba(35, 90, 228, 0.15);
+      color: #5b8af0;
+    }
+
+    .card-green .portal-name {
+      color: #34d399;
+    }
+
+    .card-green .hex {
+      background: rgba(5, 150, 105, 0.15);
+      color: #34d399;
+    }
+
+    .card-red .portal-name {
+      color: #f5a623;
+    }
+
+    .card-red .hex {
+      background: rgba(223, 120, 23, 0.15);
+      color: #f5a623;
+    }
+
+    /* ── Usage on brand backgrounds ── */
+    .usage-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      max-width: 1100px;
+      margin: 0 auto 100px;
+    }
+
+    .usage-card {
+      background: #18181f;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #2a2a35;
+    }
+
+    .usage-card .preview {
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .usage-card .preview svg {
+      width: 56px;
+      height: 56px;
+    }
+
+    .usage-card .preview .brand-text {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-text .moro {
+      color: #ffffff;
+    }
+
+    .brand-text .com {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .brand-text-dark .moro {
+      color: #1a1a2e;
+    }
+
+    .brand-text-dark .com {
+      color: #e8323a;
+    }
+
+    .preview-blue {
+      background: linear-gradient(135deg, #1a3fba 0%, #2b6af0 100%);
+    }
+
+    .preview-green {
+      background: linear-gradient(135deg, #047857 0%, #06b57a 100%);
+    }
+
+    .preview-orange {
+      background: linear-gradient(135deg, #C06210 0%, #DF7817 100%);
+    }
+
+    .preview-dark {
+      background: #0f0f13;
+    }
+
+    .preview-light {
+      background: #f0f0f5;
+    }
+
+    .preview-white {
+      background: #ffffff;
+    }
+
+    .usage-card .label {
+      padding: 16px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #8a8a9a;
+    }
+
+    /* ── Sidebar mockups ── */
+    .sidebar-section {
+      max-width: 1100px;
+      margin: 0 auto 100px;
+    }
+
+    .sidebar-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    .sidebar-mock {
+      background: #18181f;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #2a2a35;
+    }
+
+    .sidebar-inner {
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .sidebar-inner svg {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+    }
+
+    .sb-text h4 {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .sb-text h4 .moro {
+      color: #fff;
+    }
+
+    .sb-text h4 .com {
+      color: #e8323a;
+    }
+
+    .sb-text span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 500;
+    }
+
+    .sb-dark {
+      background: #0c1023;
+    }
+
+    .sb-dark .sb-text span {
+      color: #5b8af0;
+    }
+
+    .sb-green-dark {
+      background: #0a1f18;
+    }
+
+    .sb-green-dark .sb-text span {
+      color: #34d399;
+    }
+
+    .sb-red-dark {
+      background: #1a0e00;
+    }
+
+    .sb-red-dark .sb-text span {
+      color: #f5a623;
+    }
+
+    .sidebar-mock .label {
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #8a8a9a;
+      border-top: 1px solid #2a2a35;
+    }
+
+    /* ── Standalone SVG exports ── */
+    .export-section {
+      max-width: 1100px;
+      margin: 0 auto 60px;
+    }
+
+    .export-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .export-card {
+      background: #18181f;
+      border-radius: 16px;
+      padding: 32px 20px;
+      text-align: center;
+      border: 1px solid #2a2a35;
+    }
+
+    .export-card svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 16px;
+    }
+
+    .export-card .exp-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #6b6b7b;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 40px 20px;
+      }
+
+      .header h1 {
+        font-size: 28px;
+      }
+
+      .grid,
+      .usage-grid,
+      .sidebar-grid,
+      .export-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ══════════════════════════════
+  <!-- ══════════════════════════════
      HEADER
 ══════════════════════════════ -->
-<div class="header">
-  <div class="flag">🇲🇦</div>
-  <h1><span>Moro</span>com — Logo Suite</h1>
-  <p>Professional brand identity across all three portals · Moroccan Commerce Platform</p>
-</div>
+  <div class="header">
+    <div class="flag">🇲🇦</div>
+    <h1><span>Moro</span>com — Logo Suite</h1>
+    <p>Professional brand identity across all three portals · Moroccan Commerce Platform</p>
+  </div>
 
 
-<!-- ══════════════════════════════
+  <!-- ══════════════════════════════
      MAIN LOGO CARDS
 ══════════════════════════════ -->
-<div class="grid">
+  <div class="grid">
 
-  <!-- BLUE — Backoffice -->
-  <div class="card card-blue">
-    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bgA" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#2b6af0"/>
-          <stop offset="100%" style="stop-color:#1a3fba"/>
-        </linearGradient>
-        <linearGradient id="mA" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#ffffff"/>
-          <stop offset="100%" style="stop-color:#cddaff"/>
-        </linearGradient>
-      </defs>
-      <!-- Background -->
-      <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgA)"/>
-      <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-      <!-- Bold M -->
-      <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150"
-            fill="none" stroke="url(#mA)" stroke-width="16"
-            stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- Moroccan 5-pointed star -->
-      <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-      <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
-               fill="#ffffff" opacity="0.96"/>
-    </svg>
-    <h3><span class="moro">Moro</span><span class="com">com</span></h3>
-    <p class="portal-name">Backoffice</p>
-    <span class="hex">#235AE4</span>
+    <!-- BLUE — Backoffice -->
+    <div class="card card-blue">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bgA" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#2b6af0" />
+            <stop offset="100%" style="stop-color:#1a3fba" />
+          </linearGradient>
+          <linearGradient id="mA" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff" />
+            <stop offset="100%" style="stop-color:#cddaff" />
+          </linearGradient>
+        </defs>
+        <!-- Background -->
+        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgA)" />
+        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)"
+          stroke-width="1.5" />
+        <!-- Bold M -->
+        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mA)" stroke-width="16"
+          stroke-linecap="round" stroke-linejoin="round" />
+        <!-- Moroccan 5-pointed star -->
+        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+          fill="#ffffff" opacity="0.96" />
+      </svg>
+      <h3><span class="moro">Moro</span><span class="com">com</span></h3>
+      <p class="portal-name">Backoffice</p>
+      <span class="hex">#235AE4</span>
+    </div>
+
+    <!-- GREEN — Client Portal -->
+    <div class="card card-green">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bgB" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#06b57a" />
+            <stop offset="100%" style="stop-color:#047857" />
+          </linearGradient>
+          <linearGradient id="mB" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff" />
+            <stop offset="100%" style="stop-color:#c6f0db" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgB)" />
+        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)"
+          stroke-width="1.5" />
+        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mB)" stroke-width="16"
+          stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+          fill="#ffffff" opacity="0.96" />
+      </svg>
+      <h3><span class="moro">Moro</span><span class="com">com</span></h3>
+      <p class="portal-name">Client Portal</p>
+      <span class="hex">#059669</span>
+    </div>
+
+    <!-- RED — Delivery Portal (replaced orange with Moroccan red) -->
+    <div class="card card-red">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bgC" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#DF7817" />
+            <stop offset="100%" style="stop-color:#C06210" />
+          </linearGradient>
+          <linearGradient id="mC" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff" />
+            <stop offset="100%" style="stop-color:#ffd5d5" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgC)" />
+        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)"
+          stroke-width="1.5" />
+        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mC)" stroke-width="16"
+          stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+          fill="#ffffff" opacity="0.96" />
+      </svg>
+      <h3><span class="moro">Moro</span><span class="com">com</span></h3>
+      <p class="portal-name">Delivery Portal</p>
+      <span class="hex">#DF7817</span>
+    </div>
+
   </div>
 
-  <!-- GREEN — Client Portal -->
-  <div class="card card-green">
-    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bgB" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#06b57a"/>
-          <stop offset="100%" style="stop-color:#047857"/>
-        </linearGradient>
-        <linearGradient id="mB" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#ffffff"/>
-          <stop offset="100%" style="stop-color:#c6f0db"/>
-        </linearGradient>
-      </defs>
-      <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgB)"/>
-      <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-      <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150"
-            fill="none" stroke="url(#mB)" stroke-width="16"
-            stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-      <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
-               fill="#ffffff" opacity="0.96"/>
-    </svg>
-    <h3><span class="moro">Moro</span><span class="com">com</span></h3>
-    <p class="portal-name">Client Portal</p>
-    <span class="hex">#059669</span>
-  </div>
 
-  <!-- RED — Delivery Portal (replaced orange with Moroccan red) -->
-  <div class="card card-red">
-    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bgC" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#DF7817"/>
-          <stop offset="100%" style="stop-color:#C06210"/>
-        </linearGradient>
-        <linearGradient id="mC" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#ffffff"/>
-          <stop offset="100%" style="stop-color:#ffd5d5"/>
-        </linearGradient>
-      </defs>
-      <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgC)"/>
-      <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-      <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150"
-            fill="none" stroke="url(#mC)" stroke-width="16"
-            stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-      <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
-               fill="#ffffff" opacity="0.96"/>
-    </svg>
-    <h3><span class="moro">Moro</span><span class="com">com</span></h3>
-    <p class="portal-name">Delivery Portal</p>
-    <span class="hex">#DF7817</span>
-  </div>
-
-</div>
-
-
-<!-- ══════════════════════════════
+  <!-- ══════════════════════════════
      ON BRAND BACKGROUNDS
 ══════════════════════════════ -->
-<h2 class="section-title">On Brand Backgrounds</h2>
-<div class="usage-grid">
+  <h2 class="section-title">On Brand Backgrounds</h2>
+  <div class="usage-grid">
 
-  <div class="usage-card">
-    <div class="preview preview-blue">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgD" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#2b6af0"/><stop offset="100%" style="stop-color:#1a3fba"/>
-          </linearGradient>
-          <linearGradient id="mD" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#cddaff"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgD)"/>
-        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mD)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-      </svg>
-      <span class="brand-text"><span class="moro">Moro</span><span class="com">com</span></span>
+    <div class="usage-card">
+      <div class="preview preview-blue">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgD" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#2b6af0" />
+              <stop offset="100%" style="stop-color:#1a3fba" />
+            </linearGradient>
+            <linearGradient id="mD" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff" />
+              <stop offset="100%" style="stop-color:#cddaff" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgD)" />
+          <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.15)"
+            stroke-width="1.5" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mD)" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="#ffffff" opacity="0.96" />
+        </svg>
+        <span class="brand-text"><span class="moro">Moro</span><span class="com">com</span></span>
+      </div>
+      <div class="label">Backoffice — branded header</div>
     </div>
-    <div class="label">Backoffice — branded header</div>
+
+    <div class="usage-card">
+      <div class="preview preview-green">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgE" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#06b57a" />
+              <stop offset="100%" style="stop-color:#047857" />
+            </linearGradient>
+            <linearGradient id="mE" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff" />
+              <stop offset="100%" style="stop-color:#c6f0db" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgE)" />
+          <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.15)"
+            stroke-width="1.5" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mE)" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="#ffffff" opacity="0.96" />
+        </svg>
+        <span class="brand-text"><span class="moro">Moro</span><span class="com">com</span></span>
+      </div>
+      <div class="label">Client — branded header</div>
+    </div>
+
+    <div class="usage-card">
+      <div class="preview preview-orange">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgF" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#DF7817" />
+              <stop offset="100%" style="stop-color:#C06210" />
+            </linearGradient>
+            <linearGradient id="mF" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff" />
+              <stop offset="100%" style="stop-color:#ffd5d5" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgF)" />
+          <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.15)"
+            stroke-width="1.5" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mF)" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="#ffffff" opacity="0.96" />
+        </svg>
+        <span class="brand-text"><span class="moro">Moro</span><span class="com">com</span></span>
+      </div>
+      <div class="label">Delivery — branded header</div>
+    </div>
+
+    <!-- Dark background -->
+    <div class="usage-card">
+      <div class="preview preview-dark">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#2b6af0" />
+              <stop offset="100%" style="stop-color:#1a3fba" />
+            </linearGradient>
+            <linearGradient id="mG" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff" />
+              <stop offset="100%" style="stop-color:#cddaff" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgG)" />
+          <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)"
+            stroke-width="1.5" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mG)" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="#ffffff" opacity="0.96" />
+        </svg>
+        <span class="brand-text"><span class="moro">Moro</span><span class="com">com</span></span>
+      </div>
+      <div class="label">On dark background</div>
+    </div>
+
+    <!-- Light background -->
+    <div class="usage-card">
+      <div class="preview preview-light">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgH" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#2b6af0" />
+              <stop offset="100%" style="stop-color:#1a3fba" />
+            </linearGradient>
+            <linearGradient id="mH" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff" />
+              <stop offset="100%" style="stop-color:#cddaff" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgH)" />
+          <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)"
+            stroke-width="1.5" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mH)" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="#ffffff" opacity="0.96" />
+        </svg>
+        <span class="brand-text-dark" style="font-size:28px;font-weight:800;letter-spacing:-0.5px">
+          <span class="moro" style="color:#1a1a2e">Moro</span><span class="com" style="color:#dc2626">com</span>
+        </span>
+      </div>
+      <div class="label">On light background</div>
+    </div>
+
+    <!-- White background -->
+    <div class="usage-card">
+      <div class="preview preview-white">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgI" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#DF7817" />
+              <stop offset="100%" style="stop-color:#C06210" />
+            </linearGradient>
+            <linearGradient id="mI" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff" />
+              <stop offset="100%" style="stop-color:#ffd5d5" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgI)" />
+          <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)"
+            stroke-width="1.5" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mI)" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="#ffffff" opacity="0.96" />
+        </svg>
+        <span class="brand-text-dark" style="font-size:28px;font-weight:800;letter-spacing:-0.5px">
+          <span style="color:#1a1a2e">Moro</span><span style="color:#dc2626">com</span>
+        </span>
+      </div>
+      <div class="label">On white background</div>
+    </div>
+
   </div>
 
-  <div class="usage-card">
-    <div class="preview preview-green">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgE" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#06b57a"/><stop offset="100%" style="stop-color:#047857"/>
-          </linearGradient>
-          <linearGradient id="mE" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#c6f0db"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgE)"/>
-        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mE)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-      </svg>
-      <span class="brand-text"><span class="moro">Moro</span><span class="com">com</span></span>
-    </div>
-    <div class="label">Client — branded header</div>
-  </div>
 
-  <div class="usage-card">
-    <div class="preview preview-orange">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgF" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#DF7817"/><stop offset="100%" style="stop-color:#C06210"/>
-          </linearGradient>
-          <linearGradient id="mF" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#ffd5d5"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgF)"/>
-        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mF)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-      </svg>
-      <span class="brand-text"><span class="moro">Moro</span><span class="com">com</span></span>
-    </div>
-    <div class="label">Delivery — branded header</div>
-  </div>
-
-  <!-- Dark background -->
-  <div class="usage-card">
-    <div class="preview preview-dark">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#2b6af0"/><stop offset="100%" style="stop-color:#1a3fba"/>
-          </linearGradient>
-          <linearGradient id="mG" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#cddaff"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgG)"/>
-        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mG)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-      </svg>
-      <span class="brand-text"><span class="moro">Moro</span><span class="com">com</span></span>
-    </div>
-    <div class="label">On dark background</div>
-  </div>
-
-  <!-- Light background -->
-  <div class="usage-card">
-    <div class="preview preview-light">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgH" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#2b6af0"/><stop offset="100%" style="stop-color:#1a3fba"/>
-          </linearGradient>
-          <linearGradient id="mH" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#cddaff"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgH)"/>
-        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mH)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-      </svg>
-      <span class="brand-text-dark" style="font-size:28px;font-weight:800;letter-spacing:-0.5px">
-        <span class="moro" style="color:#1a1a2e">Moro</span><span class="com" style="color:#dc2626">com</span>
-      </span>
-    </div>
-    <div class="label">On light background</div>
-  </div>
-
-  <!-- White background -->
-  <div class="usage-card">
-    <div class="preview preview-white">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgI" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#DF7817"/><stop offset="100%" style="stop-color:#C06210"/>
-          </linearGradient>
-          <linearGradient id="mI" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#ffd5d5"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgI)"/>
-        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mI)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-      </svg>
-      <span class="brand-text-dark" style="font-size:28px;font-weight:800;letter-spacing:-0.5px">
-        <span style="color:#1a1a2e">Moro</span><span style="color:#dc2626">com</span>
-      </span>
-    </div>
-    <div class="label">On white background</div>
-  </div>
-
-</div>
-
-
-<!-- ══════════════════════════════
+  <!-- ══════════════════════════════
      SIDEBAR USAGE
 ══════════════════════════════ -->
-<h2 class="section-title">Sidebar Usage</h2>
-<div class="sidebar-section">
-  <div class="sidebar-grid">
+  <h2 class="section-title">Sidebar Usage</h2>
+  <div class="sidebar-section">
+    <div class="sidebar-grid">
 
-    <div class="sidebar-mock">
-      <div class="sidebar-inner sb-dark">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bgJ" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#2b6af0"/><stop offset="100%" style="stop-color:#1a3fba"/>
-            </linearGradient>
-            <linearGradient id="mJ" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#cddaff"/>
-            </linearGradient>
-          </defs>
-          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgJ)"/>
-          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mJ)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-        </svg>
-        <div class="sb-text">
-          <h4><span class="moro">Moro</span><span class="com">com</span></h4>
-          <span>Enterprise</span>
+      <div class="sidebar-mock">
+        <div class="sidebar-inner sb-dark">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bgJ" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#2b6af0" />
+                <stop offset="100%" style="stop-color:#1a3fba" />
+              </linearGradient>
+              <linearGradient id="mJ" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#ffffff" />
+                <stop offset="100%" style="stop-color:#cddaff" />
+              </linearGradient>
+            </defs>
+            <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgJ)" />
+            <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mJ)" stroke-width="16"
+              stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+            <polygon
+              points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+              fill="#ffffff" opacity="0.96" />
+          </svg>
+          <div class="sb-text">
+            <h4><span class="moro">Moro</span><span class="com">com</span></h4>
+            <span>Enterprise</span>
+          </div>
         </div>
+        <div class="label">Backoffice sidebar — dark navy</div>
       </div>
-      <div class="label">Backoffice sidebar — dark navy</div>
-    </div>
 
-    <div class="sidebar-mock">
-      <div class="sidebar-inner sb-green-dark">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bgK" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#06b57a"/><stop offset="100%" style="stop-color:#047857"/>
-            </linearGradient>
-            <linearGradient id="mK" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#c6f0db"/>
-            </linearGradient>
-          </defs>
-          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgK)"/>
-          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mK)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-        </svg>
-        <div class="sb-text">
-          <h4><span class="moro">Moro</span><span class="com">com</span></h4>
-          <span>Client</span>
+      <div class="sidebar-mock">
+        <div class="sidebar-inner sb-green-dark">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bgK" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#06b57a" />
+                <stop offset="100%" style="stop-color:#047857" />
+              </linearGradient>
+              <linearGradient id="mK" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#ffffff" />
+                <stop offset="100%" style="stop-color:#c6f0db" />
+              </linearGradient>
+            </defs>
+            <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgK)" />
+            <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mK)" stroke-width="16"
+              stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+            <polygon
+              points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+              fill="#ffffff" opacity="0.96" />
+          </svg>
+          <div class="sb-text">
+            <h4><span class="moro">Moro</span><span class="com">com</span></h4>
+            <span>Client</span>
+          </div>
         </div>
+        <div class="label">Client sidebar — dark emerald</div>
       </div>
-      <div class="label">Client sidebar — dark emerald</div>
-    </div>
 
-    <div class="sidebar-mock">
-      <div class="sidebar-inner sb-red-dark">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bgL" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#DF7817"/><stop offset="100%" style="stop-color:#C06210"/>
-            </linearGradient>
-            <linearGradient id="mL" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#ffffff"/><stop offset="100%" style="stop-color:#ffd5d5"/>
-            </linearGradient>
-          </defs>
-          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgL)"/>
-          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mL)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#ffffff" opacity="0.96"/>
-        </svg>
-        <div class="sb-text">
-          <h4><span class="moro">Moro</span><span class="com">com</span></h4>
-          <span>Delivery</span>
+      <div class="sidebar-mock">
+        <div class="sidebar-inner sb-red-dark">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bgL" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#DF7817" />
+                <stop offset="100%" style="stop-color:#C06210" />
+              </linearGradient>
+              <linearGradient id="mL" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#ffffff" />
+                <stop offset="100%" style="stop-color:#ffd5d5" />
+              </linearGradient>
+            </defs>
+            <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgL)" />
+            <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="url(#mL)" stroke-width="16"
+              stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+            <polygon
+              points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+              fill="#ffffff" opacity="0.96" />
+          </svg>
+          <div class="sb-text">
+            <h4><span class="moro">Moro</span><span class="com">com</span></h4>
+            <span>Delivery</span>
+          </div>
         </div>
+        <div class="label">Delivery sidebar — dark amber</div>
       </div>
-      <div class="label">Delivery sidebar — dark amber</div>
-    </div>
 
+    </div>
   </div>
-</div>
 
 
-<!-- ══════════════════════════════
+  <!-- ══════════════════════════════
      ICON-ONLY EXPORT SIZES
 ══════════════════════════════ -->
-<h2 class="section-title">Icon Sizes</h2>
-<div class="export-section">
-  <div class="export-grid">
+  <h2 class="section-title">Icon Sizes</h2>
+  <div class="export-section">
+    <div class="export-grid">
 
-    <!-- 80px blue -->
-    <div class="export-card">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgM" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#2b6af0"/><stop offset="100%" style="stop-color:#1a3fba"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgM)"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.95"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="white" opacity="0.96"/>
-      </svg>
-      <div class="exp-label">Backoffice · 80px</div>
+      <!-- 80px blue -->
+      <div class="export-card">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgM" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#2b6af0" />
+              <stop offset="100%" style="stop-color:#1a3fba" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgM)" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="white" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.95" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="white" opacity="0.96" />
+        </svg>
+        <div class="exp-label">Backoffice · 80px</div>
+      </div>
+
+      <!-- 80px green -->
+      <div class="export-card">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgN" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#06b57a" />
+              <stop offset="100%" style="stop-color:#047857" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgN)" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="white" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.95" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="white" opacity="0.96" />
+        </svg>
+        <div class="exp-label">Client · 80px</div>
+      </div>
+
+      <!-- 80px red -->
+      <div class="export-card">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgO" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#DF7817" />
+              <stop offset="100%" style="stop-color:#C06210" />
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgO)" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="white" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.95" />
+          <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="white" opacity="0.96" />
+        </svg>
+        <div class="exp-label">Delivery · 80px</div>
+      </div>
+
+      <!-- Flat dark -->
+      <div class="export-card" style="background:#0f0f13; border-color:#3a3a4a">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="180" height="180" rx="42" fill="#1e1e2e" />
+          <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.08)"
+            stroke-width="1.5" />
+          <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="white" stroke-width="16"
+            stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9" />
+          <circle cx="100" cy="55" r="15" fill="rgba(223,120,23,0.25)" />
+          <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7"
+            fill="#e8323a" opacity="1" />
+        </svg>
+        <div class="exp-label">Monochrome · Dark</div>
+      </div>
+
     </div>
-
-    <!-- 80px green -->
-    <div class="export-card">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgN" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#06b57a"/><stop offset="100%" style="stop-color:#047857"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgN)"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.95"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="white" opacity="0.96"/>
-      </svg>
-      <div class="exp-label">Client · 80px</div>
-    </div>
-
-    <!-- 80px red -->
-    <div class="export-card">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgO" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#DF7817"/><stop offset="100%" style="stop-color:#C06210"/>
-          </linearGradient>
-        </defs>
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="url(#bgO)"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.95"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(255,255,255,0.13)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="white" opacity="0.96"/>
-      </svg>
-      <div class="exp-label">Delivery · 80px</div>
-    </div>
-
-    <!-- Flat dark -->
-    <div class="export-card" style="background:#0f0f13; border-color:#3a3a4a">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <rect x="10" y="10" width="180" height="180" rx="42" fill="#1e1e2e"/>
-        <rect x="14" y="14" width="172" height="172" rx="39" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
-        <path d="M 67,150 L 67,88 L 100,118 L 133,88 L 133,150" fill="none" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
-        <circle cx="100" cy="55" r="15" fill="rgba(223,120,23,0.25)"/>
-        <polygon points="100,42 103.1,50.7 112.4,51 105,56.6 107.6,65.5 100,60.3 92.4,65.5 95,56.6 87.6,51 96.9,50.7" fill="#e8323a" opacity="1"/>
-      </svg>
-      <div class="exp-label">Monochrome · Dark</div>
-    </div>
-
   </div>
-</div>
 
-<!-- ══════════════════════════════
+  <!-- ══════════════════════════════
      WORDMARK REFERENCE
 ══════════════════════════════ -->
-<h2 class="section-title">Wordmark Reference</h2>
-<div style="max-width:1100px; margin: 0 auto 80px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; text-align:center;">
-  <div style="background:#18181f; border-radius:20px; padding:40px 24px; border:1px solid #2a2a35;">
-    <div style="font-size:48px; font-weight:800; letter-spacing:-1px; margin-bottom:12px;">
-      <span style="color:#fff">Moro</span><span style="color:#e8323a">com</span>
+  <h2 class="section-title">Wordmark Reference</h2>
+  <div
+    style="max-width:1100px; margin: 0 auto 80px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; text-align:center;">
+    <div style="background:#18181f; border-radius:20px; padding:40px 24px; border:1px solid #2a2a35;">
+      <div style="font-size:48px; font-weight:800; letter-spacing:-1px; margin-bottom:12px;">
+        <span style="color:#fff">Moro</span><span style="color:#e8323a">com</span>
+      </div>
+      <div style="font-size:12px; color:#6b6b7b; text-transform:uppercase; letter-spacing:2px;">On dark</div>
     </div>
-    <div style="font-size:12px; color:#6b6b7b; text-transform:uppercase; letter-spacing:2px;">On dark</div>
-  </div>
-  <div style="background:#f0f0f5; border-radius:20px; padding:40px 24px; border:1px solid #ddd;">
-    <div style="font-size:48px; font-weight:800; letter-spacing:-1px; margin-bottom:12px;">
-      <span style="color:#1a1a2e">Moro</span><span style="color:#dc2626">com</span>
+    <div style="background:#f0f0f5; border-radius:20px; padding:40px 24px; border:1px solid #ddd;">
+      <div style="font-size:48px; font-weight:800; letter-spacing:-1px; margin-bottom:12px;">
+        <span style="color:#1a1a2e">Moro</span><span style="color:#dc2626">com</span>
+      </div>
+      <div style="font-size:12px; color:#999; text-transform:uppercase; letter-spacing:2px;">On light</div>
     </div>
-    <div style="font-size:12px; color:#999; text-transform:uppercase; letter-spacing:2px;">On light</div>
-  </div>
-  <div style="background:#18181f; border-radius:20px; padding:40px 24px; border:1px solid #2a2a35;">
-    <div style="font-size:48px; font-weight:800; letter-spacing:-1px; margin-bottom:12px; color:#fff;">
-      MOROCOM
+    <div style="background:#18181f; border-radius:20px; padding:40px 24px; border:1px solid #2a2a35;">
+      <div style="font-size:48px; font-weight:800; letter-spacing:-1px; margin-bottom:12px; color:#fff;">
+        MOROCOM
+      </div>
+      <div style="font-size:12px; color:#6b6b7b; text-transform:uppercase; letter-spacing:2px;">All-caps variant</div>
     </div>
-    <div style="font-size:12px; color:#6b6b7b; text-transform:uppercase; letter-spacing:2px;">All-caps variant</div>
   </div>
-</div>
 
 </body>
+
 </html>

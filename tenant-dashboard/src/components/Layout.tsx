@@ -50,11 +50,11 @@ export function Layout({ onLogout }: Props) {
             {/* Brand */}
             <div className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-100 px-4 dark:border-slate-800/80">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/30">
-                    <span className="text-sm font-extrabold text-white tracking-tight">O</span>
+                    <span className="text-sm font-extrabold text-white tracking-tight">M</span>
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50 truncate leading-tight">
-                        Orderium
+                        Morocom
                     </p>
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                         Admin Portal
@@ -87,8 +87,8 @@ export function Layout({ onLogout }: Props) {
                     <span className="flex-1">Tenants</span>
                     {data && (
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isTenantsActive
-                                ? 'bg-white/25 text-white'
-                                : 'bg-slate-100 text-slate-600 dark:bg-slate-700/80 dark:text-slate-400'
+                            ? 'bg-white/25 text-white'
+                            : 'bg-slate-100 text-slate-600 dark:bg-slate-700/80 dark:text-slate-400'
                             }`}>
                             {data.total}
                         </span>
@@ -191,9 +191,9 @@ export function Layout({ onLogout }: Props) {
 
                     <div className="flex items-center gap-2">
                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm">
-                            <span className="text-[11px] font-extrabold text-white">O</span>
+                            <span className="text-[11px] font-extrabold text-white">M</span>
                         </div>
-                        <span className="text-sm font-extrabold text-slate-900 dark:text-slate-50">Orderium</span>
+                        <span className="text-sm font-extrabold text-slate-900 dark:text-slate-50">Morocom</span>
                     </div>
 
                     <button

@@ -245,7 +245,7 @@ export default function SharedDocumentPage() {
 
                 {/* Footer */}
                 <div style={{ textAlign: 'center', padding: '1.5rem 0', fontSize: '0.75rem', color: '#94a3b8' }}>
-                    Document partagé via Orderium
+                    Document partagé via Morocom
                 </div>
             </div>
         </div>

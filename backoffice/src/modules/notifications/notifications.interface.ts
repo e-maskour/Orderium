@@ -1,6 +1,6 @@
 /**
  * Notifications Module - TypeScript Interfaces
- * Professional notification system for Orderium backoffice
+ * Professional notification system for Morocom backoffice
  */
 
 export enum NotificationType {
@@ -35,7 +35,7 @@ export interface INotification {
   isRead: boolean;
   isArchived: boolean;
   dateCreated: string;
-  
+
   // Relational data (from data field)
   orderId?: number;
   orderNumber?: string;

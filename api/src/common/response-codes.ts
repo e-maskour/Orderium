@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  ORDERIUM — Unified API Response Code Registry
+ *  MOROCOM — Unified API Response Code Registry
  * ═══════════════════════════════════════════════════════════════
  *
  *  Code format:  PREFIX + HTTP_STATUS + "_" + SEQUENCE

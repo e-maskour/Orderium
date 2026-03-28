@@ -32,8 +32,8 @@ function KpiCard({ label, value, sub, icon, iconBg, loading, trend, linkTo }: Kp
                 </div>
                 {trend && (
                     <div className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold ${trend.value >= 0
-                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                            : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}>
                         <TrendingUp className={`h-3 w-3 ${trend.value < 0 ? 'rotate-180' : ''}`} />
                         {trend.label}
@@ -324,8 +324,8 @@ export function Dashboard() {
                                         Platform Health
                                     </p>
                                     <span className={`text-sm font-extrabold tabular-nums ${healthScore >= 70 ? 'text-emerald-600 dark:text-emerald-400'
-                                            : healthScore >= 40 ? 'text-amber-500'
-                                                : 'text-red-500'
+                                        : healthScore >= 40 ? 'text-amber-500'
+                                            : 'text-red-500'
                                         }`}>
                                         {healthScore}%
                                     </span>
@@ -333,8 +333,8 @@ export function Dashboard() {
                                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                                     <div
                                         className={`h-full rounded-full transition-all duration-1000 ease-out ${healthScore >= 70 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500'
-                                                : healthScore >= 40 ? 'bg-gradient-to-r from-amber-400 to-amber-500'
-                                                    : 'bg-gradient-to-r from-red-400 to-red-500'
+                                            : healthScore >= 40 ? 'bg-gradient-to-r from-amber-400 to-amber-500'
+                                                : 'bg-gradient-to-r from-red-400 to-red-500'
                                             }`}
                                         style={{ width: `${healthScore}%` }}
                                     />

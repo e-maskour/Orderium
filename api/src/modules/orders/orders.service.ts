@@ -796,6 +796,22 @@ export class OrdersService {
       ).length,
     };
 
+    const orderStatusCounts = {
+      all: allOrdersForCounts.length,
+      confirmed: allOrdersForCounts.filter(
+        (o) => o.status === OrderStatus.CONFIRMED,
+      ).length,
+      picked_up: allOrdersForCounts.filter(
+        (o) => o.status === OrderStatus.PICKED_UP,
+      ).length,
+      delivered: allOrdersForCounts.filter(
+        (o) => o.status === OrderStatus.DELIVERED,
+      ).length,
+      cancelled: allOrdersForCounts.filter(
+        (o) => o.status === OrderStatus.CANCELLED,
+      ).length,
+    };
+
     return {
       orders: orders.map((order) => ({
         id: order.id,

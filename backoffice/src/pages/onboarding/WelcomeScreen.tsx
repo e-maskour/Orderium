@@ -32,7 +32,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                         margin: '0 0 0.5rem',
                     }}
                 >
-                    Welcome to Orderium
+                    Welcome to Morocom
                 </h1>
                 <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
                     Let's set up your business in just 2 steps

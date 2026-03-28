@@ -1,6 +1,6 @@
 /* ============================================================
    @orderium/ui - Global Styles
-   PrimeReact + PrimeIcons + PrimeFlex + Custom Orderium theme
+   PrimeReact + PrimeIcons + PrimeFlex + Custom Morocom theme
    ============================================================ */
 
 /* PrimeReact Lara Light Amber Theme */
@@ -13,7 +13,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Arabic:wght@300;400;500;600;700&display=swap&subset=arabic,latin');
 
 /* ============================================================
-   Orderium Custom Theme Overrides
+   Morocom Custom Theme Overrides
    ============================================================ */
 
 :root {
@@ -213,7 +213,7 @@ header .p-inputtext {
    PrimeReact Component Overrides
    ============================================================ */
 
-/* Primary color override to match Orderium Terracotta theme */
+/* Primary color override to match Morocom Terracotta theme */
 .p-button {
     border-radius: var(--orderium-radius-md);
 }

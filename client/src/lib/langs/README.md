@@ -1,6 +1,6 @@
 # Internationalization (i18n) Structure
 
-This folder contains all translation files for the Orderium client application, organized by locale and module for better maintainability.
+This folder contains all translation files for the Morocom client application, organized by locale and module for better maintainability.
 
 ## Structure
 

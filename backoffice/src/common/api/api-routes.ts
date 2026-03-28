@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  ORDERIUM — Centralized API Route Configuration
+ *  MOROCOM — Centralized API Route Configuration
  * ═══════════════════════════════════════════════════════════════
  *
  *  Single source of truth for all API endpoints.

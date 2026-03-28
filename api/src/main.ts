@@ -64,7 +64,7 @@ async function bootstrap() {
     ) => {
       if (req.path === '/') {
         res.json({
-          message: 'Orderium API',
+          message: 'Morocom API',
           version: '1.0.0',
           docs: '/api/docs',
           health: '/api/health',

@@ -12,7 +12,7 @@ export default {
   createAccount: 'Créer le compte',
 
   // Messages
-  appAccess: 'Bienvenue chez Orderium !',
+  appAccess: 'Bienvenue chez Morocom !',
   enterPhoneToStart: 'Entrez votre numéro pour explorer votre catalogue.',
   createPasswordForNewAccount: 'Remplissez votre nom et créez un mot de passe',
   enterPasswordToContinue: 'Entrez votre mot de passe pour continuer',

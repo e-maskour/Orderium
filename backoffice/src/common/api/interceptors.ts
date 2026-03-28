@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  ORDERIUM — Default Request & Response Interceptors
+ *  MOROCOM — Default Request & Response Interceptors
  * ═══════════════════════════════════════════════════════════════
  *
  *  Pre-configured interceptors for:

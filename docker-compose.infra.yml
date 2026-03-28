@@ -1,5 +1,5 @@
 # ==================================
-# Orderium — Shared Infrastructure
+# Morocom — Shared Infrastructure
 # ==================================
 # Manages the three stateful services shared across all deployments:
 #   • PostgreSQL  – tenant databases (orderium_master + orderium_{slug})

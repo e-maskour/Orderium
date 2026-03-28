@@ -3,7 +3,7 @@ export type Language = 'ar' | 'fr';
 export const translations = {
   ar: {
     // App
-    appName: 'Orderium',
+    appName: 'Morocom',
     tagline: 'بوابة التوصيل',
 
     // Navigation
@@ -196,7 +196,7 @@ export const translations = {
   },
   fr: {
     // App
-    appName: 'Orderium',
+    appName: 'Morocom',
     tagline: 'Portail de Livraison',
 
     // Navigation

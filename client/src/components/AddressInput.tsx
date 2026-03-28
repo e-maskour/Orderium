@@ -72,7 +72,7 @@ export function AddressInput({
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=${language}&addressdetails=1`,
             {
               headers: {
-                'User-Agent': 'Orderium POS',
+                'User-Agent': 'Morocom POS',
               },
             }
           );

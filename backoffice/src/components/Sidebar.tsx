@@ -247,7 +247,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     }}>
                         <div>
-                            <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>Orderium ERP</div>
+                            <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>Morocom ERP</div>
                             <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)' }}>v2.0.0 PRO</div>
                         </div>
                         <Badge value="PRO" severity="info" style={{ fontSize: '0.5rem' }} />

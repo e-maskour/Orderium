@@ -1,4 +1,4 @@
-# Orderium API — Copilot Instructions
+# Morocom API — Copilot Instructions
 
 > NestJS + TypeORM + PostgreSQL multi-tenant REST API
 > Inherits all rules from root `.github/copilot-instructions.md`

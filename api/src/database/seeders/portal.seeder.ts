@@ -25,7 +25,7 @@ export async function seedPortal(dataSource: DataSource) {
     phoneNumber: '0666666666',
     name: 'admin',
     password: hashedPassword,
-    email: 'admin@orderium.com',
+    email: 'admin@morocom.com',
     isAdmin: true,
     isCustomer: false,
     isActive: true,

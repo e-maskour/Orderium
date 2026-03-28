@@ -1,4 +1,4 @@
-/* Firebase Cloud Messaging Service Worker for Orderium Client Portal */
+/* Firebase Cloud Messaging Service Worker for Morocom Client Portal */
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
@@ -31,7 +31,7 @@ if (messaging) {
   messaging.onBackgroundMessage((payload) => {
     console.log('[FCM SW] Received background message:', payload);
 
-    const notificationTitle = payload.notification?.title || 'Orderium';
+    const notificationTitle = payload.notification?.title || 'Morocom';
     const notificationOptions = {
       body: payload.notification?.body || '',
       icon: '/icons/notification-icon.png',

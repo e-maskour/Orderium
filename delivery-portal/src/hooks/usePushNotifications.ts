@@ -138,7 +138,7 @@ export function usePushNotifications(
       // Show native notification for foreground messages
       if (payload.notification) {
         const { title, body } = payload.notification;
-        new Notification(title || 'Orderium Livraison', {
+        new Notification(title || 'Morocom Livraison', {
           body,
           icon: '/icons/delivery-icon.png',
           data: payload.data,

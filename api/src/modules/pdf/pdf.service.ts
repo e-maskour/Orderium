@@ -609,7 +609,7 @@ export class PDFService {
       tax: this.formatCurrency(data.tax),
       total: this.formatCurrency(data.total),
       hideVAT,
-      companyName: company.companyName || 'ORDERIUM',
+      companyName: company.companyName || 'MOROCOM',
       companyLines,
     });
   }

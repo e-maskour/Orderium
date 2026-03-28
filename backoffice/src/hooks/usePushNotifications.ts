@@ -120,8 +120,8 @@ export function usePushNotifications(
         const notificationTitle = title || 'Morocom Backoffice';
         const notificationOptions = {
           body: body || '',
-          icon: payload.notification?.icon || '/Eo_circle_deep-orange_white_letter-o.svg',
-          badge: '/Eo_circle_deep-orange_white_letter-o.svg',
+          icon: payload.notification?.icon || '/logo-backoffice.svg',
+          badge: '/logo-backoffice.svg',
           data: payload.data,
           requireInteraction: true,
           tag: 'orderium-notification',

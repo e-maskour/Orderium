@@ -1,5 +1,5 @@
 # ==================================
-# Production Docker Compose for Orderium Platform
+# Production Docker Compose for Morocom Platform
 # ==================================
 # Deployed via Dokploy + Traefik on Contabo VPS
 # Infrastructure (postgres, redis, minio) runs separately

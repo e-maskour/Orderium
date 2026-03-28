@@ -558,7 +558,7 @@ export default function POS() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <img
                   src={orderiumLogo}
-                  alt="Orderium"
+                  alt="Morocom"
                   style={{ width: '2.25rem', height: '2.25rem' }}
                 />
                 <div>
@@ -566,7 +566,7 @@ export default function POS() {
                     {t('pointOfSale')}
                   </h1>
                   <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.45)', margin: 0, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    Orderium POS
+                    Morocom POS
                   </p>
                 </div>
               </div>
