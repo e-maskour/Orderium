@@ -133,7 +133,7 @@ export default function Settings() {
                         marginTop: '0.5rem',
                     }}
                 >
-                    Orderium · v1.0
+                    Morocom · v1.0
                 </p>
             </div>
 

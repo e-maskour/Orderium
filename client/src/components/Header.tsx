@@ -45,7 +45,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
         >
           <img
             src={orderiumLogo}
-            alt="Orderium"
+            alt="Morocom"
             style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
           />
           <span

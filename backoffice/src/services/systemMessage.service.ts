@@ -10,7 +10,7 @@ export class SystemMessageBuilder {
    * Build system message with app context for Ollama
    */
   static build(context: SafeAppContext, availableTools: ToolDefinition[]): string {
-    return `You are a helpful assistant for the Orderium business management system. You help users manage their inventory, orders, products, invoices, and customers.
+    return `You are a helpful assistant for the Morocom business management system. You help users manage their inventory, orders, products, invoices, and customers.
 
 CURRENT CONTEXT:
 - User: ${context.user.displayName} (${context.user.role})

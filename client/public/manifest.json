@@ -1,7 +1,7 @@
 {
-  "name": "Orderium Client Portal",
-  "short_name": "Orderium",
-  "description": "Orderium client portal",
+  "name": "Morocom Client Portal",
+  "short_name": "Morocom",
+  "description": "Morocom client portal",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

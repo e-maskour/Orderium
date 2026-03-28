@@ -44,7 +44,7 @@ export function Login({ onLogin }: Props) {
                         <ShieldCheck className="h-7 w-7 text-white" />
                     </div>
                     <h1 className="text-4xl font-bold leading-tight">
-                        Orderium<br />Admin Portal
+                        Morocom<br />Admin Portal
                     </h1>
                     <p className="mt-4 text-lg text-indigo-200">
                         Manage all tenants, subscriptions, and infrastructure from one place.
@@ -75,7 +75,7 @@ export function Login({ onLogin }: Props) {
                             <ShieldCheck className="h-6 w-6 text-white" />
                         </div>
                         <h1 className="mt-3 text-xl font-bold text-slate-900 dark:text-slate-100">
-                            Orderium Admin
+                            Morocom Admin
                         </h1>
                     </div>
 
@@ -131,7 +131,7 @@ export function Login({ onLogin }: Props) {
                     </form>
 
                     <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
-                        Orderium Tenant Management &mdash; Admin only
+                        Morocom Tenant Management &mdash; Admin only
                     </p>
                 </div>
             </div>

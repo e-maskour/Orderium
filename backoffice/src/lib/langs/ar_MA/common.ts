@@ -1,6 +1,6 @@
 export default {
   // App & Branding
-  appName: 'Orderium',
+  appName: 'Morocom',
   adminBackoffice: 'لوحة التحكم الإدارية',
 
   // Navigation

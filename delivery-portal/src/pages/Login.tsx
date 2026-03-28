@@ -74,7 +74,7 @@ export default function Login() {
           {/* Logo icon */}
           <img
             src={orderiumLogo}
-            alt="Orderium"
+            alt="Morocom"
             style={{
               width: '90px',
               height: '90px',
@@ -86,7 +86,7 @@ export default function Login() {
           />
 
           <h1 style={{ color: '#fff', fontSize: '2.4rem', fontWeight: 900, margin: '0', letterSpacing: '-0.5px', lineHeight: 1.05, position: 'relative', zIndex: 1 }}>
-            Orderium
+            Morocom
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.78)', margin: '0.5rem 0 0', fontSize: '1.05rem', fontWeight: 500, position: 'relative', zIndex: 1 }}>
             {t('deliveryPortal')}

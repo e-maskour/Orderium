@@ -240,7 +240,7 @@ export default function Profile() {
         </div>
 
         <p style={{ textAlign: 'center', color: '#d1d5db', fontSize: '0.8rem', fontWeight: 500, marginTop: '0.75rem', paddingBottom: '0.5rem' }}>
-          Orderium · v1.0
+          Morocom · v1.0
         </p>
       </div>
 

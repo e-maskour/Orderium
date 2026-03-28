@@ -151,12 +151,12 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <img
                         src={orderiumLogo}
-                        alt="Orderium"
+                        alt="Morocom"
                         style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
                     />
                     {!isCollapsed && (
                         <div>
-                            <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Orderium</div>
+                            <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Morocom</div>
                             <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'rgba(255,255,255,0.32)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Enterprise</div>
                         </div>
                     )}
