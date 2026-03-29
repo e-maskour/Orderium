@@ -234,7 +234,7 @@ export default function UnitsOfMeasure() {
                         rowGroupHeaderTemplate={(row: IUnitOfMeasure) => <span>{row.category}</span>}
                         emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noUomFound') || 'No units of measure found'}</div>}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                        currentPageReportTemplate={t('pageReportTemplate')}
                     >
                         <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                         <Column field="name" header={t('name')} sortable body={(row: IUnitOfMeasure) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />

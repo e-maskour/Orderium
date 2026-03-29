@@ -11,6 +11,7 @@ import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { Portal } from '../portal/entities/portal.entity';
 import { Invoice } from '../invoices/entities/invoice.entity';
+import { Order, OrderStatus } from '../orders/entities/order.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
@@ -30,6 +31,10 @@ export class PartnersService {
 
   private get invoiceRepository(): Repository<Invoice> {
     return this.tenantConnService.getRepository(Invoice);
+  }
+
+  private get orderRepository(): Repository<Order> {
+    return this.tenantConnService.getRepository(Order);
   }
 
   async upsert(
@@ -472,6 +477,18 @@ export class PartnersService {
     const averagePerInvoice =
       totalInvoices > 0 ? totalRevenue / totalInvoices : 0;
 
+    // Fetch BL (orders) for this customer in the specified year
+    const orders = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.customerId = :customerId', { customerId })
+      .andWhere('EXTRACT(YEAR FROM order.date) = :year', { year })
+      .andWhere('order.status != :cancelled', { cancelled: OrderStatus.CANCELLED })
+      .getMany();
+
+    const totalOrders = orders.length;
+    const totalOrderRevenue = orders.reduce((sum, ord) => sum + Number(ord.total), 0);
+    const unpaidOrderAmount = orders.reduce((sum, ord) => sum + Number(ord.remainingAmount), 0);
+
     return {
       year,
       chartData: monthlyData,
@@ -481,6 +498,9 @@ export class PartnersService {
         paidAmount,
         unpaidAmount,
         averagePerInvoice,
+        totalOrders,
+        totalOrderRevenue,
+        unpaidOrderAmount,
       },
     };
   }
@@ -538,6 +558,18 @@ export class PartnersService {
     const averagePerInvoice =
       totalInvoices > 0 ? totalExpenses / totalInvoices : 0;
 
+    // Fetch BL (orders) for this supplier in the specified year
+    const orders = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.supplierId = :supplierId', { supplierId })
+      .andWhere('EXTRACT(YEAR FROM order.date) = :year', { year })
+      .andWhere('order.status != :cancelled', { cancelled: OrderStatus.CANCELLED })
+      .getMany();
+
+    const totalOrders = orders.length;
+    const totalOrderExpenses = orders.reduce((sum, ord) => sum + Number(ord.total), 0);
+    const unpaidOrderAmount = orders.reduce((sum, ord) => sum + Number(ord.remainingAmount), 0);
+
     return {
       year,
       chartData: monthlyData,
@@ -547,6 +579,9 @@ export class PartnersService {
         paidAmount,
         unpaidAmount,
         averagePerInvoice,
+        totalOrders,
+        totalOrderExpenses,
+        unpaidOrderAmount,
       },
     };
   }

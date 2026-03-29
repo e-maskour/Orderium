@@ -368,7 +368,7 @@ export default function UsersPage() {
                     first={(page - 1) * perPage}
                     onPage={(e) => setPage(Math.floor((e.first ?? 0) / perPage) + 1)}
                     paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                    currentPageReportTemplate={t('pageReportTemplate')}
                     emptyMessage={t('noResults' as any) || 'No users found'}
                     dataKey="id"
                     stripedRows

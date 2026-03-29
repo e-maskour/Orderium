@@ -5,7 +5,9 @@ import {
     Activity, Shield, AlertTriangle, Calendar, Clock,
     CheckCircle, XCircle, RotateCcw, Archive, Trash2,
     ChevronDown, ChevronUp, Plus, Zap, Ban, PlayCircle,
-    Database, Users, ShoppingCart, HardDrive,
+    Database, Users, ShoppingCart, HardDrive, Globe,
+    Mail, Phone, MapPin, StickyNote, Server, Layers,
+    TrendingUp, Package,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
@@ -27,7 +29,6 @@ import {
     useRefundPayment,
 } from '../hooks/useTenants'
 import { StatusBadge } from '../components/StatusBadge'
-import { StatsCard } from '../components/StatsCard'
 import { CopyableUrl } from '../components/CopyableUrl'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { TenantForm } from '../components/TenantForm'
@@ -57,19 +58,23 @@ function formatCurrency(amount: number, currency = 'MAD') {
 function UsageMeter({ label, used, max, icon }: { label: string; used: number; max: number; icon?: React.ReactNode }) {
     const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0
     const color = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-indigo-500'
-    const textColor = pct >= 90 ? 'text-red-600' : pct >= 70 ? 'text-amber-600' : 'text-slate-500'
+    const trackColor = pct >= 90 ? 'bg-red-50 dark:bg-red-950/30' : pct >= 70 ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-indigo-50 dark:bg-indigo-950/30'
+    const labelColor = pct >= 90 ? 'text-red-600 dark:text-red-400' : pct >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'
     return (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                    {icon && <span className="text-slate-400">{icon}</span>}
-                    <span className="text-sm text-slate-600 dark:text-slate-400">{label}</span>
+                <div className="flex items-center gap-2">
+                    {icon && <span className={`${labelColor}`}>{icon}</span>}
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
                 </div>
-                <span className={`text-xs font-medium ${textColor} dark:opacity-80`}>{used.toLocaleString()} / {max.toLocaleString()}</span>
+                <div className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold ${labelColor}`}>{pct}%</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">{used.toLocaleString()} / {max.toLocaleString()}</span>
+                </div>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+            <div className={`h-2.5 w-full overflow-hidden rounded-full ${trackColor}`}>
                 <div
-                    className={`h-2 rounded-full transition-all duration-500 ${color}`}
+                    className={`h-2.5 rounded-full transition-all duration-700 ease-out ${color}`}
                     style={{ width: `${pct}%` }}
                 />
             </div>
@@ -78,14 +83,16 @@ function UsageMeter({ label, used, max, icon }: { label: string; used: number; m
 }
 
 function PaymentStatusBadge({ status }: { status: Payment['status'] }) {
-    const cfg: Record<Payment['status'], string> = {
-        pending: 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/30 dark:text-amber-400',
-        validated: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-900/30 dark:text-emerald-400',
-        rejected: 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-400',
-        refunded: 'bg-slate-100 text-slate-600 ring-slate-400/10 dark:bg-slate-800 dark:text-slate-400',
+    const cfg: Record<Payment['status'], { cls: string; dot: string }> = {
+        pending: { cls: 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/30 dark:text-amber-400', dot: 'bg-amber-400' },
+        validated: { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-900/30 dark:text-emerald-400', dot: 'bg-emerald-500' },
+        rejected: { cls: 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-400', dot: 'bg-red-500' },
+        refunded: { cls: 'bg-slate-100 text-slate-600 ring-slate-400/10 dark:bg-slate-800 dark:text-slate-400', dot: 'bg-slate-400' },
     }
+    const { cls, dot } = cfg[status]
     return (
-        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${cfg[status]}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${cls}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
             {status.charAt(0).toUpperCase() + status.slice(1)}
         </span>
     )
@@ -102,15 +109,27 @@ function InlineModal({
 }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
-                <div className="mb-4 flex items-center justify-between">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative w-full max-w-md animate-fade-in rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10">
+                <div className="mb-5 flex items-center justify-between">
                     <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-                    <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800">
+                    <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
                 {children}
+            </div>
+        </div>
+    )
+}
+
+function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
+    return (
+        <div className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0 dark:border-slate-800">
+            <span className="mt-0.5 shrink-0 text-slate-400">{icon}</span>
+            <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
+                <div className="mt-0.5 text-sm font-medium text-slate-900 dark:text-slate-100 break-words">{value}</div>
             </div>
         </div>
     )
@@ -218,18 +237,27 @@ export function TenantDetail() {
 
     if (isLoading) {
         return (
-            <div className="flex h-full items-center justify-center p-8">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+            <div className="flex h-64 items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                    <p className="text-sm text-slate-400">Loading tenant…</p>
+                </div>
             </div>
         )
     }
 
     if (error || !tenant) {
         return (
-            <div className="p-8">
-                <p className="text-sm text-red-500">Tenant not found or failed to load.</p>
-                <button onClick={() => navigate('/tenants')} className="mt-3 text-sm text-slate-600 underline">
-                    Back to tenants
+            <div className="flex h-64 flex-col items-center justify-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-900/20">
+                    <AlertTriangle className="h-8 w-8 text-red-400" />
+                </div>
+                <div className="text-center">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Tenant not found</p>
+                    <p className="mt-0.5 text-xs text-slate-400">This tenant may have been deleted or the ID is invalid.</p>
+                </div>
+                <button onClick={() => navigate('/tenants')} className="btn-secondary text-sm">
+                    <ArrowLeft className="h-4 w-4" /> Back to tenants
                 </button>
             </div>
         )
@@ -242,9 +270,9 @@ export function TenantDetail() {
     }
 
     const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
-        { key: 'overview', label: 'Overview', icon: <Shield className="h-4 w-4" /> },
+        { key: 'overview', label: 'Overview', icon: <Layers className="h-4 w-4" /> },
         { key: 'subscription', label: 'Subscription', icon: <CreditCard className="h-4 w-4" /> },
-        { key: 'payments', label: 'Payments', icon: <Calendar className="h-4 w-4" /> },
+        { key: 'payments', label: 'Payments', icon: <TrendingUp className="h-4 w-4" /> },
         { key: 'activity', label: 'Activity', icon: <Activity className="h-4 w-4" /> },
         { key: 'danger', label: 'Danger Zone', icon: <AlertTriangle className="h-4 w-4" /> },
     ]
@@ -253,631 +281,831 @@ export function TenantDetail() {
     const canActivate = ['disabled', 'suspended', 'expired'].includes(tenant.status)
     const canDisable = ['active', 'trial'].includes(tenant.status)
 
-    const PLAN_COLORS: Record<string, string> = {
-        starter: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-        growth: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-        pro: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-        enterprise: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+    const PLAN_META: Record<string, { gradient: string; badge: string; label: string }> = {
+        trial: { gradient: 'from-slate-400 to-slate-500', badge: 'bg-slate-100 text-slate-600 ring-slate-400/20 dark:bg-slate-800 dark:text-slate-300', label: 'Trial' },
+        basic: { gradient: 'from-indigo-400 to-indigo-600', badge: 'bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-900/40 dark:text-indigo-300', label: 'Basic' },
+        pro: { gradient: 'from-violet-500 to-purple-600', badge: 'bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-900/40 dark:text-violet-300', label: 'Pro' },
+        enterprise: { gradient: 'from-rose-500 to-pink-600', badge: 'bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-900/40 dark:text-rose-300', label: 'Enterprise' },
     }
-    const planColor = PLAN_COLORS[tenant.subscriptionPlan?.toLowerCase()] ?? 'bg-slate-100 text-slate-700'
+    const planMeta = PLAN_META[tenant.subscriptionPlan?.toLowerCase()] ?? PLAN_META.basic
+    const accentColor = tenant.primaryColor ?? '#6366f1'
 
     return (
-        <div className="animate-fade-in space-y-6 p-6 lg:p-8">
+        <div className="animate-fade-in">
 
-            {/* ── Page Header ── */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+            {/* ══════════ HERO HEADER ══════════ */}
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/40 dark:bg-slate-900/90 mb-6 mx-6 mt-6 lg:mx-8 lg:mt-8">
+                {/* Decorative backdrop */}
+                <div
+                    className="absolute inset-0 opacity-[0.04] dark:opacity-[0.07]"
+                    style={{
+                        background: `radial-gradient(ellipse at 20% 50%, ${accentColor} 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, ${accentColor} 0%, transparent 50%)`,
+                    }}
+                />
+                <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, ${accentColor}40, ${accentColor}, ${accentColor}40)` }} />
+
+                <div className="relative p-6 lg:p-8">
+                    {/* Back link */}
                     <button
                         onClick={() => navigate('/tenants')}
-                        className="mb-3 flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900 dark:hover:text-slate-100"
+                        className="mb-5 flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900 dark:hover:text-slate-100"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to tenants
                     </button>
-                    <div className="flex items-center gap-4">
-                        <div
-                            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold text-white shadow-lg"
-                            style={{ backgroundColor: tenant.primaryColor ?? '#6366f1' }}
-                        >
-                            {tenant.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{tenant.name}</h1>
-                            <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                                <code className="rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                                    {tenant.slug}
-                                </code>
-                                <StatusBadge status={tenant.status} trialDaysRemaining={daysLeft} />
-                                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${planColor}`}>
-                                    {tenant.subscriptionPlan}
-                                </span>
+
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                        {/* Left: identity */}
+                        <div className="flex items-center gap-5">
+                            <div
+                                className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl font-extrabold text-white shadow-lg"
+                                style={{ backgroundColor: accentColor }}
+                            >
+                                {tenant.name.charAt(0).toUpperCase()}
+                                {tenant.status === 'active' && (
+                                    <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                                    </span>
+                                )}
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{tenant.name}</h1>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                    <code className="rounded-lg bg-slate-100 px-2.5 py-0.5 text-xs font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                        {tenant.slug}
+                                    </code>
+                                    <StatusBadge status={tenant.status} trialDaysRemaining={daysLeft} />
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset capitalize ${planMeta.badge}`}>
+                                        {planMeta.label}
+                                    </span>
+                                </div>
+                                {tenant.contactEmail && (
+                                    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-400">
+                                        <Mail className="h-3 w-3" />
+                                        {tenant.contactEmail}
+                                    </p>
+                                )}
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Quick action buttons */}
-                {!isLocked && (
-                    <div className="flex shrink-0 flex-wrap items-center gap-2">
-                        {canActivate && (
-                            <button
-                                onClick={() => setDialog('activate')}
-                                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
-                            >
-                                <PlayCircle className="h-4 w-4" />
-                                Activate
-                            </button>
+                        {/* Right: actions */}
+                        {!isLocked && (
+                            <div className="flex shrink-0 flex-wrap items-center gap-2">
+                                {canActivate && (
+                                    <button
+                                        onClick={() => setDialog('activate')}
+                                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
+                                    >
+                                        <PlayCircle className="h-4 w-4" />
+                                        Activate
+                                    </button>
+                                )}
+                                {canDisable && (
+                                    <button
+                                        onClick={() => setDialog('disable')}
+                                        className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40"
+                                    >
+                                        <Ban className="h-4 w-4" />
+                                        Disable
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setEditMode((e) => !e)}
+                                    className="btn-secondary"
+                                >
+                                    {editMode ? <><X className="h-4 w-4" /> Cancel</> : <><Edit2 className="h-4 w-4" /> Edit</>}
+                                </button>
+                            </div>
                         )}
-                        {canDisable && (
-                            <button
-                                onClick={() => setDialog('disable')}
-                                className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-amber-600 active:scale-95"
-                            >
-                                <Ban className="h-4 w-4" />
-                                Disable
-                            </button>
-                        )}
-                        <button
-                            onClick={() => setEditMode((e) => !e)}
-                            className="btn-secondary flex items-center gap-2"
-                        >
-                            {editMode ? <><X className="h-4 w-4" /> Cancel</> : <><Edit2 className="h-4 w-4" /> Edit</>}
-                        </button>
                     </div>
-                )}
-            </div>
 
-            {/* ── Edit Form ── */}
-            {editMode && (
-                <div className="card animate-fade-in">
-                    <h2 className="mb-5 text-base font-semibold text-slate-900 dark:text-slate-100">Edit Tenant</h2>
-                    <TenantForm onSubmit={handleUpdate} loading={updateMutation.isPending} initial={tenant} editMode />
-                </div>
-            )}
-
-            {/* ── Trial Expiry Banner ── */}
-            {tenant.status === 'trial' && daysLeft !== null && daysLeft <= 3 && (
-                <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20">
-                    <AlertTriangle className="mt-px h-4 w-4 shrink-0 text-red-500" />
-                    <div>
-                        <p className="text-sm font-semibold text-red-700 dark:text-red-400">
-                            Trial {daysLeft === 0 ? 'ends today!' : `expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}!`}
-                        </p>
-                        <p className="mt-0.5 text-xs text-red-600 dark:text-red-500">
-                            Go to the Subscription tab to extend the trial or activate.
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => setActiveTab('subscription')}
-                        className="ml-auto shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
-                    >
-                        Manage
-                    </button>
-                </div>
-            )}
-
-            {/* ── Tabs ── */}
-            <div className="border-b border-slate-200 dark:border-slate-700">
-                <nav className="-mb-px flex gap-0.5 overflow-x-auto">
-                    {TABS.map((tab) => {
-                        const active = activeTab === tab.key
-                        const isDanger = tab.key === 'danger'
-                        return (
-                            <button
-                                key={tab.key}
-                                onClick={() => setActiveTab(tab.key)}
-                                className={[
-                                    'flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors',
-                                    active && !isDanger
-                                        ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-                                        : active && isDanger
-                                            ? 'border-red-500 text-red-500'
-                                            : isDanger
-                                                ? 'border-transparent text-red-400 hover:text-red-500 dark:text-red-500'
-                                                : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
-                                    !active && !isDanger ? 'hover:border-slate-300' : '',
-                                ].join(' ')}
-                            >
-                                {tab.icon}
-                                {tab.label}
-                            </button>
-                        )
-                    })}
-                </nav>
-            </div>
-
-            {/* ══════════════════ OVERVIEW TAB ══════════════════ */}
-            {activeTab === 'overview' && (
-                <div className="space-y-6">
-                    {/* Info grid */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {/* Quick stats strip */}
+                    <div className="mt-6 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 dark:border-slate-800 sm:grid-cols-4">
                         {[
-                            { label: 'Contact Name', value: tenant.contactName ?? '—' },
-                            { label: 'Contact Email', value: tenant.contactEmail ?? '—' },
-                            { label: 'Contact Phone', value: tenant.contactPhone ?? '—' },
-                            { label: 'Database', value: tenant.databaseName },
-                            { label: 'Created', value: formatDate(tenant.createdAt) },
-                            { label: 'Last Status Change', value: formatDate(tenant.statusChangedAt) },
-                            ...(tenant.statusReason ? [{ label: 'Status Reason', value: tenant.statusReason }] : []),
-                        ].map(({ label, value }) => (
-                            <div key={label} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
-                                <p className="mt-1 truncate text-sm font-medium text-slate-900 dark:text-slate-100">{value}</p>
+                            {
+                                icon: <Users className="h-4 w-4" />,
+                                label: 'Users',
+                                value: statsLoading ? '—' : (stats?.usersCount ?? '—').toLocaleString(),
+                                color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400',
+                            },
+                            {
+                                icon: <ShoppingCart className="h-4 w-4" />,
+                                label: 'Orders',
+                                value: statsLoading ? '—' : (stats?.ordersCount ?? '—').toLocaleString(),
+                                color: 'text-violet-600 bg-violet-50 dark:bg-violet-900/30 dark:text-violet-400',
+                            },
+                            {
+                                icon: <Database className="h-4 w-4" />,
+                                label: 'DB Size',
+                                value: statsLoading ? '—' : (stats?.dbSizeHuman ?? '—'),
+                                color: 'text-sky-600 bg-sky-50 dark:bg-sky-900/30 dark:text-sky-400',
+                            },
+                            {
+                                icon: <HardDrive className="h-4 w-4" />,
+                                label: 'Storage',
+                                value: statsLoading ? '—' : (stats?.storageUsedHuman ?? '—'),
+                                color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400',
+                            },
+                        ].map(({ icon, label, value, color }) => (
+                            <div key={label} className="flex items-center gap-3">
+                                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${color}`}>
+                                    {icon}
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-400">{label}</p>
+                                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{value}</p>
+                                </div>
                             </div>
                         ))}
                     </div>
+                </div>
+            </div>
 
-                    {/* Portal URLs */}
-                    <div className="card">
-                        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            <Zap className="h-4 w-4 text-indigo-500" />
-                            Portal URLs
-                        </h2>
-                        <div className="space-y-2">
-                            {Object.entries(urls).map(([key, url]) => (
-                                <CopyableUrl key={key} label={key} value={url} href={url} />
-                            ))}
-                        </div>
-                    </div>
+            <div className="space-y-6 px-6 pb-8 lg:px-8">
 
-                    {/* Live Stats */}
-                    <div>
-                        <div className="mb-3 flex items-center justify-between">
-                            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                <Database className="h-4 w-4 text-indigo-500" />
-                                Live Stats
-                            </h2>
-                            <button
-                                onClick={() => refetchStats()}
-                                className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                            >
-                                <RefreshCw className="h-3.5 w-3.5" /> Refresh
+                {/* ── Edit Form ── */}
+                {editMode && (
+                    <div className="card animate-fade-in p-6">
+                        <div className="mb-5 flex items-center justify-between">
+                            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Edit Tenant</h2>
+                            <button onClick={() => setEditMode(false)} className="btn-ghost text-xs py-1.5 px-2.5">
+                                <X className="h-3.5 w-3.5" /> Cancel
                             </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                            {statsLoading
-                                ? Array.from({ length: 4 }).map((_, i) => (
-                                    <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700" />
-                                ))
-                                : stats
-                                    ? <>
-                                        <StatsCard label="Users" value={stats.usersCount} />
-                                        <StatsCard label="Orders" value={stats.ordersCount} />
-                                        <StatsCard label="DB Size" value={stats.dbSizeHuman} />
-                                        <StatsCard label="Storage Used" value={stats.storageUsedHuman} />
-                                    </>
-                                    : <p className="col-span-4 text-sm text-slate-400">Could not load stats.</p>
-                            }
-                        </div>
+                        <TenantForm onSubmit={handleUpdate} loading={updateMutation.isPending} initial={tenant} editMode />
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* ══════════════════ SUBSCRIPTION TAB ══════════════════ */}
-            {activeTab === 'subscription' && (
-                <div className="space-y-6">
-                    {/* Trial info */}
-                    {tenant.status === 'trial' && (
-                        <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-blue-800/50 dark:from-blue-900/20 dark:to-indigo-900/20">
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                        <h3 className="text-base font-semibold text-blue-800 dark:text-blue-300">Trial Period</h3>
-                                    </div>
-                                    <p className={`mt-1 text-2xl font-bold ${daysLeft === 0 ? 'text-red-600' : daysLeft !== null && daysLeft <= 3 ? 'text-amber-600' : 'text-blue-700 dark:text-blue-300'}`}>
-                                        {daysLeft === null ? '—' : daysLeft === 0 ? 'Ends today!' : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} remaining`}
-                                    </p>
-                                    <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
-                                        {formatDate(tenant.trialStartedAt)} → {formatDate(tenant.trialEndsAt)}
-                                    </p>
-                                    {/* Progress bar */}
-                                    {tenant.trialDays > 0 && daysLeft !== null && (
-                                        <div className="mt-3">
-                                            <div className="h-2 w-full overflow-hidden rounded-full bg-blue-100 dark:bg-blue-900/40">
-                                                <div
-                                                    className={`h-2 rounded-full transition-all duration-700 ${daysLeft <= 3 ? 'bg-red-500' : daysLeft <= 7 ? 'bg-amber-500' : 'bg-blue-500'}`}
-                                                    style={{ width: `${Math.round((daysLeft / tenant.trialDays) * 100)}%` }}
-                                                />
-                                            </div>
-                                            <p className="mt-1 text-xs text-blue-500 dark:text-blue-500">
-                                                {Math.round((daysLeft / tenant.trialDays) * 100)}% of trial remaining
-                                            </p>
-                                        </div>
+                {/* ── Trial Expiry Banner ── */}
+                {tenant.status === 'trial' && daysLeft !== null && daysLeft <= 3 && (
+                    <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/40">
+                            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                                Trial {daysLeft === 0 ? 'ends today!' : `expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}!`}
+                            </p>
+                            <p className="mt-0.5 text-xs text-red-600/80 dark:text-red-500">
+                                Go to the Subscription tab to extend the trial or activate this tenant.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setActiveTab('subscription')}
+                            className="shrink-0 rounded-xl bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                        >
+                            Manage
+                        </button>
+                    </div>
+                )}
+
+                {/* ── Tab Navigation ── */}
+                <div className="card p-1.5">
+                    <nav className="flex gap-1 overflow-x-auto">
+                        {TABS.map((tab) => {
+                            const active = activeTab === tab.key
+                            const isDanger = tab.key === 'danger'
+                            return (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveTab(tab.key)}
+                                    className={[
+                                        'flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-150',
+                                        active && !isDanger
+                                            ? 'bg-indigo-600 text-white shadow-sm'
+                                            : active && isDanger
+                                                ? 'bg-red-600 text-white shadow-sm'
+                                                : isDanger
+                                                    ? 'text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20'
+                                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
+                                    ].join(' ')}
+                                >
+                                    {tab.icon}
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                </button>
+                            )
+                        })}
+                        <div className="ml-auto flex items-center">
+                            <button
+                                onClick={() => refetchStats()}
+                                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                title="Refresh live stats"
+                            >
+                                <RefreshCw className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Refresh</span>
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+
+                {/* ══════════════════ OVERVIEW TAB ══════════════════ */}
+                {activeTab === 'overview' && (
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                        {/* Left column */}
+                        <div className="space-y-6 lg:col-span-2">
+                            {/* Contact Information */}
+                            <div className="card p-6">
+                                <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    <Users className="h-4 w-4 text-indigo-500" />
+                                    Contact Information
+                                </h2>
+                                <p className="mb-4 text-xs text-slate-400">Primary contact details for this tenant.</p>
+                                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <InfoRow
+                                        icon={<Users className="h-4 w-4" />}
+                                        label="Contact Name"
+                                        value={tenant.contactName ?? <span className="text-slate-400">—</span>}
+                                    />
+                                    <InfoRow
+                                        icon={<Mail className="h-4 w-4" />}
+                                        label="Email"
+                                        value={tenant.contactEmail
+                                            ? <a href={`mailto:${tenant.contactEmail}`} className="text-indigo-600 hover:underline dark:text-indigo-400">{tenant.contactEmail}</a>
+                                            : <span className="text-slate-400">—</span>
+                                        }
+                                    />
+                                    <InfoRow
+                                        icon={<Phone className="h-4 w-4" />}
+                                        label="Phone"
+                                        value={tenant.contactPhone ?? <span className="text-slate-400">—</span>}
+                                    />
+                                    <InfoRow
+                                        icon={<MapPin className="h-4 w-4" />}
+                                        label="Address"
+                                        value={tenant.address ?? <span className="text-slate-400">—</span>}
+                                    />
+                                    {tenant.notes && (
+                                        <InfoRow
+                                            icon={<StickyNote className="h-4 w-4" />}
+                                            label="Notes"
+                                            value={<span className="whitespace-pre-wrap text-slate-600 dark:text-slate-300">{tenant.notes}</span>}
+                                        />
                                     )}
                                 </div>
                             </div>
-                            {/* Extend trial */}
-                            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-blue-200 pt-4 dark:border-blue-800/40">
-                                <span className="text-sm font-medium text-blue-700 dark:text-blue-400">Extend by:</span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={90}
-                                    value={extendDays}
-                                    onChange={(e) => setExtendDays(Number(e.target.value))}
-                                    className="w-20 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-sm dark:border-blue-700 dark:bg-slate-900 dark:text-slate-100"
-                                />
-                                <span className="text-sm text-blue-600 dark:text-blue-400">days</span>
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            await extendTrial.mutateAsync({ id: tenantId, additionalDays: extendDays })
-                                            toast.success(`Trial extended by ${extendDays} days`)
-                                        } catch {
-                                            toast.error('Failed to extend trial')
-                                        }
-                                    }}
-                                    disabled={extendTrial.isPending}
-                                    className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
-                                >
-                                    {extendTrial.isPending ? 'Extending…' : 'Extend Trial'}
-                                </button>
+
+                            {/* Technical Details */}
+                            <div className="card p-6">
+                                <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    <Server className="h-4 w-4 text-indigo-500" />
+                                    Technical Details
+                                </h2>
+                                <p className="mb-4 text-xs text-slate-400">Infrastructure and lifecycle metadata.</p>
+                                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <InfoRow
+                                        icon={<Database className="h-4 w-4" />}
+                                        label="Database"
+                                        value={<code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-300">{tenant.databaseName}</code>}
+                                    />
+                                    <InfoRow
+                                        icon={<Calendar className="h-4 w-4" />}
+                                        label="Created"
+                                        value={formatDate(tenant.createdAt)}
+                                    />
+                                    <InfoRow
+                                        icon={<Clock className="h-4 w-4" />}
+                                        label="Last Status Change"
+                                        value={formatDate(tenant.statusChangedAt)}
+                                    />
+                                    {tenant.statusReason && (
+                                        <InfoRow
+                                            icon={<AlertTriangle className="h-4 w-4" />}
+                                            label="Status Reason"
+                                            value={<span className="text-amber-600 dark:text-amber-400">{tenant.statusReason}</span>}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    )}
 
-                    {/* Subscription dates */}
-                    <div className="card">
-                        <h3 className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            <CreditCard className="h-4 w-4 text-indigo-500" />
-                            Subscription Details
-                        </h3>
-                        <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
-                            {[
-                                { label: 'Plan', value: <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${planColor}`}>{tenant.subscriptionPlan}</span> },
-                                { label: 'Started', value: formatDate(tenant.subscriptionStartedAt) },
-                                { label: 'Expires', value: formatDate(tenant.subscriptionEndsAt) },
-                                { label: 'Auto Renew', value: tenant.autoRenew ? '✓ Enabled' : '✗ Disabled' },
-                            ].map(({ label, value }) => (
-                                <div key={label}>
-                                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
-                                    <div className="mt-1.5 text-sm font-medium text-slate-900 dark:text-slate-100">{value}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Plan Limits + Usage */}
-                    <div className="card">
-                        <h3 className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            <Shield className="h-4 w-4 text-indigo-500" />
-                            Plan Limits & Usage
-                        </h3>
-                        <div className="space-y-5">
-                            <UsageMeter
-                                label="Users"
-                                used={stats?.usersCount ?? 0}
-                                max={tenant.maxUsers}
-                                icon={<Users className="h-3.5 w-3.5" />}
-                            />
-                            <UsageMeter
-                                label="Orders / month"
-                                used={stats?.ordersCount ?? 0}
-                                max={tenant.maxOrdersPerMonth}
-                                icon={<ShoppingCart className="h-3.5 w-3.5" />}
-                            />
-                            <UsageMeter
-                                label="Storage (MB)"
-                                used={stats ? Math.round(stats.storageUsedBytes / (1024 * 1024)) : 0}
-                                max={tenant.maxStorageMb}
-                                icon={<HardDrive className="h-3.5 w-3.5" />}
-                            />
-                        </div>
-                        <div className="mt-5 grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 dark:border-slate-800 sm:grid-cols-4">
-                            {[
-                                { label: 'Max Users', value: tenant.maxUsers },
-                                { label: 'Max Products', value: tenant.maxProducts },
-                                { label: 'Max Orders/mo', value: tenant.maxOrdersPerMonth },
-                                { label: 'Storage (MB)', value: tenant.maxStorageMb },
-                            ].map(({ label, value }) => (
-                                <div key={label}>
-                                    <p className="text-xs text-slate-400 dark:text-slate-500">{label}</p>
-                                    <p className="mt-0.5 text-base font-semibold text-slate-900 dark:text-slate-100">{value.toLocaleString()}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ══════════════════ PAYMENTS TAB ══════════════════ */}
-            {activeTab === 'payments' && (
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Payment History</h2>
-                        <button
-                            onClick={() => toast('Payment recording coming soon')}
-                            className="btn-primary flex items-center gap-1.5 text-xs py-2 px-3"
-                        >
-                            <Plus className="h-3.5 w-3.5" /> Record Payment
-                        </button>
-                    </div>
-
-                    {!paymentsData || paymentsData.length === 0 ? (
-                        <div className="card flex flex-col items-center gap-3 py-12 text-center">
-                            <CreditCard className="h-10 w-10 text-slate-300 dark:text-slate-600" />
-                            <p className="text-sm text-slate-400">No payments recorded yet.</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
-                                        {['Date', 'Plan', 'Amount', 'Method', 'Period', 'Status', ''].map((h) => (
-                                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{h}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-700/50 dark:bg-slate-900">
-                                    {paymentsData.map((p: Payment) => (
-                                        <>
-                                            <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                                                <td className="px-4 py-3 text-xs text-slate-500">{formatDate(p.createdAt)}</td>
-                                                <td className="px-4 py-3 text-xs font-medium capitalize text-slate-700 dark:text-slate-300">
-                                                    {p.planName} <span className="text-slate-400">({p.billingCycle})</span>
-                                                </td>
-                                                <td className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(p.amount, p.currency)}</td>
-                                                <td className="px-4 py-3 text-xs capitalize text-slate-500">{p.paymentMethod?.replace('_', ' ') ?? '—'}</td>
-                                                <td className="px-4 py-3 text-xs text-slate-500">{formatDate(p.periodStart)} → {formatDate(p.periodEnd)}</td>
-                                                <td className="px-4 py-3"><PaymentStatusBadge status={p.status} /></td>
-                                                <td className="px-4 py-3">
-                                                    <button
-                                                        onClick={() => setExpandedPayment(expandedPayment === p.id ? null : p.id)}
-                                                        className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
-                                                    >
-                                                        {expandedPayment === p.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            {expandedPayment === p.id && (
-                                                <tr key={`${p.id}-expanded`} className="bg-slate-50/80 dark:bg-slate-800/30">
-                                                    <td colSpan={7} className="px-4 py-4">
-                                                        <div className="flex flex-wrap items-center gap-3">
-                                                            {p.referenceNumber && (
-                                                                <span className="text-xs text-slate-500">
-                                                                    Ref: <strong className="text-slate-700 dark:text-slate-300">{p.referenceNumber}</strong>
-                                                                </span>
-                                                            )}
-                                                            {p.notes && <span className="text-xs italic text-slate-500">{p.notes}</span>}
-                                                            {p.status === 'pending' && (
-                                                                <div className="flex gap-2">
-                                                                    <button
-                                                                        onClick={() =>
-                                                                            validatePayment
-                                                                                .mutateAsync({ paymentId: p.id, tenantId })
-                                                                                .then(() => toast.success('Payment validated'))
-                                                                                .catch(() => toast.error('Failed'))
-                                                                        }
-                                                                        className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
-                                                                    >
-                                                                        <CheckCircle className="h-3 w-3" /> Validate
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => setRejectPaymentId(p.id)}
-                                                                        className="flex items-center gap-1.5 rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/20"
-                                                                    >
-                                                                        <XCircle className="h-3 w-3" /> Reject
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                            {p.status === 'validated' && (
-                                                                <button
-                                                                    onClick={() =>
-                                                                        refundPayment
-                                                                            .mutateAsync({ paymentId: p.id, tenantId })
-                                                                            .then(() => toast.success('Payment refunded'))
-                                                                            .catch(() => toast.error('Failed'))
-                                                                    }
-                                                                    className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800"
-                                                                >
-                                                                    <RotateCcw className="h-3 w-3" /> Refund
-                                                                </button>
-                                                            )}
-                                                            {rejectPaymentId === p.id && (
-                                                                <div className="flex items-center gap-2">
-                                                                    <input
-                                                                        placeholder="Rejection reason…"
-                                                                        value={rejectReason}
-                                                                        onChange={(e) => setRejectReason(e.target.value)}
-                                                                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-                                                                    />
-                                                                    <button
-                                                                        onClick={() =>
-                                                                            rejectPayment
-                                                                                .mutateAsync({ paymentId: p.id, tenantId, reason: rejectReason })
-                                                                                .then(() => { toast.success('Rejected'); setRejectPaymentId(null); setRejectReason('') })
-                                                                                .catch(() => toast.error('Failed'))
-                                                                        }
-                                                                        className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
-                                                                    >
-                                                                        Confirm
-                                                                    </button>
-                                                                    <button onClick={() => setRejectPaymentId(null)} className="text-xs text-slate-400 hover:text-slate-600">Cancel</button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </>
+                        {/* Right column */}
+                        <div className="space-y-6">
+                            {/* Portal URLs */}
+                            <div className="card p-6">
+                                <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    <Globe className="h-4 w-4 text-indigo-500" />
+                                    Portal URLs
+                                </h2>
+                                <p className="mb-4 text-xs text-slate-400">Click to open, or copy to clipboard.</p>
+                                <div className="space-y-2.5">
+                                    {[
+                                        { key: 'admin', label: 'Admin', url: urls.admin, icon: <Shield className="h-3 w-3" /> },
+                                        { key: 'client', label: 'Client', url: urls.client, icon: <Users className="h-3 w-3" /> },
+                                        { key: 'delivery', label: 'Delivery', url: urls.delivery, icon: <Package className="h-3 w-3" /> },
+                                    ].map(({ key, label, url }) => (
+                                        <CopyableUrl key={key} label={label} value={url} href={url} />
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            )}
+                                </div>
+                            </div>
 
-            {/* ══════════════════ ACTIVITY TAB ══════════════════ */}
-            {activeTab === 'activity' && (
-                <div>
-                    {!activityData || activityData.length === 0 ? (
-                        <div className="card flex flex-col items-center gap-3 py-12 text-center">
-                            <Activity className="h-10 w-10 text-slate-300 dark:text-slate-600" />
-                            <p className="text-sm text-slate-400">No activity recorded yet.</p>
+                            {/* Branding */}
+                            <div className="card p-6">
+                                <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    <Zap className="h-4 w-4 text-indigo-500" />
+                                    Branding
+                                </h2>
+                                <div className="flex items-center gap-4">
+                                    <div
+                                        className="h-10 w-10 shrink-0 rounded-xl shadow-sm ring-1 ring-black/5"
+                                        style={{ backgroundColor: accentColor }}
+                                    />
+                                    <div>
+                                        <p className="text-xs text-slate-400">Primary Color</p>
+                                        <code className="text-sm font-mono font-medium text-slate-700 dark:text-slate-300">{accentColor}</code>
+                                    </div>
+                                </div>
+                                {tenant.logoUrl && (
+                                    <div className="mt-4 overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800">
+                                        <img src={tenant.logoUrl} alt="Logo" className="h-16 w-full object-contain p-2" />
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    ) : (
-                        <div className="relative pl-8">
-                            <div className="absolute left-3 top-2 bottom-2 w-0.5 rounded-full bg-slate-200 dark:bg-slate-700" />
-                            {activityData.map((entry) => {
-                                const actionColor =
-                                    entry.action.includes('delete') || entry.action.includes('suspend') || entry.action.includes('reset')
-                                        ? 'bg-red-500 ring-red-100 dark:ring-red-900/40'
-                                        : entry.action.includes('activat') || entry.action.includes('unarchive')
-                                            ? 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-900/40'
-                                            : entry.action.includes('disable') || entry.action.includes('archive')
-                                                ? 'bg-amber-500 ring-amber-100 dark:ring-amber-900/40'
-                                                : 'bg-indigo-500 ring-indigo-100 dark:ring-indigo-900/40'
-                                return (
-                                    <div key={entry.id} className="relative mb-4">
-                                        <div className={`absolute -left-5 top-2 h-2.5 w-2.5 rounded-full ring-4 ${actionColor}`} />
-                                        <div className="card p-4">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="text-sm font-semibold capitalize text-slate-800 dark:text-slate-200">
-                                                    {entry.action.replace(/_/g, ' ')}
-                                                </span>
-                                                <span className="shrink-0 text-xs text-slate-400">{new Date(entry.createdAt).toLocaleString()}</span>
-                                            </div>
-                                            {entry.performedBy && (
-                                                <p className="mt-0.5 text-xs text-slate-500">by {entry.performedBy}</p>
-                                            )}
-                                            {entry.details && Object.keys(entry.details).length > 0 && (
-                                                <pre className="mt-2 overflow-auto rounded-lg bg-slate-50 p-2 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                                                    {JSON.stringify(entry.details, null, 2)}
-                                                </pre>
-                                            )}
+                    </div>
+                )}
+
+                {/* ══════════════════ SUBSCRIPTION TAB ══════════════════ */}
+                {activeTab === 'subscription' && (
+                    <div className="space-y-6">
+                        {/* Plan card */}
+                        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${planMeta.gradient} p-6 text-white shadow-lg`}>
+                            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 70% 30%, white 0%, transparent 60%)' }} />
+                            <div className="relative flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-sm font-medium text-white/70">Current Plan</p>
+                                    <h3 className="mt-0.5 text-3xl font-extrabold capitalize tracking-tight">{planMeta.label}</h3>
+                                    <p className="mt-2 text-sm text-white/80">
+                                        {formatDate(tenant.subscriptionStartedAt)} → {formatDate(tenant.subscriptionEndsAt)}
+                                    </p>
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-white/20 backdrop-blur-sm ${tenant.autoRenew ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'}`}>
+                                        {tenant.autoRenew ? '↻ Auto-renew on' : 'Auto-renew off'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="relative mt-5 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:grid-cols-4">
+                                {[
+                                    { label: 'Max Users', value: tenant.maxUsers.toLocaleString() },
+                                    { label: 'Max Products', value: tenant.maxProducts.toLocaleString() },
+                                    { label: 'Orders/month', value: tenant.maxOrdersPerMonth.toLocaleString() },
+                                    { label: 'Storage', value: `${tenant.maxStorageMb.toLocaleString()} MB` },
+                                ].map(({ label, value }) => (
+                                    <div key={label}>
+                                        <p className="text-xs font-medium text-white/60">{label}</p>
+                                        <p className="mt-0.5 text-lg font-bold">{value}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Trial info */}
+                        {tenant.status === 'trial' && (
+                            <div className="card overflow-hidden p-6">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${daysLeft !== null && daysLeft <= 3 ? 'bg-red-50 dark:bg-red-900/30' : daysLeft !== null && daysLeft <= 7 ? 'bg-amber-50 dark:bg-amber-900/30' : 'bg-blue-50 dark:bg-blue-900/30'}`}>
+                                            <Clock className={`h-5 w-5 ${daysLeft !== null && daysLeft <= 3 ? 'text-red-500' : daysLeft !== null && daysLeft <= 7 ? 'text-amber-500' : 'text-blue-500'}`} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Trial Period</h3>
+                                            <p className="text-xs text-slate-400">{formatDate(tenant.trialStartedAt)} → {formatDate(tenant.trialEndsAt)}</p>
                                         </div>
                                     </div>
-                                )
-                            })}
+                                    <div className="text-right">
+                                        <p className={`text-xl font-bold ${daysLeft === 0 ? 'text-red-600' : daysLeft !== null && daysLeft <= 3 ? 'text-red-600' : daysLeft !== null && daysLeft <= 7 ? 'text-amber-600' : 'text-slate-900 dark:text-slate-100'}`}>
+                                            {daysLeft === null ? '—' : daysLeft === 0 ? 'Ends today!' : `${daysLeft}d left`}
+                                        </p>
+                                        {tenant.trialDays > 0 && daysLeft !== null && (
+                                            <p className="text-xs text-slate-400">{Math.round((daysLeft / tenant.trialDays) * 100)}% remaining</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {tenant.trialDays > 0 && daysLeft !== null && (
+                                    <div className="mt-4">
+                                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                            <div
+                                                className={`h-2.5 rounded-full transition-all duration-700 ease-out ${daysLeft <= 3 ? 'bg-red-500' : daysLeft <= 7 ? 'bg-amber-500' : 'bg-blue-500'}`}
+                                                style={{ width: `${Math.round((daysLeft / tenant.trialDays) * 100)}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+                                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Extend by:</label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={90}
+                                        value={extendDays}
+                                        onChange={(e) => setExtendDays(Number(e.target.value))}
+                                        className="input w-20"
+                                    />
+                                    <span className="text-sm text-slate-500">days</span>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await extendTrial.mutateAsync({ id: tenantId, additionalDays: extendDays })
+                                                toast.success(`Trial extended by ${extendDays} days`)
+                                            } catch {
+                                                toast.error('Failed to extend trial')
+                                            }
+                                        }}
+                                        disabled={extendTrial.isPending}
+                                        className="btn-primary py-2"
+                                    >
+                                        {extendTrial.isPending ? 'Extending…' : 'Extend Trial'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Usage meters */}
+                        <div className="card p-6">
+                            <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                <Shield className="h-4 w-4 text-indigo-500" />
+                                Plan Usage
+                            </h3>
+                            <p className="mb-5 text-xs text-slate-400">Live usage vs. plan limits.</p>
+                            <div className="space-y-5">
+                                <UsageMeter
+                                    label="Users"
+                                    used={stats?.usersCount ?? 0}
+                                    max={tenant.maxUsers}
+                                    icon={<Users className="h-4 w-4" />}
+                                />
+                                <UsageMeter
+                                    label="Orders / month"
+                                    used={stats?.ordersCount ?? 0}
+                                    max={tenant.maxOrdersPerMonth}
+                                    icon={<ShoppingCart className="h-4 w-4" />}
+                                />
+                                <UsageMeter
+                                    label="Storage (MB)"
+                                    used={stats ? Math.round(stats.storageUsedBytes / (1024 * 1024)) : 0}
+                                    max={tenant.maxStorageMb}
+                                    icon={<HardDrive className="h-4 w-4" />}
+                                />
+                            </div>
                         </div>
-                    )}
-                </div>
-            )}
-
-            {/* ══════════════════ DANGER ZONE TAB ══════════════════ */}
-            {activeTab === 'danger' && (
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 dark:border-red-900/40 dark:bg-red-900/10">
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <p className="text-sm font-medium text-red-700 dark:text-red-400">
-                            Actions in this section may be irreversible. Proceed with caution.
-                        </p>
                     </div>
+                )}
 
-                    <div className="space-y-3">
-                        {/* Activate */}
-                        {canActivate && (
-                            <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-800/40 dark:bg-slate-900">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <PlayCircle className="h-4 w-4 text-emerald-600" />
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Activate Tenant</p>
-                                    </div>
-                                    <p className="mt-0.5 text-xs text-slate-500">Re-enable this tenant and restore full access.</p>
-                                </div>
-                                <button onClick={() => setDialog('activate')} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700">
-                                    Activate
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Disable */}
-                        {canDisable && (
-                            <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-white p-5 shadow-sm dark:border-amber-800/40 dark:bg-slate-900">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <Ban className="h-4 w-4 text-amber-600" />
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Disable Tenant</p>
-                                    </div>
-                                    <p className="mt-0.5 text-xs text-slate-500">All requests will receive a 403 until re-activated.</p>
-                                </div>
-                                <button onClick={() => setDialog('disable')} className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
-                                    Disable
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Suspend */}
-                        {canDisable && (
-                            <div className="flex items-center justify-between rounded-2xl border border-red-200 bg-white p-5 shadow-sm dark:border-red-800/40 dark:bg-slate-900">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Suspend Tenant</p>
-                                    </div>
-                                    <p className="mt-0.5 text-xs text-slate-500">Block access pending investigation or overdue payment.</p>
-                                </div>
-                                <button onClick={() => setDialog('suspend')} className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-700 dark:bg-red-900/20 dark:text-red-400">
-                                    Suspend
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Archive / Unarchive */}
-                        {tenant.status !== 'archived' && tenant.status !== 'deleted' && (
-                            <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <Archive className="h-4 w-4 text-slate-500" />
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Archive Tenant</p>
-                                    </div>
-                                    <p className="mt-0.5 text-xs text-slate-500">Closes the DB connection. Can be unarchived later.</p>
-                                </div>
-                                <button onClick={() => setDialog('archive')} className="btn-secondary text-xs py-2 px-4">
-                                    Archive
-                                </button>
-                            </div>
-                        )}
-                        {tenant.status === 'archived' && (
-                            <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-800/40 dark:bg-slate-900">
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Unarchive Tenant</p>
-                                    <p className="mt-0.5 text-xs text-slate-500">Restore access — tenant returns to active status.</p>
-                                </div>
-                                <button onClick={() => setDialog('unarchive')} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
-                                    Unarchive
-                                </button>
-                            </div>
-                        )}
-
-                        <div className="my-2 border-t border-slate-200 dark:border-slate-700" />
-
-                        {/* Reset Data */}
-                        <div className="flex items-center justify-between rounded-2xl border border-red-200 bg-red-50/50 p-5 shadow-sm dark:border-red-900/40 dark:bg-red-900/10">
+                {/* ══════════════════ PAYMENTS TAB ══════════════════ */}
+                {activeTab === 'payments' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <RefreshCw className="h-4 w-4 text-red-500" />
-                                    <p className="text-sm font-semibold text-red-700 dark:text-red-400">Reset Tenant Data</p>
-                                </div>
-                                <p className="mt-0.5 text-xs text-red-600 dark:text-red-500">Drops and re-provisions the database. All data will be lost permanently.</p>
+                                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Payment History</h2>
+                                <p className="text-xs text-slate-400">
+                                    {paymentsData?.length ?? 0} record{(paymentsData?.length ?? 0) !== 1 ? 's' : ''}
+                                </p>
                             </div>
-                            <button onClick={() => setDialog('reset')} className="rounded-xl border border-red-300 bg-white px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 dark:border-red-700 dark:bg-slate-900 dark:text-red-400">
-                                Reset Data
+                            <button
+                                onClick={() => toast('Payment recording coming soon')}
+                                className="btn-primary py-2 text-xs"
+                            >
+                                <Plus className="h-3.5 w-3.5" /> Record Payment
                             </button>
                         </div>
 
-                        {/* Permanent Delete */}
-                        {tenant.status !== 'deleted' && (
-                            <div className="flex items-center justify-between rounded-2xl border-2 border-red-400 bg-red-50 p-5 shadow-sm dark:border-red-700 dark:bg-red-950/20">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <Trash2 className="h-4 w-4 text-red-600" />
-                                        <p className="text-sm font-semibold text-red-700 dark:text-red-400">Delete Permanently</p>
-                                    </div>
-                                    <p className="mt-0.5 text-xs text-red-600 dark:text-red-500">
-                                        Destroys the DB, MinIO bucket, and Redis keys for <strong>{tenant.name}</strong>. Irreversible.
-                                    </p>
+                        {!paymentsData || paymentsData.length === 0 ? (
+                            <div className="card flex flex-col items-center gap-3 py-16 text-center">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-800">
+                                    <CreditCard className="h-7 w-7 text-slate-300 dark:text-slate-600" />
                                 </div>
-                                <button onClick={() => setDialog('delete')} className="btn-danger text-xs py-2 px-4">
-                                    Delete Forever
-                                </button>
+                                <div>
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No payments yet</p>
+                                    <p className="text-xs text-slate-400">Payments recorded for this tenant will appear here.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {paymentsData.map((p: Payment) => (
+                                    <div key={p.id} className="card overflow-hidden">
+                                        <button
+                                            className="flex w-full items-center gap-4 p-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                            onClick={() => setExpandedPayment(expandedPayment === p.id ? null : p.id)}
+                                        >
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
+                                                <CreditCard className="h-4 w-4 text-slate-500" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 capitalize">
+                                                        {p.planName}
+                                                    </span>
+                                                    <span className="text-xs text-slate-400">({p.billingCycle})</span>
+                                                    <PaymentStatusBadge status={p.status} />
+                                                </div>
+                                                <p className="mt-0.5 text-xs text-slate-400">
+                                                    {formatDate(p.createdAt)} · {formatDate(p.periodStart)} → {formatDate(p.periodEnd)}
+                                                    {p.paymentMethod && <> · <span className="capitalize">{p.paymentMethod.replace('_', ' ')}</span></>}
+                                                </p>
+                                            </div>
+                                            <div className="shrink-0 text-right">
+                                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{formatCurrency(p.amount, p.currency)}</p>
+                                            </div>
+                                            {expandedPayment === p.id
+                                                ? <ChevronUp className="h-4 w-4 shrink-0 text-slate-400" />
+                                                : <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+                                            }
+                                        </button>
+
+                                        {expandedPayment === p.id && (
+                                            <div className="border-t border-slate-100 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-800/30">
+                                                <div className="flex flex-wrap items-center gap-3">
+                                                    {p.referenceNumber && (
+                                                        <div className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900">
+                                                            <span className="text-xs text-slate-400">Ref: </span>
+                                                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{p.referenceNumber}</span>
+                                                        </div>
+                                                    )}
+                                                    {p.notes && (
+                                                        <p className="text-xs italic text-slate-500">{p.notes}</p>
+                                                    )}
+                                                    {p.status === 'pending' && (
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() =>
+                                                                    validatePayment
+                                                                        .mutateAsync({ paymentId: p.id, tenantId })
+                                                                        .then(() => toast.success('Payment validated'))
+                                                                        .catch(() => toast.error('Failed'))
+                                                                }
+                                                                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                                                            >
+                                                                <CheckCircle className="h-3.5 w-3.5" /> Validate
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setRejectPaymentId(p.id)}
+                                                                className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:border-red-700 dark:bg-transparent dark:hover:bg-red-900/20"
+                                                            >
+                                                                <XCircle className="h-3.5 w-3.5" /> Reject
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    {p.status === 'validated' && (
+                                                        <button
+                                                            onClick={() =>
+                                                                refundPayment
+                                                                    .mutateAsync({ paymentId: p.id, tenantId })
+                                                                    .then(() => toast.success('Payment refunded'))
+                                                                    .catch(() => toast.error('Failed'))
+                                                            }
+                                                            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800"
+                                                        >
+                                                            <RotateCcw className="h-3.5 w-3.5" /> Refund
+                                                        </button>
+                                                    )}
+                                                    {rejectPaymentId === p.id && (
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                placeholder="Rejection reason…"
+                                                                value={rejectReason}
+                                                                onChange={(e) => setRejectReason(e.target.value)}
+                                                                className="input w-52 py-1.5 text-xs"
+                                                            />
+                                                            <button
+                                                                onClick={() =>
+                                                                    rejectPayment
+                                                                        .mutateAsync({ paymentId: p.id, tenantId, reason: rejectReason })
+                                                                        .then(() => { toast.success('Rejected'); setRejectPaymentId(null); setRejectReason('') })
+                                                                        .catch(() => toast.error('Failed'))
+                                                                }
+                                                                className="rounded-xl bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                                                            >
+                                                                Confirm
+                                                            </button>
+                                                            <button onClick={() => setRejectPaymentId(null)} className="text-xs text-slate-400 hover:text-slate-600">Cancel</button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
-                </div>
-            )}
+                )}
+
+                {/* ══════════════════ ACTIVITY TAB ══════════════════ */}
+                {activeTab === 'activity' && (
+                    <div>
+                        {!activityData || activityData.length === 0 ? (
+                            <div className="card flex flex-col items-center gap-4 py-16 text-center">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-800">
+                                    <Activity className="h-7 w-7 text-slate-300 dark:text-slate-600" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No activity yet</p>
+                                    <p className="text-xs text-slate-400">Actions on this tenant will be logged here.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="relative pl-9">
+                                <div className="absolute left-4 top-2 bottom-2 w-px bg-gradient-to-b from-slate-200 via-slate-200 to-transparent dark:from-slate-700 dark:via-slate-700" />
+                                <div className="space-y-3">
+                                    {activityData.map((entry) => {
+                                        const isDestructive = entry.action.includes('delete') || entry.action.includes('suspend') || entry.action.includes('reset')
+                                        const isPositive = entry.action.includes('activat') || entry.action.includes('unarchive')
+                                        const isWarning = entry.action.includes('disable') || entry.action.includes('archive')
+                                        const dotColor = isDestructive
+                                            ? 'bg-red-500 ring-red-100 dark:ring-red-900/40'
+                                            : isPositive
+                                                ? 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-900/40'
+                                                : isWarning
+                                                    ? 'bg-amber-500 ring-amber-100 dark:ring-amber-900/40'
+                                                    : 'bg-indigo-500 ring-indigo-100 dark:ring-indigo-900/40'
+                                        const labelColor = isDestructive
+                                            ? 'text-red-600 dark:text-red-400'
+                                            : isPositive
+                                                ? 'text-emerald-600 dark:text-emerald-400'
+                                                : isWarning
+                                                    ? 'text-amber-600 dark:text-amber-400'
+                                                    : 'text-indigo-600 dark:text-indigo-400'
+
+                                        return (
+                                            <div key={entry.id} className="relative">
+                                                <div className={`absolute -left-5 top-4 h-2.5 w-2.5 rounded-full ring-4 ring-white dark:ring-[#080d1a] ${dotColor}`} />
+                                                <div className="card p-4 transition-shadow hover:shadow-md">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div>
+                                                            <span className={`text-sm font-semibold capitalize ${labelColor}`}>
+                                                                {entry.action.replace(/_/g, ' ')}
+                                                            </span>
+                                                            {entry.performedBy && (
+                                                                <p className="mt-0.5 text-xs text-slate-400">by <span className="font-medium text-slate-600 dark:text-slate-300">{entry.performedBy}</span></p>
+                                                            )}
+                                                        </div>
+                                                        <span className="shrink-0 rounded-lg bg-slate-50 px-2 py-1 text-xs text-slate-400 dark:bg-slate-800">
+                                                            {new Date(entry.createdAt).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                    {entry.details && Object.keys(entry.details).length > 0 && (
+                                                        <pre className="mt-3 overflow-auto rounded-xl bg-slate-50 p-3 text-xs leading-relaxed text-slate-600 dark:bg-slate-800/80 dark:text-slate-400">
+                                                            {JSON.stringify(entry.details, null, 2)}
+                                                        </pre>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ══════════════════ DANGER ZONE TAB ══════════════════ */}
+                {activeTab === 'danger' && (
+                    <div className="space-y-4">
+                        {/* Warning banner */}
+                        <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900/40 dark:bg-red-900/10">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/40">
+                                <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            </div>
+                            <p className="text-sm font-medium text-red-700 dark:text-red-400">
+                                Actions in this section may be irreversible. Proceed with care.
+                            </p>
+                        </div>
+
+                        {/* Status Actions */}
+                        <div className="card overflow-hidden">
+                            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status Control</p>
+                            </div>
+                            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {canActivate && (
+                                    <div className="flex items-center justify-between px-5 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+                                                <PlayCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Activate Tenant</p>
+                                                <p className="text-xs text-slate-400">Re-enable and restore full access.</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setDialog('activate')} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
+                                            Activate
+                                        </button>
+                                    </div>
+                                )}
+                                {canDisable && (
+                                    <div className="flex items-center justify-between px-5 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20">
+                                                <Ban className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Disable Tenant</p>
+                                                <p className="text-xs text-slate-400">All requests will receive 403 until re-activated.</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setDialog('disable')} className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40">
+                                            Disable
+                                        </button>
+                                    </div>
+                                )}
+                                {canDisable && (
+                                    <div className="flex items-center justify-between px-5 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20">
+                                                <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Suspend Tenant</p>
+                                                <p className="text-xs text-slate-400">Block access pending investigation or overdue payment.</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setDialog('suspend')} className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-semibold text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+                                            Suspend
+                                        </button>
+                                    </div>
+                                )}
+                                {tenant.status !== 'archived' && tenant.status !== 'deleted' && (
+                                    <div className="flex items-center justify-between px-5 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
+                                                <Archive className="h-4 w-4 text-slate-500" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Archive Tenant</p>
+                                                <p className="text-xs text-slate-400">Closes the DB connection. Can be unarchived later.</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setDialog('archive')} className="btn-secondary text-xs py-2 px-4">
+                                            Archive
+                                        </button>
+                                    </div>
+                                )}
+                                {tenant.status === 'archived' && (
+                                    <div className="flex items-center justify-between px-5 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+                                                <RotateCcw className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Unarchive Tenant</p>
+                                                <p className="text-xs text-slate-400">Restore access — tenant returns to active status.</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setDialog('unarchive')} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
+                                            Unarchive
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Destructive Actions */}
+                        <div className="card overflow-hidden">
+                            <div className="px-5 py-4 border-b border-red-100 bg-red-50/50 dark:border-red-900/30 dark:bg-red-900/10">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-red-500">Destructive Actions</p>
+                            </div>
+                            <div className="divide-y divide-red-100/80 dark:divide-red-900/20">
+                                <div className="flex items-center justify-between px-5 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20">
+                                            <RefreshCw className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-red-700 dark:text-red-400">Reset Tenant Data</p>
+                                            <p className="text-xs text-red-500/80 dark:text-red-500">Drops and re-provisions the database. All data will be lost.</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setDialog('reset')} className="rounded-xl border border-red-200 bg-white px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-900/20">
+                                        Reset Data
+                                    </button>
+                                </div>
+                                {tenant.status !== 'deleted' && (
+                                    <div className="flex items-center justify-between px-5 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/30">
+                                                <Trash2 className="h-4 w-4 text-red-700 dark:text-red-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-red-700 dark:text-red-400">Delete Permanently</p>
+                                                <p className="text-xs text-red-500/80 dark:text-red-500">
+                                                    Destroys the DB, MinIO bucket, and Redis keys for <strong>{tenant.name}</strong>.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setDialog('delete')} className="btn-danger text-xs py-2 px-4">
+                                            Delete Forever
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+            </div>{/* /px-6 container */}
 
             {/* ══════════════════ CONFIRM DIALOGS ══════════════════ */}
             <ConfirmDialog

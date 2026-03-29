@@ -1,4 +1,5 @@
-import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
+import { useState } from 'react';
+import { LucideIcon, TrendingUp, TrendingDown, BarChart3, X } from 'lucide-react';
 
 export type KpiColor = 'blue' | 'emerald' | 'amber' | 'purple' | 'red' | 'green' | 'orange' | 'indigo';
 
@@ -195,5 +196,117 @@ export const KpiCard: React.FC<KpiCardProps> = ({
                 }
             `}</style>
         </div>
+    );
+};
+
+// ---------- KpiSheet ----------
+// Desktop: renders KpiGrid normally.
+// Mobile (≤639px): hides grid, shows a single button that opens a bottom-sheet drawer.
+export const KpiSheet: React.FC<{ count: number; children: React.ReactNode; label?: string }> = ({
+    count,
+    children,
+    label = 'Statistiques',
+}) => {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <>
+            <style>{`
+                .kpi-sheet-desktop { display: block; }
+                .kpi-sheet-mobile-btn { display: none !important; }
+                @media (max-width: 639px) {
+                    .kpi-sheet-desktop { display: none !important; }
+                    .kpi-sheet-mobile-btn { display: flex !important; }
+                }
+                .kpi-sheet-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(15,23,42,0.45);
+                    z-index: 1000;
+                    display: flex;
+                    align-items: flex-end;
+                    animation: kpi-overlay-in 0.2s ease;
+                }
+                .kpi-sheet-panel {
+                    width: 100%;
+                    background: #ffffff;
+                    border-radius: 1.25rem 1.25rem 0 0;
+                    padding: 0 1rem 2.5rem;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    animation: kpi-panel-up 0.28s cubic-bezier(0.32,0.72,0,1);
+                }
+                .kpi-sheet-handle {
+                    width: 2.5rem;
+                    height: 4px;
+                    background: #e2e8f0;
+                    border-radius: 2px;
+                    margin: 0.75rem auto 1.25rem;
+                }
+                .kpi-sheet-inner-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.75rem;
+                }
+                @keyframes kpi-overlay-in {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
+                }
+                @keyframes kpi-panel-up {
+                    from { transform: translateY(100%); }
+                    to   { transform: translateY(0); }
+                }
+            `}</style>
+
+            {/* Desktop: normal grid */}
+            <div className="kpi-sheet-desktop">
+                <KpiGrid count={count}>{children}</KpiGrid>
+            </div>
+
+            {/* Mobile: trigger button */}
+            <button
+                type="button"
+                className="kpi-sheet-mobile-btn"
+                onClick={() => setOpen(true)}
+                style={{
+                    width: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1rem',
+                    background: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '0.75rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#235ae4',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(15,23,42,0.06)',
+                }}
+            >
+                <BarChart3 style={{ width: '1rem', height: '1rem' }} />
+                {label}
+            </button>
+
+            {/* Bottom sheet */}
+            {open && (
+                <div className="kpi-sheet-overlay" onClick={() => setOpen(false)}>
+                    <div className="kpi-sheet-panel" onClick={(e) => e.stopPropagation()}>
+                        <div className="kpi-sheet-handle" />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a' }}>{label}</span>
+                            <button
+                                type="button"
+                                onClick={() => setOpen(false)}
+                                style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            >
+                                <X style={{ width: '1rem', height: '1rem', color: '#64748b' }} />
+                            </button>
+                        </div>
+                        <div className="kpi-sheet-inner-grid">{children}</div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };

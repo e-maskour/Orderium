@@ -426,7 +426,7 @@ export class PDFService {
         footerTemplate,
         margin: {
           top: '32mm',
-          bottom: '7mm',
+          bottom: '14mm',
           left: '5mm',
           right: '5mm',
         },

@@ -140,7 +140,7 @@ export function usePushNotifications(
         const { title, body } = payload.notification;
         new Notification(title || 'Morocom Livraison', {
           body,
-          icon: '/icons/delivery-icon.png',
+          icon: '/notification-icon.png',
           data: payload.data,
           vibrate: [200, 100, 200],
         });

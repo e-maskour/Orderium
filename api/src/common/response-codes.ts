@@ -653,6 +653,24 @@ export const PAY = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  ORDER PAYMENTS  (OrderPaymentsController)
+// ─────────────────────────────────────────────────────────────
+export const OPAY = {
+  /** POST /order-payments                          → data: OrderPayment   | metadata: null */
+  CREATED: { code: 'OPAY201_01', status: 201, message: 'Order Payment Created' },
+  /** GET /order-payments/order/:orderId             → data: OrderPayment[] | metadata: null */
+  LIST: { code: 'OPAY200_01', status: 200, message: 'Order Payments Retrieved' },
+  /** GET /order-payments/:id                        → data: OrderPayment   | metadata: null */
+  DETAIL: { code: 'OPAY200_02', status: 200, message: 'Order Payment Retrieved' },
+  /** GET /order-payments/order/:orderId/total       → data: number         | metadata: null */
+  TOTAL_PAID: { code: 'OPAY200_03', status: 200, message: 'Order Total Paid Retrieved' },
+  /** PATCH /order-payments/:id                      → data: OrderPayment   | metadata: null */
+  UPDATED: { code: 'OPAY200_04', status: 200, message: 'Order Payment Updated' },
+  /** DELETE /order-payments/:id                     → data: null           | metadata: null */
+  DELETED: { code: 'OPAY200_05', status: 200, message: 'Order Payment Deleted' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  IMAGES  (ImagesController)
 // ─────────────────────────────────────────────────────────────
 export const IMG = {

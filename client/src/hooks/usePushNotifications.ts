@@ -127,7 +127,7 @@ export function usePushNotifications(
         const { title, body } = payload.notification;
         new Notification(title || 'Morocom', {
           body,
-          icon: '/icons/notification-icon.png',
+          icon: '/notification-icon.png',
           data: payload.data,
         });
       }

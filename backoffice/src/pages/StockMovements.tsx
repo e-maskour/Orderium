@@ -214,7 +214,7 @@ export default function StockMovements() {
               </div>
             }
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-            currentPageReportTemplate="{first}-{last} of {totalRecords}"
+            currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
             <Column field="reference" header={t('reference')} sortable body={(mov: StockMovement) => (

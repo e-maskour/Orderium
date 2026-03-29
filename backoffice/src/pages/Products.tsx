@@ -395,6 +395,12 @@ export default function Products() {
                 selection={productsList.filter((p: IProduct) => selectedProducts.includes(p.id))}
                 onSelectionChange={(e) => setSelectedProducts((e.value as IProduct[]).map((p) => p.id))}
                 selectionMode="checkbox"
+                onRowClick={(e) => {
+                  const target = e.originalEvent.target as HTMLElement;
+                  if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+                  handleViewProduct((e.data as IProduct).id);
+                }}
+                rowClassName={() => 'ord-row-clickable'}
                 dataKey="id"
                 paginator
                 paginatorPosition="top"
@@ -404,7 +410,7 @@ export default function Products() {
                 loading={isLoading}
                 emptyMessage={t('noProductsFound')}
                 paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                currentPageReportTemplate={t('pageReportTemplate')}
               >
                 <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                 <Column

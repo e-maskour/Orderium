@@ -3,8 +3,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { PartnerForm } from '../components/PartnerForm';
-import { Users, ArrowLeft } from 'lucide-react';
+import { Users, ArrowLeft, Save } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { toastCreated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
@@ -37,38 +38,35 @@ export default function CustomerCreate() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        {/* Compact Header */}
-        <div style={{ marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <PageHeader
+          icon={Users}
+          title={t('newCustomer')}
+          subtitle={t('addCustomer')}
+          backButton={
+            <Button
+              icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
+              onClick={() => navigate('/customers')}
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+            />
+          }
+          actions={
+            <div style={{ display: 'flex', gap: '0.625rem' }}>
+              <Button type="button" label={t('cancel')} outlined onClick={() => navigate('/customers')} />
               <Button
-                text
-                rounded
-                onClick={() => navigate('/customers')}
-                icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />}
-                style={{ padding: '0.5rem' }}
+                type="submit"
+                form="partner-form"
+                label={t('createPartner')}
+                icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
+                loading={createMutation.isPending}
               />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#235ae4' }} />
-                </div>
-                <div>
-                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{t('newCustomer')}</h1>
-                  <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{t('addCustomer')}</p>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
-          <PartnerForm
-            type="customer"
-            onSubmit={handleSubmit}
-            onCancel={() => navigate('/customers')}
-            isSubmitting={createMutation.isPending}
-          />
-        </div>
+          }
+        />
+        <PartnerForm
+          type="customer"
+          onSubmit={handleSubmit}
+          isSubmitting={createMutation.isPending}
+        />
       </div>
     </AdminLayout>
   );

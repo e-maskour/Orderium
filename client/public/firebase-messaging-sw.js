@@ -34,8 +34,8 @@ if (messaging) {
     const notificationTitle = payload.notification?.title || 'Morocom';
     const notificationOptions = {
       body: payload.notification?.body || '',
-      icon: '/icons/notification-icon.png',
-      badge: '/icons/badge-icon.png',
+      icon: '/notification-icon.png',
+      badge: '/notification-icon.png',
       tag: payload.data?.type || 'orderium-notification',
       data: payload.data || {},
       requireInteraction: true,

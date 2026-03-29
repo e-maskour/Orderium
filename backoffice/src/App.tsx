@@ -74,11 +74,9 @@ const Categories = lazy(() => import('./pages/Categories'));
 const Customers = lazy(() => import('./pages/Customers'));
 const CustomerCreate = lazy(() => import('./pages/CustomerCreate'));
 const CustomerEdit = lazy(() => import('./pages/CustomerEdit'));
-const CustomerDetail = lazy(() => import('./pages/CustomerDetail'));
 const Fournisseurs = lazy(() => import('./pages/Fournisseurs'));
 const FournisseurCreate = lazy(() => import('./pages/FournisseurCreate'));
 const FournisseurEdit = lazy(() => import('./pages/FournisseurEdit'));
-const FournisseurDetail = lazy(() => import('./pages/FournisseurDetail'));
 const QuotePreviewPage = lazy(() => import('./pages/QuotePreviewPage'));
 const SharedDocumentPage = lazy(() => import('./pages/SharedDocumentPage'));
 const DemandePrix = lazy(() => import('./pages/DemandePrix'));
@@ -101,6 +99,7 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const POS = lazy(() => import('./pages/POS'));
 const Products = lazy(() => import('./pages/Products'));
 const Orders = lazy(() => import('./pages/Orders'));
+const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const DrivePage = lazy(() => import('./pages/drive/DrivePage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
@@ -194,6 +193,14 @@ function App() {
                         }
                       />
                       <Route
+                        path="/orders/:id"
+                        element={
+                          <ProtectedRoute>
+                            <OrderDetailPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="/pos"
                         element={
                           <ProtectedRoute>
@@ -266,18 +273,10 @@ function App() {
                         }
                       />
                       <Route
-                        path="/customers/edit/:id"
-                        element={
-                          <ProtectedRoute>
-                            <CustomerEdit />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
                         path="/customers/:id"
                         element={
                           <ProtectedRoute>
-                            <CustomerDetail />
+                            <CustomerEdit />
                           </ProtectedRoute>
                         }
                       />
@@ -298,18 +297,10 @@ function App() {
                         }
                       />
                       <Route
-                        path="/fournisseurs/edit/:id"
-                        element={
-                          <ProtectedRoute>
-                            <FournisseurEdit />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
                         path="/fournisseurs/:id"
                         element={
                           <ProtectedRoute>
-                            <FournisseurDetail />
+                            <FournisseurEdit />
                           </ProtectedRoute>
                         }
                       />

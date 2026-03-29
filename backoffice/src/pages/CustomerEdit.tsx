@@ -3,8 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { PartnerForm } from '../components/PartnerForm';
-import { Users, ArrowLeft } from 'lucide-react';
+import { KpiCard, KpiSheet } from '../components/KpiCard';
+import { formatDH } from '../utils/formatNumber';
+import { Users, ArrowLeft, FileText, Clock, CreditCard, Truck, DollarSign, AlertCircle, Save } from 'lucide-react';
 import { toastUpdated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from 'primereact/button';
@@ -15,9 +18,15 @@ export default function CustomerEdit() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
 
-  const { data: partner, isLoading } = useQuery({
+  const { data: partner, isLoading: partnerLoading } = useQuery({
     queryKey: ['partner', id],
     queryFn: () => partnersService.getById(Number(id)),
+    enabled: !!id,
+  });
+
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['customer-analytics', id],
+    queryFn: () => partnersService.getCustomerAnalytics(Number(id), new Date().getFullYear()),
     enabled: !!id,
   });
 
@@ -48,7 +57,7 @@ export default function CustomerEdit() {
     }
   };
 
-  if (isLoading) {
+  if (partnerLoading || analyticsLoading) {
     return (
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
@@ -60,7 +69,7 @@ export default function CustomerEdit() {
     );
   }
 
-  if (!partner) {
+  if (!partner || !analytics) {
     return (
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
@@ -72,37 +81,55 @@ export default function CustomerEdit() {
     );
   }
 
+  const { kpis } = analytics;
+  const { totalInvoices, totalRevenue, unpaidAmount, totalOrders, totalOrderRevenue, unpaidOrderAmount } = kpis;
+
   return (
     <AdminLayout>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        {/* Compact Header */}
-        <div style={{ marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <PageHeader
+          icon={Users}
+          title={partner.name}
+          subtitle={t('customerDetails')}
+          backButton={
+            <Button
+              icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
+              onClick={() => navigate('/customers')}
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+            />
+          }
+          actions={
+            <div style={{ display: 'flex', gap: '0.625rem' }}>
+              <Button type="button" label={t('cancel')} outlined onClick={() => navigate('/customers')} />
               <Button
-                icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />}
-                onClick={() => navigate('/customers')}
-                text rounded
+                type="submit"
+                form="partner-form"
+                label={t('updatePartner')}
+                icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
+                loading={updateMutation.isPending}
               />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Users style={{ width: '1.25rem', height: '1.25rem', color: '#235ae4' }} />
-                </div>
-                <div>
-                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{t('editCustomer')}</h1>
-                  <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{`${t('edit')} ${partner.name}`}</p>
-                </div>
-              </div>
             </div>
-          </div>
+          }
+        />
+
+        {/* KPIs */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <KpiSheet count={6} label="Statistiques">
+            <KpiCard label="Total Factures" value={totalInvoices} icon={FileText} color="blue" />
+            <KpiCard label="Revenu Total des Factures" value={formatDH(totalRevenue, 0)} icon={CreditCard} color="emerald" />
+            <KpiCard label="Impayé des Factures" value={formatDH(unpaidAmount, 0)} icon={Clock} color="amber" />
+            <KpiCard label="Total Bon de livraison" value={totalOrders} icon={Truck} color="indigo" />
+            <KpiCard label="Revenu Total des Bon" value={formatDH(totalOrderRevenue, 0)} icon={DollarSign} color="green" />
+            <KpiCard label="Impayé des Bons" value={formatDH(unpaidOrderAmount, 0)} icon={AlertCircle} color="orange" />
+          </KpiSheet>
         </div>
 
+        {/* Edit Form */}
         <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
           <PartnerForm
             partner={partner}
             type="customer"
             onSubmit={handleSubmit}
-            onCancel={() => navigate('/customers')}
             isSubmitting={updateMutation.isPending}
           />
         </div>

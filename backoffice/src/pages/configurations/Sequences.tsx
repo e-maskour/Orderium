@@ -226,7 +226,7 @@ export default function Sequences() {
                         removableSort
                         emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noSequencesConfigured')}</div>}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                        currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                        currentPageReportTemplate={t('pageReportTemplate')}
                     >
                         <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                         <Column field="name" header={t('name')} sortable body={(row: Sequence) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />

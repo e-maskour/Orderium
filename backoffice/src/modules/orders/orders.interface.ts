@@ -32,6 +32,8 @@ export interface IOrder {
   deliveryPersonName?: string | null; // Business logic field, not in entity
   shareToken?: string | null;
   shareTokenExpiry?: string | null;
+  paidAmount: number;
+  remainingAmount: number;
   dateCreated: string;
   dateUpdated: string;
   items?: IOrderItem[]; // For compatibility with document services

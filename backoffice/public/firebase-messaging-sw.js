@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:199921288199:web:63e59398df7cc0617096a2",
 };
 
-const getNotificationIconUrl = () => `${self.location.origin}/Eo_circle_deep-orange_white_letter-o.svg`;
+const getNotificationIconUrl = () => `${self.location.origin}/notification-icon.png`;
 
 // Initialize Firebase immediately to register event handlers during initial evaluation
 let messaging = null;

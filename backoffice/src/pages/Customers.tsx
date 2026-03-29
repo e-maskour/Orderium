@@ -74,11 +74,11 @@ export default function Customers() {
   );
 
   const handleViewCustomer = (customer: Partner) => {
-    navigate(`/customers/${customer.id}`);
+    navigate(`/customers/${customer.id}`); // unified edit+detail page
   };
 
   const handleEditCustomer = (customer: Partner) => {
-    navigate(`/customers/edit/${customer.id}`);
+    navigate(`/customers/${customer.id}`); // same unified page
   };
 
   const handleDeletePartner = (customer: Partner) => {
@@ -207,6 +207,12 @@ export default function Customers() {
                   selection={filteredCustomers.filter((c: Partner) => selectedCustomers.includes(c.id))}
                   onSelectionChange={(e) => setSelectedCustomers((e.value as Partner[]).map((c) => c.id))}
                   selectionMode="checkbox"
+                  onRowClick={(e) => {
+                    const target = e.originalEvent.target as HTMLElement;
+                    if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+                    handleViewCustomer(e.data as Partner);
+                  }}
+                  rowClassName={() => 'ord-row-clickable'}
                   dataKey="id"
                   paginator
                   paginatorPosition="top"
@@ -215,7 +221,7 @@ export default function Customers() {
                   removableSort
                   emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCustomersFound')}</div>}
                   paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                  currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                  currentPageReportTemplate={t('pageReportTemplate')}
                 >
                   <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                   <Column field="name" header={t('name')} sortable body={(row: Partner) => (

@@ -321,6 +321,12 @@ export function DocumentTable({
           selection={selectedRows}
           onSelectionChange={(e) => setSelectedRows(e.value as Document[])}
           selectionMode="checkbox"
+          onRowClick={(e) => {
+            const target = e.originalEvent.target as HTMLElement;
+            if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+            onEdit?.((e.data as Document).id);
+          }}
+          rowClassName={() => 'ord-row-clickable'}
           dataKey="id"
           paginator
           paginatorPosition="top"
@@ -330,7 +336,7 @@ export function DocumentTable({
           loading={loading}
           emptyMessage={t('noDocumentFound')}
           paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-          currentPageReportTemplate="{first}-{last} of {totalRecords}"
+          currentPageReportTemplate={t('pageReportTemplate')}
         >
           <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
           <Column

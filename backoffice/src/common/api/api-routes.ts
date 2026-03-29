@@ -136,6 +136,16 @@ export const API_ROUTES = {
         INVOICE_TOTAL: (invoiceId: number) => `/api/payments/invoice/${invoiceId}/total`,
     },
 
+    // ─── Order Payments ────────────────────────────────────────
+    ORDER_PAYMENTS: {
+        CREATE: '/api/order-payments',
+        BY_ORDER: (orderId: number) => `/api/order-payments/order/${orderId}`,
+        ORDER_TOTAL: (orderId: number) => `/api/order-payments/order/${orderId}/total`,
+        DETAIL: (id: number) => `/api/order-payments/${id}`,
+        UPDATE: (id: number) => `/api/order-payments/${id}`,
+        DELETE: (id: number) => `/api/order-payments/${id}`,
+    },
+
     // ─── Company / Configurations ──────────────────────────────
     CONFIGURATIONS: {
         BY_ENTITY: (entity: string) => `/api/configurations/entity/${entity}`,

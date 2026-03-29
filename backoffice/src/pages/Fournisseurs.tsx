@@ -71,11 +71,11 @@ export default function Fournisseurs() {
   );
 
   const handleViewSupplier = (supplier: Partner) => {
-    navigate(`/fournisseurs/${supplier.id}`);
+    navigate(`/fournisseurs/${supplier.id}`); // unified edit+detail page
   };
 
   const handleEditSupplier = (supplier: Partner) => {
-    navigate(`/fournisseurs/edit/${supplier.id}`);
+    navigate(`/fournisseurs/${supplier.id}`); // same unified page
   };
 
   const handleDeletePartner = (supplier: Partner) => {
@@ -190,6 +190,12 @@ export default function Fournisseurs() {
                   selection={filteredSuppliers.filter((s: Partner) => selectedSuppliers.includes(s.id))}
                   onSelectionChange={(e) => setSelectedSuppliers((e.value as Partner[]).map((s) => s.id))}
                   selectionMode="checkbox"
+                  onRowClick={(e) => {
+                    const target = e.originalEvent.target as HTMLElement;
+                    if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+                    handleViewSupplier(e.data as Partner);
+                  }}
+                  rowClassName={() => 'ord-row-clickable'}
                   dataKey="id"
                   paginator
                   paginatorPosition="top"
@@ -198,7 +204,7 @@ export default function Fournisseurs() {
                   removableSort
                   emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Aucun fournisseur trouvé</div>}
                   paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                  currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                  currentPageReportTemplate={t('pageReportTemplate')}
                 >
                   <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                   <Column field="name" header={t('name')} sortable body={(row: Partner) => (

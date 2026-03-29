@@ -61,6 +61,7 @@ export default {
   previous: 'السابق',
   next: 'التالي',
   last: 'الأخيرة',
+  pageReportTemplate: '{first} - {last} من {totalRecords}',
 
   // Loading & States
   loading: 'جاري التحميل...',
@@ -454,4 +455,16 @@ export default {
   dateFormat: 'تنسيق التاريخ',
   settingsSaved: 'تم حفظ الإعدادات',
   install: 'تثبيت',
+
+  // Order payments
+  paidAmount: 'المبلغ المدفوع',
+  remainingAmount: 'المبلغ المتبقي',
+  addPayment: 'إضافة دفعة',
+  pay: 'دفع',
+  paymentType: 'طريقة الدفع',
+  paymentDate: 'تاريخ الدفع',
+  paymentHistory: 'سجل المدفوعات',
+  deletePayment: 'حذف الدفعة',
+  optional: 'اختياري',
+  notes: 'ملاحظات',
 };

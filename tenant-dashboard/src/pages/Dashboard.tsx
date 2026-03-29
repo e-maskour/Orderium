@@ -6,54 +6,197 @@ import {
     Building2, AlertTriangle,
     Clock, CheckCircle, XCircle, ArrowRight, Plus,
     BarChart3, Activity, Shield, Archive, Layers,
-    TrendingUp,
 } from 'lucide-react'
 
-// ─── KPI card ────────────────────────────────────────────────────────────────
-interface KpiCardProps {
-    label: string
-    value: number | string
-    sub?: string
-    icon: React.ReactNode
-    iconBg: string
+// ─── KPI hero card (Total Tenants) ───────────────────────────────────────────
+interface KpiHeroProps {
+    total: number
+    active: number
+    trial: number
+    expired: number
+    suspended: number
+    disabled: number
+    archived: number
     loading?: boolean
-    trend?: { value: number; label: string }
-    linkTo?: string
 }
 
-function KpiCard({ label, value, sub, icon, iconBg, loading, trend, linkTo }: KpiCardProps) {
-    if (loading) return <SkeletonCard />
+function KpiHeroCard({ total, active, trial, expired, suspended, disabled, archived, loading }: KpiHeroProps) {
+    if (loading) return <div className="col-span-2 h-[200px] animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700" />
 
-    const content = (
-        <div className="stat-card group animate-fade-in">
-            <div className="flex items-start justify-between mb-3">
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-black/5 ${iconBg}`}>
-                    {icon}
+    const healthScore = total > 0 ? Math.round(((active + trial * 0.5) / total) * 100) : 0
+    const healthColor = healthScore >= 70 ? 'text-emerald-600 dark:text-emerald-400'
+        : healthScore >= 40 ? 'text-amber-500 dark:text-amber-400'
+            : 'text-red-500 dark:text-red-400'
+    const healthTrack = healthScore >= 70 ? 'bg-emerald-500'
+        : healthScore >= 40 ? 'bg-amber-400'
+            : 'bg-red-500'
+
+    const segments = [
+        { count: active, color: 'bg-emerald-500', label: 'Active' },
+        { count: trial, color: 'bg-blue-400', label: 'Trial' },
+        { count: expired, color: 'bg-orange-400', label: 'Expired' },
+        { count: suspended, color: 'bg-red-400', label: 'Suspended' },
+        { count: disabled + archived, color: 'bg-slate-300 dark:bg-slate-600', label: 'Inactive' },
+    ].filter((s) => s.count > 0)
+
+    return (
+        <Link to="/tenants" className="group col-span-2 animate-fade-in">
+            <div className="card relative h-full overflow-hidden p-5 transition-all duration-200 group-hover:shadow-md group-hover:-translate-y-0.5">
+                {/* Top strip */}
+                <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500" />
+
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-900/30">
+                                <Layers className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Total Tenants</span>
+                        </div>
+                        <p className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 tabular-nums leading-none mt-2">
+                            {total}
+                        </p>
+                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{active}</span> active ·{' '}
+                            <span className="font-semibold text-blue-600 dark:text-blue-400">{trial}</span> on trial
+                        </p>
+                    </div>
+
+                    {/* Health score ring */}
+                    <div className="shrink-0 text-center">
+                        <p className={`text-2xl font-extrabold tabular-nums leading-none ${healthColor}`}>{healthScore}%</p>
+                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Health</p>
+                    </div>
                 </div>
-                {trend && (
-                    <div className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold ${trend.value >= 0
-                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                        : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                        }`}>
-                        <TrendingUp className={`h-3 w-3 ${trend.value < 0 ? 'rotate-180' : ''}`} />
-                        {trend.label}
+
+                {/* Stacked bar */}
+                {total > 0 && (
+                    <div className="mt-4">
+                        <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                            {segments.map((s) => (
+                                <div
+                                    key={s.label}
+                                    className={`h-full transition-all duration-700 ease-out ${s.color}`}
+                                    style={{ width: `${(s.count / total) * 100}%` }}
+                                    title={`${s.label}: ${s.count}`}
+                                />
+                            ))}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                            {segments.map((s) => (
+                                <div key={s.label} className="flex items-center gap-1">
+                                    <span className={`h-1.5 w-1.5 rounded-full ${s.color}`} />
+                                    <span className="text-[10px] text-slate-400">{s.label} <span className="font-semibold text-slate-600 dark:text-slate-400">{s.count}</span></span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
+
+                {/* Health bar */}
+                <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Platform Health</span>
+                        <span className={`text-[11px] font-bold ${healthColor}`}>{healthScore}%</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div
+                            className={`h-full rounded-full transition-all duration-1000 ease-out ${healthTrack}`}
+                            style={{ width: `${healthScore}%` }}
+                        />
+                    </div>
+                </div>
             </div>
-            <p className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 tabular-nums leading-none">
-                {value}
-            </p>
+        </Link>
+    )
+}
+
+// ─── KPI feature card (Active / Trial / Needs Attention) ─────────────────────
+interface KpiFeatureProps {
+    label: string
+    value: number
+    total: number
+    icon: React.ReactNode
+    accentClass: string      // top bar color
+    iconBg: string
+    valueCls: string
+    sub?: string
+    linkTo?: string
+    loading?: boolean
+}
+
+function KpiFeatureCard({ label, value, total, icon, accentClass, iconBg, valueCls, sub, linkTo, loading }: KpiFeatureProps) {
+    if (loading) return <div className="h-[140px] animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700" />
+
+    const pct = total > 0 ? Math.round((value / total) * 100) : 0
+
+    const inner = (
+        <div className="card group relative h-full animate-fade-in overflow-hidden p-5 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+            <div className={`absolute inset-x-0 top-0 h-1 rounded-t-2xl ${accentClass}`} />
+            <div className="flex items-start justify-between gap-2 mb-3">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+                    {icon}
+                </div>
+                <span className="text-xs font-bold text-slate-400 tabular-nums">{pct}%</span>
+            </div>
+            <p className={`text-3xl font-extrabold tracking-tight tabular-nums leading-none ${valueCls}`}>{value}</p>
             <p className="mt-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 leading-tight">{label}</p>
-            {sub && (
-                <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-600 leading-tight">{sub}</p>
+            {sub && <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500 leading-tight">{sub}</p>}
+            {/* mini progress */}
+            <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div
+                    className={`h-full rounded-full transition-all duration-700 ease-out ${accentClass}`}
+                    style={{ width: `${pct}%` }}
+                />
+            </div>
+        </div>
+    )
+
+    if (linkTo) return <Link to={linkTo} className="h-full">{inner}</Link>
+    return inner
+}
+
+// ─── KPI compact card (secondary metrics) ────────────────────────────────────
+interface KpiCompactProps {
+    label: string
+    value: number
+    icon: React.ReactNode
+    iconBg: string
+    valueCls: string
+    dotColor: string
+    sub?: string
+    linkTo?: string
+    loading?: boolean
+    urgent?: boolean
+}
+
+function KpiCompactCard({ label, value, icon, iconBg, valueCls, dotColor: _dotColor, sub, linkTo, loading, urgent }: KpiCompactProps) {
+    if (loading) return <div className="h-[72px] animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700" />
+
+    const inner = (
+        <div className={`group flex items-center gap-3.5 rounded-2xl border px-4 py-3.5 transition-all duration-150 hover:shadow-sm hover:-translate-y-0.5 animate-fade-in
+            ${urgent && value > 0
+                ? 'border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-900/10'
+                : 'border-slate-200/80 bg-white dark:border-slate-700/40 dark:bg-slate-900/90'
+            }`}>
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+                {icon}
+            </div>
+            <div className="min-w-0 flex-1">
+                <p className={`text-xl font-extrabold tabular-nums leading-none ${valueCls}`}>{value}</p>
+                <p className="mt-0.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 leading-tight truncate">{label}</p>
+                {sub && <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">{sub}</p>}
+            </div>
+            {urgent && value > 0 && (
+                <div className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40">
+                    <span className="text-[10px] font-bold text-red-600 dark:text-red-400">!</span>
+                </div>
             )}
         </div>
     )
 
-    if (linkTo) {
-        return <Link to={linkTo}>{content}</Link>
-    }
-    return content
+    if (linkTo) return <Link to={linkTo}>{inner}</Link>
+    return inner
 }
 
 // ─── Plan distribution bar ───────────────────────────────────────────────────
@@ -122,8 +265,6 @@ export function Dashboard() {
         .slice(0, 8)
 
     const healthScore = total > 0 ? Math.round(((active + trial * 0.5) / total) * 100) : 0
-
-    const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
 
     return (
         <div className="min-h-full space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:space-y-8 animate-fade-in">
@@ -197,59 +338,92 @@ export function Dashboard() {
                 </div>
             )}
 
-            {/* ── KPI cards ───────────────────────────────────────────── */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 xs:grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
-                {isLoading ? (
-                    Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-                ) : (
-                    <>
-                        <KpiCard
-                            label="Total Tenants"
-                            value={total}
-                            icon={<Layers className="h-5 w-5 text-slate-600 dark:text-slate-300" />}
-                            iconBg="bg-slate-100 dark:bg-slate-800"
-                            linkTo="/tenants"
-                        />
-                        <KpiCard
-                            label="Active"
-                            value={active}
-                            sub={`${pct(active)}% of total`}
-                            icon={<CheckCircle className="h-5 w-5 text-emerald-600" />}
-                            iconBg="bg-emerald-50 dark:bg-emerald-900/30"
-                            linkTo="/tenants?status=active"
-                        />
-                        <KpiCard
-                            label="On Trial"
-                            value={trial}
-                            sub={`${pct(trial)}% of total`}
-                            icon={<Clock className="h-5 w-5 text-blue-600" />}
-                            iconBg="bg-blue-50 dark:bg-blue-900/30"
-                            linkTo="/tenants?status=trial"
-                        />
-                        <KpiCard
-                            label="Expired"
-                            value={expired}
-                            sub={expired > 0 ? 'Need attention' : 'All clear'}
-                            icon={<XCircle className="h-5 w-5 text-orange-500" />}
-                            iconBg="bg-orange-50 dark:bg-orange-900/30"
-                            linkTo="/tenants?status=expired"
-                        />
-                        <KpiCard
-                            label="Suspended"
-                            value={suspended}
-                            icon={<Shield className="h-5 w-5 text-red-500" />}
-                            iconBg="bg-red-50 dark:bg-red-900/30"
-                            linkTo="/tenants?status=suspended"
-                        />
-                        <KpiCard
-                            label="Inactive"
-                            value={disabled + archived}
-                            sub={`${disabled} disabled · ${archived} archived`}
-                            icon={<Archive className="h-5 w-5 text-slate-400" />}
-                            iconBg="bg-slate-100 dark:bg-slate-800"
-                        />
-                    </>
-                )}
+            {/* ── KPI section ──────────────────────────────────────────── */}
+            <div className="space-y-3">
+
+                {/* Primary row: hero card (2 cols) + 2 feature cards */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-4">
+                    <KpiHeroCard
+                        total={total}
+                        active={active}
+                        trial={trial}
+                        expired={expired}
+                        suspended={suspended}
+                        disabled={disabled}
+                        archived={archived}
+                        loading={isLoading}
+                    />
+                    <KpiFeatureCard
+                        label="Active Tenants"
+                        value={active}
+                        total={total}
+                        icon={<CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
+                        accentClass="bg-emerald-500"
+                        iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+                        valueCls="text-emerald-700 dark:text-emerald-300"
+                        linkTo="/tenants?status=active"
+                        loading={isLoading}
+                    />
+                    <KpiFeatureCard
+                        label="On Trial"
+                        value={trial}
+                        total={total}
+                        icon={<Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+                        accentClass="bg-blue-500"
+                        iconBg="bg-blue-50 dark:bg-blue-900/30"
+                        valueCls="text-blue-700 dark:text-blue-300"
+                        sub={expiringSoon.length > 0 ? `${expiringSoon.length} expiring soon` : undefined}
+                        linkTo="/tenants?status=trial"
+                        loading={isLoading}
+                    />
+                </div>
+
+                {/* Secondary row: 4 compact status cards */}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+                    <KpiCompactCard
+                        label="Expired"
+                        value={expired}
+                        icon={<XCircle className="h-5 w-5 text-orange-500" />}
+                        iconBg="bg-orange-50 dark:bg-orange-900/30"
+                        valueCls="text-orange-600 dark:text-orange-400"
+                        dotColor="bg-orange-400"
+                        sub={expired > 0 ? 'Need renewal' : undefined}
+                        linkTo="/tenants?status=expired"
+                        loading={isLoading}
+                        urgent={expired > 0}
+                    />
+                    <KpiCompactCard
+                        label="Suspended"
+                        value={suspended}
+                        icon={<Shield className="h-5 w-5 text-red-500" />}
+                        iconBg="bg-red-50 dark:bg-red-900/30"
+                        valueCls="text-red-600 dark:text-red-400"
+                        dotColor="bg-red-400"
+                        sub={suspended > 0 ? 'Blocked access' : undefined}
+                        linkTo="/tenants?status=suspended"
+                        loading={isLoading}
+                        urgent={suspended > 0}
+                    />
+                    <KpiCompactCard
+                        label="Disabled"
+                        value={disabled}
+                        icon={<Archive className="h-5 w-5 text-slate-400" />}
+                        iconBg="bg-slate-100 dark:bg-slate-800"
+                        valueCls="text-slate-600 dark:text-slate-400"
+                        dotColor="bg-slate-300"
+                        loading={isLoading}
+                    />
+                    <KpiCompactCard
+                        label="Archived"
+                        value={archived}
+                        icon={<Archive className="h-5 w-5 text-slate-400" />}
+                        iconBg="bg-slate-100 dark:bg-slate-800"
+                        valueCls="text-slate-500 dark:text-slate-500"
+                        dotColor="bg-slate-200"
+                        loading={isLoading}
+                    />
+                </div>
+
             </div>
 
             {/* ── Second row ──────────────────────────────────────────── */}

@@ -61,6 +61,7 @@ export default {
   previous: 'Précédent',
   next: 'Suivant',
   last: 'Dernier',
+  pageReportTemplate: '{first} - {last} sur {totalRecords}',
 
   // Loading & States
   loading: 'Chargement...',
@@ -451,4 +452,16 @@ export default {
   dateFormat: 'Format de date',
   settingsSaved: 'Paramètres enregistrés',
   install: 'Installer',
+
+  // Order payments
+  paidAmount: 'Montant payé',
+  remainingAmount: 'Reste à payer',
+  addPayment: 'Ajouter un paiement',
+  pay: 'Payer',
+  paymentType: 'Mode de paiement',
+  paymentDate: 'Date de paiement',
+  paymentHistory: 'Historique des paiements',
+  deletePayment: 'Supprimer le paiement',
+  optional: 'Optionnel',
+  notes: 'Notes',
 };

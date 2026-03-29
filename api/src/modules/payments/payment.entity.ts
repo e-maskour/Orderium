@@ -8,7 +8,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Invoice } from '../invoices/entities/invoice.entity';
-import { Order } from '../orders/entities/order.entity';
 import { Partner } from '../partners/entities/partner.entity';
 import { numericTransformer } from '../../common/transformers/numeric.transformer';
 
@@ -32,13 +31,6 @@ export class Payment {
 
   @Column({ type: 'int', nullable: true })
   invoiceId: number | null;
-
-  @ManyToOne(() => Order, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'orderId' })
-  order: Order;
-
-  @Column({ type: 'int', nullable: true })
-  orderId: number | null;
 
   @ManyToOne(() => Partner, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'customerId' })

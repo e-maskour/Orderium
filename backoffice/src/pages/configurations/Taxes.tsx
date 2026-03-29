@@ -107,121 +107,121 @@ export default function Taxes() {
     return (
         <AdminLayout>
             <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-            <PageHeader
-                icon={Percent}
-                title={t('taxRates')}
-                subtitle={t('manageTaxRatesAndSettings')}
-                actions={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Button
-                            onClick={openCreateModal}
-                            icon={<Plus style={{ width: 16, height: 16 }} />}
-                            label={t('addTaxRate')}
-                            size="small"
-                        />
-                    </div>
-                }
-            />
-
-            <div className="responsive-table-mobile">
-                <MobileList
-                    items={rates}
-                    keyExtractor={(r: TaxRate) => String(r.name)}
-                    loading={isLoading}
-                    totalCount={rates.length}
-                    countLabel="taux"
-                    emptyMessage="Aucun taux configuré"
-                    config={{
-                        topLeft: (r: TaxRate) => r.name,
-                        topRight: (r: TaxRate) => `${r.rate}%`,
-                        bottomRight: (r: TaxRate) => r.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null,
-                    }}
-                />
-            </div>
-            <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                <DataTable
-                    className="tax-datatable"
-                    value={rates.map((r, i) => ({ ...r, _idx: i }))}
-                    selection={selectedRows}
-                    onSelectionChange={(e) => setSelectedRows(e.value as (TaxRate & { _idx: number })[])}
-                    selectionMode="checkbox"
-                    dataKey="_idx"
-                    paginator
-                    paginatorPosition="top"
-                    rows={25}
-                    rowsPerPageOptions={[10, 25, 50, 100]}
-                    removableSort
-                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noTaxRatesConfigured')}</div>}
-                    paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
-                >
-                    <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                    <Column field="name" header={t('name')} sortable body={(row) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
-                    <Column field="rate" header={t('ratePercentage')} sortable body={(row) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.rate}%</span>} />
-                    <Column field="isDefault" header={t('status')} body={(row) => row.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null} />
-                    <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row) => (
-                        <div style={{ textAlign: 'right' }}>
-                            <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row._idx)} text rounded severity="info" />
-                            <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row._idx)} text rounded severity="danger" />
-                        </div>
-                    )} />
-                </DataTable>
-            </div>
-            <Modal
-                isOpen={showModal}
-                onClose={closeModal}
-                title={editingIndex !== null ? t('editTaxRate') : t('addTaxRate')}
-                footer={
-                    <div className="flex justify-content-end gap-2">
-                        <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
-                        <Button
-                            form="taxes-modal-form"
-                            type="submit"
-                            loading={updateMutation.isPending}
-                            label={t('save')}
-                        />
-                    </div>
-                }
-            >
-                <form id="taxes-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
-                        <InputText
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                            style={{ width: '100%' }}
-                        />
-                    </div>
-
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('ratePercentage')} <span style={{ color: '#ef4444' }}>*</span></label>
-                        <span style={{ position: 'relative', display: 'block', width: '100%' }}>
-                            <InputText
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                max="100"
-                                value={String(formData.rate)}
-                                onChange={(e) => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
-                                required
-                                style={{ width: '100%', paddingRight: '2.5rem' }}
+                <PageHeader
+                    icon={Percent}
+                    title={t('taxRates')}
+                    subtitle={t('manageTaxRatesAndSettings')}
+                    actions={
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Button
+                                onClick={openCreateModal}
+                                icon={<Plus style={{ width: 16, height: 16 }} />}
+                                label={t('addTaxRate')}
+                                size="small"
                             />
-                            <Percent style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                        </span>
-                    </div>
+                        </div>
+                    }
+                />
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Checkbox
-                            checked={formData.isDefault}
-                            onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
-                        />
-                        <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('setAsDefaultTaxRate')}</label>
-                    </div>
+                <div className="responsive-table-mobile">
+                    <MobileList
+                        items={rates}
+                        keyExtractor={(r: TaxRate) => String(r.name)}
+                        loading={isLoading}
+                        totalCount={rates.length}
+                        countLabel="taux"
+                        emptyMessage="Aucun taux configuré"
+                        config={{
+                            topLeft: (r: TaxRate) => r.name,
+                            topRight: (r: TaxRate) => `${r.rate}%`,
+                            bottomRight: (r: TaxRate) => r.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null,
+                        }}
+                    />
+                </div>
+                <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                    <DataTable
+                        className="tax-datatable"
+                        value={rates.map((r, i) => ({ ...r, _idx: i }))}
+                        selection={selectedRows}
+                        onSelectionChange={(e) => setSelectedRows(e.value as (TaxRate & { _idx: number })[])}
+                        selectionMode="checkbox"
+                        dataKey="_idx"
+                        paginator
+                        paginatorPosition="top"
+                        rows={25}
+                        rowsPerPageOptions={[10, 25, 50, 100]}
+                        removableSort
+                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noTaxRatesConfigured')}</div>}
+                        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+                        currentPageReportTemplate={t('pageReportTemplate')}
+                    >
+                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+                        <Column field="name" header={t('name')} sortable body={(row) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
+                        <Column field="rate" header={t('ratePercentage')} sortable body={(row) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.rate}%</span>} />
+                        <Column field="isDefault" header={t('status')} body={(row) => row.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null} />
+                        <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row) => (
+                            <div style={{ textAlign: 'right' }}>
+                                <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row._idx)} text rounded severity="info" />
+                                <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row._idx)} text rounded severity="danger" />
+                            </div>
+                        )} />
+                    </DataTable>
+                </div>
+                <Modal
+                    isOpen={showModal}
+                    onClose={closeModal}
+                    title={editingIndex !== null ? t('editTaxRate') : t('addTaxRate')}
+                    footer={
+                        <div className="flex justify-content-end gap-2">
+                            <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
+                            <Button
+                                form="taxes-modal-form"
+                                type="submit"
+                                loading={updateMutation.isPending}
+                                label={t('save')}
+                            />
+                        </div>
+                    }
+                >
+                    <form id="taxes-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
+                            <InputText
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                required
+                                style={{ width: '100%' }}
+                            />
+                        </div>
 
-                </form>
-            </Modal>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('ratePercentage')} <span style={{ color: '#ef4444' }}>*</span></label>
+                            <span style={{ position: 'relative', display: 'block', width: '100%' }}>
+                                <InputText
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    max="100"
+                                    value={String(formData.rate)}
+                                    onChange={(e) => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
+                                    required
+                                    style={{ width: '100%', paddingRight: '2.5rem' }}
+                                />
+                                <Percent style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+                            </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Checkbox
+                                checked={formData.isDefault}
+                                onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
+                            />
+                            <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('setAsDefaultTaxRate')}</label>
+                        </div>
+
+                    </form>
+                </Modal>
             </div>
         </AdminLayout>
     );

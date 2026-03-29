@@ -13,6 +13,7 @@ import {
   BaseStandardItem,
 } from '../../../common/entities/base-document.entity';
 import { Partner } from '../../partners/entities/partner.entity';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
 export enum OrderStatus {
   DRAFT = 'draft', // Brouillon
@@ -136,6 +137,24 @@ export class Order extends BaseDocument {
 
   @Column({ type: 'timestamp', nullable: true })
   shareTokenExpiry: Date | null;
+
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
+  paidAmount: number = 0;
+
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
+  remainingAmount: number = 0;
 
   // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
 

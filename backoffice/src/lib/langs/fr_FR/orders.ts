@@ -8,7 +8,7 @@ export default {
   total: 'Total',
   noOrdersFound: 'Aucune commande trouvée',
   ordersSelected: 'commandes sélectionnées',
-  newOrder: '+ Nouvelle commande',
+  newOrder: 'Nouvelle commande',
 
   // Order Status
   unassigned: 'Non assigné',
@@ -99,4 +99,10 @@ export default {
   // Empty states
   noOrdersMatchFilter: 'Aucune commande ne correspond à vos critères de recherche. Essayez de modifier les filtres.',
   noOrdersYet: 'Aucune commande pour le moment. Les nouvelles commandes apparaîtront ici.',
+
+  // Order detail page
+  orderNotFound: 'Commande introuvable',
+  orderUpdated: 'Commande mise à jour',
+  paymentAdded: 'Paiement enregistré',
+  back: 'Retour',
 };

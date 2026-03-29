@@ -3,8 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { PartnerForm } from '../components/PartnerForm';
-import { Users, ArrowLeft } from 'lucide-react';
+import { KpiCard, KpiSheet } from '../components/KpiCard';
+import { formatDH } from '../utils/formatNumber';
+import { Users, ArrowLeft, FileText, Clock, CreditCard, Truck, DollarSign, AlertCircle, Save } from 'lucide-react';
 import { toastUpdated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from 'primereact/button';
@@ -15,9 +18,15 @@ export default function FournisseurEdit() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
 
-  const { data: partner, isLoading } = useQuery({
+  const { data: partner, isLoading: partnerLoading } = useQuery({
     queryKey: ['partner', id],
     queryFn: () => partnersService.getById(Number(id)),
+    enabled: !!id,
+  });
+
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['supplier-analytics', id],
+    queryFn: () => partnersService.getSupplierAnalytics(Number(id), new Date().getFullYear()),
     enabled: !!id,
   });
 
@@ -48,7 +57,7 @@ export default function FournisseurEdit() {
     }
   };
 
-  if (isLoading) {
+  if (partnerLoading || analyticsLoading) {
     return (
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
@@ -60,7 +69,7 @@ export default function FournisseurEdit() {
     );
   }
 
-  if (!partner) {
+  if (!partner || !analytics) {
     return (
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
@@ -72,34 +81,55 @@ export default function FournisseurEdit() {
     );
   }
 
+  const { kpis } = analytics;
+  const { totalInvoices, totalExpenses, unpaidAmount, totalOrders, totalOrderExpenses, unpaidOrderAmount } = kpis;
+
   return (
     <AdminLayout>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        {/* Page Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+        <PageHeader
+          icon={Users}
+          title={partner.name}
+          subtitle={t('supplierDetails')}
+          backButton={
             <Button
               icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => navigate('/fournisseurs')}
-              text rounded
-              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
             />
-            <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #1e1e2d, #16213e)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(30,30,45,0.25)' }}>
-              <Users style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
+          }
+          actions={
+            <div style={{ display: 'flex', gap: '0.625rem' }}>
+              <Button type="button" label={t('cancel')} outlined onClick={() => navigate('/fournisseurs')} />
+              <Button
+                type="submit"
+                form="partner-form"
+                label={t('updatePartner')}
+                icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
+                loading={updateMutation.isPending}
+              />
             </div>
-            <div>
-              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>{t('editSupplier')}</h1>
-              <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem', fontWeight: 500 }}>{partner.name}</p>
-            </div>
-          </div>
+          }
+        />
+
+        {/* KPIs */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <KpiSheet count={6} label="Statistiques">
+            <KpiCard label="Total Factures" value={totalInvoices} icon={FileText} color="blue" />
+            <KpiCard label="Revenu Total des Factures" value={formatDH(totalExpenses, 0)} icon={CreditCard} color="emerald" />
+            <KpiCard label="Impayé des Factures" value={formatDH(unpaidAmount, 0)} icon={Clock} color="amber" />
+            <KpiCard label="Total Bon de livraison" value={totalOrders} icon={Truck} color="indigo" />
+            <KpiCard label="Revenu Total des Bon" value={formatDH(totalOrderExpenses, 0)} icon={DollarSign} color="green" />
+            <KpiCard label="Impayé des Bons" value={formatDH(unpaidOrderAmount, 0)} icon={AlertCircle} color="orange" />
+          </KpiSheet>
         </div>
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
+        {/* Edit Form */}
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
           <PartnerForm
             partner={partner}
             type="supplier"
             onSubmit={handleSubmit}
-            onCancel={() => navigate('/fournisseurs')}
             isSubmitting={updateMutation.isPending}
           />
         </div>

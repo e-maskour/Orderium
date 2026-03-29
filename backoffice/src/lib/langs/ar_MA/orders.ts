@@ -8,7 +8,7 @@ export default {
   total: 'المجموع',
   noOrdersFound: 'لا توجد طلبات',
   ordersSelected: 'طلبات محددة',
-  newOrder: '+ طلب جديد',
+  newOrder: 'طلب جديد',
 
   // Order Status
   unassigned: 'غير معين',
@@ -99,4 +99,10 @@ export default {
   // Empty states
   noOrdersMatchFilter: 'لا توجد طلبات تطابق معايير البحث. حاول تعديل الفلاتر.',
   noOrdersYet: 'لا توجد طلبات في الوقت الحالي. ستظهر الطلبات الجديدة هنا.',
+
+  // Order detail page
+  orderNotFound: 'الطلب غير موجود',
+  orderUpdated: 'تم تحديث الطلب',
+  paymentAdded: 'تم تسجيل الدفعة',
+  back: 'رجوع',
 };

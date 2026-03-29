@@ -6,15 +6,19 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
+  backButton?: ReactNode;
 }
 
-export function PageHeader({ icon: Icon, title, subtitle, actions }: PageHeaderProps) {
+export function PageHeader({ icon: Icon, title, subtitle, actions, backButton }: PageHeaderProps) {
   return (
     <div className="page-header">
 
       {/* Decorative circles */}
       <div className="page-header__deco page-header__deco--top" />
       <div className="page-header__deco page-header__deco--bottom" />
+
+      {/* Back button (left of icon) */}
+      {backButton}
 
       {/* Left: icon + text */}
       <div className="page-header__left">

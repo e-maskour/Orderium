@@ -1,21 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ordersService, deliveryPersonService, partnersService } from '../modules';
+import { ordersService, deliveryPersonService, partnersService, orderPaymentsService, ORDER_PAYMENT_TYPE_LABELS } from '../modules';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo } from 'react';
 import { MultiSelect } from 'primereact/multiselect';
-import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, Plus } from 'lucide-react';
+import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, Plus, CreditCard } from 'lucide-react';
 import { toastSuccess, toastDeleted, toastCancelled, toastError, toastWarning, toastConfirm } from '../services/toast.service';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
 import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Sidebar } from 'primereact/sidebar';
 import { Column } from 'primereact/column';
-import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { Dialog } from 'primereact/dialog';
 import { pdfService } from '../services/pdf.service';
@@ -29,7 +29,6 @@ export default function Orders() {
   const { admin } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
@@ -124,12 +123,6 @@ export default function Orders() {
   const { data: partnersData } = useQuery({ queryKey: ['partners'], queryFn: partnersService.getAll });
   const partners = partnersData?.partners || [];
 
-  const { data: orderDetails, isLoading: orderDetailsLoading } = useQuery({
-    queryKey: ['orderDetails', selectedOrderId],
-    queryFn: () => ordersService.getById(selectedOrderId!),
-    enabled: !!selectedOrderId,
-  });
-
   const assignMutation = useMutation({
     mutationFn: ({ orderId, deliveryPersonId }: { orderId: number; deliveryPersonId: number }) => ordersService.assignToDelivery(orderId, deliveryPersonId),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess(t('orderAssigned')); },
@@ -157,16 +150,6 @@ export default function Orders() {
   const changeStatusMutation = useMutation({
     mutationFn: ({ orderId, status }: { orderId: number; status: string }) => ordersService.changeStatus(orderId, status),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess(t('statusUpdated')); },
-    onError: (error: Error) => { toastError(`${t('error')}: ${error.message}`); },
-  });
-
-  const updateItemsMutation = useMutation({
-    mutationFn: ({ orderId, data }: { orderId: number; data: any }) => ordersService.updateValidated(orderId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      if (selectedOrderId) queryClient.invalidateQueries({ queryKey: ['order', selectedOrderId] });
-      toastSuccess('Commande mise à jour');
-    },
     onError: (error: Error) => { toastError(`${t('error')}: ${error.message}`); },
   });
 
@@ -263,6 +246,55 @@ export default function Orders() {
 
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [deliveryModalSearch, setDeliveryModalSearch] = useState('');
+
+  // ── Order payment state ────────────────────────────────────
+  const [paymentOrderId, setPaymentOrderId] = useState<number | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [paymentType, setPaymentType] = useState<string>('cash');
+  const [paymentNote, setPaymentNote] = useState<string>('');
+
+  const { data: orderPayments = [], refetch: refetchPayments } = useQuery({
+    queryKey: ['orderPayments', paymentOrderId],
+    queryFn: () => orderPaymentsService.getByOrder(paymentOrderId!),
+    enabled: !!paymentOrderId,
+  });
+
+  const createPaymentMutation = useMutation({
+    mutationFn: () =>
+      orderPaymentsService.create({
+        orderId: paymentOrderId!,
+        amount: paymentAmount,
+        paymentDate,
+        paymentType: paymentType as any,
+        notes: paymentNote || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orderPayments', paymentOrderId] });
+      setPaymentAmount(0);
+      setPaymentNote('');
+      toastSuccess('Paiement enregistré');
+    },
+    onError: (e: Error) => toastError(e.message),
+  });
+
+  const deletePaymentMutation = useMutation({
+    mutationFn: (id: number) => orderPaymentsService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orderPayments', paymentOrderId] });
+    },
+    onError: (e: Error) => toastError(e.message),
+  });
+
+  const openPaymentModal = (orderId: number) => {
+    setPaymentOrderId(orderId);
+    setPaymentAmount(0);
+    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setPaymentType('cash');
+    setPaymentNote('');
+  };
 
   const handleBulkAssign = (deliveryPersonId: string) => {
     let assigned = 0; let skipped = 0;
@@ -610,7 +642,7 @@ export default function Orders() {
           <MobileList
             items={orders}
             keyExtractor={(o: any) => o.id}
-            onTap={(o: any) => setSelectedOrderId(o.id)}
+            onTap={(o: any) => navigate(`/orders/${o.id}`)}
             loading={ordersLoading}
             totalCount={totalCount}
             countLabel={t('orders')}
@@ -683,7 +715,7 @@ export default function Orders() {
               onRowClick={(e) => {
                 const target = e.originalEvent.target as HTMLElement;
                 if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
-                setSelectedOrderId(e.data.id);
+                navigate(`/orders/${e.data.id}`);
               }}
               rowClassName={() => 'ord-row-clickable'}
               dataKey="id"
@@ -695,7 +727,7 @@ export default function Orders() {
               loading={ordersLoading}
               emptyMessage={t('noOrdersFound')}
               paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="{first}-{last} of {totalRecords}"
+              currentPageReportTemplate={t('pageReportTemplate')}
             >
               <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
               <Column
@@ -786,26 +818,41 @@ export default function Orders() {
                   </span>
                 )}
               />
+              <Column
+                header={t('paidAmount')}
+                body={(order: any) => (
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
+                    {formatAmount(order.paidAmount ?? 0, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
+                  </span>
+                )}
+              />
+              <Column
+                header={t('remainingAmount')}
+                body={(order: any) => {
+                  const remaining = order.remainingAmount ?? 0;
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: remaining > 0 ? '#dc2626' : '#047857' }}>
+                        {formatAmount(remaining, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
+                      </span>
+                      {remaining > 0 && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); openPaymentModal(order.id); }}
+                          style={{ padding: '0.2rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                        >
+                          <CreditCard style={{ width: '0.7rem', height: '0.7rem' }} />
+                          {t('pay')}
+                        </button>
+                      )}
+                    </div>
+                  );
+                }}
+              />
             </DataTable>
           </div>
         )}
       </div>
-
-      {/* Order Details Modal */}
-      {selectedOrderId && orderDetails && (
-        <OrderDetailsModal
-          order={orderDetails.order || orderDetails}
-          onClose={() => setSelectedOrderId(null)}
-          onStatusChange={(orderId, status) => changeStatusMutation.mutate({ orderId, status })}
-          onOrderUpdate={(orderId, data) => updateItemsMutation.mutate({ orderId, data })}
-          onPrintReceipt={() => {
-            const order = orders.find((o: any) => o.id === selectedOrderId);
-            const url = pdfService.getPDFUrl('receipt', selectedOrderId, 'preview');
-            const label = pdfService.getDocumentLabel('receipt');
-            setPdfUrl(url); setPdfTitle(`${label} ${order?.orderNumber || ''}`.trim()); setShowPDFPreview(true);
-          }}
-        />
-      )}
 
       {/* Floating Action Bar */}
       <FloatingActionBar
@@ -816,7 +863,7 @@ export default function Orders() {
         totalCount={orders.length}
         actions={[
           { id: 'assign', label: t('assignToDelivery'), icon: <UserPlus style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => setShowAssignModal(true) },
-          { id: 'details', label: t('details'), icon: <Info style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => setSelectedOrderId(selectedOrders[0]), hidden: selectedOrders.length !== 1 },
+          { id: 'details', label: t('details'), icon: <Info style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => navigate(`/orders/${selectedOrders[0]}`), hidden: selectedOrders.length !== 1 },
           { id: 'preview-receipt', label: t('previewReceipt'), icon: <Receipt style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('receipt'), hidden: selectedOrders.length !== 1 },
           { id: 'preview-delivery-note', label: t('previewDeliveryNote'), icon: <Truck style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('delivery-note'), hidden: selectedOrders.length !== 1 },
           { id: 'cancel-delivery', label: t('cancelDelivery'), icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => toastConfirm(t('cancelDelivery'), () => cancelDeliveryMutation.mutate(selectedOrders), { description: t('confirmCancelDelivery'), confirmLabel: t('cancelDelivery') }), variant: 'danger' as const, hidden: !selectedOrders.every(orderId => { const order = orders.find((o: any) => o.id === orderId); return order && ['pending', 'assigned', 'confirmed'].includes(order.deliveryStatus); }) },
@@ -897,6 +944,109 @@ export default function Orders() {
       </Dialog>
 
       <PDFPreviewModal isOpen={showPDFPreview} onClose={() => setShowPDFPreview(false)} pdfUrl={pdfUrl} title={pdfTitle} />
+
+      {/* Order Payment Dialog */}
+      <Dialog
+        visible={!!paymentOrderId}
+        onHide={() => setPaymentOrderId(null)}
+        header={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: 'linear-gradient(135deg, #047857, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <CreditCard style={{ width: '1rem', height: '1rem', color: '#fff' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>{t('addPayment')}</p>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>{t('orderNumber')} #{orders.find((o: any) => o.id === paymentOrderId)?.orderNumber}</p>
+            </div>
+          </div>
+        }
+        style={{ width: '32rem', maxWidth: '95vw' }}
+        contentStyle={{ padding: '0 1.25rem 1.25rem' }}
+        modal
+        draggable={false}
+        resizable={false}
+        pt={{ header: { style: { padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid #f1f5f9' } } }}
+      >
+        {/* Existing payments list */}
+        {orderPayments.length > 0 && (
+          <div style={{ marginBottom: '1rem', marginTop: '1rem' }}>
+            <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.5rem' }}>{t('paymentHistory')}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', maxHeight: '10rem', overflowY: 'auto' }}>
+              {orderPayments.map((p: any) => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                  <div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#047857' }}>{formatAmount(p.amount, 2)} {t('currency')}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '0.5rem' }}>{p.paymentDate} · {p.paymentType}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toastConfirm(t('deletePayment'), () => deletePaymentMutation.mutate(p.id), { confirmLabel: t('delete') })}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '0.125rem' }}
+                  >
+                    <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* New payment form */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginTop: orderPayments.length > 0 ? 0 : '1rem' }}>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.375rem' }}>{t('amount')} *</label>
+            <InputNumber
+              value={paymentAmount}
+              onValueChange={(e) => setPaymentAmount(e.value ?? 0)}
+              mode="decimal"
+              minFractionDigits={2}
+              maxFractionDigits={2}
+              min={0}
+              style={{ width: '100%' }}
+              inputStyle={{ width: '100%' }}
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.375rem' }}>{t('paymentDate')} *</label>
+            <InputText
+              type="date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.375rem' }}>{t('paymentType')} *</label>
+            <Dropdown
+              value={paymentType}
+              onChange={(e) => setPaymentType(e.value)}
+              options={Object.entries(ORDER_PAYMENT_TYPE_LABELS).map(([value, label]) => ({ value, label }))}
+              optionLabel="label"
+              optionValue="value"
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.375rem' }}>{t('notes')}</label>
+            <InputText
+              value={paymentNote}
+              onChange={(e) => setPaymentNote(e.target.value)}
+              style={{ width: '100%' }}
+              placeholder={t('optional')}
+            />
+          </div>
+          <Button
+            label={t('addPayment')}
+            icon={<CreditCard style={{ width: '0.875rem', height: '0.875rem', marginRight: '0.375rem' }} />}
+            onClick={() => createPaymentMutation.mutate()}
+            loading={createPaymentMutation.isPending}
+            disabled={!paymentAmount || paymentAmount <= 0}
+            style={{ width: '100%', marginTop: '0.25rem' }}
+            severity="success"
+          />
+        </div>
+      </Dialog>
     </AdminLayout>
   );
 }

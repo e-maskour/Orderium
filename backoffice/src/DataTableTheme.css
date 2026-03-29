@@ -352,6 +352,14 @@
     box-shadow: 0 0 0 3px rgba(35, 90, 228, 0.12) !important;
 }
 
+/* RTL — flip prev/next arrow icons so "next" points left and "prev" points right */
+[dir="rtl"] .p-datatable.p-component .p-paginator .p-paginator-prev .p-paginator-icon,
+[dir="rtl"] .p-datatable.p-component .p-paginator .p-paginator-next .p-paginator-icon,
+[dir="rtl"] .p-datatable.p-component .p-paginator .p-paginator-first .p-paginator-icon,
+[dir="rtl"] .p-datatable.p-component .p-paginator .p-paginator-last .p-paginator-icon {
+    transform: scaleX(-1) !important;
+}
+
 /* ──────────────────────────────────────────────
    6. LOADING OVERLAY — polished spinner
    ────────────────────────────────────────────── */
@@ -1035,7 +1043,7 @@
 }
 
 /* ──────────────────────────────────────────────
-   CLICKABLE ROW — Orders page (ord-row-clickable)
+   CLICKABLE ROW — shared across all list tables
    ────────────────────────────────────────────── */
 .p-datatable.p-component .p-datatable-tbody>tr.ord-row-clickable {
     cursor: pointer !important;
