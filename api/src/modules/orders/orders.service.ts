@@ -57,7 +57,9 @@ export class OrdersService {
     return this.tenantConnService.getCurrentDataSource();
   }
 
-  async createOrder(createOrderDto: CreateOrderDto): Promise<Record<string, unknown>> {
+  async createOrder(
+    createOrderDto: CreateOrderDto,
+  ): Promise<Record<string, unknown>> {
     if (!createOrderDto.items || createOrderDto.items.length === 0) {
       throw new BadRequestException('Order must have at least one item');
     }
@@ -77,9 +79,13 @@ export class OrdersService {
 
       // Validate that customer exists if customerId is provided
       if (customerId) {
-        const customerExists = await manager.getRepository('partners').findOne({ where: { id: customerId } });
+        const customerExists = await manager
+          .getRepository('partners')
+          .findOne({ where: { id: customerId } });
         if (!customerExists) {
-          throw new BadRequestException(`Customer with ID ${customerId} does not exist`);
+          throw new BadRequestException(
+            `Customer with ID ${customerId} does not exist`,
+          );
         }
       }
 
@@ -664,14 +670,18 @@ export class OrdersService {
       // Filter panel mode
       if (fromClient !== undefined) {
         if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
-          queryBuilder.andWhere('order.fromClient = :fromClient', { fromClient });
+          queryBuilder.andWhere('order.fromClient = :fromClient', {
+            fromClient,
+          });
         } else {
           queryBuilder.where('order.fromClient = :fromClient', { fromClient });
         }
       }
 
       if (orderNumber) {
-        queryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
+        queryBuilder.andWhere('order.documentNumber = :orderNumber', {
+          orderNumber,
+        });
       }
 
       if (deliveryStatus && deliveryStatus.length > 0) {
@@ -688,7 +698,9 @@ export class OrdersService {
       }
 
       if (status && status.length > 0) {
-        queryBuilder.andWhere('order.status IN (:...orderStatuses)', { orderStatuses: status });
+        queryBuilder.andWhere('order.status IN (:...orderStatuses)', {
+          orderStatuses: status,
+        });
       }
 
       if (customerId) {
@@ -700,7 +712,9 @@ export class OrdersService {
       }
 
       if (deliveryPersonId) {
-        queryBuilder.andWhere('delivery.deliveryPersonId = :deliveryPersonId', { deliveryPersonId });
+        queryBuilder.andWhere('delivery.deliveryPersonId = :deliveryPersonId', {
+          deliveryPersonId,
+        });
       }
 
       if (startDate && endDate) {
@@ -737,20 +751,32 @@ export class OrdersService {
     } else {
       if (fromClient !== undefined) {
         if (Object.keys(countQueryBuilder.expressionMap.wheres).length > 0) {
-          countQueryBuilder.andWhere('order.fromClient = :fromClient', { fromClient });
+          countQueryBuilder.andWhere('order.fromClient = :fromClient', {
+            fromClient,
+          });
         } else {
-          countQueryBuilder.where('order.fromClient = :fromClient', { fromClient });
+          countQueryBuilder.where('order.fromClient = :fromClient', {
+            fromClient,
+          });
         }
       }
       if (orderNumber) {
-        countQueryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
+        countQueryBuilder.andWhere('order.documentNumber = :orderNumber', {
+          orderNumber,
+        });
       }
       if (startDate && endDate) {
-        countQueryBuilder.andWhere('order.dateCreated >= :startDate', { startDate });
-        countQueryBuilder.andWhere('order.dateCreated <= :endDate', { endDate });
+        countQueryBuilder.andWhere('order.dateCreated >= :startDate', {
+          startDate,
+        });
+        countQueryBuilder.andWhere('order.dateCreated <= :endDate', {
+          endDate,
+        });
       }
       if (customerId) {
-        countQueryBuilder.andWhere('order.customerId = :customerId', { customerId });
+        countQueryBuilder.andWhere('order.customerId = :customerId', {
+          customerId,
+        });
       }
       if (deliveryPersonId) {
         countQueryBuilder.andWhere(
@@ -1327,16 +1353,21 @@ export class OrdersService {
     try {
       // Build the current pattern for this sequence using document date (e.g., "BL 2026-02-")
       const pattern = this.buildSequencePattern(sequence, documentDate);
+      const isReceipt = sequence.entityType === 'receipt';
 
-      // Find all orders with document numbers matching this pattern
+      // Find all orders with document/receipt numbers matching this pattern
       const orders = await this.orderRepository
         .createQueryBuilder('order')
-        .where('order.documentNumber LIKE :pattern', {
-          pattern: `${pattern}%`,
-        })
-        .andWhere('order.documentNumber NOT LIKE :provisional', {
-          provisional: 'PROV%',
-        })
+        .where(
+          isReceipt
+            ? 'order.receiptNumber LIKE :pattern'
+            : 'order.documentNumber LIKE :pattern',
+          { pattern: `${pattern}%` },
+        )
+        .andWhere(
+          isReceipt ? '1=1' : 'order.documentNumber NOT LIKE :provisional',
+          { provisional: 'PROV%' },
+        )
         .getMany();
 
       if (orders.length === 0) {
@@ -1348,8 +1379,11 @@ export class OrdersService {
       // Extract all sequence numbers from the orders
       const numbers = orders
         .map((order) => {
+          const numberField = isReceipt
+            ? order.receiptNumber
+            : order.documentNumber;
           // Remove the pattern prefix to get just the number part
-          const numberPart = order.documentNumber.replace(pattern, '');
+          const numberPart = (numberField || '').replace(pattern, '');
           // Remove any suffix
           const cleanNumber = numberPart.replace(sequence.suffix || '', '');
           return parseInt(cleanNumber, 10);
@@ -1686,10 +1720,20 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    // Prevent updates to validated orders
+    // Prevent updates to validated orders (bon de livraison document page)
     if (order.isValidated) {
       throw new BadRequestException(
         'Cannot update a validated order. Devalidate first if changes are needed.',
+      );
+    }
+
+    // Prevent updates to delivered or cancelled orders (orders page)
+    if (
+      order.status === OrderStatus.DELIVERED ||
+      order.status === OrderStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        'Cannot update a delivered or cancelled order.',
       );
     }
 
@@ -1835,6 +1879,132 @@ export class OrdersService {
     });
   }
 
+  /**
+   * Update an order even if it is validated (e.g. from the bon de livraison page).
+   * Runs in a single transaction — skips the isValidated guard, applies all field
+   * and item changes with isValidated untouched, then regenerates the PDF non-blocking.
+   */
+  async updateValidatedOrder(
+    id: number,
+    updateOrderDto: Partial<CreateOrderDto>,
+  ): Promise<Record<string, unknown>> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['customer', 'items'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (
+      order.status === OrderStatus.DELIVERED ||
+      order.status === OrderStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        'Cannot update a delivered or cancelled order.',
+      );
+    }
+
+    const wasValidated = order.isValidated;
+
+    const result = await this.dataSource.transaction(async (manager) => {
+      if (updateOrderDto.notes !== undefined) {
+        order.notes = updateOrderDto.notes;
+      }
+      if (updateOrderDto.total !== undefined) {
+        order.total = updateOrderDto.total;
+      }
+      if (updateOrderDto.subtotal !== undefined) {
+        order.subtotal = updateOrderDto.subtotal;
+      }
+      if (updateOrderDto.tax !== undefined) {
+        order.tax = updateOrderDto.tax;
+      }
+      if (updateOrderDto.discount !== undefined) {
+        order.discount = updateOrderDto.discount;
+      }
+      if (updateOrderDto.discountType !== undefined) {
+        order.discountType = updateOrderDto.discountType;
+      }
+      if (updateOrderDto.date !== undefined) {
+        order.date = new Date(updateOrderDto.date);
+      }
+      if (updateOrderDto.dueDate !== undefined) {
+        order.dueDate = updateOrderDto.dueDate
+          ? new Date(updateOrderDto.dueDate)
+          : null;
+      }
+      if (updateOrderDto.customerId !== undefined) {
+        order.customerId = updateOrderDto.customerId;
+      }
+      if (updateOrderDto.customerName !== undefined) {
+        order.customerName = updateOrderDto.customerName;
+      }
+      if (updateOrderDto.customerPhone !== undefined) {
+        order.customerPhone = updateOrderDto.customerPhone;
+      }
+      if (updateOrderDto.customerAddress !== undefined) {
+        order.customerAddress = updateOrderDto.customerAddress;
+      }
+      if (updateOrderDto.supplierId !== undefined) {
+        order.supplierId = updateOrderDto.supplierId;
+      }
+      if (updateOrderDto.supplierName !== undefined) {
+        order.supplierName = updateOrderDto.supplierName;
+      }
+      if (updateOrderDto.supplierPhone !== undefined) {
+        order.supplierPhone = updateOrderDto.supplierPhone;
+      }
+      if (updateOrderDto.supplierAddress !== undefined) {
+        order.supplierAddress = updateOrderDto.supplierAddress;
+      }
+
+      const finalSupplierId =
+        updateOrderDto.supplierId !== undefined
+          ? updateOrderDto.supplierId
+          : order.supplierId;
+      order.direction = finalSupplierId
+        ? DocumentDirection.ACHAT
+        : DocumentDirection.VENTE;
+
+      await manager.save(Order, order);
+
+      if (updateOrderDto.items && updateOrderDto.items.length > 0) {
+        await manager.delete(OrderItem, { orderId: id });
+        const itemsToInsert = updateOrderDto.items.map((item) => ({
+          orderId: id,
+          productId: item.productId,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice ?? 0,
+          discount: item.discount || 0,
+          discountType: item.discountType || 0,
+          tax: item.tax || 0,
+          total: item.total ?? 0,
+        }));
+        await manager.insert(OrderItem, itemsToInsert);
+      }
+
+      await this.invalidateOrderCache(id);
+      return await this.getOrderById(id);
+    });
+
+    // Non-blocking PDF regeneration after transaction commits
+    if (wasValidated) {
+      void this.pdfService
+        .generateAndUploadPDF('delivery-note', id)
+        .then(async (pdfUrl) => {
+          if (pdfUrl) await this.orderRepository.update(id, { pdfUrl });
+        })
+        .catch((err: Error) =>
+          this.logger.error('PDF regeneration failed after update', err?.stack),
+        );
+    }
+
+    return result;
+  }
+
   async deliver(id: number): Promise<Record<string, unknown>> {
     const order = await this.orderRepository.findOne({
       where: { id },
@@ -1892,7 +2062,10 @@ export class OrdersService {
     return await this.getOrderById(id);
   }
 
-  async markAsInvoiced(orderId: number, invoiceId: number): Promise<Record<string, unknown>> {
+  async markAsInvoiced(
+    orderId: number,
+    invoiceId: number,
+  ): Promise<Record<string, unknown>> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
     });
@@ -2200,7 +2373,7 @@ export class OrdersService {
       [OrderStatus.INVOICED]: 'Facturée',
       [OrderStatus.CANCELLED]: 'Annulée',
     };
-    return labels[status] || status;
+    return (labels[status] as string | undefined) ?? status;
   }
 
   private getDeliveryStatusLabel(status: DeliveryStatus): string {
@@ -2214,7 +2387,7 @@ export class OrdersService {
       [DeliveryStatus.DELIVERED]: 'Livrée',
       [DeliveryStatus.CANCELED]: 'Annulée',
     };
-    return labels[status] || status;
+    return (labels[status] as string | undefined) ?? status;
   }
 
   // ─── Share Link ───────────────────────────────────────────────────────────
@@ -2239,7 +2412,10 @@ export class OrdersService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
-    await this.orderRepository.update(id, { shareToken, shareTokenExpiry: expiresAt });
+    await this.orderRepository.update(id, {
+      shareToken,
+      shareTokenExpiry: expiresAt,
+    });
     await this.cacheManager.del(`order:${id}`);
 
     return { shareToken, expiresAt };
@@ -2258,7 +2434,10 @@ export class OrdersService {
       throw new NotFoundException('Order not found or link has expired');
     }
 
-    if (order.shareTokenExpiry && new Date() > new Date(order.shareTokenExpiry)) {
+    if (
+      order.shareTokenExpiry &&
+      new Date() > new Date(order.shareTokenExpiry)
+    ) {
       throw new BadRequestException('This order link has expired');
     }
 
@@ -2301,7 +2480,10 @@ export class OrdersService {
     if (!order) {
       throw new NotFoundException('Order not found');
     }
-    await this.orderRepository.update(id, { shareToken: null, shareTokenExpiry: null });
+    await this.orderRepository.update(id, {
+      shareToken: null,
+      shareTokenExpiry: null,
+    });
     await this.cacheManager.del(`order:${id}`);
   }
 }

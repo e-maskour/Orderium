@@ -297,6 +297,18 @@ export class OrdersController {
     return ApiRes(ORD.UPDATED, order);
   }
 
+  @Patch(':id/update-validated')
+  @ApiOperation({ summary: 'Update an order even if validated — devalidates, updates and re-validates in one transaction' })
+  @ApiResponse({ status: 200, description: 'Order updated successfully' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async updateValidated(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateOrderDto: Partial<CreateOrderDto>,
+  ) {
+    const order = await this.ordersService.updateValidatedOrder(id, updateOrderDto);
+    return ApiRes(ORD.UPDATE_VALIDATED, order);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an order' })
   @ApiResponse({ status: 200, description: 'Order deleted successfully' })

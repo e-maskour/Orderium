@@ -48,6 +48,7 @@ export const API_ROUTES = {
         CREATE: '/api/orders',
         DETAIL: (id: number) => `/api/orders/${id}`,
         UPDATE: (id: number) => `/api/orders/${id}`,
+        UPDATE_VALIDATED: (id: number) => `/api/orders/${id}/update-validated`,
         DELETE: (id: number) => `/api/orders/${id}`,
         VALIDATE: (id: number) => `/api/orders/${id}/validate`,
         DEVALIDATE: (id: number) => `/api/orders/${id}/devalidate`,

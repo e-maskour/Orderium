@@ -579,27 +579,26 @@ export class PDFService {
 
     // Generate items HTML — table rows for the new design
     const itemsHtml = data.items
-      .map(
-        (item) => {
-          const discountSub = item.discount > 0
+      .map((item) => {
+        const discountSub =
+          item.discount > 0
             ? `Remise: -${this.formatCurrency(item.discount)} DH`
             : '';
-          const taxSub = !hideVAT && item.tax > 0
-            ? `TVA: ${item.tax}%`
-            : '';
-          const subParts = [discountSub, taxSub].filter(Boolean).join(' · ');
-          return `<tr class="t-item">
+        const taxSub = !hideVAT && item.tax > 0 ? `TVA: ${item.tax}%` : '';
+        const subParts = [discountSub, taxSub].filter(Boolean).join(' · ');
+        const qtyLine = `${item.quantity} × ${this.formatCurrency(item.unitPrice)} DH${subParts ? ' · ' + subParts : ''}`;
+        return `<tr class="t-item">
             <td class="t-desc">
               ${item.description}
-              ${subParts ? `<span class="t-desc-sub">${subParts}</span>` : ''}
+              <span class="t-desc-sub">${qtyLine}</span>
             </td>
-            <td class="t-qty">${item.quantity}</td>
-            <td class="t-price">${this.formatCurrency(item.unitPrice)}</td>
             <td class="t-total">${this.formatCurrency(item.total)}</td>
           </tr>`;
-        },
-      )
+      })
       .join('');
+
+    const totalQty = data.items.reduce((sum, i) => sum + i.quantity, 0);
+    const totalProducts = data.items.length;
 
     return renderReceiptTemplate({
       documentNumber: data.documentNumber,
@@ -607,6 +606,8 @@ export class PDFService {
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       itemsHtml,
+      totalQty,
+      totalProducts,
       subtotal: this.formatCurrency(data.subtotal),
       discount:
         data.discount && data.discount > 0

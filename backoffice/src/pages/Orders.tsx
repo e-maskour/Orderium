@@ -160,6 +160,16 @@ export default function Orders() {
     onError: (error: Error) => { toastError(`${t('error')}: ${error.message}`); },
   });
 
+  const updateItemsMutation = useMutation({
+    mutationFn: ({ orderId, data }: { orderId: number; data: any }) => ordersService.updateValidated(orderId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      if (selectedOrderId) queryClient.invalidateQueries({ queryKey: ['order', selectedOrderId] });
+      toastSuccess('Commande mise à jour');
+    },
+    onError: (error: Error) => { toastError(`${t('error')}: ${error.message}`); },
+  });
+
   const ORDER_STATUS_WORKFLOW: Record<string, { value: string; label: string; bg: string; color: string; border: string }[]> = {
     confirmed: [
       { value: 'picked_up', label: t('pickedUp'), bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
@@ -787,6 +797,7 @@ export default function Orders() {
           order={orderDetails.order || orderDetails}
           onClose={() => setSelectedOrderId(null)}
           onStatusChange={(orderId, status) => changeStatusMutation.mutate({ orderId, status })}
+          onOrderUpdate={(orderId, data) => updateItemsMutation.mutate({ orderId, data })}
           onPrintReceipt={() => {
             const order = orders.find((o: any) => o.id === selectedOrderId);
             const url = pdfService.getPDFUrl('receipt', selectedOrderId, 'preview');

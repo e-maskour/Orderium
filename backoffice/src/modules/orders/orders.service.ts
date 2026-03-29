@@ -65,7 +65,12 @@ export class OrdersService {
   }
 
   async update(orderId: number, orderData: any): Promise<Order> {
-    const response = await apiClient.put<any>(API_ROUTES.ORDERS.UPDATE(orderId), orderData);
+    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.UPDATE(orderId), orderData);
+    return Order.fromApiResponse(response.data);
+  }
+
+  async updateValidated(orderId: number, orderData: any): Promise<Order> {
+    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.UPDATE_VALIDATED(orderId), orderData);
     return Order.fromApiResponse(response.data);
   }
 

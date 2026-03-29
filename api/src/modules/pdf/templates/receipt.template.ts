@@ -4,6 +4,8 @@ interface ReceiptTemplateData {
   customerName: string;
   customerPhone?: string;
   itemsHtml: string;
+  totalQty: number;
+  totalProducts: number;
   subtotal: string;
   discount?: string;
   discountType?: number;
@@ -18,7 +20,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   const discountRowHtml =
     data.discount && data.discount !== '0.00'
       ? `<tr class="t-sub">
-           <td colspan="3" class="t-label">Remise${data.discountType === 1 ? ' (%)' : ''}</td>
+           <td class="t-label">Remise${data.discountType === 1 ? ' (%)' : ''}</td>
            <td class="t-amount">-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</td>
          </tr>`
       : '';
@@ -94,6 +96,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
 
     /* ── Separators ──────────────────────── */
     .sep { border: none; margin: 2.5mm 0; }
+    .sep-tight { border: none; margin: 1mm 0; }
     .sep-solid { border-top: 1.5px solid #1a1a1a; }
     .sep-dash  { border-top: 1px dashed #aaa; }
     .sep-thin  { border-top: 0.5px solid #ddd; }
@@ -103,7 +106,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1.5mm 0;
+      padding: 0.5mm 0;
     }
     .rcp-badge {
       display: inline-block;
@@ -129,7 +132,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
 
     /* ── Customer row ────────────────────── */
     .rcp-customer {
-      padding: 1.5mm 0;
+      padding: 0;
     }
     .rcp-customer-label {
       font-size: 6pt;
@@ -168,9 +171,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
       padding: 1mm 0 1.2mm;
     }
     .rcp-table th.th-desc  { text-align: left; }
-    .rcp-table th.th-qty   { text-align: center; width: 7mm; }
-    .rcp-table th.th-price { text-align: right; width: 14mm; }
-    .rcp-table th.th-total { text-align: right; width: 14mm; }
+    .rcp-table th.th-total { text-align: right; width: 18mm; }
 
     .rcp-table tbody tr.t-item td {
       padding: 1.8mm 0 0;
@@ -189,12 +190,12 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     .t-desc-sub {
       font-size: 6pt;
       color: #777;
-      font-weight: 400;
+      font-weight: 700;
       display: block;
       margin-top: 0.3mm;
       padding-bottom: 1.5mm;
     }
-    .t-qty {
+    .t-qty-removed {
       text-align: center;
       font-size: 7.5pt;
       font-weight: 600;
@@ -217,6 +218,19 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
       white-space: nowrap;
     }
 
+    /* ── Summary bar ─────────────────────── */
+    .rcp-summary {
+      display: flex;
+      justify-content: space-between;
+      font-size: 6.5pt;
+      color: #555;
+      padding: 1.5mm 0 0;
+    }
+    .rcp-summary b {
+      color: #0a0a0a;
+      font-weight: 700;
+    }
+
     /* ── Totals table ────────────────────── */
     .rcp-totals-table {
       width: 100%;
@@ -228,7 +242,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
       font-variant-numeric: tabular-nums;
     }
     .t-label {
-      text-align: right;
+      text-align: left;
       color: #444;
       padding-right: 2mm;
     }
@@ -288,7 +302,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     ${data.companyLines.map((line) => `<div class="rcp-company-detail" dir="auto">${line}</div>`).join('')}
   </div>
 
-  <hr class="sep sep-solid" />
+  <hr class="sep sep-tight sep-solid" />
 
   <!-- ── Receipt Title Band ── -->
   <div class="rcp-title-band">
@@ -299,7 +313,7 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     </div>
   </div>
 
-  <hr class="sep sep-dash" />
+  <hr class="sep sep-tight sep-dash" />
 
   <!-- ── Customer ── -->
   <div class="rcp-customer">
@@ -308,15 +322,13 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     ${data.customerPhone ? `<div class="rcp-customer-meta">${data.customerPhone}</div>` : ''}
   </div>
 
-  <hr class="sep sep-dash" />
+  <hr class="sep sep-tight sep-dash" />
 
   <!-- ── Items ── -->
   <table class="rcp-table">
     <thead>
       <tr>
         <th class="th-desc">Désignation</th>
-        <th class="th-qty">Qté</th>
-        <th class="th-price">P.U.</th>
         <th class="th-total">Total</th>
       </tr>
     </thead>
@@ -325,25 +337,29 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
     </tbody>
   </table>
 
-  <hr class="sep sep-solid" />
+  <!-- ── Summary ── -->
+  <div class="rcp-summary">
+    <span><b>${data.totalProducts}</b> article${data.totalProducts > 1 ? 's' : ''}</span>
+    <span>Qté totale : <b>${data.totalQty}</b></span>
+  </div>
 
   <!-- ── Totals ── -->
   <table class="rcp-totals-table">
     <tbody>
       ${!data.hideVAT
       ? `<tr class="t-sub">
-             <td colspan="3" class="t-label">Sous-total</td>
+             <td class="t-label">Sous-total</td>
              <td class="t-amount">${data.subtotal} DH</td>
            </tr>
            ${discountRowHtml}
            <tr class="t-sub">
-             <td colspan="3" class="t-label">TVA (20%)</td>
+             <td class="t-label">TVA (20%)</td>
              <td class="t-amount">${data.tax} DH</td>
            </tr>`
       : discountRowHtml
     }
       <tr class="t-grand">
-        <td colspan="3" class="t-label">Total TTC</td>
+        <td class="t-label">Total</td>
         <td class="t-amount">${data.total} DH</td>
       </tr>
     </tbody>
