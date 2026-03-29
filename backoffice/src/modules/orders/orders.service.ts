@@ -21,10 +21,11 @@ export class OrdersService {
     status?: string[],
   ): Promise<any> {
     const filters: any = {};
+    let remainingSearch = search || '';
     if (search) {
       search.split(' ').forEach(part => {
-        if (part.startsWith('customerId:')) filters.customerId = parseInt(part.split(':')[1]);
-        else if (part.startsWith('deliveryPersonId:')) filters.deliveryPersonId = parseInt(part.split(':')[1]);
+        if (part.startsWith('customerId:')) { filters.customerId = parseInt(part.split(':')[1]); remainingSearch = remainingSearch.replace(part, '').trim(); }
+        else if (part.startsWith('deliveryPersonId:')) { filters.deliveryPersonId = parseInt(part.split(':')[1]); remainingSearch = remainingSearch.replace(part, '').trim(); }
       });
     }
 
@@ -33,6 +34,7 @@ export class OrdersService {
     if (direction) queryParams.direction = direction;
 
     const body: any = {};
+    if (remainingSearch) body.search = remainingSearch;
     if (startDate) body.startDate = startDate.toISOString();
     if (endDate) body.endDate = endDate.toISOString();
     if (deliveryStatus) body.deliveryStatus = deliveryStatus;

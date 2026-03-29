@@ -86,6 +86,7 @@ export class OrdersController {
       filterDto.supplierId,
       directionValue,
       filterDto.status,
+      filterDto.search,
     );
 
     const offset = (pageNum - 1) * pageSize;

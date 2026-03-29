@@ -4,10 +4,11 @@ export default {
   order: 'طلب',
   orderManagement: 'إدارة الطلبات',
   viewAndAssignOrders: 'عرض وتعيين الطلبات',
-  orderNumber: 'رقم الطلب',
+  orderNumber: 'طلب',
   total: 'المجموع',
   noOrdersFound: 'لا توجد طلبات',
   ordersSelected: 'طلبات محددة',
+  newOrder: '+ طلب جديد',
 
   // Order Status
   unassigned: 'غير معين',
@@ -26,7 +27,7 @@ export default {
   orderDetails: 'تفاصيل الطلب',
   orderItems: 'المنتجات المطلوبة',
   quantity: 'الكمية',
-  unitPrice: 'السعر',
+  unitPrice: 'سعر / وحدة',
   subtotal: 'المجموع الفرعي',
   discount: 'الخصم',
   grandTotal: 'المجموع الإجمالي',
@@ -34,7 +35,7 @@ export default {
   customerInformation: 'معلومات العميل',
 
   // Order Actions
-  assignToDelivery: 'مندوب',
+  assignToDelivery: 'تعيين مندوب',
   downloadReceipt: 'تحميل الإيصال',
   downloadInvoice: 'تحميل الفاتورة',
   receipts: 'إيصالات',
@@ -45,7 +46,8 @@ export default {
   selectDeliveryPerson: 'اختر مندوب التوصيل',
   unassignOrder: 'إلغاء تعيين الطلب',
   unassignOrderConfirm: 'هل أنت متأكد من إلغاء تعيين هذا الطلب؟',
-  cancelDelivery: 'إلغاء التوصيل',
+  cancelDelivery: 'إلغاء الطلب',
+  confirmCancelDelivery: 'هل أنت متأكد من إلغاء التوصيل؟ لا يمكن التراجع عن هذا الإجراء.',
 
   // Order Notifications
   orderAssigned: 'تم تعيين الطلب بنجاح',
@@ -71,7 +73,7 @@ export default {
   orderSource: 'مصدر الطلب',
   local: 'محلي',
   client: 'العميل',
-  reset: 'إعادة تعيين',
+  reset: 'مسح الفلاتير',
   apply: 'تطبيق',
 
   // KPIs

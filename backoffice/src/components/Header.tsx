@@ -7,16 +7,18 @@ import { Button } from 'primereact/button';
 import { Avatar } from 'primereact/avatar';
 import { Divider } from 'primereact/divider';
 import { InputText } from 'primereact/inputtext';
+import { OverlayPanel } from 'primereact/overlaypanel';
 import {
     LogOut, Menu, X, Search, TrendingUp, TrendingDown, Package, FileCheck,
     PackageCheck, FileText, Wallet, UserCircle, DollarSign, ShoppingBag, Receipt,
     Truck, FolderTree, Building2, LayoutDashboard, Settings, Bell,
     Clock, Star, Plus, BarChart2, ShoppingCart, History, HardDrive, Users, CreditCard,
+    ChevronDown, User,
 } from 'lucide-react';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { toastInfo } from '../services/toast.service';
 
-const RECENT_KEY = 'orderium_search_recent';
+const RECENT_KEY = 'morocom_search_recent';
 const MAX_RECENT = 6;
 
 interface HeaderProps {
@@ -185,6 +187,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
     });
     const searchInputRef = useRef<HTMLInputElement>(null);
     const resultsRef = useRef<HTMLDivElement>(null);
+    const avatarMenuRef = useRef<OverlayPanel>(null);
 
     const subNavGroups = useMemo(() => [
         {
@@ -361,7 +364,15 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
     };
 
     const handleLogout = () => { logout(); navigate('/login'); };
-    const getInitials = () => (admin?.fullName || admin?.phoneNumber || 'A').charAt(0).toUpperCase();
+    const getInitials = () => {
+        const name = admin?.fullName || admin?.name || '';
+        if (name.trim()) {
+            const parts = name.trim().split(/\s+/);
+            if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+            return name.trim().slice(0, 2).toUpperCase();
+        }
+        return 'AD';
+    };
 
     return (
         <>
@@ -406,27 +417,126 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
 
                         <Divider layout="vertical" className="hidden sm:flex" style={{ height: '1.5rem', margin: '0 0.25rem' }} />
 
-                        <div className="flex align-items-center gap-2">
+                        {/* ── User Avatar Menu ── */}
+                        <button
+                            onClick={e => avatarMenuRef.current?.toggle(e)}
+                            aria-label="User menu"
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                background: 'transparent', border: 'none', cursor: 'pointer',
+                                padding: '0.25rem 0.5rem', borderRadius: '0.625rem',
+                                transition: 'background 0.15s ease',
+                                outline: 'none',
+                            }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(35,90,228,0.07)'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                        >
                             <Avatar
                                 label={getInitials()} shape="circle" size="normal"
-                                style={{ background: 'linear-gradient(135deg,#0f172a,#1a2342)', color: '#ffffff', fontWeight: 700, fontSize: '0.8125rem', width: '2.25rem', height: '2.25rem' }}
+                                style={{ background: 'linear-gradient(135deg,#0f172a,#1a2342)', color: '#ffffff', fontWeight: 700, fontSize: '0.8125rem', width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
                             />
                             <div className="hidden sm:flex flex-column" style={{ lineHeight: 1.3 }}>
                                 <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#111827', fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)', letterSpacing: language === 'ar' ? '0' : '-0.01em' }}>
                                     {admin?.fullName || admin?.phoneNumber || 'Admin'}
                                 </span>
                                 <span style={{ fontSize: '0.6875rem', color: '#9ca3af', fontWeight: 500, fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)', letterSpacing: language === 'ar' ? '0' : '0.01em' }}>
-                                    {t('administrator') || t('adminBackoffice')}
+                                    {t('administrator')}
                                 </span>
                             </div>
-                            <Button
-                                text rounded severity="secondary" size="small"
-                                onClick={handleLogout} tooltip={t('logout')} tooltipOptions={{ position: 'bottom' }}
-                                className="flex-shrink-0" style={{ width: '2rem', height: '2rem', color: '#6b7280' }}
-                            >
-                                <LogOut style={{ width: '0.9375rem', height: '0.9375rem' }} strokeWidth={1.75} />
-                            </Button>
-                        </div>
+                            <ChevronDown className="hidden sm:block" style={{ width: '0.875rem', height: '0.875rem', color: '#9ca3af', flexShrink: 0 }} strokeWidth={2} />
+                        </button>
+
+                        {/* ── Avatar Dropdown Overlay ── */}
+                        <OverlayPanel
+                            ref={avatarMenuRef}
+                            style={{ width: '220px', padding: 0, borderRadius: '0.75rem', overflow: 'hidden', boxShadow: '0 12px 32px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)' }}
+                            pt={{ content: { style: { padding: 0 } } }}
+                        >
+                            {/* Header block */}
+                            <div style={{ padding: '0.875rem 1rem', background: 'linear-gradient(135deg,#0f172a,#1a2342)', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexDirection: language === 'ar' ? 'row-reverse' : 'row' }}>
+                                    <Avatar
+                                        label={getInitials()} shape="circle" size="normal"
+                                        style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', fontWeight: 700, fontSize: '0.875rem', width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+                                    />
+                                    <div style={{ minWidth: 0 }}>
+                                        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#ffffff', fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {admin?.fullName || admin?.phoneNumber || 'Admin'}
+                                        </p>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)' }}>
+                                            {admin?.isSuperAdmin ? 'Super Admin' : t('administrator')}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Menu items */}
+                            <div style={{ padding: '0.375rem 0', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                                {[
+                                    {
+                                        icon: <User style={{ width: '1rem', height: '1rem' }} strokeWidth={1.75} />,
+                                        label: t('myProfile'),
+                                        color: '#6366f1',
+                                        bg: '#eef2ff',
+                                        onClick: () => { avatarMenuRef.current?.hide(); navigate('/profile'); },
+                                    },
+                                    {
+                                        icon: <Settings style={{ width: '1rem', height: '1rem' }} strokeWidth={1.75} />,
+                                        label: t('userSettings'),
+                                        color: '#235ae4',
+                                        bg: '#eff6ff',
+                                        onClick: () => { avatarMenuRef.current?.hide(); navigate('/settings'); },
+                                    },
+                                ].map(item => (
+                                    <button
+                                        key={item.label}
+                                        onClick={item.onClick}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '0.625rem',
+                                            width: '100%', padding: '0.625rem 1rem',
+                                            background: 'transparent', border: 'none', cursor: 'pointer',
+                                            flexDirection: language === 'ar' ? 'row-reverse' : 'row',
+                                            textAlign: language === 'ar' ? 'right' : 'left',
+                                            transition: 'background 0.1s ease',
+                                            outline: 'none',
+                                        }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = item.bg; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                                    >
+                                        <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: '0.4375rem', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: item.color }}>
+                                            {item.icon}
+                                        </div>
+                                        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)' }}>
+                                            {item.label}
+                                        </span>
+                                    </button>
+                                ))}
+
+                                <div style={{ height: '1px', background: '#f1f5f9', margin: '0.25rem 0' }} />
+
+                                <button
+                                    onClick={() => { avatarMenuRef.current?.hide(); handleLogout(); }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '0.625rem',
+                                        width: '100%', padding: '0.625rem 1rem',
+                                        background: 'transparent', border: 'none', cursor: 'pointer',
+                                        flexDirection: language === 'ar' ? 'row-reverse' : 'row',
+                                        textAlign: language === 'ar' ? 'right' : 'left',
+                                        transition: 'background 0.1s ease',
+                                        outline: 'none',
+                                    }}
+                                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff1f2'; }}
+                                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                                >
+                                    <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: '0.4375rem', background: '#fff1f2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#ef4444' }}>
+                                        <LogOut style={{ width: '1rem', height: '1rem' }} strokeWidth={1.75} />
+                                    </div>
+                                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#ef4444', fontFamily: language === 'ar' ? 'var(--font-arabic)' : 'var(--font-latin)' }}>
+                                        {t('logout')}
+                                    </span>
+                                </button>
+                            </div>
+                        </OverlayPanel>
                     </div>
                 </header>
 

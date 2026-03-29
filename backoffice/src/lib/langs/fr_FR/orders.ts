@@ -4,10 +4,11 @@ export default {
   order: 'commande',
   orderManagement: 'Gestion des commandes',
   viewAndAssignOrders: 'Voir et assigner les commandes',
-  orderNumber: 'N° commande',
+  orderNumber: 'Commande',
   total: 'Total',
   noOrdersFound: 'Aucune commande trouvée',
   ordersSelected: 'commandes sélectionnées',
+  newOrder: '+ Nouvelle commande',
 
   // Order Status
   unassigned: 'Non assigné',
@@ -23,10 +24,10 @@ export default {
   pickedUp: 'Récupéré',
 
   // Order Details
-  orderDetails: 'Détails de la commande',
+  orderDetails: 'Détails commande',
   orderItems: 'Produits commandés',
   quantity: 'Quantité',
-  unitPrice: 'Prix unitaire',
+  unitPrice: 'Prix / unité',
   subtotal: 'Sous-total',
   discount: 'Remise',
   grandTotal: 'Total général',
@@ -34,7 +35,7 @@ export default {
   customerInformation: 'Informations client',
 
   // Order Actions
-  assignToDelivery: 'Livreur',
+  assignToDelivery: 'Assigner au livreur',
   downloadReceipt: 'Télécharger le reçu',
   downloadInvoice: 'Télécharger la facture',
   receipts: 'reçus',
@@ -45,7 +46,8 @@ export default {
   selectDeliveryPerson: 'Sélectionner un livreur',
   unassignOrder: 'Désassigner la commande',
   unassignOrderConfirm: 'Êtes-vous sûr de vouloir désassigner cette commande ?',
-  cancelDelivery: 'Annuler livraison',
+  cancelDelivery: 'Annuler la commande',
+  confirmCancelDelivery: 'Êtes-vous sûr de vouloir annuler la livraison ? Cette action ne peut pas être annulée.',
 
   // Order Notifications
   orderAssigned: 'Commande assignée avec succès',
@@ -71,7 +73,7 @@ export default {
   orderSource: 'Source de la commande',
   local: 'Local',
   client: 'Client',
-  reset: 'Réinitialiser',
+  reset: 'Effacer les filtres',
   apply: 'Appliquer',
 
   // KPIs

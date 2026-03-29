@@ -87,4 +87,9 @@ export class FilterOrdersDto {
   @IsOptional()
   @IsBoolean()
   fromClient?: boolean;
+
+  @ApiProperty({ required: false, description: 'Free-text search: customer name, phone, or order number' })
+  @IsOptional()
+  @IsString()
+  search?: string;
 }

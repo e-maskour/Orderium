@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo } from 'react';
 import { MultiSelect } from 'primereact/multiselect';
-import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter } from 'lucide-react';
+import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, Plus } from 'lucide-react';
 import { toastSuccess, toastDeleted, toastCancelled, toastError, toastWarning, toastConfirm } from '../services/toast.service';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -22,10 +22,12 @@ import { pdfService } from '../services/pdf.service';
 import { PDFPreviewModal } from '../components/PDFPreviewModal';
 import { MobileList } from '../components/MobileList';
 import { formatAmount } from '@orderium/ui';
+import { useNavigate } from 'react-router-dom';
 
 export default function Orders() {
   const { t, language } = useLanguage();
   const { admin } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
@@ -33,6 +35,16 @@ export default function Orders() {
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [quickSearch, setQuickSearch] = useState('');
+
+  // Debounce quick search → triggers API call
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+      setAppliedFilters(prev => ({ ...prev, search: quickSearch }));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [quickSearch]);
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string[]>([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState<string[]>([]);
   const [fromClientFilter, setFromClientFilter] = useState<'all' | 'locale' | 'client'>('all');
@@ -165,16 +177,16 @@ export default function Orders() {
   };
 
   const getOrderStatusBadge = (status: string | null | undefined) => {
-    const map: Record<string, { label: string; bg: string; color: string; border: string }> = {
-      confirmed: { label: t('confirmed'), bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
-      picked_up: { label: t('pickedUp'), bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
-      delivered: { label: t('delivered'), bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
-      cancelled: { label: t('cancelled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
-      pending: { label: t('pending'), bg: '#f8fafc', color: '#334155', border: '#e2e8f0' },
-      in_progress: { label: t('inProgress'), bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
-      canceled: { label: t('canceled'), bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+    const map: Record<string, { label: string; icon: string; bg: string; color: string; border: string }> = {
+      confirmed: { label: t('confirmed'), icon: '✅', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+      picked_up: { label: t('pickedUp'), icon: '📦', bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
+      delivered: { label: t('delivered'), icon: '✔️', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+      cancelled: { label: t('cancelled'), icon: '❌', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+      pending: { label: t('pending'), icon: '⏳', bg: '#f8fafc', color: '#334155', border: '#e2e8f0' },
+      in_progress: { label: t('inProgress'), icon: '⚙️', bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
+      canceled: { label: t('canceled'), icon: '❌', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
     };
-    return map[status || ''] || { label: status || '—', bg: '#f1f5f9', color: '#334155', border: '#e2e8f0' };
+    return map[status || ''] || { label: status || '—', icon: '•', bg: '#f1f5f9', color: '#334155', border: '#e2e8f0' };
   };
 
   const handleOrderNumberSearch = async (searchValue: string) => {
@@ -310,7 +322,7 @@ export default function Orders() {
     <AdminLayout>
       <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto', width: '100%' }}>
         {/* Header */}
-        <div style={{ marginBottom: '1.5rem', flexShrink: 0 }}>
+        <div style={{ marginBottom: '1rem', flexShrink: 0 }}>
           <PageHeader
             icon={ShoppingCart}
             title={t('orders')}
@@ -326,9 +338,46 @@ export default function Orders() {
                   outlined
                   size="small"
                 />
+                {/* New Order */}
+                <Button
+                  onClick={() => navigate('/pos')}
+                  icon={<Plus style={{ width: 16, height: 16 }} />}
+                  label={t('newOrder')}
+                  size="small"
+                />
               </>
             }
           />
+        </div>
+
+        {/* Inline Quick Search Bar */}
+        <div style={{ marginBottom: '1rem', flexShrink: 0 }}>
+          <div style={{ position: 'relative', maxWidth: '36rem' }}>
+            <Search style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
+            <InputText
+              value={quickSearch}
+              onChange={(e) => {
+                setQuickSearch(e.target.value);
+                setSearchInput(e.target.value);
+              }}
+              placeholder={t('searchPlaceholder')}
+              style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: quickSearch ? '2.5rem' : '0.875rem', height: '2.5rem', fontSize: '0.875rem', borderRadius: '0.625rem', border: '1.5px solid #e2e8f0', background: '#ffffff' }}
+            />
+            {quickSearch && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickSearch('');
+                  setSearchInput('');
+                  setCurrentPage(1);
+                  setAppliedFilters(prev => ({ ...prev, search: '' }));
+                }}
+                style={{ position: 'absolute', right: '0.625rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', padding: '0.25rem' }}
+              >
+                <X style={{ width: '1rem', height: '1rem' }} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Filters Overlay Panel */}
@@ -624,8 +673,9 @@ export default function Orders() {
               onRowClick={(e) => {
                 const target = e.originalEvent.target as HTMLElement;
                 if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
-                toggleSelectOrder(e.data.id);
+                setSelectedOrderId(e.data.id);
               }}
+              rowClassName={() => 'ord-row-clickable'}
               dataKey="id"
               paginator
               paginatorPosition="top"
@@ -653,18 +703,12 @@ export default function Orders() {
                 header={t('status')}
                 body={(order: any) => {
                   const osb = getOrderStatusBadge(order.status);
-                  const sb = getSourceBadge(order);
                   const nextStatuses = ORDER_STATUS_WORKFLOW[order.status] || [];
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: osb.bg, color: osb.color, border: `1px solid ${osb.border}` }}>
-                          {osb.label}
-                        </span>
-                        <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}` }}>
-                          {sb.icon}{sb.label}
-                        </span>
-                      </div>
+                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: osb.bg, color: osb.color, border: `1px solid ${osb.border}`, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <span style={{ fontSize: '0.8rem' }}>{osb.icon}</span>{osb.label}
+                      </span>
                       {nextStatuses.length > 0 && (
                         <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
                           {nextStatuses.map(ns => (
@@ -673,7 +717,7 @@ export default function Orders() {
                               type="button"
                               onClick={(e) => { e.stopPropagation(); changeStatusMutation.mutate({ orderId: order.id, status: ns.value }); }}
                               style={{ padding: '0.2rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', backgroundColor: ns.bg, color: ns.color, border: `1px solid ${ns.border}`, transition: 'opacity 0.15s' }}
-                              title={`Changer vers ${ns.label}`}
+                              title={`→ ${ns.label}`}
                             >
                               → {ns.label}
                             </button>
@@ -681,6 +725,17 @@ export default function Orders() {
                         </div>
                       )}
                     </div>
+                  );
+                }}
+              />
+              <Column
+                header={t('orderSource')}
+                body={(order: any) => {
+                  const sb = getSourceBadge(order);
+                  return (
+                    <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', backgroundColor: sb.bg, color: sb.color, border: `1px solid ${sb.border}`, whiteSpace: 'nowrap' }}>
+                      {sb.icon}{sb.label}
+                    </span>
                   );
                 }}
               />
@@ -728,7 +783,17 @@ export default function Orders() {
 
       {/* Order Details Modal */}
       {selectedOrderId && orderDetails && (
-        <OrderDetailsModal order={orderDetails.order || orderDetails} onClose={() => setSelectedOrderId(null)} />
+        <OrderDetailsModal
+          order={orderDetails.order || orderDetails}
+          onClose={() => setSelectedOrderId(null)}
+          onStatusChange={(orderId, status) => changeStatusMutation.mutate({ orderId, status })}
+          onPrintReceipt={() => {
+            const order = orders.find((o: any) => o.id === selectedOrderId);
+            const url = pdfService.getPDFUrl('receipt', selectedOrderId, 'preview');
+            const label = pdfService.getDocumentLabel('receipt');
+            setPdfUrl(url); setPdfTitle(`${label} ${order?.orderNumber || ''}`.trim()); setShowPDFPreview(true);
+          }}
+        />
       )}
 
       {/* Floating Action Bar */}
@@ -743,7 +808,7 @@ export default function Orders() {
           { id: 'details', label: t('details'), icon: <Info style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => setSelectedOrderId(selectedOrders[0]), hidden: selectedOrders.length !== 1 },
           { id: 'preview-receipt', label: t('previewReceipt'), icon: <Receipt style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('receipt'), hidden: selectedOrders.length !== 1 },
           { id: 'preview-delivery-note', label: t('previewDeliveryNote'), icon: <Truck style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('delivery-note'), hidden: selectedOrders.length !== 1 },
-          { id: 'cancel-delivery', label: t('cancelDelivery'), icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => cancelDeliveryMutation.mutate(selectedOrders), variant: 'danger' as const, hidden: !selectedOrders.every(orderId => { const order = orders.find((o: any) => o.id === orderId); return order && ['pending', 'assigned', 'confirmed'].includes(order.deliveryStatus); }) },
+          { id: 'cancel-delivery', label: t('cancelDelivery'), icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => toastConfirm(t('cancelDelivery'), () => cancelDeliveryMutation.mutate(selectedOrders), { description: t('confirmCancelDelivery'), confirmLabel: t('cancelDelivery') }), variant: 'danger' as const, hidden: !selectedOrders.every(orderId => { const order = orders.find((o: any) => o.id === orderId); return order && ['pending', 'assigned', 'confirmed'].includes(order.deliveryStatus); }) },
           { id: 'delete', label: t('delete'), icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => toastConfirm(t('deleteOrders'), () => deleteMutation.mutate(selectedOrders), { description: t('confirmDeleteOrders'), confirmLabel: t('delete') }), variant: 'danger' as const },
         ]}
       />

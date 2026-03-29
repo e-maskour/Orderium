@@ -591,6 +591,7 @@ export class OrdersService {
     supplierId?: number,
     direction?: 'ACHAT' | 'VENTE',
     status?: string[],
+    search?: string,
   ): Promise<{
     orders: any[];
     count: number;
@@ -653,61 +654,63 @@ export class OrdersService {
       queryBuilder.where('order.fromPortal = :fromPortal', { fromPortal });
     }
 
-    if (fromClient !== undefined) {
-      if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
-        queryBuilder.andWhere('order.fromClient = :fromClient', { fromClient });
-      } else {
-        queryBuilder.where('order.fromClient = :fromClient', { fromClient });
+    if (search) {
+      // Search mode: ignore all filter-panel conditions
+      queryBuilder.andWhere(
+        '(LOWER(customer.name) LIKE LOWER(:search) OR LOWER(customer.phoneNumber) LIKE LOWER(:search) OR LOWER(order.documentNumber) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    } else {
+      // Filter panel mode
+      if (fromClient !== undefined) {
+        if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
+          queryBuilder.andWhere('order.fromClient = :fromClient', { fromClient });
+        } else {
+          queryBuilder.where('order.fromClient = :fromClient', { fromClient });
+        }
       }
-    }
 
-    if (orderNumber) {
-      queryBuilder.andWhere('order.documentNumber = :orderNumber', {
-        orderNumber,
-      });
-    }
-
-    if (deliveryStatus && deliveryStatus.length > 0) {
-      if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
-        queryBuilder.andWhere(
-          'order.deliveryStatus IN (:...deliveryStatuses)',
-          { deliveryStatuses: deliveryStatus },
-        );
-      } else {
-        queryBuilder.where('order.deliveryStatus IN (:...deliveryStatuses)', {
-          deliveryStatuses: deliveryStatus,
-        });
+      if (orderNumber) {
+        queryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
       }
-    }
 
-    if (status && status.length > 0) {
-      queryBuilder.andWhere('order.status IN (:...orderStatuses)', {
-        orderStatuses: status,
-      });
-    }
+      if (deliveryStatus && deliveryStatus.length > 0) {
+        if (Object.keys(queryBuilder.expressionMap.wheres).length > 0) {
+          queryBuilder.andWhere(
+            'order.deliveryStatus IN (:...deliveryStatuses)',
+            { deliveryStatuses: deliveryStatus },
+          );
+        } else {
+          queryBuilder.where('order.deliveryStatus IN (:...deliveryStatuses)', {
+            deliveryStatuses: deliveryStatus,
+          });
+        }
+      }
 
-    if (customerId) {
-      queryBuilder.andWhere('order.customerId = :customerId', { customerId });
-    }
+      if (status && status.length > 0) {
+        queryBuilder.andWhere('order.status IN (:...orderStatuses)', { orderStatuses: status });
+      }
 
-    if (supplierId) {
-      queryBuilder.andWhere('order.supplierId = :supplierId', { supplierId });
+      if (customerId) {
+        queryBuilder.andWhere('order.customerId = :customerId', { customerId });
+      }
+
+      if (supplierId) {
+        queryBuilder.andWhere('order.supplierId = :supplierId', { supplierId });
+      }
+
+      if (deliveryPersonId) {
+        queryBuilder.andWhere('delivery.deliveryPersonId = :deliveryPersonId', { deliveryPersonId });
+      }
+
+      if (startDate && endDate) {
+        queryBuilder.andWhere('order.dateCreated >= :startDate', { startDate });
+        queryBuilder.andWhere('order.dateCreated <= :endDate', { endDate });
+      }
     }
 
     if (direction) {
       queryBuilder.andWhere('order.direction = :direction', { direction });
-    }
-
-    if (deliveryPersonId) {
-      queryBuilder.andWhere('delivery.deliveryPersonId = :deliveryPersonId', {
-        deliveryPersonId,
-      });
-    }
-
-    // Apply date range filter
-    if (startDate && endDate) {
-      queryBuilder.andWhere('order.dateCreated >= :startDate', { startDate });
-      queryBuilder.andWhere('order.dateCreated <= :endDate', { endDate });
     }
 
     // Add pagination
@@ -718,49 +721,45 @@ export class OrdersService {
     // Get count of each delivery status
     const countQueryBuilder = this.dataSource
       .createQueryBuilder(Order, 'order')
+      .leftJoin('order.customer', 'customer')
       .leftJoin('orders_delivery', 'delivery', 'delivery.orderId = order.id');
 
     // Apply same filters for counting
     if (fromPortal !== undefined) {
       countQueryBuilder.where('order.fromPortal = :fromPortal', { fromPortal });
     }
-    if (fromClient !== undefined) {
-      if (Object.keys(countQueryBuilder.expressionMap.wheres).length > 0) {
-        countQueryBuilder.andWhere('order.fromClient = :fromClient', {
-          fromClient,
-        });
-      } else {
-        countQueryBuilder.where('order.fromClient = :fromClient', {
-          fromClient,
-        });
+
+    if (search) {
+      countQueryBuilder.andWhere(
+        '(LOWER(customer.name) LIKE LOWER(:search) OR LOWER(customer.phoneNumber) LIKE LOWER(:search) OR LOWER(order.documentNumber) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    } else {
+      if (fromClient !== undefined) {
+        if (Object.keys(countQueryBuilder.expressionMap.wheres).length > 0) {
+          countQueryBuilder.andWhere('order.fromClient = :fromClient', { fromClient });
+        } else {
+          countQueryBuilder.where('order.fromClient = :fromClient', { fromClient });
+        }
+      }
+      if (orderNumber) {
+        countQueryBuilder.andWhere('order.documentNumber = :orderNumber', { orderNumber });
+      }
+      if (startDate && endDate) {
+        countQueryBuilder.andWhere('order.dateCreated >= :startDate', { startDate });
+        countQueryBuilder.andWhere('order.dateCreated <= :endDate', { endDate });
+      }
+      if (customerId) {
+        countQueryBuilder.andWhere('order.customerId = :customerId', { customerId });
+      }
+      if (deliveryPersonId) {
+        countQueryBuilder.andWhere(
+          'delivery.deliveryPersonId = :deliveryPersonId',
+          { deliveryPersonId },
+        );
       }
     }
-    if (orderNumber) {
-      countQueryBuilder.andWhere('order.documentNumber = :orderNumber', {
-        orderNumber,
-      });
-    }
-    if (startDate && endDate) {
-      countQueryBuilder.andWhere('order.dateCreated >= :startDate', {
-        startDate,
-      });
-      countQueryBuilder.andWhere('order.dateCreated <= :endDate', {
-        endDate,
-      });
-    }
-    if (customerId) {
-      countQueryBuilder.andWhere('order.customerId = :customerId', {
-        customerId,
-      });
-    }
-    if (deliveryPersonId) {
-      countQueryBuilder.andWhere(
-        'delivery.deliveryPersonId = :deliveryPersonId',
-        {
-          deliveryPersonId,
-        },
-      );
-    }
+
     if (direction) {
       countQueryBuilder.andWhere('order.direction = :direction', { direction });
     }

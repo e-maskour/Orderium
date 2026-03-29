@@ -1033,3 +1033,15 @@
 [dir="rtl"] .p-datatable.p-component tfoot td[style*="text-align: center"] {
     text-align: center !important;
 }
+
+/* ──────────────────────────────────────────────
+   CLICKABLE ROW — Orders page (ord-row-clickable)
+   ────────────────────────────────────────────── */
+.p-datatable.p-component .p-datatable-tbody>tr.ord-row-clickable {
+    cursor: pointer !important;
+    transition: background 0.12s ease !important;
+}
+
+.p-datatable.p-component .p-datatable-tbody>tr.ord-row-clickable:hover>td {
+    background: #f0f4ff !important;
+}

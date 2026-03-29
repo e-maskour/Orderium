@@ -45,10 +45,10 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
     const formatRelativeTime = (timestamp: string): string => {
         const now = new Date();
         const diff = Math.floor((now.getTime() - new Date(timestamp).getTime()) / 1000);
-        if (diff < 60) return `${diff} ${t('secondsAgo') || 's ago'}`;
-        if (diff < 3600) return `${Math.floor(diff / 60)} ${t('minutesAgo') || 'min ago'}`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('hoursAgo') || 'h ago'}`;
-        return `${Math.floor(diff / 86400)} ${t('daysAgo') || 'd ago'}`;
+        if (diff < 60) return `${diff} ${t('secondsAgo')}`;
+        if (diff < 3600) return `${Math.floor(diff / 60)} ${t('minutesAgo')}`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('hoursAgo')}`;
+        return `${Math.floor(diff / 86400)} ${t('daysAgo')}`;
     };
 
     const header = (
@@ -69,7 +69,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
                 background: '#f0fdf4', color: '#16a34a',
                 border: '1px solid #bbf7d0',
             }}>
-                <span className="db-live-dot" />Live
+                <span className="db-live-dot" />{t('live')}
             </span>
         </div>
     );
@@ -83,7 +83,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
                         <Clock style={{ width: '1.5rem', height: '1.5rem', color: '#9ca3af' }} />
                     </div>
                     <p className="db-empty-state__text">
-                        {t('noRecentActivity') || 'No recent activity'}
+                        {t('noRecentActivity')}
                     </p>
                 </div>
             </div>
