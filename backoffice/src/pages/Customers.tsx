@@ -147,7 +147,7 @@ export default function Customers() {
           {/* Toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
             {/* Search */}
-            <div style={{ position: 'relative', width: '100%', maxWidth: '24rem' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
               <InputText
                 id="search-customers"
                 type="text"

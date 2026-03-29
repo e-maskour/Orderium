@@ -101,17 +101,19 @@ export const KpiCard: React.FC<KpiCardProps> = ({
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
                 {/* Icon bubble */}
-                <div style={{
-                    width: '2.75rem',
-                    height: '2.75rem',
-                    background: c.gradient,
-                    boxShadow: `0 4px 14px ${c.iconShadow}`,
-                    borderRadius: '0.75rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                }}>
+                <div
+                    className="kpi-icon-bubble"
+                    style={{
+                        width: '2.75rem',
+                        height: '2.75rem',
+                        background: c.gradient,
+                        boxShadow: `0 4px 14px ${c.iconShadow}`,
+                        borderRadius: '0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                    }}>
                     <Icon style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} strokeWidth={2} />
                 </div>
 
@@ -247,6 +249,40 @@ export const KpiSheet: React.FC<{ count: number; children: React.ReactNode; labe
                     display: grid;
                     grid-template-columns: repeat(2, 1fr);
                     gap: 0.75rem;
+                }
+                /* Compact card overrides inside sheet */
+                .kpi-sheet-inner-grid .kpi-card-enterprise {
+                    padding: 0.625rem 0.625rem 0.625rem 0.875rem;
+                }
+                .kpi-sheet-inner-grid .kpi-icon-bubble {
+                    width: 2rem !important;
+                    height: 2rem !important;
+                    border-radius: 0.5rem !important;
+                }
+                .kpi-sheet-inner-grid .kpi-icon-bubble svg {
+                    width: 0.875rem !important;
+                    height: 0.875rem !important;
+                }
+                .kpi-sheet-inner-grid .kpi-card-enterprise > div {
+                    gap: 0.5rem !important;
+                }
+                .kpi-sheet-inner-grid .kpi-card-enterprise p {
+                    font-size: 0.5625rem !important;
+                    white-space: normal !important;
+                    overflow: hidden !important;
+                    text-overflow: unset !important;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    line-height: 1.3;
+                    letter-spacing: 0.04em !important;
+                }
+                .kpi-sheet-inner-grid .kpi-card-enterprise h3 {
+                    font-size: 0.8125rem !important;
+                    white-space: normal !important;
+                    word-break: break-word;
+                    line-height: 1.2 !important;
+                    letter-spacing: -0.01em !important;
                 }
                 @keyframes kpi-overlay-in {
                     from { opacity: 0; }

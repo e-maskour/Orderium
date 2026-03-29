@@ -464,4 +464,8 @@ export default {
   deletePayment: 'Supprimer le paiement',
   optional: 'Optionnel',
   notes: 'Notes',
+
+  // Dates
+  createdAt: 'Créé le',
+  updatedAt: 'Mis à jour le',
 };

@@ -467,4 +467,8 @@ export default {
   deletePayment: 'حذف الدفعة',
   optional: 'اختياري',
   notes: 'ملاحظات',
+
+  // Dates
+  createdAt: 'تاريخ الإنشاء',
+  updatedAt: 'تاريخ التحديث',
 };
