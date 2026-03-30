@@ -138,7 +138,8 @@ export const API_ROUTES = {
 
     // ─── Order Payments ────────────────────────────────────────
     ORDER_PAYMENTS: {
-        CREATE: '/api/order-payments',
+        LIST_ALL: '/api/order-payments', CREATE: '/api/order-payments',
+        CAISSE: '/api/order-payments/caisse',
         BY_ORDER: (orderId: number) => `/api/order-payments/order/${orderId}`,
         ORDER_TOTAL: (orderId: number) => `/api/order-payments/order/${orderId}/total`,
         DETAIL: (id: number) => `/api/order-payments/${id}`,

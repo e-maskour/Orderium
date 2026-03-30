@@ -17,6 +17,7 @@ import {
     Store,
     Truck,
     HardDrive,
+    Banknote,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -40,6 +41,14 @@ const NAV_ITEMS = [
         icon: ShoppingCart,
         labelKey: 'orders' as const,
         activePaths: ['/orders', '/checkout'],
+        exactFirst: false,
+    },
+    {
+        id: 'sb-caisse',
+        to: '/caisse',
+        icon: Banknote,
+        labelKey: 'caisse' as const,
+        activePaths: ['/caisse'],
         exactFirst: false,
     },
     {

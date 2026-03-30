@@ -11,6 +11,9 @@ export interface IOrderPayment {
     referenceNumber?: string | null;
     dateCreated: string;
     dateUpdated: string;
+    // Relations fetched from API when listing all
+    orderNumber?: string | null;
+    customerName?: string | null;
 }
 
 export interface CreateOrderPaymentDTO {
@@ -24,6 +27,21 @@ export interface CreateOrderPaymentDTO {
 }
 
 export interface UpdateOrderPaymentDTO extends Partial<Omit<CreateOrderPaymentDTO, 'orderId'>> { }
+
+export type CaissePaymentStatus = 'paid' | 'partial' | 'unpaid';
+
+export interface ICaisseOrder {
+    id: number;
+    orderNumber: string;
+    customerName: string | null;
+    customerId: number | null;
+    total: number;
+    paidAmount: number;
+    remainingAmount: number;
+    paymentStatus: CaissePaymentStatus;
+    date: string;
+    dateCreated: string;
+}
 
 export const ORDER_PAYMENT_TYPE_LABELS: Record<OrderPaymentType, string> = {
     cash: 'Espèce',

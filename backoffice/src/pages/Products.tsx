@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -35,6 +35,19 @@ export default function Products() {
   };
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [quickSearch, setQuickSearch] = useState('');
+  const quickSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    quickSearchDebounceRef.current = setTimeout(() => {
+      setAppliedFilters(prev => ({ ...prev, name: quickSearch }));
+      setCurrentPage(1);
+    }, 500);
+    return () => {
+      if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    };
+  }, [quickSearch]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
@@ -334,6 +347,29 @@ export default function Products() {
             </div>
           }
         />
+
+        {/* Quick Search Bar */}
+        <div style={{ position: 'relative', marginBottom: '1rem' }}>
+          <span style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center' }}>
+            <Search style={{ width: '1rem', height: '1rem' }} />
+          </span>
+          <InputText
+            type="text"
+            value={quickSearch}
+            onChange={(e) => setQuickSearch(e.target.value)}
+            placeholder={t('searchProducts')}
+            style={{ width: '100%', paddingLeft: '2.25rem', paddingRight: quickSearch ? '2.5rem' : '0.875rem' }}
+          />
+          {quickSearch && (
+            <button
+              type="button"
+              onClick={() => setQuickSearch('')}
+              style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#94a3b8', padding: '0.25rem' }}
+            >
+              <X style={{ width: '1rem', height: '1rem' }} />
+            </button>
+          )}
+        </div>
 
         {/* Products View */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>

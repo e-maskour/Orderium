@@ -125,7 +125,7 @@ export default function Login() {
                 {t('phoneNumber')}
               </label>
               <div style={{ position: 'relative' }}>
-                <Phone size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+                <Phone size={18} color="#9ca3af" style={{ position: 'absolute', insetInlineStart: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
                 <input
                   className="dlv-field-input"
                   type="tel"
@@ -138,8 +138,8 @@ export default function Login() {
                   style={{
                     width: '100%',
                     height: '56px',
-                    paddingLeft: '2.875rem',
-                    paddingRight: '1rem',
+                    paddingInlineStart: '2.875rem',
+                    paddingInlineEnd: '1rem',
                     fontSize: '1rem',
                     fontWeight: 500,
                     border: '2px solid #e5e7eb',
@@ -159,7 +159,7 @@ export default function Login() {
                 {t('password')}
               </label>
               <div style={{ position: 'relative' }}>
-                <Lock size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+                <Lock size={18} color="#9ca3af" style={{ position: 'absolute', insetInlineStart: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
                 <input
                   className="dlv-field-input"
                   type={showPassword ? 'text' : 'password'}
@@ -172,8 +172,8 @@ export default function Login() {
                   style={{
                     width: '100%',
                     height: '56px',
-                    paddingLeft: '2.875rem',
-                    paddingRight: '3.5rem',
+                    paddingInlineStart: '2.875rem',
+                    paddingInlineEnd: '3.5rem',
                     fontSize: '1rem',
                     fontWeight: 500,
                     border: '2px solid #e5e7eb',
@@ -188,7 +188,7 @@ export default function Login() {
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
                   style={{
-                    position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)',
+                    position: 'absolute', insetInlineEnd: '0.875rem', top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', padding: '0.375rem',
                     cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center',
                     WebkitTapHighlightColor: 'transparent',

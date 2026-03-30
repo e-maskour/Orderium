@@ -175,9 +175,10 @@ export class OrdersController {
 
     return ApiRes(
       ORD.SEARCH_NUMBERS,
-      orderNumbers.map((num: string) => ({
-        value: num,
-        label: num,
+      orderNumbers.map((o) => ({
+        value: o.id,
+        label: o.documentNumber,
+        customerId: o.customerId,
       })),
     );
   }

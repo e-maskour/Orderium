@@ -10,7 +10,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { CartDrawer } from '@/components/CartDrawer';
 import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
-import { LogOut, Save, User, Phone, MapPin, ArrowLeft } from 'lucide-react';
+import { LogOut, Save, User, Phone, MapPin, ArrowLeft, ArrowRight, type LucideIcon } from 'lucide-react';
 
 export default function Profile() {
   const { user, logout, refreshUser } = useAuth();
@@ -47,6 +47,8 @@ export default function Profile() {
       if (!(error instanceof Error && error.message.includes('404'))) console.error('Failed to load partner data:', error);
     }
   };
+
+  const BackIcon: LucideIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
   const handleAddressChange = (address: string, latitude?: number, longitude?: number) => {
     setFormData(prev => ({ ...prev, deliveryAddress: address, latitude, longitude }));
@@ -87,7 +89,7 @@ export default function Profile() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: 'white', flexShrink: 0, WebkitTapHighlightColor: 'transparent' as const }}>
-            <ArrowLeft size={18} />
+            <BackIcon size={18} />
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
             <User size={26} strokeWidth={2.5} style={{ color: '#fff', flexShrink: 0 }} />

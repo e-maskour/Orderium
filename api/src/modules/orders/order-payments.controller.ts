@@ -35,6 +35,22 @@ export class OrderPaymentsController {
         return ApiRes(OPAY.CREATED, payment);
     }
 
+    @Get('caisse')
+    @ApiOperation({ summary: 'Get caisse summary — orders with payment status' })
+    @ApiResponse({ status: 200, description: 'Caisse summary retrieved' })
+    async getCaisseSummary() {
+        const summary = await this.orderPaymentsService.getCaisseSummary();
+        return ApiRes(OPAY.CAISSE, summary);
+    }
+
+    @Get()
+    @ApiOperation({ summary: 'Get all order payments' })
+    @ApiResponse({ status: 200, description: 'All order payments retrieved' })
+    async findAll() {
+        const payments = await this.orderPaymentsService.findAll();
+        return ApiRes(OPAY.LIST_ALL, payments);
+    }
+
     @Get('order/:orderId')
     @ApiOperation({ summary: 'Get all payments for an order' })
     @ApiResponse({ status: 200, description: 'Order payments retrieved' })

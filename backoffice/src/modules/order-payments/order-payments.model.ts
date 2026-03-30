@@ -15,6 +15,8 @@ export class OrderPayment implements IOrderPayment {
     referenceNumber?: string | null;
     dateCreated: string;
     dateUpdated: string;
+    orderNumber?: string | null;
+    customerName?: string | null;
 
     constructor(data: IOrderPayment) {
         this.id = data.id;
@@ -27,6 +29,8 @@ export class OrderPayment implements IOrderPayment {
         this.referenceNumber = data.referenceNumber;
         this.dateCreated = data.dateCreated;
         this.dateUpdated = data.dateUpdated;
+        this.orderNumber = data.orderNumber ?? null;
+        this.customerName = data.customerName ?? null;
     }
 
     get displayAmount(): string {
@@ -53,6 +57,8 @@ export class OrderPayment implements IOrderPayment {
             referenceNumber: data.referenceNumber ?? null,
             dateCreated: data.dateCreated || data.date_created,
             dateUpdated: data.dateUpdated || data.date_updated,
+            orderNumber: data.order?.documentNumber ?? data.orderNumber ?? null,
+            customerName: data.order?.customerName ?? data.customerName ?? data.customer?.name ?? null,
         });
     }
 }

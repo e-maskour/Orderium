@@ -81,7 +81,7 @@ export class TaxesService {
     if (!this.configId) {
       await this.getConfiguration();
     }
-    const response = await apiClient.put<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), { values });
+    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), { values });
     return TaxesConfiguration.fromApiResponse(response.data.values);
   }
 }

@@ -668,6 +668,10 @@ export const OPAY = {
   UPDATED: { code: 'OPAY200_04', status: 200, message: 'Order Payment Updated' },
   /** DELETE /order-payments/:id                     → data: null           | metadata: null */
   DELETED: { code: 'OPAY200_05', status: 200, message: 'Order Payment Deleted' },
+  /** GET /order-payments                              → data: OrderPayment[] | metadata: null */
+  LIST_ALL: { code: 'OPAY200_06', status: 200, message: 'All Order Payments Retrieved' },
+  /** GET /order-payments/caisse                       → data: CaisseOrder[] | metadata: null */
+  CAISSE: { code: 'OPAY200_07', status: 200, message: 'Caisse Summary Retrieved' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────

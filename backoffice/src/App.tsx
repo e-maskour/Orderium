@@ -99,6 +99,7 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const POS = lazy(() => import('./pages/POS'));
 const Products = lazy(() => import('./pages/Products'));
 const Orders = lazy(() => import('./pages/Orders'));
+const Caisse = lazy(() => import('./pages/Caisse'));
 const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const DrivePage = lazy(() => import('./pages/drive/DrivePage'));
@@ -197,6 +198,14 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <OrderDetailPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/caisse"
+                        element={
+                          <ProtectedRoute>
+                            <Caisse />
                           </ProtectedRoute>
                         }
                       />

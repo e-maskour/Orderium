@@ -248,7 +248,7 @@ export default function Login() {
           boxSizing: 'border-box',
         }}>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: '0 0 0.4rem', display: 'flex', alignItems: 'center' }}>
-            {headingText}{isExistingAccount && <HandMetal size={20} color={PRI} strokeWidth={2} style={{ marginLeft: '0.4rem', flexShrink: 0 }} />}
+            {headingText}{isExistingAccount && <HandMetal size={20} color={PRI} strokeWidth={2} style={{ marginInlineStart: '0.4rem', flexShrink: 0 }} />}
           </h2>
           {isExistingAccount && customerName && (
             <div style={{
@@ -301,7 +301,7 @@ export default function Login() {
                 {t('phoneNumber')}
               </label>
               <div style={{ position: 'relative' }}>
-                <Phone size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+                <Phone size={18} color="#9ca3af" style={{ position: 'absolute', insetInlineStart: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
                 <input
                   className="clt-field-input"
                   type="tel"
@@ -312,7 +312,7 @@ export default function Login() {
                   disabled={isLoading}
                   style={{
                     width: '100%', height: '56px',
-                    paddingLeft: '2.875rem', paddingRight: '1rem',
+                    paddingInlineStart: '2.875rem', paddingInlineEnd: '1rem',
                     fontSize: '1rem', fontWeight: 500,
                     border: errors.phone ? '2px solid #ef4444' : '2px solid #e5e7eb',
                     borderRadius: '14px', background: '#f9fafb', color: '#111827',
@@ -341,7 +341,7 @@ export default function Login() {
                   {t('fullName')}
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <User size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+                  <User size={18} color="#9ca3af" style={{ position: 'absolute', insetInlineStart: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
                   <input
                     className="clt-field-input"
                     type="text"
@@ -352,7 +352,7 @@ export default function Login() {
                     disabled={isLoading}
                     style={{
                       width: '100%', height: '56px',
-                      paddingLeft: '2.875rem', paddingRight: '1rem',
+                      paddingInlineStart: '2.875rem', paddingInlineEnd: '1rem',
                       fontSize: '1rem', fontWeight: 500,
                       border: errors.fullName ? '2px solid #ef4444' : '2px solid #e5e7eb',
                       borderRadius: '14px', background: '#f9fafb', color: '#111827',
@@ -375,7 +375,7 @@ export default function Login() {
                 {isNewAccount ? t('createPassword') : t('password')}
               </label>
               <div style={{ position: 'relative' }}>
-                <Lock size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
+                <Lock size={18} color="#9ca3af" style={{ position: 'absolute', insetInlineStart: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
                 <input
                   className="clt-field-input"
                   type={showPassword ? 'text' : 'password'}
@@ -386,7 +386,7 @@ export default function Login() {
                   disabled={isLoading}
                   style={{
                     width: '100%', height: '56px',
-                    paddingLeft: '2.875rem', paddingRight: '3.5rem',
+                    paddingInlineStart: '2.875rem', paddingInlineEnd: '3.5rem',
                     fontSize: '1rem', fontWeight: 500,
                     border: errors.password ? '2px solid #ef4444' : '2px solid #e5e7eb',
                     borderRadius: '14px', background: '#f9fafb', color: '#111827',
@@ -397,7 +397,7 @@ export default function Login() {
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
                   style={{
-                    position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)',
+                    position: 'absolute', insetInlineEnd: '0.875rem', top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', padding: '0.375rem',
                     cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center',
                     WebkitTapHighlightColor: 'transparent',

@@ -2140,10 +2140,12 @@ export class OrdersService {
   async getOrderNumbers(
     search?: string,
     limit: number = 50,
-  ): Promise<string[]> {
+  ): Promise<{ id: number; documentNumber: string; customerId: number | null }[]> {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
-      .select('DISTINCT order.documentNumber', 'documentNumber')
+      .select('order.id', 'id')
+      .addSelect('order.documentNumber', 'documentNumber')
+      .addSelect('order.customerId', 'customerId')
       .orderBy('order.documentNumber', 'DESC')
       .take(limit);
 
@@ -2153,8 +2155,8 @@ export class OrdersService {
       });
     }
 
-    const results = await queryBuilder.getRawMany<{ documentNumber: string }>();
-    return results.map((r) => r.documentNumber);
+    const results = await queryBuilder.getRawMany<{ id: number; documentNumber: string; customerId: number | null }>();
+    return results;
   }
 
   async getAnalytics(direction: 'vente' | 'achat', year: number) {

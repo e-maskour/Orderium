@@ -21,7 +21,7 @@ interface MobileTab {
 
 const MOBILE_TABS: MobileTab[] = [
     { path: '/dashboard', icon: LayoutDashboard, labelKey: 'dashboard', activePaths: ['/dashboard'], exactMatch: true },
-    { path: '/orders', icon: ShoppingCart, labelKey: 'orders', activePaths: ['/orders', '/pos', '/checkout'] },
+    { path: '/orders', icon: ShoppingCart, labelKey: 'orders', activePaths: ['/orders', '/pos', '/checkout', '/caisse'] },
     { path: '/devis', icon: TrendingUp, labelKey: 'sales', activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'] },
     { path: '/products', icon: Package, labelKey: 'stock', activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
 ];

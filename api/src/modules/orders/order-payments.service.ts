@@ -32,6 +32,54 @@ export class OrderPaymentsService {
         return saved;
     }
 
+    async findAll(): Promise<OrderPayment[]> {
+        return this.repo.find({
+            relations: ['order', 'customer'],
+            order: { paymentDate: 'DESC', dateCreated: 'DESC' },
+        });
+    }
+
+    async getCaisseSummary(): Promise<any[]> {
+        const orders = await this.orderRepo
+            .createQueryBuilder('o')
+            .select([
+                'o.id',
+                'o.documentNumber',
+                'o.customerName',
+                'o.customerId',
+                'o.total',
+                'o.paidAmount',
+                'o.remainingAmount',
+                'o.date',
+                'o.dateCreated',
+            ])
+            .where('o.direction = :dir', { dir: 'VENTE' })
+            .orderBy('o.dateCreated', 'DESC')
+            .getMany();
+
+        return orders.map(o => {
+            const total = parseFloat(o.total?.toString() || '0');
+            const paid = parseFloat(o.paidAmount?.toString() || '0');
+            const remaining = parseFloat(o.remainingAmount?.toString() || '0');
+            let paymentStatus: 'paid' | 'partial' | 'unpaid' = 'unpaid';
+            if (paid >= total && total > 0) paymentStatus = 'paid';
+            else if (paid > 0) paymentStatus = 'partial';
+
+            return {
+                id: o.id,
+                orderNumber: o.documentNumber,
+                customerName: o.customerName,
+                customerId: o.customerId,
+                total,
+                paidAmount: paid,
+                remainingAmount: remaining,
+                paymentStatus,
+                date: o.date,
+                dateCreated: o.dateCreated,
+            };
+        });
+    }
+
     async findByOrder(orderId: number): Promise<OrderPayment[]> {
         return this.repo.find({
             where: { orderId },
