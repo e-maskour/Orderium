@@ -3,6 +3,7 @@ import { Repository } from 'typeorm';
 import { Order, DeliveryStatus } from '../orders/entities/order.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { NotificationTemplateService } from './notification-template.service';
+import { NotificationsQueueService } from './notifications.queue.service';
 import { Product } from '../products/entities/product.entity';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { DeliveryPerson } from '../delivery/entities/delivery.entity';
@@ -21,6 +22,7 @@ export class OrderNotificationService {
     private readonly tenantConnService: TenantConnectionService,
     @Inject(forwardRef(() => NotificationTemplateService))
     private readonly templateService: NotificationTemplateService,
+    private readonly notificationsQueueService: NotificationsQueueService,
   ) { }
 
   private get orderRepository(): Repository<Order> {
@@ -445,7 +447,16 @@ export class OrderNotificationService {
     metadata: Record<string, unknown>,
   ): Promise<void> {
     try {
-      await this.templateService.send({ key, variables, recipients, metadata });
+      const queued = await this.notificationsQueueService.enqueue({
+        key,
+        variables,
+        recipients,
+        metadata,
+      });
+      if (!queued) {
+        // No tenant context — fall back to synchronous send
+        await this.templateService.send({ key, variables, recipients, metadata });
+      }
     } catch (err) {
       this.logger.error(
         `Notification '${key}' failed: ${(err as Error)?.message}`,

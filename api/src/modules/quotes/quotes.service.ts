@@ -14,6 +14,7 @@ import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { PDFService } from '../pdf/pdf.service';
+import { PdfQueueService } from '../pdf/pdf.queue.service';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { CreateQuoteDto, QuoteItemDto } from './dto/quote.dto';
 
@@ -26,6 +27,7 @@ export class QuotesService {
     private readonly configurationsService: ConfigurationsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
+    private readonly pdfQueueService: PdfQueueService,
   ) { }
 
   private get quoteRepository(): Repository<Quote> {
@@ -746,11 +748,8 @@ export class QuotesService {
       status: QuoteStatus.OPEN,
     });
 
-    // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
-    const pdfUrl = await this.pdfService.generateAndUploadPDF('quote', id);
-    if (pdfUrl) {
-      await this.quoteRepository.update(id, { pdfUrl });
-    }
+    // Generate PDF in background via queue (non-blocking)
+    void this.pdfQueueService.enqueue('quote', id);
 
     await this.invalidateQuoteCache(id);
     const result = await this.findOne(id);

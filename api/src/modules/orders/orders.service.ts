@@ -28,6 +28,7 @@ import { ConfigurationsService } from '../configurations/configurations.service'
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { OrderNotificationService } from '../notifications/order-notification.service';
 import { PDFService } from '../pdf/pdf.service';
+import { PdfQueueService } from '../pdf/pdf.queue.service';
 import { StockService } from '../inventory/stock.service';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
@@ -46,6 +47,7 @@ export class OrdersService {
     private readonly orderNotificationService: OrderNotificationService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
+    private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
   ) { }
 
@@ -1621,14 +1623,8 @@ export class OrdersService {
     }
 
     await this.invalidateOrderCache(id);
-    // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
-    const pdfUrl = await this.pdfService.generateAndUploadPDF(
-      'delivery-note',
-      id,
-    );
-    if (pdfUrl) {
-      await this.orderRepository.update(id, { pdfUrl });
-    }
+    // Generate PDF in background via queue (non-blocking)
+    void this.pdfQueueService.enqueue('delivery-note', id);
     return await this.getOrderById(id);
   }
 
@@ -2024,16 +2020,9 @@ export class OrdersService {
       return await this.getOrderById(id);
     });
 
-    // Non-blocking PDF regeneration after transaction commits
+    // Non-blocking PDF regeneration via queue after transaction commits
     if (wasValidated) {
-      void this.pdfService
-        .generateAndUploadPDF('delivery-note', id)
-        .then(async (pdfUrl) => {
-          if (pdfUrl) await this.orderRepository.update(id, { pdfUrl });
-        })
-        .catch((err: Error) =>
-          this.logger.error('PDF regeneration failed after update', err?.stack),
-        );
+      void this.pdfQueueService.enqueue('delivery-note', id);
     }
 
     return result;

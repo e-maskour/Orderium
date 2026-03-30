@@ -6,6 +6,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/swagger';
 
 export class CreateWarehouseDto {
   @ApiProperty({ description: 'Warehouse name', maxLength: 255 })
@@ -57,4 +58,4 @@ export class CreateWarehouseDto {
   isActive?: boolean;
 }
 
-export class UpdateWarehouseDto extends CreateWarehouseDto {}
+export class UpdateWarehouseDto extends PartialType(CreateWarehouseDto) { }

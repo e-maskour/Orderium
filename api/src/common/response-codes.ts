@@ -1069,6 +1069,14 @@ export const ONB = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  BULK OPERATIONS
+// ─────────────────────────────────────────────────────────────
+export const BULK = {
+  EXPORT_QUEUED: { code: 'BULK201_01', status: 201, message: 'Export job queued successfully' },
+  JOB_STATUS: { code: 'BULK200_01', status: 200, message: 'Bulk job status retrieved successfully' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  ERROR CODES  (Shared across all modules)
 // ─────────────────────────────────────────────────────────────
 export const ERR = {
