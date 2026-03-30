@@ -28,6 +28,7 @@ import { DataTable } from 'primereact/datatable';
 import type { DataTableProps, DataTableValueArray } from 'primereact/datatable';
 import { InputText } from 'primereact/inputtext';
 import { Search } from 'lucide-react';
+import { EmptyState } from './EmptyState';
 
 // ─── Loading Skeleton ────────────────────────────────────────────────────────
 
@@ -97,37 +98,13 @@ export interface DataTableEmptyStateProps {
     description?: string;
 }
 
-export function DataTableEmptyState({
-    icon: Icon,
-    title = 'No results found',
-    description = 'Try adjusting your search or filter criteria.',
-}: DataTableEmptyStateProps) {
+export function DataTableEmptyState({ icon, title, description }: DataTableEmptyStateProps) {
     return (
-        <div className="dt-empty-state">
-            <div className="dt-empty-state__icon">
-                {Icon ? (
-                    <Icon style={{ width: '1.5rem', height: '1.5rem', color: '#94a3b8' }} />
-                ) : (
-                    // Default: generic "inbox" SVG
-                    <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#94a3b8"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <path d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7" />
-                        <path d="M2 13h4l2 3h8l2-3h4" />
-                        <path d="M2 13v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5" />
-                    </svg>
-                )}
-            </div>
-            <p className="dt-empty-state__title">{title}</p>
-            <p className="dt-empty-state__desc">{description}</p>
-        </div>
+        <EmptyState
+            icon={icon}
+            title={title ?? 'No results found'}
+            description={description ?? 'Try adjusting your search or filter criteria.'}
+        />
     );
 }
 

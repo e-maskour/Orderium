@@ -8,6 +8,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Link, useNavigate } from 'react-router-dom';
+import { EmptyState } from '../../components/EmptyState';
 import { uomService, IUnitOfMeasure, CreateUomDTO, UpdateUomDTO, UOM_CATEGORIES } from '../../modules/uom';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
@@ -232,7 +233,7 @@ export default function UnitsOfMeasure() {
                         rowGroupMode="subheader"
                         groupRowsBy="category"
                         rowGroupHeaderTemplate={(row: IUnitOfMeasure) => <span>{row.category}</span>}
-                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noUomFound') || 'No units of measure found'}</div>}
+                        emptyMessage={<EmptyState icon={Ruler} title={t('noUomFound') || 'No units of measure found'} compact />}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                         currentPageReportTemplate={t('pageReportTemplate')}
                     >

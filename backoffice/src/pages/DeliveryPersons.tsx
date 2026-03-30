@@ -3,6 +3,7 @@ import { PageHeader } from '../components/PageHeader';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Truck, Edit2, Trash2, Search, X } from 'lucide-react';
+import { EmptyState } from '../components/EmptyState';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
@@ -270,9 +271,8 @@ export default function DeliveryPersons() {
                   <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
                 </div>
               ) : filteredPersons.length === 0 ? (
-                <div style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '4rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                  <Truck style={{ width: '5rem', height: '5rem', color: '#cbd5e1', display: 'block', margin: '0 auto', marginBottom: '1rem' }} />
-                  <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noDeliveryPersonsFound')}</p>
+                <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                  <EmptyState icon={Truck} title={t('noDeliveryPersonsFound') as string} />
                 </div>
               ) : (
                 <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
@@ -288,7 +288,7 @@ export default function DeliveryPersons() {
                     rows={25}
                     rowsPerPageOptions={[10, 25, 50, 100]}
                     removableSort
-                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
+                    emptyMessage={<EmptyState icon={Truck} title={t('noDeliveryPersonsFound') as string} compact />}
                     paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                     currentPageReportTemplate={t('pageReportTemplate')}
                   >

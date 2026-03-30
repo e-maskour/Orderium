@@ -8,6 +8,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Link, useNavigate } from 'react-router-dom';
+import { EmptyState } from '../../components/EmptyState';
 import {
     sequencesService,
     Sequence,
@@ -224,7 +225,7 @@ export default function Sequences() {
                         rows={25}
                         rowsPerPageOptions={[10, 25, 50, 100]}
                         removableSort
-                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noSequencesConfigured')}</div>}
+                        emptyMessage={<EmptyState icon={Hash} title={t('noSequencesConfigured')} compact />}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                         currentPageReportTemplate={t('pageReportTemplate')}
                     >

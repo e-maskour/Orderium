@@ -8,6 +8,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Link, useNavigate } from 'react-router-dom';
 import { taxesService, TaxRate, ITaxRate, CreateTaxRateDTO, UpdateTaxRateDTO } from '../../modules/taxes';
+import { EmptyState } from '../../components/EmptyState';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
@@ -151,7 +152,7 @@ export default function Taxes() {
                         rows={25}
                         rowsPerPageOptions={[10, 25, 50, 100]}
                         removableSort
-                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noTaxRatesConfigured')}</div>}
+                        emptyMessage={<EmptyState icon={Percent} title={t('noTaxRatesConfigured')} compact />}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                         currentPageReportTemplate={t('pageReportTemplate')}
                     >

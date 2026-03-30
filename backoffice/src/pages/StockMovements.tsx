@@ -13,6 +13,7 @@ import { StockMovement } from '../modules/inventory/inventory.model';
 import { toastValidated, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 import { MobileList } from '../components/MobileList';
+import { EmptyState } from '../components/EmptyState';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function StockMovements() {
@@ -207,12 +208,7 @@ export default function StockMovements() {
             rowsPerPageOptions={[10, 25, 50, 100]}
             removableSort
             loading={isLoading}
-            emptyMessage={
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                <ArrowLeftRight style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
-                {t('noMovementsFound' as any)}
-              </div>
-            }
+            emptyMessage={<EmptyState icon={ArrowLeftRight} title={t('noMovementsFound' as any)} compact />}
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >

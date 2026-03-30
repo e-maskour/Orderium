@@ -4,6 +4,13 @@ export class AddShareTokenToInvoicesAndOrders1743000000000 implements MigrationI
     name = 'AddShareTokenToInvoicesAndOrders1743000000000';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        // Skip on brand-new tenant databases: the invoices/orders tables don't
+        // exist yet. They will be created by InitialMigration1774300911703,
+        // and AddShareTokenColumnsIfNotExists1774619375000 will add these
+        // columns idempotently after that.
+        const invoicesExists = await queryRunner.hasTable('invoices');
+        if (!invoicesExists) return;
+
         await queryRunner.addColumn(
             'invoices',
             new TableColumn({
@@ -62,6 +69,9 @@ export class AddShareTokenToInvoicesAndOrders1743000000000 implements MigrationI
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        const invoicesExists = await queryRunner.hasTable('invoices');
+        if (!invoicesExists) return;
+
         await queryRunner.dropIndex('orders', 'IDX_order_share_token');
         await queryRunner.dropIndex('invoices', 'IDX_invoice_share_token');
         await queryRunner.dropColumn('orders', 'share_token_expiry');

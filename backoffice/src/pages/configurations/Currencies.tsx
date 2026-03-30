@@ -8,6 +8,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Link, useNavigate } from 'react-router-dom';
 import { currenciesService, Currency, ICurrency, CreateCurrencyDTO, UpdateCurrencyDTO } from '../../modules/currencies';
+import { EmptyState } from '../../components/EmptyState';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
@@ -152,7 +153,7 @@ export default function Currencies() {
                         rows={25}
                         rowsPerPageOptions={[10, 25, 50, 100]}
                         removableSort
-                        emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCurrenciesConfigured')}</div>}
+                        emptyMessage={<EmptyState icon={DollarSign} title={t('noCurrenciesConfigured')} compact />}
                         paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                         currentPageReportTemplate={t('pageReportTemplate')}
                     >

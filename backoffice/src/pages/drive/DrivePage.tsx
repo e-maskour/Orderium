@@ -13,6 +13,7 @@ import {
     SortAsc, SortDesc, Eye, Download, AlertTriangle, Database,
 } from 'lucide-react';
 import { toastSuccess, toastError, toastDeleted, toastCreated } from '../../services/toast.service';
+import { EmptyState } from '../../components/EmptyState';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Dialog } from 'primereact/dialog';
@@ -359,20 +360,10 @@ function NodeCard({ node, viewMode, isSelected, onSelect, onOpen, onMenuOpen, fo
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
-
-function EmptyState({ icon: Icon, title, desc, action }: { icon: typeof Folder; title: string; desc: string; action?: React.ReactNode }) {
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', gap: '1rem' }}>
-            <div style={{ width: '5rem', height: '5rem', borderRadius: '1.5rem', background: 'rgba(35,90,228,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={36} color="#f59e0b" strokeWidth={1.5} />
-            </div>
-            <div style={{ textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#374151' }}>{title}</p>
-                <p style={{ margin: '0.375rem 0 0', fontSize: '0.875rem', color: '#9ca3af' }}>{desc}</p>
-            </div>
-            {action && <div style={{ marginTop: '0.5rem' }}>{action}</div>}
-        </div>
-    );
+// Uses the global EmptyState component — local alias for backward compatibility
+// with callers that used the { icon, title, desc, action } signature
+function DriveEmptyState({ icon, title, desc, action }: { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; title: string; desc: string; action?: React.ReactNode }) {
+    return <EmptyState icon={icon} title={title} description={desc} action={action} />;
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -998,7 +989,7 @@ export default function DrivePage() {
                             )
                         ) : isBrowse ? (
                             browseItems.length === 0 ? (
-                                <EmptyState
+                                <DriveEmptyState
                                     icon={Database}
                                     title={searchQuery ? t('searchEmpty') as string : t('driveEmpty') as string}
                                     desc={searchQuery ? t('searchEmptyDesc') as string : t('driveEmptyDesc') as string}
@@ -1071,7 +1062,7 @@ export default function DrivePage() {
                             )
                         ) : (
                             nodes.length === 0 ? (
-                                <EmptyState
+                                <DriveEmptyState
                                     icon={activeView === 'trash' ? Trash2 : activeView === 'shared' ? Users : Folder}
                                     title={t(activeView === 'trash' ? 'trashEmpty' : activeView === 'shared' ? 'sharedEmpty' : searchQuery ? 'searchEmpty' : 'driveEmpty') as string}
                                     desc={t(activeView === 'trash' ? 'trashEmptyDesc' : activeView === 'shared' ? 'sharedEmptyDesc' : searchQuery ? 'searchEmptyDesc' : 'driveEmptyDesc') as string}

@@ -751,21 +751,6 @@ export default function Orders() {
                       <span style={{ padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: osb.bg, color: osb.color, border: `1px solid ${osb.border}`, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                         <span style={{ fontSize: '0.8rem' }}>{osb.icon}</span>{osb.label}
                       </span>
-                      {nextStatuses.length > 0 && (
-                        <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                          {nextStatuses.map(ns => (
-                            <button
-                              key={ns.value}
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); changeStatusMutation.mutate({ orderId: order.id, status: ns.value }); }}
-                              style={{ padding: '0.2rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', backgroundColor: ns.bg, color: ns.color, border: `1px solid ${ns.border}`, transition: 'opacity 0.15s' }}
-                              title={`→ ${ns.label}`}
-                            >
-                              → {ns.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   );
                 }}

@@ -8,6 +8,7 @@ import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { EmptyState } from '../components/EmptyState';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
@@ -219,7 +220,7 @@ export default function Customers() {
                   rows={25}
                   rowsPerPageOptions={[10, 25, 50, 100]}
                   removableSort
-                  emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCustomersFound')}</div>}
+                  emptyMessage={<EmptyState icon={Users} title={t('noCustomersFound')} compact />}
                   paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                   currentPageReportTemplate={t('pageReportTemplate')}
                 >

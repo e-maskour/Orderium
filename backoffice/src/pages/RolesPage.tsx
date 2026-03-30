@@ -8,6 +8,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
+import { EmptyState } from '../components/EmptyState';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Checkbox } from 'primereact/checkbox';
 import { Tag } from 'primereact/tag';
@@ -315,7 +316,7 @@ export default function RolesPage() {
                     <DataTable
                         value={roles}
                         loading={isLoading}
-                        emptyMessage={t('noResults' as any) || 'No roles found'}
+                        emptyMessage={<EmptyState title={t('noResults' as any) || 'No roles found'} />}
                         dataKey="id"
                         stripedRows
                         selectionMode="checkbox"

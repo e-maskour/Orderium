@@ -8,6 +8,7 @@ import { Dialog } from 'primereact/dialog';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Search, Package2, Wrench, ShoppingBag } from 'lucide-react';
 import { formatAmount } from '@orderium/ui';
+import { EmptyState } from './EmptyState';
 
 const PCAT_STYLES = `
   .pcat-search-wrap {
@@ -313,15 +314,12 @@ export function ProductCatalogueModal({
             <ProgressSpinner style={{ width: '2.5rem', height: '2.5rem' }} />
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="pcat-empty">
-            <div className="pcat-empty-icon">
-              <Package2 style={{ width: '1.5rem', height: '1.5rem', color: '#94a3b8' }} />
-            </div>
-            <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#64748b' }}>Aucun produit trouvé</span>
-            {catalogueSearch && (
-              <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>Essayez un autre terme de recherche</span>
-            )}
-          </div>
+          <EmptyState
+            icon={Package2}
+            title="Aucun produit trouvé"
+            description={catalogueSearch ? 'Essayez un autre terme de recherche' : undefined}
+            compact
+          />
         ) : (
           <div className="pcat-grid">
             {filteredProducts.map((product) => {

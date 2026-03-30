@@ -13,6 +13,7 @@ import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { toastDeleted, toastError, toastConfirm } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
+import { EmptyState } from '../components/EmptyState';
 import { MobileList } from '../components/MobileList';
 
 export default function Fournisseurs() {
@@ -178,9 +179,8 @@ export default function Fournisseurs() {
 
             {/* Desktop DataTable */}
             {filteredSuppliers.length === 0 ? (
-              <div className="responsive-table-desktop" style={{ textAlign: 'center', padding: '4rem 0', backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                <Users style={{ width: '5rem', height: '5rem', color: '#cbd5e1', margin: '0 auto 1rem' }} />
-                <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>Aucun fournisseur trouvé</p>
+              <div className="responsive-table-desktop" style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                <EmptyState icon={Users} title="Aucun fournisseur trouvé" />
               </div>
             ) : (
               <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
@@ -202,7 +202,7 @@ export default function Fournisseurs() {
                   rows={25}
                   rowsPerPageOptions={[10, 25, 50, 100]}
                   removableSort
-                  emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Aucun fournisseur trouvé</div>}
+                  emptyMessage={<EmptyState icon={Users} title="Aucun fournisseur trouvé" compact />}
                   paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                   currentPageReportTemplate={t('pageReportTemplate')}
                 >

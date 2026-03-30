@@ -13,6 +13,7 @@ import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjus
 import { InventoryAdjustment } from '../modules/inventory/inventory.model';
 import { toastSuccess, toastValidated, toastDeleted, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
+import { EmptyState } from '../components/EmptyState';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function InventoryAdjustments() {
@@ -160,12 +161,7 @@ export default function InventoryAdjustments() {
             rowsPerPageOptions={[10, 25, 50, 100]}
             removableSort
             loading={isLoading}
-            emptyMessage={
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                <ClipboardCheck style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
-                {t('noAdjustmentsFound')}
-              </div>
-            }
+            emptyMessage={<EmptyState icon={ClipboardCheck} title={t('noAdjustmentsFound')} compact />}
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >

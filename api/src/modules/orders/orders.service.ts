@@ -79,13 +79,23 @@ export class OrdersService {
 
       // Validate that customer exists if customerId is provided
       if (customerId) {
-        const customerExists = await manager
+        const customer = await manager
           .getRepository('partners')
           .findOne({ where: { id: customerId } });
-        if (!customerExists) {
+        if (!customer) {
           throw new BadRequestException(
             `Customer with ID ${customerId} does not exist`,
           );
+        }
+        // Auto-populate customer fields from partner record when not provided
+        if (!createOrderDto.customerName) {
+          createOrderDto.customerName = customer.name;
+        }
+        if (!createOrderDto.customerPhone) {
+          createOrderDto.customerPhone = customer.phoneNumber;
+        }
+        if (!createOrderDto.customerAddress) {
+          createOrderDto.customerAddress = customer.address || customer.deliveryAddress;
         }
       }
 

@@ -1,10 +1,15 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreatePrinters1743120000000 implements MigrationInterface {
-    name = 'CreatePrinters1743120000000';
+  name = 'CreatePrinters1743120000000';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // Skip on brand-new tenant databases: the portal table doesn't exist yet.
+    // It will be created by InitialMigration1774300911703 which runs after this.
+    const portalExists = await queryRunner.hasTable('portal');
+    if (!portalExists) return;
+
+    await queryRunner.query(`
       CREATE TABLE printers (
         id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name             VARCHAR(60) NOT NULL UNIQUE,
@@ -41,12 +46,15 @@ export class CreatePrinters1743120000000 implements MigrationInterface {
       CREATE INDEX idx_print_jobs_printed_at ON print_jobs(printed_at DESC);
       CREATE INDEX idx_print_jobs_printer    ON print_jobs(printer_id);
     `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    const portalExists = await queryRunner.hasTable('portal');
+    if (!portalExists) return;
+
+    await queryRunner.query(`
       DROP TABLE IF EXISTS print_jobs;
       DROP TABLE IF EXISTS printers;
     `);
-    }
+  }
 }

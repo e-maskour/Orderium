@@ -17,6 +17,7 @@ import {
     CircleDollarSign,
     ChevronDown,
 } from 'lucide-react';
+import { EmptyState } from '../components/EmptyState';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -377,15 +378,11 @@ export default function Caisse() {
                         ))}
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="caisse-empty">
-                        <div className="caisse-empty__icon">
-                            <Banknote />
-                        </div>
-                        <p className="caisse-empty__title">{t('noOrdersWithPayments')}</p>
-                        <p className="caisse-empty__text">
-                            {searchTerm || statusFilter !== 'all' ? t('noOrdersMatchFilter') : t('noOrdersYet')}
-                        </p>
-                    </div>
+                    <EmptyState
+                        icon={Banknote}
+                        title={t('noOrdersWithPayments') as string}
+                        description={(searchTerm || statusFilter !== 'all' ? t('noOrdersMatchFilter') : t('noOrdersYet')) as string}
+                    />
                 ) : (
                     <div className="caisse-grid">
                         {filtered.map((order) => {
@@ -437,8 +434,8 @@ export default function Caisse() {
                                             <span className="caisse-card__amount-label">{t('remaining')}</span>
                                             <span
                                                 className={`caisse-card__amount-value ${order.remainingAmount > 0
-                                                        ? 'caisse-card__amount-value--remaining'
-                                                        : 'caisse-card__amount-value--remaining-zero'
+                                                    ? 'caisse-card__amount-value--remaining'
+                                                    : 'caisse-card__amount-value--remaining-zero'
                                                     }`}
                                             >
                                                 {formatAmount(order.remainingAmount, 2)}
@@ -946,12 +943,7 @@ export default function Caisse() {
                             {t('loading')}
                         </div>
                     ) : historyPayments.length === 0 ? (
-                        <div className="caisse-empty" style={{ padding: '2rem 1rem' }}>
-                            <div className="caisse-empty__icon">
-                                <Clock />
-                            </div>
-                            <p className="caisse-empty__title">{t('noPaymentsYet')}</p>
-                        </div>
+                        <EmptyState icon={Clock} title={t('noPaymentsYet') as string} compact />
                     ) : (
                         <div className="caisse-timeline">
                             {historyPayments.map((p) => {

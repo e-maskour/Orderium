@@ -13,6 +13,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Users as UsersIcon, Shield, Plus, Pencil, Trash2, UserCheck, UserX, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { EmptyState } from '../components/EmptyState';
 import { usersService, type User, type CreateUserPayload, type UpdateUserPayload, type UserType } from '../modules/users';
 import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
@@ -369,7 +370,7 @@ export default function UsersPage() {
                     onPage={(e) => setPage(Math.floor((e.first ?? 0) / perPage) + 1)}
                     paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                     currentPageReportTemplate={t('pageReportTemplate')}
-                    emptyMessage={t('noResults' as any) || 'No users found'}
+                    emptyMessage={<EmptyState icon={UsersIcon} title={t('noResults' as any) || 'No users found'} />}
                     dataKey="id"
                     stripedRows
                     selectionMode="checkbox"

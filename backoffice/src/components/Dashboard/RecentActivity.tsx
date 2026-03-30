@@ -2,6 +2,7 @@ import { Clock, TrendingUp, Package, Users, ShoppingBag, Bell } from 'lucide-rea
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../lib/formatters';
 import type { IRecentActivity as Activity } from '../../modules/statistics/statistics.interface';
+import { EmptyState } from '../EmptyState';
 
 interface RecentActivityProps {
     activities?: Activity[];
@@ -78,14 +79,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
         return (
             <div className="db-chart-card">
                 {header}
-                <div className="db-empty-state">
-                    <div className="db-empty-state__icon">
-                        <Clock style={{ width: '1.5rem', height: '1.5rem', color: '#9ca3af' }} />
-                    </div>
-                    <p className="db-empty-state__text">
-                        {t('noRecentActivity')}
-                    </p>
-                </div>
+                <EmptyState icon={Clock} title={t('noRecentActivity') as string} compact />
             </div>
         );
     }

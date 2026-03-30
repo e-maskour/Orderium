@@ -15,6 +15,7 @@ import { toastConfirm, toastError } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { formatAmount } from '@orderium/ui';
+import { EmptyState } from '../components/EmptyState';
 
 export default function PaiementsVente() {
   const { t, language } = useLanguage();
@@ -209,15 +210,7 @@ export default function PaiementsVente() {
             rowsPerPageOptions={[10, 25, 50, 100]}
             removableSort
             loading={loading}
-            emptyMessage={
-              <div style={{ textAlign: 'center', padding: '3.5rem 1rem' }}>
-                <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', border: '1px solid #bbf7d0' }}>
-                  <Wallet style={{ width: '1.5rem', height: '1.5rem', color: '#10b981' }} />
-                </div>
-                <p style={{ color: '#1e293b', fontWeight: 600, marginBottom: '0.25rem', fontSize: '0.9375rem' }}>Aucun paiement trouvé</p>
-                <p style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>Aucun paiement de vente ne correspond à votre recherche</p>
-              </div>
-            }
+            emptyMessage={<EmptyState icon={Wallet} title="Aucun paiement trouvé" description="Aucun paiement de vente ne correspond à votre recherche" />}
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
