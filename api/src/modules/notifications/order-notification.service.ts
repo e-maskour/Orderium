@@ -42,7 +42,10 @@ export class OrderNotificationService {
   // ─── Client → Backoffice ─────────────────────────────────────────────────────
 
   /** Client registers a new account → notify admins */
-  async notifyClientRegistered(clientName: string, clientId: number): Promise<void> {
+  async notifyClientRegistered(
+    clientName: string,
+    clientId: number,
+  ): Promise<void> {
     await this.fire('CLIENT_REGISTERED', { clientName }, [{ type: 'admins' }], {
       portalUserId: clientId,
     });
@@ -53,7 +56,11 @@ export class OrderNotificationService {
     const clientName = order.customer?.name || order.customerName || 'Client';
     await this.fire(
       'ORDER_PLACED',
-      { clientName, orderNumber: order.documentNumber, orderId: String(order.id) },
+      {
+        clientName,
+        orderNumber: order.documentNumber,
+        orderId: String(order.id),
+      },
       [{ type: 'admins' }],
       { orderId: order.id, orderNumber: order.documentNumber },
     );
@@ -64,21 +71,36 @@ export class OrderNotificationService {
     const clientName = order.customer?.name || order.customerName || 'Client';
     await this.fire(
       'ORDER_CANCELLED_BY_CLIENT',
-      { clientName, orderNumber: order.documentNumber, orderId: String(order.id) },
+      {
+        clientName,
+        orderNumber: order.documentNumber,
+        orderId: String(order.id),
+      },
       [{ type: 'admins' }],
       { orderId: order.id, orderNumber: order.documentNumber },
     );
   }
 
   /** Client updates profile / address → notify admins */
-  async notifyClientProfileUpdated(clientName: string, clientId: number): Promise<void> {
-    await this.fire('CLIENT_PROFILE_UPDATED', { clientName }, [{ type: 'admins' }], {
-      portalUserId: clientId,
-    });
+  async notifyClientProfileUpdated(
+    clientName: string,
+    clientId: number,
+  ): Promise<void> {
+    await this.fire(
+      'CLIENT_PROFILE_UPDATED',
+      { clientName },
+      [{ type: 'admins' }],
+      {
+        portalUserId: clientId,
+      },
+    );
   }
 
   /** Client submits a complaint / review → notify admins */
-  async notifyClientComplaint(clientName: string, clientId: number): Promise<void> {
+  async notifyClientComplaint(
+    clientName: string,
+    clientId: number,
+  ): Promise<void> {
     await this.fire('CLIENT_COMPLAINT', { clientName }, [{ type: 'admins' }], {
       portalUserId: clientId,
     });
@@ -95,14 +117,22 @@ export class OrderNotificationService {
     const clientName = order.customer?.name || order.customerName || 'Client';
     await this.fire(
       'ORDER_ASSIGNED_DRIVER',
-      { orderNumber: order.documentNumber, clientName, driverName: deliveryPersonName },
+      {
+        orderNumber: order.documentNumber,
+        clientName,
+        driverName: deliveryPersonName,
+      },
       [{ type: 'delivery', deliveryPersonId }],
       { orderId: order.id, orderNumber: order.documentNumber },
     );
     if (order.customerId) {
       await this.fire(
         'ORDER_ASSIGNED_CLIENT',
-        { orderNumber: order.documentNumber, clientName, driverName: deliveryPersonName },
+        {
+          orderNumber: order.documentNumber,
+          clientName,
+          driverName: deliveryPersonName,
+        },
         [{ type: 'customer', customerId: order.customerId }],
         { orderId: order.id, orderNumber: order.documentNumber },
       );
@@ -118,14 +148,21 @@ export class OrderNotificationService {
     const clientName = order.customer?.name || order.customerName || 'Client';
     await this.fire(
       'ORDER_REASSIGNED_DRIVER',
-      { orderNumber: order.documentNumber, clientName, driverName: newDeliveryPersonName },
+      {
+        orderNumber: order.documentNumber,
+        clientName,
+        driverName: newDeliveryPersonName,
+      },
       [{ type: 'delivery', deliveryPersonId: newDeliveryPersonId }],
       { orderId: order.id, orderNumber: order.documentNumber },
     );
   }
 
   /** Admin cancels assigned order → notify driver */
-  async notifyOrderCancelledByAdmin_Driver(order: Order, deliveryPersonId: number): Promise<void> {
+  async notifyOrderCancelledByAdmin_Driver(
+    order: Order,
+    deliveryPersonId: number,
+  ): Promise<void> {
     await this.fire(
       'ORDER_CANCELLED_BY_ADMIN_DRIVER',
       { orderNumber: order.documentNumber },
@@ -157,7 +194,11 @@ export class OrderNotificationService {
   }
 
   /** Admin sends a custom message to a client */
-  async notifyAdminCustomMessage(customerId: number, title: string, message: string): Promise<void> {
+  async notifyAdminCustomMessage(
+    customerId: number,
+    title: string,
+    message: string,
+  ): Promise<void> {
     await this.fire(
       'ADMIN_CUSTOM_MESSAGE',
       { title, message },
@@ -169,11 +210,18 @@ export class OrderNotificationService {
   // ─── Delivery → Admin + Client ────────────────────────────────────────────────
 
   /** Driver starts delivery (IN_DELIVERY) → notify admin + client */
-  async notifyDeliveryInProgress(order: Order, deliveryPersonName: string): Promise<void> {
+  async notifyDeliveryInProgress(
+    order: Order,
+    deliveryPersonName: string,
+  ): Promise<void> {
     const clientName = order.customer?.name || order.customerName || 'Client';
     await this.fire(
       'DELIVERY_IN_PROGRESS_ADMIN',
-      { driverName: deliveryPersonName, orderNumber: order.documentNumber, clientName },
+      {
+        driverName: deliveryPersonName,
+        orderNumber: order.documentNumber,
+        clientName,
+      },
       [{ type: 'admins' }],
       { orderId: order.id, orderNumber: order.documentNumber },
     );
@@ -188,11 +236,18 @@ export class OrderNotificationService {
   }
 
   /** Driver marks order as delivered → notify admin + client */
-  async notifyDeliveryCompleted(order: Order, deliveryPersonName: string): Promise<void> {
+  async notifyDeliveryCompleted(
+    order: Order,
+    deliveryPersonName: string,
+  ): Promise<void> {
     const clientName = order.customer?.name || order.customerName || 'Client';
     await this.fire(
       'DELIVERY_COMPLETED_ADMIN',
-      { driverName: deliveryPersonName, orderNumber: order.documentNumber, clientName },
+      {
+        driverName: deliveryPersonName,
+        orderNumber: order.documentNumber,
+        clientName,
+      },
       [{ type: 'admins' }],
       { orderId: order.id, orderNumber: order.documentNumber },
     );
@@ -207,11 +262,18 @@ export class OrderNotificationService {
   }
 
   /** Driver reports delivery failed → notify admin + client */
-  async notifyDeliveryFailed(order: Order, deliveryPersonName: string): Promise<void> {
+  async notifyDeliveryFailed(
+    order: Order,
+    deliveryPersonName: string,
+  ): Promise<void> {
     const clientName = order.customer?.name || order.customerName || 'Client';
     await this.fire(
       'DELIVERY_FAILED_ADMIN',
-      { driverName: deliveryPersonName, orderNumber: order.documentNumber, clientName },
+      {
+        driverName: deliveryPersonName,
+        orderNumber: order.documentNumber,
+        clientName,
+      },
       [{ type: 'admins' }],
       { orderId: order.id, orderNumber: order.documentNumber },
     );
@@ -251,13 +313,13 @@ export class OrderNotificationService {
   // ─── System ───────────────────────────────────────────────────────────────────
 
   /** New driver registered → notify admins */
-  async notifyDriverRegistered(driverName: string, driverId: number): Promise<void> {
-    await this.fire(
-      'DRIVER_REGISTERED',
-      { driverName },
-      [{ type: 'admins' }],
-      { deliveryPersonId: driverId },
-    );
+  async notifyDriverRegistered(
+    driverName: string,
+    driverId: number,
+  ): Promise<void> {
+    await this.fire('DRIVER_REGISTERED', { driverName }, [{ type: 'admins' }], {
+      deliveryPersonId: driverId,
+    });
   }
 
   // ─── Stock Alerts ─────────────────────────────────────────────────────────────
@@ -311,7 +373,8 @@ export class OrderNotificationService {
 
   /** Single overdue invoice alert */
   async notifyInvoicePaymentOverdue(invoice: Invoice): Promise<void> {
-    const clientName = invoice.customer?.name || invoice.customerName || 'Client';
+    const clientName =
+      invoice.customer?.name || invoice.customerName || 'Client';
     const dueDate = invoice.amountDueDate
       ? new Date(invoice.amountDueDate).toLocaleDateString('fr-MA')
       : '—';
@@ -330,7 +393,11 @@ export class OrderNotificationService {
 
   // ─── Sales Reports ─────────────────────────────────────────────────────────────
 
-  async notifyDailySalesSummary(date: string, ordersCount: number, amount: number): Promise<void> {
+  async notifyDailySalesSummary(
+    date: string,
+    ordersCount: number,
+    amount: number,
+  ): Promise<void> {
     await this.fire(
       'DAILY_SALES_SUMMARY',
       { date, ordersCount: String(ordersCount), amount: String(amount) },
@@ -352,12 +419,29 @@ export class OrderNotificationService {
     );
   }
 
+  async notifyQuotesExpiringSoon(
+    count: number,
+    quoteNumbers: string[],
+  ): Promise<void> {
+    if (count === 0) return;
+    await this.fire(
+      'QUOTES_EXPIRING_SOON',
+      { count: String(count), quotes: quoteNumbers.join(', ') },
+      [{ type: 'admins' }],
+      { count, quoteNumbers },
+    );
+  }
+
   // ─── Internal Helper ─────────────────────────────────────────────────────────
 
   private async fire(
     key: string,
     variables: Record<string, string>,
-    recipients: { type: 'admins' | 'customer' | 'delivery'; customerId?: number; deliveryPersonId?: number }[],
+    recipients: {
+      type: 'admins' | 'customer' | 'delivery';
+      customerId?: number;
+      deliveryPersonId?: number;
+    }[],
     metadata: Record<string, unknown>,
   ): Promise<void> {
     try {

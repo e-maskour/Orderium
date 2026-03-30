@@ -2,8 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { UnitOfMeasure } from './entities/unit-of-measure.entity';
 import {
   CreateUnitOfMeasureDto,
@@ -15,10 +17,24 @@ import { TenantConnectionService } from '../tenant/tenant-connection.service';
 export class UnitOfMeasureService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) { }
 
   private get uomRepository(): Repository<UnitOfMeasure> {
     return this.tenantConnService.getRepository(UnitOfMeasure);
+  }
+
+  private get tenantSlug(): string {
+    return this.tenantConnService.getCurrentTenantSlug();
+  }
+
+  private uomKey(suffix: string): string {
+    return `tenant:${this.tenantSlug}:uom:${suffix}`;
+  }
+
+  private async invalidateUomCache(id?: number): Promise<void> {
+    await this.cacheManager.del(this.uomKey('all'));
+    if (id) await this.cacheManager.del(this.uomKey(`${id}`));
   }
 
   async create(createDto: CreateUnitOfMeasureDto): Promise<UnitOfMeasure> {
@@ -57,10 +73,16 @@ export class UnitOfMeasureService {
     }
 
     const uom = this.uomRepository.create(createDto);
-    return this.uomRepository.save(uom);
+    const saved = await this.uomRepository.save(uom);
+    await this.invalidateUomCache();
+    return saved;
   }
 
   async findAll(category?: string): Promise<UnitOfMeasure[]> {
+    const key = this.uomKey(category ? `all:${category}` : 'all');
+    const cached = await this.cacheManager.get<UnitOfMeasure[]>(key);
+    if (cached) return cached;
+
     const query = this.uomRepository
       .createQueryBuilder('uom')
       .leftJoinAndSelect('uom.baseUnit', 'baseUnit')
@@ -72,10 +94,16 @@ export class UnitOfMeasureService {
 
     query.orderBy('uom.category', 'ASC').addOrderBy('uom.name', 'ASC');
 
-    return query.getMany();
+    const result = await query.getMany();
+    await this.cacheManager.set(key, result, 300_000);
+    return result;
   }
 
   async findOne(id: number): Promise<UnitOfMeasure> {
+    const key = this.uomKey(`${id}`);
+    const cached = await this.cacheManager.get<UnitOfMeasure>(key);
+    if (cached) return cached;
+
     const uom = await this.uomRepository.findOne({
       where: { id },
       relations: ['baseUnit'],
@@ -85,6 +113,7 @@ export class UnitOfMeasureService {
       throw new NotFoundException(`Unit of measure with ID ${id} not found`);
     }
 
+    await this.cacheManager.set(key, uom, 300_000);
     return uom;
   }
 
@@ -116,7 +145,9 @@ export class UnitOfMeasureService {
     }
 
     Object.assign(uom, updateDto);
-    return this.uomRepository.save(uom);
+    const saved = await this.uomRepository.save(uom);
+    await this.invalidateUomCache(id);
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
@@ -127,6 +158,7 @@ export class UnitOfMeasureService {
     // For now, soft delete
     uom.isActive = false;
     await this.uomRepository.save(uom);
+    await this.invalidateUomCache(id);
   }
 
   /**

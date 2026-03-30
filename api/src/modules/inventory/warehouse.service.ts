@@ -2,8 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { Repository, DataSource } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Warehouse } from './entities/warehouse.entity';
 import { CreateWarehouseDto, UpdateWarehouseDto } from './dto/warehouse.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
@@ -12,6 +14,7 @@ import { TenantConnectionService } from '../tenant/tenant-connection.service';
 export class WarehouseService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) { }
 
   private get warehouseRepository(): Repository<Warehouse> {
@@ -20,6 +23,19 @@ export class WarehouseService {
 
   private get dataSource(): DataSource {
     return this.tenantConnService.getCurrentDataSource();
+  }
+
+  private get tenantSlug(): string {
+    return this.tenantConnService.getCurrentTenantSlug();
+  }
+
+  private warehouseKey(suffix: string): string {
+    return `tenant:${this.tenantSlug}:warehouse:${suffix}`;
+  }
+
+  private async invalidateWarehouseCache(id?: number): Promise<void> {
+    await this.cacheManager.del(this.warehouseKey('all'));
+    if (id) await this.cacheManager.del(this.warehouseKey(`${id}`));
   }
 
   async create(createDto: CreateWarehouseDto): Promise<Warehouse> {
@@ -35,17 +51,29 @@ export class WarehouseService {
     }
 
     const warehouse = this.warehouseRepository.create(createDto);
-    return this.warehouseRepository.save(warehouse);
+    const saved = await this.warehouseRepository.save(warehouse);
+    await this.invalidateWarehouseCache();
+    return saved;
   }
 
   async findAll(): Promise<Warehouse[]> {
-    return this.warehouseRepository.find({
+    const key = this.warehouseKey('all');
+    const cached = await this.cacheManager.get<Warehouse[]>(key);
+    if (cached) return cached;
+
+    const result = await this.warehouseRepository.find({
       where: { isActive: true },
       order: { name: 'ASC' },
     });
+    await this.cacheManager.set(key, result, 300_000);
+    return result;
   }
 
   async findOne(id: number): Promise<Warehouse> {
+    const key = this.warehouseKey(`${id}`);
+    const cached = await this.cacheManager.get<Warehouse>(key);
+    if (cached) return cached;
+
     const warehouse = await this.warehouseRepository.findOne({
       where: { id },
     });
@@ -54,6 +82,7 @@ export class WarehouseService {
       throw new NotFoundException(`Warehouse with ID ${id} not found`);
     }
 
+    await this.cacheManager.set(key, warehouse, 300_000);
     return warehouse;
   }
 
@@ -73,7 +102,9 @@ export class WarehouseService {
     }
 
     Object.assign(warehouse, updateDto);
-    return this.warehouseRepository.save(warehouse);
+    const saved = await this.warehouseRepository.save(warehouse);
+    await this.invalidateWarehouseCache(id);
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
@@ -82,5 +113,6 @@ export class WarehouseService {
     // Soft delete by setting isActive to false
     warehouse.isActive = false;
     await this.warehouseRepository.save(warehouse);
+    await this.invalidateWarehouseCache(id);
   }
 }
