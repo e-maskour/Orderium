@@ -48,6 +48,7 @@ export class TenantMiddleware implements NestMiddleware {
       url === '/health' ||
       url.startsWith('/api/admin/tenants') ||
       url.startsWith('/admin/tenants') ||
+      url.startsWith('/api/super-admin/') ||
       url.startsWith('/api/onboarding/public-status')
     ) {
       return next();
