@@ -55,6 +55,10 @@ export class Product {
   @Column({ type: 'int', nullable: true })
   stock: number;
 
+  /** Stock alert threshold — notify admin when stock drops to or below this value */
+  @Column({ type: 'int', nullable: true, default: 5, name: 'stock_alert_threshold' })
+  stockAlertThreshold: number | null;
+
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, transformer: numericTransformer })
   saleTax: number;
 

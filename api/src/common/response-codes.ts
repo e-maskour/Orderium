@@ -537,6 +537,26 @@ export const NOT = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  NOTIFICATION TEMPLATES  (NotificationTemplatesController)
+// ─────────────────────────────────────────────────────────────
+export const NTPL = {
+  /** GET /notification-templates                         → data: NotificationTemplate[]  | metadata: null */
+  LIST: { code: 'NTPL200_01', status: 200, message: 'Notification Templates Retrieved' },
+  /** GET /notification-templates/:key                   → data: NotificationTemplate     | metadata: null */
+  DETAIL: { code: 'NTPL200_02', status: 200, message: 'Notification Template Retrieved' },
+  /** PATCH /notification-templates/:key                 → data: NotificationTemplate     | metadata: null */
+  UPDATED: { code: 'NTPL200_03', status: 200, message: 'Notification Template Updated' },
+  /** PATCH /notification-templates/:key/toggle          → data: NotificationTemplate     | metadata: null */
+  TOGGLED: { code: 'NTPL200_04', status: 200, message: 'Notification Template Toggled' },
+  /** POST /notification-templates/:key/reset            → data: NotificationTemplate     | metadata: null */
+  RESET: { code: 'NTPL200_05', status: 200, message: 'Notification Template Reset to Default' },
+  /** POST /notification-templates/reset-all             → data: null                     | metadata: null */
+  RESET_ALL: { code: 'NTPL200_06', status: 200, message: 'All Notification Templates Reset to Defaults' },
+  /** POST /notifications/send-custom                    → data: null                     | metadata: null */
+  SENT: { code: 'NTPL200_07', status: 200, message: 'Custom Notification Sent' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  CONFIGURATIONS  (ConfigurationsController)
 // ─────────────────────────────────────────────────────────────
 export const CFG = {

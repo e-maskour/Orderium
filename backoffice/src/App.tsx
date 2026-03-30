@@ -107,6 +107,7 @@ const UsersPage = lazy(() => import('./pages/UsersPage'));
 const RolesPage = lazy(() => import('./pages/RolesPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'));
 
 // Document pages
 const FactureVenteList = lazy(() => import('./pages/documents/FactureVenteList'));
@@ -625,6 +626,14 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <SettingsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings/notifications"
+                        element={
+                          <ProtectedRoute>
+                            <NotificationSettingsPage />
                           </ProtectedRoute>
                         }
                       />

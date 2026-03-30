@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import KeyvRedis from '@keyv/redis';
 import { AppController } from './app.controller';
@@ -117,6 +118,7 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
     }),
 
     // Feature modules
+    ScheduleModule.forRoot(),
     TenantModule,
     TenantLifecycleModule,
     ProductsModule,

@@ -74,6 +74,10 @@ export class Order extends BaseDocument {
   @Column({ type: 'date', nullable: true })
   dueDate: Date | null;
 
+  /** Payment due date — triggers overdue alerts when remainingAmount > 0 past this date */
+  @Column({ type: 'date', nullable: true, name: 'amount_due_date' })
+  amountDueDate: Date | null;
+
   @Column({ type: 'date', nullable: true })
   validationDate: Date | null;
 

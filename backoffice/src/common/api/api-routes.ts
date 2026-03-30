@@ -238,6 +238,17 @@ export const API_ROUTES = {
         DEVICE_TOKEN_REFRESH: (token: string) => `/api/notifications/device-token/${token}/refresh`,
     },
 
+    // ─── Notification Templates ────────────────────────────────
+    NOTIFICATION_TEMPLATES: {
+        LIST: '/api/notification-templates',
+        DETAIL: (key: string) => `/api/notification-templates/${key}`,
+        UPDATE: (key: string) => `/api/notification-templates/${key}`,
+        TOGGLE: (key: string) => `/api/notification-templates/${key}/toggle`,
+        RESET: (key: string) => `/api/notification-templates/${key}/reset`,
+        RESET_ALL: '/api/notification-templates/reset-all',
+        SEND_CUSTOM: '/api/notification-templates/send-custom',
+    },
+
     // ─── Images ────────────────────────────────────────────────
     IMAGES: {
         UPLOAD: '/api/images/upload',

@@ -9,9 +9,10 @@ import { QuotesModule } from '../quotes/quotes.module';
 import { ConfigurationsModule } from '../configurations/configurations.module';
 import { PartnersModule } from '../partners/partners.module';
 import { CategoriesModule } from '../categories/categories.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TenantModule, AuthModule, OrdersModule, InvoicesModule, QuotesModule, ConfigurationsModule, PartnersModule, CategoriesModule],
+  imports: [TenantModule, AuthModule, OrdersModule, InvoicesModule, QuotesModule, ConfigurationsModule, PartnersModule, CategoriesModule, NotificationsModule],
   controllers: [PortalController],
   providers: [PortalService],
   exports: [PortalService],

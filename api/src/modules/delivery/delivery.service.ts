@@ -120,7 +120,14 @@ export class DeliveryService {
       password: hashedPassword,
     });
 
-    return this.deliveryPersonRepository.save(person);
+    const saved = await this.deliveryPersonRepository.save(person);
+
+    // Notify admins about new driver registration (fire-and-forget)
+    this.orderNotificationService
+      .notifyDriverRegistered(saved.name, saved.id)
+      .catch(() => undefined);
+
+    return saved;
   }
 
   async updateDeliveryPerson(
@@ -319,6 +326,12 @@ export class DeliveryService {
       );
     }
 
+    // Lookup delivery person name for notification
+    const deliveryPerson = await this.deliveryPersonRepository.findOne({
+      where: { id: deliveryPersonId },
+    });
+    const deliveryPersonName = deliveryPerson?.name || 'Livreur';
+
     // Store old status for notification
     const oldStatus = orderDelivery.status;
 
@@ -414,7 +427,7 @@ export class DeliveryService {
 
       // RULE 3: When delivery status changes, notify customer
       this.orderNotificationService
-        .notifyDeliveryStatusChanged(order, oldStatus, status)
+        .notifyDeliveryStatusChanged(order, oldStatus, status, deliveryPersonName)
         .catch((err) => {
           this.logger.error(
             'Failed to send delivery status notification',
