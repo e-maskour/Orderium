@@ -107,11 +107,11 @@ export class NotificationsController {
     @Query('customerId') customerId?: string,
     @Query('userId') userId?: string,
   ) {
-    const userIdNum: number = userId
+    const userIdNum = userId
       ? Number(userId)
       : customerId
         ? Number(customerId)
-        : 0;
+        : undefined;
 
     const count: number =
       await this.notificationsService.getUnreadCount(userIdNum);

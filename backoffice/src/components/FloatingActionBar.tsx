@@ -58,8 +58,8 @@ const FAB_STYLES = `
     pointer-events: none;
   }
   .fab-pill {
-    max-width: 60rem;
-    width: 100%;
+    max-width: min(90vw, 72rem);
+    width: max-content;
     pointer-events: auto;
     position: relative;
     display: flex;

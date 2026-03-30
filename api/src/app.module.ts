@@ -43,6 +43,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
 import { PrintersModule } from './modules/printers/printers.module';
+import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 
 // Multi-tenancy
 import { TenantModule, TenantMiddleware } from './modules/tenant/tenant.module';
@@ -51,6 +52,7 @@ import { Tenant } from './modules/tenant/tenant.entity';
 import { Payment } from './modules/tenant-lifecycle/entities/payment.entity';
 import { SubscriptionPlan } from './modules/tenant-lifecycle/entities/subscription-plan.entity';
 import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-activity-log.entity';
+import { MigrationRunLog } from './modules/super-admin/entities/migration-log.entity';
 
 @Module({
   imports: [
@@ -107,7 +109,7 @@ import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-ac
         password: configService.get<string>('DB_PASSWORD') || 'postgres',
         database:
           configService.get<string>('MASTER_DB_NAME') || 'orderium_master',
-        entities: [Tenant, Payment, SubscriptionPlan, TenantActivityLog],
+        entities: [Tenant, Payment, SubscriptionPlan, TenantActivityLog, MigrationRunLog],
         synchronize: false,
         logging: configService.get<string>('DB_LOGGING') === 'true',
         extra: { max: 5, min: 1 },
@@ -139,6 +141,7 @@ import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-ac
     RolesModule,
     UsersModule,
     PrintersModule,
+    SuperAdminModule,
   ],
   controllers: [AppController],
   providers: [
@@ -161,6 +164,8 @@ export class AppModule implements NestModule {
         { path: 'api/admin/payments/(.*)', method: RequestMethod.ALL },
         { path: 'api/admin/plans', method: RequestMethod.ALL },
         { path: 'api/admin/plans/(.*)', method: RequestMethod.ALL },
+        { path: 'api/super-admin/migrations', method: RequestMethod.ALL },
+        { path: 'api/super-admin/migrations/(.*)', method: RequestMethod.ALL },
         { path: 'api/health', method: RequestMethod.GET },
       )
       .forRoutes('*');

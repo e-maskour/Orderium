@@ -176,40 +176,60 @@
 
 /* ──────────────────────────────────────────────
    4. CHECKBOXES — polished, blue accent
+   Applies globally to ALL p-checkbox (DataTable
+   selection, form checkboxes, etc.)
    ────────────────────────────────────────────── */
-.p-datatable.p-component .p-checkbox {
-    width: 1rem !important;
-    height: 1rem !important;
+
+/* Global base — applies everywhere */
+.p-checkbox {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
 }
 
-.p-datatable.p-component .p-checkbox .p-checkbox-box {
-    width: 1rem !important;
-    height: 1rem !important;
-    border-radius: 0.25rem !important;
+.p-checkbox .p-checkbox-box {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+    border-radius: 0.3125rem !important;
     border: 1.5px solid #cbd5e1 !important;
     background: #fff !important;
     transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
 }
 
-.p-datatable.p-component .p-checkbox .p-checkbox-box:hover {
+.p-checkbox .p-checkbox-box:hover {
     border-color: #235ae4 !important;
     box-shadow: 0 0 0 3px rgba(35, 90, 228, 0.1) !important;
 }
 
-.p-datatable.p-component .p-checkbox.p-highlight .p-checkbox-box {
+.p-checkbox.p-highlight .p-checkbox-box {
     background: #235ae4 !important;
     border-color: #235ae4 !important;
 }
 
-.p-datatable.p-component .p-checkbox.p-highlight:hover .p-checkbox-box {
+.p-checkbox.p-highlight:hover .p-checkbox-box {
     background: #1a47b8 !important;
     border-color: #1a47b8 !important;
 }
 
-.p-datatable.p-component .p-checkbox .p-checkbox-box .p-checkbox-icon {
+.p-checkbox .p-checkbox-box.p-focus {
+    box-shadow: 0 0 0 3px rgba(35, 90, 228, 0.18) !important;
+    border-color: #235ae4 !important;
+}
+
+.p-checkbox .p-checkbox-box .p-checkbox-icon {
     color: #fff !important;
-    font-size: 0.6rem !important;
+    font-size: 0.6875rem !important;
     font-weight: 900 !important;
+}
+
+/* DataTable column sizing — keep column narrow despite larger box */
+.p-datatable.p-component .p-datatable-thead>tr>th.p-selection-column {
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
+}
+
+.p-datatable.p-component .p-datatable-tbody>tr>td.p-selection-column {
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
 }
 
 /* ──────────────────────────────────────────────

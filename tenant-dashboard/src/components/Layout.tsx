@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
     LayoutDashboard, Building2, LogOut, Moon, Sun,
-    CreditCard, Menu, X, ChevronRight,
+    CreditCard, Menu, X, ChevronRight, Database,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useTenants } from '../hooks/useTenants'
@@ -117,6 +117,13 @@ export function Layout({ onLogout }: Props) {
                         Soon
                     </span>
                 </div>
+
+                <p className="nav-section-title">System</p>
+
+                <NavLink to="/migrations" className={({ isActive }) => isActive ? activeClass : inactiveClass}>
+                    <Database className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">Migrations</span>
+                </NavLink>
             </nav>
 
             {/* Footer */}

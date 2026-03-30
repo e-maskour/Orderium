@@ -18,6 +18,10 @@ import {
 } from './entities/order.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
+import {
+  DeliveryPerson,
+  OrderDelivery,
+} from '../delivery/entities/delivery.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
@@ -95,7 +99,8 @@ export class OrdersService {
           createOrderDto.customerPhone = customer.phoneNumber;
         }
         if (!createOrderDto.customerAddress) {
-          createOrderDto.customerAddress = customer.address || customer.deliveryAddress;
+          createOrderDto.customerAddress =
+            customer.address || customer.deliveryAddress;
         }
       }
 
@@ -433,6 +438,8 @@ export class OrdersService {
         'order.discount',
         'order.discountType',
         'order.total',
+        'order.paidAmount',
+        'order.remainingAmount',
         'order.status',
         'order.direction',
         'order.isValidated',
@@ -635,6 +642,8 @@ export class OrdersService {
         'order.discount',
         'order.discountType',
         'order.total',
+        'order.paidAmount',
+        'order.remainingAmount',
         'order.status',
         'order.direction',
         'order.isValidated',
@@ -860,6 +869,8 @@ export class OrdersService {
         discount: order.discount,
         discountType: order.discountType,
         total: order.total,
+        paidAmount: order.paidAmount ?? 0,
+        remainingAmount: order.remainingAmount ?? 0,
         status: order.status || 'draft',
         direction: order.direction,
         isValidated: order.isValidated || false,
@@ -965,6 +976,16 @@ export class OrdersService {
       throw new NotFoundException(`Order with ID ${id} not found`);
     }
 
+    // Fetch delivery person info via TypeORM
+    const orderDelivery = await this.tenantConnService
+      .getRepository(OrderDelivery)
+      .findOne({
+        where: { orderId: id },
+        relations: ['deliveryPerson'],
+      });
+    const deliveryPerson: DeliveryPerson | null =
+      orderDelivery?.deliveryPerson ?? null;
+
     const result = {
       id: order.id,
       orderNumber: order.documentNumber,
@@ -1002,6 +1023,9 @@ export class OrdersService {
       supplierName: order.supplier?.name,
       supplierPhone: order.supplier?.phoneNumber,
       supplierAddress: order.supplier?.address,
+      deliveryPersonId: deliveryPerson?.id ?? null,
+      deliveryPersonName: deliveryPerson?.name ?? null,
+      deliveryPersonPhone: deliveryPerson?.phoneNumber ?? null,
       items:
         order.items?.map((item) => ({
           id: item.id,
@@ -2150,7 +2174,9 @@ export class OrdersService {
   async getOrderNumbers(
     search?: string,
     limit: number = 50,
-  ): Promise<{ id: number; documentNumber: string; customerId: number | null }[]> {
+  ): Promise<
+    { id: number; documentNumber: string; customerId: number | null }[]
+  > {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .select('order.id', 'id')
@@ -2165,7 +2191,11 @@ export class OrdersService {
       });
     }
 
-    const results = await queryBuilder.getRawMany<{ id: number; documentNumber: string; customerId: number | null }>();
+    const results = await queryBuilder.getRawMany<{
+      id: number;
+      documentNumber: string;
+      customerId: number | null;
+    }>();
     return results;
   }
 

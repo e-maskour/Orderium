@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo } from 'react';
 import { MultiSelect } from 'primereact/multiselect';
-import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, Plus, CreditCard } from 'lucide-react';
+import { Phone, MapPin, X, Search, Package, Eye, Check, Square, UserPlus, UserMinus, ShoppingCart, Trash2, Info, Receipt, Truck, Clock, User, CheckCircle, AlertCircle, XCircle, Navigation, Filter, Plus, CreditCard } from 'lucide-react';
 import { toastSuccess, toastDeleted, toastCancelled, toastError, toastWarning, toastConfirm } from '../services/toast.service';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -132,6 +132,12 @@ export default function Orders() {
   const unassignMutation = useMutation({
     mutationFn: (orderId: number) => ordersService.unassignOrder(orderId),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess(t('orderUnassigned')); },
+    onError: (error: Error) => { toastError(`${t('failedToUnassign')}: ${error.message}`); },
+  });
+
+  const bulkUnassignMutation = useMutation({
+    mutationFn: async (orderIds: number[]) => Promise.all(orderIds.map(id => ordersService.unassignOrder(id))),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['orders'] }); toastSuccess(t('orderUnassigned')); clearSelection(); },
     onError: (error: Error) => { toastError(`${t('failedToUnassign')}: ${error.message}`); },
   });
 
@@ -296,11 +302,14 @@ export default function Orders() {
     setPaymentNote('');
   };
 
+  const isOrderAssigned = (order: any) => order && order.deliveryStatus === 'assigned';
+  const canAssignOrder = (order: any) => order && !['delivered', 'canceled', 'assigned'].includes(order.deliveryStatus);
+
   const handleBulkAssign = (deliveryPersonId: string) => {
     let assigned = 0; let skipped = 0;
     selectedOrders.forEach(orderId => {
       const order = orders.find((o: any) => o.id === orderId);
-      if (order && order.deliveryStatus === 'pending') { handleAssign(orderId, deliveryPersonId); assigned++; }
+      if (canAssignOrder(order)) { handleAssign(orderId, deliveryPersonId); assigned++; }
       else { skipped++; }
     });
     if (assigned > 0) toastSuccess(`${assigned} ${t('ordersAssigned')}`);
@@ -703,6 +712,7 @@ export default function Orders() {
               className="ord-datatable"
               value={orders}
               lazy
+              scrollable
               totalRecords={totalCount}
               first={(currentPage - 1) * pageSize}
               onPage={(e: DataTablePageEvent) => {
@@ -729,11 +739,12 @@ export default function Orders() {
               paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
               currentPageReportTemplate={t('pageReportTemplate')}
             >
-              <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
+              <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} style={{ width: '2.5rem', minWidth: '2.5rem' }} />
               <Column
                 header={t('orderNumber')}
                 sortable
                 sortField="orderNumber"
+                style={{ minWidth: '10rem' }}
                 body={(order: any) => (
                   <div>
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>#{order.orderNumber}</span>
@@ -743,6 +754,7 @@ export default function Orders() {
               />
               <Column
                 header={t('status')}
+                style={{ minWidth: '9rem' }}
                 body={(order: any) => {
                   const osb = getOrderStatusBadge(order.status);
                   const nextStatuses = ORDER_STATUS_WORKFLOW[order.status] || [];
@@ -757,6 +769,7 @@ export default function Orders() {
               />
               <Column
                 header={t('orderSource')}
+                style={{ minWidth: '8rem' }}
                 body={(order: any) => {
                   const sb = getSourceBadge(order);
                   return (
@@ -770,6 +783,7 @@ export default function Orders() {
                 header={t('customer')}
                 sortable
                 sortField="customerName"
+                style={{ minWidth: '14rem' }}
                 body={(order: any) => (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #4f8ef7, #235ae4)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -786,6 +800,7 @@ export default function Orders() {
               />
               <Column
                 header={t('address')}
+                style={{ minWidth: '12rem' }}
                 body={(order: any) => order.customerAddress ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                     <MapPin style={{ width: '0.75rem', height: '0.75rem', color: '#235ae4', flexShrink: 0 }} />
@@ -797,6 +812,7 @@ export default function Orders() {
                 header={t('total')}
                 sortable
                 sortField="total"
+                style={{ minWidth: '8rem' }}
                 body={(order: any) => (
                   <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#235ae4' }}>
                     {formatAmount(order.total, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
@@ -805,6 +821,7 @@ export default function Orders() {
               />
               <Column
                 header={t('paidAmount')}
+                style={{ minWidth: '9rem' }}
                 body={(order: any) => (
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#047857' }}>
                     {formatAmount(order.paidAmount ?? 0, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{t('currency')}</span>
@@ -813,6 +830,7 @@ export default function Orders() {
               />
               <Column
                 header={t('remainingAmount')}
+                style={{ minWidth: '11rem' }}
                 body={(order: any) => {
                   const remaining = order.remainingAmount ?? 0;
                   return (
@@ -847,7 +865,14 @@ export default function Orders() {
         isAllSelected={selectedOrders.length === orders.length}
         totalCount={orders.length}
         actions={[
-          { id: 'assign', label: t('assignToDelivery'), icon: <UserPlus style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => setShowAssignModal(true) },
+          ...(() => {
+            const allAssigned = selectedOrders.length > 0 && selectedOrders.every(id => { const o = orders.find((o: any) => o.id === id); return isOrderAssigned(o); });
+            const allUnassignable = selectedOrders.length > 0 && selectedOrders.every(id => { const o = orders.find((o: any) => o.id === id); return !isOrderAssigned(o) && canAssignOrder(o); });
+            return [
+              { id: 'assign', label: t('assignToDelivery'), icon: <UserPlus style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => setShowAssignModal(true), hidden: !allUnassignable },
+              { id: 'unassign', label: t('unassign'), icon: <UserMinus style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => toastConfirm(t('unassignOrder'), () => bulkUnassignMutation.mutate(selectedOrders), { description: t('unassignOrderConfirm'), confirmLabel: t('unassign') }), hidden: !allAssigned },
+            ];
+          })(),
           { id: 'details', label: t('details'), icon: <Info style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => navigate(`/orders/${selectedOrders[0]}`), hidden: selectedOrders.length !== 1 },
           { id: 'preview-receipt', label: t('previewReceipt'), icon: <Receipt style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('receipt'), hidden: selectedOrders.length !== 1 },
           { id: 'preview-delivery-note', label: t('previewDeliveryNote'), icon: <Truck style={{ width: '0.875rem', height: '0.875rem' }} />, onClick: () => handlePreview('delivery-note'), hidden: selectedOrders.length !== 1 },

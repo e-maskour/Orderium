@@ -67,6 +67,10 @@ export default function OrderDetailPage() {
         queryKey: ['orderDetails', Number(id)],
         queryFn: () => ordersService.getById(Number(id)),
         enabled: !!id,
+        retry: (failureCount, error) => {
+            if ((error as any)?.status === 404) return false;
+            return failureCount < 2;
+        },
     });
 
     const order = orderWithDetails?.order;
@@ -740,16 +744,21 @@ export default function OrderDetailPage() {
                         {/* Delivery info */}
                         {order.deliveryPersonName && (
                             <div style={{ background: '#fff', borderRadius: '0.875rem', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                                <div style={{ padding: '0.75rem 1rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                <div style={{ padding: '0.75rem 1rem', background: 'linear-gradient(135deg, #7e22ce, #a855f7)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <Truck style={{ width: '0.875rem', height: '0.875rem', color: '#235ae4' }} />
-                                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                        <Truck style={{ width: '0.875rem', height: '0.875rem', color: 'rgba(255,255,255,0.8)' }} />
+                                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                             {t('deliveryPerson')}
                                         </span>
                                     </div>
                                 </div>
-                                <div style={{ padding: '0.875rem 1rem' }}>
-                                    <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a' }}>{order.deliveryPersonName}</p>
+                                <div style={{ padding: '1rem' }}>
+                                    <p style={{ margin: '0 0 0.5rem', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{order.deliveryPersonName}</p>
+                                    {order.deliveryPersonPhone && (
+                                        <a href={`tel:${order.deliveryPersonPhone}`} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: '#7e22ce', textDecoration: 'none' }}>
+                                            <Phone style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0 }} />{order.deliveryPersonPhone}
+                                        </a>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -890,7 +899,9 @@ export default function OrderDetailPage() {
                                 {order.deliveryStatus && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem' }}>
                                         <span style={{ color: '#64748b' }}>{t('deliveryStatus')}</span>
-                                        <span style={{ fontWeight: 600, color: '#334155' }}>{order.deliveryStatus}</span>
+                                        <span style={{ fontWeight: 600, color: '#334155' }}>
+                                            {t(({ pending: 'pending', assigned: 'assigned', confirmed: 'confirmed', picked_up: 'pickedUp', to_delivery: 'toDelivery', in_delivery: 'inDelivery', delivered: 'delivered', canceled: 'canceled' } as Record<string, string>)[order.deliveryStatus] || order.deliveryStatus)}
+                                        </span>
                                     </div>
                                 )}
                             </div>

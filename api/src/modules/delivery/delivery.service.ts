@@ -6,6 +6,8 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
@@ -29,6 +31,7 @@ export class DeliveryService {
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
     private readonly jwtService: JwtService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) { }
 
   private get deliveryPersonRepository(): Repository<DeliveryPerson> {
@@ -269,6 +272,7 @@ export class DeliveryService {
       }
     }
 
+    await this.cacheManager.del(`order:${orderId}`);
     return savedDelivery;
   }
 
@@ -295,6 +299,8 @@ export class DeliveryService {
       order.pendingAt = new Date();
       await this.orderRepository.save(order);
     }
+
+    await this.cacheManager.del(`order:${orderId}`);
   }
 
   async updateOrderStatus(

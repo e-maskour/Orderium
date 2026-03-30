@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageToggle } from './LanguageToggle';
-import { NotificationBellPro } from './NotificationBellPro';
+import { NotificationBell } from './notifications/NotificationBell';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from 'primereact/button';
 import { Avatar } from 'primereact/avatar';
@@ -412,7 +412,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                             <Search style={{ width: '1.0625rem', height: '1.0625rem', position: 'relative', zIndex: 1 }} strokeWidth={1.75} />
                         </button>
 
-                        <NotificationBellPro />
+                        <NotificationBell />
                         <LanguageToggle />
 
                         <Divider layout="vertical" className="hidden sm:flex" style={{ height: '1.5rem', margin: '0 0.25rem' }} />

@@ -160,7 +160,7 @@ export function MobileList<T>({
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); onToggleSelect!(itemKey); } }}
                 >
-                  {isSelected && <Check style={{ width: '0.75rem', height: '0.75rem', color: '#fff' }} />}
+                  {isSelected && <Check style={{ width: '0.625rem', height: '0.625rem', color: '#fff', strokeWidth: 3 }} />}
                 </button>
               )}
 

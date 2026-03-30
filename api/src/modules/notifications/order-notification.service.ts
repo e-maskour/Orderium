@@ -72,7 +72,7 @@ export class OrderNotificationService {
         await this.notificationsService.create({
           userId: adminId,
           type: 'new_order',
-          title: payload.title,
+          title: 'Nouvelle commande',
           message: payload.body,
           data: payload.data,
         });
@@ -123,7 +123,7 @@ export class OrderNotificationService {
           await this.notificationsService.create({
             userId: customerUserId,
             type: 'order_assigned',
-            title: customerPayload.title,
+            title: 'Commande assignée',
             message: customerPayload.body,
             data: customerPayload.data,
           });
@@ -158,7 +158,7 @@ export class OrderNotificationService {
         await this.notificationsService.create({
           userId: deliveryUserId,
           type: 'delivery_assigned',
-          title: deliveryPayload.title,
+          title: 'Nouvelle assignation',
           message: deliveryPayload.body,
           data: deliveryPayload.data,
         });
@@ -237,7 +237,7 @@ export class OrderNotificationService {
         await this.notificationsService.create({
           userId: customerUserId,
           type: 'delivery_status_update',
-          title: payload.title,
+          title: 'Mise à jour de livraison',
           message: payload.body,
           data: payload.data,
         });

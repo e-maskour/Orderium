@@ -911,6 +911,24 @@ export const ADJ = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  SUPER ADMIN — MIGRATIONS  (MigrationsController)
+// ─────────────────────────────────────────────────────────────
+export const MGMT = {
+  /** GET /super-admin/migrations              → data: TenantMigrationStatus[]  | metadata: null */
+  ALL_STATUS: { code: 'MGMT200_01', status: 200, message: 'Migration status retrieved for all tenants' },
+  /** GET /super-admin/migrations/:tenantId   → data: TenantMigrationStatus    | metadata: null */
+  TENANT_STATUS: { code: 'MGMT200_02', status: 200, message: 'Tenant migration status retrieved' },
+  /** POST /super-admin/migrations/:tenantId/run → data: MigrationRunLog       | metadata: null */
+  RUN: { code: 'MGMT200_03', status: 200, message: 'Migrations run successfully' },
+  /** POST /super-admin/migrations/run-all    → data: RunAllResult[]            | metadata: null */
+  RUN_ALL: { code: 'MGMT200_04', status: 200, message: 'Migrations run for all tenants' },
+  /** POST /super-admin/migrations/:tenantId/revert → data: MigrationRunLog    | metadata: null */
+  REVERT: { code: 'MGMT200_05', status: 200, message: 'Migration reverted successfully' },
+  /** GET /super-admin/migrations/logs        → data: MigrationRunLog[]         | metadata: null */
+  LOGS: { code: 'MGMT200_06', status: 200, message: 'Migration logs retrieved' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  DRIVE
 // ─────────────────────────────────────────────────────────────
 export const DRV = {

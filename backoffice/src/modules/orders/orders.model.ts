@@ -114,6 +114,7 @@ export class Order implements IOrder {
   deliveryStatus?: DeliveryStatus | null;
   deliveryPersonId?: number | null;
   deliveryPersonName?: string | null;
+  deliveryPersonPhone?: string | null;
   paidAmount: number;
   remainingAmount: number;
   dateCreated: string;
@@ -149,6 +150,7 @@ export class Order implements IOrder {
     this.deliveryStatus = data.deliveryStatus;
     this.deliveryPersonId = data.deliveryPersonId;
     this.deliveryPersonName = data.deliveryPersonName;
+    this.deliveryPersonPhone = data.deliveryPersonPhone;
     this.paidAmount = data.paidAmount ?? 0;
     this.remainingAmount = data.remainingAmount ?? 0;
     this.dateCreated = data.dateCreated;
@@ -311,6 +313,7 @@ export class Order implements IOrder {
       deliveryStatus: data.deliveryStatus || null,
       deliveryPersonId: data.deliveryPersonId, // Business logic field
       deliveryPersonName: data.deliveryPersonName, // Business logic field
+      deliveryPersonPhone: data.deliveryPersonPhone, // Business logic field
       paidAmount: data.paidAmount ?? 0,
       remainingAmount: data.remainingAmount ?? 0,
       dateCreated: data.dateCreated,
