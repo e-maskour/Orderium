@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
 import { posService, IPosCartItem as CartItem, ICheckoutCustomer as Customer, ICheckoutState } from '../modules/pos';
+import { orderPaymentsService } from '../modules';
 import { formatCurrency } from '@orderium/ui';
 
 export default function CheckoutPage() {
@@ -20,7 +21,19 @@ export default function CheckoutPage() {
   const [paidAmount, setPaidAmount] = useState('');
 
   const createOrderMutation = useMutation({
-    mutationFn: (orderData: any) => posService.createOrder(orderData),
+    mutationFn: async (orderData: any) => {
+      const order = await posService.createOrder(orderData);
+      if (paid > 0) {
+        await orderPaymentsService.create({
+          orderId: order.id,
+          customerId: order.customerId ?? undefined,
+          amount: Math.min(paid, order.total),
+          paymentDate: new Date().toISOString(),
+          paymentType: 'cash',
+        });
+      }
+      return order;
+    },
     onSuccess: (data: any) => {
       const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
       const orderId = data?.order?.id || data?.id;
@@ -325,7 +338,7 @@ export default function CheckoutPage() {
                 label={createOrderMutation.isPending ? (t('loading') || 'Loading...') : (t('confirm') || 'Confirm Order')}
                 icon={<CheckCircle2 style={{ width: '1rem', height: '1rem' }} />}
                 onClick={handleConfirmOrder}
-                disabled={createOrderMutation.isPending || paid < total}
+                disabled={createOrderMutation.isPending}
                 loading={createOrderMutation.isPending}
                 style={{ width: '100%', marginTop: '1.5rem', height: '3rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
               />

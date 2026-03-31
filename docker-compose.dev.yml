@@ -50,6 +50,7 @@ services:
     volumes:
       - ./api/src:/app/src
       - ./api/package.json:/app/package.json:ro
+      - ./api/pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
       # Prevent node_modules from being overwritten by host mount
       - api_node_modules:/app/node_modules
     ports:

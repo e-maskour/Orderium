@@ -14,6 +14,7 @@ import { PriceConfirmModal } from '../components/PriceConfirmModal';
 import { CustomerSelectionModal } from '../components/CustomerSelectionModal';
 import { DiscountModal } from '../components/DiscountModal';
 import { posService, IPosProduct as Product, IPosCustomer as Customer, IPosCartItem as CartItem } from '../modules/pos';
+import { orderPaymentsService } from '../modules';
 import { formatCurrency } from '@orderium/ui';
 
 export default function POS() {
@@ -173,7 +174,17 @@ export default function POS() {
   const cartTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const createOrderMutation = useMutation({
-    mutationFn: (orderData: any) => posService.createOrder(orderData),
+    mutationFn: async (orderData: any) => {
+      const order = await posService.createOrder(orderData);
+      await orderPaymentsService.create({
+        orderId: order.id,
+        customerId: order.customerId ?? undefined,
+        amount: order.total,
+        paymentDate: new Date().toISOString(),
+        paymentType: 'cash',
+      });
+      return order;
+    },
     onSuccess: (data: any) => {
       const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
       const orderId = data?.order?.id || data?.id;
