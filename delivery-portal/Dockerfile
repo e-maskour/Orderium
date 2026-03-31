@@ -28,6 +28,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY shared/ui /shared/ui
+COPY shared/components /shared/components
 RUN cd /shared/ui && pnpm install --frozen-lockfile
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY delivery-portal/ .
