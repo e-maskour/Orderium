@@ -3,7 +3,7 @@ export type Language = 'ar' | 'fr';
 export const translations = {
   ar: {
     // App
-    appName: 'Orderium',
+    appName: 'Morocom',
     tagline: 'بوابة التوصيل',
 
     // Navigation
@@ -161,6 +161,12 @@ export const translations = {
     minutesAgo: 'د',
     hoursAgo: 'س',
     daysAgo: 'ي',
+    earlier: 'سابقاً',
+    clearAll: 'مسح الكل',
+    notificationsUpToDate: 'لا تنبيهات جديدة',
+    noNotificationsFiltered: 'لا نتائج',
+    newNotification: 'إشعار جديد',
+    filterAlerts: 'تنبيهات',
     'notifications.newOrder': 'طلب جديد',
     'notifications.orderAssigned': 'تم تعيين الطلب',
     'notifications.statusChanged': 'تحديث الحالة',
@@ -196,7 +202,7 @@ export const translations = {
   },
   fr: {
     // App
-    appName: 'Orderium',
+    appName: 'Morocom',
     tagline: 'Portail de Livraison',
 
     // Navigation
@@ -349,8 +355,12 @@ export const translations = {
     justNow: 'À l\'instant',
     minutesAgo: 'min',
     hoursAgo: 'h',
-    daysAgo: 'j',
-    'notifications.newOrder': 'Nouvelle commande',
+    daysAgo: 'j', earlier: 'Plus tôt',
+    clearAll: 'Tout effacer',
+    notificationsUpToDate: 'Aucune alerte pour le moment',
+    noNotificationsFiltered: 'Aucun résultat',
+    newNotification: 'Nouvelle notification',
+    filterAlerts: 'Alertes', 'notifications.newOrder': 'Nouvelle commande',
     'notifications.orderAssigned': 'Commande assignée',
     'notifications.statusChanged': 'Mise à jour statut',
     'notifications.orderCancelled': 'Commande annulée',

@@ -6,6 +6,8 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { DeliveryPerson, OrderDelivery } from './entities/delivery.entity';
@@ -29,6 +31,7 @@ export class DeliveryService {
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
     private readonly jwtService: JwtService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) { }
 
   private get deliveryPersonRepository(): Repository<DeliveryPerson> {
@@ -117,7 +120,14 @@ export class DeliveryService {
       password: hashedPassword,
     });
 
-    return this.deliveryPersonRepository.save(person);
+    const saved = await this.deliveryPersonRepository.save(person);
+
+    // Notify admins about new driver registration (fire-and-forget)
+    this.orderNotificationService
+      .notifyDriverRegistered(saved.name, saved.id)
+      .catch(() => undefined);
+
+    return saved;
   }
 
   async updateDeliveryPerson(
@@ -269,6 +279,7 @@ export class DeliveryService {
       }
     }
 
+    await this.cacheManager.del(`order:${orderId}`);
     return savedDelivery;
   }
 
@@ -295,6 +306,8 @@ export class DeliveryService {
       order.pendingAt = new Date();
       await this.orderRepository.save(order);
     }
+
+    await this.cacheManager.del(`order:${orderId}`);
   }
 
   async updateOrderStatus(
@@ -312,6 +325,12 @@ export class DeliveryService {
         `Order delivery not found for order ${orderId} and delivery person ${deliveryPersonId}`,
       );
     }
+
+    // Lookup delivery person name for notification
+    const deliveryPerson = await this.deliveryPersonRepository.findOne({
+      where: { id: deliveryPersonId },
+    });
+    const deliveryPersonName = deliveryPerson?.name || 'Livreur';
 
     // Store old status for notification
     const oldStatus = orderDelivery.status;
@@ -408,7 +427,7 @@ export class DeliveryService {
 
       // RULE 3: When delivery status changes, notify customer
       this.orderNotificationService
-        .notifyDeliveryStatusChanged(order, oldStatus, status)
+        .notifyDeliveryStatusChanged(order, oldStatus, status, deliveryPersonName)
         .catch((err) => {
           this.logger.error(
             'Failed to send delivery status notification',

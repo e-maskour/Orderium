@@ -144,7 +144,7 @@ export default function SuccessScreen({ companyName, companyLogo }: SuccessScree
     ];
 
     const whatsappMessage = encodeURIComponent(
-        `🎉 ${companyName} is now live on Orderium!\n\nAccess your portals:\n• Admin: ${ADMIN_URL}\n${CLIENT_URL ? `• Client: ${CLIENT_URL}\n` : ''}${DELIVERY_URL ? `• Delivery: ${DELIVERY_URL}` : ''}`,
+        `🎉 ${companyName} is now live on Morocom!\n\nAccess your portals:\n• Admin: ${ADMIN_URL}\n${CLIENT_URL ? `• Client: ${CLIENT_URL}\n` : ''}${DELIVERY_URL ? `• Delivery: ${DELIVERY_URL}` : ''}`,
     );
 
     return (
@@ -172,7 +172,7 @@ export default function SuccessScreen({ companyName, companyLogo }: SuccessScree
                 You're all set!
             </h2>
             <p style={{ color: '#64748b', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>
-                Welcome to Orderium, <strong>{companyName}</strong>. Your admin account is ready.
+                Welcome to Morocom, <strong>{companyName}</strong>. Your admin account is ready.
             </p>
 
             {/* Company badge */}

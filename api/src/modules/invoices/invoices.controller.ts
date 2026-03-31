@@ -20,11 +20,12 @@ import { FilterInvoicesDto } from './dto/filter-invoices.dto';
 import { CreateInvoiceDto, UpdateInvoiceDto } from './dto/invoice.dto';
 import { ApiRes } from '../../common/api-response';
 import { INV } from '../../common/response-codes';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(private readonly invoicesService: InvoicesService) { }
 
   @Post('list')
   @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
@@ -182,6 +183,32 @@ export class InvoicesController {
   async devalidate(@Param('id', ParseIntPipe) id: number) {
     const invoice = await this.invoicesService.devalidate(id);
     return ApiRes(INV.DEVALIDATED, invoice);
+  }
+
+  @Post(':id/share')
+  @ApiOperation({ summary: 'Generate a shareable public link for an invoice' })
+  @ApiResponse({ status: 200, description: 'Share link generated' })
+  async generateShareLink(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.invoicesService.generateShareLink(id);
+    return ApiRes(INV.SHARED, result);
+  }
+
+  @Public()
+  @Get('shared/:token')
+  @ApiOperation({ summary: 'Get invoice by share token (public, no auth required)' })
+  @ApiResponse({ status: 200, description: 'Invoice retrieved' })
+  async getByShareToken(@Param('token') token: string) {
+    const invoice = await this.invoicesService.getByShareToken(token);
+    return ApiRes(INV.SHARED_DETAIL, invoice);
+  }
+
+  @Delete(':id/share')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Revoke share link for an invoice' })
+  @ApiResponse({ status: 200, description: 'Share link revoked' })
+  async revokeShareLink(@Param('id', ParseIntPipe) id: number) {
+    await this.invoicesService.revokeShareLink(id);
+    return ApiRes(INV.SHARE_REVOKED, null);
   }
 
   @Get('export/xlsx')

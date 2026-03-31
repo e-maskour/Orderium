@@ -200,10 +200,10 @@ export default function OnboardingPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                             <img
                                 src={orderiumLogo}
-                                alt="Orderium"
+                                alt="Morocom"
                                 style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
                             />
-                            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>Orderium</span>
+                            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>Morocom</span>
                         </div>
 
                         <ProgressBar current={step} />

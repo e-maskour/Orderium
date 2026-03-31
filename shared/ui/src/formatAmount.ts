@@ -1,5 +1,5 @@
 /**
- * Canonical amount formatter for all Orderium apps.
+ * Canonical amount formatter for all Morocom apps.
  * Format: 12.374.123,90  (dots = thousands separator, comma = decimal)
  *
  * @param value   - The numeric value to format

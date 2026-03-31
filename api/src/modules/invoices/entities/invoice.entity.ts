@@ -57,6 +57,10 @@ export class Invoice extends BaseDocument {
   @Column({ type: 'date', nullable: true })
   dueDate: Date | null;
 
+  /** Payment due date — triggers overdue alerts when remainingAmount > 0 past this date */
+  @Column({ type: 'date', nullable: true, name: 'amount_due_date' })
+  amountDueDate: Date | null;
+
   // subtotal, tax, discount, discountType, total inherited from BaseDocument
 
   @Column({
@@ -79,6 +83,12 @@ export class Invoice extends BaseDocument {
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
   remainingAmount: number;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, unique: true })
+  shareToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  shareTokenExpiry: Date | null;
 
   // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
 

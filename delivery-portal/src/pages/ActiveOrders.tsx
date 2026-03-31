@@ -75,7 +75,7 @@ export default function ActiveOrders() {
           display: 'flex', alignItems: 'center',
           padding: '0.625rem 1rem', gap: '0.625rem', minHeight: '56px',
         }}>
-          <img src={orderiumLogo} alt="Orderium" style={{ height: '28px', width: 'auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))', flexShrink: 0 }} />
+          <img src={orderiumLogo} alt="Morocom" style={{ height: '28px', width: 'auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.67rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
               Livreur

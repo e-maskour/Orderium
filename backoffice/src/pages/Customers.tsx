@@ -8,6 +8,7 @@ import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { EmptyState } from '../components/EmptyState';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
@@ -74,11 +75,11 @@ export default function Customers() {
   );
 
   const handleViewCustomer = (customer: Partner) => {
-    navigate(`/customers/${customer.id}`);
+    navigate(`/customers/${customer.id}`); // unified edit+detail page
   };
 
   const handleEditCustomer = (customer: Partner) => {
-    navigate(`/customers/edit/${customer.id}`);
+    navigate(`/customers/${customer.id}`); // same unified page
   };
 
   const handleDeletePartner = (customer: Partner) => {
@@ -147,14 +148,14 @@ export default function Customers() {
           {/* Toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
             {/* Search */}
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
               <InputText
                 id="search-customers"
                 type="text"
                 placeholder={t('searchCustomers')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: '24rem' }}
+                style={{ width: '100%' }}
                 aria-label={t('searchCustomers')}
               />
               {searchTerm && (
@@ -207,15 +208,21 @@ export default function Customers() {
                   selection={filteredCustomers.filter((c: Partner) => selectedCustomers.includes(c.id))}
                   onSelectionChange={(e) => setSelectedCustomers((e.value as Partner[]).map((c) => c.id))}
                   selectionMode="checkbox"
+                  onRowClick={(e) => {
+                    const target = e.originalEvent.target as HTMLElement;
+                    if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+                    handleViewCustomer(e.data as Partner);
+                  }}
+                  rowClassName={() => 'ord-row-clickable'}
                   dataKey="id"
                   paginator
                   paginatorPosition="top"
                   rows={25}
                   rowsPerPageOptions={[10, 25, 50, 100]}
                   removableSort
-                  emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noCustomersFound')}</div>}
+                  emptyMessage={<EmptyState icon={Users} title={t('noCustomersFound')} compact />}
                   paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                  currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                  currentPageReportTemplate={t('pageReportTemplate')}
                 >
                   <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                   <Column field="name" header={t('name')} sortable body={(row: Partner) => (

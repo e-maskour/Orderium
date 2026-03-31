@@ -66,6 +66,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
 COPY shared/ui /shared/ui
+COPY shared/components /shared/components
 
 # Copy package files
 COPY client/package.json client/pnpm-lock.yaml ./
@@ -110,6 +111,6 @@ EXPOSE 80
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:80/ || exit 1
-  
+
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

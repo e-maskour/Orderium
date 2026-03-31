@@ -1,4 +1,4 @@
-/* Firebase Cloud Messaging Service Worker for Orderium Delivery Portal */
+/* Firebase Cloud Messaging Service Worker for Morocom Delivery Portal */
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
@@ -31,11 +31,11 @@ if (messaging) {
   messaging.onBackgroundMessage((payload) => {
     console.log('[FCM SW] Received background message:', payload);
 
-    const notificationTitle = payload.notification?.title || 'Orderium Livraison';
+    const notificationTitle = payload.notification?.title || 'Morocom Livraison';
     const notificationOptions = {
       body: payload.notification?.body || '',
-      icon: '/icons/delivery-icon.png',
-      badge: '/icons/badge-icon.png',
+      icon: '/notification-icon.png',
+      badge: '/notification-icon.png',
       tag: payload.data?.type || 'orderium-delivery-notification',
       data: payload.data || {},
       requireInteraction: true,

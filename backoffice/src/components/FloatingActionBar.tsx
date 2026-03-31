@@ -58,8 +58,8 @@ const FAB_STYLES = `
     pointer-events: none;
   }
   .fab-pill {
-    max-width: 60rem;
-    width: 100%;
+    max-width: min(90vw, 72rem);
+    width: max-content;
     pointer-events: auto;
     position: relative;
     display: flex;
@@ -205,7 +205,7 @@ const FAB_STYLES = `
     border-radius: 1.25rem 1.25rem 0 0;
     border-top: 1px solid rgba(0,0,0,0.06);
     box-shadow: 0 -4px 30px rgba(0,0,0,0.1), 0 -1px 0 rgba(0,0,0,0.03);
-    padding-bottom: env(safe-area-inset-bottom, 0.75rem);
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.5rem);
     animation: fab-slide-up 0.28s cubic-bezier(0.4,0,0.2,1) both;
   }
 
@@ -316,6 +316,17 @@ const FAB_STYLES = `
   /* ─── Breakpoint gating ──────────────────────────────── */
   @media (min-width: 640px) { .fab-sheet { display: none !important; } }
   @media (max-width: 639px) { .fab-wrap, .fab-scrim { display: none !important; } }
+
+  /* ─── Tablet: lift pill above mobile bottom nav (640–1023px) ──── */
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .fab-wrap {
+      bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem);
+      inset: auto 0 calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem) 0;
+    }
+    .fab-scrim {
+      bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
 ` as const;
 
 function pillBtnClass(v?: string) {

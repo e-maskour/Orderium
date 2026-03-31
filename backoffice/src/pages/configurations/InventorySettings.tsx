@@ -154,7 +154,7 @@ export default function InventorySettings() {
 
     const updateMutation = useMutation({
         mutationFn: (values: InventoryConfigValues) =>
-            apiClient.put(API_ROUTES.CONFIGURATIONS.UPDATE(config!.id), { values }),
+            apiClient.patch(API_ROUTES.CONFIGURATIONS.UPDATE(config!.id), { values }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['configurations', 'inventory'] });
             toastUpdated(t('inventorySettingsSaved'));
@@ -190,122 +190,122 @@ export default function InventorySettings() {
     return (
         <AdminLayout>
             <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-            <PageHeader
-                icon={Package}
-                title={t('inventorySettings')}
-                subtitle={t('inventorySettingsSubtitle')}
-                actions={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Button
-                            onClick={() => { if (config) updateMutation.mutate(triggersToValues(warehouseId, incTrigger, decTrigger)); }}
-                            icon={updateMutation.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <Save style={{ width: 16, height: 16 }} />}
-                            label={t('save')}
-                            disabled={updateMutation.isPending || !config}
-                            size="small"
-                        />
-                    </div>
-                }
-            />
-
-            <form onSubmit={handleSubmit}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-                    {/* Default Warehouse */}
-                    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1e293b', marginBottom: '1rem' }}>
-                            {t('defaultWarehouse')}
-                        </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            <label style={{ fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
-                                {t('defaultWarehouse')}
-                            </label>
-                            <Dropdown
-                                value={warehouseId}
-                                options={warehouseOptions}
-                                onChange={e => setWarehouseId(e.value ?? null)}
-                                placeholder={t('selectDefaultWarehouse')}
-                                showClear
-                                style={{ width: '100%', maxWidth: '24rem' }}
+                <PageHeader
+                    icon={Package}
+                    title={t('inventorySettings')}
+                    subtitle={t('inventorySettingsSubtitle')}
+                    actions={
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Button
+                                onClick={() => { if (config) updateMutation.mutate(triggersToValues(warehouseId, incTrigger, decTrigger)); }}
+                                icon={updateMutation.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <Save style={{ width: 16, height: 16 }} />}
+                                label={t('save')}
+                                disabled={updateMutation.isPending || !config}
+                                size="small"
                             />
                         </div>
+                    }
+                />
 
-                        {anyMovementEnabled && noWarehouseSelected && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#fef9c3', borderRadius: '0.375rem', border: '1px solid #fde047' }}>
-                                <AlertCircle style={{ width: '1rem', height: '1rem', color: '#854d0e', flexShrink: 0 }} />
-                                <span style={{ fontSize: '0.875rem', color: '#854d0e' }}>
-                                    {t('noWarehouseConfigured')}
-                                </span>
+                <form onSubmit={handleSubmit}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+                        {/* Default Warehouse */}
+                        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1e293b', marginBottom: '1rem' }}>
+                                {t('defaultWarehouse')}
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
+                                    {t('defaultWarehouse')}
+                                </label>
+                                <Dropdown
+                                    value={warehouseId}
+                                    options={warehouseOptions}
+                                    onChange={e => setWarehouseId(e.value ?? null)}
+                                    placeholder={t('selectDefaultWarehouse')}
+                                    showClear
+                                    style={{ width: '100%', maxWidth: '24rem' }}
+                                />
                             </div>
-                        )}
-                    </div>
 
-                    {/* Stock Movement Automation */}
-                    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1e293b', marginBottom: '1.25rem' }}>
-                            {t('stockMovementAutomation')}
-                        </h3>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-                            {/* Increment group */}
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                                    <TrendingUp style={{ width: '1rem', height: '1rem', color: '#22c55e' }} />
-                                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#166534' }}>
-                                        {t('incrementStock') || 'Increment Stock'}
+                            {anyMovementEnabled && noWarehouseSelected && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#fef9c3', borderRadius: '0.375rem', border: '1px solid #fde047' }}>
+                                    <AlertCircle style={{ width: '1rem', height: '1rem', color: '#854d0e', flexShrink: 0 }} />
+                                    <span style={{ fontSize: '0.875rem', color: '#854d0e' }}>
+                                        {t('noWarehouseConfigured')}
                                     </span>
                                 </div>
-                                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                    <OptionCard
-                                        label={t('incrementOnInvoiceAchat')}
-                                        sublabel="Facture Achat"
-                                        selected={incTrigger === 'invoice'}
-                                        onClick={() => setIncTrigger('invoice')}
-                                        accentColor="#22c55e"
-                                    />
-                                    <OptionCard
-                                        label={t('incrementOnOrderAchat')}
-                                        sublabel="Bon d'achat"
-                                        selected={incTrigger === 'order'}
-                                        onClick={() => setIncTrigger('order')}
-                                        accentColor="#22c55e"
-                                    />
-                                </div>
-                            </div>
-
-                            <div style={{ borderTop: '1px solid #f1f5f9' }} />
-
-                            {/* Decrement group */}
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                                    <TrendingDown style={{ width: '1rem', height: '1rem', color: '#ef4444' }} />
-                                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#991b1b' }}>
-                                        {t('decrementStock') || 'Decrement Stock'}
-                                    </span>
-                                </div>
-                                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                    <OptionCard
-                                        label={t('decrementOnInvoiceVente')}
-                                        sublabel="Facture Vente"
-                                        selected={decTrigger === 'invoice'}
-                                        onClick={() => setDecTrigger('invoice')}
-                                        accentColor="#ef4444"
-                                    />
-                                    <OptionCard
-                                        label={t('decrementOnOrderVente')}
-                                        sublabel="Bon de livraison"
-                                        selected={decTrigger === 'order'}
-                                        onClick={() => setDecTrigger('order')}
-                                        accentColor="#ef4444"
-                                    />
-                                </div>
-                            </div>
-
+                            )}
                         </div>
-                    </div>
 
-                </div>
-            </form>
+                        {/* Stock Movement Automation */}
+                        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1e293b', marginBottom: '1.25rem' }}>
+                                {t('stockMovementAutomation')}
+                            </h3>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+                                {/* Increment group */}
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                        <TrendingUp style={{ width: '1rem', height: '1rem', color: '#22c55e' }} />
+                                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#166534' }}>
+                                            {t('incrementStock') || 'Increment Stock'}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                        <OptionCard
+                                            label={t('incrementOnInvoiceAchat')}
+                                            sublabel="Facture Achat"
+                                            selected={incTrigger === 'invoice'}
+                                            onClick={() => setIncTrigger('invoice')}
+                                            accentColor="#22c55e"
+                                        />
+                                        <OptionCard
+                                            label={t('incrementOnOrderAchat')}
+                                            sublabel="Bon d'achat"
+                                            selected={incTrigger === 'order'}
+                                            onClick={() => setIncTrigger('order')}
+                                            accentColor="#22c55e"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={{ borderTop: '1px solid #f1f5f9' }} />
+
+                                {/* Decrement group */}
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                        <TrendingDown style={{ width: '1rem', height: '1rem', color: '#ef4444' }} />
+                                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#991b1b' }}>
+                                            {t('decrementStock') || 'Decrement Stock'}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                        <OptionCard
+                                            label={t('decrementOnInvoiceVente')}
+                                            sublabel="Facture Vente"
+                                            selected={decTrigger === 'invoice'}
+                                            onClick={() => setDecTrigger('invoice')}
+                                            accentColor="#ef4444"
+                                        />
+                                        <OptionCard
+                                            label={t('decrementOnOrderVente')}
+                                            sublabel="Bon de livraison"
+                                            selected={decTrigger === 'order'}
+                                            onClick={() => setDecTrigger('order')}
+                                            accentColor="#ef4444"
+                                        />
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
             </div>
         </AdminLayout>
     );

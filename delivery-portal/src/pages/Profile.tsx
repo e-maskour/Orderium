@@ -47,7 +47,7 @@ export default function Profile() {
           display: 'flex', alignItems: 'center',
           padding: '0.625rem 1rem', gap: '0.625rem', minHeight: '56px',
         }}>
-          <img src={orderiumLogo} alt="Orderium" style={{ height: '28px', width: 'auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))', flexShrink: 0 }} />
+          <img src={orderiumLogo} alt="Morocom" style={{ height: '28px', width: 'auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.67rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
               Livreur
@@ -177,7 +177,7 @@ export default function Profile() {
 
         {/* Version */}
         <p style={{ textAlign: 'center', color: '#d1d5db', fontSize: '0.8rem', fontWeight: 500 }}>
-          Orderium Delivery · v1.0
+          Morocom Delivery · v1.0
         </p>
       </div>
     </AppLayout>

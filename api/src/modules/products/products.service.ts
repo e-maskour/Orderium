@@ -85,14 +85,15 @@ export class ProductsService {
       )
       .where('product.isEnabled = :isEnabled', { isEnabled: true });
 
-    // Search by name
+    // Search by name, code, or category name (OR across all three)
     if (search) {
-      queryBuilder.andWhere('product.name ILIKE :search', {
-        search: `%${search}%`,
-      });
+      queryBuilder.andWhere(
+        '(product.name ILIKE :search OR product.code ILIKE :search OR categories.name ILIKE :search)',
+        { search: `%${search}%` },
+      );
     }
 
-    // Filter by code
+    // Filter by code (exact-filter from the advanced filter panel)
     if (code) {
       queryBuilder.andWhere('product.code ILIKE :code', {
         code: `%${code}%`,

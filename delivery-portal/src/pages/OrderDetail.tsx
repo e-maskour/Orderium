@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../lib/i18n';
 import { toastSuccess, toastError } from '../services/toast.service';
-import { ArrowLeft, Phone, MapPin, Navigation, Package } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Phone, MapPin, Navigation, Package, type LucideIcon } from 'lucide-react';
 import type { Order } from '../types';
 
 const PRI = '#df7817';
@@ -22,14 +22,14 @@ interface StatusVisuals {
 
 function getStatusVisuals(status: string | null | undefined): StatusVisuals {
   switch (status) {
-    case 'assigned':   return { stripe: '#df7817', bg: '#fff7ed', badgeBg: '#fff3e0', badgeText: '#9a4300', label: 'assigned' };
-    case 'confirmed':  return { stripe: '#6366f1', bg: '#eef2ff', badgeBg: '#e0e7ff', badgeText: '#3730a3', label: 'confirmed' };
-    case 'picked_up':  return { stripe: '#2563eb', bg: '#eff6ff', badgeBg: '#dbeafe', badgeText: '#1d4ed8', label: 'pickedUp' };
-    case 'to_delivery':return { stripe: '#f59e0b', bg: '#fffbeb', badgeBg: '#fef3c7', badgeText: '#b45309', label: 'toDelivery' };
-    case 'in_delivery':return { stripe: '#df7817', bg: '#fff7ed', badgeBg: '#fff3e0', badgeText: '#9a4300', label: 'inDelivery' };
-    case 'delivered':  return { stripe: '#16a34a', bg: '#f0fdf4', badgeBg: '#dcfce7', badgeText: '#15803d', label: 'delivered' };
-    case 'canceled':   return { stripe: '#dc2626', bg: '#fef2f2', badgeBg: '#fee2e2', badgeText: '#dc2626', label: 'canceled' };
-    default:           return { stripe: '#94a3b8', bg: '#f9fafb', badgeBg: '#f1f5f9', badgeText: '#475569', label: 'pending' };
+    case 'assigned': return { stripe: '#df7817', bg: '#fff7ed', badgeBg: '#fff3e0', badgeText: '#9a4300', label: 'assigned' };
+    case 'confirmed': return { stripe: '#6366f1', bg: '#eef2ff', badgeBg: '#e0e7ff', badgeText: '#3730a3', label: 'confirmed' };
+    case 'picked_up': return { stripe: '#2563eb', bg: '#eff6ff', badgeBg: '#dbeafe', badgeText: '#1d4ed8', label: 'pickedUp' };
+    case 'to_delivery': return { stripe: '#f59e0b', bg: '#fffbeb', badgeBg: '#fef3c7', badgeText: '#b45309', label: 'toDelivery' };
+    case 'in_delivery': return { stripe: '#df7817', bg: '#fff7ed', badgeBg: '#fff3e0', badgeText: '#9a4300', label: 'inDelivery' };
+    case 'delivered': return { stripe: '#16a34a', bg: '#f0fdf4', badgeBg: '#dcfce7', badgeText: '#15803d', label: 'delivered' };
+    case 'canceled': return { stripe: '#dc2626', bg: '#fef2f2', badgeBg: '#fee2e2', badgeText: '#dc2626', label: 'canceled' };
+    default: return { stripe: '#94a3b8', bg: '#f9fafb', badgeBg: '#f1f5f9', badgeText: '#475569', label: 'pending' };
   }
 }
 
@@ -37,11 +37,11 @@ function getWorkflowAction(status: string | null | undefined, t: (k: any) => str
   label: string; next: WorkflowStatus; bg: string; shadow: string;
 } | null {
   switch (status) {
-    case 'assigned':   return { label: t('confirmOrder'),    next: 'confirmed',   bg: '#df7817', shadow: 'rgba(223,120,23,0.4)' };
-    case 'confirmed':  return { label: t('pickUpOrder'),     next: 'picked_up',   bg: '#6366f1', shadow: 'rgba(99,102,241,0.4)' };
-    case 'picked_up':  return { label: t('startToDelivery'), next: 'to_delivery', bg: '#2563eb', shadow: 'rgba(37,99,235,0.4)' };
-    case 'to_delivery':return { label: t('startDelivery'),   next: 'in_delivery', bg: '#f59e0b', shadow: 'rgba(245,158,11,0.4)' };
-    case 'in_delivery':return { label: '✓ ' + t('markAsDelivered'), next: 'delivered', bg: '#16a34a', shadow: 'rgba(22,163,74,0.4)' };
+    case 'assigned': return { label: t('confirmOrder'), next: 'confirmed', bg: '#df7817', shadow: 'rgba(223,120,23,0.4)' };
+    case 'confirmed': return { label: t('pickUpOrder'), next: 'picked_up', bg: '#6366f1', shadow: 'rgba(99,102,241,0.4)' };
+    case 'picked_up': return { label: t('startToDelivery'), next: 'to_delivery', bg: '#2563eb', shadow: 'rgba(37,99,235,0.4)' };
+    case 'to_delivery': return { label: t('startDelivery'), next: 'in_delivery', bg: '#f59e0b', shadow: 'rgba(245,158,11,0.4)' };
+    case 'in_delivery': return { label: '✓ ' + t('markAsDelivered'), next: 'delivered', bg: '#16a34a', shadow: 'rgba(22,163,74,0.4)' };
     default: return null;
   }
 }
@@ -51,7 +51,7 @@ export default function OrderDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const { deliveryPerson } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, dir } = useLanguage();
   const queryClient = useQueryClient();
 
   // Try to get order from router state first, fall back to query cache
@@ -98,6 +98,7 @@ export default function OrderDetail() {
   const visuals = getStatusVisuals(resolvedOrder.status);
   const action = getWorkflowAction(resolvedOrder.status, t);
   const isTerminal = resolvedOrder.status === 'delivered' || resolvedOrder.status === 'canceled';
+  const BackIcon: LucideIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
   const openGoogleMaps = () => {
     if (resolvedOrder.latitude && resolvedOrder.longitude) {
@@ -140,7 +141,7 @@ export default function OrderDetail() {
               cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flexShrink: 0,
             }}
           >
-            <ArrowLeft size={20} color="#fff" />
+            <BackIcon size={20} color="#fff" />
           </button>
           <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', fontWeight: 600 }}>
             {t('backToOrders')}

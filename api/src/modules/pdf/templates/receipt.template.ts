@@ -4,6 +4,8 @@ interface ReceiptTemplateData {
   customerName: string;
   customerPhone?: string;
   itemsHtml: string;
+  totalQty: number;
+  totalProducts: number;
   subtotal: string;
   discount?: string;
   discountType?: number;
@@ -15,13 +17,12 @@ interface ReceiptTemplateData {
 }
 
 export function renderReceiptTemplate(data: ReceiptTemplateData): string {
-  // Build discount row if it exists
   const discountRowHtml =
     data.discount && data.discount !== '0.00'
-      ? `<div class="totals-line">
-         <span>Remise${data.discountType === 1 ? ' (%)' : ''}</span>
-         <span>-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</span>
-       </div>`
+      ? `<tr class="t-sub">
+           <td class="t-label">Remise${data.discountType === 1 ? ' (%)' : ''}</td>
+           <td class="t-amount">-${data.discount}${data.discountType === 1 ? '%' : ' DH'}</td>
+         </tr>`
       : '';
 
   return `
@@ -31,219 +32,349 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;600;700&display=block" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&display=block" rel="stylesheet">
   <title>Reçu ${data.documentNumber}</title>
   <style>
     @page { size: 80mm auto; margin: 0; }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; break-inside: avoid; page-break-inside: avoid; }
 
     body {
-      font-family: "Noto Sans", "Noto Sans Arabic", monospace;
+      font-family: "Noto Sans", "Noto Sans Arabic", sans-serif;
       background: #fff;
       width: 80mm;
-      margin: 0;
+      margin: 0 auto;
       padding: 0;
       font-size: 7.5pt;
-      color: #000;
-      line-height: 1.25;
+      color: #1a1a1a;
+      line-height: 1.3;
       -webkit-font-smoothing: antialiased;
     }
 
-    .receipt {
-      padding: 3mm;
-    }
+    /* ── Wrapper ─────────────────────────── */
+    .rcp { padding: 4mm 4mm 5mm; }
 
     /* ── Company header ──────────────────── */
-    .rcp-header {
+    .rcp-brand {
       text-align: center;
-      padding-bottom: 2mm;
+      padding-bottom: 3mm;
+    }
+    .rcp-brand-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 10mm;
+      height: 10mm;
+      border-radius: 2.5mm;
+      background: #1a1a1a;
+      margin-bottom: 1.5mm;
+    }
+    .rcp-brand-initial {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      line-height: 1;
+      letter-spacing: -0.5pt;
     }
     .rcp-company-name {
-      font-size: 11pt;
+      font-size: 10.5pt;
       font-weight: 700;
-      letter-spacing: 0.5pt;
+      letter-spacing: -0.2pt;
       line-height: 1.2;
+      color: #0a0a0a;
     }
     .rcp-company-detail {
       font-size: 6.5pt;
-      color: #444;
-      line-height: 1.4;
-      margin-top: 0.5mm;
+      color: #555;
+      line-height: 1.5;
+      margin-top: 0.3mm;
+    }
+    .rcp-company-detail b {
+      color: #222;
+      font-weight: 600;
     }
 
     /* ── Separators ──────────────────────── */
-    .sep-dash {
-      border: none;
-      border-top: 1px dashed #000;
-      margin: 2mm 0;
-    }
-    .sep-solid {
-      border: none;
-      border-top: 1.5px solid #000;
-      margin: 2mm 0;
-    }
+    .sep { border: none; margin: 2.5mm 0; }
+    .sep-tight { border: none; margin: 1mm 0; }
+    .sep-solid { border-top: 1.5px solid #1a1a1a; }
+    .sep-dash  { border-top: 1px dashed #aaa; }
+    .sep-thin  { border-top: 0.5px solid #ddd; }
 
-    /* ── Document info ───────────────────── */
-    .rcp-info {
-      padding: 0.5mm 0 1mm 0;
-    }
-    .rcp-doc-label {
-      font-size: 8.5pt;
-      font-weight: 700;
-      letter-spacing: 0.3pt;
-    }
-    .rcp-meta {
-      font-size: 7pt;
-      color: #333;
-      margin-top: 0.5mm;
-      line-height: 1.4;
-    }
-
-    /* ── Items list ──────────────────────── */
-    .rcp-items {
-      padding: 0;
-    }
-    .rcp-item {
-      padding: 1.5px 0;
-    }
-    .rcp-item-top {
+    /* ── Receipt title band ──────────────── */
+    .rcp-title-band {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 2mm;
+      padding: 0.5mm 0;
     }
-    .rcp-item-desc {
-      font-size: 7.5pt;
+    .rcp-badge {
+      display: inline-block;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 0.4pt;
+      text-transform: uppercase;
+      padding: 0.7mm 2.5mm;
+      border-radius: 1mm;
+    }
+    .rcp-doc-num {
+      font-size: 6.5pt;
       font-weight: 600;
-      line-height: 1.25;
-      flex: 1;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      text-overflow: ellipsis;
-      text-align: left;
+      color: #333;
+      letter-spacing: 0.2pt;
     }
-    .rcp-item-total {
-      font-size: 7.5pt;
-      font-weight: 600;
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-      text-align: right;
-      min-width: 14mm;
-    }
-    .rcp-item-detail {
+    .rcp-doc-date {
       font-size: 6.5pt;
       color: #555;
-      line-height: 1.3;
-      margin-top: 0.3mm;
-    }
-    .rcp-item-detail .rcp-discount {
-      color: #777;
     }
 
-    /* ── Totals ──────────────────────────── */
-    .rcp-totals {
-      padding-top: 0.5mm;
+    /* ── Customer row ────────────────────── */
+    .rcp-customer {
+      padding: 0;
     }
-    .totals-line {
+    .rcp-customer-label {
+      font-size: 6pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+      color: #888;
+      margin-bottom: 0.5mm;
+    }
+    .rcp-customer-value {
+      font-size: 7.5pt;
+      font-weight: 600;
+      color: #0a0a0a;
+    }
+    .rcp-customer-meta {
+      font-size: 6.5pt;
+      color: #555;
+      margin-top: 0.3mm;
+    }
+
+    /* ── Items table ─────────────────────── */
+    .rcp-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+    .rcp-table thead tr {
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .rcp-table th {
+      font-size: 6pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4pt;
+      color: #555;
+      padding: 1mm 0 1.2mm;
+    }
+    .rcp-table th.th-desc  { text-align: left; }
+    .rcp-table th.th-total { text-align: right; width: 18mm; }
+
+    .rcp-table tbody tr.t-item td {
+      padding: 1.8mm 0 0;
+      vertical-align: top;
+    }
+    .rcp-table tbody tr.t-item + tr.t-item td {
+      border-top: 0.5px solid #eee;
+    }
+    .t-desc {
+      font-size: 7.5pt;
+      font-weight: 600;
+      color: #0a0a0a;
+      line-height: 1.3;
+      padding-bottom: 0.5mm;
+    }
+    .t-desc-sub {
+      font-size: 6pt;
+      color: #777;
+      font-weight: 700;
+      display: block;
+      margin-top: 0.3mm;
+      padding-bottom: 1.5mm;
+    }
+    .t-qty-removed {
+      text-align: center;
+      font-size: 7.5pt;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: #0a0a0a;
+    }
+    .t-price {
+      text-align: right;
+      font-size: 7pt;
+      color: #444;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .t-total {
+      text-align: right;
+      font-size: 7.5pt;
+      font-weight: 700;
+      color: #0a0a0a;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* ── Summary bar ─────────────────────── */
+    .rcp-summary {
       display: flex;
       justify-content: space-between;
+      font-size: 6.5pt;
+      color: #555;
+      padding: 1.5mm 0 0;
+    }
+    .rcp-summary b {
+      color: #0a0a0a;
+      font-weight: 700;
+    }
+
+    /* ── Totals table ────────────────────── */
+    .rcp-totals-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .t-sub td {
       font-size: 7.5pt;
-      padding: 0.5mm 0;
+      padding: 0.6mm 0;
       font-variant-numeric: tabular-nums;
     }
-    .totals-line span:first-child {
-      color: #333;
+    .t-label {
+      text-align: left;
+      color: #444;
+      padding-right: 2mm;
     }
-    .totals-grand {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10pt;
+    .t-amount {
+      text-align: right;
+      color: #0a0a0a;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .t-grand td {
+      font-size: 10.5pt;
       font-weight: 700;
-      padding: 1.5mm 0 0.5mm 0;
-      border-top: 1.5px solid #000;
-      margin-top: 1mm;
+      padding-top: 2mm;
+      padding-bottom: 0.5mm;
+      border-top: 1.5px solid #1a1a1a;
+      font-variant-numeric: tabular-nums;
+      color: #0a0a0a;
+    }
+    .t-grand .t-label {
+      color: #0a0a0a;
     }
 
     /* ── Footer ──────────────────────────── */
     .rcp-footer {
       text-align: center;
-      padding-top: 1mm;
+      padding-top: 2mm;
     }
-    .rcp-thanks {
-      font-size: 7pt;
-      font-weight: 600;
-      letter-spacing: 0.2pt;
+    .rcp-footer-thanks {
+      font-size: 7.5pt;
+      font-weight: 700;
+      color: #0a0a0a;
+      letter-spacing: 0.1pt;
     }
-    .rcp-legal {
+    .rcp-footer-sub {
+      font-size: 6pt;
+      color: #888;
+      margin-top: 0.8mm;
+      line-height: 1.4;
+    }
+    .rcp-footer-num {
       font-size: 5.5pt;
-      color: #666;
-      margin-top: 1mm;
-      line-height: 1.3;
+      color: #bbb;
+      margin-top: 1.5mm;
+      letter-spacing: 0.3pt;
     }
   </style>
 </head>
 <body>
-  <div class="receipt">
-    <!-- Company Header -->
-    <div class="rcp-header">
-      <div class="rcp-company-name" dir="auto">${data.companyName}</div>
-      ${data.companyLines.map((line) => `<div class="rcp-company-detail" dir="auto">${line}</div>`).join('')}
+<div class="rcp">
+
+  <!-- ── Brand Header ── -->
+  <div class="rcp-brand">
+    <div class="rcp-brand-badge">
+      <span class="rcp-brand-initial">${data.companyName.charAt(0)}</span>
     </div>
+    <div class="rcp-company-name" dir="auto">${data.companyName}</div>
+    ${data.companyLines.map((line) => `<div class="rcp-company-detail" dir="auto">${line}</div>`).join('')}
+  </div>
 
-    <hr class="sep-dash" />
+  <hr class="sep sep-tight sep-solid" />
 
-    <!-- Document Info -->
-    <div class="rcp-info">
-      <div class="rcp-doc-label">REÇU N° ${data.documentNumber}</div>
-      <div class="rcp-meta">
-        ${data.date}<br/>
-        <span dir="auto">${data.customerName}</span>${data.customerPhone ? ` · ${data.customerPhone}` : ''}
-      </div>
-    </div>
-
-    <hr class="sep-dash" />
-
-    <!-- Items -->
-    <div class="rcp-items">
-      ${data.itemsHtml}
-    </div>
-
-    <hr class="sep-dash" />
-
-    <!-- Totals -->
-    <div class="rcp-totals">
-      ${!data.hideVAT
-      ? `
-      <div class="totals-line">
-        <span>Sous-total</span>
-        <span>${data.subtotal} DH</span>
-      </div>
-      ${discountRowHtml}
-      <div class="totals-line">
-        <span>TVA (20%)</span>
-        <span>${data.tax} DH</span>
-      </div>
-      `
-      : `
-      ${discountRowHtml}
-      `
-    }
-      <div class="totals-grand">
-        <span>TOTAL</span>
-        <span>${data.total} DH</span>
-      </div>
-    </div>
-
-    <hr class="sep-dash" />
-
-    <!-- Footer -->
-    <div class="rcp-footer">
-      <div class="rcp-thanks">Merci pour votre confiance !</div>
+  <!-- ── Receipt Title Band ── -->
+  <div class="rcp-title-band">
+    <span class="rcp-badge">Reçu</span>
+    <div style="text-align:right;">
+      <div class="rcp-doc-num"># ${data.documentNumber}</div>
+      <div class="rcp-doc-date">${data.date}</div>
     </div>
   </div>
+
+  <hr class="sep sep-tight sep-dash" />
+
+  <!-- ── Customer ── -->
+  <div class="rcp-customer">
+    <div class="rcp-customer-label">Client</div>
+    <div class="rcp-customer-value" dir="auto">${data.customerName}</div>
+    ${data.customerPhone ? `<div class="rcp-customer-meta">${data.customerPhone}</div>` : ''}
+  </div>
+
+  <hr class="sep sep-tight sep-dash" />
+
+  <!-- ── Items ── -->
+  <table class="rcp-table">
+    <thead>
+      <tr>
+        <th class="th-desc">Désignation</th>
+        <th class="th-total">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.itemsHtml}
+    </tbody>
+  </table>
+
+  <!-- ── Summary ── -->
+  <div class="rcp-summary">
+    <span><b>${data.totalProducts}</b> article${data.totalProducts > 1 ? 's' : ''}</span>
+    <span>Qté totale : <b>${data.totalQty}</b></span>
+  </div>
+
+  <!-- ── Totals ── -->
+  <table class="rcp-totals-table">
+    <tbody>
+      ${!data.hideVAT
+      ? `<tr class="t-sub">
+             <td class="t-label">Sous-total</td>
+             <td class="t-amount">${data.subtotal} DH</td>
+           </tr>
+           ${discountRowHtml}
+           <tr class="t-sub">
+             <td class="t-label">TVA (20%)</td>
+             <td class="t-amount">${data.tax} DH</td>
+           </tr>`
+      : discountRowHtml
+    }
+      <tr class="t-grand">
+        <td class="t-label">Total</td>
+        <td class="t-amount">${data.total} DH</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr class="sep sep-dash" />
+
+  <!-- ── Footer ── -->
+  <div class="rcp-footer">
+    <div class="rcp-footer-thanks">Merci pour votre confiance !</div>
+    <div class="rcp-footer-sub">À bientôt · ${data.companyName}</div>
+    <div class="rcp-footer-num">${data.documentNumber}</div>
+  </div>
+
+</div>
 </body>
 </html>
   `;

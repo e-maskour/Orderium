@@ -52,4 +52,8 @@ export default {
     cannotRemoveOwnSuperAdmin: 'لا يمكنك إزالة دور المشرف الرئيسي الخاص بك',
     superAdminBadge: 'مشرف رئيسي',
     moduleName: 'الوحدة',
+    approved: 'موافق عليه',
+    rejected: 'مرفوض',
+    userApproved: 'تم اعتماد المستخدم بنجاح',
+    userRejected: 'تم رفض المستخدم بنجاح',
 };

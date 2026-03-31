@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -35,6 +35,19 @@ export default function Products() {
   };
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [quickSearch, setQuickSearch] = useState('');
+  const quickSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    quickSearchDebounceRef.current = setTimeout(() => {
+      setAppliedFilters(prev => ({ ...prev, name: quickSearch }));
+      setCurrentPage(1);
+    }, 500);
+    return () => {
+      if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    };
+  }, [quickSearch]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
@@ -305,7 +318,7 @@ export default function Products() {
                 severity="secondary"
                 size="small"
                 icon={<FileSpreadsheet style={{ width: 16, height: 16 }} />}
-                title="Télécharger le modèle"
+                title={t('downloadTemplate')}
               />
               <Button
                 onClick={handleImport}
@@ -313,7 +326,7 @@ export default function Products() {
                 severity="secondary"
                 size="small"
                 icon={<Upload style={{ width: 16, height: 16 }} />}
-                title="Importer"
+                title={t('import')}
               />
               <Button
                 onClick={handleExport}
@@ -321,7 +334,7 @@ export default function Products() {
                 severity="secondary"
                 size="small"
                 icon={<Download style={{ width: 16, height: 16 }} />}
-                title="Exporter"
+                title={t('export')}
               />
 
               {/* Add Product Button */}
@@ -334,6 +347,29 @@ export default function Products() {
             </div>
           }
         />
+
+        {/* Quick Search Bar */}
+        <div style={{ position: 'relative', marginBottom: '1rem' }}>
+          <span style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center' }}>
+            <Search style={{ width: '1rem', height: '1rem' }} />
+          </span>
+          <InputText
+            type="text"
+            value={quickSearch}
+            onChange={(e) => setQuickSearch(e.target.value)}
+            placeholder={t('searchProducts')}
+            style={{ width: '100%', paddingLeft: '2.25rem', paddingRight: quickSearch ? '2.5rem' : '0.875rem' }}
+          />
+          {quickSearch && (
+            <button
+              type="button"
+              onClick={() => setQuickSearch('')}
+              style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#94a3b8', padding: '0.25rem' }}
+            >
+              <X style={{ width: '1rem', height: '1rem' }} />
+            </button>
+          )}
+        </div>
 
         {/* Products View */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -355,9 +391,9 @@ export default function Products() {
                 bottomLeft: (p: IProduct) => [p.code, p.stock != null ? `Stock: ${p.stock}` : null].filter(Boolean).join(' · '),
                 bottomRight: (p: IProduct) => {
                   if (p.stock == null) return null;
-                  if (p.stock < 0) return <span className="erp-badge erp-badge--unpaid">Négatif</span>;
-                  if (p.stock === 0) return <span className="erp-badge erp-badge--draft">Zéro</span>;
-                  return <span className="erp-badge erp-badge--paid">En stock</span>;
+                  if (p.stock < 0) return <span className="erp-badge erp-badge--unpaid">{t('negativeStock')}</span>;
+                  if (p.stock === 0) return <span className="erp-badge erp-badge--draft">{t('zeroStock')}</span>;
+                  return <span className="erp-badge erp-badge--paid">{t('inStock')}</span>;
                 },
               }}
             />
@@ -395,6 +431,12 @@ export default function Products() {
                 selection={productsList.filter((p: IProduct) => selectedProducts.includes(p.id))}
                 onSelectionChange={(e) => setSelectedProducts((e.value as IProduct[]).map((p) => p.id))}
                 selectionMode="checkbox"
+                onRowClick={(e) => {
+                  const target = e.originalEvent.target as HTMLElement;
+                  if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+                  handleViewProduct((e.data as IProduct).id);
+                }}
+                rowClassName={() => 'ord-row-clickable'}
                 dataKey="id"
                 paginator
                 paginatorPosition="top"
@@ -404,7 +446,7 @@ export default function Products() {
                 loading={isLoading}
                 emptyMessage={t('noProductsFound')}
                 paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                currentPageReportTemplate={t('pageReportTemplate')}
               >
                 <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
                 <Column

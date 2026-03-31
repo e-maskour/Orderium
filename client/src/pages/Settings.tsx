@@ -6,13 +6,15 @@ import { CartDrawer } from '@/components/CartDrawer';
 import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
 import { Link } from 'react-router-dom';
-import { LogOut, Settings as SettingsIcon, ArrowLeft } from 'lucide-react';
+import { LogOut, Settings as SettingsIcon, ArrowLeft, ArrowRight, type LucideIcon } from 'lucide-react';
 
 export default function Settings() {
     const { logout } = useAuth();
     const { dir, t } = useLanguage();
     const navigate = useNavigate();
     const { isCartOpen, closeCart } = useCart();
+
+    const BackIcon: LucideIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
     return (
         <div
@@ -32,7 +34,7 @@ export default function Settings() {
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: 'white', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
-                        <ArrowLeft size={18} />
+                        <BackIcon size={18} />
                     </Link>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                         <SettingsIcon size={26} strokeWidth={2.5} style={{ color: '#fff', flexShrink: 0 }} />
@@ -133,7 +135,7 @@ export default function Settings() {
                         marginTop: '0.5rem',
                     }}
                 >
-                    Orderium · v1.0
+                    Morocom · v1.0
                 </p>
             </div>
 

@@ -97,6 +97,9 @@ export default function DocumentActionBar({ primary, secondary, overflow = [], l
         .doc-overflow-item--destructive:hover{background:#fef2f2}
         .doc-overflow-divider{height:1px;background:#e2e8f0;margin:0.25rem 0}
 
+        /* Uniform button height across the entire bar */
+        .doc-action-bar .p-button{height:2.25rem !important;padding-top:0 !important;padding-bottom:0 !important}
+
         /* Primary button */
         .doc-btn-primary{background:linear-gradient(135deg,#235ae4,#1a47b8) !important;border:none !important;font-weight:700 !important;box-shadow:0 4px 12px rgba(35,90,228,0.35) !important;border-radius:0.5rem !important}
         .doc-btn-primary:disabled{opacity:0.5 !important;cursor:not-allowed !important}

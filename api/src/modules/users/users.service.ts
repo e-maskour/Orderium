@@ -3,6 +3,8 @@ import {
     NotFoundException,
     ConflictException,
     ForbiddenException,
+    BadRequestException,
+    UnauthorizedException,
 } from '@nestjs/common';
 import { Repository, ILike, FindOptionsWhere } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -170,7 +172,16 @@ export class UsersService {
             user.isAdmin = dto.userType === UserType.ADMIN;
             user.isCustomer = dto.userType === UserType.CLIENT;
         }
-        if (dto.password) {
+        if (dto.newPassword) {
+            if (!dto.currentPassword) {
+                throw new BadRequestException('Current password is required to set a new password');
+            }
+            const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
+            if (!isMatch) {
+                throw new UnauthorizedException('Current password is incorrect');
+            }
+            user.password = await bcrypt.hash(dto.newPassword, 10);
+        } else if (dto.password) {
             user.password = await bcrypt.hash(dto.password, 10);
         }
 

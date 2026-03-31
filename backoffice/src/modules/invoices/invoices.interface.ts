@@ -23,6 +23,8 @@ export interface IInvoice {
   paidAmount: number;
   remainingAmount: number;
   notes?: string | null;
+  shareToken?: string | null;
+  shareTokenExpiry?: string | null;
   dateCreated: string;
   dateUpdated: string;
 }

@@ -1,5 +1,6 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { ChevronRight, Check } from 'lucide-react';
+import { EmptyState } from './EmptyState';
 
 export interface MobileCardConfig<T> {
   /** Bold primary identifier — top-left */
@@ -19,6 +20,8 @@ interface MobileListProps<T> {
   onTap?: (item: T) => void;
   loading?: boolean;
   emptyMessage?: string;
+  emptyIcon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  emptyDescription?: string;
   emptyAction?: ReactNode;
   /** Total record count to show above the list */
   totalCount?: number;
@@ -57,6 +60,8 @@ export function MobileList<T>({
   onTap,
   loading,
   emptyMessage = 'Aucun résultat trouvé',
+  emptyIcon,
+  emptyDescription,
   emptyAction,
   totalCount,
   countLabel = 'enregistrements',
@@ -78,10 +83,13 @@ export function MobileList<T>({
 
   if (!loading && items.length === 0) {
     return (
-      <div className="erp-empty">
-        <p className="erp-empty__title">{emptyMessage}</p>
-        {emptyAction && <div style={{ marginTop: '0.5rem' }}>{emptyAction}</div>}
-      </div>
+      <EmptyState
+        icon={emptyIcon}
+        title={emptyMessage}
+        description={emptyDescription}
+        action={emptyAction}
+        compact
+      />
     );
   }
 
@@ -152,7 +160,7 @@ export function MobileList<T>({
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); onToggleSelect!(itemKey); } }}
                 >
-                  {isSelected && <Check style={{ width: '0.75rem', height: '0.75rem', color: '#fff' }} />}
+                  {isSelected && <Check style={{ width: '0.625rem', height: '0.625rem', color: '#fff', strokeWidth: 3 }} />}
                 </button>
               )}
 

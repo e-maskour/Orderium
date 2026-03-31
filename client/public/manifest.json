@@ -1,23 +1,26 @@
 {
-  "name": "Orderium Client Portal",
-  "short_name": "Orderium",
-  "description": "Orderium client portal",
+  "name": "Morocom Client Portal",
+  "short_name": "Morocom",
+  "description": "Morocom client portal",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#f4511e",
+  "theme_color": "#06b57a",
   "background_color": "#ffffff",
-  "categories": ["shopping", "business"],
+  "categories": [
+    "shopping",
+    "business"
+  ],
   "icons": [
     {
-      "src": "/Eo_circle_deep-orange_white_letter-o.svg",
+      "src": "/logo-client.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/Eo_circle_deep-orange_white_letter-o.svg",
+      "src": "/logo-client.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"

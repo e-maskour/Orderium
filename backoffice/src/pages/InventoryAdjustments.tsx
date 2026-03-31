@@ -13,6 +13,7 @@ import { inventoryAdjustmentService } from '../modules/inventory/inventory-adjus
 import { InventoryAdjustment } from '../modules/inventory/inventory.model';
 import { toastSuccess, toastValidated, toastDeleted, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
+import { EmptyState } from '../components/EmptyState';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function InventoryAdjustments() {
@@ -160,32 +161,27 @@ export default function InventoryAdjustments() {
             rowsPerPageOptions={[10, 25, 50, 100]}
             removableSort
             loading={isLoading}
-            emptyMessage={
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                <ClipboardCheck style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.5rem', display: 'block' }} />
-                {t('noAdjustmentsFound')}
-              </div>
-            }
+            emptyMessage={<EmptyState icon={ClipboardCheck} title={t('noAdjustmentsFound')} compact />}
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-            currentPageReportTemplate="{first}-{last} of {totalRecords}"
+            currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-            <Column field="reference" header="Référence" sortable body={(adj: InventoryAdjustment) => (
+            <Column field="reference" header={t('reference')} sortable body={(adj: InventoryAdjustment) => (
               <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{adj.reference}</span>
             )} />
-            <Column field="name" header="Nom" sortable body={(adj: InventoryAdjustment) => (
+            <Column field="name" header={t('name')} sortable body={(adj: InventoryAdjustment) => (
               <span style={{ fontSize: '0.875rem', color: '#334155' }}>{adj.name}</span>
             )} />
-            <Column field="warehouseName" header="Entrepôt" sortable body={(adj: InventoryAdjustment) => (
-              <span style={{ fontSize: '0.875rem', color: '#475569' }}>{adj.warehouseName || `Entrepôt ${adj.warehouseId}`}</span>
+            <Column field="warehouseName" header={t('warehouse')} sortable body={(adj: InventoryAdjustment) => (
+              <span style={{ fontSize: '0.875rem', color: '#475569' }}>{adj.warehouseName || `${t('warehouse')} ${adj.warehouseId}`}</span>
             )} />
-            <Column field="adjustmentDate" header="Date" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
+            <Column field="adjustmentDate" header={t('date')} sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
               <span style={{ fontSize: '0.875rem', color: '#475569' }}>
                 {adj.adjustmentDate ? new Date(adj.adjustmentDate).toLocaleDateString('fr-FR') : '-'}
               </span>
             )} />
-            <Column field="status" header="Statut" sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => getStatusBadge(adj.status)} />
-            <Column header="Lignes" align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
+            <Column field="status" header={t('status')} sortable align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => getStatusBadge(adj.status)} />
+            <Column header={t('lines')} align="center" headerStyle={{ textAlign: 'center' }} body={(adj: InventoryAdjustment) => (
               <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#334155', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
                 {adj.lines?.length || 0}
               </span>

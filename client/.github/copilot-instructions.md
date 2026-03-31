@@ -1,4 +1,4 @@
-# Orderium Client — Copilot Instructions
+# Morocom Client — Copilot Instructions
 
 > React + Vite + TypeScript — Customer-facing portal
 > Inherits root `.github/copilot-instructions.md`

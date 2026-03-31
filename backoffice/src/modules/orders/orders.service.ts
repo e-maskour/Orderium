@@ -18,12 +18,14 @@ export class OrdersService {
     page: number = 1,
     perPage: number = 50,
     direction?: 'ACHAT' | 'VENTE',
+    status?: string[],
   ): Promise<any> {
     const filters: any = {};
+    let remainingSearch = search || '';
     if (search) {
       search.split(' ').forEach(part => {
-        if (part.startsWith('customerId:')) filters.customerId = parseInt(part.split(':')[1]);
-        else if (part.startsWith('deliveryPersonId:')) filters.deliveryPersonId = parseInt(part.split(':')[1]);
+        if (part.startsWith('customerId:')) { filters.customerId = parseInt(part.split(':')[1]); remainingSearch = remainingSearch.replace(part, '').trim(); }
+        else if (part.startsWith('deliveryPersonId:')) { filters.deliveryPersonId = parseInt(part.split(':')[1]); remainingSearch = remainingSearch.replace(part, '').trim(); }
       });
     }
 
@@ -32,9 +34,11 @@ export class OrdersService {
     if (direction) queryParams.direction = direction;
 
     const body: any = {};
+    if (remainingSearch) body.search = remainingSearch;
     if (startDate) body.startDate = startDate.toISOString();
     if (endDate) body.endDate = endDate.toISOString();
     if (deliveryStatus) body.deliveryStatus = deliveryStatus;
+    if (status) body.status = status;
     if (orderNumber) body.orderNumber = orderNumber;
     if (filters.customerId) body.customerId = filters.customerId;
     if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
@@ -48,10 +52,11 @@ export class OrdersService {
         orders: orders.map((o: any) => Order.fromApiResponse(o)),
         count: (response.metadata as any)?.total || orders.length,
         totalCount: (response.metadata as any)?.total || orders.length,
-        statusCounts: (response.metadata as any)?.statusCounts || {}
+        statusCounts: (response.metadata as any)?.statusCounts || {},
+        orderStatusCounts: (response.metadata as any)?.orderStatusCounts || {},
       };
     }
-    return { orders: [], count: 0, totalCount: 0, statusCounts: {} };
+    return { orders: [], count: 0, totalCount: 0, statusCounts: {}, orderStatusCounts: {} };
   }
 
   async getById(orderId: number): Promise<OrderWithDetails> {
@@ -60,7 +65,12 @@ export class OrdersService {
   }
 
   async update(orderId: number, orderData: any): Promise<Order> {
-    const response = await apiClient.put<any>(API_ROUTES.ORDERS.UPDATE(orderId), orderData);
+    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.UPDATE(orderId), orderData);
+    return Order.fromApiResponse(response.data);
+  }
+
+  async updateValidated(orderId: number, orderData: any): Promise<Order> {
+    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.UPDATE_VALIDATED(orderId), orderData);
     return Order.fromApiResponse(response.data);
   }
 
@@ -92,6 +102,11 @@ export class OrdersService {
     return Order.fromApiResponse(response.data);
   }
 
+  async changeStatus(orderId: number, status: string): Promise<Order> {
+    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.CHANGE_STATUS(orderId), { status });
+    return Order.fromApiResponse(response.data);
+  }
+
   async markAsInvoiced(orderId: number, invoiceId: number): Promise<Order> {
     const response = await apiClient.put<any>(API_ROUTES.ORDERS.MARK_INVOICED(orderId), { invoiceId });
     return Order.fromApiResponse(response.data);
@@ -118,6 +133,23 @@ export class OrdersService {
       params: supplierId !== undefined ? { supplierId } : undefined,
     });
     return raw.blob();
+  }
+
+  async generateShareLink(id: number): Promise<{ shareToken: string; expiresAt: Date }> {
+    const result = await apiClient.post<any>(API_ROUTES.ORDERS.SHARE(id));
+    return {
+      shareToken: result.data.shareToken,
+      expiresAt: new Date(result.data.expiresAt),
+    };
+  }
+
+  async getByShareToken(token: string): Promise<any> {
+    const response = await apiClient.get<any>(API_ROUTES.ORDERS.SHARED(token));
+    return response.data;
+  }
+
+  async revokeShareLink(id: number): Promise<void> {
+    await apiClient.delete(API_ROUTES.ORDERS.SHARE(id));
   }
 }
 

@@ -19,7 +19,7 @@
     --primary-800: #0f2d7a;
     --primary-900: #0a1e52;
 
-    /* ── Orderium semantic palette ── */
+    /* ── Morocom semantic palette ── */
     --orderium-primary: #235ae4;
     --orderium-primary-light: #4a78ea;
     --orderium-primary-dark: #1a47b8;
@@ -194,6 +194,19 @@ body {
 }
 
 /* ── PrimeReact input overrides ── */
+
+/* Remove number input spinners (arrows) globally */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
 .p-inputtext,
 .p-dropdown,
 .p-multiselect,
@@ -266,7 +279,64 @@ body {
     border-radius: 0.375rem;
 }
 
-/* ── Enterprise empty state ── */
+/* ══════════════════════════════════════════════════════
+   EMPTY STATE — global reusable component (EmptyState.tsx)
+   ══════════════════════════════════════════════════════ */
+.es-root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3.5rem 2rem;
+    text-align: center;
+    gap: 0.25rem;
+}
+
+.es-root--compact {
+    padding: 2rem 1.5rem;
+}
+
+.es-icon-wrap {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1.5px solid #bfdbfe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.es-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #3b82f6;
+}
+
+.es-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.es-desc {
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    margin: 0.375rem 0 0;
+    max-width: 24rem;
+    line-height: 1.55;
+}
+
+.es-action {
+    margin-top: 1.25rem;
+}
+
+/* ── Enterprise empty state (legacy MobileList) ── */
 .erp-empty {
     display: flex;
     flex-direction: column;
@@ -718,12 +788,12 @@ body {
     gap: 0.375rem;
 }
 
-/* Selection circle button */
+/* Selection checkbox button — matches DataTable checkbox design */
 .ml-card__select-btn {
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 50%;
-    border: 2px solid #cbd5e1;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 0.3125rem;
+    border: 1.5px solid #cbd5e1;
     background: #fff;
     flex-shrink: 0;
     cursor: pointer;
@@ -731,11 +801,12 @@ body {
     align-items: center;
     justify-content: center;
     padding: 0;
-    transition: border-color 0.15s, background-color 0.15s;
+    transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
 }
 
 .ml-card__select-btn:hover {
     border-color: #235ae4;
+    box-shadow: 0 0 0 3px rgba(35, 90, 228, 0.1);
 }
 
 .ml-card__select-btn--checked {
@@ -828,7 +899,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(35, 90, 228, 0.35), 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .page-header__icon {
@@ -938,7 +1008,6 @@ body {
         width: 2rem;
         height: 2rem;
         border-radius: 0.5rem;
-        box-shadow: 0 2px 6px rgba(35, 90, 228, 0.3);
     }
 
     .page-header__icon {
@@ -1566,5 +1635,891 @@ body {
     flex-wrap: wrap;
     gap: 0.625rem;
     align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE GRID UTILITIES
+   .responsive-grid-4 : 4 → 2 → 1
+   .responsive-grid-3 : 3 → 2 → 1
+   .responsive-grid-2 : 2 → 1
+   ═══════════════════════════════════════════════════════════ */
+.responsive-grid-4 {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.responsive-grid-3 {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.responsive-grid-2 {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 899px) {
+    .responsive-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .responsive-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 599px) {
+
+    .responsive-grid-4,
+    .responsive-grid-3,
+    .responsive-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Auto-fill card grid — replaces any repeat(N,1fr) inline grids */
+.responsive-card-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+}
+
+/* ── Form grid inside dialogs/panels — collapses to 1-col on small screens ── */
+.form-grid-2 {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 479px) {
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── 3-column stat strip — used in document edit payment summary ── */
+.stat-strip-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 599px) {
+    .stat-strip-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-strip-3>* {
+        border-right: none !important;
+        border-bottom: 1px solid #dbeafe;
+    }
+
+    .stat-strip-3>*:last-child {
+        border-bottom: none;
+    }
+}
+
+/* ── 3-column margin analysis mini-strip ── */
+.margin-grid-3 {
+    display: grid;
+    gap: 0.625rem;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 479px) {
+    .margin-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SEARCH INPUT — prevent fixed-width overflow on small screens
+   ═══════════════════════════════════════════════════════════ */
+.search-input-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 24rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DIALOG — global mobile safety net
+   Individual Modal.tsx already passes breakpoints; this catches
+   any raw <Dialog> usage that omits breakpoints.
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 599px) {
+    .p-dialog {
+        max-width: 95vw !important;
+        margin: 0.5rem !important;
+    }
+
+    .p-dialog .p-dialog-header {
+        padding: 1rem !important;
+    }
+
+    .p-dialog .p-dialog-content {
+        padding: 1rem !important;
+    }
+
+    .p-dialog .p-dialog-footer {
+        padding: 0.75rem 1rem !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOUCH TARGETS — minimum 44 × 44 px on mobile
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+
+    .p-button.p-button-icon-only,
+    .p-button.p-button-text.p-button-rounded {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    /* DataTable row action buttons */
+    .p-datatable .p-button.p-button-icon-only {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+}
+
+/* ── Print styles ───────────────────────────────────────── */
+#morocom-receipt {
+    display: none;
+}
+
+@media print {
+    body>*:not(#morocom-receipt) {
+        display: none !important;
+    }
+
+    #morocom-receipt {
+        display: block !important;
+        width: 80mm;
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CAISSE — Cash Register / Payment Desk
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Summary Bar ─────────────────────────────────────────────── */
+.caisse-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #fefce8 0%, #fff7ed 50%, #fef2f2 100%);
+    border-radius: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.caisse-summary__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.caisse-summary__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #78716c;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.caisse-summary__value {
+    font-size: 1.375rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+
+.caisse-summary__value--due {
+    color: #1e293b;
+}
+
+.caisse-summary__value--collected {
+    color: #059669;
+}
+
+.caisse-summary__value--remaining {
+    color: #dc2626;
+}
+
+.caisse-summary__currency {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: #a8a29e;
+    margin-left: 0.25rem;
+}
+
+/* ── Status Filter Tabs ──────────────────────────────────────── */
+.caisse-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0 1rem;
+    flex-wrap: wrap;
+}
+
+.caisse-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.caisse-tab:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.caisse-tab--active {
+    border-color: #0d9488;
+    background: #f0fdfa;
+    color: #0d9488;
+}
+
+.caisse-tab__count {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 9999px;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.caisse-tab--active .caisse-tab__count {
+    background: #ccfbf1;
+    color: #0d9488;
+}
+
+/* ── Order Cards Grid ────────────────────────────────────────── */
+.caisse-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 0.875rem;
+}
+
+/* ── Order Card ──────────────────────────────────────────────── */
+.caisse-card {
+    background: #fff;
+    border-radius: 0.875rem;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease;
+    cursor: pointer;
+}
+
+.caisse-card:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.caisse-card--paid {}
+
+.caisse-card--partial {}
+
+.caisse-card--unpaid {}
+
+.caisse-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem 0.5rem;
+}
+
+.caisse-card__order-info {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+}
+
+.caisse-card__avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.caisse-card--paid .caisse-card__avatar {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.caisse-card--partial .caisse-card__avatar {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.caisse-card--unpaid .caisse-card__avatar {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.caisse-card__name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.caisse-card__order-num {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #92400e;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: #fffbeb;
+    border-radius: 0.25rem;
+    padding: 0.0625rem 0.375rem;
+}
+
+.caisse-card__status {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.caisse-card__status--paid {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.caisse-card__status--partial {
+    background: #fef3c7;
+    color: #a16207;
+}
+
+.caisse-card__status--unpaid {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* ── Card Amounts Bar ────────────────────────────────────────── */
+.caisse-card__amounts {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem 0.75rem;
+}
+
+.caisse-card__amount-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+.caisse-card__amount-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.caisse-card__amount-value {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.caisse-card__amount-value--total {
+    color: #334155;
+}
+
+.caisse-card__amount-value--paid {
+    color: #059669;
+}
+
+.caisse-card__amount-value--remaining {
+    color: #dc2626;
+}
+
+.caisse-card__amount-value--remaining-zero {
+    color: #10b981;
+}
+
+/* ── Card Actions ────────────────────────────────────────────── */
+.caisse-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0 1rem 0.75rem;
+    padding-top: 0.625rem;
+}
+
+.caisse-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.4375rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    flex: 1;
+    min-height: 2.25rem;
+}
+
+.caisse-action-btn svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+}
+
+.caisse-action-btn--pay {
+    background: #0d9488;
+    color: #fff;
+    border-color: #0d9488;
+}
+
+.caisse-action-btn--pay:hover {
+    background: #0f766e;
+}
+
+.caisse-action-btn--pay:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+.caisse-action-btn--history {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+.caisse-action-btn--history:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+/* ── Progress Bar ────────────────────────────────────────────── */
+.caisse-progress {
+    height: 0.3125rem;
+    background: #f1f5f9;
+    overflow: hidden;
+}
+
+.caisse-progress__fill {
+    height: 100%;
+    transition: width 0.4s ease;
+    border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.caisse-progress__fill--paid {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.caisse-progress__fill--partial {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.caisse-progress__fill--unpaid {
+    background: #ef4444;
+}
+
+/* ── Drawer / Sidebar ────────────────────────────────────────── */
+.caisse-drawer .p-sidebar-content {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.caisse-drawer .p-sidebar-header {
+    display: none !important;
+}
+
+.caisse-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #fafaf9;
+    flex-shrink: 0;
+}
+
+.caisse-drawer-header__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.caisse-drawer-header__close {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.caisse-drawer-header__close:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.caisse-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+}
+
+.caisse-drawer-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #e2e8f0;
+    background: #fafaf9;
+    flex-shrink: 0;
+}
+
+/* ── Payment Form ────────────────────────────────────────────── */
+.caisse-form-group {
+    margin-bottom: 1rem;
+}
+
+.caisse-form-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 0.375rem;
+}
+
+.caisse-form-hint {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+.caisse-amount-input .p-inputnumber-input {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    height: 3.5rem !important;
+    border-radius: 0.75rem !important;
+    border: 2px solid #e2e8f0 !important;
+}
+
+.caisse-amount-input .p-inputnumber-input:focus {
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+}
+
+/* ── Quick Amount Buttons ────────────────────────────────────── */
+.caisse-quick-amounts {
+    display: flex;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.caisse-quick-amount-btn {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.caisse-quick-amount-btn:hover {
+    border-color: #0d9488;
+    background: #f0fdfa;
+    color: #0d9488;
+}
+
+.caisse-quick-amount-btn--full {
+    border-color: #0d9488;
+    background: #f0fdfa;
+    color: #0d9488;
+}
+
+/* ── Payment Method Selector ─────────────────────────────────── */
+.caisse-methods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.caisse-method-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.75rem 0.5rem;
+    border-radius: 0.75rem;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-height: 3.5rem;
+}
+
+.caisse-method-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.caisse-method-btn span {
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+.caisse-method-btn:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.caisse-method-btn--active {
+    border-color: #0d9488;
+    background: #f0fdfa;
+    color: #0d9488;
+}
+
+/* ── History Timeline ────────────────────────────────────────── */
+.caisse-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.caisse-timeline-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    position: relative;
+}
+
+.caisse-timeline-item+.caisse-timeline-item {
+    border-top: 1px solid #f1f5f9;
+}
+
+.caisse-timeline-dot {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.caisse-timeline-dot svg {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.caisse-timeline-dot--cash {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.caisse-timeline-dot--check {
+    background: #fef3c7;
+    color: #a16207;
+}
+
+.caisse-timeline-dot--bank_transfer {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.caisse-timeline-dot--credit_card {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.caisse-timeline-dot--mobile_payment {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.caisse-timeline-dot--other {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.caisse-timeline-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.caisse-timeline-amount {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #059669;
+}
+
+.caisse-timeline-meta {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.125rem;
+}
+
+.caisse-timeline-actions {
+    display: flex;
+    gap: 0.25rem;
+    align-items: flex-start;
+    flex-shrink: 0;
+}
+
+.caisse-timeline-action-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.375rem;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.caisse-timeline-action-btn:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.caisse-timeline-action-btn--danger:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.caisse-timeline-action-btn svg {
+    width: 0.8125rem;
+    height: 0.8125rem;
+}
+
+/* ── Empty State ─────────────────────────────────────────────── */
+.caisse-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.caisse-empty__icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+    border: 1px solid #99f6e4;
+}
+
+.caisse-empty__icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #0d9488;
+}
+
+.caisse-empty__title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.caisse-empty__text {
+    font-size: 0.8125rem;
+    color: #94a3b8;
+}
+
+/* ── Caisse Responsive ───────────────────────────────────────── */
+@media (max-width: 640px) {
+    .caisse-summary {
+        grid-template-columns: 1fr;
+        gap: 0.625rem;
+        padding: 0.875rem 1rem;
+    }
+
+    .caisse-summary__item {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+    }
+
+    .caisse-summary__item+.caisse-summary__item {
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        padding-top: 0.5rem;
+    }
+
+    .caisse-summary__value {
+        font-size: 1.125rem;
+    }
+
+    .caisse-grid {
+        grid-template-columns: 1fr;
+        gap: 0.625rem;
+    }
+
+    .caisse-card__amounts {
+        gap: 0.25rem;
+    }
+
+    .caisse-card__amount-value {
+        font-size: 0.8125rem;
+    }
+
+    .caisse-filters {
+        gap: 0.375rem;
+    }
+
+    .caisse-tab {
+        padding: 0.375rem 0.625rem;
+        font-size: 0.75rem;
+    }
 }
 }

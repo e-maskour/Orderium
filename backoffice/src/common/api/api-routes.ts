@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  ORDERIUM — Centralized API Route Configuration
+ *  MOROCOM — Centralized API Route Configuration
  * ═══════════════════════════════════════════════════════════════
  *
  *  Single source of truth for all API endpoints.
@@ -48,6 +48,7 @@ export const API_ROUTES = {
         CREATE: '/api/orders',
         DETAIL: (id: number) => `/api/orders/${id}`,
         UPDATE: (id: number) => `/api/orders/${id}`,
+        UPDATE_VALIDATED: (id: number) => `/api/orders/${id}/update-validated`,
         DELETE: (id: number) => `/api/orders/${id}`,
         VALIDATE: (id: number) => `/api/orders/${id}/validate`,
         DEVALIDATE: (id: number) => `/api/orders/${id}/devalidate`,
@@ -57,6 +58,9 @@ export const API_ROUTES = {
         SEARCH_ORDER_NUMBERS: '/api/orders/search/order-numbers',
         ANALYTICS: (direction: string) => `/api/orders/analytics/${direction}`,
         EXPORT_XLSX: '/api/orders/export/xlsx',
+        SHARE: (id: number) => `/api/orders/${id}/share`,
+        SHARED: (token: string) => `/api/orders/shared/${token}`,
+        CHANGE_STATUS: (id: number) => `/api/orders/${id}/status`,
     },
 
     // ─── Invoices ──────────────────────────────────────────────
@@ -72,6 +76,8 @@ export const API_ROUTES = {
         DEVALIDATE: (id: number) => `/api/invoices/${id}/devalidate`,
         ANALYTICS: (direction: string) => `/api/invoices/analytics/${direction}`,
         EXPORT_XLSX: '/api/invoices/export/xlsx',
+        SHARE: (id: number) => `/api/invoices/${id}/share`,
+        SHARED: (token: string) => `/api/invoices/shared/${token}`,
     },
 
     // ─── Quotes ────────────────────────────────────────────────
@@ -128,6 +134,17 @@ export const API_ROUTES = {
         UPDATE: (id: number) => `/api/payments/${id}`,
         DELETE: (id: number) => `/api/payments/${id}`,
         INVOICE_TOTAL: (invoiceId: number) => `/api/payments/invoice/${invoiceId}/total`,
+    },
+
+    // ─── Order Payments ────────────────────────────────────────
+    ORDER_PAYMENTS: {
+        LIST_ALL: '/api/order-payments', CREATE: '/api/order-payments',
+        CAISSE: '/api/order-payments/caisse',
+        BY_ORDER: (orderId: number) => `/api/order-payments/order/${orderId}`,
+        ORDER_TOTAL: (orderId: number) => `/api/order-payments/order/${orderId}/total`,
+        DETAIL: (id: number) => `/api/order-payments/${id}`,
+        UPDATE: (id: number) => `/api/order-payments/${id}`,
+        DELETE: (id: number) => `/api/order-payments/${id}`,
     },
 
     // ─── Company / Configurations ──────────────────────────────
@@ -221,6 +238,17 @@ export const API_ROUTES = {
         DEVICE_TOKEN_REFRESH: (token: string) => `/api/notifications/device-token/${token}/refresh`,
     },
 
+    // ─── Notification Templates ────────────────────────────────
+    NOTIFICATION_TEMPLATES: {
+        LIST: '/api/notification-templates',
+        DETAIL: (key: string) => `/api/notification-templates/${key}`,
+        UPDATE: (key: string) => `/api/notification-templates/${key}`,
+        TOGGLE: (key: string) => `/api/notification-templates/${key}/toggle`,
+        RESET: (key: string) => `/api/notification-templates/${key}/reset`,
+        RESET_ALL: '/api/notification-templates/reset-all',
+        SEND_CUSTOM: '/api/notification-templates/send-custom',
+    },
+
     // ─── Images ────────────────────────────────────────────────
     IMAGES: {
         UPLOAD: '/api/images/upload',
@@ -265,6 +293,9 @@ export const API_ROUTES = {
         REMOVE_TAG: (nodeId: string, tagId: number) => `/api/drive/nodes/${nodeId}/tags/${tagId}`,
         // Stats
         STATS: '/api/drive/stats',
+        // Raw MinIO browser
+        BROWSE_STORAGE: (prefix?: string) => `/api/drive/browse${prefix ? `?prefix=${encodeURIComponent(prefix)}` : ''}`,
+        RAW_URL: (key: string) => `/api/drive/raw-url?key=${encodeURIComponent(key)}`,
     },
 
     // ─── Onboarding ────────────────────────────────────────────
@@ -306,5 +337,21 @@ export const API_ROUTES = {
         DEACTIVATE: (id: number) => `/api/users/${id}/deactivate`,
         APPROVE: (id: number) => `/api/portal/admin/users/${id}/approve`,
         REJECT: (id: number) => `/api/portal/admin/users/${id}/reject`,
+    },
+
+    // ─── Printers ──────────────────────────────────────────────
+    PRINTERS: {
+        LIST: '/api/printers',
+        DETAIL: (id: string) => `/api/printers/${id}`,
+        CREATE: '/api/printers',
+        UPDATE: (id: string) => `/api/printers/${id}`,
+        DELETE: (id: string) => `/api/printers/${id}`,
+        PING: (id: string) => `/api/printers/${id}/ping`,
+    },
+
+    // ─── Print Jobs ────────────────────────────────────────────
+    PRINT_JOBS: {
+        LIST: '/api/print-jobs',
+        CREATE: '/api/print-jobs',
     },
 } as const;

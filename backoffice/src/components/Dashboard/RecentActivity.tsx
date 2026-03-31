@@ -2,6 +2,7 @@ import { Clock, TrendingUp, Package, Users, ShoppingBag, Bell } from 'lucide-rea
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../lib/formatters';
 import type { IRecentActivity as Activity } from '../../modules/statistics/statistics.interface';
+import { EmptyState } from '../EmptyState';
 
 interface RecentActivityProps {
     activities?: Activity[];
@@ -15,11 +16,11 @@ const iconConfig: Record<string, { bg: string; color: string; shadow: string }> 
     default: { bg: 'linear-gradient(135deg,#64748b,#475569)', color: '#fff', shadow: 'rgba(100,116,139,0.22)' },
 };
 
-const typeBadgeConfig: Record<string, { bg: string; color: string; border: string; label: string }> = {
-    order: { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label: 'Order' },
-    customer: { bg: '#faf5ff', color: '#9333ea', border: '#e9d5ff', label: 'Customer' },
-    product: { bg: '#f0f9ff', color: '#0284c7', border: '#bae6fd', label: 'Product' },
-    revenue: { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0', label: 'Revenue' },
+const typeBadgeStyles: Record<string, { bg: string; color: string; border: string }> = {
+    order: { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
+    customer: { bg: '#faf5ff', color: '#9333ea', border: '#e9d5ff' },
+    product: { bg: '#f0f9ff', color: '#0284c7', border: '#bae6fd' },
+    revenue: { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
 };
 
 function getIcon(type: string) {
@@ -35,13 +36,20 @@ function getIcon(type: string) {
 export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
     const { t, language } = useLanguage();
 
+    const typeBadgeConfig: Record<string, { bg: string; color: string; border: string; label: string }> = {
+        order: { ...typeBadgeStyles.order, label: t('order') },
+        customer: { ...typeBadgeStyles.customer, label: t('customer') },
+        product: { ...typeBadgeStyles.product, label: t('product') },
+        revenue: { ...typeBadgeStyles.revenue, label: t('revenue') },
+    };
+
     const formatRelativeTime = (timestamp: string): string => {
         const now = new Date();
         const diff = Math.floor((now.getTime() - new Date(timestamp).getTime()) / 1000);
-        if (diff < 60) return `${diff} ${t('secondsAgo') || 's ago'}`;
-        if (diff < 3600) return `${Math.floor(diff / 60)} ${t('minutesAgo') || 'min ago'}`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('hoursAgo') || 'h ago'}`;
-        return `${Math.floor(diff / 86400)} ${t('daysAgo') || 'd ago'}`;
+        if (diff < 60) return `${diff} ${t('secondsAgo')}`;
+        if (diff < 3600) return `${Math.floor(diff / 60)} ${t('minutesAgo')}`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('hoursAgo')}`;
+        return `${Math.floor(diff / 86400)} ${t('daysAgo')}`;
     };
 
     const header = (
@@ -62,7 +70,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
                 background: '#f0fdf4', color: '#16a34a',
                 border: '1px solid #bbf7d0',
             }}>
-                <span className="db-live-dot" />Live
+                <span className="db-live-dot" />{t('live')}
             </span>
         </div>
     );
@@ -71,14 +79,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
         return (
             <div className="db-chart-card">
                 {header}
-                <div className="db-empty-state">
-                    <div className="db-empty-state__icon">
-                        <Clock style={{ width: '1.5rem', height: '1.5rem', color: '#9ca3af' }} />
-                    </div>
-                    <p className="db-empty-state__text">
-                        {t('noRecentActivity') || 'No recent activity'}
-                    </p>
-                </div>
+                <EmptyState icon={Clock} title={t('noRecentActivity') as string} compact />
             </div>
         );
     }

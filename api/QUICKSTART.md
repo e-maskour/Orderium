@@ -1,6 +1,6 @@
-# 🚀 Quick Start Guide - Orderium NestJS API
+# 🚀 Quick Start Guide - Morocom NestJS API
 
-Get the Orderium API running in under 5 minutes!
+Get the Morocom API running in under 5 minutes!
 
 ## Prerequisites ✓
 

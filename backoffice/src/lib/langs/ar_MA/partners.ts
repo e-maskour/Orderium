@@ -16,7 +16,7 @@ export default {
   phoneNumberRequired: 'رقم الهاتف مطلوب',
   city: 'المدينة',
   typeCustomerName: 'اكتب اسم العميل',
-  
+
   // Suppliers
   suppliers: 'الموردين',
   supplier: 'مورد',
@@ -30,7 +30,7 @@ export default {
   editSupplier: 'تعديل المورد',
   newSupplier: 'مورد جديد',
   supplierNotFound: 'المورد غير موجود',
-  
+
   // Partner Form
   partnerType: 'نوع الشريك',
   individual: 'فرد',
@@ -59,20 +59,30 @@ export default {
   updatePartner: 'تحديث الشريك',
   createPartner: 'إنشاء شريك',
   deletePartnerConfirmation: 'هل أنت متأكد من حذف هذا الشريك؟ لا يمكن التراجع عن هذا الإجراء.',
-  
+
   // Tabs
   dashboard: 'لوحة القيادة',
   customerList: 'قائمة العملاء',
   supplierList: 'قائمة الموردين',
-  
+
   // Placeholders
   searchCustomersPlaceholder: 'البحث عن العملاء...',
   searchSuppliersPlaceholder: 'البحث عن الموردين...',
-  
+
   // Common Labels
   seeDetails: 'عرض',
-  
+
   // Supplier Detail
   supplierDetails: 'تفاصيل المورد',
   customerDetails: 'تفاصيل العميل',
+
+  // Partner Form — section subtitles & descriptions
+  namePhoneEmailAddress: 'الاسم والهاتف والبريد الإلكتروني والعنوان',
+  legalAndTaxNumbers: 'الأرقام القانونية والضريبية',
+  typeAndStatus: 'نوع وحالة الشريك',
+  individualTypeDescription: 'هذا الشريك شخص طبيعي',
+  companyTypeDescription: 'هذا الشريك شخص اعتباري',
+  visibleInSystem: 'مرئي ونشط في النظام',
+  hiddenFromSystem: 'مخفي وغير نشط في النظام',
+  partnerInfo: 'معلومات الشريك',
 };

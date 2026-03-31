@@ -117,11 +117,11 @@ export function usePushNotifications(
       // Show native notification for foreground messages
       if (payload.notification) {
         const { title, body } = payload.notification;
-        const notificationTitle = title || 'Orderium Backoffice';
+        const notificationTitle = title || 'Morocom Backoffice';
         const notificationOptions = {
           body: body || '',
-          icon: payload.notification?.icon || '/Eo_circle_deep-orange_white_letter-o.svg',
-          badge: '/Eo_circle_deep-orange_white_letter-o.svg',
+          icon: payload.notification?.icon || '/notification-icon.png',
+          badge: '/notification-icon.png',
           data: payload.data,
           requireInteraction: true,
           tag: 'orderium-notification',

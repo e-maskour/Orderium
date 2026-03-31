@@ -6,6 +6,7 @@ export * from './invoices';
 export * from './orders';
 export * from './statistics';
 export * from './payments';
+export * from './order-payments';
 export * from './categories';
 export * from './uom';
 export * from './notifications';

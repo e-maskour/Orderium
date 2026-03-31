@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  ORDERIUM — Unified API Response & Request Types
+ *  MOROCOM — Unified API Response & Request Types
  * ═══════════════════════════════════════════════════════════════
  *
  *  Mirrors the backend ApiResponseBody contract exactly.

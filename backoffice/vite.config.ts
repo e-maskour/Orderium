@@ -10,6 +10,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@orderium/ui': path.resolve(__dirname, '../shared/ui/src'),
       '@shared-logo': path.resolve(__dirname, '../shared/logo'),
+      '@shared-print': path.resolve(__dirname, '../shared/components'),
     },
   },
   // @ts-expect-error - vitest config lives alongside vite config

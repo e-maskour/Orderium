@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Order, DeliveryStatus } from '../orders/entities/order.entity';
 import { Partner } from '../partners/entities/partner.entity';
 import { DeliveryPerson } from '../delivery/entities/delivery.entity';
@@ -51,11 +52,39 @@ export interface RecentActivity {
   productId?: number;
 }
 
+/** 5-minute TTL for all statistics cache entries */
+const STATS_TTL = 300_000;
+
 @Injectable()
 export class StatisticsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) { }
+
+  private get tenantSlug(): string {
+    return this.tenantConnService.getCurrentTenantSlug();
+  }
+
+  private statsKey(suffix: string): string {
+    return `tenant:${this.tenantSlug}:statistics:${suffix}`;
+  }
+
+  async invalidateStatsCache(): Promise<void> {
+    // Invalidate the most common dashboard keys (called after write operations)
+    const slug = this.tenantSlug;
+    const keys = [
+      `tenant:${slug}:statistics:overview::`,
+      `tenant:${slug}:statistics:daily:7`,
+      `tenant:${slug}:statistics:daily:30`,
+      `tenant:${slug}:statistics:top:5`,
+      `tenant:${slug}:statistics:top:10`,
+      `tenant:${slug}:statistics:comprehensive:7`,
+      `tenant:${slug}:statistics:comprehensive:30`,
+      `tenant:${slug}:statistics:recent:10`,
+    ];
+    await Promise.all(keys.map((k) => this.cacheManager.del(k)));
+  }
 
   private get orderRepository(): Repository<Order> {
     return this.tenantConnService.getRepository(Order);
@@ -77,6 +106,10 @@ export class StatisticsService {
     startDate?: Date,
     endDate?: Date,
   ): Promise<OrderStatistics> {
+    const key = this.statsKey(`overview:${startDate?.toISOString() ?? ''}:${endDate?.toISOString() ?? ''}`);
+    const cached = await this.cacheManager.get<OrderStatistics>(key);
+    if (cached) return cached;
+
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .select('COUNT(*)', 'totalOrders')
@@ -109,7 +142,7 @@ export class StatisticsService {
       where: { isActive: true },
     });
 
-    return {
+    const stats: OrderStatistics = {
       totalOrders: parseInt(result?.totalOrders || '0', 10),
       totalRevenue: parseFloat(result?.totalRevenue || '0'),
       averageOrderValue: parseFloat(result?.averageOrderValue || '0'),
@@ -120,9 +153,16 @@ export class StatisticsService {
       cancelledOrders: statusCounts.cancelled,
       activeDeliveryPersons,
     };
+
+    await this.cacheManager.set(key, stats, STATS_TTL);
+    return stats;
   }
 
   async getTopProducts(limit = 5): Promise<TopProduct[]> {
+    const key = this.statsKey(`top:${limit}`);
+    const cached = await this.cacheManager.get<TopProduct[]>(key);
+    if (cached) return cached;
+
     const result = await this.orderRepository
       .createQueryBuilder('order')
       .innerJoin('order.items', 'item')
@@ -137,26 +177,31 @@ export class StatisticsService {
       .limit(limit)
       .getRawMany();
 
-    return result.map((row) => ({
+    const products = result.map((row) => ({
       productId: parseInt(row.productId, 10),
       productName: row.productName,
       sales: parseInt(row.sales, 10) || 0,
       revenue: parseFloat(row.revenue) || 0,
     }));
+
+    await this.cacheManager.set(key, products, STATS_TTL);
+    return products;
   }
 
   async getComprehensiveStats(days = 7): Promise<ComprehensiveStats> {
+    const key = this.statsKey(`comprehensive:${days}`);
+    const cached = await this.cacheManager.get<ComprehensiveStats>(key);
+    if (cached) return cached;
+
     const [overview, dailyStats, topProducts] = await Promise.all([
       this.getOrderStatistics(),
       this.getDailyStats(days),
       this.getTopProducts(5),
     ]);
 
-    return {
-      overview,
-      dailyStats,
-      topProducts,
-    };
+    const stats = { overview, dailyStats, topProducts };
+    await this.cacheManager.set(key, stats, STATS_TTL);
+    return stats;
   }
 
   private async getOrderCountsByStatus(
@@ -208,6 +253,10 @@ export class StatisticsService {
   }
 
   async getDailyStats(days = 7): Promise<DailyStats[]> {
+    const key = this.statsKey(`daily:${days}`);
+    const cached = await this.cacheManager.get<DailyStats[]>(key);
+    if (cached) return cached;
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -233,7 +282,7 @@ export class StatisticsService {
       .orderBy('DATE(order.date)', 'ASC')
       .getRawMany();
 
-    return result.map((row) => ({
+    const daily = result.map((row) => ({
       date: row.date,
       orders: parseInt(row.orders, 10) || 0,
       revenue: parseFloat(row.revenue) || 0,
@@ -241,9 +290,16 @@ export class StatisticsService {
       delivered: parseInt(row.delivered, 10) || 0,
       cancelled: parseInt(row.cancelled, 10) || 0,
     }));
+
+    await this.cacheManager.set(key, daily, STATS_TTL);
+    return daily;
   }
 
   async getRecentActivities(limit = 10): Promise<RecentActivity[]> {
+    const key = this.statsKey(`recent:${limit}`);
+    const cached = await this.cacheManager.get<RecentActivity[]>(key);
+    if (cached) return cached;
+
     const activities: RecentActivity[] = [];
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -343,8 +399,10 @@ export class StatisticsService {
 
     // Sort all activities by timestamp (most recent first)
     activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    const result = activities.slice(0, limit);
 
-    // Return limited number of activities
-    return activities.slice(0, limit);
+    // Short TTL for recent activities (2 min) since data is time-sensitive
+    await this.cacheManager.set(key, result, 120_000);
+    return result;
   }
 }

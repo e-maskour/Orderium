@@ -1,6 +1,6 @@
 export default {
   // App & Branding
-  appName: 'Orderium',
+  appName: 'Morocom',
   tagline: 'نقطة البيع',
 
   // Navigation

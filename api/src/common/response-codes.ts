@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  ORDERIUM — Unified API Response Code Registry
+ *  MOROCOM — Unified API Response Code Registry
  * ═══════════════════════════════════════════════════════════════
  *
  *  Code format:  PREFIX + HTTP_STATUS + "_" + SEQUENCE
@@ -162,6 +162,16 @@ export const ORD = {
   },
   /** GET /orders/export/xlsx            → binary (not wrapped)      | metadata: n/a */
   EXPORTED: { code: 'ORD200_15', status: 200, message: 'Orders Exported' },
+  /** POST /orders/:id/share             → data: { shareToken, expiresAt } | metadata: null */
+  SHARED: { code: 'ORD200_16', status: 200, message: 'Order Share Link Generated' },
+  /** GET /orders/shared/:token (Public) → data: Order               | metadata: null */
+  SHARED_DETAIL: { code: 'ORD200_17', status: 200, message: 'Shared Order Retrieved' },
+  /** DELETE /orders/:id/share           → data: null                | metadata: null */
+  SHARE_REVOKED: { code: 'ORD200_18', status: 200, message: 'Order Share Link Revoked' },
+  /** PATCH /orders/:id/status           → data: Order               | metadata: null */
+  STATUS_CHANGED: { code: 'ORD200_19', status: 200, message: 'Order Status Changed' },
+  /** PATCH /orders/:id/update-validated  → data: Order               | metadata: null */
+  UPDATE_VALIDATED: { code: 'ORD200_20', status: 200, message: 'Order Updated' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -196,6 +206,12 @@ export const INV = {
   },
   /** GET /invoices/export/xlsx          → binary (not wrapped)      | metadata: n/a */
   EXPORTED: { code: 'INV200_09', status: 200, message: 'Invoices Exported' },
+  /** POST /invoices/:id/share            → data: { shareToken, expiresAt } | metadata: null */
+  SHARED: { code: 'INV200_10', status: 200, message: 'Invoice Share Link Generated' },
+  /** GET /invoices/shared/:token (Public) → data: Invoice           | metadata: null */
+  SHARED_DETAIL: { code: 'INV200_11', status: 200, message: 'Shared Invoice Retrieved' },
+  /** DELETE /invoices/:id/share          → data: null               | metadata: null */
+  SHARE_REVOKED: { code: 'INV200_12', status: 200, message: 'Invoice Share Link Revoked' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -521,6 +537,26 @@ export const NOT = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  NOTIFICATION TEMPLATES  (NotificationTemplatesController)
+// ─────────────────────────────────────────────────────────────
+export const NTPL = {
+  /** GET /notification-templates                         → data: NotificationTemplate[]  | metadata: null */
+  LIST: { code: 'NTPL200_01', status: 200, message: 'Notification Templates Retrieved' },
+  /** GET /notification-templates/:key                   → data: NotificationTemplate     | metadata: null */
+  DETAIL: { code: 'NTPL200_02', status: 200, message: 'Notification Template Retrieved' },
+  /** PATCH /notification-templates/:key                 → data: NotificationTemplate     | metadata: null */
+  UPDATED: { code: 'NTPL200_03', status: 200, message: 'Notification Template Updated' },
+  /** PATCH /notification-templates/:key/toggle          → data: NotificationTemplate     | metadata: null */
+  TOGGLED: { code: 'NTPL200_04', status: 200, message: 'Notification Template Toggled' },
+  /** POST /notification-templates/:key/reset            → data: NotificationTemplate     | metadata: null */
+  RESET: { code: 'NTPL200_05', status: 200, message: 'Notification Template Reset to Default' },
+  /** POST /notification-templates/reset-all             → data: null                     | metadata: null */
+  RESET_ALL: { code: 'NTPL200_06', status: 200, message: 'All Notification Templates Reset to Defaults' },
+  /** POST /notifications/send-custom                    → data: null                     | metadata: null */
+  SENT: { code: 'NTPL200_07', status: 200, message: 'Custom Notification Sent' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  CONFIGURATIONS  (ConfigurationsController)
 // ─────────────────────────────────────────────────────────────
 export const CFG = {
@@ -634,6 +670,28 @@ export const PAY = {
   UPDATED: { code: 'PAY200_04', status: 200, message: 'Payment Updated' },
   /** DELETE /payments/:id                      → data: null          | metadata: null */
   DELETED: { code: 'PAY200_05', status: 200, message: 'Payment Deleted' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  ORDER PAYMENTS  (OrderPaymentsController)
+// ─────────────────────────────────────────────────────────────
+export const OPAY = {
+  /** POST /order-payments                          → data: OrderPayment   | metadata: null */
+  CREATED: { code: 'OPAY201_01', status: 201, message: 'Order Payment Created' },
+  /** GET /order-payments/order/:orderId             → data: OrderPayment[] | metadata: null */
+  LIST: { code: 'OPAY200_01', status: 200, message: 'Order Payments Retrieved' },
+  /** GET /order-payments/:id                        → data: OrderPayment   | metadata: null */
+  DETAIL: { code: 'OPAY200_02', status: 200, message: 'Order Payment Retrieved' },
+  /** GET /order-payments/order/:orderId/total       → data: number         | metadata: null */
+  TOTAL_PAID: { code: 'OPAY200_03', status: 200, message: 'Order Total Paid Retrieved' },
+  /** PATCH /order-payments/:id                      → data: OrderPayment   | metadata: null */
+  UPDATED: { code: 'OPAY200_04', status: 200, message: 'Order Payment Updated' },
+  /** DELETE /order-payments/:id                     → data: null           | metadata: null */
+  DELETED: { code: 'OPAY200_05', status: 200, message: 'Order Payment Deleted' },
+  /** GET /order-payments                              → data: OrderPayment[] | metadata: null */
+  LIST_ALL: { code: 'OPAY200_06', status: 200, message: 'All Order Payments Retrieved' },
+  /** GET /order-payments/caisse                       → data: CaisseOrder[] | metadata: null */
+  CAISSE: { code: 'OPAY200_07', status: 200, message: 'Caisse Summary Retrieved' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -873,6 +931,24 @@ export const ADJ = {
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
+//  SUPER ADMIN — MIGRATIONS  (MigrationsController)
+// ─────────────────────────────────────────────────────────────
+export const MGMT = {
+  /** GET /super-admin/migrations              → data: TenantMigrationStatus[]  | metadata: null */
+  ALL_STATUS: { code: 'MGMT200_01', status: 200, message: 'Migration status retrieved for all tenants' },
+  /** GET /super-admin/migrations/:tenantId   → data: TenantMigrationStatus    | metadata: null */
+  TENANT_STATUS: { code: 'MGMT200_02', status: 200, message: 'Tenant migration status retrieved' },
+  /** POST /super-admin/migrations/:tenantId/run → data: MigrationRunLog       | metadata: null */
+  RUN: { code: 'MGMT200_03', status: 200, message: 'Migrations run successfully' },
+  /** POST /super-admin/migrations/run-all    → data: RunAllResult[]            | metadata: null */
+  RUN_ALL: { code: 'MGMT200_04', status: 200, message: 'Migrations run for all tenants' },
+  /** POST /super-admin/migrations/:tenantId/revert → data: MigrationRunLog    | metadata: null */
+  REVERT: { code: 'MGMT200_05', status: 200, message: 'Migration reverted successfully' },
+  /** GET /super-admin/migrations/logs        → data: MigrationRunLog[]         | metadata: null */
+  LOGS: { code: 'MGMT200_06', status: 200, message: 'Migration logs retrieved' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
 //  DRIVE
 // ─────────────────────────────────────────────────────────────
 export const DRV = {
@@ -972,6 +1048,10 @@ export const DRV = {
     status: 200,
     message: 'Shared Nodes Retrieved',
   },
+  /** GET  /drive/browse?prefix=       → data: BrowseResult  | metadata: null */
+  BROWSE_LISTED: { code: 'DRV200_22', status: 200, message: 'Storage Browsed' },
+  /** GET  /drive/raw-url?key=         → data: { url: string } | metadata: null */
+  RAW_URL: { code: 'DRV200_23', status: 200, message: 'Raw presigned URL generated' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -986,6 +1066,14 @@ export const ONB = {
   ADMIN_CREATED: { code: 'ONB201_02', status: 201, message: 'Admin Account Created' },
   /** POST /onboarding/complete→ data: Configuration   | metadata: null */
   COMPLETED: { code: 'ONB200_02', status: 200, message: 'Onboarding Complete' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  BULK OPERATIONS
+// ─────────────────────────────────────────────────────────────
+export const BULK = {
+  EXPORT_QUEUED: { code: 'BULK201_01', status: 201, message: 'Export job queued successfully' },
+  JOB_STATUS: { code: 'BULK200_01', status: 200, message: 'Bulk job status retrieved successfully' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -1018,37 +1106,65 @@ export const ERR = {
 //  PERMISSIONS  (PermissionsController)
 // ─────────────────────────────────────────────────────────────
 export const PERM = {
-  LIST:    { code: 'PERM200_01', status: 200, message: 'Permissions Retrieved' },
-  DETAIL:  { code: 'PERM200_02', status: 200, message: 'Permission Retrieved' },
+  LIST: { code: 'PERM200_01', status: 200, message: 'Permissions Retrieved' },
+  DETAIL: { code: 'PERM200_02', status: 200, message: 'Permission Retrieved' },
   CREATED: { code: 'PERM201_01', status: 201, message: 'Permission Created' },
   UPDATED: { code: 'PERM200_03', status: 200, message: 'Permission Updated' },
   DELETED: { code: 'PERM200_04', status: 200, message: 'Permission Deleted' },
-  SEEDED:  { code: 'PERM200_05', status: 200, message: 'Permissions Seeded' },
+  SEEDED: { code: 'PERM200_05', status: 200, message: 'Permissions Seeded' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
 //  ROLES  (RolesController)
 // ─────────────────────────────────────────────────────────────
 export const ROLE = {
-  LIST:    { code: 'ROLE200_01', status: 200, message: 'Roles Retrieved' },
-  DETAIL:  { code: 'ROLE200_02', status: 200, message: 'Role Retrieved' },
+  LIST: { code: 'ROLE200_01', status: 200, message: 'Roles Retrieved' },
+  DETAIL: { code: 'ROLE200_02', status: 200, message: 'Role Retrieved' },
   CREATED: { code: 'ROLE201_01', status: 201, message: 'Role Created' },
   UPDATED: { code: 'ROLE200_03', status: 200, message: 'Role Updated' },
   DELETED: { code: 'ROLE200_04', status: 200, message: 'Role Deleted' },
-  SEEDED:  { code: 'ROLE200_05', status: 200, message: 'Default Role Seeded' },
+  SEEDED: { code: 'ROLE200_05', status: 200, message: 'Default Role Seeded' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
 //  USERS  (UsersController)
 // ─────────────────────────────────────────────────────────────
 export const USR = {
-  LIST:        { code: 'USR200_01', status: 200, message: 'Users Retrieved' },
-  DETAIL:      { code: 'USR200_02', status: 200, message: 'User Retrieved' },
-  CREATED:     { code: 'USR201_01', status: 201, message: 'User Created' },
-  UPDATED:     { code: 'USR200_03', status: 200, message: 'User Updated' },
-  DELETED:     { code: 'USR200_04', status: 200, message: 'User Deleted' },
-  ACTIVATED:   { code: 'USR200_05', status: 200, message: 'User Activated' },
+  LIST: { code: 'USR200_01', status: 200, message: 'Users Retrieved' },
+  DETAIL: { code: 'USR200_02', status: 200, message: 'User Retrieved' },
+  CREATED: { code: 'USR201_01', status: 201, message: 'User Created' },
+  UPDATED: { code: 'USR200_03', status: 200, message: 'User Updated' },
+  DELETED: { code: 'USR200_04', status: 200, message: 'User Deleted' },
+  ACTIVATED: { code: 'USR200_05', status: 200, message: 'User Activated' },
   DEACTIVATED: { code: 'USR200_06', status: 200, message: 'User Deactivated' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  PRINTERS  (PrintersController)
+// ─────────────────────────────────────────────────────────────
+export const PRI = {
+  /** GET /printers                    → data: Printer[]            | metadata: null */
+  LIST: { code: 'PRI200_01', status: 200, message: 'Printers Retrieved' },
+  /** GET /printers/:id                → data: Printer              | metadata: null */
+  DETAIL: { code: 'PRI200_02', status: 200, message: 'Printer Retrieved' },
+  /** POST /printers                   → data: Printer              | metadata: null */
+  CREATED: { code: 'PRI201_01', status: 201, message: 'Printer Created' },
+  /** PATCH /printers/:id              → data: Printer              | metadata: null */
+  UPDATED: { code: 'PRI200_03', status: 200, message: 'Printer Updated' },
+  /** DELETE /printers/:id             → data: null                 | metadata: null */
+  DELETED: { code: 'PRI200_04', status: 200, message: 'Printer Deleted' },
+  /** POST /printers/:id/ping          → data: null                 | metadata: null */
+  PINGED: { code: 'PRI200_05', status: 200, message: 'Printer Pinged' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  PRINT JOBS  (PrintJobsController)
+// ─────────────────────────────────────────────────────────────
+export const PJB = {
+  /** GET /print-jobs                  → data: PrintJob[]           | metadata: PaginationMeta */
+  LIST: { code: 'PJB200_01', status: 200, message: 'Print Jobs Retrieved' },
+  /** POST /print-jobs                 → data: PrintJob             | metadata: null */
+  CREATED: { code: 'PJB201_01', status: 201, message: 'Print Job Logged' },
 } as const satisfies Record<string, ResponseDef>;
 
 /**

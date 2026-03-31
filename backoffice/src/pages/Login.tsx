@@ -172,7 +172,7 @@ export default function Login() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
                 <img
                   src={orderiumLogo}
-                  alt="Orderium"
+                  alt="Morocom"
                   style={{ width: '4.25rem', height: '4.25rem', flexShrink: 0, filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.25))' }}
                 />
                 <div>

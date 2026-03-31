@@ -74,12 +74,11 @@ const Categories = lazy(() => import('./pages/Categories'));
 const Customers = lazy(() => import('./pages/Customers'));
 const CustomerCreate = lazy(() => import('./pages/CustomerCreate'));
 const CustomerEdit = lazy(() => import('./pages/CustomerEdit'));
-const CustomerDetail = lazy(() => import('./pages/CustomerDetail'));
 const Fournisseurs = lazy(() => import('./pages/Fournisseurs'));
 const FournisseurCreate = lazy(() => import('./pages/FournisseurCreate'));
 const FournisseurEdit = lazy(() => import('./pages/FournisseurEdit'));
-const FournisseurDetail = lazy(() => import('./pages/FournisseurDetail'));
 const QuotePreviewPage = lazy(() => import('./pages/QuotePreviewPage'));
+const SharedDocumentPage = lazy(() => import('./pages/SharedDocumentPage'));
 const DemandePrix = lazy(() => import('./pages/DemandePrix'));
 const BonAchat = lazy(() => import('./pages/BonAchat'));
 const PaiementsVente = lazy(() => import('./pages/PaiementsVente'));
@@ -92,6 +91,7 @@ const Sequences = lazy(() => import('./pages/configurations/Sequences'));
 const UnitsOfMeasure = lazy(() => import('./pages/configurations/UnitsOfMeasure'));
 const CompanySettings = lazy(() => import('./pages/configurations/CompanySettings'));
 const InventorySettings = lazy(() => import('./pages/configurations/InventorySettings'));
+const Printers = lazy(() => import('./pages/configurations/Printers'));
 const Warehouses = lazy(() => import('./pages/Warehouses'));
 const StockMovements = lazy(() => import('./pages/StockMovements'));
 const InventoryAdjustments = lazy(() => import('./pages/InventoryAdjustments'));
@@ -99,10 +99,15 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const POS = lazy(() => import('./pages/POS'));
 const Products = lazy(() => import('./pages/Products'));
 const Orders = lazy(() => import('./pages/Orders'));
+const Caisse = lazy(() => import('./pages/Caisse'));
+const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const DrivePage = lazy(() => import('./pages/drive/DrivePage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
 const RolesPage = lazy(() => import('./pages/RolesPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'));
 
 // Document pages
 const FactureVenteList = lazy(() => import('./pages/documents/FactureVenteList'));
@@ -163,6 +168,8 @@ function App() {
                       <Route path="/onboarding" element={<OnboardingPage />} />
                       <Route path="/login" element={<Login />} />
                       <Route path="/preview/quote/:token" element={<QuotePreviewPage />} />
+                      <Route path="/preview/invoice/:token" element={<SharedDocumentPage />} />
+                      <Route path="/preview/order/:token" element={<SharedDocumentPage />} />
                       <Route
                         path="/dashboard"
                         element={
@@ -184,6 +191,22 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <Orders />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/orders/:id"
+                        element={
+                          <ProtectedRoute>
+                            <OrderDetailPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/caisse"
+                        element={
+                          <ProtectedRoute>
+                            <Caisse />
                           </ProtectedRoute>
                         }
                       />
@@ -260,18 +283,10 @@ function App() {
                         }
                       />
                       <Route
-                        path="/customers/edit/:id"
-                        element={
-                          <ProtectedRoute>
-                            <CustomerEdit />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
                         path="/customers/:id"
                         element={
                           <ProtectedRoute>
-                            <CustomerDetail />
+                            <CustomerEdit />
                           </ProtectedRoute>
                         }
                       />
@@ -292,18 +307,10 @@ function App() {
                         }
                       />
                       <Route
-                        path="/fournisseurs/edit/:id"
-                        element={
-                          <ProtectedRoute>
-                            <FournisseurEdit />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
                         path="/fournisseurs/:id"
                         element={
                           <ProtectedRoute>
-                            <FournisseurDetail />
+                            <FournisseurEdit />
                           </ProtectedRoute>
                         }
                       />
@@ -542,6 +549,14 @@ function App() {
                         }
                       />
                       <Route
+                        path="/configurations/printers"
+                        element={
+                          <ProtectedRoute>
+                            <Printers />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="/warehouses"
                         element={
                           <ProtectedRoute>
@@ -573,6 +588,7 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
+
                       <Route
                         path="/drive"
                         element={
@@ -594,6 +610,30 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <RolesPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <ProfilePage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings"
+                        element={
+                          <ProtectedRoute>
+                            <SettingsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings/notifications"
+                        element={
+                          <ProtectedRoute>
+                            <NotificationSettingsPage />
                           </ProtectedRoute>
                         }
                       />

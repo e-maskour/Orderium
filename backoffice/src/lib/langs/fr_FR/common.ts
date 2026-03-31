@@ -1,12 +1,15 @@
 export default {
   // App & Branding
-  appName: 'Orderium',
+  appName: 'Morocom',
   adminBackoffice: 'Backoffice Admin',
 
   // Navigation
   dashboard: 'Tableau de bord',
   welcomeBack: 'Bon retour',
   welcome: 'Bienvenue',
+  goodMorning: 'Bonjour',
+  goodAfternoon: 'Bon après-midi',
+  goodEvening: 'Bonsoir',
 
   // Common Actions
   create: 'Créer',
@@ -22,6 +25,7 @@ export default {
 
   // Common Fields
   name: 'Nom',
+  code: 'Code',
   email: 'Email',
   phone: 'Téléphone',
   phoneNumber: 'Numéro de téléphone',
@@ -57,6 +61,7 @@ export default {
   previous: 'Précédent',
   next: 'Suivant',
   last: 'Dernier',
+  pageReportTemplate: '{first} - {last} sur {totalRecords}',
 
   // Loading & States
   loading: 'Chargement...',
@@ -114,6 +119,7 @@ export default {
   month: 'mois',
   year: 'année',
   custom: 'personnalisé',
+  vsPeriod: 'vs période précédente',
 
   // Language Toggle
   switchToFrench: 'Changer en français',
@@ -193,6 +199,7 @@ export default {
   conversionRate: 'Taux de conversion',
   recentActivity: 'Activité récente',
   latestUpdates: 'Dernières mises à jour',
+  live: 'En direct',
   viewAll: 'Voir tout',
   newOrderReceived: 'Nouvelle commande reçue',
   newCustomer: 'Nouveau client',
@@ -318,6 +325,7 @@ export default {
   failedToDeleteWarehouse: 'Échec de suppression de l\'entrepôt',
   deleteWarehouseTitle: 'Supprimer l\'entrepôt',
   confirmDeleteWarehouse: 'Êtes-vous sûr de vouloir supprimer cet entrepôt ? Cette action est irréversible.',
+  noWarehousesFound: 'Aucun entrepôt trouvé',
   errorCreatingDocument: 'Erreur lors de la création du document',
   errorUpdatingDocument: 'Erreur lors de la mise à jour du document',
   loadingQuote: 'Chargement du devis...',
@@ -335,7 +343,129 @@ export default {
   moreOptions: 'Plus d\'options',
   settings: 'Paramètres',
   // General
-  noItems: 'Aucun \u00e9l\u00e9ment',
-  completed: 'Termin\u00e9',
+  noItems: 'Aucun élément',
+  completed: 'Terminé',
   type: 'Type',
+
+  // Search & empty states
+  noResults: 'Aucun résultat trouvé',
+  resetFilters: 'Réinitialiser les filtres',
+
+  // Common fields (extended)
+  reference: 'Référence',
+  city: 'Ville',
+  zipCode: 'Code postal',
+  select: 'Sélectionner',
+  qty: 'Qté',
+  totalWithTax: 'Total TTC',
+
+  // Common actions (extended)
+  import: 'Importer',
+  export: 'Exporter',
+  print: 'Imprimer',
+  share: 'Partager',
+  copy: 'Copier',
+  copied: 'Copié !',
+  copyUrl: 'Copier l\'URL',
+  new: 'Nouveau',
+
+  // Upload
+  imageLoadError: 'Erreur de chargement de l\'image',
+  clickToChange: 'Cliquer pour changer l\'image',
+  clickOrDrag: 'Cliquer ou glisser-déposer',
+
+  // Share
+  shareLinkGenerated: 'Lien de partage généré',
+  shareLinkError: 'Erreur lors de la génération du lien',
+  linkRevoked: 'Lien révoqué avec succès',
+  linkRevocationError: 'Erreur lors de la révocation du lien',
+
+  // Paginator
+  paginatorReport: '{first}-{last} sur {totalRecords}',
+
+  // Navigation (mobile + sidebar)
+  navMore: 'Plus',
+  navExpand: 'Développer',
+  navCollapse: 'Réduire',
+  navTeam: 'Équipe',
+  navPos: 'Point de vente',
+
+  // Stock / inventory
+  negativeStock: 'Stock négatif',
+  zeroStock: 'Stock nul',
+  positiveStock: 'Stock positif',
+  inStock: 'En stock',
+
+  // Documents
+  shareLink: 'Lien de partage',
+  preview: 'Aperçu',
+  linkExpires: 'Ce lien expire le',
+  shareQuote: 'Partager le devis',
+  shareInvoice: 'Partager la facture',
+  shareBL: 'Partager le bon',
+  sendWhatsApp: 'Envoyer par WhatsApp',
+  revokeLink: 'Révoquer le lien',
+  backToPOS: 'Retour au point de vente',
+  orderSummary: 'Récapitulatif de commande',
+  lines: 'Lignes',
+
+  // ── User Profile Menu ──
+  myProfile: 'Mon Profil',
+  userSettings: 'Paramètres',
+  profileAndAccount: 'Profil & Compte',
+  editProfile: 'Modifier le profil',
+  profileUpdatedSuccess: 'Profil mis à jour avec succès',
+  profileUpdateError: 'Erreur lors de la mise à jour du profil',
+  administrator: 'Administrateur',
+  fullName: 'Nom complet',
+  currentPassword: 'Mot de passe actuel',
+  newPassword: 'Nouveau mot de passe',
+  confirmPassword: 'Confirmer le mot de passe',
+  passwordsDoNotMatch: 'Les mots de passe ne correspondent pas',
+  leaveBlankToKeep: 'Laisser vide pour ne pas changer',
+  accountInfo: 'Informations du compte',
+  securitySection: 'Sécurité',
+  changePassword: 'Changer le mot de passe',
+
+  // ── User Settings Modal ──
+  languageAndRegion: 'Langue & Région',
+  selectLanguage: 'Sélectionner la langue',
+  french: 'Français',
+  arabic: 'Arabe',
+  languageChanged: 'Langue modifiée avec succès',
+  notificationPreferences: 'Préférences de notifications',
+  notifAll: 'Toutes les notifications',
+  notifOrders: 'Nouvelles commandes',
+  notifPayments: 'Paiements & encaissements',
+  notifStock: 'Alertes de stock',
+  notifSystem: 'Notifications système',
+  notifDelivery: 'Mises à jour de livraison',
+  notifMarketing: 'Offres & actualités',
+  professionalSettings: 'Paramètres professionnels',
+  compactMode: 'Mode compact',
+  compactModeDesc: 'Réduire l\'espacement pour afficher plus de contenu',
+  autoSave: 'Sauvegarde automatique',
+  autoSaveDesc: 'Sauvegarder automatiquement les brouillons',
+  showTutorials: 'Afficher les tutoriels',
+  showTutorialsDesc: 'Afficher les guides et astuces interactifs',
+  defaultCurrency: 'Devise par défaut',
+  dateFormat: 'Format de date',
+  settingsSaved: 'Paramètres enregistrés',
+  install: 'Installer',
+
+  // Order payments
+  paidAmount: 'Montant payé',
+  remainingAmount: 'Reste à payer',
+  addPayment: 'Ajouter un paiement',
+  pay: 'Payer',
+  paymentType: 'Mode de paiement',
+  paymentDate: 'Date de paiement',
+  paymentHistory: 'Historique des paiements',
+  deletePayment: 'Supprimer le paiement',
+  optional: 'Optionnel',
+  notes: 'Notes',
+
+  // Dates
+  createdAt: 'Créé le',
+  updatedAt: 'Mis à jour le',
 };

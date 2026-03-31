@@ -3,8 +3,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { CreatePartnerDTO } from '../modules/partners/partners.interface';
 import { AdminLayout } from '../components/AdminLayout';
+import { PageHeader } from '../components/PageHeader';
 import { PartnerForm } from '../components/PartnerForm';
-import { Users, ArrowLeft } from 'lucide-react';
+import { Users, ArrowLeft, Save } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { toastCreated, toastError } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
@@ -37,34 +38,35 @@ export default function FournisseurCreate() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        {/* Page Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+        <PageHeader
+          icon={Users}
+          title={t('newSupplier')}
+          subtitle={t('addSupplier')}
+          backButton={
             <Button
-              text
-              rounded
+              icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => navigate('/fournisseurs')}
-              icon={<ArrowLeft style={{ width: '1rem', height: '1rem', color: '#475569' }} />}
-              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
+              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
             />
-            <div style={{ width: '2.75rem', height: '2.75rem', background: 'linear-gradient(135deg, #1e1e2d, #16213e)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(30,30,45,0.25)' }}>
-              <Users style={{ width: '1.25rem', height: '1.25rem', color: '#ffffff' }} />
+          }
+          actions={
+            <div style={{ display: 'flex', gap: '0.625rem' }}>
+              <Button type="button" label={t('cancel')} outlined onClick={() => navigate('/fournisseurs')} />
+              <Button
+                type="submit"
+                form="partner-form"
+                label={t('createPartner')}
+                icon={<Save style={{ width: '0.875rem', height: '0.875rem' }} />}
+                loading={createMutation.isPending}
+              />
             </div>
-            <div>
-              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>{t('newSupplier')}</h1>
-              <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem', fontWeight: 500 }}>{t('addSupplier')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
-          <PartnerForm
-            type="supplier"
-            onSubmit={handleSubmit}
-            onCancel={() => navigate('/fournisseurs')}
-            isSubmitting={createMutation.isPending}
-          />
-        </div>
+          }
+        />
+        <PartnerForm
+          type="supplier"
+          onSubmit={handleSubmit}
+          isSubmitting={createMutation.isPending}
+        />
       </div>
     </AdminLayout>
   );

@@ -1,4 +1,4 @@
-/* Safe Production Service Worker for Orderium Backoffice */
+/* Safe Production Service Worker for Morocom Backoffice */
 const CACHE_NAME = 'orderium-backoffice-v1.0.1';
 
 const STATIC_ASSETS = [

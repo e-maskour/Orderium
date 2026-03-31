@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Settings, Percent, DollarSign, Calendar, Hash, Ruler, ArrowLeft, Building2, Package } from 'lucide-react';
+import { Settings, Percent, DollarSign, Calendar, Hash, Ruler, ArrowLeft, Building2, Package, Printer } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
@@ -55,6 +55,13 @@ export default function Configurations() {
       icon: Package,
       path: '/configurations/inventory',
       color: '#235ae4',
+    },
+    {
+      name: t('printers'),
+      description: t('printersDescription'),
+      icon: Printer,
+      path: '/configurations/printers',
+      color: '#8b5cf6',
     },
   ];
 

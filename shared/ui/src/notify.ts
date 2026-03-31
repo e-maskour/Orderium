@@ -37,7 +37,7 @@ interface PromiseMessages<T = unknown> {
 }
 
 /**
- * Unified notification API for all Orderium apps.
+ * Unified notification API for all Morocom apps.
  */
 export const notify = {
     // ── Base toasts ──

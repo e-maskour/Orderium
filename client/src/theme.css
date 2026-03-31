@@ -19,7 +19,7 @@
     --primary-800: #064e3b;
     --primary-900: #022c22;
 
-    /* ── Orderium semantic palette ── */
+    /* ── Morocom semantic palette ── */
     --orderium-primary: #059669;
     --orderium-primary-light: #10b981;
     --orderium-primary-dark: #047857;
@@ -37,4 +37,25 @@
     /* ── Highlight (selected rows, multiselect, etc.) ── */
     --highlight-bg: var(--primary-50);
     --highlight-text-color: var(--primary-700);
+}
+
+/* ── Print styles ───────────────────────────────────────── */
+#morocom-receipt {
+    display: none;
+}
+
+@media print {
+    body>*:not(#morocom-receipt) {
+        display: none !important;
+    }
+
+    #morocom-receipt {
+        display: block !important;
+        width: 80mm;
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+}
 }

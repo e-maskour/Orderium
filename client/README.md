@@ -1,6 +1,6 @@
-# Orderium Client Portal
+# Morocom Client Portal
 
-Customer-facing portal for Orderium.
+Customer-facing portal for Morocom.
 
 ## Development
 

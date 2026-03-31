@@ -33,6 +33,7 @@ import { QuotesService } from '../quotes/quotes.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { PartnersService } from '../partners/partners.service';
 import { CategoriesService } from '../categories/categories.service';
+import { OrderNotificationService } from '../notifications/order-notification.service';
 
 @ApiTags('Portal')
 @Controller('portal')
@@ -47,6 +48,7 @@ export class PortalController {
     private readonly configurationsService: ConfigurationsService,
     private readonly partnersService: PartnersService,
     private readonly categoriesService: CategoriesService,
+    private readonly orderNotificationService: OrderNotificationService,
   ) { }
 
   @Public()
@@ -187,6 +189,11 @@ export class PortalController {
       isAdmin: false, // Never allow self-registration as admin
       status: 'pending',
     });
+
+    // Notify admins about new client registration (fire-and-forget)
+    this.orderNotificationService
+      .notifyClientRegistered(user.name, user.customerId ?? user.id)
+      .catch(() => undefined);
 
     return ApiRes(PRT.REGISTERED, {
       user: {

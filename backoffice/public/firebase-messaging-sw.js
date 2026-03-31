@@ -1,4 +1,4 @@
-/* Firebase Cloud Messaging Service Worker for Orderium Backoffice */
+/* Firebase Cloud Messaging Service Worker for Morocom Backoffice */
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:199921288199:web:63e59398df7cc0617096a2",
 };
 
-const getNotificationIconUrl = () => `${self.location.origin}/Eo_circle_deep-orange_white_letter-o.svg`;
+const getNotificationIconUrl = () => `${self.location.origin}/notification-icon.png`;
 
 // Initialize Firebase immediately to register event handlers during initial evaluation
 let messaging = null;
@@ -29,7 +29,7 @@ if (firebaseConfig.apiKey) {
 if (messaging) {
   messaging.onBackgroundMessage((payload) => {
     const notificationTitle =
-      payload.notification?.title || payload.data?.title || 'Orderium Backoffice';
+      payload.notification?.title || payload.data?.title || 'Morocom Backoffice';
     const notificationOptions = {
       body: payload.notification?.body || payload.data?.body || '',
       icon: getNotificationIconUrl(),

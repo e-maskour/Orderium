@@ -1,12 +1,15 @@
 export default {
   // App & Branding
-  appName: 'Orderium',
+  appName: 'Morocom',
   adminBackoffice: 'لوحة التحكم الإدارية',
 
   // Navigation
   dashboard: 'لوحة التحكم',
   welcomeBack: 'مرحباً بعودتك',
   welcome: 'مرحباً',
+  goodMorning: 'صباح الخير',
+  goodAfternoon: 'مساء الخير',
+  goodEvening: 'مساء النور',
 
   // Common Actions
   create: 'إنشاء',
@@ -22,6 +25,7 @@ export default {
 
   // Common Fields
   name: 'الاسم',
+  code: 'الرمز',
   email: 'البريد الإلكتروني',
   phone: 'الهاتف',
   phoneNumber: 'رقم الهاتف',
@@ -57,6 +61,7 @@ export default {
   previous: 'السابق',
   next: 'التالي',
   last: 'الأخيرة',
+  pageReportTemplate: '{first} - {last} من {totalRecords}',
 
   // Loading & States
   loading: 'جاري التحميل...',
@@ -114,6 +119,7 @@ export default {
   month: 'شهر',
   year: 'سنة',
   custom: 'مخصص',
+  vsPeriod: 'مقارنةً بالفترة السابقة',
 
   // Language Toggle
   switchToFrench: 'Changer en français',
@@ -254,6 +260,7 @@ export default {
   failedToDeleteWarehouse: 'فشل في حذف المستودع',
   deleteWarehouseTitle: 'حذف المستودع',
   confirmDeleteWarehouse: 'هل أنت متأكد من حذف هذا المستودع؟ لا يمكن التراجع عن هذا الإجراء.',
+  noWarehousesFound: 'لا توجد مستودعات',
   errorCreatingDocument: 'خطأ أثناء إنشاء المستند',
   errorUpdatingDocument: 'خطأ أثناء تحديث المستند',
   loadingQuote: 'جاري تحميل العرض...',
@@ -289,6 +296,7 @@ export default {
   conversionRate: 'معدل التحويل',
   recentActivity: 'النشاط الأخير',
   latestUpdates: 'آخر التحديثات',
+  live: 'مباشر',
   viewAll: 'عرض الكل',
   newOrderReceived: 'تم استلام طلب جديد',
   newCustomer: 'عميل جديد',
@@ -341,4 +349,126 @@ export default {
   noItems: 'لا توجد عناصر',
   completed: 'مكتمل',
   type: 'النوع',
+
+  // Search & empty states
+  noResults: 'لا توجد نتائج',
+  resetFilters: 'إعادة تعيين الفلاتر',
+
+  // Common fields (extended)
+  reference: 'المرجع',
+  city: 'المدينة',
+  zipCode: 'الرمز البريدي',
+  select: 'اختر',
+  qty: 'الكمية',
+  totalWithTax: 'المجموع شامل الضريبة',
+
+  // Common actions (extended)
+  import: 'استيراد',
+  export: 'تصدير',
+  print: 'طباعة',
+  share: 'مشاركة',
+  copy: 'نسخ',
+  copied: 'تم النسخ !',
+  copyUrl: 'نسخ الرابط',
+  new: 'جديد',
+
+  // Upload
+  imageLoadError: 'خطأ في تحميل الصورة',
+  clickToChange: 'انقر لتغيير الصورة',
+  clickOrDrag: 'انقر أو اسحب وأفلت',
+
+  // Share
+  shareLinkGenerated: 'تم إنشاء رابط المشاركة',
+  shareLinkError: 'خطأ أثناء إنشاء رابط المشاركة',
+  linkRevoked: 'تم إلغاء الرابط بنجاح',
+  linkRevocationError: 'خطأ أثناء إلغاء الرابط',
+
+  // Paginator
+  paginatorReport: '{first}-{last} من {totalRecords}',
+
+  // Navigation (mobile + sidebar)
+  navMore: 'المزيد',
+  navExpand: 'توسيع',
+  navCollapse: 'طي',
+  navTeam: 'الفريق',
+  navPos: 'نقطة البيع',
+
+  // Stock / inventory
+  negativeStock: 'مخزون سالب',
+  zeroStock: 'مخزون صفري',
+  positiveStock: 'مخزون موجب',
+  inStock: 'في المخزون',
+
+  // Documents
+  shareLink: 'رابط المشاركة',
+  preview: 'معاينة',
+  linkExpires: 'ينتهي صلاحية هذا الرابط بتاريخ',
+  shareQuote: 'مشاركة عرض الأسعار',
+  shareInvoice: 'مشاركة الفاتورة',
+  shareBL: 'مشاركة وصل التسليم',
+  sendWhatsApp: 'إرسال عبر واتساب',
+  revokeLink: 'إلغاء الرابط',
+  backToPOS: 'العودة إلى نقطة البيع',
+  orderSummary: 'ملخص الطلب',
+  lines: 'البنود',
+
+  // ── User Profile Menu ──
+  myProfile: 'ملفي الشخصي',
+  userSettings: 'الإعدادات',
+  profileAndAccount: 'الملف الشخصي والحساب',
+  editProfile: 'تعديل الملف الشخصي',
+  profileUpdatedSuccess: 'تم تحديث الملف الشخصي بنجاح',
+  profileUpdateError: 'خطأ في تحديث الملف الشخصي',
+  administrator: 'مسؤول النظام',
+  fullName: 'الاسم الكامل',
+  currentPassword: 'كلمة المرور الحالية',
+  newPassword: 'كلمة المرور الجديدة',
+  confirmPassword: 'تأكيد كلمة المرور',
+  passwordsDoNotMatch: 'كلمتا المرور غير متطابقتين',
+  leaveBlankToKeep: 'اتركه فارغاً لعدم التغيير',
+  accountInfo: 'معلومات الحساب',
+  securitySection: 'الأمان',
+  changePassword: 'تغيير كلمة المرور',
+
+  // ── User Settings Modal ──
+  languageAndRegion: 'اللغة والمنطقة',
+  selectLanguage: 'اختيار اللغة',
+  french: 'الفرنسية',
+  arabic: 'العربية',
+  languageChanged: 'تم تغيير اللغة بنجاح',
+  notificationPreferences: 'تفضيلات الإشعارات',
+  notifAll: 'جميع الإشعارات',
+  notifOrders: 'الطلبات الجديدة',
+  notifPayments: 'المدفوعات والتحصيلات',
+  notifStock: 'تنبيهات المخزون',
+  notifSystem: 'إشعارات النظام',
+  notifDelivery: 'تحديثات التوصيل',
+  notifMarketing: 'العروض والأخبار',
+  professionalSettings: 'الإعدادات المهنية',
+  compactMode: 'الوضع المدمج',
+  compactModeDesc: 'تقليل المسافات لعرض محتوى أكثر',
+  autoSave: 'الحفظ التلقائي',
+  autoSaveDesc: 'حفظ المسودات تلقائياً',
+  showTutorials: 'عرض الأدلة التعليمية',
+  showTutorialsDesc: 'عرض الأدلة التفاعلية والنصائح',
+  defaultCurrency: 'العملة الافتراضية',
+  dateFormat: 'تنسيق التاريخ',
+  settingsSaved: 'تم حفظ الإعدادات',
+  install: 'تثبيت',
+
+  // Order payments
+  paidAmount: 'المبلغ المدفوع',
+  remainingAmount: 'المبلغ المتبقي',
+  addPayment: 'إضافة دفعة',
+  pay: 'دفع',
+  paymentType: 'طريقة الدفع',
+  paymentDate: 'تاريخ الدفع',
+  paymentHistory: 'سجل المدفوعات',
+  deletePayment: 'حذف الدفعة',
+  optional: 'اختياري',
+  notes: 'ملاحظات',
+
+  // Dates
+  createdAt: 'تاريخ الإنشاء',
+  updatedAt: 'تاريخ التحديث',
 };

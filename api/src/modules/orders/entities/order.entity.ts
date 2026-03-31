@@ -13,11 +13,14 @@ import {
   BaseStandardItem,
 } from '../../../common/entities/base-document.entity';
 import { Partner } from '../../partners/entities/partner.entity';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer';
 
 export enum OrderStatus {
   DRAFT = 'draft', // Brouillon
   VALIDATED = 'validated', // Validée
   IN_PROGRESS = 'in_progress', // En cours
+  CONFIRMED = 'confirmed', // Confirmé
+  PICKED_UP = 'picked_up', // Récupéré
   DELIVERED = 'delivered', // Livrée
   INVOICED = 'invoiced', // Facturée
   CANCELLED = 'cancelled', // Annulée
@@ -70,6 +73,10 @@ export class Order extends BaseDocument {
 
   @Column({ type: 'date', nullable: true })
   dueDate: Date | null;
+
+  /** Payment due date — triggers overdue alerts when remainingAmount > 0 past this date */
+  @Column({ type: 'date', nullable: true, name: 'amount_due_date' })
+  amountDueDate: Date | null;
 
   @Column({ type: 'date', nullable: true })
   validationDate: Date | null;
@@ -129,6 +136,30 @@ export class Order extends BaseDocument {
   @Column({ type: 'timestamp', nullable: true })
   canceledAt: Date | null;
 
+  @Column({ type: 'varchar', length: 100, nullable: true, unique: true })
+  shareToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  shareTokenExpiry: Date | null;
+
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
+  paidAmount: number = 0;
+
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
+  remainingAmount: number = 0;
+
   // notes, dateCreated, dateUpdated, customer relationship inherited from BaseDocument
 
   @OneToMany(() => OrderItem, (item) => item.order)
@@ -140,11 +171,13 @@ export class Order extends BaseDocument {
     // Ensure status is consistent with isValidated field
     // Only enforce rules for non-terminal statuses
     if (!this.isValidated) {
-      // If not validated, status must be DRAFT (unless it's a terminal status)
+      // If not validated, status must be DRAFT (unless it's a terminal or workflow status)
       if (
         this.status !== OrderStatus.INVOICED &&
         this.status !== OrderStatus.CANCELLED &&
-        this.status !== OrderStatus.DELIVERED
+        this.status !== OrderStatus.DELIVERED &&
+        this.status !== OrderStatus.CONFIRMED &&
+        this.status !== OrderStatus.PICKED_UP
       ) {
         this.status = OrderStatus.DRAFT;
       }

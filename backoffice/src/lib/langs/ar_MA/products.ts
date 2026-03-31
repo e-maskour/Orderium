@@ -33,7 +33,7 @@ export default {
   noProductsFound: 'لا توجد منتجات',
   noResultsMessage: 'جرب كلمة بحث أخرى',
   noProductsInCategory: 'لا توجد منتجات متاحة',
-  
+
   // Categories
   categories: 'الفئات',
   category: 'فئة',
@@ -52,18 +52,18 @@ export default {
   categoryCreated: 'تم إنشاء الفئة بنجاح',
   categoryUpdated: 'تم تحديث الفئة بنجاح',
   categoryDeleted: 'تم حذف الفئة بنجاح',
-  deleteCategoryConfirmation: 'هل أنت متأكد من حذف الفئة',  
+  deleteCategoryConfirmation: 'هل أنت متأكد من حذف الفئة',
   // Product Details
   noCode: 'لا يوجد رمز',
   saving: 'جاري الحفظ...',
-  saveChanges: 'حفظ التغييرات',
+  saveChanges: 'حفظ',
   creating: 'جاري الإنشاء...',
   createProduct: 'إنشاء منتج',
   newUniqueCodeGenerated: 'تم إنشاء رمز فريد جديد',
   failedToGenerateUniqueCode: 'فشل توليد رمز فريد',
   imageUrlSavedSuccessfully: 'تم حفظ عنوان URL للصورة بنجاح',
   failedToSaveImageUrl: 'فشل في حفظ عنوان URL للصورة',
-  
+
   // Product Create/Edit Placeholders
   createNewProduct: 'إنشاء منتج جديد',
   addNewProductToInventory: 'إضافة منتج جديد إلى مخزونك',
@@ -76,7 +76,7 @@ export default {
   mainWarehouse: 'المستودع الرئيسي',
   cityName: 'الدار البيضاء',
   unit: 'UNIT',
-  
+
   // Product Detail Additions
   add: 'إضافة',
   remove: 'حذف',
@@ -87,7 +87,7 @@ export default {
   transferring: 'جاري النقل...',
   transfer: 'نقل',
   confirmDeleteProduct: 'هل أنت متأكد من أنك تريد حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.',
-  
+
   // Product Create/Edit Additional Keys
   backToProducts: 'العودة إلى المنتجات',
   basicInformation: 'المعلومات الأساسية',
@@ -117,7 +117,7 @@ export default {
   enabledDescription: 'المنتج نشط ومتاح للبيع',
   allowPriceChangeDescription: 'يمكن للمستخدمين تعديل السعر عند إنشاء الطلب',
   per: 'لكل',
-  
+
   // Product Detail Additional Keys
   eanBarcodeePlaceholder: 'الرمز الشريطي EAN-13',
   imageUrl: 'رابط الصورة',
@@ -145,4 +145,22 @@ export default {
   unitLabel: 'الوحدة',
   numericPlaceholder: '0.00',
   taxPlaceholder: '20',
+
+  // Stock filter labels
+  negativeStock: 'مخزون سالب',
+  zeroStock: 'مخزون صفري',
+  positiveStock: 'مخزون موجب',
+  inStock: 'في المخزون',
+  downloadTemplate: 'تحميل النموذج',
+  catalogue: 'كتالوج المنتجات',
+  notFound: 'المنتج غير موجود',
+
+  // Product Detail / Create panel labels
+  tabInformation: 'المعلومات',
+  panelBasicSubtitle: 'الاسم والباركود والوصف',
+  panelPriceSubtitle: 'السعر المعروض للعملاء',
+  panelCostSubtitle: 'تكلفة الشراء',
+  settingsSection: 'الإعدادات',
+  behaviorOptions: 'خيارات سلوك المنتج',
+  warehouseAndCategories: 'المستودع والتصنيفات',
 };

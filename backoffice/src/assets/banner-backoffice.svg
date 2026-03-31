@@ -19,15 +19,18 @@
     <rect x="0" y="0" width="60" height="60" rx="14" ry="14" fill="url(#boIconGrad)"/>
     <!-- Inner glow ring -->
     <rect x="1.5" y="1.5" width="57" height="57" rx="13" ry="13" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
-    <!-- Letter O ring (scaled from 200px to 60px, ratio 0.3) -->
-    <path d="M30 15.6c-7.95 0-14.4 6.45-14.4 14.4s6.45 14.4 14.4 14.4 14.4-6.45 14.4-14.4-6.45-14.4-14.4-14.4zm0 23.4c-4.98 0-9-4.02-9-9s4.02-9 9-9 9 4.02 9 9-4.02 9-9 9z" fill="url(#boRingGrad)"/>
-    <!-- Accent dot -->
-    <circle cx="45.6" cy="15.6" r="2.4" fill="#ffffff" opacity="0.9"/>
-    <circle cx="45.6" cy="15.6" r="1.2" fill="#235ae4"/>
+    <!-- Bold M (scaled 0.3 from 200px viewBox) -->
+    <path d="M 20.1,45 L 20.1,26.4 L 30,35.4 L 39.9,26.4 L 39.9,45"
+          fill="none" stroke="url(#boRingGrad)" stroke-width="4.8"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Moroccan 5-pointed star -->
+    <circle cx="30" cy="16.5" r="4.5" fill="rgba(255,255,255,0.13)"/>
+    <polygon points="30,12.6 30.93,15.21 33.72,15.3 31.5,16.98 32.28,19.65 30,18.09 27.72,19.65 28.5,16.98 26.28,15.3 29.07,15.21"
+             fill="#ffffff" opacity="0.96"/>
   </g>
 
-  <!-- Wordmark: "Orderium" -->
-  <text x="84" y="43" font-family="'Plus Jakarta Sans','Inter','Segoe UI',system-ui,sans-serif" font-size="26" font-weight="800" fill="#0f172a" letter-spacing="-0.5">Orderium</text>
+  <!-- Wordmark: "Morocom" -->
+  <text x="84" y="43" font-family="'Plus Jakarta Sans','Inter','Segoe UI',system-ui,sans-serif" font-size="26" font-weight="800" fill="#0f172a" letter-spacing="-0.5">Morocom</text>
   <!-- Subtitle: "Enterprise" -->
   <text x="85" y="60" font-family="'Plus Jakarta Sans','Inter','Segoe UI',system-ui,sans-serif" font-size="10" font-weight="600" fill="#235ae4" letter-spacing="2" text-transform="uppercase">ENTERPRISE</text>
 </svg>

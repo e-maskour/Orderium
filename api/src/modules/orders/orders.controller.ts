@@ -22,6 +22,7 @@ import { FilterOrdersDto } from './dto/filter-orders.dto';
 import { ApiRes } from '../../common/api-response';
 import { ORD } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Orders')
 @PortalRoute()
@@ -84,6 +85,8 @@ export class OrdersController {
       pageSize,
       filterDto.supplierId,
       directionValue,
+      filterDto.status,
+      filterDto.search,
     );
 
     const offset = (pageNum - 1) * pageSize;
@@ -94,6 +97,7 @@ export class OrdersController {
       hasNext: offset + pageSize < result.totalCount,
       hasPrev: offset > 0,
       statusCounts: result.statusCounts,
+      orderStatusCounts: result.orderStatusCounts,
     });
   }
 
@@ -171,9 +175,10 @@ export class OrdersController {
 
     return ApiRes(
       ORD.SEARCH_NUMBERS,
-      orderNumbers.map((num: string) => ({
-        value: num,
-        label: num,
+      orderNumbers.map((o) => ({
+        value: o.id,
+        label: o.documentNumber,
+        customerId: o.customerId,
       })),
     );
   }
@@ -293,6 +298,18 @@ export class OrdersController {
     return ApiRes(ORD.UPDATED, order);
   }
 
+  @Patch(':id/update-validated')
+  @ApiOperation({ summary: 'Update an order even if validated — devalidates, updates and re-validates in one transaction' })
+  @ApiResponse({ status: 200, description: 'Order updated successfully' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async updateValidated(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateOrderDto: Partial<CreateOrderDto>,
+  ) {
+    const order = await this.ordersService.updateValidatedOrder(id, updateOrderDto);
+    return ApiRes(ORD.UPDATE_VALIDATED, order);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an order' })
   @ApiResponse({ status: 200, description: 'Order deleted successfully' })
@@ -343,6 +360,19 @@ export class OrdersController {
     return ApiRes(ORD.CANCELLED, order);
   }
 
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Change order status via workflow (confirmed → picked_up | delivered | cancelled)' })
+  @ApiResponse({ status: 200, description: 'Order status changed successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid status transition' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async changeStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { status: string },
+  ) {
+    const order = await this.ordersService.changeOrderStatus(id, body.status);
+    return ApiRes(ORD.STATUS_CHANGED, order);
+  }
+
   @Put(':id/mark-invoiced')
   @ApiOperation({ summary: 'Mark an order as invoiced after conversion' })
   @ApiResponse({
@@ -356,6 +386,31 @@ export class OrdersController {
   ) {
     const order = await this.ordersService.markAsInvoiced(id, body.invoiceId);
     return ApiRes(ORD.MARKED_INVOICED, order);
+  }
+
+  @Post(':id/share')
+  @ApiOperation({ summary: 'Generate a shareable public link for an order' })
+  @ApiResponse({ status: 200, description: 'Share link generated' })
+  async generateShareLink(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.ordersService.generateShareLink(id);
+    return ApiRes(ORD.SHARED, result);
+  }
+
+  @Public()
+  @Get('shared/:token')
+  @ApiOperation({ summary: 'Get order by share token (public, no auth required)' })
+  @ApiResponse({ status: 200, description: 'Order retrieved' })
+  async getByShareToken(@Param('token') token: string) {
+    const order = await this.ordersService.getByShareToken(token);
+    return ApiRes(ORD.SHARED_DETAIL, order);
+  }
+
+  @Delete(':id/share')
+  @ApiOperation({ summary: 'Revoke share link for an order' })
+  @ApiResponse({ status: 200, description: 'Share link revoked' })
+  async revokeShareLink(@Param('id', ParseIntPipe) id: number) {
+    await this.ordersService.revokeShareLink(id);
+    return ApiRes(ORD.SHARE_REVOKED, null);
   }
 
   @Get('export/xlsx')

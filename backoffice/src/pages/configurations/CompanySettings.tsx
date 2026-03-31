@@ -136,8 +136,8 @@ export default function CompanySettings() {
                             <Building2 style={{ width: '1rem', height: '1rem', color: '#7c3aed' }} />
                         </div>
                         <div>
-                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>Identité de l'entreprise</p>
-                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>Nom officiel et secteur d'activité</p>
+                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>{t('companyIdentitySection' as any)}</p>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>{t('officialNameSubtitle' as any)}</p>
                         </div>
                     </div>
                     <div className="cs-card-body">
@@ -147,7 +147,7 @@ export default function CompanySettings() {
                             </div>
                             <div className="cs-identity-fields">
                                 <div>
-                                    <label className="cs-label" htmlFor="cs-cname">Nom de l'entreprise <span className="cs-req">*</span></label>
+                                    <label className="cs-label" htmlFor="cs-cname">{t('companyName' as any)} <span className="cs-req">*</span></label>
                                     <InputText
                                         id="cs-cname"
                                         type="text"
@@ -158,16 +158,16 @@ export default function CompanySettings() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="cs-label" htmlFor="cs-professions">Professions / Activités</label>
+                                    <label className="cs-label" htmlFor="cs-professions">{t('professions' as any)}</label>
                                     <InputText
                                         id="cs-professions"
                                         type="text"
                                         value={formData.professions || ''}
                                         onChange={(e) => handleChange('professions', e.target.value)}
-                                        placeholder="Ex: Distribution, Vente en gros..."
+                                        placeholder={t('professionsPlaceholder' as any)}
                                         style={{ width: '100%' }}
                                     />
-                                    <p className="cs-hint">Apparaît sur vos documents commerciaux</p>
+                                    <p className="cs-hint">{t('appearsOnDocs' as any)}</p>
                                 </div>
                             </div>
                         </div>
@@ -181,14 +181,14 @@ export default function CompanySettings() {
                             <MapPin style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />
                         </div>
                         <div>
-                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>Contact & Localisation</p>
-                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>Adresse postale et coordonnées</p>
+                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>{t('contactSection' as any)}</p>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>{t('postalAddressSubtitle' as any)}</p>
                         </div>
                     </div>
                     <div className="cs-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                         <div className="cs-grid">
                             <div className="cs-col-2">
-                                <label className="cs-label" htmlFor="cs-address">Adresse</label>
+                                <label className="cs-label" htmlFor="cs-address">{t('address')}</label>
                                 <InputText
                                     id="cs-address"
                                     type="text"
@@ -198,7 +198,7 @@ export default function CompanySettings() {
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-zip">Code postal</label>
+                                <label className="cs-label" htmlFor="cs-zip">{t('zipCode')}</label>
                                 <InputText
                                     id="cs-zip"
                                     type="text"
@@ -208,19 +208,19 @@ export default function CompanySettings() {
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-city">Ville</label>
+                                <label className="cs-label" htmlFor="cs-city">{t('city')}</label>
                                 <Dropdown
                                     id="cs-city"
                                     value={formData.city || ''}
                                     onChange={(e) => handleChange('city', e.value)}
-                                    options={[{ label: 'Sélectionner une ville', value: '' }, ...MOROCCAN_CITIES.map(city => ({ label: city, value: city }))]}
+                                    options={[{ label: t('selectCity' as any), value: '' }, ...MOROCCAN_CITIES.map(city => ({ label: city, value: city }))]}
                                     optionLabel="label"
                                     optionValue="value"
                                     style={{ width: '100%' }}
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-state">État / Province</label>
+                                <label className="cs-label" htmlFor="cs-state">{t('state' as any)}</label>
                                 <InputText
                                     id="cs-state"
                                     type="text"
@@ -230,7 +230,7 @@ export default function CompanySettings() {
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-country">Pays</label>
+                                <label className="cs-label" htmlFor="cs-country">{t('country' as any)}</label>
                                 <InputText
                                     id="cs-country"
                                     type="text"
@@ -247,7 +247,7 @@ export default function CompanySettings() {
                             <div>
                                 <label className="cs-label" htmlFor="cs-phone">
                                     <Phone style={{ display: 'inline', width: '0.75rem', height: '0.75rem', marginRight: '0.25rem', verticalAlign: 'middle' }} />
-                                    Téléphone
+                                    {t('phone')}
                                 </label>
                                 <InputText
                                     id="cs-phone"
@@ -258,7 +258,7 @@ export default function CompanySettings() {
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-fax">Fax</label>
+                                <label className="cs-label" htmlFor="cs-fax">{t('fax' as any)}</label>
                                 <InputText
                                     id="cs-fax"
                                     type="tel"
@@ -270,7 +270,7 @@ export default function CompanySettings() {
                             <div>
                                 <label className="cs-label" htmlFor="cs-email">
                                     <Mail style={{ display: 'inline', width: '0.75rem', height: '0.75rem', marginRight: '0.25rem', verticalAlign: 'middle' }} />
-                                    Email
+                                    {t('email')}
                                 </label>
                                 <InputText
                                     id="cs-email"
@@ -283,7 +283,7 @@ export default function CompanySettings() {
                             <div>
                                 <label className="cs-label" htmlFor="cs-website">
                                     <Globe style={{ display: 'inline', width: '0.75rem', height: '0.75rem', marginRight: '0.25rem', verticalAlign: 'middle' }} />
-                                    Site web
+                                    {t('website' as any)}
                                 </label>
                                 <InputText
                                     id="cs-website"
@@ -305,14 +305,14 @@ export default function CompanySettings() {
                             <FileText style={{ width: '1rem', height: '1rem', color: '#16a34a' }} />
                         </div>
                         <div>
-                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>Informations légales & administratives</p>
-                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>Identifiants fiscaux et structure juridique</p>
+                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827', lineHeight: 1.4 }}>{t('legalSection' as any)}</p>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>{t('fiscalIdentifiers' as any)}</p>
                         </div>
                     </div>
                     <div className="cs-card-body">
                         <div className="cs-grid">
                             <div>
-                                <label className="cs-label" htmlFor="cs-vat">Numéro de TVA</label>
+                                <label className="cs-label" htmlFor="cs-vat">{t('vatNumber' as any)}</label>
                                 <InputText
                                     id="cs-vat"
                                     type="text"
@@ -323,7 +323,7 @@ export default function CompanySettings() {
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-ice">ICE — Identifiant Commun de l'Entreprise</label>
+                                <label className="cs-label" htmlFor="cs-ice">{t('ice' as any)}</label>
                                 <InputText
                                     id="cs-ice"
                                     type="text"
@@ -333,10 +333,10 @@ export default function CompanySettings() {
                                     maxLength={15}
                                     style={{ width: '100%' }}
                                 />
-                                <p className="cs-hint">15 chiffres obligatoires</p>
+                                <p className="cs-hint">{t('iceHint' as any)}</p>
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-taxid">IF — Identifiant Fiscal</label>
+                                <label className="cs-label" htmlFor="cs-taxid">{t('taxId' as any)}</label>
                                 <InputText
                                     id="cs-taxid"
                                     type="text"
@@ -346,7 +346,7 @@ export default function CompanySettings() {
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-rc">RC — Registre de Commerce</label>
+                                <label className="cs-label" htmlFor="cs-rc">{t('registrationNumber' as any)}</label>
                                 <InputText
                                     id="cs-rc"
                                     type="text"
@@ -357,19 +357,19 @@ export default function CompanySettings() {
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-legal">Forme juridique</label>
+                                <label className="cs-label" htmlFor="cs-legal">{t('legalStructure' as any)}</label>
                                 <Dropdown
                                     id="cs-legal"
                                     value={formData.legalStructure || ''}
                                     onChange={(e) => handleChange('legalStructure', e.value)}
-                                    options={[{ label: 'Sélectionner', value: '' }, ...LEGAL_STRUCTURES.map(structure => ({ label: structure, value: structure }))]}
+                                    options={[{ label: t('select'), value: '' }, ...LEGAL_STRUCTURES.map(structure => ({ label: structure, value: structure }))]}
                                     optionLabel="label"
                                     optionValue="value"
                                     style={{ width: '100%' }}
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-capital">Capital (MAD)</label>
+                                <label className="cs-label" htmlFor="cs-capital">{t('capital' as any)}</label>
                                 <InputText
                                     id="cs-capital"
                                     type="number"
@@ -379,7 +379,7 @@ export default function CompanySettings() {
                                 />
                             </div>
                             <div>
-                                <label className="cs-label" htmlFor="cs-fiscal">Début de l'exercice fiscal</label>
+                                <label className="cs-label" htmlFor="cs-fiscal">{t('fiscalYearStart' as any)}</label>
                                 <Dropdown
                                     id="cs-fiscal"
                                     value={formData.fiscalYearStartMonth || 1}

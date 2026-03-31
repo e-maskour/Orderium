@@ -1,287 +1,467 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import {
-  PushNotificationService,
-  PushNotificationPayload,
-} from './push-notification.service';
-import { NotificationsService } from './notifications.service';
 import { Order, DeliveryStatus } from '../orders/entities/order.entity';
-import { OrderDelivery } from '../delivery/entities/delivery.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { NotificationTemplateService } from './notification-template.service';
+import { NotificationsQueueService } from './notifications.queue.service';
+import { Product } from '../products/entities/product.entity';
+import { Invoice } from '../invoices/entities/invoice.entity';
+import { DeliveryPerson } from '../delivery/entities/delivery.entity';
 
 /**
- * Service responsible for sending notifications based on order-related events.
- * Implements the three main notification rules:
- * 1. Client creates order -> Admin receives notification
- * 2. Admin assigns order -> Customer and Delivery person receive notifications
- * 3. Delivery status changes -> Customer receives notification
+ * Central notification trigger service.
+ * All business events that require notifications are handled here.
+ * Each method resolves the correct template, interpolates variables,
+ * and dispatches via NotificationTemplateService.send().
  */
 @Injectable()
 export class OrderNotificationService {
   private readonly logger = new Logger(OrderNotificationService.name);
 
-  // Human-readable delivery status labels
-  private readonly deliveryStatusLabels: Record<DeliveryStatus, string> = {
-    [DeliveryStatus.PENDING]: 'En attente',
-    [DeliveryStatus.ASSIGNED]: 'Assignée',
-    [DeliveryStatus.CONFIRMED]: 'Confirmée',
-    [DeliveryStatus.PICKED_UP]: 'Récupérée',
-    [DeliveryStatus.TO_DELIVERY]: 'En route',
-    [DeliveryStatus.IN_DELIVERY]: 'En livraison',
-    [DeliveryStatus.DELIVERED]: 'Livrée',
-    [DeliveryStatus.CANCELED]: 'Annulée',
-  };
-
   constructor(
     private readonly tenantConnService: TenantConnectionService,
-    private readonly pushNotificationService: PushNotificationService,
-    private readonly notificationsService: NotificationsService,
+    @Inject(forwardRef(() => NotificationTemplateService))
+    private readonly templateService: NotificationTemplateService,
+    private readonly notificationsQueueService: NotificationsQueueService,
   ) { }
 
   private get orderRepository(): Repository<Order> {
     return this.tenantConnService.getRepository(Order);
   }
 
-  private get orderDeliveryRepository(): Repository<OrderDelivery> {
-    return this.tenantConnService.getRepository(OrderDelivery);
+  private get productRepository(): Repository<Product> {
+    return this.tenantConnService.getRepository(Product);
   }
 
-  /**
-   * RULE 1: When a client creates an order, notify all admins
-   */
+  private get invoiceRepository(): Repository<Invoice> {
+    return this.tenantConnService.getRepository(Invoice);
+  }
+
+  private get deliveryPersonRepository(): Repository<DeliveryPerson> {
+    return this.tenantConnService.getRepository(DeliveryPerson);
+  }
+
+  // ─── Client → Backoffice ─────────────────────────────────────────────────────
+
+  /** Client registers a new account → notify admins */
+  async notifyClientRegistered(
+    clientName: string,
+    clientId: number,
+  ): Promise<void> {
+    await this.fire('CLIENT_REGISTERED', { clientName }, [{ type: 'admins' }], {
+      portalUserId: clientId,
+    });
+  }
+
+  /** Client places a new order → notify admins */
   async notifyNewOrderFromClient(order: Order): Promise<void> {
-    try {
-      const payload: PushNotificationPayload = {
-        title: '🛒 Nouvelle commande',
-        body: `Commande #${order.documentNumber} reçue${order.customer?.name ? ` de ${order.customer.name}` : ''}`,
-        data: {
-          type: 'new_order',
-          orderId: order.id.toString(),
-          orderNumber: order.documentNumber,
-          customerName: order.customer?.name || order.customerName || '',
-        },
-        clickAction: `/orders/${order.id}`,
-      };
-
-      // Send push notification to all admins
-      await this.pushNotificationService.sendToAdmins(payload);
-
-      // Create in-app notification for all admins
-      const adminIds = await this.pushNotificationService.getAdminUserIds();
-      for (const adminId of adminIds) {
-        await this.notificationsService.create({
-          userId: adminId,
-          type: 'new_order',
-          title: payload.title,
-          message: payload.body,
-          data: payload.data,
-        });
-      }
-
-      this.logger.log(
-        `Notified admins about new order #${order.documentNumber}`,
-      );
-    } catch (error) {
-      this.logger.error(`Failed to notify admins about new order:`, error);
-    }
+    const clientName = order.customer?.name || order.customerName || 'Client';
+    await this.fire(
+      'ORDER_PLACED',
+      {
+        clientName,
+        orderNumber: order.documentNumber,
+        orderId: String(order.id),
+      },
+      [{ type: 'admins' }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
   }
 
-  /**
-   * RULE 2: When admin assigns order to delivery person, notify customer and delivery person
-   */
+  /** Client cancels their own order → notify admins */
+  async notifyOrderCancelledByClient(order: Order): Promise<void> {
+    const clientName = order.customer?.name || order.customerName || 'Client';
+    await this.fire(
+      'ORDER_CANCELLED_BY_CLIENT',
+      {
+        clientName,
+        orderNumber: order.documentNumber,
+        orderId: String(order.id),
+      },
+      [{ type: 'admins' }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+  }
+
+  /** Client updates profile / address → notify admins */
+  async notifyClientProfileUpdated(
+    clientName: string,
+    clientId: number,
+  ): Promise<void> {
+    await this.fire(
+      'CLIENT_PROFILE_UPDATED',
+      { clientName },
+      [{ type: 'admins' }],
+      {
+        portalUserId: clientId,
+      },
+    );
+  }
+
+  /** Client submits a complaint / review → notify admins */
+  async notifyClientComplaint(
+    clientName: string,
+    clientId: number,
+  ): Promise<void> {
+    await this.fire('CLIENT_COMPLAINT', { clientName }, [{ type: 'admins' }], {
+      portalUserId: clientId,
+    });
+  }
+
+  // ─── Admin → Delivery Portal ─────────────────────────────────────────────────
+
+  /** Admin assigns order to driver → notify driver + client */
   async notifyOrderAssigned(
     order: Order,
     deliveryPersonId: number,
     deliveryPersonName: string,
   ): Promise<void> {
-    try {
-      // Notify customer
-      if (order.customerId) {
-        const customerPayload: PushNotificationPayload = {
-          title: '📦 Commande assignée',
-          body: `Votre commande #${order.documentNumber} a été assignée à ${deliveryPersonName}`,
-          data: {
-            type: 'order_assigned',
-            orderId: order.id.toString(),
-            orderNumber: order.documentNumber,
-            deliveryPersonName,
-          },
-          clickAction: `/orders/${order.id}`,
-        };
-
-        await this.pushNotificationService.sendToCustomer(
-          order.customerId,
-          customerPayload,
-        );
-
-        // Create in-app notification for customer
-        const customerUserId =
-          await this.pushNotificationService.getUserIdByCustomerId(
-            order.customerId,
-          );
-        if (customerUserId) {
-          await this.notificationsService.create({
-            userId: customerUserId,
-            type: 'order_assigned',
-            title: customerPayload.title,
-            message: customerPayload.body,
-            data: customerPayload.data,
-          });
-        }
-      }
-
-      // Notify delivery person
-      const deliveryPayload: PushNotificationPayload = {
-        title: '🚚 Nouvelle assignation',
-        body: `Commande #${order.documentNumber} vous a été assignée${order.customer?.name ? ` - Client: ${order.customer.name}` : ''}`,
-        data: {
-          type: 'delivery_assigned',
-          orderId: order.id.toString(),
+    const clientName = order.customer?.name || order.customerName || 'Client';
+    await this.fire(
+      'ORDER_ASSIGNED_DRIVER',
+      {
+        orderNumber: order.documentNumber,
+        clientName,
+        driverName: deliveryPersonName,
+      },
+      [{ type: 'delivery', deliveryPersonId }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+    if (order.customerId) {
+      await this.fire(
+        'ORDER_ASSIGNED_CLIENT',
+        {
           orderNumber: order.documentNumber,
-          customerName: order.customer?.name || '',
-          customerAddress: order.customer?.address || '',
+          clientName,
+          driverName: deliveryPersonName,
         },
-        clickAction: `/deliveries/${order.id}`,
-      };
-
-      await this.pushNotificationService.sendToDeliveryPerson(
-        deliveryPersonId,
-        deliveryPayload,
+        [{ type: 'customer', customerId: order.customerId }],
+        { orderId: order.id, orderNumber: order.documentNumber },
       );
+    }
+  }
 
-      // Create in-app notification for delivery person
-      const deliveryUserId =
-        await this.pushNotificationService.getUserIdByDeliveryId(
-          deliveryPersonId,
-        );
-      if (deliveryUserId) {
-        await this.notificationsService.create({
-          userId: deliveryUserId,
-          type: 'delivery_assigned',
-          title: deliveryPayload.title,
-          message: deliveryPayload.body,
-          data: deliveryPayload.data,
-        });
-      }
+  /** Admin reassigns order to a different driver → notify new driver */
+  async notifyOrderReassigned(
+    order: Order,
+    newDeliveryPersonId: number,
+    newDeliveryPersonName: string,
+  ): Promise<void> {
+    const clientName = order.customer?.name || order.customerName || 'Client';
+    await this.fire(
+      'ORDER_REASSIGNED_DRIVER',
+      {
+        orderNumber: order.documentNumber,
+        clientName,
+        driverName: newDeliveryPersonName,
+      },
+      [{ type: 'delivery', deliveryPersonId: newDeliveryPersonId }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+  }
 
-      this.logger.log(
-        `Notified customer and delivery person about order #${order.documentNumber} assignment`,
+  /** Admin cancels assigned order → notify driver */
+  async notifyOrderCancelledByAdmin_Driver(
+    order: Order,
+    deliveryPersonId: number,
+  ): Promise<void> {
+    await this.fire(
+      'ORDER_CANCELLED_BY_ADMIN_DRIVER',
+      { orderNumber: order.documentNumber },
+      [{ type: 'delivery', deliveryPersonId }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+  }
+
+  /** Admin marks fromClient order as delivered → notify client */
+  async notifyOrderDeliveredToClient(order: Order): Promise<void> {
+    if (!order.customerId) return;
+    await this.fire(
+      'ORDER_DELIVERED_CLIENT',
+      { orderNumber: order.documentNumber },
+      [{ type: 'customer', customerId: order.customerId }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+  }
+
+  /** Admin cancels fromClient order → notify client */
+  async notifyOrderCancelledByAdmin_Client(order: Order): Promise<void> {
+    if (!order.customerId) return;
+    await this.fire(
+      'ORDER_CANCELLED_BY_ADMIN_CLIENT',
+      { orderNumber: order.documentNumber },
+      [{ type: 'customer', customerId: order.customerId }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+  }
+
+  /** Admin sends a custom message to a client */
+  async notifyAdminCustomMessage(
+    customerId: number,
+    title: string,
+    message: string,
+  ): Promise<void> {
+    await this.fire(
+      'ADMIN_CUSTOM_MESSAGE',
+      { title, message },
+      [{ type: 'customer', customerId }],
+      {},
+    );
+  }
+
+  // ─── Delivery → Admin + Client ────────────────────────────────────────────────
+
+  /** Driver starts delivery (IN_DELIVERY) → notify admin + client */
+  async notifyDeliveryInProgress(
+    order: Order,
+    deliveryPersonName: string,
+  ): Promise<void> {
+    const clientName = order.customer?.name || order.customerName || 'Client';
+    await this.fire(
+      'DELIVERY_IN_PROGRESS_ADMIN',
+      {
+        driverName: deliveryPersonName,
+        orderNumber: order.documentNumber,
+        clientName,
+      },
+      [{ type: 'admins' }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+    if (order.customerId) {
+      await this.fire(
+        'DELIVERY_IN_PROGRESS_CLIENT',
+        { driverName: deliveryPersonName, orderNumber: order.documentNumber },
+        [{ type: 'customer', customerId: order.customerId }],
+        { orderId: order.id, orderNumber: order.documentNumber },
       );
-    } catch (error) {
-      this.logger.error(`Failed to notify about order assignment:`, error);
+    }
+  }
+
+  /** Driver marks order as delivered → notify admin + client */
+  async notifyDeliveryCompleted(
+    order: Order,
+    deliveryPersonName: string,
+  ): Promise<void> {
+    const clientName = order.customer?.name || order.customerName || 'Client';
+    await this.fire(
+      'DELIVERY_COMPLETED_ADMIN',
+      {
+        driverName: deliveryPersonName,
+        orderNumber: order.documentNumber,
+        clientName,
+      },
+      [{ type: 'admins' }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+    if (order.customerId) {
+      await this.fire(
+        'DELIVERY_COMPLETED_CLIENT',
+        { orderNumber: order.documentNumber },
+        [{ type: 'customer', customerId: order.customerId }],
+        { orderId: order.id, orderNumber: order.documentNumber },
+      );
+    }
+  }
+
+  /** Driver reports delivery failed → notify admin + client */
+  async notifyDeliveryFailed(
+    order: Order,
+    deliveryPersonName: string,
+  ): Promise<void> {
+    const clientName = order.customer?.name || order.customerName || 'Client';
+    await this.fire(
+      'DELIVERY_FAILED_ADMIN',
+      {
+        driverName: deliveryPersonName,
+        orderNumber: order.documentNumber,
+        clientName,
+      },
+      [{ type: 'admins' }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+    if (order.customerId) {
+      await this.fire(
+        'DELIVERY_FAILED_CLIENT',
+        { orderNumber: order.documentNumber },
+        [{ type: 'customer', customerId: order.customerId }],
+        { orderId: order.id, orderNumber: order.documentNumber },
+      );
     }
   }
 
   /**
-   * RULE 3: When delivery status changes, notify customer
+   * Backward-compatible entry point for delivery status changes.
+   * Called from DeliveryService.updateOrderStatus().
    */
   async notifyDeliveryStatusChanged(
     order: Order,
-    oldStatus: DeliveryStatus | null,
+    _oldStatus: DeliveryStatus | null,
     newStatus: DeliveryStatus,
+    deliveryPersonName = 'Livreur',
+  ): Promise<void> {
+    switch (newStatus) {
+      case DeliveryStatus.IN_DELIVERY:
+        await this.notifyDeliveryInProgress(order, deliveryPersonName);
+        break;
+      case DeliveryStatus.DELIVERED:
+        await this.notifyDeliveryCompleted(order, deliveryPersonName);
+        break;
+      case DeliveryStatus.CANCELED:
+        await this.notifyDeliveryFailed(order, deliveryPersonName);
+        break;
+    }
+  }
+
+  // ─── System ───────────────────────────────────────────────────────────────────
+
+  /** New driver registered → notify admins */
+  async notifyDriverRegistered(
+    driverName: string,
+    driverId: number,
+  ): Promise<void> {
+    await this.fire('DRIVER_REGISTERED', { driverName }, [{ type: 'admins' }], {
+      deliveryPersonId: driverId,
+    });
+  }
+
+  // ─── Stock Alerts ─────────────────────────────────────────────────────────────
+
+  /** Single product low-stock alert */
+  async notifyStockLow(product: Product): Promise<void> {
+    const threshold = product.stockAlertThreshold ?? 5;
+    await this.fire(
+      'STOCK_LOW_ALERT',
+      {
+        productName: product.name,
+        stock: String(product.stock ?? 0),
+        threshold: String(threshold),
+      },
+      [{ type: 'admins' }],
+      { productId: product.id, productName: product.name },
+    );
+  }
+
+  /** Daily summary: multiple products below threshold */
+  async notifyStockDailySummary(count: number): Promise<void> {
+    if (count === 0) return;
+    await this.fire(
+      'STOCK_DAILY_SUMMARY',
+      { count: String(count) },
+      [{ type: 'admins' }],
+      { count },
+    );
+  }
+
+  // ─── Payment Due Alerts ───────────────────────────────────────────────────────
+
+  /** Single overdue order alert */
+  async notifyOrderPaymentOverdue(order: Order): Promise<void> {
+    const clientName = order.customer?.name || order.customerName || 'Client';
+    const dueDate = order.amountDueDate
+      ? new Date(order.amountDueDate).toLocaleDateString('fr-MA')
+      : '—';
+    await this.fire(
+      'ORDER_PAYMENT_OVERDUE',
+      {
+        orderNumber: order.documentNumber,
+        clientName,
+        amount: String(order.remainingAmount ?? 0),
+        dueDate,
+      },
+      [{ type: 'admins' }],
+      { orderId: order.id, orderNumber: order.documentNumber },
+    );
+  }
+
+  /** Single overdue invoice alert */
+  async notifyInvoicePaymentOverdue(invoice: Invoice): Promise<void> {
+    const clientName =
+      invoice.customer?.name || invoice.customerName || 'Client';
+    const dueDate = invoice.amountDueDate
+      ? new Date(invoice.amountDueDate).toLocaleDateString('fr-MA')
+      : '—';
+    await this.fire(
+      'INVOICE_PAYMENT_OVERDUE',
+      {
+        invoiceNumber: invoice.documentNumber,
+        clientName,
+        amount: String(invoice.remainingAmount ?? 0),
+        dueDate,
+      },
+      [{ type: 'admins' }],
+      { invoiceId: invoice.id, invoiceNumber: invoice.documentNumber },
+    );
+  }
+
+  // ─── Sales Reports ─────────────────────────────────────────────────────────────
+
+  async notifyDailySalesSummary(
+    date: string,
+    ordersCount: number,
+    amount: number,
+  ): Promise<void> {
+    await this.fire(
+      'DAILY_SALES_SUMMARY',
+      { date, ordersCount: String(ordersCount), amount: String(amount) },
+      [{ type: 'admins' }],
+      { date, ordersCount, amount },
+    );
+  }
+
+  async notifyWeeklyRevenueReport(
+    weekStart: string,
+    ordersCount: number,
+    amount: number,
+  ): Promise<void> {
+    await this.fire(
+      'WEEKLY_REVENUE_REPORT',
+      { weekStart, ordersCount: String(ordersCount), amount: String(amount) },
+      [{ type: 'admins' }],
+      { weekStart, ordersCount, amount },
+    );
+  }
+
+  async notifyQuotesExpiringSoon(
+    count: number,
+    quoteNumbers: string[],
+  ): Promise<void> {
+    if (count === 0) return;
+    await this.fire(
+      'QUOTES_EXPIRING_SOON',
+      { count: String(count), quotes: quoteNumbers.join(', ') },
+      [{ type: 'admins' }],
+      { count, quoteNumbers },
+    );
+  }
+
+  // ─── Internal Helper ─────────────────────────────────────────────────────────
+
+  private async fire(
+    key: string,
+    variables: Record<string, string>,
+    recipients: {
+      type: 'admins' | 'customer' | 'delivery';
+      customerId?: number;
+      deliveryPersonId?: number;
+    }[],
+    metadata: Record<string, unknown>,
   ): Promise<void> {
     try {
-      // Only notify if there's a customer and status actually changed
-      if (!order.customerId || oldStatus === newStatus) {
-        return;
+      const queued = await this.notificationsQueueService.enqueue({
+        key,
+        variables,
+        recipients,
+        metadata,
+      });
+      if (!queued) {
+        // No tenant context — fall back to synchronous send
+        await this.templateService.send({ key, variables, recipients, metadata });
       }
-
-      const statusLabel = this.deliveryStatusLabels[newStatus] || newStatus;
-      let emoji = '📦';
-
-      // Customize emoji based on status
-      switch (newStatus) {
-        case DeliveryStatus.CONFIRMED:
-          emoji = '✅';
-          break;
-        case DeliveryStatus.PICKED_UP:
-          emoji = '📦';
-          break;
-        case DeliveryStatus.TO_DELIVERY:
-        case DeliveryStatus.IN_DELIVERY:
-          emoji = '🚚';
-          break;
-        case DeliveryStatus.DELIVERED:
-          emoji = '🎉';
-          break;
-        case DeliveryStatus.CANCELED:
-          emoji = '❌';
-          break;
-      }
-
-      const payload: PushNotificationPayload = {
-        title: `${emoji} Mise à jour de livraison`,
-        body: `Commande #${order.documentNumber}: ${statusLabel}`,
-        data: {
-          type: 'delivery_status_update',
-          orderId: order.id.toString(),
-          orderNumber: order.documentNumber,
-          oldStatus: oldStatus || '',
-          newStatus,
-          deliveryStatus: statusLabel,
-        },
-        clickAction: `/orders/${order.id}`,
-      };
-
-      await this.pushNotificationService.sendToCustomer(
-        order.customerId,
-        payload,
-      );
-
-      // Create in-app notification
-      const customerUserId =
-        await this.pushNotificationService.getUserIdByCustomerId(
-          order.customerId,
-        );
-      if (customerUserId) {
-        await this.notificationsService.create({
-          userId: customerUserId,
-          type: 'delivery_status_update',
-          title: payload.title,
-          message: payload.body,
-          data: payload.data,
-        });
-      }
-
-      this.logger.log(
-        `Notified customer about order #${order.documentNumber} status change to ${newStatus}`,
-      );
-    } catch (error) {
+    } catch (err) {
       this.logger.error(
-        `Failed to notify about delivery status change:`,
-        error,
+        `Notification '${key}' failed: ${(err as Error)?.message}`,
+        (err as Error)?.stack,
       );
     }
-  }
-
-  /**
-   * Helper to load full order with customer relation
-   */
-  async loadOrderWithCustomer(orderId: number): Promise<Order | null> {
-    return this.orderRepository.findOne({
-      where: { id: orderId },
-      relations: ['customer'],
-    });
-  }
-
-  /**
-   * Get delivery person info for an order
-   */
-  async getDeliveryPersonForOrder(
-    orderId: number,
-  ): Promise<{ id: number; name: string } | null> {
-    const orderDelivery = await this.orderDeliveryRepository.findOne({
-      where: { orderId },
-      relations: ['deliveryPerson'],
-    });
-
-    if (!orderDelivery?.deliveryPerson) {
-      return null;
-    }
-
-    return {
-      id: orderDelivery.deliveryPerson.id,
-      name: orderDelivery.deliveryPerson.name,
-    };
   }
 }

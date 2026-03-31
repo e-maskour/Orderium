@@ -8,6 +8,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
+import { EmptyState } from '../components/EmptyState';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Checkbox } from 'primereact/checkbox';
 import { Tag } from 'primereact/tag';
@@ -178,84 +179,86 @@ export default function RolesPage() {
         if (!moduleNames.length) return <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>{t('noResults' as any)}</p>;
 
         return (
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: '0.75rem', overflow: 'hidden' }}>
-                {/* Header */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '2fr repeat(4, 1fr)',
-                    background: '#f8fafc',
-                    borderBottom: '1px solid #e2e8f0',
-                    padding: '0.75rem 1rem',
-                }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#475569', textTransform: 'uppercase' }}>{t('module' as any)}</span>
-                    {ACTIONS.map((a) => (
-                        <span key={a} style={{ fontWeight: 700, fontSize: '0.75rem', color: '#475569', textTransform: 'uppercase', textAlign: 'center' }}>
-                            {t(a as any)}
-                        </span>
-                    ))}
-                </div>
-                {/* Rows */}
-                {moduleNames.map((mod, idx) => {
-                    const perms = grouped[mod];
-                    const allChecked = perms.every((p) => selectedPermIds.has(p.id));
-                    const someChecked = !allChecked && perms.some((p) => selectedPermIds.has(p.id));
+            <div style={{ overflowX: 'auto' }}>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '0.75rem', overflow: 'hidden', minWidth: '30rem' }}>
+                    {/* Header */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '2fr repeat(4, 1fr)',
+                        background: '#f8fafc',
+                        borderBottom: '1px solid #e2e8f0',
+                        padding: '0.75rem 1rem',
+                    }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#475569', textTransform: 'uppercase' }}>{t('module' as any)}</span>
+                        {ACTIONS.map((a) => (
+                            <span key={a} style={{ fontWeight: 700, fontSize: '0.75rem', color: '#475569', textTransform: 'uppercase', textAlign: 'center' }}>
+                                {t(a as any)}
+                            </span>
+                        ))}
+                    </div>
+                    {/* Rows */}
+                    {moduleNames.map((mod, idx) => {
+                        const perms = grouped[mod];
+                        const allChecked = perms.every((p) => selectedPermIds.has(p.id));
+                        const someChecked = !allChecked && perms.some((p) => selectedPermIds.has(p.id));
 
-                    return (
-                        <div
-                            key={mod}
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: '2fr repeat(4, 1fr)',
-                                alignItems: 'center',
-                                padding: '0.625rem 1rem',
-                                borderBottom: idx < moduleNames.length - 1 ? '1px solid #f1f5f9' : undefined,
-                                background: idx % 2 === 0 ? '#fff' : '#fafbfc',
-                            }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }} onClick={() => toggleModule(mod)}>
-                                <Checkbox
-                                    checked={allChecked}
-                                    onChange={() => toggleModule(mod)}
-                                    style={{ width: '1.125rem', height: '1.125rem' }}
-                                />
-                                <span style={{
-                                    fontWeight: 600,
-                                    fontSize: '0.8125rem',
-                                    color: allChecked ? '#235ae4' : someChecked ? '#475569' : '#64748b',
-                                    textTransform: 'capitalize',
-                                }}>
-                                    {mod.replace(/_/g, ' ')}
-                                </span>
-                            </div>
-                            {ACTIONS.map((action) => {
-                                const perm = perms.find((p) => p.action === action);
-                                if (!perm) return <div key={action} style={{ textAlign: 'center', color: '#e2e8f0' }}>—</div>;
-                                const checked = selectedPermIds.has(perm.id);
-                                return (
-                                    <div key={action} style={{ textAlign: 'center' }}>
-                                        <div
-                                            onClick={() => togglePermission(perm.id)}
-                                            style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                width: '1.5rem',
-                                                height: '1.5rem',
-                                                borderRadius: '0.375rem',
-                                                cursor: 'pointer',
-                                                border: checked ? '2px solid #235ae4' : '2px solid #cbd5e1',
-                                                background: checked ? '#235ae4' : 'transparent',
-                                                transition: 'all 0.15s',
-                                            }}
-                                        >
-                                            {checked && <Check style={{ width: '0.875rem', height: '0.875rem', color: '#fff', strokeWidth: 3 }} />}
+                        return (
+                            <div
+                                key={mod}
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '2fr repeat(4, 1fr)',
+                                    alignItems: 'center',
+                                    padding: '0.625rem 1rem',
+                                    borderBottom: idx < moduleNames.length - 1 ? '1px solid #f1f5f9' : undefined,
+                                    background: idx % 2 === 0 ? '#fff' : '#fafbfc',
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }} onClick={() => toggleModule(mod)}>
+                                    <Checkbox
+                                        checked={allChecked}
+                                        onChange={() => toggleModule(mod)}
+                                        style={{ width: '1.125rem', height: '1.125rem' }}
+                                    />
+                                    <span style={{
+                                        fontWeight: 600,
+                                        fontSize: '0.8125rem',
+                                        color: allChecked ? '#235ae4' : someChecked ? '#475569' : '#64748b',
+                                        textTransform: 'capitalize',
+                                    }}>
+                                        {mod.replace(/_/g, ' ')}
+                                    </span>
+                                </div>
+                                {ACTIONS.map((action) => {
+                                    const perm = perms.find((p) => p.action === action);
+                                    if (!perm) return <div key={action} style={{ textAlign: 'center', color: '#e2e8f0' }}>—</div>;
+                                    const checked = selectedPermIds.has(perm.id);
+                                    return (
+                                        <div key={action} style={{ textAlign: 'center' }}>
+                                            <div
+                                                onClick={() => togglePermission(perm.id)}
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '1.5rem',
+                                                    height: '1.5rem',
+                                                    borderRadius: '0.375rem',
+                                                    cursor: 'pointer',
+                                                    border: checked ? '2px solid #235ae4' : '2px solid #cbd5e1',
+                                                    background: checked ? '#235ae4' : 'transparent',
+                                                    transition: 'all 0.15s',
+                                                }}
+                                            >
+                                                {checked && <Check style={{ width: '0.875rem', height: '0.875rem', color: '#fff', strokeWidth: 3 }} />}
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    );
-                })}
+                                    );
+                                })}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         );
     };
@@ -313,7 +316,7 @@ export default function RolesPage() {
                     <DataTable
                         value={roles}
                         loading={isLoading}
-                        emptyMessage={t('noResults' as any) || 'No roles found'}
+                        emptyMessage={<EmptyState title={t('noResults' as any) || 'No roles found'} />}
                         dataKey="id"
                         stripedRows
                         selectionMode="checkbox"

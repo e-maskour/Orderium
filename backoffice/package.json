@@ -4,8 +4,8 @@
   "version": "2.0.0",
   "type": "module",
   "packageManager": "pnpm@10.5.2",
-  "description": "Professional backoffice and management system for Orderium",
-  "author": "Orderium Team",
+  "description": "Professional backoffice and management system for Morocom",
+  "author": "Morocom Team",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

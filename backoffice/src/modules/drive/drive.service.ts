@@ -13,6 +13,7 @@ import type {
     IDriveShare,
     IDriveActivity,
     IDriveTag,
+    IBrowseStorageResult,
 } from './drive.interface';
 
 export class DriveService {
@@ -220,6 +221,18 @@ export class DriveService {
     async getStats(): Promise<DriveStatsResponse> {
         const res = await apiClient.get<any>(API_ROUTES.DRIVE.STATS);
         return res.data;
+    }
+
+    // ─── Raw MinIO Browser ───────────────────────────────────────────────────
+
+    async browseStorage(prefix = ''): Promise<IBrowseStorageResult> {
+        const res = await apiClient.get<any>(API_ROUTES.DRIVE.BROWSE_STORAGE(prefix));
+        return res.data as IBrowseStorageResult;
+    }
+
+    async getRawUrl(key: string): Promise<string> {
+        const res = await apiClient.get<any>(API_ROUTES.DRIVE.RAW_URL(key));
+        return (res.data as { url: string }).url;
     }
 }
 

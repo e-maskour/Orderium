@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  ORDERIUM — Token Management Strategy
+ *  MOROCOM — Token Management Strategy
  * ═══════════════════════════════════════════════════════════════
  *
  *  Handles token storage, retrieval, and unauthorized callbacks.

@@ -1,6 +1,6 @@
-# Orderium API - NestJS Edition
+# Morocom API - NestJS Edition
 
-A professional, scalable NestJS API for the Orderium platform, featuring PostgreSQL, TypeORM, Socket.io, and comprehensive validation.
+A professional, scalable NestJS API for the Morocom platform, featuring PostgreSQL, TypeORM, Socket.io, and comprehensive validation.
 
 ## 🚀 Features
 

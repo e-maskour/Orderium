@@ -55,7 +55,7 @@ const CONFIG: Record<BlockReason, StatusConfig> = {
         Icon: Clock,
         badge: 'Trial Ended',
         title: 'Your free trial has ended',
-        detail: 'Your trial period has concluded. Upgrade to a paid plan to continue using Orderium without interruption.',
+        detail: 'Your trial period has concluded. Upgrade to a paid plan to continue using Morocom without interruption.',
         accentLight: '#eff6ff',
         accentIcon: '#235ae4',
         accentBorder: 'rgba(35,90,228,0.2)',
@@ -118,10 +118,10 @@ export function BlockedScreen({ reason }: Props) {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                                 <img
                                     src={orderiumLogo}
-                                    alt="Orderium"
+                                    alt="Morocom"
                                     style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0 }}
                                 />
-                                <span style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a', letterSpacing: '-0.01em' }}>Orderium</span>
+                                <span style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a', letterSpacing: '-0.01em' }}>Morocom</span>
                             </div>
 
                             <a
@@ -255,7 +255,7 @@ export function BlockedScreen({ reason }: Props) {
                     }}>
                         <AlertTriangle size={12} color='#94a3b8' />
                         <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                            If you believe this is an error, please contact <strong style={{ color: '#64748b' }}>support@orderium.io</strong>
+                            If you believe this is an error, please contact <strong style={{ color: '#64748b' }}>support@morocom.io</strong>
                         </span>
                     </div>
                 </div>

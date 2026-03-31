@@ -1,4 +1,4 @@
-export type OrderStatus = 'draft' | 'validated' | 'in_progress' | 'delivered' | 'cancelled';
+export type OrderStatus = 'draft' | 'validated' | 'in_progress' | 'confirmed' | 'picked_up' | 'delivered' | 'cancelled';
 export type DeliveryStatus = 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
 
 export interface IOrder {
@@ -30,6 +30,11 @@ export interface IOrder {
   deliveryStatus?: DeliveryStatus | null; // Delivery lifecycle status
   deliveryPersonId?: number | null; // Business logic field, not in entity
   deliveryPersonName?: string | null; // Business logic field, not in entity
+  deliveryPersonPhone?: string | null; // Business logic field, not in entity
+  shareToken?: string | null;
+  shareTokenExpiry?: string | null;
+  paidAmount: number;
+  remainingAmount: number;
   dateCreated: string;
   dateUpdated: string;
   items?: IOrderItem[]; // For compatibility with document services

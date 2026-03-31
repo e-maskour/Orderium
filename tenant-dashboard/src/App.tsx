@@ -8,6 +8,7 @@ import { Dashboard } from './pages/Dashboard'
 import { TenantsList } from './pages/TenantsList'
 import { TenantDetail } from './pages/TenantDetail'
 import { CreateTenant } from './pages/CreateTenant'
+import { MigrationManager } from './pages/MigrationManager'
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -49,6 +50,7 @@ export default function App() {
                         <Route path="tenants" element={<TenantsList />} />
                         <Route path="tenants/new" element={<CreateTenant />} />
                         <Route path="tenants/:id" element={<TenantDetail />} />
+                        <Route path="migrations" element={<MigrationManager />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Route>
                     <Route path="/login" element={<Navigate to="/" replace />} />

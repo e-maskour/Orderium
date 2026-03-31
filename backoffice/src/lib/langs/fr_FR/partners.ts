@@ -16,7 +16,7 @@ export default {
   phoneNumberRequired: 'Numéro de téléphone requis',
   city: 'Ville',
   typeCustomerName: 'Tapez le nom du client',
-  
+
   // Suppliers
   suppliers: 'Fournisseurs',
   supplier: 'Fournisseur',
@@ -30,7 +30,7 @@ export default {
   editSupplier: 'Modifier Fournisseur',
   newSupplier: 'Nouveau Fournisseur',
   supplierNotFound: 'Fournisseur non trouvé',
-  
+
   // Partner Form
   partnerType: 'Type de partenaire',
   individual: 'Particulier',
@@ -59,20 +59,30 @@ export default {
   updatePartner: 'Mettre à jour le partenaire',
   createPartner: 'Créer un partenaire',
   deletePartnerConfirmation: 'Êtes-vous sûr de vouloir supprimer ce partenaire ? Cette action ne peut pas être annulée.',
-  
+
   // Tabs
   dashboard: 'Tableau de bord',
   customerList: 'Liste des clients',
   supplierList: 'Liste des fournisseurs',
-  
+
   // Placeholders
   searchCustomersPlaceholder: 'Rechercher clients...',
   searchSuppliersPlaceholder: 'Rechercher fournisseurs...',
-  
+
   // Common Labels
   seeDetails: 'Voir',
-  
+
   // Supplier Detail
   supplierDetails: 'Détails du fournisseur',
   customerDetails: 'Détails du client',
+
+  // Partner Form — section subtitles & descriptions
+  namePhoneEmailAddress: 'Nom, téléphone, email et adresse',
+  legalAndTaxNumbers: 'Numéros légaux et fiscaux',
+  typeAndStatus: 'Type et statut du partenaire',
+  individualTypeDescription: 'Ce partenaire est une personne physique',
+  companyTypeDescription: 'Ce partenaire est une personne morale',
+  visibleInSystem: 'Visible et actif dans le système',
+  hiddenFromSystem: 'Masqué et inactif dans le système',
+  partnerInfo: 'Informations du partenaire',
 };

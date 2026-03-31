@@ -98,7 +98,7 @@ export default function Dashboard() {
     const avgOrderValue = statistics?.AverageOrderValue || 0;
 
     const formatDate = (dateStr: string) =>
-        new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });
+        new Date(dateStr).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', { weekday: 'short' });
 
     const revenueData = {
         dates: dailyStats.map((s) => formatDate(s.date)),
@@ -118,7 +118,7 @@ export default function Dashboard() {
     const prev = dailyStats.slice(0, midPoint);
 
     const salesComparisonData = {
-        categories: cur.length > 0 ? cur.map((_, i) => `Day ${i + 1}`) : ['D1', 'D2', 'D3', 'D4'],
+        categories: cur.length > 0 ? cur.map((s) => new Date(s.date).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', { day: 'numeric', month: 'short' })) : ['D1', 'D2', 'D3', 'D4'],
         currentPeriod: cur.map((s) => s.revenue),
         previousPeriod: prev.map((s) => s.revenue),
     };

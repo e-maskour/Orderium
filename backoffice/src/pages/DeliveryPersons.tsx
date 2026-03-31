@@ -3,6 +3,7 @@ import { PageHeader } from '../components/PageHeader';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Truck, Edit2, Trash2, Search, X } from 'lucide-react';
+import { EmptyState } from '../components/EmptyState';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
@@ -219,7 +220,7 @@ export default function DeliveryPersons() {
           {/* Toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
             {/* Search */}
-            <span style={{ position: 'relative', display: 'block', width: '24rem' }}>
+            <span style={{ position: 'relative', display: 'block', width: '100%', maxWidth: '24rem' }}>
               <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
               <InputText
                 id="search-delivery-persons"
@@ -270,9 +271,8 @@ export default function DeliveryPersons() {
                   <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid #235ae4', borderTopColor: 'transparent', borderRadius: '9999px' }} className="animate-spin"></div>
                 </div>
               ) : filteredPersons.length === 0 ? (
-                <div style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '4rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                  <Truck style={{ width: '5rem', height: '5rem', color: '#cbd5e1', display: 'block', margin: '0 auto', marginBottom: '1rem' }} />
-                  <p style={{ color: '#1e293b', fontWeight: 600, fontSize: '1.125rem' }}>{t('noDeliveryPersonsFound')}</p>
+                <div style={{ background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                  <EmptyState icon={Truck} title={t('noDeliveryPersonsFound') as string} />
                 </div>
               ) : (
                 <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
@@ -288,22 +288,22 @@ export default function DeliveryPersons() {
                     rows={25}
                     rowsPerPageOptions={[10, 25, 50, 100]}
                     removableSort
-                    emptyMessage={<div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>{t('noDeliveryPersonsFound')}</div>}
+                    emptyMessage={<EmptyState icon={Truck} title={t('noDeliveryPersonsFound') as string} compact />}
                     paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                    currentPageReportTemplate="{first}-{last} of {totalRecords}"
+                    currentPageReportTemplate={t('pageReportTemplate')}
                   >
                     <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                    <Column field="name" header="Nom" sortable body={(row: DeliveryPerson) => (
+                    <Column field="name" header={t('name')} sortable body={(row: DeliveryPerson) => (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Truck style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />
                         <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>
                       </div>
                     )} />
-                    <Column field="phoneNumber" header="Téléphone" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
-                    <Column field="email" header="Email" sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
-                    <Column field="isActive" header="Statut" body={(row: DeliveryPerson) => (
+                    <Column field="phoneNumber" header={t('phone')} sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber}</span>} />
+                    <Column field="email" header={t('email')} sortable body={(row: DeliveryPerson) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
+                    <Column field="isActive" header={t('status')} body={(row: DeliveryPerson) => (
                       <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isActive ? { background: '#d1fae5', color: '#047857' } : { background: '#f1f5f9', color: '#475569' }) }}>
-                        {row.isActive ? 'Actif' : 'Inactif'}
+                        {row.isActive ? t('active') : t('inactive')}
                       </span>
                     )} />
                   </DataTable>
@@ -344,7 +344,7 @@ export default function DeliveryPersons() {
         }
       >
         <form id="delivery-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' }}>
+          <div className="form-grid-2">
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
               <InputText

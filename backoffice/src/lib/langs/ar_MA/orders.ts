@@ -4,34 +4,38 @@ export default {
   order: 'طلب',
   orderManagement: 'إدارة الطلبات',
   viewAndAssignOrders: 'عرض وتعيين الطلبات',
-  orderNumber: 'رقم الطلب',
+  orderNumber: 'طلب',
   total: 'المجموع',
   noOrdersFound: 'لا توجد طلبات',
-  
+  ordersSelected: 'طلبات محددة',
+  newOrder: 'طلب جديد',
+
   // Order Status
   unassigned: 'غير معين',
   toDelivery: 'للتوصيل',
   inDelivery: 'قيد التوصيل',
+  inProgress: 'جارٍ التنفيذ',
   delivered: 'تم التسليم',
   canceled: 'ملغي',
+  cancelled: 'ملغي',
   pending: 'قيد الانتظار',
   assigned: 'معين',
   confirmed: 'مؤكد',
   pickedUp: 'تم الاستلام',
-  
+
   // Order Details
   orderDetails: 'تفاصيل الطلب',
   orderItems: 'المنتجات المطلوبة',
   quantity: 'الكمية',
-  unitPrice: 'السعر',
+  unitPrice: 'سعر / وحدة',
   subtotal: 'المجموع الفرعي',
   discount: 'الخصم',
   grandTotal: 'المجموع الإجمالي',
   orderInformation: 'معلومات الطلب',
   customerInformation: 'معلومات العميل',
-  
+
   // Order Actions
-  assignToDelivery: 'مندوب',
+  assignToDelivery: 'تعيين مندوب',
   downloadReceipt: 'تحميل الإيصال',
   downloadInvoice: 'تحميل الفاتورة',
   receipts: 'إيصالات',
@@ -42,8 +46,9 @@ export default {
   selectDeliveryPerson: 'اختر مندوب التوصيل',
   unassignOrder: 'إلغاء تعيين الطلب',
   unassignOrderConfirm: 'هل أنت متأكد من إلغاء تعيين هذا الطلب؟',
-  cancelDelivery: 'إلغاء التوصيل',
-  
+  cancelDelivery: 'إلغاء الطلب',
+  confirmCancelDelivery: 'هل أنت متأكد من إلغاء التوصيل؟ لا يمكن التراجع عن هذا الإجراء.',
+
   // Order Notifications
   orderAssigned: 'تم تعيين الطلب بنجاح',
   orderUnassigned: 'تم إلغاء تعيين الطلب بنجاح',
@@ -57,7 +62,7 @@ export default {
   failedToDelete: 'فشل الحذف',
   deliveryCanceled: 'تم إلغاء التوصيل بنجاح',
   failedToCancelDelivery: 'فشل إلغاء التوصيل',
-  
+
   // Search & Filter
   searchPlaceholder: 'ابحث برقم الطلب، اسم العميل، الهاتف، أو مندوب التوصيل...',
   filterByStatus: 'تصفية حسب الحالة',
@@ -68,22 +73,71 @@ export default {
   orderSource: 'مصدر الطلب',
   local: 'محلي',
   client: 'العميل',
-  reset: 'إعادة تعيين',
+  reset: 'مسح الفلاتير',
   apply: 'تطبيق',
-  
+
   // KPIs
   totalOrders: 'إجمالي الطلبات',
   ordersToday: 'طلبات اليوم',
   totalRevenue: 'إجمالي الإيرادات',
   revenueToday: 'الإيرادات اليوم',
-  
+
   // Order Actions - Bulk
   deleteOrders: 'حذف الطلبات',
   ordersDeleted: 'تم حذف الطلبات بنجاح',
   confirmDeleteOrders: 'هل أنت متأكد من رغبتك في حذف الطلب(ات)؟ لا يمكن التراجع عن هذا الإجراء.',
   selectOneOrder: 'يرجى تحديد طلب واحد فقط للمعاينة',
-  
+
   // Additional
   previewReceipt: 'إيصال',
   previewDeliveryNote: 'وصل',
+
+  // Status change
+  statusUpdated: 'تم تحديث الحالة',
+  orderStatus: 'حالة الطلب',
+
+  // Empty states
+  noOrdersMatchFilter: 'لا توجد طلبات تطابق معايير البحث. حاول تعديل الفلاتر.',
+  noOrdersYet: 'لا توجد طلبات في الوقت الحالي. ستظهر الطلبات الجديدة هنا.',
+
+  // Order detail page
+  orderNotFound: 'الطلب غير موجود',
+  orderUpdated: 'تم تحديث الطلب',
+  paymentAdded: 'تم تسجيل الدفعة',
+  paymentUpdated: 'تم تحديث الدفعة',
+  back: 'رجوع',
+
+  // Caisse (order payments)
+  caisse: 'الصندوق',
+  manageOrderPayments: 'تحصيلات الطلبات',
+  addPayment: 'إضافة دفعة',
+  recordPayment: 'تسجيل الدفعة',
+  editPayment: 'تعديل الدفعة',
+  deletePayment: 'حذف الدفعة',
+  confirmDeletePayment: 'هل أنت متأكد من حذف هذه الدفعة؟',
+  paymentDeleted: 'تم حذف الدفعة',
+  paymentHistory: 'سجل الدفعات',
+  noPaymentsYet: 'لا توجد دفعات مسجلة',
+  totalDue: 'إجمالي المستحق',
+  totalCollected: 'إجمالي المحصّل',
+  totalRemaining: 'المتبقي للتحصيل',
+  fullyPaid: 'مدفوع',
+  partiallyPaid: 'جزئي',
+  unpaid: 'غير مدفوع',
+  allStatuses: 'الكل',
+  orderTotal: 'إجمالي الطلب',
+  amountPaid: 'المبلغ المدفوع',
+  remaining: 'المتبقي',
+  paymentAmount: 'مبلغ الدفعة',
+  paymentMethod: 'طريقة الدفع',
+  paymentDate: 'تاريخ الدفعة',
+  cash: 'نقداً',
+  card: 'بطاقة',
+  transfer: 'تحويل',
+  searchCaisse: 'ابحث برقم الطلب أو اسم العميل...',
+  noOrdersWithPayments: 'لا توجد طلبات',
+  quickPay: 'دفع المتبقي',
+  viewHistory: 'عرض السجل',
+  paymentsCount: 'دفعة/دفعات',
+  paymentRecorded: 'تم تسجيل الدفعة بنجاح',
 };

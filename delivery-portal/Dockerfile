@@ -66,6 +66,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
 COPY shared/ui /shared/ui
+COPY shared/components /shared/components
 
 # Copy package files
 COPY delivery-portal/package.json delivery-portal/pnpm-lock.yaml ./

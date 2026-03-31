@@ -88,4 +88,22 @@ export default {
     sortByDate: 'التاريخ',
     sortBySize: 'الحجم',
     sortByType: 'النوع',
+
+    // Drive — Storage browser
+    allStorage: 'كل التخزين',
+    systemFile: 'نظام',
+    systemFileReadOnly: 'ملف نظام (للقراءة فقط)',
+    systemFileNoDelete: 'تم إنشاء هذا الملف تلقائياً ولا يمكن حذفه.',
+    systemFolderReadOnly: 'مجلد نظام (للقراءة فقط)',
+    copyLink: 'نسخ الرابط',
+    linkCopied: 'تم نسخ الرابط!',
+    shareViaWhatsApp: 'مشاركة عبر واتساب',
+    previewFile: 'معاينة',
+    confirmDelete: 'حذف هذا الملف؟',
+    confirmDeleteDesc: 'هل أنت متأكد من حذف هذا الملف؟ لا يمكن التراجع عن هذا الإجراء.',
+    item: 'عنصر',
+    items: 'عناصر',
+    selected: 'محدد',
+    noPreview: 'لا تتوفر معاينة',
+    openInNewTab: 'فتح في علامة تبويب جديدة',
 };

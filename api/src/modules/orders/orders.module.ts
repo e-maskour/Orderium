@@ -1,6 +1,8 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
+import { OrderPaymentsService } from './order-payments.service';
+import { OrderPaymentsController } from './order-payments.controller';
 import { TenantModule } from '../tenant/tenant.module';
 import { PartnersModule } from '../partners/partners.module';
 import { ConfigurationsModule } from '../configurations/configurations.module';
@@ -17,8 +19,8 @@ import { InventoryModule } from '../inventory/inventory.module';
     PDFModule,
     InventoryModule,
   ],
-  controllers: [OrdersController],
-  providers: [OrdersService],
-  exports: [OrdersService],
+  controllers: [OrdersController, OrderPaymentsController],
+  providers: [OrdersService, OrderPaymentsService],
+  exports: [OrdersService, OrderPaymentsService],
 })
 export class OrdersModule { }

@@ -4,6 +4,7 @@ import { Tenant } from '../modules/tenant/tenant.entity';
 import { Payment } from '../modules/tenant-lifecycle/entities/payment.entity';
 import { SubscriptionPlan } from '../modules/tenant-lifecycle/entities/subscription-plan.entity';
 import { TenantActivityLog } from '../modules/tenant-lifecycle/entities/tenant-activity-log.entity';
+import { MigrationRunLog } from '../modules/super-admin/entities/migration-log.entity';
 
 config({ path: '.env.local' });
 config(); // fallback
@@ -24,7 +25,7 @@ export const MasterDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.MASTER_DB_NAME || 'orderium_master',
-  entities: [Tenant, Payment, SubscriptionPlan, TenantActivityLog],
+  entities: [Tenant, Payment, SubscriptionPlan, TenantActivityLog, MigrationRunLog],
   migrations: [__dirname + '/master-migrations/*{.ts,.js}'],
   synchronize: false,
   logging: process.env.DB_LOGGING === 'true',

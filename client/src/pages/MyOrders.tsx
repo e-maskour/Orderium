@@ -11,7 +11,7 @@ import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { CartDrawer } from '@/components/CartDrawer';
 import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
-import { Package, MapPin, Calendar as CalendarIcon, FileText, ReceiptText, ChevronLeft, ChevronRight, ArrowLeft, ShoppingBag, ClipboardList } from 'lucide-react';
+import { Package, MapPin, Calendar as CalendarIcon, FileText, ReceiptText, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, ShoppingBag, ClipboardList, type LucideIcon } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { notify } from '@orderium/ui';
 
@@ -86,6 +86,10 @@ export default function MyOrders() {
     return counts;
   }, [orders, totalCount]);
 
+  const BackIcon: LucideIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
+  const PrevIcon: LucideIcon = dir === 'rtl' ? ChevronRight : ChevronLeft;
+  const NextIcon: LucideIcon = dir === 'rtl' ? ChevronLeft : ChevronRight;
+
   const getStatusLabel = (status: string) => {
     const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
     return language === 'ar' ? cfg.label_ar : cfg.label_fr;
@@ -154,7 +158,7 @@ export default function MyOrders() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: 'white', flexShrink: 0, WebkitTapHighlightColor: 'transparent' as const }}>
-              <ArrowLeft size={18} />
+              <BackIcon size={18} />
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
               <ClipboardList size={26} strokeWidth={2.5} style={{ color: '#fff', flexShrink: 0 }} />
@@ -346,7 +350,7 @@ export default function MyOrders() {
                     opacity: currentPage === 1 ? 0.4 : 1,
                   }}
                 >
-                  <ChevronLeft size={18} />
+                  <PrevIcon size={18} />
                 </button>
                 <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#374151' }}>
                   {currentPage} / {totalPages}
@@ -361,7 +365,7 @@ export default function MyOrders() {
                     opacity: currentPage === totalPages ? 0.4 : 1,
                   }}
                 >
-                  <ChevronRight size={18} />
+                  <NextIcon size={18} />
                 </button>
               </div>
             )}

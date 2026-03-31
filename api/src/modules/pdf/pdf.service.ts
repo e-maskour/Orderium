@@ -426,7 +426,7 @@ export class PDFService {
         footerTemplate,
         margin: {
           top: '32mm',
-          bottom: '7mm',
+          bottom: '14mm',
           left: '5mm',
           right: '5mm',
         },
@@ -470,7 +470,8 @@ export class PDFService {
       await page.evaluate(() => (document as any).fonts.ready);
 
       const contentHeight = await page.evaluate(() => {
-        return document.body.scrollHeight;
+        // Add a small buffer so Chromium never triggers a second page
+        return document.body.scrollHeight + 40;
       });
 
       const pdfBuffer = await page.pdf({
@@ -479,6 +480,7 @@ export class PDFService {
         printBackground: true,
         margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
         preferCSSPageSize: false,
+        pageRanges: '1',
         displayHeaderFooter: false,
       });
 
@@ -575,24 +577,28 @@ export class PDFService {
     const hideVAT = data.fromPortal || false;
     const companyLines = this.buildCompanyLines(company);
 
-    // Generate items HTML
+    // Generate items HTML — table rows for the new design
     const itemsHtml = data.items
-      .map(
-        (item) => `
-          <div class="rcp-item">
-            <div class="rcp-item-top">
-              <div class="rcp-item-desc">${item.description}</div>
-              <div class="rcp-item-total">${this.formatCurrency(item.total)} DH</div>
-            </div>
-            <div class="rcp-item-detail">
-              ${item.quantity} × ${this.formatCurrency(item.unitPrice)}
-              ${item.discount > 0 ? `<span class="rcp-discount"> · Remise: ${this.formatCurrency(item.discount)} DH</span>` : ''}
-              ${!hideVAT && item.tax > 0 ? `<span class="rcp-discount"> · TVA: ${item.tax}%</span>` : ''}
-            </div>
-          </div>
-        `,
-      )
+      .map((item) => {
+        const discountSub =
+          item.discount > 0
+            ? `Remise: -${this.formatCurrency(item.discount)} DH`
+            : '';
+        const taxSub = !hideVAT && item.tax > 0 ? `TVA: ${item.tax}%` : '';
+        const subParts = [discountSub, taxSub].filter(Boolean).join(' · ');
+        const qtyLine = `${item.quantity} × ${this.formatCurrency(item.unitPrice)} DH${subParts ? ' · ' + subParts : ''}`;
+        return `<tr class="t-item">
+            <td class="t-desc">
+              ${item.description}
+              <span class="t-desc-sub">${qtyLine}</span>
+            </td>
+            <td class="t-total">${this.formatCurrency(item.total)}</td>
+          </tr>`;
+      })
       .join('');
+
+    const totalQty = data.items.reduce((sum, i) => sum + i.quantity, 0);
+    const totalProducts = data.items.length;
 
     return renderReceiptTemplate({
       documentNumber: data.documentNumber,
@@ -600,6 +606,8 @@ export class PDFService {
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       itemsHtml,
+      totalQty,
+      totalProducts,
       subtotal: this.formatCurrency(data.subtotal),
       discount:
         data.discount && data.discount > 0
@@ -609,7 +617,7 @@ export class PDFService {
       tax: this.formatCurrency(data.tax),
       total: this.formatCurrency(data.total),
       hideVAT,
-      companyName: company.companyName || 'ORDERIUM',
+      companyName: company.companyName || 'MOROCOM',
       companyLines,
     });
   }

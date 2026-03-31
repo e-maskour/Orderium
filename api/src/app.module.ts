@@ -8,6 +8,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ScheduleModule } from '@nestjs/schedule';
+import { BullModule } from '@nestjs/bullmq';
 import { APP_GUARD } from '@nestjs/core';
 import KeyvRedis from '@keyv/redis';
 import { AppController } from './app.controller';
@@ -42,6 +44,9 @@ import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
+import { PrintersModule } from './modules/printers/printers.module';
+import { SuperAdminModule } from './modules/super-admin/super-admin.module';
+import { BulkModule } from './modules/bulk/bulk.module';
 
 // Multi-tenancy
 import { TenantModule, TenantMiddleware } from './modules/tenant/tenant.module';
@@ -50,6 +55,7 @@ import { Tenant } from './modules/tenant/tenant.entity';
 import { Payment } from './modules/tenant-lifecycle/entities/payment.entity';
 import { SubscriptionPlan } from './modules/tenant-lifecycle/entities/subscription-plan.entity';
 import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-activity-log.entity';
+import { MigrationRunLog } from './modules/super-admin/entities/migration-log.entity';
 
 @Module({
   imports: [
@@ -106,7 +112,13 @@ import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-ac
         password: configService.get<string>('DB_PASSWORD') || 'postgres',
         database:
           configService.get<string>('MASTER_DB_NAME') || 'orderium_master',
-        entities: [Tenant, Payment, SubscriptionPlan, TenantActivityLog],
+        entities: [
+          Tenant,
+          Payment,
+          SubscriptionPlan,
+          TenantActivityLog,
+          MigrationRunLog,
+        ],
         synchronize: false,
         logging: configService.get<string>('DB_LOGGING') === 'true',
         extra: { max: 5, min: 1 },
@@ -114,6 +126,30 @@ import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-ac
     }),
 
     // Feature modules
+    ScheduleModule.forRoot(),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const redisUrl = configService.get<string>('REDIS_URL');
+        let connection: Record<string, unknown>;
+        if (redisUrl) {
+          try {
+            const url = new URL(redisUrl);
+            connection = {
+              host: url.hostname,
+              port: parseInt(url.port || '6379', 10),
+              ...(url.password ? { password: decodeURIComponent(url.password) } : {}),
+            };
+          } catch {
+            connection = { host: 'localhost', port: 6379 };
+          }
+        } else {
+          connection = { host: 'localhost', port: 6379 };
+        }
+        return { connection };
+      },
+    }),
     TenantModule,
     TenantLifecycleModule,
     ProductsModule,
@@ -137,6 +173,9 @@ import { TenantActivityLog } from './modules/tenant-lifecycle/entities/tenant-ac
     PermissionsModule,
     RolesModule,
     UsersModule,
+    PrintersModule,
+    SuperAdminModule,
+    BulkModule,
   ],
   controllers: [AppController],
   providers: [
@@ -159,6 +198,8 @@ export class AppModule implements NestModule {
         { path: 'api/admin/payments/(.*)', method: RequestMethod.ALL },
         { path: 'api/admin/plans', method: RequestMethod.ALL },
         { path: 'api/admin/plans/(.*)', method: RequestMethod.ALL },
+        { path: 'api/super-admin/migrations', method: RequestMethod.ALL },
+        { path: 'api/super-admin/migrations/(.*)', method: RequestMethod.ALL },
         { path: 'api/health', method: RequestMethod.GET },
       )
       .forRoutes('*');

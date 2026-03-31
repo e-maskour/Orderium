@@ -1,4 +1,4 @@
-# Orderium Backoffice — Copilot Instructions
+# Morocom Backoffice — Copilot Instructions
 
 > React + Vite + TypeScript + PrimeReact — Admin Dashboard
 > Inherits root `.github/copilot-instructions.md`

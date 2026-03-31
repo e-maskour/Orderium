@@ -88,4 +88,22 @@ export default {
     sortByDate: 'Date',
     sortBySize: 'Taille',
     sortByType: 'Type',
+
+    // Drive — Storage browser
+    allStorage: 'Tout le stockage',
+    systemFile: 'Système',
+    systemFileReadOnly: 'Fichier système (lecture seule)',
+    systemFileNoDelete: 'Ce fichier est généré automatiquement et ne peut pas être supprimé.',
+    systemFolderReadOnly: 'Dossier système (lecture seule)',
+    copyLink: 'Copier le lien',
+    linkCopied: 'Lien copié !',
+    shareViaWhatsApp: 'Partager via WhatsApp',
+    previewFile: 'Aperçu',
+    confirmDelete: 'Supprimer ce fichier ?',
+    confirmDeleteDesc: 'Êtes-vous sûr de vouloir supprimer ce fichier ? Cette action est irréversible.',
+    item: 'élément',
+    items: 'éléments',
+    selected: 'Sélectionné',
+    noPreview: 'Aperçu non disponible',
+    openInNewTab: 'Ouvrir dans un nouvel onglet',
 };

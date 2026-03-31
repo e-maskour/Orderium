@@ -64,7 +64,7 @@ export function usePushNotifications(
       isInitializedRef.current = true;
 
       const supported = isNotificationSupported();
-      
+
       if (!supported) {
         setState({
           isSupported: false,
@@ -92,7 +92,7 @@ export function usePushNotifications(
 
       // Check current permission
       const permission = getNotificationPermission();
-      
+
       // Get stored token
       const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
 
@@ -125,9 +125,9 @@ export function usePushNotifications(
       // Also show a native notification for foreground messages
       if (payload.notification) {
         const { title, body } = payload.notification;
-        new Notification(title || 'Orderium', {
+        new Notification(title || 'Morocom', {
           body,
-          icon: '/icons/notification-icon.png',
+          icon: '/notification-icon.png',
           data: payload.data,
         });
       }
@@ -151,7 +151,7 @@ export function usePushNotifications(
 
     try {
       const permission = await requestNotificationPermission();
-      
+
       setState((prev) => ({
         ...prev,
         permission,
@@ -242,7 +242,7 @@ export function usePushNotifications(
 
       // Register with server
       const success = await registerTokenToServer(userId, token);
-      
+
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -271,7 +271,7 @@ export function usePushNotifications(
   // Unregister token
   const unregisterToken = useCallback(async (): Promise<boolean> => {
     const token = state.token || localStorage.getItem(TOKEN_STORAGE_KEY);
-    
+
     if (!token) {
       return true;
     }

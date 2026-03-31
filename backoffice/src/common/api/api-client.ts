@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  ORDERIUM — Enterprise API Client
+ *  MOROCOM — Enterprise API Client
  * ═══════════════════════════════════════════════════════════════
  *
  *  Centralized, strongly-typed HTTP client that replaces all

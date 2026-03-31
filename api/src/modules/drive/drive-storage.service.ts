@@ -142,6 +142,56 @@ export class DriveStorageService implements OnModuleInit {
     this.logger.log(`🗑️  Drive deleted: [${bucket}] ${storageKey}`);
   }
 
+  /**
+   * Lists objects at a given prefix level (non-recursive, one level deep).
+   * Returns common-prefix "folders" and actual file objects separately.
+   */
+  async listObjects(prefix: string, storageBucket?: string): Promise<{
+    folders: Array<{ prefix: string; name: string }>;
+    files: Array<{ key: string; name: string; sizeBytes: number; lastModified: Date; etag: string }>;
+  }> {
+    if (!this.ready) return { folders: [], files: [] };
+    if (prefix && (prefix.includes('..') || prefix.startsWith('/'))) {
+      throw new Error('Invalid prefix');
+    }
+    const bucket = storageBucket ?? this.getTenantBucket();
+
+    const stream = this.client.listObjectsV2(bucket, prefix, false);
+    const result: {
+      folders: Array<{ prefix: string; name: string }>;
+      files: Array<{ key: string; name: string; sizeBytes: number; lastModified: Date; etag: string }>;
+    } = { folders: [], files: [] };
+
+    await new Promise<void>((resolve, reject) => {
+      stream.on('data', (item) => {
+        if (item.prefix) {
+          // Common prefix — a virtual "folder"
+          const folderPrefix = item.prefix as string;
+          const name = folderPrefix.endsWith('/')
+            ? folderPrefix.slice(prefix.length, -1)
+            : folderPrefix.slice(prefix.length);
+          result.folders.push({ prefix: folderPrefix, name: name || folderPrefix });
+        } else if (item.name) {
+          const key = item.name as string;
+          const name = key.slice(prefix.length);
+          if (name) {
+            result.files.push({
+              key,
+              name,
+              sizeBytes: item.size ?? 0,
+              lastModified: item.lastModified ?? new Date(),
+              etag: (item.etag ?? '').replace(/"/g, ''),
+            });
+          }
+        }
+      });
+      stream.on('end', resolve);
+      stream.on('error', reject);
+    });
+
+    return result;
+  }
+
   isReady(): boolean {
     return this.ready;
   }

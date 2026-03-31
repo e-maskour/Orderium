@@ -14,6 +14,7 @@ import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { PDFService } from '../pdf/pdf.service';
+import { PdfQueueService } from '../pdf/pdf.queue.service';
 import { StockService } from '../inventory/stock.service';
 import { MovementType } from '../inventory/entities/stock-movement.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
@@ -28,6 +29,7 @@ export class InvoicesService {
     private readonly configurationsService: ConfigurationsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
+    private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
   ) { }
 
@@ -848,19 +850,8 @@ export class InvoicesService {
       );
     }
 
-    // Generate PDF and store in MinIO (non-blocking — failure doesn't abort validation)
-    const documentType = (
-      await this.invoiceRepository.findOne({
-        where: { id },
-        select: ['supplierId'],
-      })
-    )?.supplierId
-      ? 'invoice' // facture achat
-      : 'invoice'; // facture vente
-    const pdfUrl = await this.pdfService.generateAndUploadPDF(documentType, id);
-    if (pdfUrl) {
-      await this.invoiceRepository.update(id, { pdfUrl });
-    }
+    // Generate PDF in background via queue (non-blocking)
+    void this.pdfQueueService.enqueue('invoice', id);
 
     await this.invalidateInvoiceCache(id);
     const result = await this.findOne(id);
@@ -1193,5 +1184,62 @@ export class InvoicesService {
       [InvoiceStatus.PAID]: 'Payée',
     };
     return labels[status] || status;
+  }
+
+  // ─── Share Link ───────────────────────────────────────────────────────────
+
+  async generateShareLink(
+    id: number,
+  ): Promise<{ shareToken: string; expiresAt: Date }> {
+    const invoice = await this.findOne(id);
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+
+    if (!invoice.isValidated || invoice.status === InvoiceStatus.DRAFT) {
+      throw new BadRequestException('Only validated invoices can be shared');
+    }
+
+    const shareToken =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15) +
+      Date.now().toString(36);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await this.invoiceRepository.update(id, { shareToken, shareTokenExpiry: expiresAt });
+    await this.invalidateInvoiceCache(id);
+
+    return { shareToken, expiresAt };
+  }
+
+  async getByShareToken(token: string): Promise<Invoice> {
+    const invoice = await this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.items', 'items')
+      .leftJoinAndSelect('invoice.customer', 'customer')
+      .leftJoinAndSelect('invoice.supplier', 'supplier')
+      .where('invoice.shareToken = :token', { token })
+      .getOne();
+
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found or link has expired');
+    }
+
+    if (invoice.shareTokenExpiry && new Date() > new Date(invoice.shareTokenExpiry)) {
+      throw new BadRequestException('This invoice link has expired');
+    }
+
+    return invoice;
+  }
+
+  async revokeShareLink(id: number): Promise<void> {
+    const invoice = await this.findOne(id);
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+    await this.invoiceRepository.update(id, { shareToken: null, shareTokenExpiry: null });
+    await this.invalidateInvoiceCache(id);
   }
 }

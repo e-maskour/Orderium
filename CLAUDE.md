@@ -1,7 +1,7 @@
-# Orderium — Claude Instructions
+# Morocom — Claude Instructions
 
 ## Project Identity
-**Orderium** is a multi-tenant SaaS ERP. This is a pnpm monorepo.
+**Morocom** is a multi-tenant SaaS ERP. This is a pnpm monorepo.
 
 | Folder | Framework | Role |
 |--------|-----------|------|

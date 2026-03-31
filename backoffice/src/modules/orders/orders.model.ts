@@ -114,6 +114,9 @@ export class Order implements IOrder {
   deliveryStatus?: DeliveryStatus | null;
   deliveryPersonId?: number | null;
   deliveryPersonName?: string | null;
+  deliveryPersonPhone?: string | null;
+  paidAmount: number;
+  remainingAmount: number;
   dateCreated: string;
   dateUpdated: string;
   items?: OrderItem[];
@@ -147,6 +150,9 @@ export class Order implements IOrder {
     this.deliveryStatus = data.deliveryStatus;
     this.deliveryPersonId = data.deliveryPersonId;
     this.deliveryPersonName = data.deliveryPersonName;
+    this.deliveryPersonPhone = data.deliveryPersonPhone;
+    this.paidAmount = data.paidAmount ?? 0;
+    this.remainingAmount = data.remainingAmount ?? 0;
     this.dateCreated = data.dateCreated;
     this.dateUpdated = data.dateUpdated;
     this.items = data.items ? (data.items.map(item => item instanceof OrderItem ? item : new OrderItem(item))) : undefined;
@@ -218,6 +224,8 @@ export class Order implements IOrder {
       case 'draft': return 'Brouillon';
       case 'validated': return 'Validée';
       case 'in_progress': return 'En cours';
+      case 'confirmed': return 'Confirmé';
+      case 'picked_up': return 'Récupéré';
       case 'delivered': return 'Livrée';
       case 'cancelled': return 'Annulée';
       default: return 'Inconnu';
@@ -235,6 +243,14 @@ export class Order implements IOrder {
 
   get isInProgress(): boolean {
     return this.status === 'in_progress';
+  }
+
+  get isConfirmed(): boolean {
+    return this.status === 'confirmed';
+  }
+
+  get isPickedUp(): boolean {
+    return this.status === 'picked_up';
   }
 
   get isDelivered(): boolean {
@@ -297,6 +313,9 @@ export class Order implements IOrder {
       deliveryStatus: data.deliveryStatus || null,
       deliveryPersonId: data.deliveryPersonId, // Business logic field
       deliveryPersonName: data.deliveryPersonName, // Business logic field
+      deliveryPersonPhone: data.deliveryPersonPhone, // Business logic field
+      paidAmount: data.paidAmount ?? 0,
+      remainingAmount: data.remainingAmount ?? 0,
       dateCreated: data.dateCreated,
       dateUpdated: data.dateUpdated,
       items: (data.items || []).map(OrderItem.fromApiResponse),
