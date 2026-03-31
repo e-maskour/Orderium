@@ -44,8 +44,7 @@
   "include": [
     "src",
     "../shared/ui/src",
-    "../shared/logo",
-    "../shared/components"
+    "../shared/logo"
   ],
   "references": [
     {
