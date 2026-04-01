@@ -31,25 +31,32 @@ export class NotificationsQueueService {
             return false; // caller should fall back to direct send
         }
 
-        await this.notificationsQueue.add(
-            NotificationJobName.SEND,
-            {
-                request,
-                tenantSlug: ctx.tenantSlug,
-                tenantId: ctx.tenantId,
-                tenantName: ctx.tenantName,
-            },
-            {
-                attempts: 3,
-                backoff: { type: 'exponential', delay: 3_000 },
-                removeOnComplete: { count: 200 },
-                removeOnFail: { count: 100 },
-            },
-        );
+        try {
+            await this.notificationsQueue.add(
+                NotificationJobName.SEND,
+                {
+                    request,
+                    tenantSlug: ctx.tenantSlug,
+                    tenantId: ctx.tenantId,
+                    tenantName: ctx.tenantName,
+                },
+                {
+                    attempts: 3,
+                    backoff: { type: 'exponential', delay: 3_000 },
+                    removeOnComplete: { count: 200 },
+                    removeOnFail: { count: 100 },
+                },
+            );
 
-        this.logger.debug(
-            `📨 Notification job queued: '${request.key}' (tenant: ${ctx.tenantSlug})`,
-        );
-        return true;
+            this.logger.debug(
+                `📨 Notification job queued: '${request.key}' (tenant: ${ctx.tenantSlug})`,
+            );
+            return true;
+        } catch (err) {
+            this.logger.warn(
+                `Redis unavailable, notification '${request.key}' will be sent directly: ${(err as Error).message}`,
+            );
+            return false; // caller falls back to synchronous send
+        }
     }
 }

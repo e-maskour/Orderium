@@ -133,6 +133,35 @@ export class NotificationsController {
     return ApiRes(NOT.USER_LIST, notifications);
   }
 
+  @Get('preferences')
+  @ApiOperation({ summary: 'Get notification preferences' })
+  @ApiResponse({ status: 200, description: 'Notification preferences retrieved' })
+  getPreferences() {
+    // Placeholder - implement user preferences later
+    return ApiRes(NOT.PREFS_DETAIL, {
+      emailNotifications: true,
+      pushNotifications: true,
+      smsNotifications: false,
+      notificationTypes: {
+        NEW_ORDER: true,
+        ORDER_ASSIGNED: true,
+        ORDER_COMPLETED: true,
+        ORDER_CANCELLED: true,
+        PAYMENT_RECEIVED: true,
+        DELIVERY_UPDATE: true,
+        SYSTEM_ALERT: true,
+      },
+    });
+  }
+
+  @Patch('preferences')
+  @ApiOperation({ summary: 'Update notification preferences' })
+  @ApiResponse({ status: 200, description: 'Notification preferences updated' })
+  updatePreferences(@Body() preferences: Record<string, boolean>) {
+    // Placeholder - implement user preferences later
+    return ApiRes(NOT.PREFS_UPDATED, preferences);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get notification by ID' })
   @ApiResponse({ status: 200, description: 'Notification retrieved successfully' })
@@ -207,35 +236,6 @@ export class NotificationsController {
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.notificationsService.delete(id);
     return ApiRes(NOT.DELETED, null);
-  }
-
-  @Get('preferences')
-  @ApiOperation({ summary: 'Get notification preferences' })
-  @ApiResponse({ status: 200, description: 'Notification preferences retrieved' })
-  getPreferences() {
-    // Placeholder - implement user preferences later
-    return ApiRes(NOT.PREFS_DETAIL, {
-      emailNotifications: true,
-      pushNotifications: true,
-      smsNotifications: false,
-      notificationTypes: {
-        NEW_ORDER: true,
-        ORDER_ASSIGNED: true,
-        ORDER_COMPLETED: true,
-        ORDER_CANCELLED: true,
-        PAYMENT_RECEIVED: true,
-        DELIVERY_UPDATE: true,
-        SYSTEM_ALERT: true,
-      },
-    });
-  }
-
-  @Patch('preferences')
-  @ApiOperation({ summary: 'Update notification preferences' })
-  @ApiResponse({ status: 200, description: 'Notification preferences updated' })
-  updatePreferences(@Body() preferences: Record<string, boolean>) {
-    // Placeholder - implement user preferences later
-    return ApiRes(NOT.PREFS_UPDATED, preferences);
   }
 
   @Post('test')

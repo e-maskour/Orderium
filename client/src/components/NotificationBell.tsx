@@ -399,7 +399,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
           >
             {/* ── Drawer header ── */}
             <div style={{
-              padding: '1.125rem 1.25rem 0.75rem',
+              padding: 'calc(1.125rem + env(safe-area-inset-top, 0)) 1.25rem 0.75rem',
               borderBottom: '1px solid #f0f0f0',
               flexShrink: 0,
               background: '#fff',

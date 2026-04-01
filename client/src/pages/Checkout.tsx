@@ -134,7 +134,7 @@ const Checkout = () => {
         customerId, customerPhone: formData.phone,
         items: orderItems, note: formData.note,
         subtotal, tax: 0, discount: 0, discountType: 0, total: subtotal,
-        fromPortal: true, fromClient: true, deliveryStatus: 'pending',
+        fromPortal: true, fromClient: true,
       });
 
       navigate('/success', { state: { orderNumber: orderResult.data.orderNumber, orderId: orderResult.data.id, total: subtotal, customerName: formData.name, customerPhone: formData.phone, customerAddress: formData.address, items } });
@@ -173,7 +173,7 @@ const Checkout = () => {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc' }} dir={dir}>
       {/* Sticky header */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 40, background: 'white', borderBottom: '1px solid #e5e7eb', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 40, background: 'white', borderBottom: '1px solid #e5e7eb', boxShadow: '0 1px 6px rgba(0,0,0,0.06)', paddingTop: 'env(safe-area-inset-top, 0)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0 1rem', height: '3.75rem' }}>
           <Link to="/">
             <button style={{ width: '2.25rem', height: '2.25rem', borderRadius: '50%', border: 'none', background: '#f3f4f6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151' }}>

@@ -310,7 +310,7 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
           >
             {/* Header */}
             <div style={{
-              padding: '1.125rem 1.25rem 0.875rem',
+              padding: 'calc(1.125rem + env(safe-area-inset-top, 0)) 1.25rem 0.875rem',
               borderBottom: '1px solid #f0f0f0',
               flexShrink: 0,
               background: '#fff',

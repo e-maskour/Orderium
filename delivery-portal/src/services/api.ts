@@ -1,6 +1,7 @@
 import { Order } from '../types';
 
-const API_URL = '/api/delivery';
+const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+const API_URL = `${BASE}/api/delivery`;
 
 const getAuthHeaders = (): Record<string, string> => {
   const token = localStorage.getItem('authToken');

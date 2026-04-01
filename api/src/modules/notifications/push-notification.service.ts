@@ -34,7 +34,7 @@ export class PushNotificationService implements OnModuleInit {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   private get deviceTokenRepository(): Repository<DeviceToken> {
     return this.tenantConnService.getRepository(DeviceToken);
@@ -59,6 +59,15 @@ export class PushNotificationService implements OnModuleInit {
       if (!projectId || !clientEmail || !privateKey) {
         this.logger.warn(
           'Firebase credentials not configured. Push notifications will be disabled.',
+        );
+        return;
+      }
+
+      // Reuse existing default app (e.g. after hot-reload or accidental double-init)
+      if (admin.apps.length > 0) {
+        this.firebaseApp = admin.apps[0]!;
+        this.logger.log(
+          'Firebase Admin SDK already initialized, reusing existing app',
         );
         return;
       }
@@ -201,7 +210,7 @@ export class PushNotificationService implements OnModuleInit {
    * Delivery persons register device tokens with their own ID as userId,
    * so we just return the deliveryId directly.
    */
-  async getUserIdByDeliveryId(deliveryId: number): Promise<number | null> {
+  getUserIdByDeliveryId(deliveryId: number): number {
     return deliveryId;
   }
 
@@ -232,67 +241,67 @@ export class PushNotificationService implements OnModuleInit {
 
     const message: admin.messaging.MulticastMessage = options?.dataOnlyWeb
       ? {
-        tokens,
-        data: {
-          ...(payload.data || {}),
-          title: payload.title,
-          body: payload.body,
-          clickAction: payload.clickAction || '/',
-        },
-        webpush: {
-          fcmOptions: {
-            link: payload.clickAction || '/',
-          },
-        },
-      }
-      : {
-        tokens,
-        notification: {
-          title: payload.title,
-          body: payload.body,
-          ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
-        },
-        data: payload.data || {},
-        webpush: {
-          notification: {
+          tokens,
+          data: {
+            ...(payload.data || {}),
             title: payload.title,
             body: payload.body,
-            icon: '/Eo_circle_deep-orange_white_letter-o.svg',
-            badge: '/Eo_circle_deep-orange_white_letter-o.svg',
-            ...(payload.imageUrl && { image: payload.imageUrl }),
+            clickAction: payload.clickAction || '/',
           },
-          fcmOptions: {
-            link: payload.clickAction || '/',
-          },
-        },
-        android: {
-          notification: {
-            title: payload.title,
-            body: payload.body,
-            icon: 'notification_icon',
-            color: '#FF6B00',
-            channelId: 'orderium_notifications',
-            clickAction: payload.clickAction || 'OPEN_APP',
-            ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
-          },
-          priority: 'high',
-        },
-        apns: {
-          payload: {
-            aps: {
-              alert: {
-                title: payload.title,
-                body: payload.body,
-              },
-              badge: 1,
-              sound: 'default',
+          webpush: {
+            fcmOptions: {
+              link: payload.clickAction || '/',
             },
           },
-          fcmOptions: {
+        }
+      : {
+          tokens,
+          notification: {
+            title: payload.title,
+            body: payload.body,
             ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
           },
-        },
-      };
+          data: payload.data || {},
+          webpush: {
+            notification: {
+              title: payload.title,
+              body: payload.body,
+              icon: '/Eo_circle_deep-orange_white_letter-o.svg',
+              badge: '/Eo_circle_deep-orange_white_letter-o.svg',
+              ...(payload.imageUrl && { image: payload.imageUrl }),
+            },
+            fcmOptions: {
+              link: payload.clickAction || '/',
+            },
+          },
+          android: {
+            notification: {
+              title: payload.title,
+              body: payload.body,
+              icon: 'notification_icon',
+              color: '#FF6B00',
+              channelId: 'orderium_notifications',
+              clickAction: payload.clickAction || 'OPEN_APP',
+              ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+            },
+            priority: 'high',
+          },
+          apns: {
+            payload: {
+              aps: {
+                alert: {
+                  title: payload.title,
+                  body: payload.body,
+                },
+                badge: 1,
+                sound: 'default',
+              },
+            },
+            fcmOptions: {
+              ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+            },
+          },
+        };
 
     try {
       const response = await admin.messaging().sendEachForMulticast(message);
@@ -331,13 +340,17 @@ export class PushNotificationService implements OnModuleInit {
         failureCount: response.failureCount,
         invalidTokens,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Firebase network errors (EAI_AGAIN, ECONNREFUSED) mean the container
       // cannot reach fcm.googleapis.com — log and degrade gracefully.
-      if (error?.errorInfo?.code === 'app/network-error') {
+      const fcmError = error as {
+        errorInfo?: { code?: string };
+        message?: string;
+      };
+      if (fcmError.errorInfo?.code === 'app/network-error') {
         this.logger.warn(
           'FCM network unreachable (push notifications skipped):',
-          error.message,
+          fcmError.message,
         );
       } else {
         this.logger.error('Failed to send push notification:', error);
@@ -422,7 +435,7 @@ export class PushNotificationService implements OnModuleInit {
     deliveryId: number,
     payload: PushNotificationPayload,
   ): Promise<void> {
-    const userId = await this.getUserIdByDeliveryId(deliveryId);
+    const userId = this.getUserIdByDeliveryId(deliveryId);
 
     if (!userId) {
       this.logger.debug(

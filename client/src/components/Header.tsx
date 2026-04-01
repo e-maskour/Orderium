@@ -27,6 +27,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
         background: '#ffffff',
         borderBottom: '1px solid #e5e7eb',
         boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+        paddingTop: 'env(safe-area-inset-top, 0)',
       }}
     >
       <div

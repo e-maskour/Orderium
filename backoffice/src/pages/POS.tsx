@@ -547,6 +547,7 @@ export default function POS() {
         top: 0,
         zIndex: 50,
         boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
+        paddingTop: 'env(safe-area-inset-top, 0)',
       }}>
         <div style={{ padding: '0 1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '3.75rem' }}>

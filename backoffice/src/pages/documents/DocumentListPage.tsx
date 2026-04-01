@@ -326,7 +326,7 @@ export default function DocumentListPage({
           pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
         >
           {/* Panel Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(1rem + env(safe-area-inset-top, 0)) 1.5rem 1rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Filter style={{ width: 20, height: 20, color: '#fff' }} />
               <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#fff' }}>{t('filters')}</h2>

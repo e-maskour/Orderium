@@ -122,11 +122,13 @@ export function usePushNotifications(
         onNotification(payload);
       }
 
-      // Also show a native notification for foreground messages
-      if (payload.notification) {
-        const { title, body } = payload.notification;
-        new Notification(title || 'Morocom', {
-          body,
+      // Show native notification for foreground messages.
+      // Fall back to payload.data for title/body in case of data-only messages.
+      const title = payload.notification?.title || payload.data?.title;
+      const body = payload.notification?.body || payload.data?.body;
+      if (title && Notification.permission === 'granted') {
+        new Notification(title, {
+          body: body || '',
           icon: '/notification-icon.png',
           data: payload.data,
         });

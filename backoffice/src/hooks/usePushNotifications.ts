@@ -114,10 +114,14 @@ export function usePushNotifications(
         onNotification(payload);
       }
 
-      // Show native notification for foreground messages
-      if (payload.notification) {
-        const { title, body } = payload.notification;
-        const notificationTitle = title || 'Morocom Backoffice';
+      // Show native notification for foreground messages.
+      // FCM data-only messages (sent to backoffice admins) do NOT have
+      // payload.notification, so fall back to payload.data for title/body.
+      const title = payload.notification?.title || payload.data?.title;
+      const body = payload.notification?.body || payload.data?.body;
+
+      if (title) {
+        const notificationTitle = title;
         const notificationOptions = {
           body: body || '',
           icon: payload.notification?.icon || '/notification-icon.png',
@@ -128,21 +132,15 @@ export function usePushNotifications(
           vibrate: [200, 100, 200],
         };
 
-
         if ('serviceWorker' in navigator && Notification.permission === 'granted') {
           navigator.serviceWorker.ready
             .then((registration) => {
               return registration.showNotification(notificationTitle, notificationOptions);
             })
-            .then(() => {
-              console.log('✅ Notification displayed successfully');
-            })
             .catch((error) => {
               console.error('❌ Service worker notification failed:', error);
-              // Fallback to direct notification
               try {
                 new Notification(notificationTitle, notificationOptions);
-                console.log('✅ Notification displayed via fallback');
               } catch (fallbackError) {
                 console.error('❌ Fallback notification also failed:', fallbackError);
               }
@@ -153,11 +151,7 @@ export function usePushNotifications(
           } catch (error) {
             console.error('❌ Direct notification failed:', error);
           }
-        } else {
-          console.error('❌ Notification permission not granted:', Notification.permission);
         }
-      } else {
-        console.log('⚠️ No notification object in payload');
       }
     });
 

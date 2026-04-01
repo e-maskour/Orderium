@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { IProduct } from '../modules/products/products.interface';
 import { productsService } from '../modules/products/products.service';
 import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { ProgressSpinner } from 'primereact/progressspinner';
@@ -11,6 +10,22 @@ import { formatAmount } from '@orderium/ui';
 import { EmptyState } from './EmptyState';
 
 const PCAT_STYLES = `
+  /* ── Bottom sheet on mobile ── */
+  @media (max-width: 640px) {
+    .pcat-dialog.p-dialog-mask {
+      align-items: flex-end !important;
+      padding: 0 !important;
+    }
+    .pcat-dialog.p-dialog-mask .p-dialog .p-dialog-footer {
+      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0)) !important;
+    }
+    .pcat-dialog .p-dialog-content {
+      max-height: none !important;
+      flex: 1 !important;
+      height: 0 !important;
+      overflow-y: auto !important;
+    }
+  }
   .pcat-search-wrap {
     padding: 0.625rem 0.875rem;
     background: #f8fafc;
@@ -52,8 +67,6 @@ const PCAT_STYLES = `
     .pcat-card { gap: 0.375rem; padding: 0.5rem; }
     .pcat-right { gap: 0.125rem; }
     .pcat-price { font-size: 0.8125rem !important; }
-    .pcat-qty .p-inputnumber-input { width: 1.75rem !important; font-size: 0.75rem !important; }
-    .pcat-qty .p-button { width: 1.375rem !important; height: 1.5rem !important; }
   }
   .pcat-card:hover:not(.pcat-selected) {
     border-color: #94a3b8;
@@ -105,10 +118,26 @@ const PCAT_STYLES = `
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 5px rgba(35,90,228,0.4);
   }
-  .pcat-qty { display: flex; align-items: center; }
-  .pcat-qty .p-inputnumber { height: 1.75rem; }
-  .pcat-qty .p-inputnumber-input { width: 2rem !important; text-align: center !important; padding: 0.125rem 0.125rem !important; font-weight: 700 !important; font-size: 0.8125rem !important; height: 1.75rem !important; }
-  .pcat-qty .p-button { width: 1.5rem !important; height: 1.75rem !important; padding: 0 !important; }
+  .pcat-qty { display: flex; align-items: center; gap: 0; border: 1.5px solid #235ae4; border-radius: 0.5rem; overflow: hidden; background: #fff; }
+  .pcat-qty-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 1.75rem; height: 1.75rem;
+    background: #f0f6ff; border: none; outline: none; cursor: pointer;
+    color: #235ae4; font-size: 1rem; font-weight: 700; line-height: 1;
+    flex-shrink: 0; transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pcat-qty-btn:active { background: #dbeafe; }
+  .pcat-qty-val {
+    width: 2.5rem; text-align: center;
+    font-size: 0.8125rem; font-weight: 700; color: #1e293b;
+    padding: 0 0.125rem; height: 1.75rem;
+    border: none; outline: none; background: transparent;
+    border-left: 1px solid #bfdbfe; border-right: 1px solid #bfdbfe;
+  }
+  .pcat-qty-val::-webkit-outer-spin-button,
+  .pcat-qty-val::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .pcat-qty-val[type=number] { -moz-appearance: textfield; }
   .pcat-name { font-size: 0.8125rem; font-weight: 700; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
   .pcat-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.0625rem; overflow: hidden; }
   .pcat-empty {
@@ -152,6 +181,7 @@ export function ProductCatalogueModal({
   const [allProducts, setAllProducts] = useState<IProduct[]>([]);
   const [catalogueLoading, setCatalogueLoading] = useState(false);
   const [catalogueSearch, setCatalogueSearch] = useState('');
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 640;
 
   const isVente = type === 'vente';
 
@@ -288,9 +318,24 @@ export function ProductCatalogueModal({
       footer={footerContent}
       modal
       dismissableMask
-      style={{ width: '95vw', maxWidth: '58rem' }}
-      breakpoints={{ '960px': '90vw', '640px': '95vw' }}
-      contentStyle={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'calc(80vh - 9rem)' }}
+      maskClassName="pcat-dialog"
+      style={isMobile ? {
+        width: '100vw',
+        maxWidth: '100vw',
+        maxHeight: '90dvh',
+        margin: 0,
+        borderRadius: '1rem 1rem 0 0',
+      } : { width: '95vw', maxWidth: '58rem' }}
+      breakpoints={isMobile ? undefined : { '960px': '90vw', '640px': '100vw' }}
+      contentStyle={isMobile ? {
+        padding: 0,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        height: 0,
+        maxHeight: 'none',
+      } : { padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'calc(85dvh - 9rem)' }}
     >
       <style>{PCAT_STYLES}</style>
 
@@ -372,17 +417,27 @@ export function ProductCatalogueModal({
                       getStockBadge(product.stock)
                     ) : (
                       <div className="pcat-qty" onClick={(e) => e.stopPropagation()}>
-                        <InputNumber
+                        <button
+                          className="pcat-qty-btn"
+                          onClick={() => updateProductQuantity(product, Math.max(0, currentQuantity - 1))}
+                          type="button"
+                        >−</button>
+                        <input
+                          className="pcat-qty-val"
+                          type="number"
+                          min={1}
                           value={currentQuantity}
-                          onValueChange={(e) => updateProductQuantity(product, Math.max(0, e.value || 0))}
-                          min={0}
-                          showButtons
-                          buttonLayout="horizontal"
-                          incrementButtonIcon="pi pi-plus"
-                          decrementButtonIcon="pi pi-minus"
-                          style={{ width: '6.5rem' }}
-                          inputStyle={{ textAlign: 'center', width: '2rem', fontWeight: 700 }}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value, 10);
+                            if (!isNaN(v) && v >= 0) updateProductQuantity(product, v);
+                          }}
+                          onFocus={(e) => e.target.select()}
                         />
+                        <button
+                          className="pcat-qty-btn"
+                          onClick={() => updateProductQuantity(product, currentQuantity + 1)}
+                          type="button"
+                        >+</button>
                       </div>
                     )}
                   </div>

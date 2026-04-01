@@ -283,8 +283,9 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileDrawer = false }:
         >
             {/* ── Logo ───────────────────────────────────── */}
             <div style={{
-                height: '4.25rem',
+                height: isMobileDrawer ? 'calc(4.25rem + env(safe-area-inset-top, 0))' : '4.25rem',
                 padding: isCollapsed ? '0 0.75rem' : '0 1rem 0 1.125rem',
+                paddingTop: isMobileDrawer ? 'env(safe-area-inset-top, 0)' : undefined,
                 display: 'flex', alignItems: 'center',
                 justifyContent: isCollapsed ? 'center' : 'flex-start',
                 borderBottom: '1px solid rgba(255,255,255,0.07)',
