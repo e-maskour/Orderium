@@ -1022,3 +1022,57 @@ textarea.p-inputtextarea:enabled:focus {
     background: var(--primary-50);
     color: var(--primary-700);
 }
+
+/* ============================================================
+   Mobile Auto-Zoom Prevention
+   iOS Safari (and other mobile browsers) auto-zoom when an
+   input's computed font-size is below 16px. The (pointer: coarse)
+   media query targets touch screens only — desktop layouts are
+   completely unaffected. Do NOT use maximum-scale/user-scalable
+   viewport hacks; they harm accessibility and are ignored on
+   recent iOS.
+   ============================================================ */
+
+@media (hover: none) and (pointer: coarse) {
+
+    /* ── Native form elements ── */
+    input,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="time"],
+    input[type="month"],
+    input[type="week"],
+    textarea,
+    select,
+    [contenteditable="true"],
+    [contenteditable=""] {
+        font-size: 16px !important;
+    }
+
+    /* ── PrimeReact form components ── */
+    .p-inputtext,
+    .p-dropdown .p-dropdown-label,
+    .p-multiselect .p-multiselect-label,
+    .p-treeselect .p-treeselect-label,
+    .p-cascadeselect .p-cascadeselect-label,
+    .p-chips .p-inputtext,
+    .p-autocomplete .p-inputtext,
+    .p-password .p-inputtext,
+    .p-calendar .p-inputtext,
+    textarea.p-inputtextarea {
+        font-size: 16px !important;
+    }
+
+    /* ── Compact-mode override (backoffice) ── */
+    .orderium-compact .p-inputtext,
+    .orderium-compact textarea.p-inputtextarea {
+        font-size: 16px !important;
+    }
+}

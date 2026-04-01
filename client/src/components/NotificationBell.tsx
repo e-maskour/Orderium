@@ -421,6 +421,7 @@ export function NotificationBell({ customerId }: NotificationBellProps) {
                   >
                     <X size={18} />
                   </button>
+                  <Bell size={18} color="#3b82f6" />
                   <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#111827' }}>
                     {t('notifications')}
                   </h2>

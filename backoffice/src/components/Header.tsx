@@ -178,6 +178,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
     const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
     const [canInstall, setCanInstall] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeIndex, setActiveIndex] = useState(-1);
@@ -188,6 +189,12 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
     const searchInputRef = useRef<HTMLInputElement>(null);
     const resultsRef = useRef<HTMLDivElement>(null);
     const avatarMenuRef = useRef<OverlayPanel>(null);
+
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handler, { passive: true });
+        return () => window.removeEventListener('resize', handler);
+    }, []);
 
     const subNavGroups = useMemo(() => [
         {
@@ -376,7 +383,7 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
 
     return (
         <>
-            <div style={{ position: 'sticky', top: 0, zIndex: 100, direction: language === 'ar' ? 'rtl' : 'ltr', backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255,255,255,0.97)', borderBottom: '1px solid rgba(35, 90, 228, 0.12)' }}>
+            <div style={{ position: 'sticky', top: 0, zIndex: 100, direction: language === 'ar' ? 'rtl' : 'ltr', backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255,255,255,0.97)', borderBottom: '1px solid rgba(35, 90, 228, 0.12)', paddingTop: 'env(safe-area-inset-top)' }}>
                 {/* ── Top Bar ── */}
                 <header className="flex align-items-center justify-content-between" style={{ height: '3.5rem', padding: '0 1.5rem' }}>
                     {/* Left */}
@@ -549,6 +556,123 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                 let globalIdx = -1;
                 const allFlat: SearchRoute[] = Object.values(groupedResults).flat();
 
+                /* ─────────────────────────────────────────
+                   MOBILE: bottom-sheet search
+                ───────────────────────────────────────── */
+                if (isMobile) {
+                    return (
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                            {/* Backdrop */}
+                            <div onClick={closeSearch} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }} />
+
+                            {/* Sheet */}
+                            <div style={{
+                                position: 'relative',
+                                background: '#fff',
+                                borderRadius: '1.25rem 1.25rem 0 0',
+                                boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                maxHeight: '88dvh',
+                                animation: 'mobileSheetIn 0.22s cubic-bezier(0.16,1,0.3,1)',
+                                direction: isRTL ? 'rtl' : 'ltr',
+                            }}>
+                                {/* Handle */}
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: '0.625rem 0 0' }}>
+                                    <div style={{ width: '2.5rem', height: '0.25rem', borderRadius: '99px', background: '#e2e8f0' }} />
+                                </div>
+
+                                {/* Search input */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
+                                    <Search style={{ width: '1.25rem', height: '1.25rem', color: '#6366f1', flexShrink: 0 }} strokeWidth={2} />
+                                    <InputText
+                                        ref={searchInputRef}
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                        placeholder={ui.placeholder}
+                                        dir={isRTL ? 'rtl' : 'ltr'}
+                                        autoFocus
+                                        style={{
+                                            flex: 1, border: 'none', outline: 'none',
+                                            fontSize: '1rem', fontWeight: 400,
+                                            color: '#111827', background: 'transparent',
+                                            fontFamily: 'inherit', textAlign: isRTL ? 'right' : 'left',
+                                            boxShadow: 'none', padding: '0.25rem 0',
+                                        }}
+                                    />
+                                    {searchQuery ? (
+                                        <button
+                                            onClick={() => setSearchQuery('')}
+                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', background: '#f1f5f9', borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+                                        >
+                                            <X style={{ width: '0.875rem', height: '0.875rem', color: '#64748b' }} />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={closeSearch}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: '#6366f1', padding: '0.25rem 0.5rem', flexShrink: 0 }}
+                                        >
+                                            {lang === 'ar' ? 'إلغاء' : 'Annuler'}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Results list */}
+                                <div style={{ overflowY: 'auto', flex: 1, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+                                    {allFlat.length === 0 ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
+                                            <Search style={{ width: '2rem', height: '2rem', marginBottom: '0.75rem', opacity: 0.3 }} />
+                                            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 500 }}>{ui.noResults}</p>
+                                        </div>
+                                    ) : (
+                                        allFlat.map((route) => {
+                                            const RouteIcon = route.icon;
+                                            const gc = GROUP_CONFIG[route.group] || { color: '#6b7280', bg: '#f9fafb' };
+                                            return (
+                                                <button
+                                                    key={route.path}
+                                                    onClick={() => goTo(route.path)}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center',
+                                                        gap: '0.875rem', width: '100%',
+                                                        padding: '0.875rem 1rem',
+                                                        background: 'none', border: 'none', cursor: 'pointer',
+                                                        borderBottom: '1px solid #f8fafc',
+                                                        textAlign: isRTL ? 'right' : 'left',
+                                                        flexDirection: isRTL ? 'row-reverse' : 'row',
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem',
+                                                        background: gc.bg, display: 'flex', alignItems: 'center',
+                                                        justifyContent: 'center', flexShrink: 0,
+                                                    }}>
+                                                        <RouteIcon style={{ width: '1.1rem', height: '1.1rem', color: gc.color }} strokeWidth={1.75} />
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0, textAlign: isRTL ? 'right' : 'left' }}>
+                                                        <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0f172a', lineHeight: 1.3 }}>
+                                                            {highlightText(route.labels[lang], searchQuery.trim())}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.8125rem', color: '#94a3b8', lineHeight: 1.3, marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {highlightText(route.descriptions[lang], searchQuery.trim())}
+                                                        </div>
+                                                    </div>
+                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.3, transform: isRTL ? 'scaleX(-1)' : undefined }}>
+                                                        <path d="M6 4l4 4-4 4" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                </button>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                /* ─────────────────────────────────────────
+                   DESKTOP: original modal
+                ───────────────────────────────────────── */
                 return (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '4rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
                         {/* Backdrop */}
@@ -769,6 +893,10 @@ export const Header = ({ isSidebarOpen = false, onMenuToggle }: HeaderProps) => 
                 @keyframes searchModalIn {
                     from { opacity: 0; transform: scale(0.97) translateY(-8px); }
                     to   { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                @keyframes mobileSheetIn {
+                    from { transform: translateY(100%); }
+                    to   { transform: translateY(0); }
                 }
                 @keyframes searchIconPulse {
                     0%   { transform: scale(1); opacity: 0.55; }

@@ -384,6 +384,8 @@ export default {
   paginatorReport: '{first}-{last} sur {totalRecords}',
 
   // Navigation (mobile + sidebar)
+  navBoard: 'Board',
+  navInventory: 'Inventaire',
   navMore: 'Plus',
   navExpand: 'Développer',
   navCollapse: 'Réduire',

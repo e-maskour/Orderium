@@ -54,15 +54,24 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
     }
 
-    this.logger.error(
-      `${request.method} ${request.url}`,
-      exception instanceof Error ? exception.stack : exception,
-    );
+    const SILENT_PATHS = ['/.well-known/'];
+    const isSilent = SILENT_PATHS.some((p) => request.url.startsWith(p));
+
+    if (!isSilent) {
+      this.logger.error(
+        `${request.method} ${request.url}`,
+        exception instanceof Error ? exception.stack : exception,
+      );
+    }
 
     // For validation errors, log the individual field messages so they appear in server logs
     if (exception instanceof HttpException && status === 400) {
       const body = exception.getResponse();
-      if (typeof body === 'object' && body !== null && Array.isArray((body as Record<string, unknown>)['message'])) {
+      if (
+        typeof body === 'object' &&
+        body !== null &&
+        Array.isArray((body as Record<string, unknown>)['message'])
+      ) {
         this.logger.error(
           `Validation errors: ${((body as Record<string, unknown>)['message'] as string[]).join(' | ')}`,
         );

@@ -387,6 +387,8 @@ export default {
   paginatorReport: '{first}-{last} من {totalRecords}',
 
   // Navigation (mobile + sidebar)
+  navBoard: 'Board',
+  navInventory: 'المخزون',
   navMore: 'المزيد',
   navExpand: 'توسيع',
   navCollapse: 'طي',

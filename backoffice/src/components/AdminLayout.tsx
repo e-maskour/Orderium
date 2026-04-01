@@ -19,10 +19,9 @@ interface MobileTab {
 }
 
 const MOBILE_TABS: MobileTab[] = [
-    { path: '/dashboard', icon: LayoutDashboard, labelKey: 'dashboard', activePaths: ['/dashboard'], exactMatch: true },
+    { path: '/dashboard', icon: LayoutDashboard, labelKey: 'navBoard', activePaths: ['/dashboard'], exactMatch: true },
     { path: '/orders', icon: ShoppingCart, labelKey: 'orders', activePaths: ['/orders', '/pos', '/checkout', '/caisse'] },
-    { path: '/devis', icon: TrendingUp, labelKey: 'sales', activePaths: ['/devis', '/bons-livraison', '/factures/vente', '/paiements-vente', '/customers'] },
-    { path: '/products', icon: Package, labelKey: 'stock', activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
+    { path: '/products', icon: Package, labelKey: 'navInventory', activePaths: ['/products', '/categories', '/warehouses', '/stock-movements', '/inventory-adjustments'] },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
@@ -106,7 +105,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                                 }} />
                             )}
                             <tab.icon style={{ width: 22, height: 22 }} strokeWidth={active ? 2.25 : 1.75} />
-                            <span style={{ fontSize: '0.625rem', fontWeight: active ? 700 : 500 }}>{t(tab.labelKey)}</span>
+                            <span style={{ fontSize: '11px', fontWeight: active ? 700 : 500, lineHeight: 1.2, textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t(tab.labelKey)}</span>
                         </Link>
                     );
                 })}
@@ -119,7 +118,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                     }}
                 >
                     <MoreHorizontal style={{ width: 22, height: 22 }} strokeWidth={1.75} />
-                    <span style={{ fontSize: '0.625rem', fontWeight: 500 }}>{t('navMore')}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 500, lineHeight: 1.2 }}>{t('navMore')}</span>
                 </button>
             </nav>
 
@@ -129,10 +128,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         }
         .admin-main-area { padding: 1.25rem 1.5rem; }
         @media (max-width: 1023px) {
-          .admin-main-area { padding: 1rem 0.75rem 5.5rem; }
+          .admin-main-area { padding: 1rem 0.75rem calc(5.5rem + env(safe-area-inset-bottom)); }
         }
         @media (max-width: 639px) {
-          .admin-main-area { padding: 0.75rem 0.625rem 5.5rem; }
+          .admin-main-area { padding: 0.75rem 0.625rem calc(5.5rem + env(safe-area-inset-bottom)); }
         }
         .page-container { max-width: 1600px; margin: 0 auto; width: 100%; }
         .mobile-bottom-nav {
@@ -142,6 +141,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           background: #ffffff; border-top: 1px solid #e2e8f0;
           display: flex; align-items: stretch; z-index: 30;
           box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+          -webkit-text-size-adjust: 100%;
+          text-size-adjust: 100%;
         }
       `}</style>
         </div>

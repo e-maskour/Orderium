@@ -1052,4 +1052,29 @@ a,
         padding-bottom: 0 !important;
     }
 }
+
+/* ===== MOBILE AUTO-ZOOM PREVENTION =====
+   Override sub-16px font-size rules for inputs on touch screens.
+   Prevents iOS Safari / Android browsers from auto-zooming on focus.
+   ===================================== */
+@media (hover: none) and (pointer: coarse) {
+
+    /* Search bar input */
+    .cl-search-wrap .p-inputtext {
+        font-size: 16px !important;
+    }
+
+    /* Big input variant (.cl-input) */
+    .cl-input .p-inputtext,
+    .cl-input.p-inputtext {
+        font-size: 16px !important;
+    }
+
+    /* Native inputs & selects not covered by shared styles */
+    input,
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+}
 }

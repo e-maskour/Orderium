@@ -99,6 +99,37 @@
     @apply bg-slate-400 dark:bg-slate-600;
 }
 
+/* ── Mobile Auto-Zoom Prevention ──────────────────────────
+   iOS Safari and Android browsers auto-zoom when an input's
+   computed font-size is below 16px. This fix targets touch
+   screens only; desktop layouts are unaffected.
+   ──────────────────────────────────────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+
+    input,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="time"],
+    textarea,
+    select,
+    [contenteditable="true"],
+    [contenteditable=""] {
+        font-size: 16px !important;
+    }
+
+    /* Tailwind .input utility class (uses text-sm = 14px) */
+    .input {
+        font-size: 16px !important;
+    }
+}
+
 /* ── Animations ── */
 @keyframes fadeInUp {
     from {
