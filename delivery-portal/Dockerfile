@@ -10,11 +10,11 @@ WORKDIR /app
 # Enable pnpm via corepack
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
-COPY shared/ui /shared/ui
-
-# Copy package files a
+# 1. Copy package files FIRST — this layer is only invalidated when deps change
 COPY delivery-portal/package.json delivery-portal/pnpm-lock.yaml ./
+
+# 2. Copy shared/ui AFTER package files so source changes don't bust the install cache
+COPY shared/ui /shared/ui
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile

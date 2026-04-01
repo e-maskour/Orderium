@@ -11,15 +11,15 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy shared UI package
-COPY shared/ui /shared/ui
-COPY shared/components /shared/components
-
-# 1. Copy ONLY package files — cached until deps change
+# 1. Copy ONLY package files FIRST — cached until deps change
 COPY backoffice/package.json backoffice/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# 2. Copy source AFTER install (fallback if not volume-mounted)
+# 2. Copy shared packages AFTER install so source changes don't bust the cache
+COPY shared/ui /shared/ui
+COPY shared/components /shared/components
+
+# 3. Copy source AFTER install (fallback if not volume-mounted)
 COPY backoffice/ .
 
 EXPOSE 3001
