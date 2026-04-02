@@ -154,3 +154,4 @@ scripts.env
 .env.local
 .env.production
 **/.env.local
+.vscode/settings.json

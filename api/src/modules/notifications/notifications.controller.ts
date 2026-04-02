@@ -201,7 +201,7 @@ export class NotificationsController {
       ? Number(userId)
       : customerId
         ? Number(customerId)
-        : 0;
+        : undefined;
     const updated = await this.notificationsService.markAllAsRead(userIdNum);
     return ApiRes(NOT.MARKED_ALL_READ, { updated });
   }

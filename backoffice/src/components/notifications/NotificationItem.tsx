@@ -48,13 +48,15 @@ export function NotificationItem({
         notification.priority === NotificationPriority.URGENT ||
         notification.priority === NotificationPriority.HIGH;
 
-    // Translated title
+    // Translated title — fall back to DB title when no i18n key exists for this type
     const titleKey = `notification.title.${notification.type}`;
-    const translatedTitle = t(titleKey as any) || notification.title;
+    const titleTranslation = t(titleKey as any);
+    const translatedTitle = titleTranslation !== titleKey ? titleTranslation : (notification.title || titleKey);
 
-    // Translated message with interpolation
+    // Translated message with interpolation — fall back to DB message when no i18n key exists
     const messageKey = `notification.message.${notification.type}`;
-    let translatedMessage = t(messageKey as any) || notification.message;
+    const messageTranslation = t(messageKey as any);
+    let translatedMessage = messageTranslation !== messageKey ? messageTranslation : (notification.message || messageKey);
     const replacements: Record<string, string> = {};
     if (notification.data) {
         Object.entries(notification.data).forEach(([k, v]) => {

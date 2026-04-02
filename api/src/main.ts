@@ -75,8 +75,8 @@ async function bootstrap() {
     },
   );
 
-  // Global prefix
-  app.setGlobalPrefix('api');
+  // Global prefix (exclude /queues so Bull Board is served at /queues, not /api/queues)
+  app.setGlobalPrefix('api', { exclude: ['/queues'] });
 
   // Increase body limit to handle base64-encoded logo uploads in onboarding
   app.use(express.json({ limit: '10mb' }));

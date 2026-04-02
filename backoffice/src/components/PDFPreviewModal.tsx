@@ -9,11 +9,16 @@ interface PDFPreviewModalProps {
   title: string;
 }
 
+function isMobileBrowser(): boolean {
+  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+}
+
 export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewModalProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const prevBlobUrl = useRef<string | null>(null);
+  const mobile = isMobileBrowser();
 
   useEffect(() => {
     if (!isOpen || !pdfUrl) return;
@@ -92,12 +97,39 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
         </div>
       )}
 
-      {blobUrl && (
+      {blobUrl && !mobile && (
         <iframe
           src={blobUrl}
           style={{ width: '100%', height: '100%', border: 'none' }}
           title={title}
         />
+      )}
+
+      {blobUrl && mobile && (
+        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: '#f1f5f9', padding: '2rem' }}>
+          <div className="text-center">
+            <p className="font-medium mb-4" style={{ color: '#475569' }}>
+              Appuyez sur le bouton ci-dessous pour ouvrir le PDF
+            </p>
+            <a
+              href={blobUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-block',
+                padding: '0.75rem 2rem',
+                background: '#2563eb',
+                color: '#fff',
+                borderRadius: '0.5rem',
+                fontWeight: 600,
+                fontSize: '1rem',
+                textDecoration: 'none',
+              }}
+            >
+              Ouvrir le PDF
+            </a>
+          </div>
+        </div>
       )}
     </Dialog>
   );

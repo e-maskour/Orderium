@@ -1,3 +1,6 @@
 {
-    "python-envs.defaultEnvManager": "ms-python.python:system"
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "editor.tabSize": 2,
+    "editor.formatOnPaste": true,
+    "files.autoSave": "afterDelay"
 }

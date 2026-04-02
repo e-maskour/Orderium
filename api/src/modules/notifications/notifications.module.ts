@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { PushNotificationService } from './push-notification.service';
@@ -16,6 +18,10 @@ import { QueueName } from '../../common/queues/queue.constants';
   imports: [
     TenantModule,
     BullModule.registerQueue({ name: QueueName.NOTIFICATIONS }),
+    BullBoardModule.forFeature({
+      name: QueueName.NOTIFICATIONS,
+      adapter: BullMQAdapter,
+    }),
   ],
   controllers: [NotificationsController, NotificationTemplatesController],
   providers: [
@@ -35,4 +41,4 @@ import { QueueName } from '../../common/queues/queue.constants';
     NotificationsQueueService,
   ],
 })
-export class NotificationsModule { }
+export class NotificationsModule {}

@@ -177,11 +177,10 @@ export class NotificationsService {
     return result.affected || 0;
   }
 
-  async markAllAsRead(userId: number): Promise<number> {
-    const result = await this.notificationRepository.update(
-      { userId, isRead: false },
-      { isRead: true },
-    );
+  async markAllAsRead(userId?: number): Promise<number> {
+    const where: Record<string, unknown> = { isRead: false };
+    if (userId !== undefined) where.userId = userId;
+    const result = await this.notificationRepository.update(where, { isRead: true });
     return result.affected || 0;
   }
 

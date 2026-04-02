@@ -92,7 +92,7 @@ export function useNotifications(filters?: NotificationFilters) {
     });
 
     const markAllReadMutation = useMutation({
-        mutationFn: () => notificationsService.markAllAsRead({ isRead: false }),
+        mutationFn: () => notificationsService.markAllAsRead(),
         onMutate: async () => {
             await queryClient.cancelQueries({ queryKey: NOTIFICATIONS_KEY });
             await queryClient.cancelQueries({ queryKey: UNREAD_COUNT_KEY });
