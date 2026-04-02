@@ -1,6 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { chromium } from 'playwright';
+import { chromium, Browser } from 'playwright';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { Quote } from '../quotes/entities/quote.entity';
 import {
@@ -73,14 +78,70 @@ interface CompanyConfigData {
 }
 
 @Injectable()
-export class PDFService {
+export class PDFService implements OnModuleDestroy {
   private readonly logger = new Logger(PDFService.name);
+
+  /** Singleton browser instance — launched lazily, reused across all PDF jobs */
+  private browser: Browser | null = null;
+  private browserLaunchPromise: Promise<Browser> | null = null;
 
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
   ) { }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.closeBrowser();
+  }
+
+  /** Returns a shared Chromium browser, launching it on first call */
+  private async getBrowser(): Promise<Browser> {
+    if (this.browser?.isConnected()) return this.browser;
+
+    // Prevent concurrent launches
+    if (!this.browserLaunchPromise) {
+      this.browserLaunchPromise = chromium
+        .launch({
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--no-zygote',
+            '--single-process',
+          ],
+        })
+        .then((b) => {
+          this.browser = b;
+          this.browserLaunchPromise = null;
+          this.logger.log('Chromium browser launched (singleton)');
+          b.on('disconnected', () => {
+            this.browser = null;
+            this.logger.warn(
+              'Chromium browser disconnected — will re-launch on next job',
+            );
+          });
+          return b;
+        })
+        .catch((err) => {
+          this.browserLaunchPromise = null;
+          throw err;
+        });
+    }
+
+    return this.browserLaunchPromise;
+  }
+
+  private async closeBrowser(): Promise<void> {
+    if (this.browser?.isConnected()) {
+      await this.browser.close();
+      this.logger.log('Chromium browser closed');
+    }
+    this.browser = null;
+    this.browserLaunchPromise = null;
+  }
 
   private get invoiceRepository(): Repository<Invoice> {
     return this.tenantConnService.getRepository(Invoice);
@@ -364,27 +425,16 @@ export class PDFService {
     documentType: DocumentType,
     data: DocumentData,
   ): Promise<Buffer> {
-    const browser = await chromium.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-zygote',
-      ],
+    const browser = await this.getBrowser();
+    const page = await browser.newPage({
+      viewport: {
+        width: 420,
+        height: 595,
+      },
+      deviceScaleFactor: 2,
     });
 
     try {
-      // A5 dimensions: 148x210 mm (420x595 pixels at 72 DPI)
-      const page = await browser.newPage({
-        viewport: {
-          width: 420,
-          height: 595,
-        },
-        deviceScaleFactor: 2,
-      });
-
       const htmlContent = this.renderDocumentHTML(documentType, data);
       await page.setContent(htmlContent, {
         waitUntil: 'networkidle',
@@ -434,31 +484,21 @@ export class PDFService {
 
       return pdfBuffer;
     } finally {
-      await browser.close();
+      await page.close();
     }
   }
 
   private async generateReceiptPDF(data: DocumentData): Promise<Buffer> {
-    const browser = await chromium.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-zygote',
-      ],
+    const browser = await this.getBrowser();
+    const page = await browser.newPage({
+      viewport: {
+        width: 302,
+        height: 3000,
+      },
+      deviceScaleFactor: 2,
     });
 
     try {
-      const page = await browser.newPage({
-        viewport: {
-          width: 302,
-          height: 3000,
-        },
-        deviceScaleFactor: 2,
-      });
-
       const companyConfig = await this.getCompanyConfig();
       const htmlContent = this.renderReceiptHTML(data, companyConfig);
       await page.setContent(htmlContent, {
@@ -486,7 +526,7 @@ export class PDFService {
 
       return pdfBuffer;
     } finally {
-      await browser.close();
+      await page.close();
     }
   }
 

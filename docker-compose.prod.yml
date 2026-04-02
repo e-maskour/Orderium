@@ -19,6 +19,13 @@ services:
       dockerfile: Dockerfile
       target: production
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+          cpus: '1.5'
+        reservations:
+          memory: 512M
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -100,6 +107,11 @@ services:
         VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"
@@ -135,6 +147,11 @@ services:
         VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"
@@ -170,6 +187,11 @@ services:
         VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID}
         VITE_FIREBASE_VAPID_KEY: ${VITE_FIREBASE_VAPID_KEY}
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"
@@ -196,6 +218,11 @@ services:
       args:
         VITE_API_URL: https://orderium-api.mar-nova.com
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"

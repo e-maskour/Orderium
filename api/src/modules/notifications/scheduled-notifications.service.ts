@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { Repository, LessThan, In } from 'typeorm';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { TenantService } from '../tenant/tenant.service';
+import { tenantStorage } from '../tenant/tenant.context';
 import { OrderNotificationService } from './order-notification.service';
 import { Product } from '../products/entities/product.entity';
 import { Order } from '../orders/entities/order.entity';
@@ -11,6 +13,9 @@ import { Quote, QuoteStatus } from '../quotes/entities/quote.entity';
 /**
  * Scheduled notification jobs.
  * Requires ScheduleModule.forRoot() to be imported in AppModule.
+ *
+ * Each cron job iterates over all active tenants, setting the async-local
+ * tenant context so that TenantConnectionService resolves the correct DB.
  */
 @Injectable()
 export class ScheduledNotificationsService {
@@ -18,8 +23,9 @@ export class ScheduledNotificationsService {
 
   constructor(
     private readonly tenantConnService: TenantConnectionService,
+    private readonly tenantService: TenantService,
     private readonly orderNotificationService: OrderNotificationService,
-  ) {}
+  ) { }
 
   private get productRepo(): Repository<Product> {
     return this.tenantConnService.getRepository(Product);
@@ -37,12 +43,41 @@ export class ScheduledNotificationsService {
     return this.tenantConnService.getRepository(Quote);
   }
 
+  /**
+   * Run a callback for every active tenant inside its AsyncLocalStorage context.
+   * The tenant DB connection is pre-warmed before the callback executes.
+   */
+  private async forEachTenant(
+    jobName: string,
+    fn: (tenantSlug: string) => Promise<void>,
+  ): Promise<void> {
+    const tenants = await this.tenantService.getActiveTenantSlugs();
+    for (const { slug, id, name } of tenants) {
+      try {
+        await this.tenantConnService.getConnection(slug);
+        await new Promise<void>((resolve, reject) => {
+          tenantStorage.run(
+            { tenantSlug: slug, tenantId: id, tenantName: name },
+            () => {
+              fn(slug).then(resolve, reject);
+            },
+          );
+        });
+      } catch (err) {
+        this.logger.error(
+          `[${jobName}] Failed for tenant '${slug}'`,
+          (err as Error)?.stack,
+        );
+      }
+    }
+  }
+
   // ─── Stock Alerts — daily at 08:00 ──────────────────────────────────────────
 
   @Cron('0 8 * * *', { name: 'stock-alerts' })
   async checkLowStockAlerts(): Promise<void> {
     this.logger.log('Running low-stock alert check...');
-    try {
+    await this.forEachTenant('stock-alerts', async (tenantSlug) => {
       const products = await this.productRepo
         .createQueryBuilder('product')
         .where('product.isEnabled = true')
@@ -77,11 +112,9 @@ export class ScheduledNotificationsService {
       }
 
       this.logger.log(
-        `Stock alert check done — ${alertCount} product(s) below threshold`,
+        `[${tenantSlug}] Stock alert check done — ${alertCount} product(s) below threshold`,
       );
-    } catch (err) {
-      this.logger.error('checkLowStockAlerts failed', (err as Error)?.stack);
-    }
+    });
   }
 
   // ─── Overdue Order Payments — daily at 09:00 ────────────────────────────────
@@ -89,7 +122,7 @@ export class ScheduledNotificationsService {
   @Cron('0 9 * * *', { name: 'overdue-order-payments' })
   async checkOverdueOrderPayments(): Promise<void> {
     this.logger.log('Running overdue order payments check...');
-    try {
+    await this.forEachTenant('overdue-order-payments', async (tenantSlug) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -114,14 +147,9 @@ export class ScheduledNotificationsService {
       }
 
       this.logger.log(
-        `Overdue order check done — ${overdueOrders.length} order(s) overdue`,
+        `[${tenantSlug}] Overdue order check done — ${overdueOrders.length} order(s) overdue`,
       );
-    } catch (err) {
-      this.logger.error(
-        'checkOverdueOrderPayments failed',
-        (err as Error)?.stack,
-      );
-    }
+    });
   }
 
   // ─── Overdue Invoice Payments — daily at 09:05 ──────────────────────────────
@@ -129,7 +157,7 @@ export class ScheduledNotificationsService {
   @Cron('5 9 * * *', { name: 'overdue-invoice-payments' })
   async checkOverdueInvoicePayments(): Promise<void> {
     this.logger.log('Running overdue invoice payments check...');
-    try {
+    await this.forEachTenant('overdue-invoice-payments', async (tenantSlug) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -157,12 +185,10 @@ export class ScheduledNotificationsService {
       this.logger.log(
         `Overdue invoice check done — ${overdueInvoices.length} invoice(s) overdue`,
       );
-    } catch (err) {
-      this.logger.error(
-        'checkOverdueInvoicePayments failed',
-        (err as Error)?.stack,
+      this.logger.log(
+        `[${tenantSlug}] Overdue invoice check done — ${overdueInvoices.length} invoice(s) overdue`,
       );
-    }
+    });
   }
 
   // ─── Daily Sales Summary — daily at 20:00 ───────────────────────────────────
@@ -170,7 +196,7 @@ export class ScheduledNotificationsService {
   @Cron('0 20 * * *', { name: 'daily-sales-summary' })
   async sendDailySalesSummary(): Promise<void> {
     this.logger.log('Running daily sales summary...');
-    try {
+    await this.forEachTenant('daily-sales-summary', async (tenantSlug) => {
       const today = new Date();
       const dateStr = today.toLocaleDateString('fr-MA');
 
@@ -197,11 +223,9 @@ export class ScheduledNotificationsService {
         amount,
       );
       this.logger.log(
-        `Daily sales summary sent — ${ordersCount} orders, ${amount} MAD`,
+        `[${tenantSlug}] Daily sales summary sent — ${ordersCount} orders, ${amount} MAD`,
       );
-    } catch (err) {
-      this.logger.error('sendDailySalesSummary failed', (err as Error)?.stack);
-    }
+    });
   }
 
   // ─── Weekly Revenue Report — every Monday at 08:00 ──────────────────────────
@@ -209,7 +233,7 @@ export class ScheduledNotificationsService {
   @Cron('0 8 * * 1', { name: 'weekly-revenue-report' })
   async sendWeeklyRevenueReport(): Promise<void> {
     this.logger.log('Running weekly revenue report...');
-    try {
+    await this.forEachTenant('weekly-revenue-report', async (tenantSlug) => {
       const today = new Date();
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - 7);
@@ -235,14 +259,9 @@ export class ScheduledNotificationsService {
         amount,
       );
       this.logger.log(
-        `Weekly revenue report sent — ${ordersCount} orders, ${amount} MAD`,
+        `[${tenantSlug}] Weekly revenue report sent — ${ordersCount} orders, ${amount} MAD`,
       );
-    } catch (err) {
-      this.logger.error(
-        'sendWeeklyRevenueReport failed',
-        (err as Error)?.stack,
-      );
-    }
+    });
   }
 
   // ─── Auto-close Expired Open Quotes — daily at 01:00 ────────────────────────
@@ -250,37 +269,40 @@ export class ScheduledNotificationsService {
   @Cron('0 1 * * *', { name: 'auto-close-expired-quotes' })
   async autoCloseExpiredQuotes(): Promise<void> {
     this.logger.log('Running auto-close expired quotes...');
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    await this.forEachTenant(
+      'auto-close-expired-quotes',
+      async (tenantSlug) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-      const expired = await this.quoteRepo.find({
-        where: {
-          status: In([QuoteStatus.DRAFT, QuoteStatus.OPEN]),
-          expirationDate: LessThan(today),
-        },
-        select: ['id'],
-      });
+        const expired = await this.quoteRepo.find({
+          where: {
+            status: In([QuoteStatus.DRAFT, QuoteStatus.OPEN]),
+            expirationDate: LessThan(today),
+          },
+          select: ['id'],
+        });
 
-      if (expired.length === 0) {
-        this.logger.log('Auto-close expired quotes done — no quotes to close');
-        return;
-      }
+        if (expired.length === 0) {
+          this.logger.log(
+            'Auto-close expired quotes done — no quotes to close',
+          );
+          return;
+        }
 
-      const ids = expired.map((q) => q.id);
-      await this.quoteRepo
-        .createQueryBuilder()
-        .update(Quote)
-        .set({ status: QuoteStatus.CLOSED })
-        .where('id IN (:...ids)', { ids })
-        .execute();
+        const ids = expired.map((q) => q.id);
+        await this.quoteRepo
+          .createQueryBuilder()
+          .update(Quote)
+          .set({ status: QuoteStatus.CLOSED })
+          .where('id IN (:...ids)', { ids })
+          .execute();
 
-      this.logger.log(
-        `Auto-close expired quotes done — ${expired.length} quote(s) closed`,
-      );
-    } catch (err) {
-      this.logger.error('autoCloseExpiredQuotes failed', (err as Error)?.stack);
-    }
+        this.logger.log(
+          `[${tenantSlug}] Auto-close expired quotes done — ${expired.length} quote(s) closed`,
+        );
+      },
+    );
   }
 
   // ─── Quotes Expiring Soon — daily at 09:15 ──────────────────────────────────
@@ -288,7 +310,7 @@ export class ScheduledNotificationsService {
   @Cron('15 9 * * *', { name: 'quotes-expiring-soon' })
   async notifyExpiringQuotes(): Promise<void> {
     this.logger.log('Running quotes-expiring-soon check...');
-    try {
+    await this.forEachTenant('quotes-expiring-soon', async (tenantSlug) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -325,10 +347,8 @@ export class ScheduledNotificationsService {
       }
 
       this.logger.log(
-        `Quotes-expiring-soon check done — ${expiring.length} quote(s) expiring`,
+        `[${tenantSlug}] Quotes-expiring-soon check done — ${expiring.length} quote(s) expiring`,
       );
-    } catch (err) {
-      this.logger.error('notifyExpiringQuotes failed', (err as Error)?.stack);
-    }
+    });
   }
 }

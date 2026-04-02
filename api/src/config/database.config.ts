@@ -21,7 +21,7 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     logging: process.env.DB_LOGGING === 'true',
     autoLoadEntities: true,
     extra: {
-      max: parseInt(process.env.DB_POOL_MAX || '20', 10),
+      max: parseInt(process.env.DB_POOL_MAX || '10', 10),
       min: parseInt(process.env.DB_POOL_MIN || '2', 10),
     },
   };

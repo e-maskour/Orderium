@@ -24,6 +24,7 @@ export function useNotifications(filters?: NotificationFilters) {
                 { page: 1, limit: 50, sortBy: 'dateCreated', sortOrder: 'DESC' }
             ),
         enabled: !!admin,
+        staleTime: 30000,
         refetchInterval: 30000,
     });
 
@@ -32,6 +33,7 @@ export function useNotifications(filters?: NotificationFilters) {
         queryKey: [...UNREAD_COUNT_KEY],
         queryFn: () => notificationsService.getUnreadCount(),
         enabled: !!admin,
+        staleTime: 30000,
         refetchInterval: 30000,
     });
 

@@ -64,7 +64,7 @@ export default function Login() {
         }}>
           {/* Language toggle */}
           <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 2 }}>
-            <LanguageToggle />
+            <LanguageToggle variant="dark" />
           </div>
 
           {/* Decorative blobs */}

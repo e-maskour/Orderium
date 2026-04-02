@@ -144,6 +144,17 @@ export class TenantService implements OnModuleInit {
     this.cache.delete(slug);
   }
 
+  /** Returns slug/id/name for all active (non-deleted) tenants. Used by cron jobs. */
+  async getActiveTenantSlugs(): Promise<
+    { slug: string; id: number; name: string }[]
+  > {
+    const tenants = await this.tenantRepo.find({
+      where: { deletedAt: IsNull(), isActive: true },
+      select: ['id', 'slug', 'name'],
+    });
+    return tenants.map((t) => ({ slug: t.slug, id: t.id, name: t.name }));
+  }
+
   async findAll(dto: ListTenantsDto = {}): Promise<PaginatedTenants> {
     const {
       search,
