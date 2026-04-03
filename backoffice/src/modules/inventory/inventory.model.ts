@@ -14,6 +14,7 @@ export class AdjustmentLine implements IAdjustmentLine {
   productId: number;
   productName?: string;
   productCode?: string;
+  uomCode?: string;
   theoreticalQuantity: number;
   countedQuantity: number;
   difference: number;
@@ -26,6 +27,7 @@ export class AdjustmentLine implements IAdjustmentLine {
     this.productId = data.productId;
     this.productName = data.productName;
     this.productCode = data.productCode;
+    this.uomCode = data.uomCode;
     this.theoreticalQuantity = data.theoreticalQuantity;
     this.countedQuantity = data.countedQuantity;
     this.difference = data.difference;
@@ -54,6 +56,7 @@ export class AdjustmentLine implements IAdjustmentLine {
       productId: this.productId,
       productName: this.productName,
       productCode: this.productCode,
+      uomCode: this.uomCode,
       theoreticalQuantity: this.theoreticalQuantity,
       countedQuantity: this.countedQuantity,
       difference: this.difference,
@@ -69,6 +72,7 @@ export class AdjustmentLine implements IAdjustmentLine {
       productId: data.productId,
       productName: data.product?.name || data.productName,
       productCode: data.product?.code || data.productCode,
+      uomCode: data.product?.saleUnitOfMeasure?.code || data.uomCode,
       theoreticalQuantity: parseFloat(data.theoreticalQuantity) || 0,
       countedQuantity: parseFloat(data.countedQuantity) || 0,
       difference: parseFloat(data.difference) || 0,

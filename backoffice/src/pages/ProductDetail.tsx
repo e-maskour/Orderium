@@ -23,10 +23,13 @@ import {
   RefreshCw,
   ShoppingCart,
   TrendingUp,
+  TrendingDown,
   SlidersHorizontal,
   Building2,
   Tag as TagIcon,
   Package,
+  CheckCircle,
+  Lock,
 } from 'lucide-react';
 import { toastSuccess, toastUpdated, toastDeleted, toastError } from '../services/toast.service';
 import { generateUniqueProductCode } from '../utils/uniqueCodeGenerator';
@@ -41,10 +44,7 @@ import { InputSwitch } from 'primereact/inputswitch';
 import { Dropdown } from 'primereact/dropdown';
 import { MultiSelect } from 'primereact/multiselect';
 import { Message } from 'primereact/message';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { ColumnGroup } from 'primereact/columngroup';
-import { Row } from 'primereact/row';
+
 import { Tag as PTag } from 'primereact/tag';
 import { Dialog } from 'primereact/dialog';
 import { TabView, TabPanel } from 'primereact/tabview';
@@ -278,7 +278,11 @@ export default function ProductDetail() {
     });
   };
 
-  const handleSave = rhfHandleSubmit(onSubmit);
+  const onInvalidSubmit = () => {
+    toastError(t('validationCheckFields' as TranslationKey));
+  };
+
+  const handleSave = rhfHandleSubmit(onSubmit, onInvalidSubmit);
 
   const handleStockCorrection = () => {
     stockCorrectionMutation.mutate(stockCorrectionData);
@@ -1088,101 +1092,57 @@ export default function ProductDetail() {
         <TabPanel header={t('stock') || 'Stock'}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* ── Summary KPI cards ── */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: '1rem',
-              }}
-            >
-              {[
-                {
-                  label: t('onHand'),
-                  value: totalOnHand,
-                  icon: '📦',
-                  bg: 'linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%)',
-                  border: '#e2e8f0',
-                  color: '#0f172a',
-                },
-                {
-                  label: t('available'),
-                  value: totalAvailable,
-                  icon: '✅',
-                  bg: 'linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%)',
-                  border: '#6ee7b7',
-                  color: '#059669',
-                },
-                {
-                  label: t('reserved'),
-                  value: totalReserved,
-                  icon: '🔒',
-                  bg: 'linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%)',
-                  border: '#fcd34d',
-                  color: '#d97706',
-                },
-                {
-                  label: t('incoming'),
-                  value: totalIncoming,
-                  icon: '⬇️',
-                  bg: 'linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%)',
-                  border: '#93c5fd',
-                  color: '#2563eb',
-                },
-                {
-                  label: t('outgoing'),
-                  value: totalOutgoing,
-                  icon: '⬆️',
-                  bg: 'linear-gradient(135deg,#fff7ed 0%,#ffedd5 100%)',
-                  border: '#fdba74',
-                  color: '#ea580c',
-                },
-              ].map(({ label, value, icon, bg, border, color }) => (
-                <div
-                  key={label}
-                  style={{
-                    background: bg,
-                    border: `1px solid ${border}`,
-                    borderRadius: '1rem',
-                    padding: '1.125rem 1.25rem',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '0.625rem',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: '0.6875rem',
-                        fontWeight: 700,
-                        color: '#64748b',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.07em',
-                      }}
-                    >
-                      {label}
-                    </span>
-                    <span style={{ fontSize: '1rem' }}>{icon}</span>
+            {(() => {
+              const globalUomCode = (product as any)?.saleUnitOfMeasure?.code ?? '';
+              const kpis: { label: string; value: number; Icon: React.ElementType; color: string; iconBg: string; accent: string }[] = [
+                { label: t('onHand'), value: totalOnHand, Icon: Package, color: '#0f172a', iconBg: '#f1f5f9', accent: '#94a3b8' },
+                { label: t('available'), value: totalAvailable, Icon: CheckCircle, color: '#059669', iconBg: '#ecfdf5', accent: '#10b981' },
+                { label: t('reserved'), value: totalReserved, Icon: Lock, color: '#d97706', iconBg: '#fffbeb', accent: '#f59e0b' },
+                { label: t('incoming'), value: totalIncoming, Icon: TrendingUp, color: '#2563eb', iconBg: '#eff6ff', accent: '#3b82f6' },
+                { label: t('outgoing'), value: totalOutgoing, Icon: TrendingDown, color: '#ea580c', iconBg: '#fff7ed', accent: '#f97316' },
+              ];
+              return (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.875rem' }}>
+                    {kpis.map(({ label, value, Icon, color, iconBg, accent }) => (
+                      <div
+                        key={label}
+                        style={{
+                          background: '#fff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '0.875rem',
+                          padding: '1.25rem',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                        }}
+                      >
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: accent, borderRadius: '0.875rem 0.875rem 0 0' }} />
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
+                          <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            {label}
+                          </span>
+                          <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Icon size={14} color={color} />
+                          </div>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color, lineHeight: 1, letterSpacing: '-0.025em' }}>
+                          {value.toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: '1.875rem',
-                      fontWeight: 800,
-                      color,
-                      lineHeight: 1,
-                      letterSpacing: '-0.03em',
-                    }}
-                  >
-                    {value.toFixed(0)}
-                  </p>
-                </div>
-              ))}
-            </div>
+                  {globalUomCode && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>Unité de mesure :</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.1875rem 0.625rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '9999px', color: '#475569', letterSpacing: '0.04em' }}>
+                        {globalUomCode}
+                      </span>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* ── Stock table panel ── */}
             <div
@@ -1257,339 +1217,60 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* DataTable */}
-              <div style={{ overflowX: 'auto' }}>
-                <DataTable
-                  value={stockQuants}
-                  stripedRows
-                  showGridlines
-                  size="small"
-                  tableStyle={{ minWidth: '45rem' }}
-                  emptyMessage={
-                    <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8' }}>
-                      <Building2
-                        style={{ width: 40, height: 40, margin: '0 auto 0.75rem', opacity: 0.3 }}
-                      />
-                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>
-                        {t('noStockRecordsFound')}
-                      </p>
-                    </div>
-                  }
-                  pt={{
-                    thead: { style: { background: '#f8fafc' } },
-                    table: { style: { borderRadius: 0, width: '100%' } },
-                    tfoot: { style: { background: '#f1f5f9', borderTop: '2px solid #cbd5e1' } },
-                  }}
-                  footerColumnGroup={
-                    <ColumnGroup>
-                      <Row>
-                        <Column
-                          footer={
-                            <span
-                              style={{
-                                fontWeight: 700,
-                                fontSize: '0.8125rem',
-                                color: '#475569',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.04em',
-                              }}
-                            >
-                              {t('total')}
-                            </span>
-                          }
-                          footerStyle={{ padding: '0.625rem 1rem' }}
-                        />
-                        <Column
-                          footer={
-                            <span
-                              style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#0f172a' }}
-                            >
-                              {totalOnHand.toFixed(2)}
-                            </span>
-                          }
-                          footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
-                        />
-                        <Column
-                          footer={
-                            <span
-                              style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#d97706' }}
-                            >
-                              {totalReserved.toFixed(2)}
-                            </span>
-                          }
-                          footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
-                        />
-                        <Column
-                          footer={
-                            <span
-                              style={{
-                                fontWeight: 800,
-                                fontSize: '0.9375rem',
-                                color: totalAvailable > 0 ? '#059669' : '#ef4444',
-                              }}
-                            >
-                              {totalAvailable.toFixed(2)}
-                            </span>
-                          }
-                          footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
-                        />
-                        <Column
-                          footer={
-                            <span
-                              style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#2563eb' }}
-                            >
-                              {totalIncoming.toFixed(2)}
-                            </span>
-                          }
-                          footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
-                        />
-                        <Column
-                          footer={
-                            <span
-                              style={{ fontWeight: 800, fontSize: '0.9375rem', color: '#ea580c' }}
-                            >
-                              {totalOutgoing.toFixed(2)}
-                            </span>
-                          }
-                          footerStyle={{ textAlign: 'right', padding: '0.625rem 1rem' }}
-                        />
-                      </Row>
-                    </ColumnGroup>
-                  }
-                >
-                  <Column
-                    field="warehouse.name"
-                    header={t('location')}
-                    body={(row) => (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                        <div
-                          style={{
-                            width: '0.5rem',
-                            height: '0.5rem',
-                            borderRadius: '50%',
-                            flexShrink: 0,
-                            background:
-                              parseFloat(row.availableQuantity?.toString() || '0') > 0
-                                ? '#22c55e'
-                                : '#e2e8f0',
-                          }}
-                        />
-                        <span style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem' }}>
-                          {row.warehouse?.name || t('unknown')}
-                        </span>
-                      </div>
-                    )}
-                    headerStyle={{
-                      padding: '0.625rem 1rem',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                      color: '#64748b',
-                      background: '#f8fafc',
-                    }}
-                    bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
-                    style={{ minWidth: '11rem' }}
-                  />
-                  <Column
-                    field="quantity"
-                    header={t('onHand')}
-                    body={(row) => (
-                      <span
-                        style={{
-                          display: 'block',
-                          textAlign: 'right',
-                          fontWeight: 700,
-                          fontSize: '0.9375rem',
-                          color: '#0f172a',
-                        }}
+              {/* Warehouse cards */}
+              {stockQuants.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
+                  <Building2 style={{ width: 48, height: 48, margin: '0 auto 1rem', opacity: 0.25 }} />
+                  <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>{t('noStockRecordsFound')}</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', padding: '1rem 1.25rem' }}>
+                  {stockQuants.map((row: any) => {
+                    const onHand = parseFloat(row.quantity?.toString() || '0');
+                    const available = parseFloat(row.availableQuantity?.toString() || '0');
+                    const reserved = parseFloat(row.reservedQuantity?.toString() || '0');
+                    const incoming = parseFloat(row.incomingQuantity?.toString() || '0');
+                    const outgoing = parseFloat(row.outgoingQuantity?.toString() || '0');
+                    const isInStock = available > 0;
+                    const metrics = [
+                      { label: t('onHand'), display: onHand.toFixed(2), sign: '', color: '#0f172a', dimBg: 'transparent' },
+                      { label: t('available'), display: available.toFixed(2), sign: '', color: isInStock ? '#059669' : '#ef4444', dimBg: isInStock ? '#f0fdf4' : '#fef2f2' },
+                      { label: t('reserved'), display: reserved > 0 ? reserved.toFixed(2) : '—', sign: '', color: reserved > 0 ? '#d97706' : '#cbd5e1', dimBg: '#fffbeb' },
+                      { label: t('incoming'), display: incoming > 0 ? incoming.toFixed(2) : '—', sign: incoming > 0 ? '+' : '', color: incoming > 0 ? '#2563eb' : '#cbd5e1', dimBg: '#eff6ff' },
+                      { label: t('outgoing'), display: outgoing > 0 ? outgoing.toFixed(2) : '—', sign: outgoing > 0 ? '-' : '', color: outgoing > 0 ? '#ea580c' : '#cbd5e1', dimBg: '#fff7ed' },
+                    ];
+                    return (
+                      <div
+                        key={row.id ?? row.warehouse?.id}
+                        style={{ border: '1px solid #e2e8f0', borderRadius: '0.875rem', background: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
                       >
-                        {parseFloat(row.quantity.toString()).toFixed(2)}
-                      </span>
-                    )}
-                    headerStyle={{
-                      padding: '0.625rem 1rem',
-                      textAlign: 'right',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                      color: '#64748b',
-                      background: '#f8fafc',
-                    }}
-                    bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
-                    style={{ width: '9rem' }}
-                  />
-                  <Column
-                    field="reservedQuantity"
-                    header={t('reserved')}
-                    body={(row) => {
-                      const val = parseFloat(row.reservedQuantity?.toString() || '0');
-                      return (
-                        <div style={{ textAlign: 'right' }}>
-                          {val > 0 ? (
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                minWidth: '3.5rem',
-                                textAlign: 'right',
-                                fontWeight: 600,
-                                fontSize: '0.875rem',
-                                color: '#d97706',
-                                background: '#fffbeb',
-                                padding: '0.125rem 0.5rem',
-                                borderRadius: '0.375rem',
-                                border: '1px solid #fde68a',
-                              }}
-                            >
-                              {val.toFixed(2)}
-                            </span>
-                          ) : (
-                            <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
-                          )}
-                        </div>
-                      );
-                    }}
-                    headerStyle={{
-                      padding: '0.625rem 1rem',
-                      textAlign: 'right',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                      color: '#64748b',
-                      background: '#f8fafc',
-                    }}
-                    bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
-                    style={{ width: '9rem' }}
-                  />
-                  <Column
-                    field="availableQuantity"
-                    header={t('available')}
-                    body={(row) => {
-                      const val = parseFloat(row.availableQuantity?.toString() || '0');
-                      return (
-                        <div style={{ textAlign: 'right' }}>
-                          <span
-                            style={{
-                              display: 'inline-block',
-                              minWidth: '3.5rem',
-                              textAlign: 'right',
-                              fontWeight: 700,
-                              fontSize: '0.875rem',
-                              color: val > 0 ? '#059669' : '#ef4444',
-                              background: val > 0 ? '#ecfdf5' : '#fef2f2',
-                              padding: '0.125rem 0.5rem',
-                              borderRadius: '0.375rem',
-                              border: `1px solid ${val > 0 ? '#bbf7d0' : '#fecaca'}`,
-                            }}
-                          >
-                            {val.toFixed(2)}
+                        {/* card header */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                            <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', flexShrink: 0, background: isInStock ? '#22c55e' : '#d1d5db', display: 'inline-block', boxShadow: isInStock ? '0 0 0 3px #dcfce7' : 'none' }} />
+                            <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a' }}>{row.warehouse?.name || t('unknown')}</span>
+                          </div>
+                          <span style={{ fontSize: '0.6875rem', fontWeight: 600, padding: '0.1875rem 0.625rem', borderRadius: '9999px', background: isInStock ? '#dcfce7' : '#f1f5f9', color: isInStock ? '#15803d' : '#64748b', border: `1px solid ${isInStock ? '#bbf7d0' : '#e2e8f0'}` }}>
+                            {isInStock ? 'En stock' : 'Rupture'}
                           </span>
                         </div>
-                      );
-                    }}
-                    headerStyle={{
-                      padding: '0.625rem 1rem',
-                      textAlign: 'right',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                      color: '#64748b',
-                      background: '#f8fafc',
-                    }}
-                    bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
-                    style={{ width: '9rem' }}
-                  />
-                  <Column
-                    field="incomingQuantity"
-                    header={t('incoming')}
-                    body={(row) => {
-                      const val = parseFloat(row.incomingQuantity?.toString() || '0');
-                      return (
-                        <div style={{ textAlign: 'right' }}>
-                          {val > 0 ? (
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                minWidth: '3.5rem',
-                                textAlign: 'right',
-                                fontWeight: 600,
-                                fontSize: '0.875rem',
-                                color: '#2563eb',
-                                background: '#eff6ff',
-                                padding: '0.125rem 0.5rem',
-                                borderRadius: '0.375rem',
-                                border: '1px solid #bfdbfe',
-                              }}
+                        {/* metrics row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }}>
+                          {metrics.map(({ label, display, sign, color, dimBg }, i) => (
+                            <div
+                              key={label}
+                              style={{ padding: '0.875rem 0.5rem', background: dimBg, borderRight: i < 4 ? '1px solid #f1f5f9' : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}
                             >
-                              {val.toFixed(2)}
-                            </span>
-                          ) : (
-                            <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
-                          )}
+                              <span style={{ fontSize: '0.625rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{label}</span>
+                              <span style={{ fontSize: '1.0625rem', fontWeight: 800, color, lineHeight: 1 }}>{sign}{display}</span>
+                            </div>
+                          ))}
                         </div>
-                      );
-                    }}
-                    headerStyle={{
-                      padding: '0.625rem 1rem',
-                      textAlign: 'right',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                      color: '#64748b',
-                      background: '#f8fafc',
-                    }}
-                    bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
-                    style={{ width: '9rem' }}
-                  />
-                  <Column
-                    field="outgoingQuantity"
-                    header={t('outgoing')}
-                    body={(row) => {
-                      const val = parseFloat(row.outgoingQuantity?.toString() || '0');
-                      return (
-                        <div style={{ textAlign: 'right' }}>
-                          {val > 0 ? (
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                minWidth: '3.5rem',
-                                textAlign: 'right',
-                                fontWeight: 600,
-                                fontSize: '0.875rem',
-                                color: '#ea580c',
-                                background: '#fff7ed',
-                                padding: '0.125rem 0.5rem',
-                                borderRadius: '0.375rem',
-                                border: '1px solid #fed7aa',
-                              }}
-                            >
-                              {val.toFixed(2)}
-                            </span>
-                          ) : (
-                            <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
-                          )}
-                        </div>
-                      );
-                    }}
-                    headerStyle={{
-                      padding: '0.625rem 1rem',
-                      textAlign: 'right',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                      color: '#64748b',
-                      background: '#f8fafc',
-                    }}
-                    bodyStyle={{ padding: '0.625rem 1rem', verticalAlign: 'middle' }}
-                    style={{ width: '9rem' }}
-                  />
-                </DataTable>
-              </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </TabPanel>

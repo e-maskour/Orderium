@@ -7,6 +7,7 @@ export interface IAdjustmentLine {
   productId: number;
   productName?: string;
   productCode?: string;
+  uomCode?: string;
   theoreticalQuantity: number;
   countedQuantity: number;
   difference: number;

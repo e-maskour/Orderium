@@ -52,6 +52,7 @@ export default function InventoryAdjustments() {
       productId: number;
       productName: string;
       productCode?: string;
+      uomCode?: string;
       theoreticalQuantity: number;
       countedQuantity: number;
     }>
@@ -218,6 +219,7 @@ export default function InventoryAdjustments() {
           productId: item.productId,
           productName: item.productName || `Produit #${item.productId}`,
           productCode: item.productCode,
+          uomCode: item.uomCode,
           theoreticalQuantity: parseFloat(item.theoreticalQuantity) || 0,
           countedQuantity: saved?.countedQuantity ?? parseFloat(item.theoreticalQuantity) ?? 0,
         };
@@ -702,8 +704,14 @@ export default function InventoryAdjustments() {
                                 <div style={{ color: '#94a3b8', fontSize: '0.8125rem', marginTop: '0.125rem' }}>{line.productCode}</div>
                               )}
                             </td>
-                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#334155', fontSize: '0.875rem' }}>{line.theoreticalQuantity}</td>
-                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#334155', fontWeight: 500, fontSize: '0.875rem' }}>{line.countedQuantity}</td>
+                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#334155', fontSize: '0.875rem' }}>
+                              {line.theoreticalQuantity}
+                              {line.uomCode && <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.25rem' }}>{line.uomCode}</span>}
+                            </td>
+                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#334155', fontWeight: 500, fontSize: '0.875rem' }}>
+                              {line.countedQuantity}
+                              {line.uomCode && <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.25rem' }}>{line.uomCode}</span>}
+                            </td>
                             <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
                               <span style={{
                                 display: 'inline-block',
@@ -859,17 +867,21 @@ export default function InventoryAdjustments() {
                           </td>
                           <td style={{ padding: '0.5rem 0.875rem', textAlign: 'center', color: '#94a3b8', fontWeight: 500, width: '9rem' }}>
                             {line.theoreticalQuantity}
+                            {line.uomCode && <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.25rem' }}>{line.uomCode}</span>}
                           </td>
                           <td style={{ padding: 0, width: '10rem', borderLeft: '2px solid #f1f5f9', borderRight: '2px solid #f1f5f9', background: '#fafbff' }}>
-                            <InputNumber
-                              value={line.countedQuantity}
-                              onValueChange={(e) => updateLine(line.productId, e.value ?? 0)}
-                              min={0}
-                              minFractionDigits={0}
-                              maxFractionDigits={4}
-                              style={{ width: '100%', display: 'block' }}
-                              inputStyle={{ textAlign: 'center', width: '100%', border: 'none', borderRadius: 0, background: 'transparent', padding: '0.5rem 0.375rem' }}
-                            />
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', padding: '0 0.375rem' }}>
+                              <InputNumber
+                                value={line.countedQuantity}
+                                onValueChange={(e) => updateLine(line.productId, e.value ?? 0)}
+                                min={0}
+                                minFractionDigits={0}
+                                maxFractionDigits={4}
+                                style={{ flex: 1 }}
+                                inputStyle={{ textAlign: 'center', width: '100%', border: 'none', borderRadius: 0, background: 'transparent', padding: '0.5rem 0.25rem' }}
+                              />
+                              {line.uomCode && <span style={{ fontSize: '0.7rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>{line.uomCode}</span>}
+                            </div>
                           </td>
                           <td style={{ padding: '0.5rem 0.875rem', textAlign: 'center', width: '8rem' }}>
                             <span style={{
