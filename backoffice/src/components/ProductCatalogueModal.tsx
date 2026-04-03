@@ -8,6 +8,7 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Search, Package2, Wrench, ShoppingBag } from 'lucide-react';
 import { formatAmount } from '@orderium/ui';
 import { EmptyState } from './EmptyState';
+import { useLanguage } from '../context/LanguageContext';
 
 const PCAT_STYLES = `
   /* ── Bottom sheet on mobile ── */
@@ -181,6 +182,7 @@ export function ProductCatalogueModal({
   const [allProducts, setAllProducts] = useState<IProduct[]>([]);
   const [catalogueLoading, setCatalogueLoading] = useState(false);
   const [catalogueSearch, setCatalogueSearch] = useState('');
+  const { t } = useLanguage();
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 640;
 
   const isVente = type === 'vente';
@@ -354,33 +356,33 @@ export function ProductCatalogueModal({
       style={
         isMobile
           ? {
-              width: '100vw',
-              maxWidth: '100vw',
-              maxHeight: '90dvh',
-              margin: 0,
-              borderRadius: '1rem 1rem 0 0',
-            }
+            width: '100vw',
+            maxWidth: '100vw',
+            maxHeight: '90dvh',
+            margin: 0,
+            borderRadius: '1rem 1rem 0 0',
+          }
           : { width: '95vw', maxWidth: '58rem' }
       }
       breakpoints={isMobile ? undefined : { '960px': '90vw', '640px': '100vw' }}
       contentStyle={
         isMobile
           ? {
-              padding: 0,
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              flex: 1,
-              height: 0,
-              maxHeight: 'none',
-            }
+            padding: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            height: 0,
+            maxHeight: 'none',
+          }
           : {
-              padding: 0,
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              maxHeight: 'calc(85dvh - 9rem)',
-            }
+            padding: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: 'calc(85dvh - 9rem)',
+          }
       }
     >
       <style>{PCAT_STYLES}</style>
@@ -475,7 +477,7 @@ export function ProductCatalogueModal({
                   <div className="pcat-right">
                     <span className="pcat-price">
                       {displayPrice}
-                      <span className="pcat-price-dim">DH</span>
+                      <span className="pcat-price-dim">{t('currency')}</span>
                     </span>
                     {!isSelected ? (
                       getStockBadge(product.stock)

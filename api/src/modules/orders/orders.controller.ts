@@ -28,7 +28,7 @@ import { Public } from '../auth/decorators/public.decorator';
 @PortalRoute()
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new order' })
@@ -41,19 +41,15 @@ export class OrdersController {
 
   @Post('filter')
   @ApiOperation({ summary: 'Filter orders (POST method)' })
-  @ApiQuery({ name: 'fromPortal', required: false, type: Boolean })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'perPage', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
   async filterOrders(
     @Body() filterDto: FilterOrdersDto,
-    @Query('fromPortal') fromPortal?: string,
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
     @Query('direction') direction?: string,
   ) {
-    const fromPortalBool =
-      fromPortal !== undefined ? fromPortal === 'true' : undefined;
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
@@ -81,8 +77,7 @@ export class OrdersController {
       filterDto.orderNumber,
       filterDto.customerId,
       filterDto.deliveryPersonId,
-      fromPortalBool,
-      filterDto.fromClient,
+      filterDto.originType,
       pageNum,
       pageSize,
       filterDto.supplierId,
@@ -106,17 +101,15 @@ export class OrdersController {
   @Get()
   @ApiOperation({ summary: 'Get all orders with filtering' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'fromPortal', required: false, type: Boolean })
+  @ApiQuery({ name: 'originType', required: false, type: String })
   @ApiQuery({ name: 'deliveryStatus', required: false, type: String })
-  @ApiQuery({ name: 'fromClient', required: false, type: Boolean })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
   async findAll(
     @Query('limit') limit?: string,
-    @Query('fromPortal') fromPortal?: string,
+    @Query('originType') originType?: string,
     @Query('deliveryStatus') deliveryStatus?: string,
-    @Query('fromClient') fromClient?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('direction') direction?: string,
@@ -125,10 +118,6 @@ export class OrdersController {
       100,
       Math.max(1, parseInt(limit ?? '50', 10) || 50),
     );
-    const fromPortalBool =
-      fromPortal !== undefined ? fromPortal === 'true' : undefined;
-    const fromClientBool =
-      fromClient !== undefined ? fromClient === 'true' : undefined;
     const directionValue =
       direction?.toUpperCase() === 'ACHAT'
         ? 'ACHAT'
@@ -140,9 +129,8 @@ export class OrdersController {
 
     const result = await this.ordersService.getAllOrders(
       limitNum,
-      fromPortalBool,
+      originType,
       deliveryStatus,
-      fromClientBool,
       startDateObj,
       endDateObj,
       directionValue,

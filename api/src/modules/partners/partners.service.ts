@@ -23,7 +23,7 @@ export class PartnersService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
 
   private get partnerRepository(): Repository<Partner> {
     return this.tenantConnService.getRepository(Partner);
@@ -172,6 +172,32 @@ export class PartnersService {
 
   async remove(id: number): Promise<void> {
     const partner = await this.findOne(id);
+
+    // Block deletion if partner is referenced in any orders
+    const orderCount = await this.orderRepository.count({
+      where: [{ customerId: id }, { supplierId: id }],
+    });
+    if (orderCount > 0) {
+      throw new ConflictException('PARTNER_HAS_DOCUMENTS');
+    }
+
+    // Block deletion if partner is referenced in any invoices
+    const invoiceCount = await this.invoiceRepository.count({
+      where: [{ customerId: id }, { supplierId: id }],
+    });
+    if (invoiceCount > 0) {
+      throw new ConflictException('PARTNER_HAS_DOCUMENTS');
+    }
+
+    // Block deletion if partner is referenced in any quotes (raw query — no quoteRepo here)
+    const quoteRows = await this.partnerRepository.manager.query(
+      `SELECT COUNT(*) as count FROM quotes WHERE "customerId" = $1 OR "supplierId" = $1`,
+      [id],
+    );
+    if (parseInt(quoteRows[0]?.count || '0') > 0) {
+      throw new ConflictException('PARTNER_HAS_DOCUMENTS');
+    }
+
     partner.isEnabled = false;
     await this.partnerRepository.save(partner);
     await this.invalidatePartnerCache(id);

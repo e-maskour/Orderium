@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
   Inject,
 } from '@nestjs/common';
 import { Repository, DataSource } from 'typeorm';
@@ -15,7 +16,7 @@ export class WarehouseService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) {}
+  ) { }
 
   private get warehouseRepository(): Repository<Warehouse> {
     return this.tenantConnService.getRepository(Warehouse);
@@ -109,6 +110,15 @@ export class WarehouseService {
 
   async remove(id: number): Promise<void> {
     const warehouse = await this.findOne(id);
+
+    // Block if any active products are assigned to this warehouse
+    const productRows = await this.warehouseRepository.manager.query(
+      `SELECT COUNT(*) as count FROM products WHERE "warehouseId" = $1 AND "isEnabled" = true`,
+      [id],
+    );
+    if (parseInt(productRows[0]?.count || '0') > 0) {
+      throw new ConflictException('WAREHOUSE_HAS_PRODUCTS');
+    }
 
     // Soft delete by setting isActive to false
     warehouse.isActive = false;

@@ -825,7 +825,7 @@ export class DriveService {
           ...f,
           canDelete: !!node,
           driveNodeId: node?.id ?? null,
-          source: node ? 'user' : 'system',
+          source: (node ? 'user' : 'system') as 'user' | 'system',
         };
       }),
     );

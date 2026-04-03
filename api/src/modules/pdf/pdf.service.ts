@@ -50,7 +50,7 @@ interface DocumentData {
   signedBy?: string;
   signedDate?: Date;
   orderNumber?: string;
-  fromPortal?: boolean;
+  originType?: string;
   isDemandePrix?: boolean; // For purchase quotes (achat)
   supplierName?: string;
 }
@@ -90,7 +90,7 @@ export class PDFService implements OnModuleDestroy {
     private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
-  ) {}
+  ) { }
 
   async onModuleDestroy(): Promise<void> {
     await this.closeBrowser();
@@ -372,7 +372,7 @@ export class PDFService implements OnModuleDestroy {
       discountType: Number(order.discountType) || 0,
       tax: Number(order.tax) || 0,
       total: Number(order.total) || 0,
-      fromPortal: order.fromPortal || false,
+      originType: order.originType || 'BACKOFFICE',
       isDemandePrix,
       items: mapDocumentItems(order.items),
     };
@@ -440,7 +440,7 @@ export class PDFService implements OnModuleDestroy {
 
       const footerTemplate = renderFooterTemplate({
         footerLines,
-        hideVAT: data.fromPortal || false,
+        hideVAT: data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS',
       });
 
       const pdfBuffer = await page.pdf({
@@ -516,7 +516,7 @@ export class PDFService implements OnModuleDestroy {
       documentType,
       data.isDemandePrix,
     );
-    const hideVAT = data.fromPortal || false;
+    const hideVAT = data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
     // Only hide prices for demande de prix (quotes with supplier), not for facture achat or bon d'achat
     const hidePrices =
       (documentType === 'quote' && data.isDemandePrix) || false;
@@ -588,7 +588,7 @@ export class PDFService implements OnModuleDestroy {
     data: DocumentData,
     company: CompanyConfigData,
   ): string {
-    const hideVAT = data.fromPortal || false;
+    const hideVAT = data.originType === 'CLIENT_POS' || data.originType === 'ADMIN_POS';
     const companyLines = this.buildCompanyLines(company);
 
     // Generate items HTML — table rows for the new design

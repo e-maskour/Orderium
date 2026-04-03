@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
   Logger,
   Inject,
   forwardRef,
@@ -14,6 +15,7 @@ import {
   Order,
   OrderItem,
   OrderStatus,
+  OrderOriginType,
   DeliveryStatus,
 } from './entities/order.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
@@ -69,7 +71,7 @@ export class OrdersService {
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
-  ) {}
+  ) { }
 
   private get orderRepository(): Repository<Order> {
     return this.tenantConnService.getRepository(Order);
@@ -342,10 +344,16 @@ export class OrdersService {
             customer.address || customer.deliveryAddress;
       }
 
+      const originType =
+        createOrderDto.originType ?? OrderOriginType.BACKOFFICE;
+      const isPortalOrigin =
+        originType === OrderOriginType.CLIENT_POS ||
+        originType === OrderOriginType.ADMIN_POS;
+
       let documentNumber: string;
       let receiptNumber: string | null = null;
 
-      if (createOrderDto.fromPortal) {
+      if (isPortalOrigin) {
         const seq = await this.getOrCreateSequence(
           'delivery_note',
           createOrderDto.date,
@@ -384,15 +392,14 @@ export class OrdersService {
       order.notes = createOrderDto.note ?? '';
       order.discount = createOrderDto.discount || 0;
       order.discountType = createOrderDto.discountType || 0;
-      order.fromPortal = createOrderDto.fromPortal ?? false;
-      order.fromClient = createOrderDto.fromClient ?? false;
+      order.originType = originType;
       order.deliveryStatus = (createOrderDto.deliveryStatus as any) ?? null;
 
       if (order.deliveryStatus) {
         applyDeliveryStatusTimestamp(order, order.deliveryStatus, now);
       }
 
-      if (createOrderDto.fromPortal) {
+      if (isPortalOrigin) {
         order.status = OrderStatus.CONFIRMED;
         order.isValidated = true;
       } else {
@@ -402,7 +409,7 @@ export class OrdersService {
 
       const savedOrder = await manager.save(Order, order);
 
-      if (createOrderDto.fromPortal) {
+      if (isPortalOrigin) {
         const seq = await this.getOrCreateSequence(
           'delivery_note',
           createOrderDto.date,
@@ -469,7 +476,10 @@ export class OrdersService {
       return formatOrderDetail(createdOrder);
     });
 
-    if (createOrderDto.fromClient && result) {
+    if (
+      createOrderDto.originType === OrderOriginType.CLIENT_POS &&
+      result
+    ) {
       const fullOrder = await this.orderRepository.findOne({
         where: { id: (result as any).id },
         relations: ['customer'],
@@ -491,9 +501,8 @@ export class OrdersService {
 
   async getAllOrders(
     limit = 100,
-    fromPortal?: boolean,
+    originType?: string | string[],
     deliveryStatus?: string,
-    fromClient?: boolean,
     startDate?: Date,
     endDate?: Date,
     direction?: 'ACHAT' | 'VENTE',
@@ -505,12 +514,7 @@ export class OrdersService {
       .orderBy('order.dateCreated', 'DESC')
       .take(limit);
 
-    applyOrderFilters(qb, {
-      fromPortal,
-      fromClient,
-      deliveryStatus,
-      direction,
-    });
+    applyOrderFilters(qb, { originType, deliveryStatus, direction });
     if (startDate && endDate) {
       qb.andWhere('order.dateCreated >= :startDate', { startDate });
       qb.andWhere('order.dateCreated <= :endDate', { endDate });
@@ -525,7 +529,7 @@ export class OrdersService {
       .addSelect('COUNT(*)', 'count')
       .groupBy('order.deliveryStatus');
 
-    applyOrderFilters(countQb, { fromPortal, direction });
+    applyOrderFilters(countQb, { originType, direction });
     if (startDate && endDate) {
       countQb.andWhere('order.dateCreated >= :startDate', { startDate });
       countQb.andWhere('order.dateCreated <= :endDate', { endDate });
@@ -551,8 +555,7 @@ export class OrdersService {
     orderNumber?: string,
     customerId?: number,
     deliveryPersonId?: number,
-    fromPortal?: boolean,
-    fromClient?: boolean,
+    originType?: string | string[],
     page = 1,
     pageSize = 50,
     supplierId?: number,
@@ -567,8 +570,7 @@ export class OrdersService {
     orderStatusCounts: any;
   }> {
     const filters = {
-      fromPortal,
-      fromClient,
+      originType,
       deliveryStatus,
       status,
       search,
@@ -1059,6 +1061,20 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({ where: { id } });
     if (!order) throw new NotFoundException('Order not found');
 
+    if (order.isValidated) {
+      throw new BadRequestException('ORDER_VALIDATED');
+    }
+
+    if (order.originType === 'CLIENT_POS' || order.originType === 'ADMIN_POS') {
+      const paymentRows = await this.orderRepository.manager.query(
+        `SELECT COUNT(*) as count FROM order_payments WHERE "orderId" = $1`,
+        [id],
+      );
+      if (parseInt(paymentRows[0]?.count || '0') > 0) {
+        throw new ConflictException('ORDER_HAS_PAYMENTS');
+      }
+    }
+
     await this.orderItemRepository.delete({ orderId: id });
     await this.pdfService.deletePDF(order.pdfUrl);
     await this.orderRepository.delete(id);
@@ -1097,7 +1113,9 @@ export class OrdersService {
   async getAnalytics(direction: 'vente' | 'achat', year: number) {
     const qb = this.orderRepository
       .createQueryBuilder('order')
-      .where('order.fromPortal = :fromPortal', { fromPortal: false })
+      .where('order.originType = :originType', {
+        originType: OrderOriginType.BACKOFFICE,
+      })
       .andWhere(
         'EXTRACT(YEAR FROM COALESCE(order.date, order.dateCreated)) = :year',
         { year },

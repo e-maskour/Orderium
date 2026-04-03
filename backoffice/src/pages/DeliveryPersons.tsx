@@ -18,6 +18,7 @@ import {
   toastUpdated,
   toastDeleted,
   toastError,
+  toastDeleteError,
   toastConfirm,
 } from '../services/toast.service';
 import { MobileList } from '../components/MobileList';
@@ -89,7 +90,7 @@ export default function DeliveryPersons() {
       setSelectedPersons([]);
     },
     onError: (error: Error) => {
-      toastError(`${t('failedToDelete')}: ${error.message}`);
+      toastDeleteError(error, t);
     },
   });
 

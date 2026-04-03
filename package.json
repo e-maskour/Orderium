@@ -4,7 +4,15 @@
   "version": "1.0.0",
   "scripts": {
     "prepare": "husky",
-    "lint:all": "pnpm --filter './backoffice' lint && pnpm --filter './client' lint && pnpm --filter './delivery-portal' lint && pnpm --filter './tenant-dashboard' lint && pnpm --filter './api' lint"
+    "lint:all": "pnpm --filter './backoffice' lint && pnpm --filter './client' lint && pnpm --filter './delivery-portal' lint && pnpm --filter './tenant-dashboard' lint && pnpm --filter './api' lint",
+    "docker:infra": "docker compose -f docker-compose.infra.yml up -d",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up -d --build",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up -d",
+    "docker:build": "docker compose -f docker-compose.yml build",
+    "docker:build:prod": "docker compose -f docker-compose.prod.yml build",
+    "docker:up": "docker compose -f docker-compose.infra.yml up -d --build && docker compose -f docker-compose.dev.yml up -d --build",
+    "docker:down": "docker compose -f docker-compose.dev.yml down && docker compose -f docker-compose.infra.yml down",
+    "docker:down:prod": "docker compose -f docker-compose.prod.yml down"
   },
   "devDependencies": {
     "husky": "^9.1.7"

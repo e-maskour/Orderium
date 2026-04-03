@@ -3,11 +3,12 @@ import {
   IsString,
   IsDateString,
   IsNumber,
-  IsBoolean,
   IsArray,
+  IsEnum,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { OrderOriginType } from '../entities/order.entity';
 
 export class FilterOrdersDto {
   @ApiProperty({
@@ -83,11 +84,21 @@ export class FilterOrdersDto {
 
   @ApiProperty({
     required: false,
-    description: 'Filter by order source - client app or local',
+    description: 'Filter by order origin type: BACKOFFICE | CLIENT_POS | ADMIN_POS',
+    enum: OrderOriginType,
+    isArray: true,
   })
   @IsOptional()
-  @IsBoolean()
-  fromClient?: boolean;
+  @Transform(({ value }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return [value];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return value;
+  })
+  @IsArray()
+  @IsEnum(OrderOriginType, { each: true })
+  originType?: OrderOriginType[];
 
   @ApiProperty({
     required: false,

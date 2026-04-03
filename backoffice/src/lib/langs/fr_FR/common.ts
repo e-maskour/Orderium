@@ -480,4 +480,24 @@ export default {
   // Dates
   createdAt: 'Créé le',
   updatedAt: 'Mis à jour le',
+
+  // ── Deletion guard error codes (returned by API) ─────────────────────────
+  deletionBlocked: 'Suppression impossible',
+  PRODUCT_IN_INVOICES: 'Ce produit est utilisé dans des factures et ne peut pas être supprimé.',
+  PRODUCT_IN_ORDERS: 'Ce produit est utilisé dans des commandes et ne peut pas être supprimé.',
+  PRODUCT_IN_QUOTES: 'Ce produit est utilisé dans des devis et ne peut pas être supprimé.',
+  ORDER_VALIDATED: 'Cette commande est validée. Veuillez la dévalider avant de la supprimer.',
+  ORDER_HAS_PAYMENTS: 'Cette commande a des paiements associés et ne peut pas être supprimée.',
+  INVOICE_VALIDATED: 'Cette facture est validée. Veuillez la dévalider avant de la supprimer.',
+  INVOICE_HAS_PAYMENTS: 'Cette facture a des paiements associés et ne peut pas être supprimée.',
+  QUOTE_VALIDATED: 'Ce devis est validé. Veuillez le dévalider avant de le supprimer.',
+  QUOTE_CONVERTED_TO_INVOICE: 'Ce devis a été converti en facture et ne peut pas être supprimé.',
+  PARTNER_HAS_DOCUMENTS:
+    'Ce partenaire est associé à des commandes, factures ou devis et ne peut pas être supprimé.',
+  DELIVERY_PERSON_HAS_ORDERS:
+    'Ce livreur est assigné à des commandes actives et ne peut pas être supprimé.',
+  CATEGORY_HAS_CHILDREN:
+    'Cette catégorie contient des sous-catégories et ne peut pas être supprimée.',
+  CATEGORY_HAS_PRODUCTS: 'Cette catégorie est assignée à des produits et ne peut pas être supprimée.',
+  WAREHOUSE_HAS_PRODUCTS: 'Cet entrepôt est assigné à des produits et ne peut pas être supprimé.',
 };

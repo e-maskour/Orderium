@@ -13,6 +13,7 @@ import {
   toastUpdated,
   toastDeleted,
   toastError,
+  toastDeleteError,
   toastConfirm,
 } from '../services/toast.service';
 
@@ -79,8 +80,8 @@ export default function Warehouses() {
       queryClient.invalidateQueries({ queryKey: ['warehouses'] });
       toastDeleted(t('warehouseDeleted'));
     },
-    onError: (error: any) => {
-      toastError(error.message || t('failedToDeleteWarehouse'));
+    onError: (error: Error) => {
+      toastDeleteError(error, t);
     },
   });
 

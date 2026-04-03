@@ -102,14 +102,13 @@ export class DocumentsService {
       };
     } else if (type === 'bon_livraison') {
       const isVente = direction === 'vente';
-      // Fetch only orders NOT created from portal (fromPortal = false)
+      // Fetch only BACKOFFICE orders (not created from portal)
       const result = await ordersService.getAll(
         filters?.search,
         filters?.dateFrom ? new Date(filters.dateFrom) : undefined,
         filters?.dateTo ? new Date(filters.dateTo) : undefined,
-        false,
+        'BACKOFFICE',
         filters?.status !== 'all' ? filters?.status : undefined,
-        undefined,
         undefined,
         filters?.page,
         filters?.pageSize,

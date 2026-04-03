@@ -27,7 +27,7 @@ export class ProductsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
 
   private get productRepository(): Repository<Product> {
     return this.tenantConnService.getRepository(Product);
@@ -170,9 +170,7 @@ export class ProductsService {
       [id],
     );
     if (parseInt(invoiceCount[0]?.count || '0') > 0) {
-      throw new ConflictException(
-        'Cannot delete product that is used in invoices. Please remove from all invoices first.',
-      );
+      throw new ConflictException('PRODUCT_IN_INVOICES');
     }
 
     try {
@@ -181,16 +179,24 @@ export class ProductsService {
         [id],
       );
       if (parseInt(orderCount[0]?.count || '0') > 0) {
-        throw new ConflictException(
-          'Cannot delete product that is used in orders. Please remove from all orders first.',
-        );
+        throw new ConflictException('PRODUCT_IN_ORDERS');
       }
     } catch (e) {
-      if (!(e instanceof ConflictException)) {
-        // order_items table might not exist — ignore
-      } else {
-        throw e;
+      if (e instanceof ConflictException) throw e;
+      // order_items table might not exist — ignore
+    }
+
+    try {
+      const quoteCount = await this.productRepository.manager.query(
+        `SELECT COUNT(*) as count FROM quote_items WHERE "productId" = $1`,
+        [id],
+      );
+      if (parseInt(quoteCount[0]?.count || '0') > 0) {
+        throw new ConflictException('PRODUCT_IN_QUOTES');
       }
+    } catch (e) {
+      if (e instanceof ConflictException) throw e;
+      // quote_items table might not exist — ignore
     }
   }
 
@@ -230,7 +236,7 @@ export class ProductsService {
 
     try {
       const workbook = XLSX.read(file.buffer, { type: 'buffer' });
-      const data = XLSX.utils.sheet_to_json(
+      const data = XLSX.utils.sheet_to_json<Record<string, unknown>>(
         workbook.Sheets[workbook.SheetNames[0]],
       );
 

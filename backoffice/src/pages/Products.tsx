@@ -29,6 +29,7 @@ import {
   toastExported,
   toastImported,
   toastError,
+  toastDeleteError,
   toastWarning,
   toastInfo,
   toastConfirm,
@@ -130,7 +131,7 @@ export default function Products() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (error: Error) => {
-      toastError(t('deleteError'), { description: error.message });
+      toastDeleteError(error, t);
     },
   });
 
@@ -171,7 +172,7 @@ export default function Products() {
             await productsService.deleteProduct(id);
           } catch (error: any) {
             hasErrors = true;
-            toastError(t('deleteError'), { description: error.message });
+            toastDeleteError(error, t);
             break;
           }
         }
@@ -707,14 +708,14 @@ export default function Products() {
         actions={[
           ...(selectedProducts.length === 1
             ? [
-                {
-                  id: 'view',
-                  label: t('details'),
-                  icon: <Eye style={{ width: '0.875rem', height: '0.875rem' }} />,
-                  onClick: () => handleViewProduct(selectedProducts[0]),
-                  variant: 'secondary' as const,
-                },
-              ]
+              {
+                id: 'view',
+                label: t('details'),
+                icon: <Eye style={{ width: '0.875rem', height: '0.875rem' }} />,
+                onClick: () => handleViewProduct(selectedProducts[0]),
+                variant: 'secondary' as const,
+              },
+            ]
             : []),
           {
             id: 'delete',
@@ -949,30 +950,30 @@ export default function Products() {
                   style={
                     isServiceFilter === filter.key
                       ? {
-                          paddingLeft: '0.75rem',
-                          paddingRight: '0.75rem',
-                          paddingTop: '0.5rem',
-                          paddingBottom: '0.5rem',
-                          borderRadius: '0.5rem',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: '#235ae4',
-                          color: 'white',
-                          boxShadow: '0 10px 15px -3px rgba(35,90,228,0.3)',
-                          border: 'none',
-                        }
+                        paddingLeft: '0.75rem',
+                        paddingRight: '0.75rem',
+                        paddingTop: '0.5rem',
+                        paddingBottom: '0.5rem',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        backgroundColor: '#235ae4',
+                        color: 'white',
+                        boxShadow: '0 10px 15px -3px rgba(35,90,228,0.3)',
+                        border: 'none',
+                      }
                       : {
-                          paddingLeft: '0.75rem',
-                          paddingRight: '0.75rem',
-                          paddingTop: '0.5rem',
-                          paddingBottom: '0.5rem',
-                          borderRadius: '0.5rem',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: '#f8fafc',
-                          color: '#334155',
-                          border: '2px solid #e2e8f0',
-                        }
+                        paddingLeft: '0.75rem',
+                        paddingRight: '0.75rem',
+                        paddingTop: '0.5rem',
+                        paddingBottom: '0.5rem',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        backgroundColor: '#f8fafc',
+                        color: '#334155',
+                        border: '2px solid #e2e8f0',
+                      }
                   }
                   text={isServiceFilter !== filter.key}
                 />

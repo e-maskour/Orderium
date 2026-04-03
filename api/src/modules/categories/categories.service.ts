@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, ConflictException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Category } from './entities/category.entity';
@@ -10,7 +10,7 @@ export class CategoriesService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
 
   private get categoryRepository(): Repository<Category> {
     return this.tenantConnService.getRepository(Category);
@@ -108,11 +108,17 @@ export class CategoriesService {
   async delete(id: number): Promise<void> {
     const category = await this.findOne(id);
 
-    // Check if category has children
     if (category.children && category.children.length > 0) {
-      throw new Error(
-        'Cannot delete category with child categories. Please delete or reassign children first.',
-      );
+      throw new ConflictException('CATEGORY_HAS_CHILDREN');
+    }
+
+    // Block if any products are assigned to this category
+    const productRows = await this.categoryRepository.manager.query(
+      `SELECT COUNT(*) as count FROM product_categories WHERE "categoryId" = $1`,
+      [id],
+    );
+    if (parseInt(productRows[0]?.count || '0') > 0) {
+      throw new ConflictException('CATEGORY_HAS_PRODUCTS');
     }
 
     await this.categoryRepository.remove(category);

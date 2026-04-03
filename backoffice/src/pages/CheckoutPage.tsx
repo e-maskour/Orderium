@@ -125,8 +125,7 @@ export default function CheckoutPage() {
 
     const orderData = {
       customerId: state.customer.id,
-      fromPortal: true,
-      fromClient: false,
+      originType: 'ADMIN_POS',
       deliveryStatus: 'pending',
       date: new Date().toISOString(),
       subtotal,

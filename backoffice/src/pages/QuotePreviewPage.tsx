@@ -398,7 +398,7 @@ export default function QuotePreviewPage() {
                   fontSize: '0.875rem',
                   color: '#334155',
                 }}
-                body={(item: any) => `${formatAmount(item.unitPrice, 2)} DH`}
+                body={(item: any) => `${formatAmount(item.unitPrice, 2)} ${t('currency')}`}
               />
               <Column
                 field="total"
@@ -419,7 +419,7 @@ export default function QuotePreviewPage() {
                   fontWeight: 600,
                   color: '#0f172a',
                 }}
-                body={(item: any) => `${formatAmount(item.total, 2)} DH`}
+                body={(item: any) => `${formatAmount(item.total, 2)} ${t('currency')}`}
               />
             </DataTable>
           </div>
@@ -621,7 +621,7 @@ export default function QuotePreviewPage() {
                 >
                   <span style={{ color: '#475569' }}>Sous-total HT:</span>
                   <span style={{ fontWeight: 600, color: '#0f172a' }}>
-                    {formatAmount(q.subtotal, 2)} DH
+                    {formatAmount(q.subtotal, 2)} {t('currency')}
                   </span>
                 </div>
                 <div
@@ -629,7 +629,7 @@ export default function QuotePreviewPage() {
                 >
                   <span style={{ color: '#475569' }}>TVA:</span>
                   <span style={{ fontWeight: 600, color: '#0f172a' }}>
-                    {formatAmount(q.tax, 2)} DH
+                    {formatAmount(q.tax, 2)} {t('currency')}
                   </span>
                 </div>
                 <div
@@ -643,7 +643,7 @@ export default function QuotePreviewPage() {
                 >
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>Total TTC:</span>
                   <span style={{ fontWeight: 700, color: '#2563eb' }}>
-                    {formatAmount(q.total, 2)} DH
+                    {formatAmount(q.total, 2)} {t('currency')}
                   </span>
                 </div>
               </div>

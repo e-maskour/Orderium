@@ -17,6 +17,7 @@ import { invoicesService } from '../modules/invoices/invoices.service';
 import { ordersService } from '../modules/orders/orders.service';
 import { quotesService } from '../modules/quotes/quotes.service';
 import { formatAmount } from '@orderium/ui';
+import { useLanguage } from '../context/LanguageContext';
 
 function getDocType(pathname: string): 'invoice' | 'order' | 'quote' {
   if (pathname.includes('/invoice/')) return 'invoice';
@@ -34,6 +35,7 @@ export default function SharedDocumentPage() {
   const { token } = useParams<{ token: string }>();
   const location = useLocation();
   const docType = getDocType(location.pathname);
+  const { t } = useLanguage();
 
   const [doc, setDoc] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
@@ -398,7 +400,7 @@ export default function SharedDocumentPage() {
                   color: '#334155',
                 }}
                 body={(item: any) =>
-                  `${formatAmount(Number(item.unitPrice || item.priceBeforeTax || 0), 2)} DH`
+                  `${formatAmount(Number(item.unitPrice || item.priceBeforeTax || 0), 2)} ${t('currency')}`
                 }
               />
               <Column
@@ -421,7 +423,7 @@ export default function SharedDocumentPage() {
                   fontWeight: 700,
                   color: '#0f172a',
                 }}
-                body={(item: any) => `${formatAmount(Number(item.total || 0), 2)} DH`}
+                body={(item: any) => `${formatAmount(Number(item.total || 0), 2)} ${t('currency')}`}
               />
             </DataTable>
           </div>
@@ -447,7 +449,7 @@ export default function SharedDocumentPage() {
               >
                 <span style={{ color: '#64748b' }}>Sous-total HT</span>
                 <span style={{ fontWeight: 600, color: '#334155' }}>
-                  {formatAmount(subtotal, 2)} DH
+                  {formatAmount(subtotal, 2)} {t('currency')}
                 </span>
               </div>
               <div
@@ -460,7 +462,7 @@ export default function SharedDocumentPage() {
                 }}
               >
                 <span style={{ color: '#64748b' }}>TVA</span>
-                <span style={{ fontWeight: 600, color: '#334155' }}>{formatAmount(tax, 2)} DH</span>
+                <span style={{ fontWeight: 600, color: '#334155' }}>{formatAmount(tax, 2)} {t('currency')}</span>
               </div>
               <div
                 style={{
@@ -477,7 +479,7 @@ export default function SharedDocumentPage() {
                   Total TTC
                 </span>
                 <span style={{ fontWeight: 800, color: '#235ae4', fontSize: '1.125rem' }}>
-                  {formatAmount(total, 2)} DH
+                  {formatAmount(total, 2)} {t('currency')}
                 </span>
               </div>
             </div>

@@ -33,7 +33,7 @@ export class DeliveryService {
     private readonly orderNotificationService: OrderNotificationService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) {}
+  ) { }
 
   private get deliveryPersonRepository(): Repository<DeliveryPerson> {
     return this.tenantConnService.getRepository(DeliveryPerson);
@@ -171,6 +171,19 @@ export class DeliveryService {
 
   async deleteDeliveryPerson(id: number): Promise<void> {
     const person = await this.getDeliveryPersonById(id);
+
+    // Block if delivery person is assigned to any active (non-terminal) orders
+    const activeRows = await this.deliveryPersonRepository.manager.query(
+      `SELECT COUNT(*) as count FROM orders_delivery od
+       JOIN orders o ON o.id = od."orderId"
+       WHERE od."deliveryPersonId" = $1
+         AND o.status NOT IN ('delivered', 'invoiced', 'cancelled')`,
+      [id],
+    );
+    if (parseInt(activeRows[0]?.count || '0') > 0) {
+      throw new ConflictException('DELIVERY_PERSON_HAS_ORDERS');
+    }
+
     await this.deliveryPersonRepository.remove(person);
   }
 

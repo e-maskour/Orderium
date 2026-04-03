@@ -27,8 +27,7 @@ export const ORDER_LIST_FIELDS = [
   'order.direction',
   'order.isValidated',
   'order.notes',
-  'order.fromPortal',
-  'order.fromClient',
+  'order.originType',
   'order.deliveryStatus',
   'order.pendingAt',
   'order.assignedAt',
@@ -80,8 +79,7 @@ export const PRODUCT_SUMMARY_FIELDS = [
 // ─── Filter application helpers ─────────────────────────────────────────────
 
 export interface OrderListFilters {
-  fromPortal?: boolean;
-  fromClient?: boolean;
+  originType?: string | string[];
   deliveryStatus?: string | string[];
   status?: string[];
   search?: string;
@@ -102,10 +100,17 @@ export function applyOrderFilters(
   qb: SelectQueryBuilder<Order>,
   filters: OrderListFilters,
 ): SelectQueryBuilder<Order> {
-  if (filters.fromPortal !== undefined) {
-    qb.andWhere('order.fromPortal = :fromPortal', {
-      fromPortal: filters.fromPortal,
-    });
+  if (filters.originType !== undefined) {
+    const types = Array.isArray(filters.originType)
+      ? filters.originType
+      : [filters.originType];
+    if (types.length === 1) {
+      qb.andWhere('order.originType = :originType', { originType: types[0] });
+    } else {
+      qb.andWhere('order.originType IN (:...originTypes)', {
+        originTypes: types,
+      });
+    }
   }
 
   if (filters.search) {
@@ -115,12 +120,6 @@ export function applyOrderFilters(
     );
     // In search mode the remaining filter-panel conditions are skipped
     return qb;
-  }
-
-  if (filters.fromClient !== undefined) {
-    qb.andWhere('order.fromClient = :fromClient', {
-      fromClient: filters.fromClient,
-    });
   }
   if (filters.orderNumber) {
     qb.andWhere('order.documentNumber = :orderNumber', {

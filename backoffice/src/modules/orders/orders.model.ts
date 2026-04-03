@@ -109,8 +109,7 @@ export class Order implements IOrder {
   isValidated: boolean;
   notes?: string | null;
   convertedToInvoiceId?: number | null;
-  fromPortal?: boolean;
-  fromClient?: boolean;
+  originType?: string;
   deliveryStatus?: DeliveryStatus | null;
   deliveryPersonId?: number | null;
   deliveryPersonName?: string | null;
@@ -145,8 +144,7 @@ export class Order implements IOrder {
     this.isValidated = data.isValidated;
     this.notes = data.notes;
     this.convertedToInvoiceId = data.convertedToInvoiceId;
-    this.fromPortal = data.fromPortal;
-    this.fromClient = data.fromClient;
+    this.originType = data.originType;
     this.deliveryStatus = data.deliveryStatus;
     this.deliveryPersonId = data.deliveryPersonId;
     this.deliveryPersonName = data.deliveryPersonName;
@@ -276,7 +274,9 @@ export class Order implements IOrder {
   }
 
   get isFromExternal(): boolean {
-    return !!(this.fromPortal || this.fromClient);
+    return (
+      this.originType === 'CLIENT_POS' || this.originType === 'ADMIN_POS'
+    );
   }
 
   // Methods
@@ -318,8 +318,7 @@ export class Order implements IOrder {
       isValidated: data.isValidated || false,
       notes: data.notes,
       convertedToInvoiceId: data.convertedToInvoiceId,
-      fromPortal: data.fromPortal || false,
-      fromClient: data.fromClient || false,
+      originType: data.originType || 'BACKOFFICE',
       deliveryStatus: data.deliveryStatus || null,
       deliveryPersonId: data.deliveryPersonId, // Business logic field
       deliveryPersonName: data.deliveryPersonName, // Business logic field
@@ -357,8 +356,7 @@ export class Order implements IOrder {
       isValidated: this.isValidated,
       notes: this.notes,
       convertedToInvoiceId: this.convertedToInvoiceId,
-      fromPortal: this.fromPortal,
-      fromClient: this.fromClient,
+      originType: this.originType,
       deliveryStatus: this.deliveryStatus,
       deliveryPersonId: this.deliveryPersonId,
       deliveryPersonName: this.deliveryPersonName,

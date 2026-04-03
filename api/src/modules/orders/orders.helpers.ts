@@ -30,8 +30,7 @@ export interface OrderResponseDto {
   direction: string;
   isValidated: boolean;
   note: string;
-  fromPortal: boolean;
-  fromClient: boolean;
+  originType: string;
   deliveryStatus: string | null;
   pendingAt: Date | null;
   assignedAt: Date | null;
@@ -129,8 +128,7 @@ export function formatOrderDetail(
     direction: order.direction,
     isValidated: order.isValidated || false,
     note: order.notes,
-    fromPortal: order.fromPortal || false,
-    fromClient: order.fromClient || false,
+    originType: order.originType || 'BACKOFFICE',
     deliveryStatus: order.deliveryStatus || null,
     pendingAt: order.pendingAt,
     assignedAt: order.assignedAt,
@@ -178,8 +176,7 @@ export function formatOrderListItem(order: Order): OrderResponseDto {
     direction: order.direction,
     isValidated: order.isValidated || false,
     note: order.notes,
-    fromPortal: order.fromPortal || false,
-    fromClient: order.fromClient || false,
+    originType: order.originType || 'BACKOFFICE',
     deliveryStatus: order.deliveryStatus || null,
     pendingAt: order.pendingAt,
     assignedAt: order.assignedAt,
@@ -338,8 +335,7 @@ export function buildOrderExportBaseRow(order: Order) {
     'Type remise': order.discountType === 0 ? 'Montant' : 'Pourcentage',
     Taxe: Number(order.tax),
     Total: Number(order.total),
-    'Du portail': order.fromPortal ? 'Oui' : 'Non',
-    'Du client': order.fromClient ? 'Oui' : 'Non',
+    Origine: order.originType || 'BACKOFFICE',
     Notes: order.notes || '',
   };
 }

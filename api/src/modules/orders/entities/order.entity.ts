@@ -37,6 +37,12 @@ export enum DeliveryStatus {
   CANCELED = 'canceled',
 }
 
+export enum OrderOriginType {
+  BACKOFFICE = 'BACKOFFICE',
+  CLIENT_POS = 'CLIENT_POS',
+  ADMIN_POS = 'ADMIN_POS',
+}
+
 @Entity('orders')
 @Index(['documentNumber'])
 @Index(['customerId'])
@@ -44,6 +50,7 @@ export enum DeliveryStatus {
 @Index(['date'])
 @Index(['status'])
 @Index(['deliveryStatus'])
+@Index(['originType'])
 export class Order extends BaseDocument {
   // Override documentNumber to use orderNumber for backwards compatibility
   get orderNumber(): string {
@@ -87,11 +94,8 @@ export class Order extends BaseDocument {
   @Column({ type: 'int', nullable: true })
   convertedToInvoiceId: number | null; // Reference to invoice if converted
 
-  @Column({ type: 'boolean', default: false })
-  fromPortal: boolean; // Indicates if order was created from delivery portal
-
-  @Column({ type: 'boolean', default: false })
-  fromClient: boolean; // Indicates if order was created from client app
+  @Column({ type: 'varchar', length: 50, default: 'BACKOFFICE' })
+  originType: string; // BACKOFFICE | CLIENT_POS | ADMIN_POS
 
   @Column({ type: 'varchar', nullable: true })
   receiptNumber: string | null;

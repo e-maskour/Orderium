@@ -40,8 +40,7 @@ export interface IOrder {
   isValidated: boolean;
   notes?: string | null;
   convertedToInvoiceId?: number | null;
-  fromPortal?: boolean; // Indicates if order was created from delivery portal
-  fromClient?: boolean; // Indicates if order was created from client app
+  originType?: string; // BACKOFFICE | CLIENT_POS | ADMIN_POS
   deliveryStatus?: DeliveryStatus | null; // Delivery lifecycle status
   deliveryPersonId?: number | null; // Business logic field, not in entity
   deliveryPersonName?: string | null; // Business logic field, not in entity
@@ -108,4 +107,4 @@ export interface CreateOrderDTO {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateOrderDTO extends Partial<CreateOrderDTO> {}
+export interface UpdateOrderDTO extends Partial<CreateOrderDTO> { }

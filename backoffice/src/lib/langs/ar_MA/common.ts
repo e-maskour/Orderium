@@ -89,7 +89,7 @@ export default {
   total: 'المجموع',
 
   // Currency
-  currency: 'درهم',
+  currency: 'د.م',
   currencyCode: 'MAD',
 
   // Date Filters
@@ -479,4 +479,23 @@ export default {
   // Dates
   createdAt: 'تاريخ الإنشاء',
   updatedAt: 'تاريخ التحديث',
+
+  // ── Deletion guard error codes (returned by API) ─────────────────────────
+  deletionBlocked: 'لا يمكن الحذف',
+  PRODUCT_IN_INVOICES: 'هذا المنتج مستخدم في فواتير ولا يمكن حذفه.',
+  PRODUCT_IN_ORDERS: 'هذا المنتج مستخدم في طلبات ولا يمكن حذفه.',
+  PRODUCT_IN_QUOTES: 'هذا المنتج مستخدم في عروض أسعار ولا يمكن حذفه.',
+  ORDER_VALIDATED: 'هذا الطلب مُعتمد. يرجى إلغاء اعتماده قبل الحذف.',
+  ORDER_HAS_PAYMENTS: 'هذا الطلب مرتبط بمدفوعات ولا يمكن حذفه.',
+  INVOICE_VALIDATED: 'هذه الفاتورة مُعتمدة. يرجى إلغاء اعتمادها قبل الحذف.',
+  INVOICE_HAS_PAYMENTS: 'هذه الفاتورة مرتبطة بمدفوعات ولا يمكن حذفها.',
+  QUOTE_VALIDATED: 'هذا العرض مُعتمد. يرجى إلغاء اعتماده قبل الحذف.',
+  QUOTE_CONVERTED_TO_INVOICE: 'تم تحويل هذا العرض إلى فاتورة ولا يمكن حذفه.',
+  PARTNER_HAS_DOCUMENTS:
+    'هذا الشريك مرتبط بطلبات أو فواتير أو عروض أسعار ولا يمكن حذفه.',
+  DELIVERY_PERSON_HAS_ORDERS: 'هذا المندوب مخصص لطلبات نشطة ولا يمكن حذفه.',
+  CATEGORY_HAS_CHILDREN: 'هذه الفئة تحتوي على فئات فرعية ولا يمكن حذفها.',
+  CATEGORY_HAS_PRODUCTS: 'هذه الفئة مخصصة لمنتجات ولا يمكن حذفها.',
+  WAREHOUSE_HAS_PRODUCTS: 'هذا المستودع مخصص لمنتجات ولا يمكن حذفه.',
 };
+

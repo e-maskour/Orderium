@@ -335,8 +335,7 @@ export default function POS() {
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const orderData = {
       customerId: selectedCustomer.id,
-      fromPortal: true,
-      fromClient: false,
+      originType: 'ADMIN_POS',
       deliveryStatus: 'pending',
       date: new Date().toISOString(),
       subtotal,
@@ -989,29 +988,29 @@ export default function POS() {
               style={
                 selectedCustomer
                   ? {
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.375rem 0.75rem',
-                      background: 'rgba(34,197,94,0.12)',
-                      border: '1px solid rgba(34,197,94,0.25)',
-                      borderRadius: '2rem',
-                      color: '#fff',
-                      fontSize: '0.8125rem',
-                      fontWeight: 700,
-                    }
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.375rem 0.75rem',
+                    background: 'rgba(34,197,94,0.12)',
+                    border: '1px solid rgba(34,197,94,0.25)',
+                    borderRadius: '2rem',
+                    color: '#fff',
+                    fontSize: '0.8125rem',
+                    fontWeight: 700,
+                  }
                   : {
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.375rem 0.75rem',
-                      background: 'rgba(255,255,255,0.07)',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      borderRadius: '2rem',
-                      color: 'rgba(255,255,255,0.6)',
-                      fontSize: '0.8125rem',
-                      fontWeight: 500,
-                    }
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.375rem 0.75rem',
+                    background: 'rgba(255,255,255,0.07)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '2rem',
+                    color: 'rgba(255,255,255,0.6)',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                  }
               }
             />
           </div>

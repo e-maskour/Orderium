@@ -14,6 +14,7 @@ import {
   toastUpdated,
   toastDeleted,
   toastError,
+  toastDeleteError,
   toastConfirm,
 } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
@@ -80,8 +81,8 @@ export default function Categories() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toastDeleted(t('categoryDeleted'));
     },
-    onError: (error: any) => {
-      toastError(error.message || t('failedToDelete'));
+    onError: (error: Error) => {
+      toastDeleteError(error, t);
     },
   });
 

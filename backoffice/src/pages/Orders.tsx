@@ -40,6 +40,7 @@ import {
   toastDeleted,
   toastCancelled,
   toastError,
+  toastDeleteError,
   toastWarning,
   toastConfirm,
 } from '../services/toast.service';
@@ -83,7 +84,7 @@ export default function Orders() {
   }, [quickSearch]);
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<string[]>([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState<string[]>([]);
-  const [fromClientFilter, setFromClientFilter] = useState<'all' | 'locale' | 'client'>('all');
+  const [originTypeFilter, setOriginTypeFilter] = useState<'all' | 'BACKOFFICE' | 'CLIENT_POS' | 'ADMIN_POS'>('all');
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -93,7 +94,7 @@ export default function Orders() {
     orderNumber: string;
     deliveryStatus: any;
     orderStatus: string[];
-    fromClient: any;
+    originType: 'all' | 'BACKOFFICE' | 'CLIENT_POS' | 'ADMIN_POS';
     dateFilterType: any;
     dateRange: { start: Date | undefined; end: Date | undefined };
   }>({
@@ -101,7 +102,7 @@ export default function Orders() {
     orderNumber: '',
     deliveryStatus: [] as string[],
     orderStatus: [] as string[],
-    fromClient: 'all' as any,
+    originType: 'all' as any,
     dateFilterType: 'custom' as any,
     dateRange: { start: undefined, end: undefined },
   });
@@ -184,13 +185,10 @@ export default function Orders() {
         appliedFilters.search,
         getDateRange.start,
         getDateRange.end,
-        true,
+        appliedFilters.originType === 'all'
+          ? ['CLIENT_POS', 'ADMIN_POS']
+          : appliedFilters.originType,
         appliedFilters.deliveryStatus?.length > 0 ? appliedFilters.deliveryStatus : undefined,
-        appliedFilters.fromClient === 'client'
-          ? true
-          : appliedFilters.fromClient === 'locale'
-            ? false
-            : undefined,
         appliedFilters.orderNumber,
         currentPage,
         pageSize,
@@ -262,7 +260,7 @@ export default function Orders() {
       clearSelection();
     },
     onError: (error: Error) => {
-      toastError(`${t('failedToDelete')}: ${error.message}`);
+      toastDeleteError(error, t);
     },
   });
 
@@ -451,7 +449,7 @@ export default function Orders() {
   };
 
   const getSourceBadge = (order: any) => {
-    if (order?.fromClient) {
+    if (order?.originType === 'CLIENT_POS') {
       return {
         label: t('client'),
         icon: <ShoppingCart style={{ width: '0.75rem', height: '0.75rem' }} />,
@@ -693,7 +691,7 @@ export default function Orders() {
     setCustomerPhoneSearch('');
     setDeliveryPersonIdSearch('');
     setSearchInput('');
-    setFromClientFilter('all');
+    setOriginTypeFilter('all');
     setDateFilterType('custom');
     setDateRange({ start: undefined, end: undefined });
     setDeliveryStatusFilter([]);
@@ -705,7 +703,7 @@ export default function Orders() {
       orderNumber: '',
       deliveryStatus: [],
       orderStatus: [],
-      fromClient: 'all',
+      originType: 'all',
       dateFilterType: 'custom',
       dateRange: { start: undefined, end: undefined },
     });
@@ -724,7 +722,7 @@ export default function Orders() {
       orderNumber: orderNumberSearch,
       deliveryStatus: deliveryStatusFilter,
       orderStatus: orderStatusFilter,
-      fromClient: fromClientFilter,
+      originType: originTypeFilter,
       dateFilterType: 'custom',
       dateRange: { start: dateRange.start, end: dateRange.end },
     });
@@ -1097,22 +1095,22 @@ export default function Orders() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {[
                   { key: 'all', label: t('all') },
-                  { key: 'locale', label: t('local') },
-                  { key: 'client', label: t('client') },
+                  { key: 'ADMIN_POS', label: t('local') },
+                  { key: 'CLIENT_POS', label: t('client') },
                 ].map((filter) => (
                   <Button
                     key={filter.key}
-                    onClick={() => setFromClientFilter(filter.key as any)}
+                    onClick={() => setOriginTypeFilter(filter.key as any)}
                     label={filter.label}
-                    text={fromClientFilter !== filter.key}
+                    text={originTypeFilter !== filter.key}
                     style={{
                       padding: '0.5rem 0.75rem',
                       borderRadius: '0.5rem',
                       fontSize: '0.75rem',
                       fontWeight: 600,
-                      backgroundColor: fromClientFilter === filter.key ? '#3b82f6' : '#f8fafc',
-                      color: fromClientFilter === filter.key ? '#ffffff' : '#334155',
-                      border: fromClientFilter === filter.key ? 'none' : '2px solid #e2e8f0',
+                      backgroundColor: originTypeFilter === filter.key ? '#3b82f6' : '#f8fafc',
+                      color: originTypeFilter === filter.key ? '#ffffff' : '#334155',
+                      border: originTypeFilter === filter.key ? 'none' : '2px solid #e2e8f0',
                     }}
                   />
                 ))}
@@ -1401,26 +1399,26 @@ export default function Orders() {
                 }}
               >
                 {appliedFilters.search ||
-                appliedFilters.orderNumber ||
-                appliedFilters.deliveryStatus?.length > 0 ||
-                appliedFilters.fromClient !== 'all' ||
-                appliedFilters.dateRange.start ||
-                appliedFilters.dateRange.end
+                  appliedFilters.orderNumber ||
+                  appliedFilters.deliveryStatus?.length > 0 ||
+                  appliedFilters.originType !== 'all' ||
+                  appliedFilters.dateRange.start ||
+                  appliedFilters.dateRange.end
                   ? t('noOrdersMatchFilter')
                   : t('noOrdersYet')}
               </p>
               {(appliedFilters.search ||
                 appliedFilters.orderNumber ||
                 appliedFilters.deliveryStatus?.length > 0 ||
-                appliedFilters.fromClient !== 'all' ||
+                appliedFilters.originType !== 'all' ||
                 appliedFilters.dateRange.start ||
                 appliedFilters.dateRange.end) && (
-                <Button
-                  label={t('resetFilters')}
-                  onClick={resetFilters}
-                  style={{ marginTop: '1.5rem' }}
-                />
-              )}
+                  <Button
+                    label={t('resetFilters')}
+                    onClick={resetFilters}
+                    style={{ marginTop: '1.5rem' }}
+                  />
+                )}
             </div>
           </div>
         ) : (
@@ -1934,18 +1932,18 @@ export default function Orders() {
                 !deliveryModalSearch ||
                 p.name.toLowerCase().includes(deliveryModalSearch.toLowerCase()),
             ).length === 0 && (
-            <p
-              style={{
-                textAlign: 'center',
-                color: '#94a3b8',
-                fontSize: '0.875rem',
-                padding: '1.5rem 0',
-                margin: 0,
-              }}
-            >
-              {t('noDeliveryPersons')}
-            </p>
-          )}
+              <p
+                style={{
+                  textAlign: 'center',
+                  color: '#94a3b8',
+                  fontSize: '0.875rem',
+                  padding: '1.5rem 0',
+                  margin: 0,
+                }}
+              >
+                {t('noDeliveryPersons')}
+              </p>
+            )}
         </div>
       </Dialog>
 

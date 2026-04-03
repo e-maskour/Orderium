@@ -22,8 +22,7 @@ export interface CreateOrderRequest {
   total?: number; // Final total (subtotal + tax - discount)
   discount?: number; // Order-level discount
   discountType?: number; // 0=amount, 1=percentage
-  fromPortal?: boolean; // Indicates if order is from portal
-  fromClient?: boolean; // Indicates if order is from client app
+  originType?: string; // BACKOFFICE | CLIENT_POS | ADMIN_POS
 }
 
 export interface Order {
@@ -46,8 +45,7 @@ export interface Order {
   dateCreated: string;
   dateUpdated: string;
   isValidated?: boolean;
-  fromPortal?: boolean; // Default to true
-  fromClient?: boolean; // Indicates if order is from client app
+  originType?: string; // BACKOFFICE | CLIENT_POS | ADMIN_POS
 }
 
 export interface OrderItem {

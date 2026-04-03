@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { notify, confirmAction as _confirmAction, type ConfirmVariant } from '@orderium/ui';
+import { notify, confirmAction as _confirmAction, alertAction, type ConfirmVariant } from '@orderium/ui';
 
 interface ToastOptions {
   description?: ReactNode;
@@ -124,7 +124,10 @@ function inferVariant(title: string): ConfirmVariant {
     lower.includes('reject') ||
     lower.includes('refus') ||
     lower.includes('void') ||
-    lower.includes('invalide')
+    lower.includes('invalide') ||
+    lower.includes('حذف') ||    // Arabic: delete
+    lower.includes('إلغاء') ||  // Arabic: cancel/annul
+    lower.includes('رفض')       // Arabic: reject
   ) {
     return 'destructive';
   }
@@ -134,9 +137,55 @@ function inferVariant(title: string): ConfirmVariant {
     lower.includes('revert') ||
     lower.includes('dévalid') ||
     lower.includes('désassign') ||
-    lower.includes('unassign')
+    lower.includes('unassign') ||
+    lower.includes('تعطيل') ||   // Arabic: disable
+    lower.includes('حظر')        // Arabic: block
   ) {
     return 'warning';
   }
   return 'info';
+}
+
+// ── Deletion guard alert ─────────────────────────────────
+/**
+ * Call in delete `catch` blocks. If the API returned a known deletion-guard
+ * error code, opens the AlertDialog with a translated message.
+ * Falls back to toastError for unknown errors.
+ *
+ * @param error   The caught error
+ * @param t       The translation function from useLanguage()
+ */
+const DELETION_ERROR_CODES = new Set([
+  'PRODUCT_IN_INVOICES',
+  'PRODUCT_IN_ORDERS',
+  'PRODUCT_IN_QUOTES',
+  'ORDER_VALIDATED',
+  'ORDER_HAS_PAYMENTS',
+  'INVOICE_VALIDATED',
+  'INVOICE_HAS_PAYMENTS',
+  'QUOTE_VALIDATED',
+  'QUOTE_CONVERTED_TO_INVOICE',
+  'PARTNER_HAS_DOCUMENTS',
+  'DELIVERY_PERSON_HAS_ORDERS',
+  'CATEGORY_HAS_CHILDREN',
+  'CATEGORY_HAS_PRODUCTS',
+  'WAREHOUSE_HAS_PRODUCTS',
+]);
+
+export function toastDeleteError(
+  error: unknown,
+  t: (key: string) => string,
+): void {
+  const code = (error as Error)?.message ?? '';
+  if (DELETION_ERROR_CODES.has(code)) {
+    void alertAction({
+      variant: 'destructive',
+      title: t('deletionBlocked'),
+      description: t(code),
+    });
+  } else {
+    toastError(t('deleteError'), {
+      description: (error as Error)?.message || String(error),
+    });
+  }
 }

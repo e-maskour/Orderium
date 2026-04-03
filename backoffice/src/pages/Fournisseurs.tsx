@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { toastDeleted, toastError, toastConfirm } from '../services/toast.service';
+import { toastDeleted, toastError, toastDeleteError, toastConfirm } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { EmptyState } from '../components/EmptyState';
 import { MobileList } from '../components/MobileList';
@@ -54,7 +54,7 @@ export default function Fournisseurs() {
       setSelectedSuppliers([]);
     },
     onError: (error: Error) => {
-      toastError(`${t('failedToDelete')}: ${error.message}`);
+      toastDeleteError(error, t);
     },
   });
 

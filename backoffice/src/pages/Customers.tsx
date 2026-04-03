@@ -12,7 +12,7 @@ import { EmptyState } from '../components/EmptyState';
 import { partnersService } from '../modules/partners';
 import { Partner } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { toastDeleted, toastError, toastConfirm } from '../services/toast.service';
+import { toastDeleted, toastError, toastDeleteError, toastConfirm } from '../services/toast.service';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { MobileList } from '../components/MobileList';
 
@@ -54,10 +54,7 @@ export default function Customers() {
       setSelectedCustomers([]);
     },
     onError: (error: Error) => {
-      const message = error.message.includes('Cannot delete customer that has')
-        ? error.message
-        : `${t('failedToDelete')}: ${error.message}`;
-      toastError(message);
+      toastDeleteError(error, t);
     },
   });
 

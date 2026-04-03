@@ -1,6 +1,7 @@
 import {
   Injectable,
   BadRequestException,
+  ConflictException,
   NotFoundException,
   Logger,
   Inject,
@@ -43,7 +44,7 @@ export class InvoicesService {
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
-  ) {}
+  ) { }
 
   private get invoiceRepository(): Repository<Invoice> {
     return this.tenantConnService.getRepository(Invoice);
@@ -480,11 +481,18 @@ export class InvoicesService {
   }
 
   async remove(id: number): Promise<void> {
-    const totalPaid = await this.getTotalPaid(id);
-    if (totalPaid > 0)
-      throw new Error('Cannot delete invoice that has payments.');
-
     const invoice = await this.findOne(id);
+    if (!invoice) throw new NotFoundException(`Invoice #${id} not found`);
+
+    if (invoice.isValidated) {
+      throw new BadRequestException('INVOICE_VALIDATED');
+    }
+
+    const totalPaid = await this.getTotalPaid(id);
+    if (totalPaid > 0) {
+      throw new ConflictException('INVOICE_HAS_PAYMENTS');
+    }
+
     await this.invoiceItemRepository.delete({ invoiceId: id });
     await this.pdfService.deletePDF(invoice?.pdfUrl);
     await this.invoiceRepository.delete(id);

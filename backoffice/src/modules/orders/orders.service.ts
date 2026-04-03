@@ -11,9 +11,8 @@ export class OrdersService {
     search?: string,
     startDate?: Date,
     endDate?: Date,
-    fromPortal?: boolean,
+    originType?: string | string[],
     deliveryStatus?: string[],
-    fromClient?: boolean,
     orderNumber?: string,
     page: number = 1,
     perPage: number = 50,
@@ -35,7 +34,6 @@ export class OrdersService {
     }
 
     const queryParams: Record<string, string | number | boolean | undefined> = { page, perPage };
-    if (fromPortal !== undefined) queryParams.fromPortal = fromPortal;
     if (direction) queryParams.direction = direction;
 
     const body: any = {};
@@ -47,7 +45,7 @@ export class OrdersService {
     if (orderNumber) body.orderNumber = orderNumber;
     if (filters.customerId) body.customerId = filters.customerId;
     if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
-    if (fromClient !== undefined) body.fromClient = fromClient;
+    if (originType !== undefined) body.originType = originType;
 
     const response = await apiClient.post<any[]>(API_ROUTES.ORDERS.FILTER, body, {
       params: queryParams,

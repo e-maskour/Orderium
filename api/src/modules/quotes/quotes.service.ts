@@ -39,7 +39,7 @@ export class QuotesService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
-  ) {}
+  ) { }
 
   private get quoteRepository(): Repository<Quote> {
     return this.tenantConnService.getRepository(Quote);
@@ -426,11 +426,15 @@ export class QuotesService {
   async remove(id: number): Promise<void> {
     const quote = await this.findOne(id);
     if (!quote) throw new NotFoundException('Quote not found');
+
     if (quote.status === QuoteStatus.INVOICED) {
-      throw new BadRequestException(
-        'Cannot delete a quote that has been converted to an invoice',
-      );
+      throw new BadRequestException('QUOTE_CONVERTED_TO_INVOICE');
     }
+
+    if (quote.isValidated) {
+      throw new BadRequestException('QUOTE_VALIDATED');
+    }
+
     await this.quoteItemRepository.delete({ quoteId: id });
     await this.pdfService.deletePDF(quote.pdfUrl);
     await this.quoteRepository.delete(id);

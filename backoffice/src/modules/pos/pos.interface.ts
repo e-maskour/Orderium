@@ -90,8 +90,7 @@ export interface CreatePosOrderItem {
 
 export interface CreatePosOrderDTO {
   customerId: number;
-  fromPortal: boolean;
-  fromClient?: boolean;
+  originType?: string;
   deliveryStatus?: string;
   date?: string;
   subtotal: number;

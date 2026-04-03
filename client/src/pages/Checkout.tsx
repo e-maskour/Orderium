@@ -164,8 +164,7 @@ const Checkout = () => {
         discount: 0,
         discountType: 0,
         total: subtotal,
-        fromPortal: true,
-        fromClient: true,
+        originType: 'CLIENT_POS',
       });
 
       navigate('/success', {

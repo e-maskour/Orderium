@@ -48,6 +48,7 @@ import { Row } from 'primereact/row';
 import { Tag as PTag } from 'primereact/tag';
 import { Dialog } from 'primereact/dialog';
 import { TabView, TabPanel } from 'primereact/tabview';
+import { RadioButton } from 'primereact/radiobutton';
 import { formatAmount } from '@orderium/ui';
 
 export default function ProductDetail() {
