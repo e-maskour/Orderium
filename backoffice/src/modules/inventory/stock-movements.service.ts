@@ -16,6 +16,7 @@ export class StockMovementService {
     movementType?: string;
     startDate?: string;
     endDate?: string;
+    search?: string;
   }): Promise<StockMovement[]> {
     const params = new URLSearchParams();
     if (filters?.productId) params.append('productId', filters.productId.toString());
@@ -24,6 +25,7 @@ export class StockMovementService {
     if (filters?.movementType) params.append('movementType', filters.movementType);
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
+    if (filters?.search) params.append('search', filters.search);
 
     const queryString = params.toString();
     const url = queryString

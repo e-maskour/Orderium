@@ -25,7 +25,7 @@ import { MOV } from '../../common/response-codes';
 @ApiTags('Inventory - Stock Movements')
 @Controller('inventory/movements')
 export class StockMovementController {
-  constructor(private readonly stockService: StockService) {}
+  constructor(private readonly stockService: StockService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new stock movement (draft)' })
@@ -44,6 +44,7 @@ export class StockMovementController {
   @ApiQuery({ name: 'movementType', required: false, enum: MovementType })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
   async findAll(
     @Query('productId') productId?: string,
     @Query('warehouseId') warehouseId?: string,
@@ -51,6 +52,7 @@ export class StockMovementController {
     @Query('movementType') movementType?: MovementType,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('search') search?: string,
   ) {
     const filters: any = {};
     if (productId) filters.productId = +productId;
@@ -59,6 +61,7 @@ export class StockMovementController {
     if (movementType) filters.movementType = movementType;
     if (startDate) filters.startDate = new Date(startDate);
     if (endDate) filters.endDate = new Date(endDate);
+    if (search) filters.search = search;
 
     const movements = await this.stockService.findAllMovements(filters);
     return ApiRes(MOV.LIST, movements);

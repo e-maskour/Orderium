@@ -7,9 +7,11 @@ import {
   Param,
   Body,
   Query,
+  Req,
   ParseIntPipe,
   NotFoundException,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { PushNotificationService } from './push-notification.service';
@@ -29,7 +31,7 @@ export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationService: PushNotificationService,
-  ) {}
+  ) { }
 
   @Get()
   @ApiOperation({ summary: 'Get notifications with filters and pagination' })
@@ -38,6 +40,7 @@ export class NotificationsController {
     description: 'Notifications retrieved successfully',
   })
   async getNotifications(
+    @Req() req: Request,
     @Query('userType') userType?: string,
     @Query('customerId') customerId?: string,
     @Query('userId') userId?: string,
@@ -53,11 +56,12 @@ export class NotificationsController {
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
   ) {
+    const jwtUserId = (req.user as { id: number } | undefined)?.id;
     const userIdNum = userId
       ? Number(userId)
       : customerId
         ? Number(customerId)
-        : undefined;
+        : jwtUserId;
 
     const result = await this.notificationsService.findAll({
       userId: userIdNum,
@@ -93,14 +97,16 @@ export class NotificationsController {
     description: 'Notification statistics retrieved successfully',
   })
   async getStats(
+    @Req() req: Request,
     @Query('userId') userId?: string,
     @Query('customerId') customerId?: string,
   ) {
+    const jwtUserId = (req.user as { id: number } | undefined)?.id;
     const userIdNum = userId
       ? Number(userId)
       : customerId
         ? Number(customerId)
-        : undefined;
+        : jwtUserId;
     const stats = await this.notificationsService.getStats(userIdNum);
     return ApiRes(NOT.STATS, stats);
   }
@@ -112,15 +118,17 @@ export class NotificationsController {
     description: 'Unread count retrieved successfully',
   })
   async getUnreadCount(
+    @Req() req: Request,
     @Query('userType') userType?: string,
     @Query('customerId') customerId?: string,
     @Query('userId') userId?: string,
   ) {
+    const jwtUserId = (req.user as { id: number } | undefined)?.id;
     const userIdNum = userId
       ? Number(userId)
       : customerId
         ? Number(customerId)
-        : undefined;
+        : jwtUserId;
 
     const count: number =
       await this.notificationsService.getUnreadCount(userIdNum);

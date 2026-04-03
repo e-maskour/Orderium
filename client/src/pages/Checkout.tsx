@@ -658,7 +658,7 @@ const Checkout = () => {
               <div className="hidden lg:block" style={{ marginTop: '1.125rem' }}>
                 <button
                   type="button"
-                  onClick={handleSubmit}
+                  onClick={handleSubmit(onSubmit)}
                   disabled={isSubmitting || !isFormValid}
                   style={{
                     width: '100%',

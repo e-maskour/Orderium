@@ -35,10 +35,24 @@ export class InventoryAdjustmentService {
     return InventoryAdjustment.fromApiResponse(result.data);
   }
 
-  async generateCountingList(warehouseId: number): Promise<any> {
-    const result = await apiClient.get<any>(
-      API_ROUTES.INVENTORY_ADJUSTMENTS.GENERATE_LIST(warehouseId),
-    );
+  async update(id: number, data: Record<string, any>): Promise<InventoryAdjustment> {
+    const result = await apiClient.patch<any>(API_ROUTES.INVENTORY_ADJUSTMENTS.UPDATE(id), data);
+    return InventoryAdjustment.fromApiResponse(result.data);
+  }
+
+  async generateCountingList(
+    warehouseId: number,
+    params?: { search?: string; page?: number; limit?: number },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    const query = new URLSearchParams();
+    if (params?.search) query.append('search', params.search);
+    if (params?.page) query.append('page', String(params.page));
+    if (params?.limit) query.append('limit', String(params.limit));
+    const qs = query.toString();
+    const url = qs
+      ? `${API_ROUTES.INVENTORY_ADJUSTMENTS.GENERATE_LIST(warehouseId)}?${qs}`
+      : API_ROUTES.INVENTORY_ADJUSTMENTS.GENERATE_LIST(warehouseId);
+    const result = await apiClient.get<any>(url);
     return result.data;
   }
 

@@ -80,7 +80,7 @@ export const ProductCard = ({ product, viewMode = 'grid', index = 99 }: ProductC
                 alt={product.name}
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 loading={isAboveFold ? 'eager' : 'lazy'}
-                fetchPriority={isAboveFold ? 'high' : 'auto'}
+                fetchpriority={isAboveFold ? 'high' : 'auto'}
                 decoding="async"
               />
             ) : (
@@ -225,7 +225,7 @@ export const ProductCard = ({ product, viewMode = 'grid', index = 99 }: ProductC
               alt={product.name}
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               loading={isAboveFold ? 'eager' : 'lazy'}
-              fetchPriority={isAboveFold ? 'high' : 'auto'}
+              fetchpriority={isAboveFold ? 'high' : 'auto'}
               decoding="async"
             />
           ) : (

@@ -26,7 +26,7 @@ export class InventoryAdjustmentService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly stockService: StockService,
-  ) {}
+  ) { }
 
   private get adjustmentRepository(): Repository<InventoryAdjustment> {
     return this.tenantConnService.getRepository(InventoryAdjustment);
@@ -95,7 +95,7 @@ export class InventoryAdjustmentService {
   async findOne(id: number): Promise<InventoryAdjustment> {
     const adjustment = await this.adjustmentRepository.findOne({
       where: { id },
-      relations: ['warehouse', 'lines'],
+      relations: ['warehouse', 'lines', 'lines.product'],
     });
 
     if (!adjustment) {
@@ -118,8 +118,7 @@ export class InventoryAdjustmentService {
   }): Promise<InventoryAdjustment[]> {
     const query = this.adjustmentRepository
       .createQueryBuilder('adjustment')
-      .leftJoinAndSelect('adjustment.warehouse', 'warehouse')
-      .leftJoinAndSelect('adjustment.lines', 'lines');
+      .leftJoinAndSelect('adjustment.warehouse', 'warehouse');
 
     if (filters?.warehouseId) {
       query.andWhere('adjustment.warehouseId = :warehouseId', {
@@ -161,21 +160,21 @@ export class InventoryAdjustmentService {
       throw new BadRequestException('Cannot update validated adjustment');
     }
 
-    // Update basic fields
-    if (updateDto.name) adjustment.name = updateDto.name;
-    if (updateDto.notes !== undefined) adjustment.notes = updateDto.notes;
-    if (updateDto.status) adjustment.status = updateDto.status;
+    // Update basic fields without triggering cascade on lines
+    const basicUpdates: Partial<InventoryAdjustment> = {};
+    if (updateDto.name) basicUpdates.name = updateDto.name;
+    if (updateDto.notes !== undefined) basicUpdates.notes = updateDto.notes;
+    if (updateDto.status) basicUpdates.status = updateDto.status;
 
-    // Update lines if provided
-    if (updateDto.lines) {
-      // Delete existing lines and add new ones
-      await this.adjustmentLineRepository.delete({ adjustmentId: id });
-      for (const lineDto of updateDto.lines) {
-        await this.saveAdjustmentLine(lineDto, id);
-      }
+    if (Object.keys(basicUpdates).length > 0) {
+      await this.adjustmentRepository.update(id, basicUpdates);
     }
 
-    await this.adjustmentRepository.save(adjustment);
+    // Update lines if provided (delete + batch re-insert, no cascade involved)
+    if (updateDto.lines) {
+      await this.adjustmentLineRepository.delete({ adjustmentId: id });
+      await this.saveLinesInBatch(updateDto.lines, id);
+    }
 
     return this.findOne(id);
   }
@@ -212,14 +211,18 @@ export class InventoryAdjustmentService {
       throw new BadRequestException('Cannot validate cancelled adjustment');
     }
 
-    if (!adjustment.lines || adjustment.lines.length === 0) {
-      throw new BadRequestException('Cannot validate adjustment without lines');
-    }
+    // Lines may be empty if everything matched (no discrepancies) — that's valid
 
     // Start transaction
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
+    // Generate a base reference once before the loop to avoid duplicate keys
+    // (movements inside the transaction are not yet visible to subsequent calls)
+    const baseReference = await this.generateMovementReference();
+    const [refPrefix, refYear, refSeq] = baseReference.split('/');
+    let refCounter = parseInt(refSeq, 10);
 
     try {
       // Create stock movements for each line with difference
@@ -238,9 +241,12 @@ export class InventoryAdjustmentService {
             sourceWarehouseId = adjustment.warehouseId;
           }
 
+          const reference = `${refPrefix}/${refYear}/${refCounter.toString().padStart(5, '0')}`;
+          refCounter++;
+
           // Create stock movement
           const movement = this.stockMovementRepository.create({
-            reference: await this.generateMovementReference(),
+            reference,
             movementType: MovementType.ADJUSTMENT,
             productId: line.productId,
             sourceWarehouseId,
@@ -257,39 +263,27 @@ export class InventoryAdjustmentService {
 
           await queryRunner.manager.save(movement);
 
-          // Update stock quant
-          if (line.difference > 0) {
-            // Increase stock
-            await this.stockService.updateStockQuant(
-              line.productId,
-              adjustment.warehouseId,
-              quantity,
-              {
-                lotNumber: line.lotNumber,
-                serialNumber: line.serialNumber,
-              },
-            );
-          } else {
-            // Decrease stock
-            await this.stockService.updateStockQuant(
-              line.productId,
-              adjustment.warehouseId,
-              -quantity,
-              {
-                lotNumber: line.lotNumber,
-                serialNumber: line.serialNumber,
-              },
-            );
-          }
+          // Update stock quant inside the same transaction
+          const quantityChange = line.difference > 0 ? quantity : -quantity;
+          await this.stockService.updateStockQuantWithManager(
+            queryRunner.manager,
+            line.productId,
+            adjustment.warehouseId,
+            quantityChange,
+            {
+              lotNumber: line.lotNumber,
+              serialNumber: line.serialNumber,
+            },
+          );
         }
       }
 
-      // Update adjustment status
-      adjustment.status = AdjustmentStatus.DONE;
-      adjustment.adjustmentDate = new Date();
-      adjustment.userId = validateDto.userId ?? null;
-
-      await queryRunner.manager.save(adjustment);
+      // Update adjustment status — direct UPDATE to avoid cascade on lines
+      await queryRunner.manager.update(InventoryAdjustment, adjustment.id, {
+        status: AdjustmentStatus.DONE,
+        adjustmentDate: new Date(),
+        userId: validateDto.userId ?? null,
+      });
 
       await queryRunner.commitTransaction();
 
@@ -332,7 +326,10 @@ export class InventoryAdjustmentService {
   /**
    * Generate products list for counting (pre-fill theoretical quantities)
    */
-  async generateCountingList(warehouseId: number): Promise<any[]> {
+  async generateCountingList(
+    warehouseId: number,
+    options: { search?: string; page?: number; limit?: number } = {},
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
     const warehouse = await this.warehouseRepository.findOne({
       where: { id: warehouseId },
     });
@@ -340,7 +337,34 @@ export class InventoryAdjustmentService {
       throw new NotFoundException(`Warehouse with ID ${warehouseId} not found`);
     }
 
-    const query = `
+    const page = options.page ?? 1;
+    const limit = Math.min(options.limit ?? 50, 100);
+    const offset = (page - 1) * limit;
+    const searchTerm = options.search?.trim();
+
+    // Count query only filters by product — no warehouseId needed
+    const countSearchFilter = searchTerm
+      ? `AND (LOWER(p.name) LIKE $1 OR LOWER(p.code) LIKE $1)`
+      : '';
+    const countParams: any[] = [];
+    if (searchTerm) countParams.push(`%${searchTerm.toLowerCase()}%`);
+
+    // Data query also filters stock by warehouse ($1), search is $2 if present
+    const dataSearchFilter = searchTerm
+      ? `AND (LOWER(p.name) LIKE $2 OR LOWER(p.code) LIKE $2)`
+      : '';
+    const dataParams: any[] = [warehouseId];
+    if (searchTerm) dataParams.push(`%${searchTerm.toLowerCase()}%`);
+
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM products p
+      WHERE p."isEnabled" = true AND p."isService" = false
+      ${countSearchFilter}
+    `;
+    const [{ total }] = await this.dataSource.query(countQuery, countParams);
+
+    const dataQuery = `
       SELECT 
         p.id as "productId",
         p.name as "productName",
@@ -351,13 +375,37 @@ export class InventoryAdjustmentService {
       FROM products p
       LEFT JOIN stock_quants sq ON p.id = sq."productId" AND sq."warehouseId" = $1
       WHERE p."isEnabled" = true AND p."isService" = false
+      ${dataSearchFilter}
       ORDER BY p.name ASC
+      LIMIT ${limit} OFFSET ${offset}
     `;
+    const data = await this.dataSource.query(dataQuery, dataParams);
 
-    return this.dataSource.query(query, [warehouseId]);
+    return { data, total: +total, page, limit };
   }
 
   // ==================== HELPER METHODS ====================
+
+  /**
+   * Batch insert adjustment lines — no per-line product query
+   */
+  private async saveLinesInBatch(
+    lineDtos: AdjustmentLineDto[],
+    adjustmentId: number,
+  ): Promise<void> {
+    if (!lineDtos.length) return;
+    const rows = lineDtos.map((lineDto) => ({
+      adjustmentId,
+      productId: lineDto.productId,
+      theoreticalQuantity: lineDto.theoreticalQuantity,
+      countedQuantity: lineDto.countedQuantity,
+      difference: lineDto.countedQuantity - lineDto.theoreticalQuantity,
+      lotNumber: lineDto.lotNumber ?? undefined,
+      serialNumber: lineDto.serialNumber ?? undefined,
+      notes: lineDto.notes ?? undefined,
+    }));
+    await this.adjustmentLineRepository.insert(rows);
+  }
 
   private async saveAdjustmentLine(
     lineDto: AdjustmentLineDto,
@@ -395,17 +443,23 @@ export class InventoryAdjustmentService {
   }
 
   private generateAdjustmentReference(): Promise<string> {
-    return this.generateRef('ADJ', () =>
-      this.adjustmentRepository.findOne({ order: { id: 'DESC' } }),
-    );
+    return this.generateRef('ADJ', async () => {
+      const results = await this.adjustmentRepository.find({
+        order: { id: 'DESC' },
+        take: 1,
+      });
+      return results[0] ?? null;
+    });
   }
 
   private generateMovementReference(): Promise<string> {
-    return this.generateRef('ADJ', () =>
-      this.stockMovementRepository.findOne({
+    return this.generateRef('ADJ', async () => {
+      const results = await this.stockMovementRepository.find({
         where: { movementType: MovementType.ADJUSTMENT },
         order: { id: 'DESC' },
-      }),
-    );
+        take: 1,
+      });
+      return results[0] ?? null;
+    });
   }
 }

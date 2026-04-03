@@ -415,6 +415,7 @@ export class StockService {
     movementType?: MovementType;
     startDate?: Date;
     endDate?: Date;
+    search?: string;
   }): Promise<StockMovement[]> {
     const query = this.stockMovementRepository
       .createQueryBuilder('movement')
@@ -456,6 +457,13 @@ export class StockService {
       query.andWhere('movement.dateCreated <= :endDate', {
         endDate: filters.endDate,
       });
+    }
+
+    if (filters?.search) {
+      query.andWhere(
+        '(LOWER(movement.reference) LIKE :search OR LOWER(product.name) LIKE :search)',
+        { search: `%${filters.search.toLowerCase()}%` },
+      );
     }
 
     query.orderBy('movement.dateCreated', 'DESC');
@@ -503,6 +511,20 @@ export class StockService {
    * existing EntityManager (e.g. a QueryRunner's manager).  All public callers
    * that don't own a transaction simply use `this.stockQuantRepository`.
    */
+  async updateStockQuantWithManager(
+    manager: EntityManager,
+    productId: number,
+    warehouseId: number,
+    quantityChange: number,
+    options: {
+      lotNumber?: string;
+      serialNumber?: string;
+      unitOfMeasureId?: number;
+    } = {},
+  ): Promise<StockQuant> {
+    return this._updateStockQuantWithManager(manager, productId, warehouseId, quantityChange, options);
+  }
+
   private async _updateStockQuantWithManager(
     manager: EntityManager,
     productId: number,
@@ -547,6 +569,98 @@ export class StockService {
     );
 
     return manager.save(StockQuant, stockQuant);
+  }
+
+  /**
+   * Update only the pending (forecast) quantities on a StockQuant row, within
+   * an existing EntityManager.  Does NOT touch `quantity`.
+   *
+   * type = 'outgoing' → updates outgoingQuantity AND reservedQuantity, then
+   *                      recalculates availableQuantity.
+   * type = 'incoming' → updates incomingQuantity only.
+   *
+   * Values are always clamped to ≥ 0.
+   */
+  private async _updatePendingQuantWithManager(
+    manager: EntityManager,
+    productId: number,
+    warehouseId: number,
+    type: 'incoming' | 'outgoing',
+    delta: number,
+  ): Promise<void> {
+    let stockQuant = await manager.findOne(StockQuant, {
+      where: { productId, warehouseId },
+    });
+
+    if (!stockQuant) {
+      stockQuant = manager.create(StockQuant, {
+        productId,
+        warehouseId,
+        quantity: 0,
+        reservedQuantity: 0,
+        availableQuantity: 0,
+        incomingQuantity: 0,
+        outgoingQuantity: 0,
+      });
+    }
+
+    const numericDelta = parseFloat(delta.toString());
+
+    if (type === 'incoming') {
+      const current = parseFloat(stockQuant.incomingQuantity.toString() || '0');
+      stockQuant.incomingQuantity = Math.max(0, current + numericDelta);
+    } else {
+      const currentOut = parseFloat(stockQuant.outgoingQuantity.toString() || '0');
+      const currentRes = parseFloat(stockQuant.reservedQuantity.toString() || '0');
+      stockQuant.outgoingQuantity = Math.max(0, currentOut + numericDelta);
+      stockQuant.reservedQuantity = Math.max(0, currentRes + numericDelta);
+      stockQuant.availableQuantity = calcAvailableQty(
+        stockQuant.quantity,
+        stockQuant.reservedQuantity,
+      );
+    }
+
+    await manager.save(StockQuant, stockQuant);
+  }
+
+  /**
+   * Add or remove pending (forecast) quantities for a list of items, in a
+   * single atomic transaction.
+   *
+   * Call with delta = 1  when a document is confirmed (order validated).
+   * Call with delta = -1 when a document is cancelled / devalidated.
+   */
+  async updatePendingQuantitiesForDocument(params: {
+    items: Array<{ productId: number; quantity: number }>;
+    warehouseId: number;
+    type: 'incoming' | 'outgoing';
+    delta: 1 | -1;
+  }): Promise<void> {
+    const { items, warehouseId, type, delta } = params;
+    const validItems = items.filter((i) => !!i.productId && i.quantity > 0);
+    if (validItems.length === 0) return;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      for (const item of validItems) {
+        await this._updatePendingQuantWithManager(
+          queryRunner.manager,
+          item.productId,
+          warehouseId,
+          type,
+          delta * item.quantity,
+        );
+      }
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   // ==================== DOCUMENT-DRIVEN STOCK OPERATIONS ====================
@@ -667,6 +781,28 @@ export class StockService {
           isOutgoing ? -item.quantity : item.quantity,
         );
 
+        // Clear pending (forecast) quantities that were set when the document
+        // was confirmed/validated.  Clamped to ≥ 0 so no harm if none was set.
+        if (isOutgoing) {
+          // Physical delivery clears the outgoing/reserved forecast
+          await this._updatePendingQuantWithManager(
+            queryRunner.manager,
+            item.productId,
+            warehouseId,
+            'outgoing',
+            -item.quantity,
+          );
+        } else if (movementType === MovementType.RECEIPT) {
+          // Physical receipt clears the incoming forecast
+          await this._updatePendingQuantWithManager(
+            queryRunner.manager,
+            item.productId,
+            warehouseId,
+            'incoming',
+            -item.quantity,
+          );
+        }
+
         results.push(movement);
       }
 
@@ -686,10 +822,16 @@ export class StockService {
    * Creates counter-movements (RETURN_IN for a previous DELIVERY, etc.)
    * and updates stock quants atomically.  Idempotent — already-reversed
    * documents are skipped.
+   *
+   * options.restorePending = true → also restores the forecast quantities
+   * (outgoing/reserved or incoming) that were cleared when the original
+   * physical movement ran.  Pass this when devalidating an invoice so the
+   * associated order's forecast is visible again.
    */
   async reverseDocumentStockMovements(
     sourceDocumentType: SourceDocumentType,
     sourceDocumentId: number,
+    options?: { restorePending?: boolean },
   ): Promise<void> {
     const doneMoves = await this.stockMovementRepository.find({
       where: {
@@ -760,6 +902,36 @@ export class StockService {
             move.sourceWarehouseId,
             move.quantity,
           );
+        }
+
+        // Restore pending (forecast) quantities when requested.
+        // Used by invoice devalidation to return to "order validated, invoice pending" state.
+        if (options?.restorePending) {
+          if (
+            move.movementType === MovementType.DELIVERY &&
+            move.sourceWarehouseId
+          ) {
+            // Was an outgoing delivery → restore outgoing + reserved forecast
+            await this._updatePendingQuantWithManager(
+              queryRunner.manager,
+              move.productId,
+              move.sourceWarehouseId,
+              'outgoing',
+              move.quantity,
+            );
+          } else if (
+            move.movementType === MovementType.RECEIPT &&
+            move.destWarehouseId
+          ) {
+            // Was an incoming receipt → restore incoming forecast
+            await this._updatePendingQuantWithManager(
+              queryRunner.manager,
+              move.productId,
+              move.destWarehouseId,
+              'incoming',
+              move.quantity,
+            );
+          }
         }
 
         // Mark original movement as cancelled so it's no longer "DONE"

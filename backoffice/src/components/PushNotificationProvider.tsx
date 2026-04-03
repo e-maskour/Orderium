@@ -1,10 +1,17 @@
 import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 
 export function PushNotificationProvider() {
   const { admin, isAuthenticated } = useAuth();
-  const { requestPermission, permission, token, error } = usePushNotifications(admin?.id);
+  const queryClient = useQueryClient();
+
+  const onNotification = () => {
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  };
+
+  const { requestPermission, permission, token, error } = usePushNotifications(admin?.id, onNotification);
 
   const hasRequestedPermissionRef = useRef(false);
 

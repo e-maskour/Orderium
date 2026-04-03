@@ -291,6 +291,19 @@ export default function Orders() {
     },
   });
 
+  const bulkChangeOrderStatusMutation = useMutation({
+    mutationFn: async ({ orderIds, status }: { orderIds: number[]; status: string }) =>
+      Promise.all(orderIds.map((id) => ordersService.changeStatus(id, status))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toastSuccess(t('statusUpdated'));
+      clearSelection();
+    },
+    onError: (error: Error) => {
+      toastError(`${t('error')}: ${error.message}`);
+    },
+  });
+
   const ORDER_STATUS_WORKFLOW: Record<
     string,
     { value: string; label: string; bg: string; color: string; border: string }[]
@@ -1755,6 +1768,42 @@ export default function Orders() {
               return order && ['pending', 'assigned', 'confirmed'].includes(order.deliveryStatus);
             }),
           },
+          ...(() => {
+            if (selectedOrders.length === 0) return [];
+            const allClientPos = selectedOrders.every((id) => {
+              const o = orders.find((o: any) => o.id === id);
+              return o?.originType === 'CLIENT_POS';
+            });
+            if (!allClientPos) return [];
+            const statusSet = new Set(
+              selectedOrders.map((id) => orders.find((o: any) => o.id === id)?.status),
+            );
+            if (statusSet.size !== 1) return [];
+            const commonStatus = [...statusSet][0] as string;
+            const actions: import('../components/FloatingActionBar').FloatingAction[] = [];
+            if (commonStatus === 'confirmed') {
+              actions.push({
+                id: 'pos-mark-delivered',
+                label: t('markAsDelivered'),
+                icon: <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
+                onClick: () =>
+                  toastConfirm(
+                    t('markAsDelivered'),
+                    () =>
+                      bulkChangeOrderStatusMutation.mutate({
+                        orderIds: selectedOrders,
+                        status: 'delivered',
+                      }),
+                    {
+                      description: t('confirmMarkDelivered'),
+                      confirmLabel: t('markAsDelivered'),
+                    },
+                  ),
+                variant: 'primary' as const,
+              });
+            }
+            return actions;
+          })(),
           {
             id: 'delete',
             label: t('delete'),

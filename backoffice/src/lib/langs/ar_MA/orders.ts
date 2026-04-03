@@ -95,6 +95,8 @@ export default {
   // Status change
   statusUpdated: 'تم تحديث الحالة',
   orderStatus: 'حالة الطلب',
+  markAsDelivered: 'تعيين كمُسلَّم',
+  confirmMarkDelivered: 'هل أنت متأكد من رغبتك في تعيين هذه الطلبات كمُسلَّمة؟',
 
   // Empty states
   noOrdersMatchFilter: 'لا توجد طلبات تطابق معايير البحث. حاول تعديل الفلاتر.',

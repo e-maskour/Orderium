@@ -97,6 +97,8 @@ export default {
   // Status change
   statusUpdated: 'Statut mis à jour',
   orderStatus: 'Statut commande',
+  markAsDelivered: 'Marquer comme livré',
+  confirmMarkDelivered: 'Êtes-vous sûr de vouloir marquer ces commandes comme livrées ?',
 
   // Empty states
   noOrdersMatchFilter:

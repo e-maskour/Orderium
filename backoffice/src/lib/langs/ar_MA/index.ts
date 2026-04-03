@@ -13,6 +13,7 @@ import purchases from './purchases';
 import drive from './drive';
 import users from './users';
 import company from './company';
+import inventoryAdjustments from './inventory-adjustments';
 
 export default {
   ...common,
@@ -30,4 +31,5 @@ export default {
   ...drive,
   ...users,
   ...company,
+  ...inventoryAdjustments,
 };

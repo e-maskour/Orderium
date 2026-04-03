@@ -38,13 +38,7 @@ export interface CreateAdjustmentDto {
 
 export interface ValidateAdjustmentDto {
   adjustmentId: number;
-  lines: Array<{
-    productId: number;
-    countedQuantity: number;
-    lotNumber?: string;
-    serialNumber?: string;
-    notes?: string;
-  }>;
+  userId?: number;
 }
 
 export interface AdjustmentFilters {

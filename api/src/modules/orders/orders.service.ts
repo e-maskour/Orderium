@@ -403,7 +403,10 @@ export class OrdersService {
         applyDeliveryStatusTimestamp(order, order.deliveryStatus, now);
       }
 
-      if (isPortalOrigin) {
+      if (originType === OrderOriginType.ADMIN_POS) {
+        order.status = OrderStatus.DELIVERED;
+        order.isValidated = true;
+      } else if (originType === OrderOriginType.CLIENT_POS) {
         order.status = OrderStatus.CONFIRMED;
         order.isValidated = true;
       } else {
@@ -480,23 +483,31 @@ export class OrdersService {
       return formatOrderDetail(createdOrder);
     });
 
-    if (
-      createOrderDto.originType === OrderOriginType.CLIENT_POS &&
-      result
-    ) {
-      const fullOrder = await this.orderRepository.findOne({
-        where: { id: (result as any).id },
-        relations: ['customer'],
-      });
-      if (fullOrder) {
-        this.orderNotificationService
-          .notifyNewOrderFromClient(fullOrder)
-          .catch((err) => {
-            this.logger.error(
-              'Failed to send new order notification',
-              (err as Error)?.stack,
-            );
-          });
+    const isPortalOriginFinal =
+      createOrderDto.originType === OrderOriginType.CLIENT_POS ||
+      createOrderDto.originType === OrderOriginType.ADMIN_POS;
+
+    if (isPortalOriginFinal && result) {
+      const orderId = (result as any).id as number;
+
+      // Process stock for auto-validated portal orders (same logic as validate())
+      void this.processOrderStockIfConfigured(orderId);
+
+      if (createOrderDto.originType === OrderOriginType.CLIENT_POS) {
+        const fullOrder = await this.orderRepository.findOne({
+          where: { id: orderId },
+          relations: ['customer'],
+        });
+        if (fullOrder) {
+          this.orderNotificationService
+            .notifyNewOrderFromClient(fullOrder)
+            .catch((err) => {
+              this.logger.error(
+                'Failed to send new order notification',
+                (err as Error)?.stack,
+              );
+            });
+        }
       }
     }
 
@@ -814,7 +825,15 @@ export class OrdersService {
 
   /**
    * Read inventory configuration and, when applicable, trigger stock movements
-   * for the given order.  Failures are non-fatal and only logged.
+   * or update pending (forecast) quantities for the given order.
+   *
+   * - decrementStockOnOrderVente / incrementStockOnOrderAchat = true
+   *   → physical movement happens immediately (quantity changes now).
+   * - decrementStockOnInvoiceVente / incrementStockOnInvoiceAchat = true
+   *   → only forecast quantities are set (outgoing/incoming/reserved);
+   *     the physical movement will occur when the related invoice is validated.
+   *
+   * Failures are non-fatal and only logged.
    */
   private async processOrderStockIfConfigured(orderId: number): Promise<void> {
     try {
@@ -836,38 +855,117 @@ export class OrdersService {
       const isVente = orderWithItems.direction === DocumentDirection.VENTE;
       const isAchat = orderWithItems.direction === DocumentDirection.ACHAT;
 
-      const shouldMove =
-        (isVente && invValues?.decrementStockOnOrderVente) ||
-        (isAchat && invValues?.incrementStockOnOrderAchat);
-
-      if (!shouldMove) return;
-
-      const movementType = isAchat
-        ? MovementType.RECEIPT
-        : MovementType.DELIVERY;
-
-      const partnerName = isAchat
-        ? orderWithItems.supplierName
-        : orderWithItems.customerName;
-
       const items = (orderWithItems.items ?? [])
         .filter((i): i is typeof i & { productId: number } => !!i.productId && i.quantity > 0)
         .map((i) => ({ productId: i.productId, quantity: i.quantity }));
 
       if (items.length === 0) return;
 
-      await this.stockService.processDocumentStockMovements({
-        sourceDocumentType: SourceDocumentType.ORDER,
-        sourceDocumentId: orderId,
-        items,
-        warehouseId: defaultWarehouseId,
-        movementType,
-        origin: orderWithItems.documentNumber,
-        partnerName: partnerName ?? undefined,
-      });
+      // ── Physical movement (stock moves at order validation time) ──────────
+      const shouldMovePhysical =
+        (isVente && invValues?.decrementStockOnOrderVente) ||
+        (isAchat && invValues?.incrementStockOnOrderAchat);
+
+      if (shouldMovePhysical) {
+        const movementType = isAchat
+          ? MovementType.RECEIPT
+          : MovementType.DELIVERY;
+
+        const partnerName = isAchat
+          ? orderWithItems.supplierName
+          : orderWithItems.customerName;
+
+        await this.stockService.processDocumentStockMovements({
+          sourceDocumentType: SourceDocumentType.ORDER,
+          sourceDocumentId: orderId,
+          items,
+          warehouseId: defaultWarehouseId,
+          movementType,
+          origin: orderWithItems.documentNumber,
+          partnerName: partnerName ?? undefined,
+        });
+
+        // Physical movement already handles all quantity fields — done.
+        return;
+      }
+
+      // ── Forecast quantities (stock moves at invoice validation time) ───────
+      // Set outgoing/incoming/reserved so the product detail stock table shows
+      // the committed quantities before the invoice is created.
+      if (isVente && invValues?.decrementStockOnInvoiceVente) {
+        await this.stockService.updatePendingQuantitiesForDocument({
+          items,
+          warehouseId: defaultWarehouseId,
+          type: 'outgoing',
+          delta: 1,
+        });
+      } else if (isAchat && invValues?.incrementStockOnInvoiceAchat) {
+        await this.stockService.updatePendingQuantitiesForDocument({
+          items,
+          warehouseId: defaultWarehouseId,
+          type: 'incoming',
+          delta: 1,
+        });
+      }
     } catch (err) {
       this.logger.warn(
         `Failed to process stock for order #${orderId}: ${(err as Error)?.message}`,
+      );
+    }
+  }
+
+  /**
+   * Clear pending (forecast) quantities that were set when the order was
+   * validated in "invoice trigger" mode.  Called on devalidate.
+   */
+  private async clearOrderPendingQuantitiesIfConfigured(
+    orderId: number,
+    order: Order,
+  ): Promise<void> {
+    try {
+      const invConfig =
+        await this.configurationsService.findByEntity('inventory');
+      const invValues = invConfig?.values as Record<string, unknown> | null;
+      const defaultWarehouseId = invValues?.defaultWarehouseId as
+        | number
+        | null;
+
+      if (!defaultWarehouseId) return;
+
+      const isVente = order.direction === DocumentDirection.VENTE;
+      const isAchat = order.direction === DocumentDirection.ACHAT;
+
+      const shouldClearPending =
+        (isVente && invValues?.decrementStockOnInvoiceVente) ||
+        (isAchat && invValues?.incrementStockOnInvoiceAchat);
+
+      if (!shouldClearPending) return;
+
+      const orderWithItems = await this.orderRepository.findOne({
+        where: { id: orderId },
+        relations: ['items'],
+      });
+
+      if (!orderWithItems) return;
+
+      const items = (orderWithItems.items ?? [])
+        .filter(
+          (i): i is typeof i & { productId: number } =>
+            !!i.productId && i.quantity > 0,
+        )
+        .map((i) => ({ productId: i.productId, quantity: i.quantity }));
+
+      if (items.length === 0) return;
+
+      await this.stockService.updatePendingQuantitiesForDocument({
+        items,
+        warehouseId: defaultWarehouseId,
+        type: isVente ? 'outgoing' : 'incoming',
+        delta: -1,
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Failed to clear pending stock for order #${orderId}: ${(err as Error)?.message}`,
       );
     }
   }
@@ -941,6 +1039,21 @@ export class OrdersService {
       status: OrderStatus.DRAFT,
       pdfUrl: null,
     });
+
+    // Reverse physical stock movements (if stock was moved at order validation time)
+    // and clear any pending forecast quantities (if stock is tracked at invoice time).
+    try {
+      await this.stockService.reverseDocumentStockMovements(
+        SourceDocumentType.ORDER,
+        id,
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Failed to reverse stock for devalidated order #${id}: ${(err as Error)?.message}`,
+      );
+    }
+
+    await this.clearOrderPendingQuantitiesIfConfigured(id, order);
 
     await this.invalidateOrderCache(id);
     return await this.getOrderById(id);

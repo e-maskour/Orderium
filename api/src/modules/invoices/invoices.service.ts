@@ -659,11 +659,14 @@ export class InvoicesService {
       pdfUrl: null,
     });
 
-    // Reverse any stock movements that were applied during validation
+    // Reverse any stock movements that were applied during validation.
+    // restorePending = true → also restores outgoing/incoming forecast quantities
+    // so the product stock table reflects the pending order state again.
     try {
       await this.stockService.reverseDocumentStockMovements(
         SourceDocumentType.INVOICE,
         id,
+        { restorePending: true },
       );
     } catch (err) {
       this.logger.warn(

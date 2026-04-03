@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
@@ -35,6 +35,8 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 export default function StockMovements() {
   const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedMovement, setSelectedMovement] = useState<StockMovement | null>(null);
@@ -43,11 +45,12 @@ export default function StockMovements() {
   const queryClient = useQueryClient();
 
   const { data: movements = [], isLoading } = useQuery({
-    queryKey: ['stock-movements', statusFilter, typeFilter],
+    queryKey: ['stock-movements', statusFilter, typeFilter, debouncedSearch],
     queryFn: () =>
       stockMovementService.getAll({
         status: statusFilter !== 'all' ? statusFilter : undefined,
         movementType: typeFilter !== 'all' ? typeFilter : undefined,
+        search: debouncedSearch || undefined,
       }),
   });
 
@@ -73,17 +76,19 @@ export default function StockMovements() {
     },
   });
 
-  const filteredMovements = movements.filter(
-    (mov) =>
-      mov.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (mov.productName && mov.productName.toLowerCase().includes(searchTerm.toLowerCase())),
-  );
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(value);
+    }, 500);
+  };
 
   const clearSelection = () => setSelectedRows([]);
   const toggleSelectAll = () =>
-    selectedRows.length === filteredMovements.length
+    selectedRows.length === movements.length
       ? setSelectedRows([])
-      : setSelectedRows(filteredMovements);
+      : setSelectedRows(movements);
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; cls: string }> = {
@@ -170,9 +175,16 @@ export default function StockMovements() {
             marginBottom: '1rem',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Search */}
-            <div style={{ flex: 1, position: 'relative' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              alignItems: 'center',
+            }}
+          >
+            {/* Search — 50% on desktop, 100% on mobile */}
+            <div style={{ flex: '1 1 50%', minWidth: '0', position: 'relative' }}>
               <Search
                 style={{
                   width: '1rem',
@@ -190,13 +202,14 @@ export default function StockMovements() {
                 type="text"
                 placeholder={t('searchByReferenceOrProduct')}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 style={{ width: '100%', paddingLeft: '2.5rem' }}
                 aria-label={t('searchByReferenceOrProduct')}
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            {/* Dropdowns — share remaining 50% on desktop, full width on mobile */}
+            <div style={{ flex: '1 1 40%', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               {/* Type Filter */}
               <Dropdown
                 value={typeFilter}
@@ -204,7 +217,7 @@ export default function StockMovements() {
                 options={typeOptions}
                 optionLabel="label"
                 optionValue="value"
-                style={{ minWidth: '12rem' }}
+                style={{ flex: '1 1 10rem' }}
               />
 
               {/* Status Filter */}
@@ -214,7 +227,7 @@ export default function StockMovements() {
                 options={statusOptions}
                 optionLabel="label"
                 optionValue="value"
-                style={{ minWidth: '12rem' }}
+                style={{ flex: '1 1 10rem' }}
               />
             </div>
           </div>
@@ -223,10 +236,10 @@ export default function StockMovements() {
         {/* Movements List */}
         <div className="responsive-table-mobile" style={{ marginBottom: '0.5rem' }}>
           <MobileList
-            items={filteredMovements}
+            items={movements}
             keyExtractor={(m: StockMovement) => m.id}
             loading={isLoading}
-            totalCount={filteredMovements.length}
+            totalCount={movements.length}
             countLabel="mouvements"
             emptyMessage={t('noMovementsFound' as any)}
             config={{
@@ -248,7 +261,7 @@ export default function StockMovements() {
         >
           <DataTable
             className="sm-datatable"
-            value={filteredMovements}
+            value={movements}
             selection={selectedRows}
             onSelectionChange={(e) => setSelectedRows(e.value as StockMovement[])}
             selectionMode="checkbox"
@@ -315,27 +328,34 @@ export default function StockMovements() {
             />
             <Column
               header={t('originDestination' as any)}
-              body={(mov: StockMovement) => (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontSize: '0.875rem',
-                    color: '#475569',
-                  }}
-                >
-                  <span>
-                    {mov.sourceWarehouseName ||
-                      (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-')}
-                  </span>
-                  <ArrowLeftRight style={{ width: '0.75rem', height: '0.75rem' }} />
-                  <span>
-                    {mov.destWarehouseName ||
-                      (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-')}
-                  </span>
-                </div>
-              )}
+              body={(mov: StockMovement) => {
+                const inboundTypes = ['receipt', 'return_in', 'production_in'];
+                const outboundTypes = ['delivery', 'return_out', 'production_out', 'scrap'];
+                const externalLabel = mov.partnerName || 'Externe';
+
+                let source: string;
+                let dest: string;
+
+                if (inboundTypes.includes(mov.movementType)) {
+                  source = externalLabel;
+                  dest = mov.destWarehouseName || (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-');
+                } else if (outboundTypes.includes(mov.movementType)) {
+                  source = mov.sourceWarehouseName || (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-');
+                  dest = externalLabel;
+                } else {
+                  // internal / adjustment
+                  source = mov.sourceWarehouseName || (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-');
+                  dest = mov.destWarehouseName || (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-');
+                }
+
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569' }}>
+                    <span style={inboundTypes.includes(mov.movementType) ? { color: '#64748b', fontStyle: 'italic' } : undefined}>{source}</span>
+                    <ArrowLeftRight style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0 }} />
+                    <span style={outboundTypes.includes(mov.movementType) ? { color: '#64748b', fontStyle: 'italic' } : undefined}>{dest}</span>
+                  </div>
+                );
+              }}
             />
             <Column
               field="quantity"
@@ -343,23 +363,36 @@ export default function StockMovements() {
               sortable
               align="center"
               headerStyle={{ textAlign: 'center' }}
-              body={(mov: StockMovement) => (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#fef3c7',
-                    color: '#b45309',
-                    fontWeight: 700,
-                    padding: '0.25rem 0.625rem',
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  {parseFloat(mov.quantity.toString()).toFixed(2)} {translateUomCode(mov.unitOfMeasureCode, language)}
-                </span>
-              )}
+              body={(mov: StockMovement) => {
+                const outboundTypes = ['delivery', 'return_out', 'production_out', 'scrap'];
+                // For adjustment movements, direction is determined by warehouse IDs:
+                // destWarehouseId set = inbound (increase), sourceWarehouseId only = outbound (decrease)
+                let isOutbound: boolean;
+                if (mov.movementType === 'adjustment') {
+                  isOutbound = !mov.destWarehouseId && !!mov.sourceWarehouseId;
+                } else {
+                  isOutbound = outboundTypes.includes(mov.movementType);
+                }
+                const qty = parseFloat(mov.quantity.toString()).toFixed(2);
+                const sign = isOutbound ? '-' : '+';
+                return (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: isOutbound ? '#fee2e2' : '#dcfce7',
+                      color: isOutbound ? '#dc2626' : '#15803d',
+                      fontWeight: 700,
+                      padding: '0.25rem 0.625rem',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    {sign}{qty} {translateUomCode(mov.unitOfMeasureCode, language)}
+                  </span>
+                );
+              }}
             />
             <Column
               field="dateDone"
@@ -393,9 +426,9 @@ export default function StockMovements() {
           onClearSelection={clearSelection}
           onSelectAll={toggleSelectAll}
           isAllSelected={
-            selectedRows.length === filteredMovements.length && filteredMovements.length > 0
+            selectedRows.length === movements.length && movements.length > 0
           }
-          totalCount={filteredMovements.length}
+          totalCount={movements.length}
           itemLabel="mouvement"
           actions={(() => {
             const mov = selectedRows.length === 1 ? selectedRows[0] : null;
