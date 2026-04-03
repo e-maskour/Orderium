@@ -15,15 +15,18 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PartnersService } from './partners.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { PartnerResponseDto } from './dto/partner-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { PTR } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Partners')
 @PortalRoute()
+@Serialize(PartnerResponseDto)
 @Controller('partners')
 export class PartnersController {
-  constructor(private readonly partnersService: PartnersService) {}
+  constructor(private readonly partnersService: PartnersService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new partner' })

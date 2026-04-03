@@ -95,7 +95,7 @@ export class InventoryAdjustmentService {
   async findOne(id: number): Promise<InventoryAdjustment> {
     const adjustment = await this.adjustmentRepository.findOne({
       where: { id },
-      relations: ['warehouse', 'lines', 'lines.product'],
+      relations: ['warehouse', 'lines', 'lines.product', 'lines.product.saleUnitOfMeasure'],
     });
 
     if (!adjustment) {
@@ -249,6 +249,7 @@ export class InventoryAdjustmentService {
             reference,
             movementType: MovementType.ADJUSTMENT,
             productId: line.productId,
+            unitOfMeasureId: line.product?.saleUnitId ?? undefined,
             sourceWarehouseId,
             destWarehouseId,
             quantity,
@@ -371,9 +372,11 @@ export class InventoryAdjustmentService {
         p.code as "productCode",
         COALESCE(sq.quantity, 0) as "theoreticalQuantity",
         sq."lotNumber",
-        sq."serialNumber"
+        sq."serialNumber",
+        uom.code as "uomCode"
       FROM products p
       LEFT JOIN stock_quants sq ON p.id = sq."productId" AND sq."warehouseId" = $1
+      LEFT JOIN unit_of_measures uom ON p."saleUnitId" = uom.id
       WHERE p."isEnabled" = true AND p."isService" = false
       ${dataSearchFilter}
       ORDER BY p.name ASC

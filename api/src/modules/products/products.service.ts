@@ -123,7 +123,7 @@ export class ProductsService {
 
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['categories', 'saleUnitOfMeasure', 'purchaseUnitOfMeasure'],
+      relations: ['categories', 'saleUnitOfMeasure', 'purchaseUnitOfMeasure', 'warehouse'],
     });
     if (!product)
       throw new NotFoundException(`Product with ID ${id} not found`);

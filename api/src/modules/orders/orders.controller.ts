@@ -19,10 +19,15 @@ import type { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrdersDto } from './dto/filter-orders.dto';
+import {
+  OrderListResponseDto,
+  OrderDetailResponseDto,
+} from './dto/order-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { ORD } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Orders')
 @PortalRoute()
@@ -31,6 +36,7 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) { }
 
   @Post()
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({ summary: 'Create a new order' })
   @ApiResponse({ status: 201, description: 'Order created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid order data' })
@@ -40,6 +46,7 @@ export class OrdersController {
   }
 
   @Post('filter')
+  @Serialize(OrderListResponseDto)
   @ApiOperation({ summary: 'Filter orders (POST method)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'perPage', required: false, type: Number })
@@ -99,6 +106,7 @@ export class OrdersController {
   }
 
   @Get()
+  @Serialize(OrderListResponseDto)
   @ApiOperation({ summary: 'Get all orders with filtering' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'originType', required: false, type: String })
@@ -204,6 +212,7 @@ export class OrdersController {
   }
 
   @Get('customer/:customerId')
+  @Serialize(OrderListResponseDto)
   @ApiOperation({ summary: 'Get customer orders with pagination and filters' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'pageSize', required: false, type: Number, example: 10 })
@@ -267,6 +276,7 @@ export class OrdersController {
   }
 
   @Get(':id')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({ summary: 'Get order by ID' })
   @ApiResponse({ status: 200, description: 'Order retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
@@ -276,6 +286,7 @@ export class OrdersController {
   }
 
   @Patch(':id')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({ summary: 'Update an order' })
   @ApiResponse({ status: 200, description: 'Order updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update a validated order' })
@@ -289,6 +300,7 @@ export class OrdersController {
   }
 
   @Patch(':id/update-validated')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({
     summary:
       'Update an order even if validated — devalidates, updates and re-validates in one transaction',
@@ -316,6 +328,7 @@ export class OrdersController {
   }
 
   @Put(':id/validate')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({
     summary: 'Validate an order (change from draft to validated)',
   })
@@ -327,6 +340,7 @@ export class OrdersController {
   }
 
   @Put(':id/devalidate')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({ summary: 'Devalidate an order (change back to draft)' })
   @ApiResponse({ status: 200, description: 'Order devalidated successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
@@ -336,6 +350,7 @@ export class OrdersController {
   }
 
   @Put(':id/deliver')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({ summary: 'Mark an order as delivered' })
   @ApiResponse({
     status: 200,
@@ -348,6 +363,7 @@ export class OrdersController {
   }
 
   @Put(':id/cancel')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({ summary: 'Cancel an order' })
   @ApiResponse({ status: 200, description: 'Order cancelled successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
@@ -357,6 +373,7 @@ export class OrdersController {
   }
 
   @Patch(':id/status')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({
     summary:
       'Change order status via workflow (confirmed → picked_up | delivered | cancelled)',
@@ -376,6 +393,7 @@ export class OrdersController {
   }
 
   @Put(':id/mark-invoiced')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({ summary: 'Mark an order as invoiced after conversion' })
   @ApiResponse({
     status: 200,
@@ -400,6 +418,7 @@ export class OrdersController {
 
   @Public()
   @Get('shared/:token')
+  @Serialize(OrderDetailResponseDto)
   @ApiOperation({
     summary: 'Get order by share token (public, no auth required)',
   })

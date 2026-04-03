@@ -1,13 +1,16 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { StockService } from './stock.service';
+import { StockQuantResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { STK } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Inventory - Stock')
+@Serialize(StockQuantResponseDto)
 @Controller('inventory/stock')
 export class StockController {
-  constructor(private readonly stockService: StockService) {}
+  constructor(private readonly stockService: StockService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all stock (aggregated across warehouses)' })

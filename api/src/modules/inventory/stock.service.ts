@@ -420,6 +420,7 @@ export class StockService {
     const query = this.stockMovementRepository
       .createQueryBuilder('movement')
       .leftJoinAndSelect('movement.product', 'product')
+      .leftJoinAndSelect('product.saleUnitOfMeasure', 'saleUom')
       .leftJoinAndSelect('movement.sourceWarehouse', 'sourceWarehouse')
       .leftJoinAndSelect('movement.destWarehouse', 'destWarehouse')
       .leftJoinAndSelect('movement.unitOfMeasure', 'unitOfMeasure');
@@ -468,7 +469,18 @@ export class StockService {
 
     query.orderBy('movement.dateCreated', 'DESC');
 
-    return query.getMany();
+    const movements = await query.getMany();
+
+    // Backfill unitOfMeasure from the product's sale UOM for movements that
+    // were created before unitOfMeasureId was populated (legacy data).
+    for (const m of movements) {
+      if (!m.unitOfMeasure && m.product?.saleUnitOfMeasure) {
+        m.unitOfMeasure = m.product.saleUnitOfMeasure;
+        m.unitOfMeasureId = m.product.saleUnitId;
+      }
+    }
+
+    return movements;
   }
 
   /**
@@ -522,7 +534,13 @@ export class StockService {
       unitOfMeasureId?: number;
     } = {},
   ): Promise<StockQuant> {
-    return this._updateStockQuantWithManager(manager, productId, warehouseId, quantityChange, options);
+    return this._updateStockQuantWithManager(
+      manager,
+      productId,
+      warehouseId,
+      quantityChange,
+      options,
+    );
   }
 
   private async _updateStockQuantWithManager(
@@ -610,8 +628,12 @@ export class StockService {
       const current = parseFloat(stockQuant.incomingQuantity.toString() || '0');
       stockQuant.incomingQuantity = Math.max(0, current + numericDelta);
     } else {
-      const currentOut = parseFloat(stockQuant.outgoingQuantity.toString() || '0');
-      const currentRes = parseFloat(stockQuant.reservedQuantity.toString() || '0');
+      const currentOut = parseFloat(
+        stockQuant.outgoingQuantity.toString() || '0',
+      );
+      const currentRes = parseFloat(
+        stockQuant.reservedQuantity.toString() || '0',
+      );
       stockQuant.outgoingQuantity = Math.max(0, currentOut + numericDelta);
       stockQuant.reservedQuantity = Math.max(0, currentRes + numericDelta);
       stockQuant.availableQuantity = calcAvailableQty(
@@ -713,9 +735,7 @@ export class StockService {
       movementType === MovementType.PRODUCTION_OUT ||
       movementType === MovementType.SCRAP;
 
-    const validItems = items.filter(
-      (i) => !!i.productId && i.quantity > 0,
-    );
+    const validItems = items.filter((i) => !!i.productId && i.quantity > 0);
 
     if (validItems.length === 0) return [];
 
@@ -729,6 +749,7 @@ export class StockService {
       for (const item of validItems) {
         const product = await queryRunner.manager.findOne(Product, {
           where: { id: item.productId },
+          relations: ['saleUnitOfMeasure', 'purchaseUnitOfMeasure'],
         });
         if (!product) {
           this.logger.warn(
@@ -736,6 +757,11 @@ export class StockService {
           );
           continue;
         }
+
+        // Resolve UOM: outgoing movements use sale UOM, incoming use purchase UOM
+        const unitOfMeasureId = isOutgoing
+          ? (product.saleUnitId ?? product.purchaseUnitId ?? undefined)
+          : (product.purchaseUnitId ?? product.saleUnitId ?? undefined);
 
         // Stock availability check for outgoing movements
         if (isOutgoing) {
@@ -760,6 +786,7 @@ export class StockService {
           movementType,
           productId: item.productId,
           quantity: item.quantity,
+          unitOfMeasureId,
           ...(isOutgoing
             ? { sourceWarehouseId: warehouseId }
             : { destWarehouseId: warehouseId }),

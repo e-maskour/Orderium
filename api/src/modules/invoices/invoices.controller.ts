@@ -18,16 +18,22 @@ import { Res, Header } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { FilterInvoicesDto } from './dto/filter-invoices.dto';
 import { CreateInvoiceDto, UpdateInvoiceDto } from './dto/invoice.dto';
+import {
+  InvoiceListResponseDto,
+  InvoiceDetailResponseDto,
+} from './dto/invoice-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { INV } from '../../common/response-codes';
 import { Public } from '../auth/decorators/public.decorator';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(private readonly invoicesService: InvoicesService) { }
 
   @Post('list')
+  @Serialize(InvoiceListResponseDto)
   @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
   @ApiResponse({ status: 200, description: 'Invoices retrieved' })
   async findAll(
@@ -71,6 +77,7 @@ export class InvoicesController {
   }
 
   @Get()
+  @Serialize(InvoiceListResponseDto)
   @ApiOperation({
     summary: 'Get all invoices (legacy - use POST /list instead)',
   })
@@ -125,6 +132,7 @@ export class InvoicesController {
   }
 
   @Get(':id')
+  @Serialize(InvoiceDetailResponseDto)
   @ApiOperation({ summary: 'Get invoice by ID' })
   @ApiResponse({ status: 200, description: 'Invoice retrieved' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
@@ -134,6 +142,7 @@ export class InvoicesController {
   }
 
   @Post()
+  @Serialize(InvoiceDetailResponseDto)
   @ApiOperation({ summary: 'Create a new invoice' })
   @ApiResponse({ status: 201, description: 'Invoice created' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
@@ -143,6 +152,7 @@ export class InvoicesController {
   }
 
   @Patch(':id')
+  @Serialize(InvoiceDetailResponseDto)
   @ApiOperation({ summary: 'Update an invoice' })
   @ApiResponse({ status: 200, description: 'Invoice updated' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
@@ -165,6 +175,7 @@ export class InvoicesController {
   }
 
   @Put(':id/validate')
+  @Serialize(InvoiceDetailResponseDto)
   @ApiOperation({
     summary: 'Validate an invoice (change from draft to unpaid)',
   })
@@ -175,6 +186,7 @@ export class InvoicesController {
   }
 
   @Put(':id/devalidate')
+  @Serialize(InvoiceDetailResponseDto)
   @ApiOperation({ summary: 'Devalidate an invoice (change back to draft)' })
   @ApiResponse({ status: 200, description: 'Invoice devalidated' })
   async devalidate(@Param('id', ParseIntPipe) id: number) {
@@ -192,6 +204,7 @@ export class InvoicesController {
 
   @Public()
   @Get('shared/:token')
+  @Serialize(InvoiceDetailResponseDto)
   @ApiOperation({
     summary: 'Get invoice by share token (public, no auth required)',
   })

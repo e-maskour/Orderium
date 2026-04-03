@@ -14,13 +14,16 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
+import { PermissionResponseDto } from './dto/permission-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { PERM } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Permissions')
+@Serialize(PermissionResponseDto)
 @Controller('permissions')
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) {}
+  constructor(private readonly permissionsService: PermissionsService) { }
 
   @Get()
   @ApiOperation({ summary: 'List all permissions' })

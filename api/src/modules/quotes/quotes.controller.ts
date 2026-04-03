@@ -18,16 +18,22 @@ import { Res, Header } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 import { FilterQuotesDto } from './dto/filter-quotes.dto';
 import { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto';
+import {
+  QuoteListResponseDto,
+  QuoteDetailResponseDto,
+} from './dto/quote-response.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { ApiRes } from '../../common/api-response';
 import { QUO } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Quotes')
 @Controller('quotes')
 export class QuotesController {
-  constructor(private readonly quotesService: QuotesService) {}
+  constructor(private readonly quotesService: QuotesService) { }
 
   @Post('list')
+  @Serialize(QuoteListResponseDto)
   @ApiOperation({ summary: 'Get all quotes with filters (POST method)' })
   @ApiResponse({ status: 200, description: 'Quotes retrieved' })
   async findAll(
@@ -71,6 +77,7 @@ export class QuotesController {
   }
 
   @Get()
+  @Serialize(QuoteListResponseDto)
   @ApiOperation({ summary: 'Get all quotes (legacy - use POST /list instead)' })
   @ApiResponse({ status: 200, description: 'Quotes retrieved' })
   async findAllLegacy(
@@ -108,6 +115,7 @@ export class QuotesController {
   }
 
   @Get(':id')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Get quote by ID' })
   @ApiResponse({ status: 200, description: 'Quote retrieved' })
   @ApiResponse({ status: 404, description: 'Quote not found' })
@@ -117,6 +125,7 @@ export class QuotesController {
   }
 
   @Post()
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Create a new quote' })
   @ApiResponse({ status: 201, description: 'Quote created' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
@@ -126,6 +135,7 @@ export class QuotesController {
   }
 
   @Patch(':id')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Update a quote' })
   @ApiResponse({ status: 200, description: 'Quote updated' })
   @ApiResponse({ status: 404, description: 'Quote not found' })
@@ -148,6 +158,7 @@ export class QuotesController {
   }
 
   @Put(':id/validate')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Validate a quote (change from draft to sent)' })
   @ApiResponse({ status: 200, description: 'Quote validated' })
   async validate(@Param('id', ParseIntPipe) id: number) {
@@ -156,6 +167,7 @@ export class QuotesController {
   }
 
   @Put(':id/devalidate')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Devalidate a quote (change back to draft)' })
   @ApiResponse({ status: 200, description: 'Quote devalidated' })
   async devalidate(@Param('id', ParseIntPipe) id: number) {
@@ -164,6 +176,7 @@ export class QuotesController {
   }
 
   @Put(':id/accept')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Accept a quote' })
   @ApiResponse({ status: 200, description: 'Quote accepted' })
   async accept(@Param('id', ParseIntPipe) id: number) {
@@ -172,6 +185,7 @@ export class QuotesController {
   }
 
   @Put(':id/reject')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Reject a quote' })
   @ApiResponse({ status: 200, description: 'Quote rejected' })
   async reject(@Param('id', ParseIntPipe) id: number) {
@@ -189,6 +203,7 @@ export class QuotesController {
 
   @Public()
   @Get('shared/:token')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Get quote by share token (public)' })
   @ApiResponse({ status: 200, description: 'Shared quote retrieved' })
   @ApiResponse({ status: 404, description: 'Quote not found' })
@@ -199,6 +214,7 @@ export class QuotesController {
 
   @Public()
   @Post('shared/:token/sign')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Sign quote via share link (public)' })
   @ApiResponse({ status: 200, description: 'Quote signed' })
   @ApiResponse({ status: 400, description: 'Invalid request' })
@@ -215,6 +231,7 @@ export class QuotesController {
   }
 
   @Put(':id/unsign')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({
     summary: 'Refuse a signed quote and set status to closed (admin only)',
   })
@@ -225,6 +242,7 @@ export class QuotesController {
   }
 
   @Put(':id/convert-to-order')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({
     summary: 'Mark quote as converted to order (bon de livraison)',
   })
@@ -238,6 +256,7 @@ export class QuotesController {
   }
 
   @Put(':id/convert-to-invoice')
+  @Serialize(QuoteDetailResponseDto)
   @ApiOperation({ summary: 'Mark quote as converted to invoice (facture)' })
   @ApiResponse({ status: 200, description: 'Quote converted to invoice' })
   async convertToInvoice(

@@ -14,13 +14,16 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
+import { CategoryResponseDto } from './dto/category-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { CAT } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Categories')
+@Serialize(CategoryResponseDto)
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(private readonly categoriesService: CategoriesService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all categories' })

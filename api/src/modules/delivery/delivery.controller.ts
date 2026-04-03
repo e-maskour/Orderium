@@ -18,16 +18,21 @@ import { CreateDeliveryPersonDto } from './dto/create-delivery-person.dto';
 import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
 import { DeliveryStatus } from '../orders/entities/order.entity';
 import { DeliveryOrderResponseDto } from './dto/delivery-order-response.dto';
+import {
+  DeliveryPersonResponseDto,
+  OrderDeliveryAdminResponseDto,
+} from './dto/delivery-response.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 import { ApiRes } from '../../common/api-response';
 import { DLV } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Delivery')
 @Controller('delivery')
 @PortalRoute()
 export class DeliveryController {
-  constructor(private readonly deliveryService: DeliveryService) {}
+  constructor(private readonly deliveryService: DeliveryService) { }
 
   @Public()
   @Post('login')
@@ -44,6 +49,7 @@ export class DeliveryController {
   }
 
   @Get('persons')
+  @Serialize(DeliveryPersonResponseDto)
   @ApiOperation({ summary: 'Get all delivery persons' })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiResponse({ status: 200, description: 'List of delivery persons' })
@@ -54,6 +60,7 @@ export class DeliveryController {
   }
 
   @Get('persons/:id')
+  @Serialize(DeliveryPersonResponseDto)
   @ApiOperation({ summary: 'Get a delivery person by ID' })
   @ApiResponse({ status: 200, description: 'Delivery person details' })
   @ApiResponse({ status: 404, description: 'Delivery person not found' })
@@ -63,6 +70,7 @@ export class DeliveryController {
   }
 
   @Post()
+  @Serialize(DeliveryPersonResponseDto)
   @ApiOperation({ summary: 'Create a new delivery person' })
   @ApiResponse({
     status: 201,
@@ -75,6 +83,7 @@ export class DeliveryController {
   }
 
   @Patch(':id')
+  @Serialize(DeliveryPersonResponseDto)
   @ApiOperation({ summary: 'Update a delivery person' })
   @ApiResponse({
     status: 200,
@@ -106,6 +115,7 @@ export class DeliveryController {
   }
 
   @Get('orders')
+  @Serialize(OrderDeliveryAdminResponseDto)
   @ApiOperation({ summary: 'Get all delivery orders' })
   @ApiResponse({ status: 200, description: 'List of delivery orders' })
   async getOrderDeliveries(@Query('limit') limit?: string) {
@@ -169,6 +179,7 @@ export class DeliveryController {
   }
 
   @Post('assign')
+  @Serialize(OrderDeliveryAdminResponseDto)
   @ApiOperation({ summary: 'Assign order to delivery person' })
   @ApiResponse({ status: 200, description: 'Order assigned successfully' })
   async assignToDelivery(

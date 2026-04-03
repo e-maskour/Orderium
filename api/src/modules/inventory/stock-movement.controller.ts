@@ -19,10 +19,13 @@ import {
   InternalTransferDto,
 } from './dto/stock-movement.dto';
 import { MovementStatus, MovementType } from './entities/stock-movement.entity';
+import { StockMovementResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { MOV } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Inventory - Stock Movements')
+@Serialize(StockMovementResponseDto)
 @Controller('inventory/movements')
 export class StockMovementController {
   constructor(private readonly stockService: StockService) { }

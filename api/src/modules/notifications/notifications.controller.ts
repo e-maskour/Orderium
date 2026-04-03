@@ -20,13 +20,16 @@ import {
   RegisterDeviceTokenDto,
   UnregisterDeviceTokenDto,
 } from './dto/device-token.dto';
+import { NotificationResponseDto } from './dto/notification-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { NOT } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Notifications')
 @Controller('notifications')
 @PortalRoute()
+@Serialize(NotificationResponseDto)
 export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,

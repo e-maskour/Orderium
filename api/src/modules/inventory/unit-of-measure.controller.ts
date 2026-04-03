@@ -16,13 +16,16 @@ import {
   CreateUnitOfMeasureDto,
   UpdateUnitOfMeasureDto,
 } from './dto/unit-of-measure.dto';
+import { UomResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { UOM } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Inventory - Units of Measure')
+@Serialize(UomResponseDto)
 @Controller('inventory/uom')
 export class UnitOfMeasureController {
-  constructor(private readonly uomService: UnitOfMeasureService) {}
+  constructor(private readonly uomService: UnitOfMeasureService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new unit of measure' })

@@ -36,6 +36,7 @@ import { ProductImageResponseDto } from '../images/dto/product-image.dto';
 import { ApiRes } from '../../common/api-response';
 import { PRD } from '../../common/response-codes';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Products')
 @PortalRoute()
@@ -45,9 +46,10 @@ export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly imageService: ImageService,
-  ) {}
+  ) { }
 
   @Post('create')
+  @Serialize(ProductResponseDto)
   @ApiOperation({ summary: 'Create a new product' })
   @ApiResponse({
     status: 201,
@@ -61,6 +63,7 @@ export class ProductsController {
 
   @Post('filter')
   @HttpCode(HttpStatus.OK)
+  @Serialize(ProductResponseDto)
   @ApiOperation({ summary: 'Filter products with POST body' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'perPage', required: false, type: Number })
@@ -101,6 +104,7 @@ export class ProductsController {
   }
 
   @Get()
+  @Serialize(ProductResponseDto)
   @ApiOperation({ summary: 'Get all products' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
@@ -161,6 +165,7 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @Serialize(ProductResponseDto)
   @ApiOperation({ summary: 'Get product by ID' })
   @ApiResponse({
     status: 200,
@@ -174,6 +179,7 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @Serialize(ProductResponseDto)
   @ApiOperation({ summary: 'Update a product' })
   @ApiResponse({
     status: 200,

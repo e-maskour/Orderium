@@ -14,13 +14,16 @@ import {
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
+import { PaymentResponseDto } from './dto/payment-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { PAY } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Payments')
+@Serialize(PaymentResponseDto)
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new payment' })

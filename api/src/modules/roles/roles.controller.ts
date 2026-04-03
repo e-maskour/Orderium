@@ -14,13 +14,16 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { RoleResponseDto } from './dto/role-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { ROLE } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Roles')
+@Serialize(RoleResponseDto)
 @Controller('roles')
 export class RolesController {
-  constructor(private readonly rolesService: RolesService) {}
+  constructor(private readonly rolesService: RolesService) { }
 
   @Get()
   @ApiOperation({ summary: 'List all roles' })

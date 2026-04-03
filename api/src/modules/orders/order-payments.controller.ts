@@ -17,15 +17,18 @@ import {
   CreateOrderPaymentDto,
   UpdateOrderPaymentDto,
 } from './dto/create-order-payment.dto';
+import { OrderPaymentResponseDto } from './dto/order-payment-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { OPAY } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Order Payments')
+@Serialize(OrderPaymentResponseDto)
 @Controller('order-payments')
 export class OrderPaymentsController {
   private readonly logger = new Logger(OrderPaymentsController.name);
 
-  constructor(private readonly orderPaymentsService: OrderPaymentsService) {}
+  constructor(private readonly orderPaymentsService: OrderPaymentsService) { }
 
   @Post()
   @ApiOperation({ summary: 'Record a payment for an order' })

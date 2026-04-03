@@ -13,8 +13,10 @@ import { IsOptional, IsString, IsBoolean, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { NotificationTemplateService } from './notification-template.service';
 import { OrderNotificationService } from './order-notification.service';
+import { NotificationTemplateResponseDto } from './dto/notification-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { NTPL } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 class UpdateNotificationTemplateDto {
   @ApiPropertyOptional({ example: 'Nouvelle commande' })
@@ -73,6 +75,7 @@ class SendCustomNotificationDto {
 }
 
 @ApiTags('Notification Templates')
+@Serialize(NotificationTemplateResponseDto)
 @Controller('notification-templates')
 export class NotificationTemplatesController {
   private readonly logger = new Logger(NotificationTemplatesController.name);
@@ -80,7 +83,7 @@ export class NotificationTemplatesController {
   constructor(
     private readonly templateService: NotificationTemplateService,
     private readonly orderNotificationService: OrderNotificationService,
-  ) {}
+  ) { }
 
   @Get()
   @ApiOperation({ summary: 'List all notification templates' })

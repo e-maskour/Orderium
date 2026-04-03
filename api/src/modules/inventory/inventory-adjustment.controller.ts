@@ -18,10 +18,13 @@ import {
   ValidateAdjustmentDto,
 } from './dto/inventory-adjustment.dto';
 import { AdjustmentStatus } from './entities/inventory-adjustment.entity';
+import { InventoryAdjustmentResponseDto } from './dto/inventory-response.dto';
 import { ApiRes } from '../../common/api-response';
 import { ADJ } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 
 @ApiTags('Inventory - Adjustments')
+@Serialize(InventoryAdjustmentResponseDto)
 @Controller('inventory/adjustments')
 export class InventoryAdjustmentController {
   constructor(private readonly adjustmentService: InventoryAdjustmentService) { }

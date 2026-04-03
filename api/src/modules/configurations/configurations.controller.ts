@@ -19,6 +19,7 @@ import { DataSource } from 'typeorm';
 import { ConfigurationsService } from './configurations.service';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
+import { ConfigurationResponseDto } from './dto/configuration-response.dto';
 import { CompanyDto } from './dto/company.dto';
 import {
   CreateSequenceDto,
@@ -27,6 +28,7 @@ import {
 } from './dto/sequence.dto';
 import { ApiRes } from '../../common/api-response';
 import { CFG } from '../../common/response-codes';
+import { Serialize } from '../../common/decorators/serialize.decorator';
 import { SequenceConfig } from '../../common/types/sequence-config.interface';
 
 @ApiTags('Configurations')
@@ -37,9 +39,10 @@ export class ConfigurationsController {
   constructor(
     private readonly configurationsService: ConfigurationsService,
     @Inject(DataSource) private dataSource: DataSource,
-  ) {}
+  ) { }
 
   @Get()
+  @Serialize(ConfigurationResponseDto)
   @ApiOperation({ summary: 'Get all configurations' })
   @ApiResponse({ status: 200, description: 'List of configurations' })
   async findAll() {
@@ -48,6 +51,7 @@ export class ConfigurationsController {
   }
 
   @Get(':id')
+  @Serialize(ConfigurationResponseDto)
   @ApiOperation({ summary: 'Get configuration by ID' })
   @ApiResponse({ status: 200, description: 'Configuration details' })
   @ApiResponse({ status: 404, description: 'Configuration not found' })
@@ -228,7 +232,7 @@ export class ConfigurationsController {
     if (existingSequence.nextNumber > 1) {
       throw new BadRequestException(
         `Cannot update sequence. Invoices already exist using this sequence (next number: ${existingSequence.nextNumber}). ` +
-          `To modify this sequence, please create a new one instead.`,
+        `To modify this sequence, please create a new one instead.`,
       );
     }
 
