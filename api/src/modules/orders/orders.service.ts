@@ -32,6 +32,10 @@ import { OrderNotificationService } from '../notifications/order-notification.se
 import { PDFService } from '../pdf/pdf.service';
 import { PdfQueueService } from '../pdf/pdf.queue.service';
 import { StockService } from '../inventory/stock.service';
+import {
+  MovementType,
+  SourceDocumentType,
+} from '../inventory/entities/stock-movement.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import {
   buildSequencePattern,
@@ -801,7 +805,71 @@ export class OrdersService {
 
     await this.invalidateOrderCache(id);
     void this.pdfQueueService.enqueue('delivery-note', id);
+
+    // ── Config-driven stock movement ───────────────────────────────────────
+    await this.processOrderStockIfConfigured(id);
+
     return await this.getOrderById(id);
+  }
+
+  /**
+   * Read inventory configuration and, when applicable, trigger stock movements
+   * for the given order.  Failures are non-fatal and only logged.
+   */
+  private async processOrderStockIfConfigured(orderId: number): Promise<void> {
+    try {
+      const [invConfig, orderWithItems] = await Promise.all([
+        this.configurationsService.findByEntity('inventory'),
+        this.orderRepository.findOne({
+          where: { id: orderId },
+          relations: ['items'],
+        }),
+      ]);
+
+      if (!orderWithItems) return;
+
+      const invValues = invConfig?.values as Record<string, unknown> | null;
+      const defaultWarehouseId = invValues?.defaultWarehouseId as number | null;
+
+      if (!defaultWarehouseId) return;
+
+      const isVente = orderWithItems.direction === DocumentDirection.VENTE;
+      const isAchat = orderWithItems.direction === DocumentDirection.ACHAT;
+
+      const shouldMove =
+        (isVente && invValues?.decrementStockOnOrderVente) ||
+        (isAchat && invValues?.incrementStockOnOrderAchat);
+
+      if (!shouldMove) return;
+
+      const movementType = isAchat
+        ? MovementType.RECEIPT
+        : MovementType.DELIVERY;
+
+      const partnerName = isAchat
+        ? orderWithItems.supplierName
+        : orderWithItems.customerName;
+
+      const items = (orderWithItems.items ?? [])
+        .filter((i): i is typeof i & { productId: number } => !!i.productId && i.quantity > 0)
+        .map((i) => ({ productId: i.productId, quantity: i.quantity }));
+
+      if (items.length === 0) return;
+
+      await this.stockService.processDocumentStockMovements({
+        sourceDocumentType: SourceDocumentType.ORDER,
+        sourceDocumentId: orderId,
+        items,
+        warehouseId: defaultWarehouseId,
+        movementType,
+        origin: orderWithItems.documentNumber,
+        partnerName: partnerName ?? undefined,
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Failed to process stock for order #${orderId}: ${(err as Error)?.message}`,
+      );
+    }
   }
 
   async devalidate(id: number): Promise<Record<string, unknown>> {
@@ -999,6 +1067,19 @@ export class OrdersService {
       status: OrderStatus.CANCELLED,
       isValidated: false,
     });
+
+    // Reverse any stock movements that were applied when the order was confirmed
+    try {
+      await this.stockService.reverseDocumentStockMovements(
+        SourceDocumentType.ORDER,
+        id,
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Failed to reverse stock for cancelled order #${id}: ${(err as Error)?.message}`,
+      );
+    }
+
     await this.invalidateOrderCache(id);
     return await this.getOrderById(id);
   }

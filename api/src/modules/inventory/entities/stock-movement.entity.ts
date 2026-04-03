@@ -25,6 +25,13 @@ export enum MovementType {
   SCRAP = 'scrap', // Scrapped/damaged
 }
 
+/** Identifies the business document that triggered the movement */
+export enum SourceDocumentType {
+  ORDER = 'order',
+  INVOICE = 'invoice',
+  MANUAL = 'manual',
+}
+
 export enum MovementStatus {
   DRAFT = 'draft',
   WAITING = 'waiting',
@@ -42,6 +49,7 @@ export enum MovementStatus {
 @Index(['movementType'])
 @Index(['reference'])
 @Index(['dateScheduled'])
+@Index(['sourceDocumentType', 'sourceDocumentId'])
 export class StockMovement {
   @PrimaryGeneratedColumn()
   id: number;
@@ -125,6 +133,19 @@ export class StockMovement {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   partnerName: string; // Customer or Supplier name
+
+  /** Source document that triggered this movement (order/invoice) */
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    enum: SourceDocumentType,
+  })
+  sourceDocumentType: SourceDocumentType | null;
+
+  /** ID of the source document (orderId or invoiceId) */
+  @Column({ type: 'int', nullable: true })
+  sourceDocumentId: number | null;
 
   @CreateDateColumn()
   dateCreated: Date;

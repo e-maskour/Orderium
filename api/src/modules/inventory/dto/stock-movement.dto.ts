@@ -10,6 +10,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   MovementType,
   MovementStatus,
+  SourceDocumentType,
 } from '../entities/stock-movement.entity';
 
 export class CreateStockMovementDto {
@@ -75,6 +76,19 @@ export class CreateStockMovementDto {
   @IsString()
   @MaxLength(255)
   partnerName?: string;
+
+  @ApiPropertyOptional({
+    description: 'Source document type (order/invoice/manual)',
+    enum: SourceDocumentType,
+  })
+  @IsOptional()
+  @IsEnum(SourceDocumentType)
+  sourceDocumentType?: SourceDocumentType;
+
+  @ApiPropertyOptional({ description: 'Source document ID' })
+  @IsOptional()
+  @IsNumber()
+  sourceDocumentId?: number;
 }
 
 export class UpdateStockMovementDto {

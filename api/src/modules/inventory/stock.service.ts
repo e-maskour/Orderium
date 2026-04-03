@@ -2,13 +2,15 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, EntityManager } from 'typeorm';
 import { StockQuant } from './entities/stock-quant.entity';
 import {
   StockMovement,
   MovementType,
   MovementStatus,
+  SourceDocumentType,
 } from './entities/stock-movement.entity';
 import { Warehouse } from './entities/warehouse.entity';
 import { Product } from '../products/entities/product.entity';
@@ -24,7 +26,9 @@ import { calcAvailableQty } from './stock.helpers';
 
 @Injectable()
 export class StockService {
-  constructor(private readonly tenantConnService: TenantConnectionService) {}
+  private readonly logger = new Logger(StockService.name);
+
+  constructor(private readonly tenantConnService: TenantConnectionService) { }
 
   private get stockQuantRepository(): Repository<StockQuant> {
     return this.tenantConnService.getRepository(StockQuant);
@@ -207,18 +211,18 @@ export class StockService {
       this.productRepository.findOne({ where: { id: createDto.productId } }),
       createDto.sourceWarehouseId
         ? this.warehouseRepository.findOne({
-            where: { id: createDto.sourceWarehouseId },
-          })
+          where: { id: createDto.sourceWarehouseId },
+        })
         : null,
       createDto.destWarehouseId
         ? this.warehouseRepository.findOne({
-            where: { id: createDto.destWarehouseId },
-          })
+          where: { id: createDto.destWarehouseId },
+        })
         : null,
       createDto.unitOfMeasureId
         ? this.uomRepository.findOne({
-            where: { id: createDto.unitOfMeasureId },
-          })
+          where: { id: createDto.unitOfMeasureId },
+        })
         : null,
     ]);
     if (!product)
@@ -292,7 +296,7 @@ export class StockService {
       if (stockQuant.availableQuantity < movement.quantity) {
         throw new BadRequestException(
           `Insufficient stock at ${movement.sourceWarehouse?.name}. ` +
-            `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
+          `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
         );
       }
     }
@@ -303,9 +307,10 @@ export class StockService {
     await queryRunner.startTransaction();
 
     try {
-      // Update source warehouse stock (decrease)
+      // Update source warehouse stock (decrease) — uses manager to stay atomic
       if (movement.sourceWarehouseId) {
-        await this.updateStockQuant(
+        await this._updateStockQuantWithManager(
+          queryRunner.manager,
           movement.productId,
           movement.sourceWarehouseId,
           -movement.quantity,
@@ -317,9 +322,10 @@ export class StockService {
         );
       }
 
-      // Update destination warehouse stock (increase)
+      // Update destination warehouse stock (increase) — uses manager to stay atomic
       if (movement.destWarehouseId) {
-        await this.updateStockQuant(
+        await this._updateStockQuantWithManager(
+          queryRunner.manager,
           movement.productId,
           movement.destWarehouseId,
           movement.quantity,
@@ -491,6 +497,287 @@ export class StockService {
   }
 
   // ==================== HELPER METHODS ====================
+
+  /**
+   * Internal transactional stock quant update that operates within an
+   * existing EntityManager (e.g. a QueryRunner's manager).  All public callers
+   * that don't own a transaction simply use `this.stockQuantRepository`.
+   */
+  private async _updateStockQuantWithManager(
+    manager: EntityManager,
+    productId: number,
+    warehouseId: number,
+    quantityChange: number,
+    options: {
+      lotNumber?: string;
+      serialNumber?: string;
+      unitOfMeasureId?: number;
+    } = {},
+  ): Promise<StockQuant> {
+    const numericChange = parseFloat(quantityChange.toString());
+
+    let stockQuant = await manager.findOne(StockQuant, {
+      where: { productId, warehouseId },
+    });
+
+    if (!stockQuant) {
+      stockQuant = manager.create(StockQuant, {
+        productId,
+        warehouseId,
+        quantity: numericChange,
+        reservedQuantity: 0,
+        incomingQuantity: 0,
+        outgoingQuantity: 0,
+        lotNumber: options.lotNumber,
+        serialNumber: options.serialNumber,
+        unitOfMeasureId: options.unitOfMeasureId,
+      });
+    } else {
+      const currentQty = parseFloat(stockQuant.quantity.toString() || '0');
+      stockQuant.quantity = currentQty + numericChange;
+      if (options.lotNumber) stockQuant.lotNumber = options.lotNumber;
+      if (options.serialNumber) stockQuant.serialNumber = options.serialNumber;
+      if (options.unitOfMeasureId)
+        stockQuant.unitOfMeasureId = options.unitOfMeasureId;
+    }
+
+    stockQuant.availableQuantity = calcAvailableQty(
+      stockQuant.quantity,
+      stockQuant.reservedQuantity,
+    );
+
+    return manager.save(StockQuant, stockQuant);
+  }
+
+  // ==================== DOCUMENT-DRIVEN STOCK OPERATIONS ====================
+
+  /**
+   * Apply stock movements for a business document (order or invoice).
+   *
+   * Idempotent — if DONE movements already exist for the same
+   * (sourceDocumentType, sourceDocumentId) pair, the call is a no-op.
+   *
+   * All writes are wrapped in a single database transaction.
+   */
+  async processDocumentStockMovements(params: {
+    sourceDocumentType: SourceDocumentType;
+    sourceDocumentId: number;
+    items: Array<{ productId: number; quantity: number }>;
+    warehouseId: number;
+    movementType: MovementType;
+    origin: string;
+    partnerName?: string;
+  }): Promise<StockMovement[]> {
+    const {
+      sourceDocumentType,
+      sourceDocumentId,
+      items,
+      warehouseId,
+      movementType,
+      origin,
+      partnerName,
+    } = params;
+
+    // ── Idempotency guard ────────────────────────────────────────────────────
+    const existing = await this.stockMovementRepository.find({
+      where: {
+        sourceDocumentType,
+        sourceDocumentId,
+        status: MovementStatus.DONE,
+      },
+    });
+    if (existing.length > 0) {
+      this.logger.warn(
+        `Stock movements already processed for ${sourceDocumentType} #${sourceDocumentId} — skipping.`,
+      );
+      return existing;
+    }
+
+    const isOutgoing =
+      movementType === MovementType.DELIVERY ||
+      movementType === MovementType.RETURN_OUT ||
+      movementType === MovementType.PRODUCTION_OUT ||
+      movementType === MovementType.SCRAP;
+
+    const validItems = items.filter(
+      (i) => !!i.productId && i.quantity > 0,
+    );
+
+    if (validItems.length === 0) return [];
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const results: StockMovement[] = [];
+
+    try {
+      for (const item of validItems) {
+        const product = await queryRunner.manager.findOne(Product, {
+          where: { id: item.productId },
+        });
+        if (!product) {
+          this.logger.warn(
+            `Product #${item.productId} not found — skipping stock movement.`,
+          );
+          continue;
+        }
+
+        // Stock availability check for outgoing movements
+        if (isOutgoing) {
+          const stockQuant = await queryRunner.manager.findOne(StockQuant, {
+            where: { productId: item.productId, warehouseId },
+          });
+          const available = stockQuant
+            ? parseFloat(stockQuant.availableQuantity.toString() || '0')
+            : 0;
+          if (available < item.quantity) {
+            throw new BadRequestException(
+              `Insufficient stock for product #${item.productId}. ` +
+              `Available: ${available}, Required: ${item.quantity}`,
+            );
+          }
+        }
+
+        const reference = await this.generateMovementReference(movementType);
+
+        const movement = queryRunner.manager.create(StockMovement, {
+          reference,
+          movementType,
+          productId: item.productId,
+          quantity: item.quantity,
+          ...(isOutgoing
+            ? { sourceWarehouseId: warehouseId }
+            : { destWarehouseId: warehouseId }),
+          origin,
+          partnerName: partnerName ?? undefined,
+          sourceDocumentType,
+          sourceDocumentId,
+          status: MovementStatus.DONE,
+          dateDone: new Date(),
+        });
+
+        await queryRunner.manager.save(StockMovement, movement);
+
+        // Update stock quants atomically
+        await this._updateStockQuantWithManager(
+          queryRunner.manager,
+          item.productId,
+          warehouseId,
+          isOutgoing ? -item.quantity : item.quantity,
+        );
+
+        results.push(movement);
+      }
+
+      await queryRunner.commitTransaction();
+      return results;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Reverse all DONE stock movements for a given document.
+   *
+   * Creates counter-movements (RETURN_IN for a previous DELIVERY, etc.)
+   * and updates stock quants atomically.  Idempotent — already-reversed
+   * documents are skipped.
+   */
+  async reverseDocumentStockMovements(
+    sourceDocumentType: SourceDocumentType,
+    sourceDocumentId: number,
+  ): Promise<void> {
+    const doneMoves = await this.stockMovementRepository.find({
+      where: {
+        sourceDocumentType,
+        sourceDocumentId,
+        status: MovementStatus.DONE,
+      },
+    });
+
+    if (doneMoves.length === 0) {
+      this.logger.debug(
+        `No DONE movements found for ${sourceDocumentType} #${sourceDocumentId} — nothing to reverse.`,
+      );
+      return;
+    }
+
+    const reversalTypeMap: Partial<Record<MovementType, MovementType>> = {
+      [MovementType.DELIVERY]: MovementType.RETURN_IN,
+      [MovementType.RECEIPT]: MovementType.RETURN_OUT,
+      [MovementType.RETURN_IN]: MovementType.DELIVERY,
+      [MovementType.RETURN_OUT]: MovementType.RECEIPT,
+    };
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      for (const move of doneMoves) {
+        const reversalType =
+          reversalTypeMap[move.movementType] ?? MovementType.ADJUSTMENT;
+        const reference = await this.generateMovementReference(reversalType);
+
+        const reversal = queryRunner.manager.create(StockMovement, {
+          reference,
+          movementType: reversalType,
+          productId: move.productId,
+          quantity: move.quantity,
+          // Swap source ↔ destination
+          sourceWarehouseId: move.destWarehouseId,
+          destWarehouseId: move.sourceWarehouseId,
+          origin: `REV:${move.origin ?? move.reference}`,
+          partnerName: move.partnerName,
+          sourceDocumentType,
+          sourceDocumentId,
+          status: MovementStatus.DONE,
+          dateDone: new Date(),
+          notes: `Reversal of movement #${move.id}`,
+        });
+
+        await queryRunner.manager.save(StockMovement, reversal);
+
+        // Undo the quant change from the original movement
+        if (move.destWarehouseId) {
+          // Original increased dest → now decrease dest
+          await this._updateStockQuantWithManager(
+            queryRunner.manager,
+            move.productId,
+            move.destWarehouseId,
+            -move.quantity,
+          );
+        }
+        if (move.sourceWarehouseId) {
+          // Original decreased source → now increase source
+          await this._updateStockQuantWithManager(
+            queryRunner.manager,
+            move.productId,
+            move.sourceWarehouseId,
+            move.quantity,
+          );
+        }
+
+        // Mark original movement as cancelled so it's no longer "DONE"
+        move.status = MovementStatus.CANCELLED;
+        await queryRunner.manager.save(StockMovement, move);
+      }
+
+      await queryRunner.commitTransaction();
+      this.logger.log(
+        `Reversed ${doneMoves.length} stock movement(s) for ${sourceDocumentType} #${sourceDocumentId}.`,
+      );
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 
   /**
    * Generate unique movement reference number

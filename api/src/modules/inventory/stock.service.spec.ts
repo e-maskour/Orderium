@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { StockService } from './stock.service';
@@ -8,6 +7,7 @@ import {
   StockMovement,
   MovementType,
   MovementStatus,
+  SourceDocumentType,
 } from './entities/stock-movement.entity';
 import { Warehouse } from './entities/warehouse.entity';
 import { Product } from '../products/entities/product.entity';
@@ -48,7 +48,11 @@ const mockQueryRunner = {
   commitTransaction: jest.fn(),
   rollbackTransaction: jest.fn(),
   release: jest.fn(),
-  manager: { save: jest.fn() },
+  manager: {
+    save: jest.fn(),
+    findOne: jest.fn(),
+    create: jest.fn(),
+  },
 };
 
 const mockDataSource = {
@@ -117,30 +121,41 @@ describe('StockService', () => {
   let uomRepo: ReturnType<typeof mockRepository>;
 
   beforeEach(async () => {
+    stockQuantRepo = mockRepository();
+    stockMovementRepo = mockRepository();
+    warehouseRepo = mockRepository();
+    productRepo = mockRepository();
+    uomRepo = mockRepository();
+
+    const repoMap = new Map<unknown, ReturnType<typeof mockRepository>>([
+      [StockQuant, stockQuantRepo],
+      [StockMovement, stockMovementRepo],
+      [Warehouse, warehouseRepo],
+      [Product, productRepo],
+      [UnitOfMeasure, uomRepo],
+    ]);
+
+    const mockTenantConnService = {
+      getRepository: jest.fn((entity: unknown) => repoMap.get(entity) ?? mockRepository()),
+      getCurrentDataSource: jest.fn(() => mockDataSource),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StockService,
-        { provide: getRepositoryToken(StockQuant), useFactory: mockRepository },
         {
-          provide: getRepositoryToken(StockMovement),
-          useFactory: mockRepository,
+          provide: 'TenantConnectionService',
+          useValue: mockTenantConnService,
         },
-        { provide: getRepositoryToken(Warehouse), useFactory: mockRepository },
-        { provide: getRepositoryToken(Product), useFactory: mockRepository },
+        // Also register under the class token so NestJS DI resolves it
         {
-          provide: getRepositoryToken(UnitOfMeasure),
-          useFactory: mockRepository,
+          provide: require('../tenant/tenant-connection.service').TenantConnectionService,
+          useValue: mockTenantConnService,
         },
-        { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
 
     service = module.get<StockService>(StockService);
-    stockQuantRepo = module.get(getRepositoryToken(StockQuant));
-    stockMovementRepo = module.get(getRepositoryToken(StockMovement));
-    warehouseRepo = module.get(getRepositoryToken(Warehouse));
-    productRepo = module.get(getRepositoryToken(Product));
-    uomRepo = module.get(getRepositoryToken(UnitOfMeasure));
 
     jest.clearAllMocks();
     mockQueryRunner.connect.mockReset();
@@ -149,6 +164,16 @@ describe('StockService', () => {
     mockQueryRunner.rollbackTransaction.mockReset();
     mockQueryRunner.release.mockReset();
     mockQueryRunner.manager.save.mockReset();
+    mockQueryRunner.manager.findOne.mockReset();
+    mockQueryRunner.manager.create.mockReset();
+
+    // Default: manager.create returns the data object passed in
+    mockQueryRunner.manager.create.mockImplementation(
+      (_Entity: unknown, data: unknown) => data,
+    );
+    mockQueryRunner.manager.save.mockImplementation(
+      (_Entity: unknown, data: unknown) => Promise.resolve(data),
+    );
   });
 
   // ─── getProductStock ────────────────────────────────────────────────────────
@@ -489,8 +514,8 @@ describe('StockService', () => {
         quantity: 50,
       });
       stockMovementRepo.findOne.mockResolvedValue(movement);
-      stockQuantRepo.findOne.mockResolvedValue(makeStockQuant());
-      stockQuantRepo.save.mockImplementation((q) => Promise.resolve(q));
+      // _updateStockQuantWithManager uses queryRunner.manager.findOne / save
+      mockQueryRunner.manager.findOne.mockResolvedValue(makeStockQuant());
       mockQueryRunner.manager.save.mockResolvedValue({
         ...movement,
         status: MovementStatus.DONE,
@@ -580,8 +605,7 @@ describe('StockService', () => {
         quantity: 999,
       });
       stockMovementRepo.findOne.mockResolvedValue(movement);
-      stockQuantRepo.findOne.mockResolvedValue(makeStockQuant());
-      stockQuantRepo.save.mockImplementation((q) => Promise.resolve(q));
+      mockQueryRunner.manager.findOne.mockResolvedValue(makeStockQuant());
       mockQueryRunner.manager.save.mockResolvedValue(movement);
 
       const doneMov = makeMovement({ status: MovementStatus.DONE });
@@ -601,8 +625,8 @@ describe('StockService', () => {
         quantity: 50,
       });
       stockMovementRepo.findOne.mockResolvedValue(movement);
-      stockQuantRepo.findOne.mockResolvedValue(makeStockQuant());
-      stockQuantRepo.save.mockRejectedValue(new Error('DB error'));
+      // Trigger failure inside the transaction on manager.findOne
+      mockQueryRunner.manager.findOne.mockRejectedValue(new Error('DB error'));
 
       await expect(service.validateMovement({ movementId: 1 })).rejects.toThrow(
         'DB error',
@@ -657,8 +681,8 @@ describe('StockService', () => {
         availableQuantity: 100,
         reservedQuantity: 0,
       });
-      stockQuantRepo.findOne.mockResolvedValue(sourceQuant);
-      stockQuantRepo.save.mockImplementation((q) => Promise.resolve(q));
+      stockQuantRepo.findOne.mockResolvedValue(sourceQuant); // for availability check
+      mockQueryRunner.manager.findOne.mockResolvedValue(sourceQuant); // for _updateStockQuantWithManager
       mockQueryRunner.manager.save.mockResolvedValue({
         ...draftMovement,
         status: MovementStatus.DONE,
@@ -855,6 +879,317 @@ describe('StockService', () => {
       await expect(service.updateMovement(1, { quantity: 75 })).rejects.toThrow(
         'Cannot update validated movement',
       );
+    });
+  });
+
+  // ─── processDocumentStockMovements ───────────────────────────────────────────
+
+  describe('processDocumentStockMovements', () => {
+    const baseParams = {
+      sourceDocumentType: SourceDocumentType.ORDER,
+      sourceDocumentId: 42,
+      items: [
+        { productId: 1, quantity: 10 },
+        { productId: 2, quantity: 5 },
+      ],
+      warehouseId: 1,
+      movementType: MovementType.DELIVERY,
+      origin: 'BL/2026/00042',
+      partnerName: 'Client ACME',
+    };
+
+    beforeEach(() => {
+      stockMovementRepo.find.mockResolvedValue([]); // no existing movements by default
+      mockQueryRunner.manager.findOne.mockResolvedValue(null); // no prior stock quant
+      mockQueryRunner.manager.create.mockImplementation((_Entity: unknown, data: unknown) => data);
+      mockQueryRunner.manager.save.mockImplementation((_Entity: unknown, data: unknown) =>
+        Promise.resolve(data),
+      );
+    });
+
+    it('creates DONE movements for all valid items', async () => {
+      mockQueryRunner.manager.findOne
+        .mockResolvedValueOnce(makeProduct({ id: 1 })) // product 1 exists
+        .mockResolvedValueOnce(makeStockQuant({ availableQuantity: 50 })) // stock check
+        .mockResolvedValueOnce(null) // no prior quant → will create
+        .mockResolvedValueOnce(makeProduct({ id: 2 })) // product 2 exists
+        .mockResolvedValueOnce(makeStockQuant({ availableQuantity: 20 })) // stock check
+        .mockResolvedValueOnce(null); // no prior quant
+
+      // for reference generation
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      const results = await service.processDocumentStockMovements(baseParams);
+
+      expect(results).toHaveLength(2);
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+    });
+
+    it('is idempotent — skips processing when DONE movements already exist', async () => {
+      const existingMovements = [
+        makeMovement({ status: MovementStatus.DONE, sourceDocumentId: 42 }),
+      ];
+      stockMovementRepo.find.mockResolvedValue(existingMovements);
+
+      const results = await service.processDocumentStockMovements(baseParams);
+
+      expect(results).toHaveLength(1);
+      expect(mockQueryRunner.connect).not.toHaveBeenCalled(); // no transaction started
+    });
+
+    it('throws BadRequestException for outgoing movement when stock is insufficient', async () => {
+      mockQueryRunner.manager.findOne
+        .mockResolvedValueOnce(makeProduct({ id: 1 })) // product exists
+        .mockResolvedValueOnce(
+          makeStockQuant({ productId: 1, warehouseId: 1, availableQuantity: 2 }),
+        ); // insufficient stock (need 10)
+
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      let thrown: unknown;
+      try {
+        await service.processDocumentStockMovements(baseParams);
+      } catch (err) {
+        thrown = err;
+      }
+
+      expect(thrown).toBeInstanceOf(BadRequestException);
+      expect((thrown as BadRequestException).message).toMatch(/insufficient stock/i);
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+    });
+
+    it('skips items with no productId or zero quantity', async () => {
+      const paramsWithInvalid = {
+        ...baseParams,
+        items: [
+          { productId: 0, quantity: 10 }, // productId falsy
+          { productId: 1, quantity: 0 },  // zero quantity
+        ],
+      };
+
+      const results = await service.processDocumentStockMovements(paramsWithInvalid);
+
+      expect(results).toHaveLength(0);
+      expect(mockQueryRunner.connect).not.toHaveBeenCalled();
+    });
+
+    it('returns empty array when all items are empty', async () => {
+      const results = await service.processDocumentStockMovements({
+        ...baseParams,
+        items: [],
+      });
+
+      expect(results).toHaveLength(0);
+    });
+
+    it('skips product silently if it does not exist in DB', async () => {
+      mockQueryRunner.manager.findOne
+        .mockResolvedValueOnce(null) // product 1 not found
+        .mockResolvedValueOnce(makeProduct({ id: 2 })) // product 2 exists
+        .mockResolvedValueOnce(makeStockQuant({ availableQuantity: 20 })) // stock check p2
+        .mockResolvedValueOnce(null); // no prior quant p2
+
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      const results = await service.processDocumentStockMovements(baseParams);
+
+      // Only product 2 creates a movement (product 1 skipped)
+      expect(results).toHaveLength(1);
+    });
+
+    it('does NOT check stock availability for RECEIPT movements (incoming)', async () => {
+      const receiptParams = {
+        ...baseParams,
+        movementType: MovementType.RECEIPT,
+        items: [{ productId: 1, quantity: 500 }], // large quantity — no check needed
+      };
+
+      mockQueryRunner.manager.findOne
+        .mockResolvedValueOnce(makeProduct({ id: 1 }))
+        .mockResolvedValueOnce(null); // quant update: no existing quant
+
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      const results = await service.processDocumentStockMovements(receiptParams);
+
+      expect(results).toHaveLength(1);
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+    });
+
+    it('rolls back and re-throws on any DB error inside transaction', async () => {
+      mockQueryRunner.manager.findOne.mockResolvedValueOnce(makeProduct({ id: 1 }));
+      mockQueryRunner.manager.save.mockRejectedValueOnce(new Error('DB write fail'));
+
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.processDocumentStockMovements({
+          ...baseParams,
+          items: [{ productId: 1, quantity: 10 }],
+          movementType: MovementType.RECEIPT, // skip stock check
+        }),
+      ).rejects.toThrow('DB write fail');
+
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
+    });
+
+    it('attaches sourceDocumentType and sourceDocumentId to created movement', async () => {
+      const capturedMoves: unknown[] = [];
+      mockQueryRunner.manager.findOne
+        .mockResolvedValueOnce(makeProduct({ id: 1 }))
+        .mockResolvedValueOnce(null); // quant
+
+      mockQueryRunner.manager.create.mockImplementation(
+        (_Entity: unknown, data: unknown) => {
+          capturedMoves.push(data);
+          return data;
+        },
+      );
+      mockQueryRunner.manager.save.mockImplementation((_E: unknown, d: unknown) =>
+        Promise.resolve(d),
+      );
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      await service.processDocumentStockMovements({
+        ...baseParams,
+        movementType: MovementType.RECEIPT,
+        items: [{ productId: 1, quantity: 5 }],
+      });
+
+      const movData = capturedMoves.find(
+        (d: any) => d.sourceDocumentType !== undefined,
+      ) as any;
+      expect(movData?.sourceDocumentType).toBe(SourceDocumentType.ORDER);
+      expect(movData?.sourceDocumentId).toBe(42);
+    });
+  });
+
+  // ─── reverseDocumentStockMovements ───────────────────────────────────────────
+
+  describe('reverseDocumentStockMovements', () => {
+    const makeDoneDelivery = (overrides: Partial<StockMovement> = {}) =>
+      makeMovement({
+        id: 10,
+        movementType: MovementType.DELIVERY,
+        status: MovementStatus.DONE,
+        sourceWarehouseId: 1,
+        destWarehouseId: null,
+        quantity: 20,
+        origin: 'BL/2026/00042',
+        sourceDocumentType: SourceDocumentType.ORDER,
+        sourceDocumentId: 42,
+        ...overrides,
+      });
+
+    beforeEach(() => {
+      mockQueryRunner.manager.create.mockImplementation((_E: unknown, d: unknown) => d);
+      mockQueryRunner.manager.save.mockImplementation((_E: unknown, d: unknown) =>
+        Promise.resolve(d),
+      );
+      mockQueryRunner.manager.findOne.mockResolvedValue(null);
+    });
+
+    it('is a no-op when no DONE movements exist for the document', async () => {
+      stockMovementRepo.find.mockResolvedValue([]);
+
+      await service.reverseDocumentStockMovements(SourceDocumentType.ORDER, 42);
+
+      expect(mockQueryRunner.connect).not.toHaveBeenCalled();
+    });
+
+    it('creates a RETURN_IN reversal for each DONE DELIVERY movement', async () => {
+      const doneMove = makeDoneDelivery();
+      stockMovementRepo.find.mockResolvedValue([doneMove]);
+      stockMovementRepo.findOne.mockResolvedValue(null); // reference generation
+
+      const capturedReversals: unknown[] = [];
+      mockQueryRunner.manager.create.mockImplementation(
+        (_E: unknown, data: unknown) => {
+          capturedReversals.push(data);
+          return data;
+        },
+      );
+
+      await service.reverseDocumentStockMovements(SourceDocumentType.ORDER, 42);
+
+      const reversal = capturedReversals.find(
+        (d: any) => d.movementType === MovementType.RETURN_IN,
+      ) as any;
+      expect(reversal).toBeDefined();
+      expect(reversal?.quantity).toBe(20);
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+    });
+
+    it('swaps source and destination warehouses in the reversal', async () => {
+      // Original: RECEIPT destWarehouseId=1, sourceWarehouseId=null
+      const receiptMove = makeDoneDelivery({
+        movementType: MovementType.RECEIPT,
+        sourceWarehouseId: null,
+        destWarehouseId: 1,
+      });
+      stockMovementRepo.find.mockResolvedValue([receiptMove]);
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      const capturedReversals: unknown[] = [];
+      mockQueryRunner.manager.create.mockImplementation(
+        (_E: unknown, data: unknown) => {
+          capturedReversals.push(data);
+          return data;
+        },
+      );
+
+      await service.reverseDocumentStockMovements(SourceDocumentType.INVOICE, 7);
+
+      const reversal = capturedReversals.find(
+        (d: any) => d.movementType !== undefined,
+      ) as any;
+      // Reversal of RECEIPT (null→1): reversal is RETURN_OUT (1→null)
+      expect(reversal?.sourceWarehouseId).toBe(1);   // original destWarehouseId swapped to source
+      expect(reversal?.destWarehouseId).toBeNull();  // original sourceWarehouseId (null) swapped to dest
+    });
+
+    it('marks original movements as CANCELLED after reversal', async () => {
+      const doneMove = makeDoneDelivery();
+      stockMovementRepo.find.mockResolvedValue([doneMove]);
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      await service.reverseDocumentStockMovements(SourceDocumentType.ORDER, 42);
+
+      // Original movement should be saved with CANCELLED status
+      const cancelledSave = mockQueryRunner.manager.save.mock.calls.find(
+        (call: unknown[]) => {
+          const data = call[1] as any;
+          return data?.status === MovementStatus.CANCELLED;
+        },
+      );
+      expect(cancelledSave).toBeDefined();
+    });
+
+    it('rolls back and re-throws on transaction error', async () => {
+      const doneMove = makeDoneDelivery();
+      stockMovementRepo.find.mockResolvedValue([doneMove]);
+      stockMovementRepo.findOne.mockResolvedValue(null);
+      mockQueryRunner.manager.save.mockRejectedValue(new Error('DB crash'));
+
+      await expect(
+        service.reverseDocumentStockMovements(SourceDocumentType.ORDER, 42),
+      ).rejects.toThrow('DB crash');
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+    });
+
+    it('handles multiple movements for the same document atomically', async () => {
+      const moves = [
+        makeDoneDelivery({ id: 10, productId: 1 }),
+        makeDoneDelivery({ id: 11, productId: 2 }),
+      ];
+      stockMovementRepo.find.mockResolvedValue(moves);
+      stockMovementRepo.findOne.mockResolvedValue(null);
+
+      await service.reverseDocumentStockMovements(SourceDocumentType.ORDER, 42);
+
+      // commitTransaction called once (single transaction for all movements)
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalledTimes(1);
     });
   });
 });

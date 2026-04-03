@@ -17,7 +17,10 @@ import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { PDFService } from '../pdf/pdf.service';
 import { PdfQueueService } from '../pdf/pdf.queue.service';
 import { StockService } from '../inventory/stock.service';
-import { MovementType } from '../inventory/entities/stock-movement.entity';
+import {
+  MovementType,
+  SourceDocumentType,
+} from '../inventory/entities/stock-movement.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { CreateInvoiceDto } from './dto/invoice.dto';
 import {
@@ -529,7 +532,7 @@ export class InvoicesService {
       remainingAmount: invoice.total,
     });
 
-    // Auto-create stock movements
+    // Auto-create stock movements via centralized service
     try {
       const inventoryConfig =
         await this.configurationsService.findByEntity('inventory');
@@ -540,11 +543,12 @@ export class InvoicesService {
       const defaultWarehouseId = invValues?.defaultWarehouseId as number | null;
 
       if (defaultWarehouseId) {
+        const isAchat = invoice.direction === DocumentDirection.ACHAT;
+        const isVente = invoice.direction === DocumentDirection.VENTE;
+
         const shouldMove =
-          (invoice.direction === DocumentDirection.ACHAT &&
-            invValues?.incrementStockOnInvoiceAchat) ||
-          (invoice.direction === DocumentDirection.VENTE &&
-            invValues?.decrementStockOnInvoiceVente);
+          (isAchat && invValues?.incrementStockOnInvoiceAchat) ||
+          (isVente && invValues?.decrementStockOnInvoiceVente);
 
         if (shouldMove) {
           const withItems = await this.invoiceRepository.findOne({
@@ -552,8 +556,11 @@ export class InvoicesService {
             relations: ['items'],
           });
 
-          if (withItems?.items?.length) {
-            const isAchat = invoice.direction === DocumentDirection.ACHAT;
+          const items = (withItems?.items ?? [])
+            .filter((i): i is typeof i & { productId: number } => !!i.productId && i.quantity > 0)
+            .map((i) => ({ productId: i.productId, quantity: i.quantity }));
+
+          if (items.length > 0) {
             const movementType = isAchat
               ? MovementType.RECEIPT
               : MovementType.DELIVERY;
@@ -561,28 +568,15 @@ export class InvoicesService {
               ? invoice.supplierName
               : invoice.customerName;
 
-            for (const item of withItems.items) {
-              if (!item.productId || item.quantity <= 0) continue;
-              try {
-                const movement = await this.stockService.createMovement({
-                  movementType,
-                  productId: item.productId,
-                  quantity: item.quantity,
-                  ...(isAchat
-                    ? { destWarehouseId: defaultWarehouseId }
-                    : { sourceWarehouseId: defaultWarehouseId }),
-                  origin: finalNumber,
-                  partnerName: partnerName ?? undefined,
-                });
-                await this.stockService.validateMovement({
-                  movementId: movement.id,
-                });
-              } catch (itemError) {
-                this.logger.warn(
-                  `Failed to create stock movement for invoice ${id}, product ${item.productId}: ${(itemError as Error)?.message}`,
-                );
-              }
-            }
+            await this.stockService.processDocumentStockMovements({
+              sourceDocumentType: SourceDocumentType.INVOICE,
+              sourceDocumentId: id,
+              items,
+              warehouseId: defaultWarehouseId,
+              movementType,
+              origin: finalNumber,
+              partnerName: partnerName ?? undefined,
+            });
           }
         }
       }
@@ -664,6 +658,18 @@ export class InvoicesService {
       status: InvoiceStatus.DRAFT,
       pdfUrl: null,
     });
+
+    // Reverse any stock movements that were applied during validation
+    try {
+      await this.stockService.reverseDocumentStockMovements(
+        SourceDocumentType.INVOICE,
+        id,
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Failed to reverse stock for devalidated invoice #${id}: ${(err as Error)?.message}`,
+      );
+    }
 
     await this.invalidateInvoiceCache(id);
     const result = await this.findOne(id);
