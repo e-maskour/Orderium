@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { translateUomCode } from '../lib/uom-translations';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
@@ -44,7 +45,7 @@ import { AutoComplete } from 'primereact/autocomplete';
 import { formatAmount } from '@orderium/ui';
 
 export default function Products() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -687,7 +688,7 @@ export default function Products() {
                   body={(product: IProduct) => (
                     <span style={{ fontSize: '0.875rem', color: '#334155', fontWeight: 500 }}>
                       {product.stock !== null && product.stock !== undefined
-                        ? `${product.stock} ${t('per')} ${(product as any).saleUnitOfMeasure?.code || t('unit')}`
+                        ? `${product.stock} ${t('per')} ${translateUomCode((product as any).saleUnitOfMeasure?.code, language)}`
                         : '—'}
                     </span>
                   )}

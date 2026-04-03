@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ShoppingCart, X, Package } from 'lucide-react';
 import { formatAmount } from '@orderium/ui';
+import { translateUomCode } from '../lib/uom-translations';
 
 interface Product {
   id: number;
@@ -79,7 +80,7 @@ export const ProductQuantityModal = ({
   const hasQuantity = quantity !== '' && qty > 0;
   const totalPrice = product.price * qty;
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
-  const unitCode = product.saleUnitOfMeasure?.code || 'UNIT';
+  const unitCode = translateUomCode(product.saleUnitOfMeasure?.code, language ?? 'fr');
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {

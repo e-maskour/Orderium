@@ -4,6 +4,7 @@ import { Product } from '@/types/database';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { formatCurrency } from '@/lib/i18n';
+import { translateUomCode } from '@/lib/uom-translations';
 import { InputText } from 'primereact/inputtext';
 import { ShoppingCart, X } from 'lucide-react';
 
@@ -140,7 +141,7 @@ export const ProductQuantityModal = ({
   const totalPrice = product.price * (parseFloat(quantity) || 0);
   const hasQuantity = quantity !== '' && parseFloat(quantity) > 0;
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
-  const unitCode = product.saleUnitOfMeasure?.code || 'UNIT';
+  const unitCode = translateUomCode(product.saleUnitOfMeasure?.code, language);
 
   const modalContent = (
     <div

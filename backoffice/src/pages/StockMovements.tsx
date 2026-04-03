@@ -27,12 +27,13 @@ import {
   toastConfirm,
 } from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
+import { translateUomCode } from '../lib/uom-translations';
 import { MobileList } from '../components/MobileList';
 import { EmptyState } from '../components/EmptyState';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 
 export default function StockMovements() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -231,8 +232,7 @@ export default function StockMovements() {
             config={{
               topLeft: (m: StockMovement) => m.reference,
               topRight: (m: StockMovement) =>
-                `${parseFloat(m.quantity.toString()).toFixed(2)} ${m.unitOfMeasureCode || 'U'}`,
-              bottomLeft: (m: StockMovement) => m.productName || `Produit #${m.productId}`,
+                `${parseFloat(m.quantity.toString()).toFixed(2)} ${translateUomCode(m.unitOfMeasureCode, language)}`, bottomLeft: (m: StockMovement) => m.productName || `Produit #${m.productId}`,
               bottomRight: (m: StockMovement) => getStatusBadge(m.status),
             }}
           />
@@ -357,7 +357,7 @@ export default function StockMovements() {
                     fontSize: '0.875rem',
                   }}
                 >
-                  {parseFloat(mov.quantity.toString()).toFixed(2)} {mov.unitOfMeasureCode || 'U'}
+                  {parseFloat(mov.quantity.toString()).toFixed(2)} {translateUomCode(mov.unitOfMeasureCode, language)}
                 </span>
               )}
             />
