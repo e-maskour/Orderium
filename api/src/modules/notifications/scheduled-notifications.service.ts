@@ -25,7 +25,7 @@ export class ScheduledNotificationsService {
     private readonly tenantConnService: TenantConnectionService,
     private readonly tenantService: TenantService,
     private readonly orderNotificationService: OrderNotificationService,
-  ) { }
+  ) {}
 
   private get productRepo(): Repository<Product> {
     return this.tenantConnService.getRepository(Product);

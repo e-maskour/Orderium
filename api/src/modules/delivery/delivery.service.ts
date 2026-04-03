@@ -21,6 +21,7 @@ import { UpdateDeliveryPersonDto } from './dto/update-delivery-person.dto';
 import { OrderNotificationService } from '../notifications/order-notification.service';
 import * as bcrypt from 'bcrypt';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { applyDeliveryStatusTimestamp } from './delivery.helpers';
 
 @Injectable()
 export class DeliveryService {
@@ -32,7 +33,7 @@ export class DeliveryService {
     private readonly orderNotificationService: OrderNotificationService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get deliveryPersonRepository(): Repository<DeliveryPerson> {
     return this.tenantConnService.getRepository(DeliveryPerson);
@@ -46,7 +47,16 @@ export class DeliveryService {
     return this.tenantConnService.getRepository(Order);
   }
 
-  async getAllDeliveryPersons(): Promise<DeliveryPerson[]> {
+  async getAllDeliveryPersons(search?: string): Promise<DeliveryPerson[]> {
+    if (search) {
+      return this.deliveryPersonRepository
+        .createQueryBuilder('dp')
+        .where('(LOWER(dp.name) LIKE :q OR dp.phoneNumber LIKE :q)', {
+          q: `%${search.toLowerCase()}%`,
+        })
+        .orderBy('dp.name', 'ASC')
+        .getMany();
+    }
     return this.deliveryPersonRepository.find({
       order: { name: 'ASC' },
     });
@@ -55,7 +65,10 @@ export class DeliveryService {
   async login(
     phoneNumber: string,
     password: string,
-  ): Promise<{ deliveryPerson: Omit<DeliveryPerson, 'password'>; token: string }> {
+  ): Promise<{
+    deliveryPerson: Omit<DeliveryPerson, 'password'>;
+    token: string;
+  }> {
     const person = await this.deliveryPersonRepository.findOne({
       where: { phoneNumber },
     });
@@ -213,13 +226,11 @@ export class DeliveryService {
       });
     }
 
-    const total = await queryBuilder.getCount();
-
-    const orderDeliveries = await queryBuilder
+    const [orderDeliveries, total] = await queryBuilder
       .orderBy('ord.dateCreated', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize)
-      .getMany();
+      .getManyAndCount();
 
     return { orderDeliveries, total };
   }
@@ -338,33 +349,11 @@ export class DeliveryService {
     // Update status and corresponding timestamp
     const now = new Date();
     orderDelivery.status = status;
-
-    switch (status) {
-      case DeliveryStatus.PENDING:
-        orderDelivery.pendingAt = now;
-        break;
-      case DeliveryStatus.ASSIGNED:
-        orderDelivery.assignedAt = now;
-        break;
-      case DeliveryStatus.CONFIRMED:
-        orderDelivery.confirmedAt = now;
-        break;
-      case DeliveryStatus.PICKED_UP:
-        orderDelivery.pickedUpAt = now;
-        break;
-      case DeliveryStatus.TO_DELIVERY:
-        orderDelivery.toDeliveryAt = now;
-        break;
-      case DeliveryStatus.IN_DELIVERY:
-        orderDelivery.inDeliveryAt = now;
-        break;
-      case DeliveryStatus.DELIVERED:
-        orderDelivery.deliveredAt = now;
-        break;
-      case DeliveryStatus.CANCELED:
-        orderDelivery.canceledAt = now;
-        break;
-    }
+    applyDeliveryStatusTimestamp(
+      orderDelivery as unknown as Record<string, unknown>,
+      status,
+      now,
+    );
 
     await this.orderDeliveryRepository.save(orderDelivery);
 
@@ -396,38 +385,22 @@ export class DeliveryService {
       }
 
       // Update delivery timestamps
-      switch (status) {
-        case DeliveryStatus.PENDING:
-          order.pendingAt = now;
-          break;
-        case DeliveryStatus.ASSIGNED:
-          order.assignedAt = now;
-          break;
-        case DeliveryStatus.CONFIRMED:
-          order.confirmedAt = now;
-          break;
-        case DeliveryStatus.PICKED_UP:
-          order.pickedUpAt = now;
-          break;
-        case DeliveryStatus.TO_DELIVERY:
-          order.toDeliveryAt = now;
-          break;
-        case DeliveryStatus.IN_DELIVERY:
-          order.inDeliveryAt = now;
-          break;
-        case DeliveryStatus.DELIVERED:
-          order.deliveredAt = now;
-          break;
-        case DeliveryStatus.CANCELED:
-          order.canceledAt = now;
-          break;
-      }
+      applyDeliveryStatusTimestamp(
+        order as unknown as Record<string, unknown>,
+        status,
+        now,
+      );
 
       await this.orderRepository.save(order);
 
       // RULE 3: When delivery status changes, notify customer
       this.orderNotificationService
-        .notifyDeliveryStatusChanged(order, oldStatus, status, deliveryPersonName)
+        .notifyDeliveryStatusChanged(
+          order,
+          oldStatus,
+          status,
+          deliveryPersonName,
+        )
         .catch((err) => {
           this.logger.error(
             'Failed to send delivery status notification',

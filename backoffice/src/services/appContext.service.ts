@@ -10,11 +10,7 @@ export class AppContextProvider {
    * Build safe context for AI assistant
    * CRITICAL: Never include tokens, passwords, API keys, or PII
    */
-  static buildContext(
-    userState: any,
-    routerState: any,
-    appState?: any
-  ): SafeAppContext {
+  static buildContext(userState: any, routerState: any, appState?: any): SafeAppContext {
     return {
       user: {
         id: userState?.uid || 'anonymous',
@@ -82,7 +78,7 @@ export class AppContextProvider {
   private static getSanitizedErrors(errorLog: any[]): SafeAppContext['recentErrors'] {
     return (errorLog || [])
       .slice(-5) // Last 5 errors
-      .map(err => ({
+      .map((err) => ({
         timestamp: err.timestamp || Date.now(),
         message: this.sanitizeErrorMessage(err.message || 'Unknown error'),
         component: err.component || 'unknown',
@@ -104,15 +100,13 @@ export class AppContextProvider {
    * Sanitize API call logs (remove responses with PII)
    */
   private static getSanitizedApiCalls(apiLog: any[]): SafeAppContext['recentApiCalls'] {
-    return (apiLog || [])
-      .slice(-5)
-      .map(call => ({
-        endpoint: call.endpoint?.replace(/\/\d+/g, '/:id') || '/unknown', // Replace IDs
-        method: call.method || 'GET',
-        status: call.status || 0,
-        timestamp: call.timestamp || Date.now(),
-        responseSummary: call.status === 200 ? 'Success' : `Error ${call.status}`,
-      }));
+    return (apiLog || []).slice(-5).map((call) => ({
+      endpoint: call.endpoint?.replace(/\/\d+/g, '/:id') || '/unknown', // Replace IDs
+      method: call.method || 'GET',
+      status: call.status || 0,
+      timestamp: call.timestamp || Date.now(),
+      responseSummary: call.status === 200 ? 'Success' : `Error ${call.status}`,
+    }));
   }
 
   private static sanitizeFilters(filters: any): Record<string, any> {

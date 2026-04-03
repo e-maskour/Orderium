@@ -58,7 +58,9 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
         setIsLoading(false);
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, pdfUrl]);
 
   // Cleanup blob URL when modal closes
@@ -80,19 +82,33 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
       maximizable
       style={{ width: '90vw', maxWidth: '80rem' }}
       breakpoints={{ '960px': '90vw', '640px': '95vw' }}
-      contentStyle={{ height: '80vh', padding: 0, position: 'relative', background: '#f1f5f9', overflow: 'hidden' }}
+      contentStyle={{
+        height: '80vh',
+        padding: 0,
+        position: 'relative',
+        background: '#f1f5f9',
+        overflow: 'hidden',
+      }}
     >
       {isLoading && (
-        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: '#f1f5f9', zIndex: 1 }}>
+        <div
+          className="flex align-items-center justify-content-center"
+          style={{ position: 'absolute', inset: 0, background: '#f1f5f9', zIndex: 1 }}
+        >
           <div className="text-center">
             <ProgressSpinner style={{ width: '3rem', height: '3rem' }} />
-            <p className="font-medium mt-3" style={{ color: '#475569' }}>Chargement du PDF...</p>
+            <p className="font-medium mt-3" style={{ color: '#475569' }}>
+              Chargement du PDF...
+            </p>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: '#f1f5f9', zIndex: 1 }}>
+        <div
+          className="flex align-items-center justify-content-center"
+          style={{ position: 'absolute', inset: 0, background: '#f1f5f9', zIndex: 1 }}
+        >
           <p style={{ color: '#ef4444', fontWeight: 600 }}>Erreur: {error}</p>
         </div>
       )}
@@ -106,7 +122,10 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
       )}
 
       {blobUrl && mobile && (
-        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: '#f1f5f9', padding: '2rem' }}>
+        <div
+          className="flex align-items-center justify-content-center"
+          style={{ position: 'absolute', inset: 0, background: '#f1f5f9', padding: '2rem' }}
+        >
           <div className="text-center">
             <p className="font-medium mb-4" style={{ color: '#475569' }}>
               Appuyez sur le bouton ci-dessous pour ouvrir le PDF

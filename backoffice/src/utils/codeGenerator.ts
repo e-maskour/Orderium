@@ -23,14 +23,16 @@ const calculateEAN13CheckDigit = (code12: string): string => {
  */
 export const generateEAN13Barcode = (): string => {
   const countryCode = '611'; // Morocco
-  
+
   // Generate 9 random digits for product identifier
   const timestamp = Date.now().toString().slice(-6); // 6 digits from timestamp
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // 3 random digits
-  
+  const random = Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, '0'); // 3 random digits
+
   const code12 = countryCode + timestamp + random;
   const checkDigit = calculateEAN13CheckDigit(code12);
-  
+
   return code12 + checkDigit;
 };
 
@@ -41,10 +43,10 @@ export const isValidEAN13 = (code: string): boolean => {
   if (code.length !== 13 || !/^\d{13}$/.test(code)) {
     return false;
   }
-  
+
   const checkDigit = code[12];
   const calculatedCheckDigit = calculateEAN13CheckDigit(code.substring(0, 12));
-  
+
   return checkDigit === calculatedCheckDigit;
 };
 

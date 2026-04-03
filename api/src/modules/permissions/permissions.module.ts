@@ -4,9 +4,9 @@ import { PermissionsController } from './permissions.controller';
 import { TenantModule } from '../tenant/tenant.module';
 
 @Module({
-    imports: [TenantModule],
-    controllers: [PermissionsController],
-    providers: [PermissionsService],
-    exports: [PermissionsService],
+  imports: [TenantModule],
+  controllers: [PermissionsController],
+  providers: [PermissionsService],
+  exports: [PermissionsService],
 })
-export class PermissionsModule { }
+export class PermissionsModule {}

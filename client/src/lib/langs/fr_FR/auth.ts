@@ -16,7 +16,7 @@ export default {
   enterPhoneToStart: 'Entrez votre numéro pour explorer votre catalogue.',
   createPasswordForNewAccount: 'Remplissez votre nom et créez un mot de passe',
   enterPasswordToContinue: 'Entrez votre mot de passe pour continuer',
-  yourInfoIsSecure: "Votre informations est sécurisée et ne sera pas partagée.",
+  yourInfoIsSecure: 'Votre informations est sécurisée et ne sera pas partagée.',
 
   // Validation
   phoneNumberRequired: 'Numéro de téléphone requis',
@@ -33,22 +33,26 @@ export default {
   loginSuccess: 'Connexion réussie',
   welcome: 'Bienvenue!',
   accountCreatedSuccess: 'Compte créé avec succès',
-  accountCreatedPending: 'Votre compte a été créé et est en attente de validation par un administrateur.',
+  accountCreatedPending:
+    'Votre compte a été créé et est en attente de validation par un administrateur.',
   loginFailed: 'Échec de connexion',
   registrationFailed: 'Échec de création',
   incorrectPassword: 'Mot de passe incorrect',
   errorOccurred: 'Une erreur est survenue',
   accountPendingTitle: 'Compte en attente de validation',
-  accountPendingDesc: 'Votre compte a été créé mais doit être approuvé par un administrateur avant de pouvoir vous connecter.',
+  accountPendingDesc:
+    'Votre compte a été créé mais doit être approuvé par un administrateur avant de pouvoir vous connecter.',
   accountRejectedTitle: 'Compte refusé',
-  accountRejectedDesc: 'Votre compte a été refusé par un administrateur. Veuillez contacter le support pour plus d\'informations.',
+  accountRejectedDesc:
+    "Votre compte a été refusé par un administrateur. Veuillez contacter le support pour plus d'informations.",
 
   // Login page UI
   clientPortal: 'Portail Client',
   secureCustomerAccess: 'Accès Client Sécurisé',
   loginHeroTitle: 'Commandez plus intelligemment,',
   loginHeroSubtitle: 'livré plus vite.',
-  loginHeroDesc: 'Parcourez votre catalogue, passez des commandes et suivez vos livraisons — en un seul endroit.',
+  loginHeroDesc:
+    'Parcourez votre catalogue, passez des commandes et suivez vos livraisons — en un seul endroit.',
   loginFeatureEasyOrdering: 'Commande Facile',
   loginFeatureOrderTracking: 'Suivi de Commande',
   loginFeatureFastDelivery: 'Livraison Rapide',

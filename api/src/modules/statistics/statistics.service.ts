@@ -60,7 +60,7 @@ export class StatisticsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get tenantSlug(): string {
     return this.tenantConnService.getCurrentTenantSlug();
@@ -68,6 +68,18 @@ export class StatisticsService {
 
   private statsKey(suffix: string): string {
     return `tenant:${this.tenantSlug}:statistics:${suffix}`;
+  }
+
+  private async withCache<T>(
+    key: string,
+    ttl: number,
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    const cached = await this.cacheManager.get<T>(key);
+    if (cached) return cached;
+    const value = await fn();
+    await this.cacheManager.set(key, value, ttl);
+    return value;
   }
 
   async invalidateStatsCache(): Promise<void> {
@@ -106,102 +118,110 @@ export class StatisticsService {
     startDate?: Date,
     endDate?: Date,
   ): Promise<OrderStatistics> {
-    const key = this.statsKey(`overview:${startDate?.toISOString() ?? ''}:${endDate?.toISOString() ?? ''}`);
-    const cached = await this.cacheManager.get<OrderStatistics>(key);
-    if (cached) return cached;
+    return this.withCache<OrderStatistics>(
+      this.statsKey(
+        `overview:${startDate?.toISOString() ?? ''}:${endDate?.toISOString() ?? ''}`,
+      ),
+      STATS_TTL,
+      async () => {
+        const queryBuilder = this.orderRepository
+          .createQueryBuilder('order')
+          .select('COUNT(*)', 'totalOrders')
+          .addSelect('SUM(order.total)', 'totalRevenue')
+          .addSelect('AVG(order.total)', 'averageOrderValue');
 
-    const queryBuilder = this.orderRepository
-      .createQueryBuilder('order')
-      .select('COUNT(*)', 'totalOrders')
-      .addSelect('SUM(order.total)', 'totalRevenue')
-      .addSelect('AVG(order.total)', 'averageOrderValue');
+        if (startDate) {
+          queryBuilder.andWhere('order.date >= :startDate', { startDate });
+        }
+        if (endDate) {
+          queryBuilder.andWhere('order.date <= :endDate', { endDate });
+        }
 
-    if (startDate) {
-      queryBuilder.andWhere('order.date >= :startDate', { startDate });
-    }
-    if (endDate) {
-      queryBuilder.andWhere('order.date <= :endDate', { endDate });
-    }
+        const result = await queryBuilder.getRawOne<{
+          totalOrders: string;
+          totalRevenue: string;
+          averageOrderValue: string;
+        }>();
 
-    const result = await queryBuilder.getRawOne<{
-      totalOrders: string;
-      totalRevenue: string;
-      averageOrderValue: string;
-    }>();
+        // Get order counts by delivery status
+        const statusCounts = await this.getOrderCountsByStatus(
+          startDate,
+          endDate,
+        );
 
-    // Get order counts by delivery status
-    const statusCounts = await this.getOrderCountsByStatus(startDate, endDate);
+        // Get total customers
+        const totalCustomers = await this.partnerRepository.count({
+          where: { isCustomer: true },
+        });
 
-    // Get total customers
-    const totalCustomers = await this.partnerRepository.count({
-      where: { isCustomer: true },
-    });
+        // Get active delivery persons
+        const activeDeliveryPersons = await this.deliveryPersonRepository.count(
+          {
+            where: { isActive: true },
+          },
+        );
 
-    // Get active delivery persons
-    const activeDeliveryPersons = await this.deliveryPersonRepository.count({
-      where: { isActive: true },
-    });
+        const stats: OrderStatistics = {
+          totalOrders: parseInt(result?.totalOrders || '0', 10),
+          totalRevenue: parseFloat(result?.totalRevenue || '0'),
+          averageOrderValue: parseFloat(result?.averageOrderValue || '0'),
+          totalCustomers,
+          pendingOrders: statusCounts.pending,
+          inDeliveryOrders: statusCounts.inDelivery,
+          deliveredOrders: statusCounts.delivered,
+          cancelledOrders: statusCounts.cancelled,
+          activeDeliveryPersons,
+        };
 
-    const stats: OrderStatistics = {
-      totalOrders: parseInt(result?.totalOrders || '0', 10),
-      totalRevenue: parseFloat(result?.totalRevenue || '0'),
-      averageOrderValue: parseFloat(result?.averageOrderValue || '0'),
-      totalCustomers,
-      pendingOrders: statusCounts.pending,
-      inDeliveryOrders: statusCounts.inDelivery,
-      deliveredOrders: statusCounts.delivered,
-      cancelledOrders: statusCounts.cancelled,
-      activeDeliveryPersons,
-    };
-
-    await this.cacheManager.set(key, stats, STATS_TTL);
-    return stats;
+        return stats;
+      },
+    );
   }
 
   async getTopProducts(limit = 5): Promise<TopProduct[]> {
-    const key = this.statsKey(`top:${limit}`);
-    const cached = await this.cacheManager.get<TopProduct[]>(key);
-    if (cached) return cached;
+    return this.withCache<TopProduct[]>(
+      this.statsKey(`top:${limit}`),
+      STATS_TTL,
+      async () => {
+        const result = await this.orderRepository
+          .createQueryBuilder('order')
+          .innerJoin('order.items', 'item')
+          .innerJoin('item.product', 'product')
+          .select('product.id', 'productId')
+          .addSelect('product.name', 'productName')
+          .addSelect('SUM(item.quantity)', 'sales')
+          .addSelect('SUM(item.quantity * item.unitPrice)', 'revenue')
+          .groupBy('product.id')
+          .addGroupBy('product.name')
+          .orderBy('revenue', 'DESC')
+          .limit(limit)
+          .getRawMany();
 
-    const result = await this.orderRepository
-      .createQueryBuilder('order')
-      .innerJoin('order.items', 'item')
-      .innerJoin('item.product', 'product')
-      .select('product.id', 'productId')
-      .addSelect('product.name', 'productName')
-      .addSelect('SUM(item.quantity)', 'sales')
-      .addSelect('SUM(item.quantity * item.unitPrice)', 'revenue')
-      .groupBy('product.id')
-      .addGroupBy('product.name')
-      .orderBy('revenue', 'DESC')
-      .limit(limit)
-      .getRawMany();
+        const products = result.map((row) => ({
+          productId: parseInt(row.productId, 10),
+          productName: row.productName,
+          sales: parseInt(row.sales, 10) || 0,
+          revenue: parseFloat(row.revenue) || 0,
+        }));
 
-    const products = result.map((row) => ({
-      productId: parseInt(row.productId, 10),
-      productName: row.productName,
-      sales: parseInt(row.sales, 10) || 0,
-      revenue: parseFloat(row.revenue) || 0,
-    }));
-
-    await this.cacheManager.set(key, products, STATS_TTL);
-    return products;
+        return products;
+      },
+    );
   }
 
   async getComprehensiveStats(days = 7): Promise<ComprehensiveStats> {
-    const key = this.statsKey(`comprehensive:${days}`);
-    const cached = await this.cacheManager.get<ComprehensiveStats>(key);
-    if (cached) return cached;
-
-    const [overview, dailyStats, topProducts] = await Promise.all([
-      this.getOrderStatistics(),
-      this.getDailyStats(days),
-      this.getTopProducts(5),
-    ]);
-
-    const stats = { overview, dailyStats, topProducts };
-    await this.cacheManager.set(key, stats, STATS_TTL);
-    return stats;
+    return this.withCache<ComprehensiveStats>(
+      this.statsKey(`comprehensive:${days}`),
+      STATS_TTL,
+      async () => {
+        const [overview, dailyStats, topProducts] = await Promise.all([
+          this.getOrderStatistics(),
+          this.getDailyStats(days),
+          this.getTopProducts(5),
+        ]);
+        return { overview, dailyStats, topProducts };
+      },
+    );
   }
 
   private async getOrderCountsByStatus(
@@ -253,156 +273,161 @@ export class StatisticsService {
   }
 
   async getDailyStats(days = 7): Promise<DailyStats[]> {
-    const key = this.statsKey(`daily:${days}`);
-    const cached = await this.cacheManager.get<DailyStats[]>(key);
-    if (cached) return cached;
+    return this.withCache<DailyStats[]>(
+      this.statsKey(`daily:${days}`),
+      STATS_TTL,
+      async () => {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
 
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+        const result = await this.orderRepository
+          .createQueryBuilder('order')
+          .select('DATE(order.date)', 'date')
+          .addSelect('COUNT(*)', 'orders')
+          .addSelect('SUM(order.total)', 'revenue')
+          .addSelect(
+            `SUM(CASE WHEN order.deliveryStatus = '${DeliveryStatus.PENDING}' THEN 1 ELSE 0 END)`,
+            'newOrders',
+          )
+          .addSelect(
+            `SUM(CASE WHEN order.deliveryStatus = '${DeliveryStatus.DELIVERED}' THEN 1 ELSE 0 END)`,
+            'delivered',
+          )
+          .addSelect(
+            `SUM(CASE WHEN order.deliveryStatus = '${DeliveryStatus.CANCELED}' THEN 1 ELSE 0 END)`,
+            'cancelled',
+          )
+          .where('order.date >= :startDate', { startDate })
+          .groupBy('DATE(order.date)')
+          .orderBy('DATE(order.date)', 'ASC')
+          .getRawMany();
 
-    const result = await this.orderRepository
-      .createQueryBuilder('order')
-      .select('DATE(order.date)', 'date')
-      .addSelect('COUNT(*)', 'orders')
-      .addSelect('SUM(order.total)', 'revenue')
-      .addSelect(
-        `SUM(CASE WHEN order.deliveryStatus = '${DeliveryStatus.PENDING}' THEN 1 ELSE 0 END)`,
-        'newOrders',
-      )
-      .addSelect(
-        `SUM(CASE WHEN order.deliveryStatus = '${DeliveryStatus.DELIVERED}' THEN 1 ELSE 0 END)`,
-        'delivered',
-      )
-      .addSelect(
-        `SUM(CASE WHEN order.deliveryStatus = '${DeliveryStatus.CANCELED}' THEN 1 ELSE 0 END)`,
-        'cancelled',
-      )
-      .where('order.date >= :startDate', { startDate })
-      .groupBy('DATE(order.date)')
-      .orderBy('DATE(order.date)', 'ASC')
-      .getRawMany();
+        const daily = result.map((row) => ({
+          date: row.date,
+          orders: parseInt(row.orders, 10) || 0,
+          revenue: parseFloat(row.revenue) || 0,
+          newOrders: parseInt(row.newOrders, 10) || 0,
+          delivered: parseInt(row.delivered, 10) || 0,
+          cancelled: parseInt(row.cancelled, 10) || 0,
+        }));
 
-    const daily = result.map((row) => ({
-      date: row.date,
-      orders: parseInt(row.orders, 10) || 0,
-      revenue: parseFloat(row.revenue) || 0,
-      newOrders: parseInt(row.newOrders, 10) || 0,
-      delivered: parseInt(row.delivered, 10) || 0,
-      cancelled: parseInt(row.cancelled, 10) || 0,
-    }));
-
-    await this.cacheManager.set(key, daily, STATS_TTL);
-    return daily;
+        return daily;
+      },
+    );
   }
 
   async getRecentActivities(limit = 10): Promise<RecentActivity[]> {
-    const key = this.statsKey(`recent:${limit}`);
-    const cached = await this.cacheManager.get<RecentActivity[]>(key);
-    if (cached) return cached;
+    return this.withCache<RecentActivity[]>(
+      this.statsKey(`recent:${limit}`),
+      120_000,
+      async () => {
+        const activities: RecentActivity[] = [];
+        const now = new Date();
+        const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    const activities: RecentActivity[] = [];
-    const now = new Date();
-    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        // Get recent orders
+        const recentOrders = await this.orderRepository
+          .createQueryBuilder('order')
+          .leftJoinAndSelect('order.customer', 'customer')
+          .where('order.dateCreated >= :startDate', { startDate: last24Hours })
+          .orderBy('order.dateCreated', 'DESC')
+          .limit(5)
+          .getMany();
 
-    // Get recent orders
-    const recentOrders = await this.orderRepository
-      .createQueryBuilder('order')
-      .leftJoinAndSelect('order.customer', 'customer')
-      .where('order.dateCreated >= :startDate', { startDate: last24Hours })
-      .orderBy('order.dateCreated', 'DESC')
-      .limit(5)
-      .getMany();
+        for (const order of recentOrders) {
+          if (order.deliveryStatus === DeliveryStatus.DELIVERED) {
+            activities.push({
+              type: 'order',
+              title: 'Delivered',
+              description: `Order #${order.documentNumber} delivered successfully`,
+              timestamp: order.deliveredAt || order.dateCreated,
+              value: order.total,
+              orderId: order.id,
+            });
+          } else {
+            activities.push({
+              type: 'order',
+              title: 'New Order Received',
+              description: `Order #${order.documentNumber} from ${order.customerName || 'Customer'}`,
+              timestamp: order.dateCreated,
+              value: order.total,
+              orderId: order.id,
+            });
+          }
+        }
 
-    for (const order of recentOrders) {
-      if (order.deliveryStatus === DeliveryStatus.DELIVERED) {
-        activities.push({
-          type: 'order',
-          title: 'Delivered',
-          description: `Order #${order.documentNumber} delivered successfully`,
-          timestamp: order.deliveredAt || order.dateCreated,
-          value: order.total,
-          orderId: order.id,
-        });
-      } else {
-        activities.push({
-          type: 'order',
-          title: 'New Order Received',
-          description: `Order #${order.documentNumber} from ${order.customerName || 'Customer'}`,
-          timestamp: order.dateCreated,
-          value: order.total,
-          orderId: order.id,
-        });
-      }
-    }
+        // Get recently registered customers
+        const recentCustomers = await this.partnerRepository
+          .createQueryBuilder('partner')
+          .where('partner.isCustomer = :isCustomer', { isCustomer: true })
+          .andWhere('partner.dateCreated >= :startDate', {
+            startDate: last24Hours,
+          })
+          .orderBy('partner.dateCreated', 'DESC')
+          .limit(3)
+          .getMany();
 
-    // Get recently registered customers
-    const recentCustomers = await this.partnerRepository
-      .createQueryBuilder('partner')
-      .where('partner.isCustomer = :isCustomer', { isCustomer: true })
-      .andWhere('partner.dateCreated >= :startDate', { startDate: last24Hours })
-      .orderBy('partner.dateCreated', 'DESC')
-      .limit(3)
-      .getMany();
+        for (const customer of recentCustomers) {
+          activities.push({
+            type: 'customer',
+            title: 'New Customer',
+            description: `${customer.name} registered`,
+            timestamp: customer.dateCreated,
+            customerId: customer.id,
+          });
+        }
 
-    for (const customer of recentCustomers) {
-      activities.push({
-        type: 'customer',
-        title: 'New Customer',
-        description: `${customer.name} registered`,
-        timestamp: customer.dateCreated,
-        customerId: customer.id,
-      });
-    }
+        // Get low stock products (assuming there's a stock field)
+        const lowStockProducts = await this.productRepository
+          .createQueryBuilder('product')
+          .where('product.stock <= :threshold', { threshold: 10 })
+          .andWhere('product.stock > 0')
+          .orderBy('product.stock', 'ASC')
+          .limit(2)
+          .getMany();
 
-    // Get low stock products (assuming there's a stock field)
-    const lowStockProducts = await this.productRepository
-      .createQueryBuilder('product')
-      .where('product.stock <= :threshold', { threshold: 10 })
-      .andWhere('product.stock > 0')
-      .orderBy('product.stock', 'ASC')
-      .limit(2)
-      .getMany();
+        for (const product of lowStockProducts) {
+          activities.push({
+            type: 'product',
+            title: 'Low Stock',
+            description: `${product.name} needs restocking (${product.stock} remaining)`,
+            timestamp: new Date(
+              now.getTime() - Math.random() * 3 * 60 * 60 * 1000,
+            ), // Random time in last 3 hours
+            productId: product.id,
+          });
+        }
 
-    for (const product of lowStockProducts) {
-      activities.push({
-        type: 'product',
-        title: 'Low Stock',
-        description: `${product.name} needs restocking (${product.stock} remaining)`,
-        timestamp: new Date(now.getTime() - Math.random() * 3 * 60 * 60 * 1000), // Random time in last 3 hours
-        productId: product.id,
-      });
-    }
+        // Calculate daily revenue goal
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
 
-    // Calculate daily revenue goal
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+        const todayRevenue = await this.orderRepository
+          .createQueryBuilder('order')
+          .select('SUM(order.total)', 'total')
+          .where('order.date >= :todayStart', { todayStart })
+          .getRawOne<{ total: string }>();
 
-    const todayRevenue = await this.orderRepository
-      .createQueryBuilder('order')
-      .select('SUM(order.total)', 'total')
-      .where('order.date >= :todayStart', { todayStart })
-      .getRawOne<{ total: string }>();
+        const revenue = parseFloat(todayRevenue?.total || '0');
+        const dailyGoal = 3000; // You can make this configurable
+        const percentage = Math.min(100, (revenue / dailyGoal) * 100);
 
-    const revenue = parseFloat(todayRevenue?.total || '0');
-    const dailyGoal = 3000; // You can make this configurable
-    const percentage = Math.min(100, (revenue / dailyGoal) * 100);
+        if (percentage > 0) {
+          activities.push({
+            type: 'revenue',
+            title: 'Daily Goal',
+            description: `Reached ${percentage.toFixed(0)}% of daily revenue goal`,
+            timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+            value: revenue,
+          });
+        }
 
-    if (percentage > 0) {
-      activities.push({
-        type: 'revenue',
-        title: 'Daily Goal',
-        description: `Reached ${percentage.toFixed(0)}% of daily revenue goal`,
-        timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
-        value: revenue,
-      });
-    }
-
-    // Sort all activities by timestamp (most recent first)
-    activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    const result = activities.slice(0, limit);
-
-    // Short TTL for recent activities (2 min) since data is time-sensitive
-    await this.cacheManager.set(key, result, 120_000);
-    return result;
+        // Sort all activities by timestamp (most recent first)
+        activities.sort(
+          (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
+        );
+        return activities.slice(0, limit);
+      },
+    );
   }
 }

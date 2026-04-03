@@ -1,0 +1,12 @@
+{
+  "name": "orderium-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "prepare": "husky",
+    "lint:all": "pnpm --filter './backoffice' lint && pnpm --filter './client' lint && pnpm --filter './delivery-portal' lint && pnpm --filter './tenant-dashboard' lint && pnpm --filter './api' lint"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

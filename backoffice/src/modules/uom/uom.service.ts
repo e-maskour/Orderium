@@ -35,7 +35,11 @@ export class UomService {
   }
 
   async convertQuantity(quantity: number, fromUomId: number, toUomId: number): Promise<number> {
-    const response = await apiClient.post<any>(API_ROUTES.UOM.CONVERT, { quantity, fromUomId, toUomId });
+    const response = await apiClient.post<any>(API_ROUTES.UOM.CONVERT, {
+      quantity,
+      fromUomId,
+      toUomId,
+    });
     return response.data.convertedQuantity;
   }
 }

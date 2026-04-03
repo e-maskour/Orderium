@@ -1,4 +1,9 @@
-import { IInventoryAdjustment, IAdjustmentLine, AdjustmentStatus, UpdateInventoryAdjustmentDTO } from './inventory-adjustments.interface';
+import {
+  IInventoryAdjustment,
+  IAdjustmentLine,
+  AdjustmentStatus,
+  UpdateInventoryAdjustmentDTO,
+} from './inventory-adjustments.interface';
 
 export class InventoryAdjustment implements IInventoryAdjustment {
   id: number;

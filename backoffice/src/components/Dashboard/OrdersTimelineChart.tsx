@@ -122,21 +122,31 @@ export const OrdersTimelineChart: React.FC<OrdersTimelineChartProps> = ({ data }
     <div className="db-chart-card">
       <div className="db-chart-header">
         <div className="db-chart-header-left">
-          <div className="db-chart-icon" style={{
-            background: 'linear-gradient(135deg,#10b981,#059669)',
-            boxShadow: '0 4px 10px rgba(16,185,129,0.28)',
-          }}>
-            <Activity style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          <div
+            className="db-chart-icon"
+            style={{
+              background: 'linear-gradient(135deg,#10b981,#059669)',
+              boxShadow: '0 4px 10px rgba(16,185,129,0.28)',
+            }}
+          >
+            <Activity
+              style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }}
+              strokeWidth={2}
+            />
           </div>
           <div>
             <h3 className="db-chart-title">{t('ordersTimeline')}</h3>
             <p className="db-chart-subtitle">{t('dailyOrdersFlow')}</p>
           </div>
         </div>
-        <span className="db-chart-badge" style={{
-          background: '#ecfdf5', color: '#059669',
-          border: '1px solid #a7f3d0',
-        }}>
+        <span
+          className="db-chart-badge"
+          style={{
+            background: '#ecfdf5',
+            color: '#059669',
+            border: '1px solid #a7f3d0',
+          }}
+        >
           {t('newOrders')} · {t('delivered')} · {t('cancelled')}
         </span>
       </div>

@@ -78,10 +78,22 @@ export class Invoice extends BaseDocument {
   @Column({ type: 'text', nullable: true })
   pdfUrl: string | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   paidAmount: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   remainingAmount: number;
 
   @Column({ type: 'varchar', length: 100, nullable: true, unique: true })

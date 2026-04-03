@@ -47,7 +47,8 @@ export default {
   unassignOrder: 'Désassigner la commande',
   unassignOrderConfirm: 'Êtes-vous sûr de vouloir désassigner cette commande ?',
   cancelDelivery: 'Annuler la commande',
-  confirmCancelDelivery: 'Êtes-vous sûr de vouloir annuler la livraison ? Cette action ne peut pas être annulée.',
+  confirmCancelDelivery:
+    'Êtes-vous sûr de vouloir annuler la livraison ? Cette action ne peut pas être annulée.',
 
   // Order Notifications
   orderAssigned: 'Commande assignée avec succès',
@@ -57,14 +58,14 @@ export default {
   orderCreatedSuccessfully: 'Commande créée avec succès',
   ordersAssigned: 'commandes assignées',
   ordersSkippedNotPending: 'commandes ignorées (pas en attente)',
-  failedToAssign: 'Échec d\'assignation',
+  failedToAssign: "Échec d'assignation",
   failedToUnassign: 'Échec de désassignation',
   failedToDelete: 'Échec de la suppression',
   deliveryCanceled: 'Livraison annulée avec succès',
-  failedToCancelDelivery: 'Échec de l\'annulation de la livraison',
+  failedToCancelDelivery: "Échec de l'annulation de la livraison",
 
   // Search & Filter
-  searchPlaceholder: 'Rechercher par n° commande, client, téléphone ou livreur...',
+  searchPlaceholder: 'Rechercher par N° commande, client, téléphone...',
   filterByStatus: 'Filtrer par statut',
   filters: 'Filtres',
   dateRange: 'Plage de dates',
@@ -78,15 +79,16 @@ export default {
 
   // KPIs
   totalOrders: 'Total des commandes',
-  ordersToday: 'Commandes aujourd\'hui',
+  ordersToday: "Commandes aujourd'hui",
   totalRevenue: 'Revenu total',
-  revenueToday: 'Revenu aujourd\'hui',
+  revenueToday: "Revenu aujourd'hui",
 
   // Order Actions - Bulk
   deleteOrders: 'Supprimer les commandes',
   ordersDeleted: 'Commandes supprimées avec succès',
-  confirmDeleteOrders: 'Êtes-vous sûr de vouloir supprimer les commandes ? Cette action ne peut pas être annulée.',
-  selectOneOrder: 'Veuillez sélectionner une seule commande pour l\'aperçu',
+  confirmDeleteOrders:
+    'Êtes-vous sûr de vouloir supprimer les commandes ? Cette action ne peut pas être annulée.',
+  selectOneOrder: "Veuillez sélectionner une seule commande pour l'aperçu",
 
   // Additional
   previewReceipt: 'Reçu',
@@ -97,7 +99,8 @@ export default {
   orderStatus: 'Statut commande',
 
   // Empty states
-  noOrdersMatchFilter: 'Aucune commande ne correspond à vos critères de recherche. Essayez de modifier les filtres.',
+  noOrdersMatchFilter:
+    'Aucune commande ne correspond à vos critères de recherche. Essayez de modifier les filtres.',
   noOrdersYet: 'Aucune commande pour le moment. Les nouvelles commandes apparaîtront ici.',
 
   // Order detail page
@@ -137,7 +140,7 @@ export default {
   searchCaisse: 'Rechercher par n° commande ou client...',
   noOrdersWithPayments: 'Aucune commande trouvée',
   quickPay: 'Payer le reste',
-  viewHistory: 'Voir l\'historique',
+  viewHistory: "Voir l'historique",
   paymentsCount: 'paiement(s)',
   paymentRecorded: 'Paiement enregistré avec succès',
 };

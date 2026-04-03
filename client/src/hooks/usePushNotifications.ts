@@ -12,6 +12,7 @@ import {
   getPlatform,
 } from '../services/firebase';
 import { http, API_BASE_URL } from '../services/httpClient';
+import { API_ROUTES } from '../common/api-routes';
 
 export type NotificationPermissionStatus = NotificationPermission | 'unsupported' | 'loading';
 
@@ -43,7 +44,7 @@ const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '';
  */
 export function usePushNotifications(
   userId?: number,
-  onNotification?: (payload: MessagePayload) => void
+  onNotification?: (payload: MessagePayload) => void,
 ): UsePushNotificationsReturn {
   const [state, setState] = useState<PushNotificationState>({
     isSupported: false,
@@ -187,7 +188,7 @@ export function usePushNotifications(
       const deviceInfo = getDeviceInfo();
       const platform = getPlatform();
 
-      await http(`/api/notifications/device-token/${userId}`, {
+      await http(API_ROUTES.NOTIFICATIONS.DEVICE_TOKEN(userId), {
         method: 'POST',
         body: JSON.stringify({
           token,
@@ -208,59 +209,62 @@ export function usePushNotifications(
   };
 
   // Register token
-  const registerToken = useCallback(async (userId: number): Promise<boolean> => {
-    if (!state.isSupported) {
-      return false;
-    }
-
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      // Request permission if not granted
-      if (state.permission !== 'granted') {
-        const granted = await requestPermission();
-        if (!granted) {
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: 'Notification permission denied',
-          }));
-          return false;
-        }
-      }
-
-      const token = await getFCMToken();
-      if (!token) {
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: 'Failed to get FCM token',
-        }));
+  const registerToken = useCallback(
+    async (userId: number): Promise<boolean> => {
+      if (!state.isSupported) {
         return false;
       }
 
-      localStorage.setItem(TOKEN_STORAGE_KEY, token);
-      setState((prev) => ({ ...prev, token }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      // Register with server
-      const success = await registerTokenToServer(userId, token);
+      try {
+        // Request permission if not granted
+        if (state.permission !== 'granted') {
+          const granted = await requestPermission();
+          if (!granted) {
+            setState((prev) => ({
+              ...prev,
+              isLoading: false,
+              error: 'Notification permission denied',
+            }));
+            return false;
+          }
+        }
 
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: success ? null : 'Failed to register token with server',
-      }));
+        const token = await getFCMToken();
+        if (!token) {
+          setState((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: 'Failed to get FCM token',
+          }));
+          return false;
+        }
 
-      return success;
-    } catch (error) {
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to register token',
-      }));
-      return false;
-    }
-  }, [state.isSupported, state.permission, state.token, requestPermission]);
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        setState((prev) => ({ ...prev, token }));
+
+        // Register with server
+        const success = await registerTokenToServer(userId, token);
+
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: success ? null : 'Failed to register token with server',
+        }));
+
+        return success;
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Failed to register token',
+        }));
+        return false;
+      }
+    },
+    [state.isSupported, state.permission, state.token, requestPermission],
+  );
 
   // Auto-register token when userId changes and permission is granted
   useEffect(() => {
@@ -279,7 +283,7 @@ export function usePushNotifications(
     }
 
     try {
-      await http('/api/notifications/device-token', {
+      await http(API_ROUTES.NOTIFICATIONS.DEVICE_TOKEN_DELETE, {
         method: 'DELETE',
         body: JSON.stringify({ token }),
       });
@@ -307,7 +311,7 @@ export function usePushNotifications(
         setState((prev) => ({ ...prev, token }));
 
         // Refresh on server
-        await http(`/api/notifications/device-token/${token}/refresh`, {
+        await http(API_ROUTES.NOTIFICATIONS.DEVICE_TOKEN_REFRESH(token), {
           method: 'PATCH',
         });
       }

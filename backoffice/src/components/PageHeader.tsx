@@ -12,7 +12,6 @@ interface PageHeaderProps {
 export function PageHeader({ icon: Icon, title, subtitle, actions, backButton }: PageHeaderProps) {
   return (
     <div className="page-header">
-
       {/* Decorative circles */}
       <div className="page-header__deco page-header__deco--top" />
       <div className="page-header__deco page-header__deco--bottom" />
@@ -34,11 +33,7 @@ export function PageHeader({ icon: Icon, title, subtitle, actions, backButton }:
       </div>
 
       {/* Right: actions */}
-      {actions && (
-        <div className="page-header__actions">
-          {actions}
-        </div>
-      )}
+      {actions && <div className="page-header__actions">{actions}</div>}
     </div>
   );
 }

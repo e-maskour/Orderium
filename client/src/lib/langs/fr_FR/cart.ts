@@ -32,7 +32,7 @@ export default {
   orderNumber: 'Numéro de commande',
   thankYou: 'Merci pour votre commande',
   orderConfirmation: 'Nous vous contacterons bientôt pour confirmer',
-  backToHome: 'Retour à l\'accueil',
+  backToHome: "Retour à l'accueil",
   orderCreationError: 'Erreur lors de la création de la commande',
   removeFromCart: 'Retirer du panier',
 };

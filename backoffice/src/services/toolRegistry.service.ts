@@ -51,7 +51,7 @@ export class ToolRegistry {
    * Get tools accessible by user (filtered by permissions)
    */
   getToolsForUser(context: AppContext): ToolDefinition[] {
-    return this.getAllTools().filter(tool => {
+    return this.getAllTools().filter((tool) => {
       const permCheck = this.checkPermissions(tool, context);
       return permCheck.allowed;
     });
@@ -60,10 +60,7 @@ export class ToolRegistry {
   /**
    * Execute a tool with full safety checks
    */
-  async execute(
-    toolCall: ToolCall,
-    context: AppContext
-  ): Promise<ToolResult> {
+  async execute(toolCall: ToolCall, context: AppContext): Promise<ToolResult> {
     const startTime = Date.now();
     const tool = this.tools.get(toolCall.function.name);
 
@@ -74,9 +71,10 @@ export class ToolRegistry {
     // Parse arguments (handle both string and object)
     let params: any;
     try {
-      params = typeof toolCall.function.arguments === 'string'
-        ? JSON.parse(toolCall.function.arguments)
-        : toolCall.function.arguments;
+      params =
+        typeof toolCall.function.arguments === 'string'
+          ? JSON.parse(toolCall.function.arguments)
+          : toolCall.function.arguments;
     } catch {
       return this.createErrorResult(toolCall.id, 'Invalid JSON arguments');
     }
@@ -118,11 +116,10 @@ export class ToolRegistry {
       });
 
       return result;
-
     } catch (error) {
       const errorResult = this.createErrorResult(
         toolCall.id,
-        error instanceof Error ? error.message : 'Unknown error'
+        error instanceof Error ? error.message : 'Unknown error',
       );
 
       this.logExecution({
@@ -143,7 +140,7 @@ export class ToolRegistry {
 
   private checkPermissions(
     tool: ToolDefinition,
-    context: AppContext
+    context: AppContext,
   ): { allowed: boolean; reason?: string } {
     const { permissions } = tool;
 
@@ -180,7 +177,7 @@ export class ToolRegistry {
 
     // Get recent executions
     const recent = this.rateLimitTracking.get(key) || [];
-    const filtered = recent.filter(ts => ts > oneMinuteAgo);
+    const filtered = recent.filter((ts) => ts > oneMinuteAgo);
 
     if (filtered.length >= tool.permissions.rateLimitPerMinute) {
       return false;
@@ -215,7 +212,7 @@ export class ToolRegistry {
     }
 
     // Store in localStorage for persistence
-    this.persistToLocalStorage(log).catch(err => {
+    this.persistToLocalStorage(log).catch((err) => {
       console.error('Failed to persist audit log:', err);
     });
   }
@@ -249,11 +246,11 @@ export class ToolRegistry {
     let logs = this.executionLogs;
 
     if (filter?.userId) {
-      logs = logs.filter(log => log.context.userId === filter.userId);
+      logs = logs.filter((log) => log.context.userId === filter.userId);
     }
 
     if (filter?.toolName) {
-      logs = logs.filter(log => log.toolName === filter.toolName);
+      logs = logs.filter((log) => log.toolName === filter.toolName);
     }
 
     return logs;

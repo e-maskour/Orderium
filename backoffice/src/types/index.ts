@@ -72,7 +72,7 @@ export enum InvoiceStatus {
   DRAFT = 'draft',
   UNPAID = 'unpaid',
   PARTIAL = 'partial',
-  PAID = 'paid'
+  PAID = 'paid',
 }
 
 export interface Invoice {

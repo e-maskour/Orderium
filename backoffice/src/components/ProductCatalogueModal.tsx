@@ -176,7 +176,7 @@ export function ProductCatalogueModal({
   onClose,
   onItemsChange,
   currentItems,
-  type = 'vente'
+  type = 'vente',
 }: ProductCatalogueModalProps) {
   const [allProducts, setAllProducts] = useState<IProduct[]>([]);
   const [catalogueLoading, setCatalogueLoading] = useState(false);
@@ -186,15 +186,14 @@ export function ProductCatalogueModal({
   const isVente = type === 'vente';
 
   const getProductQuantity = (productId: number): number => {
-    const item = currentItems.find(item => item.productId === productId);
+    const item = currentItems.find((item) => item.productId === productId);
     return item ? item.quantity : 0;
   };
 
   const calculateItemTotal = (item: InvoiceItemRow): number => {
     const subtotal = item.quantity * item.unitPrice;
-    const discountAmount = item.discountType === 1
-      ? (subtotal * item.discount / 100)
-      : item.discount;
+    const discountAmount =
+      item.discountType === 1 ? (subtotal * item.discount) / 100 : item.discount;
     const afterDiscount = subtotal - discountAmount;
     const taxAmount = afterDiscount * (item.tax / 100);
     return afterDiscount + taxAmount;
@@ -202,7 +201,7 @@ export function ProductCatalogueModal({
 
   const updateProductQuantity = (product: IProduct, newQuantity: number) => {
     const updatedItems = [...currentItems];
-    const existingItemIndex = updatedItems.findIndex(item => item.productId === product.id);
+    const existingItemIndex = updatedItems.findIndex((item) => item.productId === product.id);
 
     if (newQuantity <= 0) {
       if (existingItemIndex !== -1) {
@@ -212,7 +211,7 @@ export function ProductCatalogueModal({
       if (existingItemIndex !== -1) {
         const updated = {
           ...updatedItems[existingItemIndex],
-          quantity: newQuantity
+          quantity: newQuantity,
         };
         updated.total = calculateItemTotal(updated);
         updatedItems[existingItemIndex] = updated;
@@ -222,11 +221,11 @@ export function ProductCatalogueModal({
           productId: product.id,
           description: product.name,
           quantity: newQuantity,
-          unitPrice: isVente ? product.price : (product.cost || product.price),
+          unitPrice: isVente ? product.price : product.cost || product.price,
           discount: 0,
           discountType: 0,
           tax: (isVente ? product.saleTax : product.purchaseTax) || 0,
-          total: 0
+          total: 0,
         };
         newItem.total = calculateItemTotal(newItem);
         updatedItems.push(newItem);
@@ -256,10 +255,11 @@ export function ProductCatalogueModal({
     }
   }, [isOpen]);
 
-  const filteredProducts = allProducts.filter(product =>
-    product.name.toLowerCase().includes(catalogueSearch.toLowerCase()) ||
-    product.code?.toLowerCase().includes(catalogueSearch.toLowerCase()) ||
-    product.description?.toLowerCase().includes(catalogueSearch.toLowerCase())
+  const filteredProducts = allProducts.filter(
+    (product) =>
+      product.name.toLowerCase().includes(catalogueSearch.toLowerCase()) ||
+      product.code?.toLowerCase().includes(catalogueSearch.toLowerCase()) ||
+      product.description?.toLowerCase().includes(catalogueSearch.toLowerCase()),
   );
 
   const handleClose = () => {
@@ -267,46 +267,78 @@ export function ProductCatalogueModal({
     onClose();
   };
 
-  const selectedCount = currentItems.filter(item => item.productId).length;
+  const selectedCount = currentItems.filter((item) => item.productId).length;
 
   const headerContent = (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-      <div style={{
-        width: '2.5rem', height: '2.5rem', flexShrink: 0,
-        background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-        borderRadius: '0.6875rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 3px 10px rgba(35,90,228,0.4)'
-      }}>
+      <div
+        style={{
+          width: '2.5rem',
+          height: '2.5rem',
+          flexShrink: 0,
+          background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+          borderRadius: '0.6875rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 3px 10px rgba(35,90,228,0.4)',
+        }}
+      >
         <ShoppingBag style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />
       </div>
       <div>
-        <div style={{ fontWeight: 700, fontSize: '1.0625rem', color: '#0f172a' }}>Catalogue des produits</div>
+        <div style={{ fontWeight: 700, fontSize: '1.0625rem', color: '#0f172a' }}>
+          Catalogue des produits
+        </div>
         <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.125rem' }}>
-          {selectedCount > 0
-            ? <span style={{ color: '#235ae4', fontWeight: 600 }}>{selectedCount} produit{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1 ? 's' : ''}</span>
-            : 'Sélectionnez des produits à ajouter'
-          }
+          {selectedCount > 0 ? (
+            <span style={{ color: '#235ae4', fontWeight: 600 }}>
+              {selectedCount} produit{selectedCount > 1 ? 's' : ''} sélectionné
+              {selectedCount > 1 ? 's' : ''}
+            </span>
+          ) : (
+            'Sélectionnez des produits à ajouter'
+          )}
         </div>
       </div>
     </div>
   );
 
   const footerContent = (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0.25rem 0' }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        padding: '0.25rem 0',
+      }}
+    >
       <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
-        {filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''} affiché{filteredProducts.length !== 1 ? 's' : ''}
+        {filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''} affiché
+        {filteredProducts.length !== 1 ? 's' : ''}
       </span>
       <Button
         label="Terminé"
         onClick={handleClose}
-        style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none', boxShadow: '0 2px 8px rgba(35,90,228,0.35)', fontWeight: 600 }}
+        style={{
+          background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+          border: 'none',
+          boxShadow: '0 2px 8px rgba(35,90,228,0.35)',
+          fontWeight: 600,
+        }}
       />
     </div>
   );
 
   const getStockBadge = (stock?: number | null) => {
     if (stock === undefined || stock === null) return null;
-    const cls = stock === 0 ? 'pcat-stock pcat-stock-zero' : stock <= 5 ? 'pcat-stock pcat-stock-low' : 'pcat-stock pcat-stock-ok';
+    const cls =
+      stock === 0
+        ? 'pcat-stock pcat-stock-zero'
+        : stock <= 5
+          ? 'pcat-stock pcat-stock-low'
+          : 'pcat-stock pcat-stock-ok';
     return <span className={cls}>Stock: {stock}</span>;
   };
 
@@ -319,30 +351,47 @@ export function ProductCatalogueModal({
       modal
       dismissableMask
       maskClassName="pcat-dialog"
-      style={isMobile ? {
-        width: '100vw',
-        maxWidth: '100vw',
-        maxHeight: '90dvh',
-        margin: 0,
-        borderRadius: '1rem 1rem 0 0',
-      } : { width: '95vw', maxWidth: '58rem' }}
+      style={
+        isMobile
+          ? {
+              width: '100vw',
+              maxWidth: '100vw',
+              maxHeight: '90dvh',
+              margin: 0,
+              borderRadius: '1rem 1rem 0 0',
+            }
+          : { width: '95vw', maxWidth: '58rem' }
+      }
       breakpoints={isMobile ? undefined : { '960px': '90vw', '640px': '100vw' }}
-      contentStyle={isMobile ? {
-        padding: 0,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        height: 0,
-        maxHeight: 'none',
-      } : { padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'calc(85dvh - 9rem)' }}
+      contentStyle={
+        isMobile
+          ? {
+              padding: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              height: 0,
+              maxHeight: 'none',
+            }
+          : {
+              padding: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: 'calc(85dvh - 9rem)',
+            }
+      }
     >
       <style>{PCAT_STYLES}</style>
 
       {/* ── Sticky search bar ── */}
       <div className="pcat-search-wrap">
         <div className="pcat-search-inner">
-          <Search className="pcat-search-icon" style={{ width: '1rem', height: '1rem', color: '#94a3b8' }} />
+          <Search
+            className="pcat-search-icon"
+            style={{ width: '1rem', height: '1rem', color: '#94a3b8' }}
+          />
           <InputText
             placeholder="Rechercher un produit..."
             value={catalogueSearch}
@@ -355,7 +404,14 @@ export function ProductCatalogueModal({
       {/* ── Scrollable content ── */}
       <div className="pcat-scroll-area">
         {catalogueLoading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '3rem 0',
+            }}
+          >
             <ProgressSpinner style={{ width: '2.5rem', height: '2.5rem' }} />
           </div>
         ) : filteredProducts.length === 0 ? (
@@ -370,13 +426,18 @@ export function ProductCatalogueModal({
             {filteredProducts.map((product) => {
               const currentQuantity = getProductQuantity(product.id);
               const isSelected = currentQuantity > 0;
-              const displayPrice = formatAmount(isVente ? product.price : (product.cost || product.price), 2);
+              const displayPrice = formatAmount(
+                isVente ? product.price : product.cost || product.price,
+                2,
+              );
 
               return (
                 <div
                   key={product.id}
                   className={`pcat-card${isSelected ? ' pcat-selected' : ''}`}
-                  onClick={() => { if (!isSelected) updateProductQuantity(product, 1); }}
+                  onClick={() => {
+                    if (!isSelected) updateProductQuantity(product, 1);
+                  }}
                 >
                   {/* Thumbnail */}
                   <div
@@ -386,7 +447,7 @@ export function ProductCatalogueModal({
                         ? undefined
                         : product.isService
                           ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
-                          : 'linear-gradient(135deg, #235ae4, #1a47b8)'
+                          : 'linear-gradient(135deg, #235ae4, #1a47b8)',
                     }}
                   >
                     {product.imageUrl ? (
@@ -400,7 +461,9 @@ export function ProductCatalogueModal({
 
                   {/* Body */}
                   <div className="pcat-body">
-                    <span className="pcat-name" title={product.name}>{product.name}</span>
+                    <span className="pcat-name" title={product.name}>
+                      {product.name}
+                    </span>
                     {product.code && (
                       <div className="pcat-meta">
                         <span className="pcat-code">#{product.code}</span>
@@ -411,7 +474,8 @@ export function ProductCatalogueModal({
                   {/* Right: price + stock/qty + check */}
                   <div className="pcat-right">
                     <span className="pcat-price">
-                      {displayPrice}<span className="pcat-price-dim">DH</span>
+                      {displayPrice}
+                      <span className="pcat-price-dim">DH</span>
                     </span>
                     {!isSelected ? (
                       getStockBadge(product.stock)
@@ -419,9 +483,13 @@ export function ProductCatalogueModal({
                       <div className="pcat-qty" onClick={(e) => e.stopPropagation()}>
                         <button
                           className="pcat-qty-btn"
-                          onClick={() => updateProductQuantity(product, Math.max(0, currentQuantity - 1))}
+                          onClick={() =>
+                            updateProductQuantity(product, Math.max(0, currentQuantity - 1))
+                          }
                           type="button"
-                        >−</button>
+                        >
+                          −
+                        </button>
                         <input
                           className="pcat-qty-val"
                           type="number"
@@ -437,7 +505,9 @@ export function ProductCatalogueModal({
                           className="pcat-qty-btn"
                           onClick={() => updateProductQuantity(product, currentQuantity + 1)}
                           type="button"
-                        >+</button>
+                        >
+                          +
+                        </button>
                       </div>
                     )}
                   </div>
@@ -445,7 +515,13 @@ export function ProductCatalogueModal({
                   {isSelected && (
                     <div className="pcat-check">
                       <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path
+                          d="M2 6l3 3 5-5"
+                          stroke="#fff"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     </div>
                   )}

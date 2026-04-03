@@ -23,7 +23,7 @@ import { PortalRoute } from '../auth/decorators/portal-route.decorator';
 @PortalRoute()
 @Controller('partners')
 export class PartnersController {
-  constructor(private readonly partnersService: PartnersService) { }
+  constructor(private readonly partnersService: PartnersService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new partner' })

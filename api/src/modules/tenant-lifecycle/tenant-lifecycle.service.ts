@@ -68,7 +68,7 @@ export class TenantLifecycleService {
     private readonly cacheManager: Cache,
 
     private readonly tenantService: TenantService,
-  ) { }
+  ) {}
 
   // ─── Status transitions ────────────────────────────────────────────────────
 

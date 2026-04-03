@@ -51,12 +51,7 @@ export default function Notifications() {
   const { t, dir } = useLanguage();
   const isRtl = dir === 'rtl';
 
-  const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllRead,
-  } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllRead } = useNotifications();
 
   const [activeTab, setActiveTab] = useState<NotificationTab>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,9 +72,7 @@ export default function Notifications() {
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        (n) =>
-          n.title.toLowerCase().includes(term) ||
-          n.message.toLowerCase().includes(term)
+        (n) => n.title.toLowerCase().includes(term) || n.message.toLowerCase().includes(term),
       );
     }
 
@@ -103,7 +96,7 @@ export default function Notifications() {
 
   const unreadTabCount = useMemo(
     () => notifications.filter((n) => !n.isRead).length,
-    [notifications]
+    [notifications],
   );
 
   return (
@@ -121,7 +114,14 @@ export default function Notifications() {
             flexDirection: isRtl ? 'row-reverse' : 'row',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              flexDirection: isRtl ? 'row-reverse' : 'row',
+            }}
+          >
             <div
               style={{
                 width: 48,
@@ -145,7 +145,14 @@ export default function Notifications() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexDirection: isRtl ? 'row-reverse' : 'row' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              flexDirection: isRtl ? 'row-reverse' : 'row',
+            }}
+          >
             {unreadCount > 0 && (
               <button
                 onClick={() => markAllRead()}
@@ -165,14 +172,17 @@ export default function Notifications() {
                   minHeight: 44,
                   flexDirection: isRtl ? 'row-reverse' : 'row',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#eff6ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#fff';
+                }}
               >
                 <CheckCheck style={{ width: 16, height: 16 }} />
                 {t('markAllRead')}
               </button>
             )}
-
           </div>
         </div>
 
@@ -256,16 +266,18 @@ export default function Notifications() {
               >
                 {t(TAB_I18N[tab] as any)}
                 {tab === 'unread' && unreadTabCount > 0 && (
-                  <span style={{
-                    background: isActive ? '#2563eb' : '#9ca3af',
-                    color: '#fff',
-                    fontSize: '0.625rem',
-                    fontWeight: 600,
-                    borderRadius: 9999,
-                    padding: '1px 6px',
-                    minWidth: 18,
-                    textAlign: 'center',
-                  }}>
+                  <span
+                    style={{
+                      background: isActive ? '#2563eb' : '#9ca3af',
+                      color: '#fff',
+                      fontSize: '0.625rem',
+                      fontWeight: 600,
+                      borderRadius: 9999,
+                      padding: '1px 6px',
+                      minWidth: 18,
+                      textAlign: 'center',
+                    }}
+                  >
                     {unreadTabCount}
                   </span>
                 )}
@@ -305,7 +317,15 @@ export default function Notifications() {
             <span style={{ fontSize: '1rem', fontWeight: 600, color: '#374151' }}>
               {t('emptyTitle')}
             </span>
-            <span style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: 6, textAlign: 'center', maxWidth: 320 }}>
+            <span
+              style={{
+                fontSize: '0.875rem',
+                color: '#9ca3af',
+                marginTop: 6,
+                textAlign: 'center',
+                maxWidth: 320,
+              }}
+            >
               {t('emptySubtitle')}
             </span>
           </div>

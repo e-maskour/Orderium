@@ -93,7 +93,7 @@ export default {
   currencyCode: 'MAD',
 
   // Date Filters
-  today: 'Aujourd\'hui',
+  today: "Aujourd'hui",
   yesterday: 'Hier',
   thisWeek: 'Cette semaine',
   thisMonth: 'Ce mois',
@@ -147,7 +147,7 @@ export default {
   purchaseInvoice: "Facture d'Achat",
   suppliers: 'Fournisseurs',
   stockMovements: 'Mouvements de stock',
-  inventoryAdjustments: 'Ajustements d\'inventaire',
+  inventoryAdjustments: "Ajustements d'inventaire",
   warehouses: 'Entrepôts',
 
   // Document Statuses
@@ -177,13 +177,13 @@ export default {
   uploadFailed: 'Échec du téléchargement',
   pleaseTryAgain: 'Veuillez réessayer',
   imageUploadedSuccessfully: 'Image téléchargée avec succès',
-  failedToConstructImageUrl: 'Impossible de construire l\'URL de l\'image',
-  failedToRemoveImage: 'Impossible de supprimer l\'image',
+  failedToConstructImageUrl: "Impossible de construire l'URL de l'image",
+  failedToRemoveImage: "Impossible de supprimer l'image",
   productPreview: 'Aperçu du produit',
-  removeImage: 'Supprimer l\'image',
+  removeImage: "Supprimer l'image",
 
   // Dashboard
-  dashboardOverview: 'Vue d\'ensemble de votre activité',
+  dashboardOverview: "Vue d'ensemble de votre activité",
   revenueTrend: 'Tendance des revenus',
   last7Days: '7 derniers jours',
   ordersDistribution: 'Répartition des commandes',
@@ -284,25 +284,29 @@ export default {
   newPasswordOptional: 'Nouveau mot de passe (optionnel)',
   minCharacters: 'Min 6 caractères',
   informationSavedSuccess: 'Informations enregistrées avec succès',
-  errorSaving: 'Erreur lors de l\'enregistrement',
+  errorSaving: "Erreur lors de l'enregistrement",
   errorGeneratingPDF: 'Erreur lors de la génération du PDF',
   pdfDownloaded: 'téléchargé avec succès',
   pdfDownloadedShort: 'téléchargé',
-  confirmDeletePayment: 'Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible.',
+  confirmDeletePayment:
+    'Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible.',
   errorDeletingPayment: 'Erreur lors de la suppression du paiement',
   previewReceipt: 'Aperçu Reçu',
   previewDeliveryNote: 'Aperçu Bon',
-  iosInstallHint: 'Pour installer sur iOS, appuyez sur Partager et choisissez "Ajouter à l\'écran d\'accueil".',
+  iosInstallHint:
+    'Pour installer sur iOS, appuyez sur Partager et choisissez "Ajouter à l\'écran d\'accueil".',
   deleteError: 'Erreur de suppression',
   exportSuccess: 'Export réussi',
-  exportError: 'Erreur lors de l\'exportation',
+  exportError: "Erreur lors de l'exportation",
   templateDownloaded: 'Modèle téléchargé avec succès',
   templateDownloadError: 'Erreur lors du téléchargement du modèle',
   importInProgress: 'Import en cours...',
   importSuccess: 'Import réussi: {{created}} créés, {{updated}} mis à jour',
-  importPartial: 'Import terminé avec des erreurs: {{created}} créés, {{updated}} mis à jour, {{failed}} échoués',
-  importError: 'Erreur lors de l\'import',
-  confirmBulkDelete: 'Êtes-vous sûr de vouloir supprimer {{count}} élément(s) sélectionné(s) ? Cette action est irréversible.',
+  importPartial:
+    'Import terminé avec des erreurs: {{created}} créés, {{updated}} mis à jour, {{failed}} échoués',
+  importError: "Erreur lors de l'import",
+  confirmBulkDelete:
+    'Êtes-vous sûr de vouloir supprimer {{count}} élément(s) sélectionné(s) ? Cette action est irréversible.',
   deleteProducts: 'Supprimer les produits',
   unsupportedDocumentType: 'Type de document non pris en charge',
   confirmDeleteCategory: 'Êtes-vous sûr de vouloir supprimer "{{name}}" ?',
@@ -320,12 +324,16 @@ export default {
   failedToCorrectStock: 'Échec de correction du stock',
   failedToTransferStock: 'Échec de transfert du stock',
   errorCreating: 'Erreur lors de la création',
-  failedToCreateWarehouse: 'Échec de création de l\'entrepôt',
-  failedToUpdateWarehouse: 'Échec de mise à jour de l\'entrepôt',
-  failedToDeleteWarehouse: 'Échec de suppression de l\'entrepôt',
-  deleteWarehouseTitle: 'Supprimer l\'entrepôt',
-  confirmDeleteWarehouse: 'Êtes-vous sûr de vouloir supprimer cet entrepôt ? Cette action est irréversible.',
+  failedToCreateWarehouse: "Échec de création de l'entrepôt",
+  failedToUpdateWarehouse: "Échec de mise à jour de l'entrepôt",
+  failedToDeleteWarehouse: "Échec de suppression de l'entrepôt",
+  deleteWarehouseTitle: "Supprimer l'entrepôt",
+  confirmDeleteWarehouse:
+    'Êtes-vous sûr de vouloir supprimer cet entrepôt ? Cette action est irréversible.',
   noWarehousesFound: 'Aucun entrepôt trouvé',
+  noAddress: 'Aucune adresse',
+  createFirstWarehouse: 'Créez votre premier entrepôt pour commencer',
+  tryDifferentSearch: 'Essayez une recherche différente',
   errorCreatingDocument: 'Erreur lors de la création du document',
   errorUpdatingDocument: 'Erreur lors de la mise à jour du document',
   loadingQuote: 'Chargement du devis...',
@@ -335,12 +343,13 @@ export default {
 
   // Document action bar
   moreActions: "Plus d'actions",
-  confirmDeleteDocument: 'Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.',
+  confirmDeleteDocument:
+    'Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.',
   documentDeleted: 'Document supprimé avec succès',
 
   // Accessibility
   refresh: 'Actualiser',
-  moreOptions: 'Plus d\'options',
+  moreOptions: "Plus d'options",
   settings: 'Paramètres',
   // General
   noItems: 'Aucun élément',
@@ -366,12 +375,12 @@ export default {
   share: 'Partager',
   copy: 'Copier',
   copied: 'Copié !',
-  copyUrl: 'Copier l\'URL',
+  copyUrl: "Copier l'URL",
   new: 'Nouveau',
 
   // Upload
-  imageLoadError: 'Erreur de chargement de l\'image',
-  clickToChange: 'Cliquer pour changer l\'image',
+  imageLoadError: "Erreur de chargement de l'image",
+  clickToChange: "Cliquer pour changer l'image",
   clickOrDrag: 'Cliquer ou glisser-déposer',
 
   // Share
@@ -391,6 +400,7 @@ export default {
   navCollapse: 'Réduire',
   navTeam: 'Équipe',
   navPos: 'Point de vente',
+  rolesPermissions: 'Rôles & Permissions',
 
   // Stock / inventory
   negativeStock: 'Stock négatif',
@@ -445,7 +455,7 @@ export default {
   notifMarketing: 'Offres & actualités',
   professionalSettings: 'Paramètres professionnels',
   compactMode: 'Mode compact',
-  compactModeDesc: 'Réduire l\'espacement pour afficher plus de contenu',
+  compactModeDesc: "Réduire l'espacement pour afficher plus de contenu",
   autoSave: 'Sauvegarde automatique',
   autoSaveDesc: 'Sauvegarder automatiquement les brouillons',
   showTutorials: 'Afficher les tutoriels',

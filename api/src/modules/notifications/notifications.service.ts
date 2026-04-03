@@ -5,9 +5,7 @@ import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 @Injectable()
 export class NotificationsService {
-  constructor(
-    private readonly tenantConnService: TenantConnectionService,
-  ) { }
+  constructor(private readonly tenantConnService: TenantConnectionService) {}
 
   private get notificationRepository(): Repository<Notification> {
     return this.tenantConnService.getRepository(Notification);
@@ -180,7 +178,9 @@ export class NotificationsService {
   async markAllAsRead(userId?: number): Promise<number> {
     const where: Record<string, unknown> = { isRead: false };
     if (userId !== undefined) where.userId = userId;
-    const result = await this.notificationRepository.update(where, { isRead: true });
+    const result = await this.notificationRepository.update(where, {
+      isRead: true,
+    });
     return result.affected || 0;
   }
 

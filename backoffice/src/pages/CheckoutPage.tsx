@@ -2,11 +2,28 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useMutation } from '@tanstack/react-query';
-import { ArrowLeft, ShoppingBag, Tag, DollarSign, Percent, CreditCard, Banknote, CheckCircle2, User, Phone, MapPin } from 'lucide-react';
+import {
+  ArrowLeft,
+  ShoppingBag,
+  Tag,
+  DollarSign,
+  Percent,
+  CreditCard,
+  Banknote,
+  CheckCircle2,
+  User,
+  Phone,
+  MapPin,
+} from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { toastError } from '../services/toast.service';
-import { posService, IPosCartItem as CartItem, ICheckoutCustomer as Customer, ICheckoutState } from '../modules/pos';
+import {
+  posService,
+  IPosCartItem as CartItem,
+  ICheckoutCustomer as Customer,
+  ICheckoutState,
+} from '../modules/pos';
 import { orderPaymentsService } from '../modules';
 import { formatCurrency } from '@orderium/ui';
 
@@ -47,7 +64,7 @@ export default function CheckoutPage() {
           paidAmount: paid,
           change,
           orderDate: new Date(),
-        }
+        },
       });
     },
     onError: (error: any) => {
@@ -67,15 +84,13 @@ export default function CheckoutPage() {
 
   const itemsSubtotal = state.cart.reduce((sum, item) => {
     const itemSubtotal = item.product.price * item.quantity;
-    const itemDiscount = item.discountType === 1
-      ? (itemSubtotal * item.discount) / 100
-      : item.discount;
+    const itemDiscount =
+      item.discountType === 1 ? (itemSubtotal * item.discount) / 100 : item.discount;
     return sum + (itemSubtotal - itemDiscount);
   }, 0);
 
-  const globalDiscountAmount = globalDiscountType === 1
-    ? (itemsSubtotal * globalDiscount) / 100
-    : globalDiscount;
+  const globalDiscountAmount =
+    globalDiscountType === 1 ? (itemsSubtotal * globalDiscount) / 100 : globalDiscount;
 
   const total = itemsSubtotal - globalDiscountAmount;
   const totalItemsCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -83,13 +98,12 @@ export default function CheckoutPage() {
   const change = paid - total;
 
   const handleConfirmOrder = () => {
-    const items = state.cart.map(item => {
+    const items = state.cart.map((item) => {
       const quantity = item.quantity;
       const unitPrice = item.product.price;
       const itemSubtotal = quantity * unitPrice;
-      const itemDiscountAmount = item.discountType === 1
-        ? (itemSubtotal * item.discount) / 100
-        : item.discount;
+      const itemDiscountAmount =
+        item.discountType === 1 ? (itemSubtotal * item.discount) / 100 : item.discount;
       const tax = 0;
       const itemTotal = itemSubtotal - itemDiscountAmount;
 
@@ -101,7 +115,7 @@ export default function CheckoutPage() {
         discount: itemDiscountAmount,
         discountType: item.discountType,
         tax,
-        total: itemTotal
+        total: itemTotal,
       };
     });
 
@@ -121,7 +135,7 @@ export default function CheckoutPage() {
       discountType: globalDiscountType,
       total: totalAmount,
       notes: '',
-      items
+      items,
     };
 
     createOrderMutation.mutate(orderData);
@@ -130,18 +144,31 @@ export default function CheckoutPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Header */}
-      <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          borderBottom: '1px solid #e5e7eb',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+        }}
+      >
         <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '1rem 1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Button
               icon={<ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />}
               onClick={() => navigate('/pos')}
-              text rounded
+              text
+              rounded
               style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#f3f4f6' }}
             />
             <div style={{ flex: 1 }}>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', margin: 0 }}>{t('cart')}</h1>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>{t('reviewAndConfirmOrder')}</p>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                {t('cart')}
+              </h1>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+                {t('reviewAndConfirmOrder')}
+              </p>
             </div>
           </div>
         </div>
@@ -153,7 +180,17 @@ export default function CheckoutPage() {
           {/* Left Column - Cart Items */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Customer Info */}
-            <p style={{ fontSize: '0.875rem', color: '#374151', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
+            <p
+              style={{
+                fontSize: '0.875rem',
+                color: '#374151',
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: '0.75rem',
+                margin: 0,
+              }}
+            >
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 <User style={{ width: '1rem', height: '1rem', color: '#9ca3af' }} />
                 <span style={{ fontWeight: 500 }}>{state.customer.name}</span>
@@ -175,9 +212,34 @@ export default function CheckoutPage() {
             </p>
 
             {/* Cart Items */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '0.75rem',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                border: '1px solid #e5e7eb',
+                padding: '1.5rem',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '1rem',
+                }}
+              >
+                <h2
+                  style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 600,
+                    color: '#111827',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    margin: 0,
+                  }}
+                >
                   <ShoppingBag style={{ width: '1.25rem', height: '1.25rem' }} />
                   {t('items')}
                 </h2>
@@ -189,29 +251,76 @@ export default function CheckoutPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {state.cart.map((item) => {
                   const itemSubtotal = item.product.price * item.quantity;
-                  const itemDiscountAmount = item.discountType === 1
-                    ? (itemSubtotal * item.discount) / 100
-                    : item.discount;
+                  const itemDiscountAmount =
+                    item.discountType === 1 ? (itemSubtotal * item.discount) / 100 : item.discount;
                   const itemTotal = itemSubtotal - itemDiscountAmount;
 
                   return (
-                    <div key={item.product.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', backgroundColor: '#f9fafb', borderRadius: '0.5rem' }}>
+                    <div
+                      key={item.product.id}
+                      style={{
+                        display: 'flex',
+                        gap: '0.75rem',
+                        padding: '0.75rem',
+                        backgroundColor: '#f9fafb',
+                        borderRadius: '0.5rem',
+                      }}
+                    >
                       <div style={{ flex: 1 }}>
-                        <h3 style={{ fontWeight: 500, color: '#111827', marginBottom: '0.25rem', margin: 0 }}>{item.product.name}</h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', color: '#4b5563' }}>
-                          <span>{formatCurrency(item.product.price, language as 'fr' | 'ar')} × {item.quantity}</span>
+                        <h3
+                          style={{
+                            fontWeight: 500,
+                            color: '#111827',
+                            marginBottom: '0.25rem',
+                            margin: 0,
+                          }}
+                        >
+                          {item.product.name}
+                        </h3>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            fontSize: '0.875rem',
+                            color: '#4b5563',
+                          }}
+                        >
+                          <span>
+                            {formatCurrency(item.product.price, language as 'fr' | 'ar')} ×{' '}
+                            {item.quantity}
+                          </span>
                           {item.discount > 0 && (
-                            <span style={{ color: '#ea580c', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <Tag style={{ width: '0.75rem', height: '0.75rem' }} />
-                              -{item.discountType === 1 ? `${item.discount}%` : formatCurrency(item.discount, language as 'fr' | 'ar')}
+                            <span
+                              style={{
+                                color: '#ea580c',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                              }}
+                            >
+                              <Tag style={{ width: '0.75rem', height: '0.75rem' }} />-
+                              {item.discountType === 1
+                                ? `${item.discount}%`
+                                : formatCurrency(item.discount, language as 'fr' | 'ar')}
                             </span>
                           )}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 600, color: '#111827' }}>{formatCurrency(itemTotal, language as 'fr' | 'ar')}</div>
+                        <div style={{ fontWeight: 600, color: '#111827' }}>
+                          {formatCurrency(itemTotal, language as 'fr' | 'ar')}
+                        </div>
                         {item.discount > 0 && (
-                          <div style={{ fontSize: '0.75rem', color: '#9ca3af', textDecoration: 'line-through' }}>{formatCurrency(itemSubtotal, language as 'fr' | 'ar')}</div>
+                          <div
+                            style={{
+                              fontSize: '0.75rem',
+                              color: '#9ca3af',
+                              textDecoration: 'line-through',
+                            }}
+                          >
+                            {formatCurrency(itemSubtotal, language as 'fr' | 'ar')}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -224,12 +333,46 @@ export default function CheckoutPage() {
           {/* Right Column - Summary & Payment */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Order Summary */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', padding: '1.5rem', position: 'sticky', top: '6rem' }}>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', margin: '0 0 1rem 0' }}>{t('orderSummary')}</h2>
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '0.75rem',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                border: '1px solid #e5e7eb',
+                padding: '1.5rem',
+                position: 'sticky',
+                top: '6rem',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '1.125rem',
+                  fontWeight: 600,
+                  color: '#111827',
+                  margin: '0 0 1rem 0',
+                }}
+              >
+                {t('orderSummary')}
+              </h2>
 
               {/* Global Discount */}
-              <div style={{ paddingTop: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #e5e7eb' }}>
-                <h3 style={{ fontWeight: 600, color: '#111827', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div
+                style={{
+                  paddingTop: '1rem',
+                  paddingBottom: '1rem',
+                  borderBottom: '1px solid #e5e7eb',
+                }}
+              >
+                <h3
+                  style={{
+                    fontWeight: 600,
+                    color: '#111827',
+                    marginBottom: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
                   <Tag style={{ width: '1.25rem', height: '1.25rem', color: '#f97316' }} />
                   {t('discount')}
                 </h3>
@@ -239,9 +382,16 @@ export default function CheckoutPage() {
                     <Button
                       icon={<DollarSign style={{ width: '1rem', height: '1rem' }} />}
                       label={t('amount')}
-                      onClick={() => { setGlobalDiscountType(0); setGlobalDiscount(0); }}
+                      onClick={() => {
+                        setGlobalDiscountType(0);
+                        setGlobalDiscount(0);
+                      }}
                       style={{
-                        flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem',
+                        flex: 1,
+                        height: '2.25rem',
+                        borderRadius: '0.5rem',
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
                         backgroundColor: globalDiscountType === 0 ? '#f97316' : '#f3f4f6',
                         borderColor: globalDiscountType === 0 ? '#f97316' : '#f3f4f6',
                         color: globalDiscountType === 0 ? '#ffffff' : '#374151',
@@ -250,9 +400,16 @@ export default function CheckoutPage() {
                     <Button
                       icon={<Percent style={{ width: '1rem', height: '1rem' }} />}
                       label={t('percentage')}
-                      onClick={() => { setGlobalDiscountType(1); setGlobalDiscount(0); }}
+                      onClick={() => {
+                        setGlobalDiscountType(1);
+                        setGlobalDiscount(0);
+                      }}
                       style={{
-                        flex: 1, height: '2.25rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem',
+                        flex: 1,
+                        height: '2.25rem',
+                        borderRadius: '0.5rem',
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
                         backgroundColor: globalDiscountType === 1 ? '#f97316' : '#f3f4f6',
                         borderColor: globalDiscountType === 1 ? '#f97316' : '#f3f4f6',
                         color: globalDiscountType === 1 ? '#ffffff' : '#374151',
@@ -276,37 +433,99 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                  marginBottom: '1rem',
+                }}
+              >
                 {globalDiscount > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '0.875rem',
+                    }}
+                  >
                     <span style={{ color: '#4b5563' }}>{t('discount')}</span>
-                    <span style={{ fontWeight: 500, color: '#ea580c' }}>-{formatCurrency(globalDiscountAmount, language as 'fr' | 'ar')}</span>
+                    <span style={{ fontWeight: 500, color: '#ea580c' }}>
+                      -{formatCurrency(globalDiscountAmount, language as 'fr' | 'ar')}
+                    </span>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '0.875rem',
+                  }}
+                >
                   <span style={{ color: '#4b5563' }}>{t('subtotal')}</span>
-                  <span style={{ fontWeight: 500, color: '#111827' }}>{formatCurrency(itemsSubtotal, language as 'fr' | 'ar')}</span>
+                  <span style={{ fontWeight: 500, color: '#111827' }}>
+                    {formatCurrency(itemsSubtotal, language as 'fr' | 'ar')}
+                  </span>
                 </div>
 
                 <div style={{ paddingTop: '0.75rem', borderTop: '1px solid #e5e7eb' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
                     <span style={{ fontWeight: 600, color: '#111827' }}>{t('total')}</span>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>{formatCurrency(total, language as 'fr' | 'ar')}</span>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                      {formatCurrency(total, language as 'fr' | 'ar')}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Payment Section */}
-              <div style={{ paddingTop: '1rem', borderTop: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <h3 style={{ fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+              <div
+                style={{
+                  paddingTop: '1rem',
+                  borderTop: '1px solid #e5e7eb',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                }}
+              >
+                <h3
+                  style={{
+                    fontWeight: 600,
+                    color: '#111827',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    margin: 0,
+                  }}
+                >
                   <CreditCard style={{ width: '1.25rem', height: '1.25rem' }} />
                   {t('payment')}
                 </h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <div style={{ position: 'relative' }}>
-                    <Banknote style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none', zIndex: 1 }} />
+                    <Banknote
+                      style={{
+                        width: '1.25rem',
+                        height: '1.25rem',
+                        position: 'absolute',
+                        left: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#94a3b8',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    />
                     <InputText
                       type="number"
                       value={String(paidAmount)}
@@ -317,14 +536,26 @@ export default function CheckoutPage() {
                   </div>
 
                   {paid > 0 && (
-                    <div style={{
-                      padding: '0.75rem', borderRadius: '0.5rem',
-                      backgroundColor: change >= 0 ? '#f0fdf4' : '#fef2f2',
-                      border: `1px solid ${change >= 0 ? '#bbf7d0' : '#fecaca'}`,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                    <div
+                      style={{
+                        padding: '0.75rem',
+                        borderRadius: '0.5rem',
+                        backgroundColor: change >= 0 ? '#f0fdf4' : '#fef2f2',
+                        border: `1px solid ${change >= 0 ? '#bbf7d0' : '#fecaca'}`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          fontSize: '0.875rem',
+                        }}
+                      >
                         <span style={{ color: '#4b5563' }}>{t('change')}</span>
-                        <span style={{ fontWeight: 600, color: change >= 0 ? '#16a34a' : '#dc2626' }}>
+                        <span
+                          style={{ fontWeight: 600, color: change >= 0 ? '#16a34a' : '#dc2626' }}
+                        >
                           {formatCurrency(Math.abs(change), language as 'fr' | 'ar')}
                         </span>
                       </div>
@@ -335,12 +566,21 @@ export default function CheckoutPage() {
 
               {/* Confirm Button */}
               <Button
-                label={createOrderMutation.isPending ? (t('loading') || 'Loading...') : (t('confirm') || 'Confirm Order')}
+                label={
+                  createOrderMutation.isPending
+                    ? t('loading') || 'Loading...'
+                    : t('confirm') || 'Confirm Order'
+                }
                 icon={<CheckCircle2 style={{ width: '1rem', height: '1rem' }} />}
                 onClick={handleConfirmOrder}
                 disabled={createOrderMutation.isPending}
                 loading={createOrderMutation.isPending}
-                style={{ width: '100%', marginTop: '1.5rem', height: '3rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                style={{
+                  width: '100%',
+                  marginTop: '1.5rem',
+                  height: '3rem',
+                  boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                }}
               />
             </div>
           </div>

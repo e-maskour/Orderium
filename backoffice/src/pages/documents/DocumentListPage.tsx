@@ -1,11 +1,14 @@
 import { AdminLayout } from '../../components/AdminLayout';
 import { PageHeader } from '../../components/PageHeader';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Clock, CheckCircle, Filter, X, Download } from 'lucide-react';
+import { Plus, Clock, CheckCircle, Filter, X, Download, Search } from 'lucide-react';
 import { DocumentTable } from '../../components/documents';
-import { ShareDocumentDialog, ShareDocumentType } from '../../components/documents/ShareDocumentDialog';
+import {
+  ShareDocumentDialog,
+  ShareDocumentType,
+} from '../../components/documents/ShareDocumentDialog';
 import { documentsService, DocumentItem } from '../../modules/documents/services/documents.service';
 import { partnersService } from '../../modules';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
@@ -20,7 +23,13 @@ import { useQuery } from '@tanstack/react-query';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import { ordersService } from '../../modules/orders/orders.service';
-import { toastExported, toastError, toastConfirm, toastDocument, toastSuccess } from '../../services/toast.service';
+import {
+  toastExported,
+  toastError,
+  toastConfirm,
+  toastDocument,
+  toastSuccess,
+} from '../../services/toast.service';
 
 interface DocumentListPageProps {
   documentType: DocumentType;
@@ -35,16 +44,24 @@ export default function DocumentListPage({
   direction,
   config,
   createRoute,
-  editRoute
+  editRoute,
 }: DocumentListPageProps) {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<{ id: number; number: string; total: number } | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<{
+    id: number;
+    number: string;
+    total: number;
+  } | null>(null);
 
   // Share dialog state
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [sharingDoc, setSharingDoc] = useState<{ id: number; number: string; partnerName: string } | null>(null);
+  const [sharingDoc, setSharingDoc] = useState<{
+    id: number;
+    number: string;
+    partnerName: string;
+  } | null>(null);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareTokenExpiry, setShareTokenExpiry] = useState<Date | null>(null);
 
@@ -52,8 +69,15 @@ export default function DocumentListPage({
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [documentNumberSearch, setDocumentNumberSearch] = useState('');
   const [partnerIdSearch, setPartnerIdSearch] = useState('');
-  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({ start: undefined, end: undefined });
+  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({
+    start: undefined,
+    end: undefined,
+  });
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Quick search (debounced)
+  const [quickSearch, setQuickSearch] = useState('');
+  const quickSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,6 +91,17 @@ export default function DocumentListPage({
     dateRange: { start: undefined as Date | undefined, end: undefined as Date | undefined },
   });
 
+  useEffect(() => {
+    if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    quickSearchDebounceRef.current = setTimeout(() => {
+      setAppliedFilters((prev) => ({ ...prev, search: quickSearch }));
+      setCurrentPage(1);
+    }, 400);
+    return () => {
+      if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    };
+  }, [quickSearch]);
+
   // Fetch partners for autocomplete
   const { data: partnersData } = useQuery({
     queryKey: ['partners'],
@@ -77,24 +112,40 @@ export default function DocumentListPage({
   const partnerLabel = config.partnerLabel;
 
   // Fetch documents with filters and pagination
-  const { data: documentsData = { documents: [], count: 0, totalCount: 0 }, isLoading: loading, refetch } = useQuery({
-    queryKey: ['documents', documentType, direction, JSON.stringify(appliedFilters), currentPage, pageSize],
-    queryFn: () => documentsService.getDocuments(documentType, direction, {
-      search: appliedFilters.search,
-      status: appliedFilters.status,
-      partnerId: appliedFilters.partnerId,
-      dateFrom: appliedFilters.dateRange.start ? appliedFilters.dateRange.start.toISOString().split('T')[0] : undefined,
-      dateTo: appliedFilters.dateRange.end ? appliedFilters.dateRange.end.toISOString().split('T')[0] : undefined,
-      page: currentPage,
-      pageSize: pageSize
-    }),
+  const {
+    data: documentsData = { documents: [], count: 0, totalCount: 0 },
+    isLoading: loading,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'documents',
+      documentType,
+      direction,
+      JSON.stringify(appliedFilters),
+      currentPage,
+      pageSize,
+    ],
+    queryFn: () =>
+      documentsService.getDocuments(documentType, direction, {
+        search: appliedFilters.search,
+        status: appliedFilters.status,
+        partnerId: appliedFilters.partnerId,
+        dateFrom: appliedFilters.dateRange.start
+          ? appliedFilters.dateRange.start.toISOString().split('T')[0]
+          : undefined,
+        dateTo: appliedFilters.dateRange.end
+          ? appliedFilters.dateRange.end.toISOString().split('T')[0]
+          : undefined,
+        page: currentPage,
+        pageSize: pageSize,
+      }),
   });
 
   const documents = documentsData.documents || [];
   const totalCount = documentsData.totalCount || 0;
 
   // Documents are already in the correct format
-  const transformedFactures = documents.map(doc => ({
+  const transformedFactures = documents.map((doc) => ({
     id: doc.id,
     number: doc.number,
     date: doc.date,
@@ -108,7 +159,7 @@ export default function DocumentListPage({
     remainingAmount: doc.remainingAmount || 0,
     status: doc.status as 'draft' | 'unpaid' | 'partial' | 'paid' | 'overdue',
     isValidated: doc.isValidated,
-    itemsCount: doc.itemsCount
+    itemsCount: doc.itemsCount,
   }));
 
   const handleEdit = (id: number) => {
@@ -116,40 +167,54 @@ export default function DocumentListPage({
   };
 
   const handleValidate = async (id: number) => {
-    toastConfirm(t('validateDocument'), async () => {
-      try {
-        await documentsService.validateDocument(documentType, id);
-        await refetch();
-        toastDocument(t('pdfGenerated'));
-      } catch (error) {
-        console.error('Error validating document:', error);
-        toastError(t('error'), { description: t('errorValidatingDocument') });
-      }
-    }, { description: t('confirmValidate'), confirmLabel: t('validate') });
+    toastConfirm(
+      t('validateDocument'),
+      async () => {
+        try {
+          await documentsService.validateDocument(documentType, id);
+          await refetch();
+          toastDocument(t('pdfGenerated'));
+        } catch (error) {
+          console.error('Error validating document:', error);
+          toastError(t('error'), { description: t('errorValidatingDocument') });
+        }
+      },
+      { description: t('confirmValidate'), confirmLabel: t('validate') },
+    );
   };
 
   const handleDevalidate = async (id: number) => {
-    toastConfirm(t('devalidateDocument'), async () => {
-      try {
-        await documentsService.devalidateDocument(documentType, id);
-        await refetch();
-      } catch (error) {
-        console.error('Error devalidating document:', error);
-        toastError(t('error'), { description: t('errorDevalidatingDocument') });
-      }
-    }, { description: t('confirmDevalidate'), confirmLabel: t('devalidate') });
+    toastConfirm(
+      t('devalidateDocument'),
+      async () => {
+        try {
+          await documentsService.devalidateDocument(documentType, id);
+          await refetch();
+        } catch (error) {
+          console.error('Error devalidating document:', error);
+          toastError(t('error'), { description: t('errorDevalidatingDocument') });
+        }
+      },
+      { description: t('confirmDevalidate'), confirmLabel: t('devalidate') },
+    );
   };
 
   const handleDelete = async (id: number) => {
-    toastConfirm(t('deleteTitle'), async () => {
-      try {
-        await documentsService.deleteDocument(documentType, id);
-        await refetch();
-      } catch (error: any) {
-        console.error('Error deleting document:', error);
-        toastError(t('deletionImpossible'), { description: error.message || t('errorDeletingDocument') });
-      }
-    }, { description: t('confirmDeleteDocument'), confirmLabel: t('delete') });
+    toastConfirm(
+      t('deleteTitle'),
+      async () => {
+        try {
+          await documentsService.deleteDocument(documentType, id);
+          await refetch();
+        } catch (error: any) {
+          console.error('Error deleting document:', error);
+          toastError(t('deletionImpossible'), {
+            description: error.message || t('errorDeletingDocument'),
+          });
+        }
+      },
+      { description: t('confirmDeleteDocument'), confirmLabel: t('delete') },
+    );
   };
 
   const handleDownload = (id: number) => {
@@ -160,19 +225,19 @@ export default function DocumentListPage({
   const handleViewPayments = (id: number) => {
     if (!config.features.hasPayments) return;
 
-    const doc = documents.find(d => d.id === id);
+    const doc = documents.find((d) => d.id === id);
     if (doc) {
       setSelectedInvoice({
         id: doc.id,
         number: doc.number,
-        total: doc.total
+        total: doc.total,
       });
       setShowPaymentModal(true);
     }
   };
 
   const handleShare = (id: number) => {
-    const doc = documents.find(d => d.id === id);
+    const doc = documents.find((d) => d.id === id);
     if (!doc) return;
     setSharingDoc({ id: doc.id, number: doc.number, partnerName: doc.partnerName });
     setShareToken(null);
@@ -323,13 +388,35 @@ export default function DocumentListPage({
           style={{ width: '560px', maxWidth: '100vw' }}
           showCloseIcon={false}
           blockScroll
-          pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
+          pt={{
+            header: { style: { display: 'none' } },
+            content: {
+              style: {
+                padding: 0,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              },
+            },
+          }}
         >
           {/* Panel Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(1rem + env(safe-area-inset-top, 0)) 1.5rem 1rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 'calc(1rem + env(safe-area-inset-top, 0)) 1.5rem 1rem',
+              borderBottom: '1px solid #e2e8f0',
+              background: 'linear-gradient(to right, #235ae4, #1a47b8)',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Filter style={{ width: 20, height: 20, color: '#fff' }} />
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#fff' }}>{t('filters')}</h2>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#fff' }}>
+                {t('filters')}
+              </h2>
             </div>
             <Button
               onClick={() => setFiltersExpanded(false)}
@@ -340,15 +427,43 @@ export default function DocumentListPage({
           </div>
 
           {/* Panel Content - Scrollable */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
+          <div
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.5rem',
+            }}
+          >
             {/* Document Number Search */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.5rem' }}>{documentType === 'devis' ? t('quoteNumber') : documentType === 'bon_livraison' ? t('deliveryNumber') : t('invoiceNumber')}</label>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                {documentType === 'devis'
+                  ? t('quoteNumber')
+                  : documentType === 'bon_livraison'
+                    ? t('deliveryNumber')
+                    : t('invoiceNumber')}
+              </label>
               <div style={{ position: 'relative' }}>
                 <InputText
                   type="text"
-                  placeholder={documentType === 'devis' ? 'DEV-001' : documentType === 'bon_livraison' ? 'BL-001' : 'FAC-001'}
+                  placeholder={
+                    documentType === 'devis'
+                      ? 'DEV-001'
+                      : documentType === 'bon_livraison'
+                        ? 'BL-001'
+                        : 'FAC-001'
+                  }
                   value={documentNumberSearch}
                   onChange={(e) => setDocumentNumberSearch(e.target.value)}
                   style={{ width: '100%' }}
@@ -359,7 +474,15 @@ export default function DocumentListPage({
                     icon={<X style={{ width: 16, height: 16 }} />}
                     text
                     rounded
-                    style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10, padding: '0.25rem' }}
+                    style={{
+                      position: 'absolute',
+                      right: '0.5rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#94a3b8',
+                      zIndex: 10,
+                      padding: '0.25rem',
+                    }}
                   />
                 )}
               </div>
@@ -367,13 +490,23 @@ export default function DocumentListPage({
 
             {/* Partner Autocomplete */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#334155', marginBottom: '0.5rem' }}>{config.partnerLabel}</label>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                {config.partnerLabel}
+              </label>
               <Dropdown
                 options={(partnersData?.partners || [])
-                  .filter((p: any) => direction === 'vente' ? p.isCustomer : p.isSupplier)
+                  .filter((p: any) => (direction === 'vente' ? p.isCustomer : p.isSupplier))
                   .map((partner: any) => ({
                     value: String(partner.id),
-                    label: `${partner.name}${partner.phoneNumber ? ` (${partner.phoneNumber})` : ''}`
+                    label: `${partner.name}${partner.phoneNumber ? ` (${partner.phoneNumber})` : ''}`,
                   }))}
                 value={partnerIdSearch}
                 onChange={(e) => setPartnerIdSearch(e.value)}
@@ -389,13 +522,32 @@ export default function DocumentListPage({
 
             {/* Date Range */}
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#334155',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
                 <Clock style={{ width: 16, height: 16, color: '#235ae4' }} />
-                {documentType === 'devis' ? t('quoteDate') : documentType === 'bon_livraison' ? t('deliveryDate') : t('invoiceDate')}
+                {documentType === 'devis'
+                  ? t('quoteDate')
+                  : documentType === 'bon_livraison'
+                    ? t('deliveryDate')
+                    : t('invoiceDate')}
               </div>
               <Calendar
                 value={dateRange.start ? [dateRange.start, dateRange.end as Date] : null}
-                onChange={(e) => { const v = e.value as Date[]; setDateRange({ start: v?.[0], end: v?.[1] }); }}
+                onChange={(e) => {
+                  const v = e.value as Date[];
+                  setDateRange({ start: v?.[0], end: v?.[1] });
+                }}
                 selectionMode="range"
                 dateFormat="dd/mm/yy"
                 showIcon
@@ -406,34 +558,51 @@ export default function DocumentListPage({
 
             {/* Status Filter */}
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#334155',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
                 <CheckCircle style={{ width: 16, height: 16, color: '#235ae4' }} />
                 {t('status')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {(documentType === 'devis' ? [
-                  { key: 'all', label: t('all'), icon: '📋' },
-                  { key: 'draft', label: t('draft'), icon: '📝' },
-                  { key: 'open', label: t('statusOpen'), icon: '🔓' },
-                  { key: 'signed', label: t('statusSigned'), icon: '✍️' },
-                  { key: 'closed', label: t('statusClosed'), icon: '🔒' },
-                  { key: 'invoiced', label: t('statusInvoiced'), icon: '✅' },
-                ] : documentType === 'bon_livraison' ? [
-                  { key: 'all', label: t('all'), icon: '📋' },
-                  { key: 'draft', label: t('draft'), icon: '📝' },
-                  { key: 'validated', label: t('statusValidated'), icon: '✓' },
-                  { key: 'in_progress', label: t('statusInProgress'), icon: '🔄' },
-                  { key: 'delivered', label: t('statusDeliveredBon'), icon: '✅' },
-                  { key: 'cancelled', label: t('statusCancelled'), icon: '❌' },
-                  { key: 'invoiced', label: t('statusInvoicedBon'), icon: '📄' },
-                ] : [
-                  { key: 'all', label: t('all'), icon: '📋' },
-                  { key: 'draft', label: t('draft'), icon: '📝' },
-                  { key: 'unpaid', label: t('statusUnpaid'), icon: '⏳' },
-                  { key: 'partial', label: t('statusPartial'), icon: '⚠️' },
-                  { key: 'paid', label: t('statusPaid'), icon: '✅' },
-                  { key: 'overdue', label: t('invoice.overdue'), icon: '🔴' },
-                ]).map((filter) => (
+                {(documentType === 'devis'
+                  ? [
+                      { key: 'all', label: t('all'), icon: '📋' },
+                      { key: 'draft', label: t('draft'), icon: '📝' },
+                      { key: 'open', label: t('statusOpen'), icon: '🔓' },
+                      { key: 'signed', label: t('statusSigned'), icon: '✍️' },
+                      { key: 'closed', label: t('statusClosed'), icon: '🔒' },
+                      { key: 'invoiced', label: t('statusInvoiced'), icon: '✅' },
+                    ]
+                  : documentType === 'bon_livraison'
+                    ? [
+                        { key: 'all', label: t('all'), icon: '📋' },
+                        { key: 'draft', label: t('draft'), icon: '📝' },
+                        { key: 'validated', label: t('statusValidated'), icon: '✓' },
+                        { key: 'in_progress', label: t('statusInProgress'), icon: '🔄' },
+                        { key: 'delivered', label: t('statusDeliveredBon'), icon: '✅' },
+                        { key: 'cancelled', label: t('statusCancelled'), icon: '❌' },
+                        { key: 'invoiced', label: t('statusInvoicedBon'), icon: '📄' },
+                      ]
+                    : [
+                        { key: 'all', label: t('all'), icon: '📋' },
+                        { key: 'draft', label: t('draft'), icon: '📝' },
+                        { key: 'unpaid', label: t('statusUnpaid'), icon: '⏳' },
+                        { key: 'partial', label: t('statusPartial'), icon: '⚠️' },
+                        { key: 'paid', label: t('statusPaid'), icon: '✅' },
+                        { key: 'overdue', label: t('invoice.overdue'), icon: '🔴' },
+                      ]
+                ).map((filter) => (
                   <Button
                     key={filter.key}
                     onClick={() => setStatusFilter(filter.key)}
@@ -442,18 +611,30 @@ export default function DocumentListPage({
                     style={{
                       fontSize: '0.75rem',
                       ...(statusFilter === filter.key
-                        ? { backgroundColor: '#235ae4', color: '#fff', boxShadow: '0 10px 15px rgba(35,90,228,0.3)', border: 'none' }
-                        : { backgroundColor: '#f8fafc', color: '#334155' })
+                        ? {
+                            backgroundColor: '#235ae4',
+                            color: '#fff',
+                            boxShadow: '0 10px 15px rgba(35,90,228,0.3)',
+                            border: 'none',
+                          }
+                        : { backgroundColor: '#f8fafc', color: '#334155' }),
                     }}
                   />
                 ))}
               </div>
             </div>
-
           </div>
 
           {/* Panel Footer */}
-          <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
+          <div
+            style={{
+              borderTop: '1px solid #e2e8f0',
+              padding: '1rem',
+              backgroundColor: '#f8fafc',
+              display: 'flex',
+              gap: '0.75rem',
+            }}
+          >
             <Button
               label={t('reset')}
               severity="secondary"
@@ -461,20 +642,74 @@ export default function DocumentListPage({
               onClick={handleResetFilters}
               style={{ flex: 1 }}
             />
-            <Button
-              label={t('apply')}
-              onClick={handleApplyFilters}
-              style={{ flex: 1 }}
-            />
+            <Button label={t('apply')} onClick={handleApplyFilters} style={{ flex: 1 }} />
           </div>
         </Sidebar>
+
+        {/* Quick Search Bar */}
+        <div className="page-quick-search">
+          <Search
+            style={{
+              position: 'absolute',
+              left: '0.875rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '1rem',
+              height: '1rem',
+              color: '#94a3b8',
+              pointerEvents: 'none',
+            }}
+          />
+          <InputText
+            type="text"
+            value={quickSearch}
+            onChange={(e) => setQuickSearch(e.target.value)}
+            placeholder={t('searchByNumberOrName')}
+            style={{
+              width: '100%',
+              paddingLeft: '2.5rem',
+              paddingRight: quickSearch ? '2.5rem' : '0.875rem',
+              height: '2.5rem',
+              fontSize: '0.875rem',
+              borderRadius: '0.625rem',
+              border: '1.5px solid #e2e8f0',
+              background: '#ffffff',
+            }}
+          />
+          {quickSearch && (
+            <button
+              type="button"
+              onClick={() => setQuickSearch('')}
+              style={{
+                position: 'absolute',
+                right: '0.625rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#94a3b8',
+                display: 'flex',
+                padding: '0.25rem',
+              }}
+            >
+              <X style={{ width: '1rem', height: '1rem' }} />
+            </button>
+          )}
+        </div>
 
         <DocumentTable
           documentType={documentType}
           direction={direction}
           documents={transformedFactures}
           partnerLabel={config.partnerLabel}
-          itemLabel={documentType === 'facture' ? 'facture' : documentType === 'devis' ? 'devis' : 'bon de livraison'}
+          itemLabel={
+            documentType === 'facture'
+              ? 'facture'
+              : documentType === 'devis'
+                ? 'devis'
+                : 'bon de livraison'
+          }
           onFiltersToggle={() => setFiltersExpanded(!filtersExpanded)}
           filtersExpanded={filtersExpanded}
           onEdit={handleEdit}
@@ -516,7 +751,10 @@ export default function DocumentListPage({
       {sharingDoc && (
         <ShareDocumentDialog
           isOpen={showShareDialog}
-          onClose={() => { setShowShareDialog(false); setSharingDoc(null); }}
+          onClose={() => {
+            setShowShareDialog(false);
+            setSharingDoc(null);
+          }}
           documentType={documentType as ShareDocumentType}
           documentNumber={sharingDoc.number}
           partnerName={sharingDoc.partnerName}

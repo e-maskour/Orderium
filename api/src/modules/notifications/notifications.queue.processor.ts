@@ -9,27 +9,27 @@ import { NotificationJobData } from './notifications.queue.service';
 
 @Processor(QueueName.NOTIFICATIONS, { concurrency: 5 })
 export class NotificationsQueueProcessor extends WorkerHost {
-    private readonly logger = new Logger(NotificationsQueueProcessor.name);
+  private readonly logger = new Logger(NotificationsQueueProcessor.name);
 
-    constructor(
-        private readonly templateService: NotificationTemplateService,
-        private readonly tenantConnService: TenantConnectionService,
-    ) {
-        super();
-    }
+  constructor(
+    private readonly templateService: NotificationTemplateService,
+    private readonly tenantConnService: TenantConnectionService,
+  ) {
+    super();
+  }
 
-    async process(job: Job<NotificationJobData>): Promise<void> {
-        const { request, tenantSlug, tenantId, tenantName } = job.data;
+  async process(job: Job<NotificationJobData>): Promise<void> {
+    const { request, tenantSlug, tenantId, tenantName } = job.data;
 
-        this.logger.debug(
-            `⚙️  Processing notification job [${job.id}]: '${request.key}' (tenant: ${tenantSlug})`,
-        );
+    this.logger.debug(
+      `⚙️  Processing notification job [${job.id}]: '${request.key}' (tenant: ${tenantSlug})`,
+    );
 
-        // Pre-warm the per-tenant DB connection
-        await this.tenantConnService.getConnection(tenantSlug);
+    // Pre-warm the per-tenant DB connection
+    await this.tenantConnService.getConnection(tenantSlug);
 
-        await tenantStorage.run({ tenantSlug, tenantId, tenantName }, async () => {
-            await this.templateService.send(request);
-        });
-    }
+    await tenantStorage.run({ tenantSlug, tenantId, tenantName }, async () => {
+      await this.templateService.send(request);
+    });
+  }
 }

@@ -53,12 +53,14 @@ export class Notification implements INotification {
   }
 
   get typeConfig() {
-    return NOTIFICATION_TYPE_CONFIG[this.type] ?? {
-      emoji: 'ℹ️',
-      bgClass: 'bg-gray-100',
-      colorClass: 'text-gray-600',
-      borderClass: 'border-gray-400',
-    };
+    return (
+      NOTIFICATION_TYPE_CONFIG[this.type] ?? {
+        emoji: 'ℹ️',
+        bgClass: 'bg-gray-100',
+        colorClass: 'text-gray-600',
+        borderClass: 'border-gray-400',
+      }
+    );
   }
 
   get resolvedActionUrl(): string | undefined {

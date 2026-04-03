@@ -10,7 +10,7 @@ import './DataTableTheme.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 
 // Note: Firebase messaging service worker is registered automatically by firebase.ts

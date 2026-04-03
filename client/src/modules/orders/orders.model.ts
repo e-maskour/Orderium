@@ -14,8 +14,8 @@ export class OrderItem implements IOrderItem {
     public total: number,
     public description?: string,
     public price?: number,
-    public tax?: number
-  ) { }
+    public tax?: number,
+  ) {}
 
   get displayPrice(): string {
     return `$${this.unitPrice.toFixed(2)}`;
@@ -41,14 +41,14 @@ export class OrderItem implements IOrderItem {
       data.productId as number,
       String(data.productName || data.description || `Product ${data.productId}`),
       (data.quantity as number) || 0,
-      (data.unitPrice as number || data.price as number) || 0,
+      (data.unitPrice as number) || (data.price as number) || 0,
       (data.discount as number) || 0,
       (data.discountType as number) || 0,
-      (data.taxAmount as number || data.tax as number) || 0,
+      (data.taxAmount as number) || (data.tax as number) || 0,
       (data.total as number) || 0,
       data.description as string | undefined,
       (data.price as number) || undefined,
-      (data.tax as number) || undefined
+      (data.tax as number) || undefined,
     );
   }
 }
@@ -56,7 +56,7 @@ export class OrderItem implements IOrderItem {
 export class Order implements IOrder {
   constructor(
     public id: number,
-    public orderNumber: string,  // Changed from 'number' to 'orderNumber'
+    public orderNumber: string, // Changed from 'number' to 'orderNumber'
     public customerId: number,
     public items: OrderItem[],
     public subtotal: number,
@@ -72,8 +72,8 @@ export class Order implements IOrder {
     public note?: string,
     public internalNote?: string,
     public date?: string,
-    public isValidated?: boolean
-  ) { }
+    public isValidated?: boolean,
+  ) {}
 
   get displayTotal(): string {
     return `$${this.total.toFixed(2)}`;
@@ -157,7 +157,7 @@ export class Order implements IOrder {
       data.note as string | undefined,
       data.internalNote as string | undefined,
       data.date as string | undefined,
-      data.isValidated as boolean | undefined
+      data.isValidated as boolean | undefined,
     );
   }
 
@@ -169,7 +169,7 @@ export class Order implements IOrder {
       customerName: this.customerName,
       customerPhone: this.customerPhone,
       customerAddress: this.customerAddress,
-      items: this.items.map(item => ({
+      items: this.items.map((item) => ({
         id: item.id,
         orderId: item.orderId,
         productId: item.productId,

@@ -30,7 +30,7 @@ export class DriveService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly storage: DriveStorageService,
-  ) { }
+  ) {}
 
   private get nodeRepo(): Repository<DriveNode> {
     return this.tenantConnService.getRepository(DriveNode);
@@ -72,21 +72,7 @@ export class DriveService {
     isAdmin: boolean,
   ): Promise<boolean> {
     if (isAdmin || node.ownerId === userId) return true;
-    const share = await this.shareRepo.findOne({
-      where: [
-        { nodeId: node.id, targetType: DriveShareTarget.EVERYONE },
-        {
-          nodeId: node.id,
-          targetType: DriveShareTarget.USER,
-          targetUserId: userId,
-        },
-      ],
-    });
-    if (share) {
-      if (share.expiresAt && share.expiresAt < new Date()) return false;
-      return true;
-    }
-    return false;
+    return !!(await this.findActiveShare(node.id, userId));
   }
 
   private async canWrite(
@@ -95,21 +81,8 @@ export class DriveService {
     isAdmin: boolean,
   ): Promise<boolean> {
     if (isAdmin || node.ownerId === userId) return true;
-    const share = await this.shareRepo.findOne({
-      where: [
-        { nodeId: node.id, targetType: DriveShareTarget.EVERYONE },
-        {
-          nodeId: node.id,
-          targetType: DriveShareTarget.USER,
-          targetUserId: userId,
-        },
-      ],
-    });
-    if (share && share.permission === DrivePermission.EDITOR) {
-      if (share.expiresAt && share.expiresAt < new Date()) return false;
-      return true;
-    }
-    return false;
+    const share = await this.findActiveShare(node.id, userId);
+    return share?.permission === DrivePermission.EDITOR;
   }
 
   private async logActivity(
@@ -131,6 +104,42 @@ export class DriveService {
     } catch (err) {
       this.logger.warn('Activity log failed', err);
     }
+  }
+
+  private requireOwner(
+    node: DriveNode,
+    userId: number,
+    isAdmin: boolean,
+    action: string,
+  ): void {
+    if (!isAdmin && node.ownerId !== userId)
+      throw new ForbiddenException(`Only the owner can ${action}`);
+  }
+
+  private async requireShare(
+    nodeId: string,
+    shareId: string,
+  ): Promise<DriveShare> {
+    const share = await this.shareRepo.findOne({
+      where: { id: shareId, nodeId },
+    });
+    if (!share) throw new NotFoundException(`Share ${shareId} not found`);
+    return share;
+  }
+
+  private async findActiveShare(
+    nodeId: string,
+    userId: number,
+  ): Promise<DriveShare | null> {
+    const share = await this.shareRepo.findOne({
+      where: [
+        { nodeId, targetType: DriveShareTarget.EVERYONE },
+        { nodeId, targetType: DriveShareTarget.USER, targetUserId: userId },
+      ],
+    });
+    if (!share) return null;
+    if (share.expiresAt && share.expiresAt < new Date()) return null;
+    return share;
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -452,8 +461,7 @@ export class DriveService {
 
   async trashNode(id: string, userId: number, isAdmin: boolean): Promise<void> {
     const node = await this.requireNode(id);
-    if (!isAdmin && node.ownerId !== userId)
-      throw new ForbiddenException('Only the owner can trash this node');
+    this.requireOwner(node, userId, isAdmin, 'trash this node');
     await this.nodeRepo.update(id, {
       isTrashed: true,
       trashedAt: new Date(),
@@ -468,8 +476,7 @@ export class DriveService {
     isAdmin: boolean,
   ): Promise<DriveNode> {
     const node = await this.requireNode(id);
-    if (!isAdmin && node.ownerId !== userId)
-      throw new ForbiddenException('Only the owner can restore this node');
+    this.requireOwner(node, userId, isAdmin, 'restore this node');
     await this.nodeRepo.update(id, {
       isTrashed: false,
       trashedAt: null,
@@ -503,8 +510,7 @@ export class DriveService {
     isAdmin: boolean,
   ): Promise<void> {
     const node = await this.requireNode(id);
-    if (!isAdmin && node.ownerId !== userId)
-      throw new ForbiddenException('Only the owner can delete this node');
+    this.requireOwner(node, userId, isAdmin, 'delete this node');
     if (!node.isTrashed)
       throw new ForbiddenException(
         'Node must be trashed before permanent deletion',
@@ -532,8 +538,7 @@ export class DriveService {
     isAdmin: boolean,
   ): Promise<DriveShare[]> {
     const node = await this.requireNode(nodeId);
-    if (!isAdmin && node.ownerId !== userId)
-      throw new ForbiddenException('Only the owner can view shares');
+    this.requireOwner(node, userId, isAdmin, 'view shares');
     return this.shareRepo.find({
       where: { nodeId },
       order: { createdAt: 'DESC' },
@@ -547,8 +552,7 @@ export class DriveService {
     isAdmin: boolean,
   ): Promise<DriveShare> {
     const node = await this.requireNode(nodeId);
-    if (!isAdmin && node.ownerId !== userId)
-      throw new ForbiddenException('Only the owner can share this node');
+    this.requireOwner(node, userId, isAdmin, 'share this node');
     const share = this.shareRepo.create({
       nodeId,
       targetType: dto.targetType,
@@ -573,12 +577,8 @@ export class DriveService {
     isAdmin: boolean,
   ): Promise<DriveShare> {
     const node = await this.requireNode(nodeId);
-    if (!isAdmin && node.ownerId !== userId)
-      throw new ForbiddenException('Only the owner can update shares');
-    const share = await this.shareRepo.findOne({
-      where: { id: shareId, nodeId },
-    });
-    if (!share) throw new NotFoundException(`Share ${shareId} not found`);
+    this.requireOwner(node, userId, isAdmin, 'update shares');
+    const share = await this.requireShare(nodeId, shareId);
     Object.assign(share, dto);
     return this.shareRepo.save(share);
   }
@@ -590,12 +590,8 @@ export class DriveService {
     isAdmin: boolean,
   ): Promise<void> {
     const node = await this.requireNode(nodeId);
-    if (!isAdmin && node.ownerId !== userId)
-      throw new ForbiddenException('Only the owner can revoke shares');
-    const share = await this.shareRepo.findOne({
-      where: { id: shareId, nodeId },
-    });
-    if (!share) throw new NotFoundException(`Share ${shareId} not found`);
+    this.requireOwner(node, userId, isAdmin, 'revoke shares');
+    const share = await this.requireShare(nodeId, shareId);
     await this.shareRepo.remove(share);
     await this.logActivity(DriveAction.UNSHARE, node, userId);
   }
@@ -829,7 +825,7 @@ export class DriveService {
           ...f,
           canDelete: !!node,
           driveNodeId: node?.id ?? null,
-          source: (node ? 'user' : 'system') as 'user' | 'system',
+          source: node ? 'user' : 'system',
         };
       }),
     );
@@ -837,4 +833,3 @@ export class DriveService {
     return { prefix, folders, files: enrichedFiles };
   }
 }
-

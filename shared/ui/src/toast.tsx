@@ -41,6 +41,12 @@ function generateId(): string {
 }
 
 function addToast(toast: Toast): string {
+    // Enforce max 3 visible non-error toasts: evict the oldest non-error if over limit
+    const nonErrors = toasts.filter((t) => t.type !== 'error' && !t.removing);
+    if (toast.type !== 'error' && nonErrors.length >= 3) {
+        const oldest = nonErrors[nonErrors.length - 1];
+        toasts = toasts.filter((t) => t.id !== oldest.id);
+    }
     toasts = [toast, ...toasts];
     emit();
 
@@ -107,7 +113,7 @@ export const toast = {
             id: generateId(),
             type: 'success',
             title,
-            duration: 4000,
+            duration: 3000,
             createdAt: Date.now(),
             ...opts,
         });
@@ -118,7 +124,7 @@ export const toast = {
             id: generateId(),
             type: 'error',
             title,
-            duration: 6000,
+            duration: 4000,
             createdAt: Date.now(),
             ...opts,
         });
@@ -129,7 +135,7 @@ export const toast = {
             id: generateId(),
             type: 'warning',
             title,
-            duration: 5000,
+            duration: 4000,
             createdAt: Date.now(),
             ...opts,
         });
@@ -140,7 +146,7 @@ export const toast = {
             id: generateId(),
             type: 'info',
             title,
-            duration: 4000,
+            duration: 3000,
             createdAt: Date.now(),
             ...opts,
         });
@@ -175,14 +181,14 @@ export const toast = {
         return promise.then(
             (data) => {
                 const msg = typeof messages.success === 'function' ? messages.success(data) : messages.success;
-                updateToast(id, { type: 'success', title: msg, duration: 4000 });
-                setTimeout(() => dismissToast(id), 4000);
+                updateToast(id, { type: 'success', title: msg, duration: 3000 });
+                setTimeout(() => dismissToast(id), 3000);
                 return data;
             },
             (err) => {
                 const msg = typeof messages.error === 'function' ? messages.error(err) : messages.error;
-                updateToast(id, { type: 'error', title: msg, duration: 6000 });
-                setTimeout(() => dismissToast(id), 6000);
+                updateToast(id, { type: 'error', title: msg, duration: 4000 });
+                setTimeout(() => dismissToast(id), 4000);
                 throw err;
             },
         );
@@ -262,7 +268,7 @@ interface ToasterProps {
     maxVisible?: number;
 }
 
-export function Toaster({ position = 'bottom-right', maxVisible = 5 }: ToasterProps) {
+export function Toaster({ position = 'bottom-right', maxVisible = 3 }: ToasterProps) {
     const items = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
     const handleDismiss = useCallback((id: string) => {

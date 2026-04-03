@@ -7,14 +7,9 @@ import { PDFModule } from '../pdf/pdf.module';
 import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
-  imports: [
-    TenantModule,
-    ConfigurationsModule,
-    PDFModule,
-    InventoryModule,
-  ],
+  imports: [TenantModule, ConfigurationsModule, PDFModule, InventoryModule],
   controllers: [InvoicesController],
   providers: [InvoicesService],
   exports: [InvoicesService],
 })
-export class InvoicesModule { }
+export class InvoicesModule {}

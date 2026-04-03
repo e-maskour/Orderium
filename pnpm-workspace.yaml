@@ -1,0 +1,7 @@
+packages:
+  - 'api'
+  - 'backoffice'
+  - 'client'
+  - 'delivery-portal'
+  - 'tenant-dashboard'
+  - 'shared'

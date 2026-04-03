@@ -12,17 +12,17 @@ import { applyPaymentTrigger } from './payment-trigger.init';
  *  - applyPaymentTrigger — keeps `invoices.paidAmount`/status in sync with `payments`
  */
 export async function runTenantInitScripts(
-    dataSource: DataSource,
+  dataSource: DataSource,
 ): Promise<void> {
-    console.log('⚙️  Running tenant init scripts...\n');
+  console.log('⚙️  Running tenant init scripts...\n');
 
-    try {
-        await applyStockTrigger(dataSource);
-        await applyPaymentTrigger(dataSource);
+  try {
+    await applyStockTrigger(dataSource);
+    await applyPaymentTrigger(dataSource);
 
-        console.log('\n✅ Tenant init scripts completed successfully');
-    } catch (error) {
-        console.error('\n❌ Error running tenant init scripts:', error);
-        throw error;
-    }
+    console.log('\n✅ Tenant init scripts completed successfully');
+  } catch (error) {
+    console.error('\n❌ Error running tenant init scripts:', error);
+    throw error;
+  }
 }

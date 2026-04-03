@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function DemandePrix() {
   const { t } = useLanguage();
   const config = getDocumentConfig('devis', 'achat', t);
-  
+
   return (
     <DocumentListPage
       documentType="devis"

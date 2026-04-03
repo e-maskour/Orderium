@@ -7,11 +7,11 @@ import { Tenant } from '../tenant/tenant.entity';
 import { TenantModule } from '../tenant/tenant.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([MigrationRunLog, Tenant], 'master'),
-        TenantModule,
-    ],
-    controllers: [MigrationsController],
-    providers: [MigrationsService],
+  imports: [
+    TypeOrmModule.forFeature([MigrationRunLog, Tenant], 'master'),
+    TenantModule,
+  ],
+  controllers: [MigrationsController],
+  providers: [MigrationsService],
 })
-export class SuperAdminModule { }
+export class SuperAdminModule {}

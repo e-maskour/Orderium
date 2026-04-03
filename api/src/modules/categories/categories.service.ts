@@ -10,7 +10,7 @@ export class CategoriesService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get categoryRepository(): Repository<Category> {
     return this.tenantConnService.getRepository(Category);

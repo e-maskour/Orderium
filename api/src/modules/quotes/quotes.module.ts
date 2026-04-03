@@ -6,13 +6,9 @@ import { ConfigurationsModule } from '../configurations/configurations.module';
 import { PDFModule } from '../pdf/pdf.module';
 
 @Module({
-  imports: [
-    TenantModule,
-    ConfigurationsModule,
-    PDFModule,
-  ],
+  imports: [TenantModule, ConfigurationsModule, PDFModule],
   controllers: [QuotesController],
   providers: [QuotesService],
   exports: [QuotesService],
 })
-export class QuotesModule { }
+export class QuotesModule {}

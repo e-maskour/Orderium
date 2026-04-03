@@ -12,7 +12,9 @@ export class StatisticsService {
   }
 
   async getComprehensiveStats(days: number = 7): Promise<IComprehensiveStatistics> {
-    const response = await apiClient.get<any>(API_ROUTES.STATISTICS.COMPREHENSIVE, { params: { days } });
+    const response = await apiClient.get<any>(API_ROUTES.STATISTICS.COMPREHENSIVE, {
+      params: { days },
+    });
     return {
       overview: Statistics.fromApiResponse(response.data.overview),
       dailyStats: response.data.dailyStats,
@@ -21,7 +23,10 @@ export class StatisticsService {
   }
 
   async getRecentActivities(limit: number = 10): Promise<IRecentActivity[]> {
-    const response = await apiClient.get<IRecentActivity[]>(API_ROUTES.STATISTICS.RECENT_ACTIVITIES, { params: { limit } });
+    const response = await apiClient.get<IRecentActivity[]>(
+      API_ROUTES.STATISTICS.RECENT_ACTIVITIES,
+      { params: { limit } },
+    );
     return response.data;
   }
 }

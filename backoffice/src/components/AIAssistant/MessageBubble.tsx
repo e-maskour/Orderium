@@ -20,11 +20,21 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       case 'error':
         return <AlertCircle style={{ width: '1rem', height: '1rem', color: '#ef4444' }} />;
       case 'tool-pending':
-        return <Loader2 className="animate-spin" style={{ width: '1rem', height: '1rem', color: '#3b82f6' }} />;
+        return (
+          <Loader2
+            className="animate-spin"
+            style={{ width: '1rem', height: '1rem', color: '#3b82f6' }}
+          />
+        );
       case 'tool-complete':
         return <CheckCircle style={{ width: '1rem', height: '1rem', color: '#22c55e' }} />;
       case 'streaming':
-        return <Loader2 className="animate-spin" style={{ width: '1rem', height: '1rem', color: '#9ca3af' }} />;
+        return (
+          <Loader2
+            className="animate-spin"
+            style={{ width: '1rem', height: '1rem', color: '#9ca3af' }}
+          />
+        );
       default:
         return null;
     }
@@ -66,10 +76,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           color: isUser ? '#ffffff' : '#374151',
         }}
       >
-        {isUser
-          ? <User style={{ width: '1rem', height: '1rem' }} />
-          : <Bot style={{ width: '1rem', height: '1rem' }} />
-        }
+        {isUser ? (
+          <User style={{ width: '1rem', height: '1rem' }} />
+        ) : (
+          <Bot style={{ width: '1rem', height: '1rem' }} />
+        )}
       </div>
 
       {/* Content */}
@@ -89,25 +100,36 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
           {/* Tool Calls */}
           {message.toolCalls && message.toolCalls.length > 0 && (
-            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}>
+            <div
+              style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}
+            >
               <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
-                🔧 Using tools: {message.toolCalls.map(tc => tc.function.name).join(', ')}
+                🔧 Using tools: {message.toolCalls.map((tc) => tc.function.name).join(', ')}
               </p>
             </div>
           )}
 
           {/* Error */}
           {message.error && (
-            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #fecaca' }}>
-              <p style={{ fontSize: '0.75rem', color: '#ef4444', margin: 0 }}>
-                {message.error}
-              </p>
+            <div
+              style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #fecaca' }}
+            >
+              <p style={{ fontSize: '0.75rem', color: '#ef4444', margin: 0 }}>{message.error}</p>
             </div>
           )}
         </div>
 
         {/* Status & Timestamp */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            marginTop: '0.25rem',
+            fontSize: '0.75rem',
+            color: '#6b7280',
+          }}
+        >
           {getStatusIcon()}
           <span>
             {new Date(message.timestamp).toLocaleTimeString([], {

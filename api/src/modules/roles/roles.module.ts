@@ -5,9 +5,9 @@ import { TenantModule } from '../tenant/tenant.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
-    imports: [TenantModule, PermissionsModule],
-    controllers: [RolesController],
-    providers: [RolesService],
-    exports: [RolesService],
+  imports: [TenantModule, PermissionsModule],
+  controllers: [RolesController],
+  providers: [RolesService],
+  exports: [RolesService],
 })
-export class RolesModule { }
+export class RolesModule {}

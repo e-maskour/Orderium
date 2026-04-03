@@ -35,7 +35,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
   private publicUrl: string;
   private ready = false;
 
-  constructor(private readonly config: ConfigService) { }
+  constructor(private readonly config: ConfigService) {}
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -57,7 +57,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     if (!accessKey || !secretKey) {
       this.logger.error(
         '❌ MINIO_ACCESS_KEY and MINIO_SECRET_KEY must be set.  ' +
-        'MinIO provider will not be available.',
+          'MinIO provider will not be available.',
       );
       return;
     }
@@ -75,7 +75,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
       this.ready = true;
       this.logger.log(
         `✅ MinIO provider ready — endpoint: ${endpoint}:${port}, ` +
-        `bucket: ${this.bucket}, public: ${this.publicUrl}`,
+          `bucket: ${this.bucket}, public: ${this.publicUrl}`,
       );
     } catch (error) {
       this.logger.error('❌ MinIO provider initialisation failed', error);
@@ -205,7 +205,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
    * MinIO does not support real-time image transformations.
    * The original URL is returned unchanged.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   transformUrl(url: string, _options: ImageTransformOptions): string {
     return url;
   }
@@ -214,7 +214,7 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
    * MinIO does not support dynamic resizing.
    * The original URL is returned unchanged.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   getOptimizedUrl(url: string, _width?: number, _height?: number): string {
     return url;
   }
@@ -244,13 +244,9 @@ export class MinioProvider implements IImageStorageProvider, OnModuleInit {
     const objectName = `${safeFolder}/${safeFilename}`;
     const bucket = this.getTenantBucket();
 
-    await this.client.putObject(
-      bucket,
-      objectName,
-      buffer,
-      buffer.length,
-      { 'Content-Type': contentType },
-    );
+    await this.client.putObject(bucket, objectName, buffer, buffer.length, {
+      'Content-Type': contentType,
+    });
 
     this.logger.log(`📤  [${bucket}] ${objectName}  (${buffer.length} B)`);
 

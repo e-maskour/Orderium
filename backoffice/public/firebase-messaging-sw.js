@@ -4,12 +4,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-comp
 
 // Firebase configuration - Must match the values in .env
 const firebaseConfig = {
-  apiKey: "AIzaSyD1r4pCQDBE0xyWj62u9QGorFTp2DyVLDE",
-  authDomain: "orderium-9df24.firebaseapp.com",
-  projectId: "orderium-9df24",
-  storageBucket: "orderium-9df24.firebasestorage.app",
-  messagingSenderId: "199921288199",
-  appId: "1:199921288199:web:63e59398df7cc0617096a2",
+  apiKey: 'AIzaSyD1r4pCQDBE0xyWj62u9QGorFTp2DyVLDE',
+  authDomain: 'orderium-9df24.firebaseapp.com',
+  projectId: 'orderium-9df24',
+  storageBucket: 'orderium-9df24.firebasestorage.app',
+  messagingSenderId: '199921288199',
+  appId: '1:199921288199:web:63e59398df7cc0617096a2',
 };
 
 const getNotificationIconUrl = () => `${self.location.origin}/notification-icon.png`;
@@ -71,44 +71,39 @@ self.addEventListener('notificationclick', (event) => {
   const urlToOpen = event.notification.data?.clickAction || '/';
 
   event.waitUntil(
-    clients
-      .matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Try to find an existing window and focus it
-        for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            client.postMessage({
-              type: 'NOTIFICATION_CLICKED',
-              data: event.notification.data,
-            });
-            return client.focus();
-          }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Try to find an existing window and focus it
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.postMessage({
+            type: 'NOTIFICATION_CLICKED',
+            data: event.notification.data,
+          });
+          return client.focus();
         }
+      }
 
-        // If no window is open, open a new one
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      }),
+      // If no window is open, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    }),
   );
 });
 
 // Handle push subscription change
 self.addEventListener('pushsubscriptionchange', (event) => {
-
   event.waitUntil(
-    self.registration.pushManager
-      .subscribe({ userVisibleOnly: true })
-      .then((subscription) => {
-        return clients.matchAll().then((clientList) => {
-          clientList.forEach((client) => {
-            client.postMessage({
-              type: 'PUSH_SUBSCRIPTION_CHANGED',
-              subscription: subscription,
-            });
+    self.registration.pushManager.subscribe({ userVisibleOnly: true }).then((subscription) => {
+      return clients.matchAll().then((clientList) => {
+        clientList.forEach((client) => {
+          client.postMessage({
+            type: 'PUSH_SUBSCRIPTION_CHANGED',
+            subscription: subscription,
           });
         });
-      }),
+      });
+    }),
   );
 });
 
@@ -125,7 +120,16 @@ const STATIC_ASSETS = [
 
 // Only cache safe static file types
 const ALLOWED_EXTENSIONS = [
-  '.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.woff', '.woff2'
+  '.js',
+  '.css',
+  '.svg',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.ico',
+  '.woff',
+  '.woff2',
 ];
 
 // Install
@@ -139,7 +143,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS).catch((err) => {
         console.warn('[SW] Failed to cache static assets:', err);
       });
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -155,9 +159,9 @@ self.addEventListener('activate', (event) => {
       Promise.all(
         names.map((name) => {
           if (name !== CACHE_NAME) return caches.delete(name);
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
   self.clients.claim();
 });
@@ -181,7 +185,7 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.endsWith('.ts') || url.pathname.endsWith('.tsx')) return;
 
   // Only cache SAFE static file extensions
-  const shouldCache = ALLOWED_EXTENSIONS.some(ext => url.pathname.endsWith(ext));
+  const shouldCache = ALLOWED_EXTENSIONS.some((ext) => url.pathname.endsWith(ext));
 
   event.respondWith(
     fetch(req)
@@ -202,7 +206,7 @@ self.addEventListener('fetch', (event) => {
           status: 503,
           statusText: 'Service Unavailable',
         });
-      })
+      }),
   );
 });
 

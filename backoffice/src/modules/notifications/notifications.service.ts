@@ -14,10 +14,9 @@ import { Notification } from './notifications.model';
 import { apiClient, API_ROUTES } from '../../common';
 
 class NotificationsService {
-
   async getNotifications(
     filters?: NotificationFilters,
-    pagination?: PaginationParams
+    pagination?: PaginationParams,
   ): Promise<PaginatedResponse<Notification>> {
     const params = new URLSearchParams();
     if (pagination?.page) params.append('page', pagination.page.toString());
@@ -33,13 +32,16 @@ class NotificationsService {
       priorities.forEach((priority) => params.append('priority', priority));
     }
     if (filters?.isRead !== undefined) params.append('isRead', filters.isRead.toString());
-    if (filters?.isArchived !== undefined) params.append('isArchived', filters.isArchived.toString());
+    if (filters?.isArchived !== undefined)
+      params.append('isArchived', filters.isArchived.toString());
     if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
     if (filters?.dateTo) params.append('dateTo', filters.dateTo);
     if (filters?.search) params.append('search', filters.search);
 
     const queryString = params.toString();
-    const url = queryString ? `${API_ROUTES.NOTIFICATIONS.LIST}?${queryString}` : API_ROUTES.NOTIFICATIONS.LIST;
+    const url = queryString
+      ? `${API_ROUTES.NOTIFICATIONS.LIST}?${queryString}`
+      : API_ROUTES.NOTIFICATIONS.LIST;
     const response = await apiClient.get<any[]>(url);
     const total = (response.metadata as any)?.total || 0;
     const limit = (response.metadata as any)?.limit || pagination?.limit || 25;
@@ -73,12 +75,18 @@ class NotificationsService {
   }
 
   async markManyAsRead(ids: number[]): Promise<{ updated: number }> {
-    const response = await apiClient.patch<{ updated: number }>(API_ROUTES.NOTIFICATIONS.MARK_MANY_READ, { ids });
+    const response = await apiClient.patch<{ updated: number }>(
+      API_ROUTES.NOTIFICATIONS.MARK_MANY_READ,
+      { ids },
+    );
     return response.data;
   }
 
   async markAllAsRead(filters?: NotificationFilters): Promise<{ updated: number }> {
-    const response = await apiClient.patch<{ updated: number }>(API_ROUTES.NOTIFICATIONS.MARK_ALL_READ, filters || {});
+    const response = await apiClient.patch<{ updated: number }>(
+      API_ROUTES.NOTIFICATIONS.MARK_ALL_READ,
+      filters || {},
+    );
     return response.data;
   }
 
@@ -88,7 +96,10 @@ class NotificationsService {
   }
 
   async archiveMany(ids: number[]): Promise<{ updated: number }> {
-    const response = await apiClient.patch<{ updated: number }>(API_ROUTES.NOTIFICATIONS.ARCHIVE_MANY, { ids });
+    const response = await apiClient.patch<{ updated: number }>(
+      API_ROUTES.NOTIFICATIONS.ARCHIVE_MANY,
+      { ids },
+    );
     return response.data;
   }
 
@@ -97,17 +108,27 @@ class NotificationsService {
   }
 
   async deleteMany(ids: number[]): Promise<{ deleted: number }> {
-    const response = await apiClient.delete<{ deleted: number }>(API_ROUTES.NOTIFICATIONS.DELETE_MANY, { ids });
+    const response = await apiClient.delete<{ deleted: number }>(
+      API_ROUTES.NOTIFICATIONS.DELETE_MANY,
+      { ids },
+    );
     return response.data;
   }
 
   async getPreferences(): Promise<NotificationPreferences> {
-    const response = await apiClient.get<NotificationPreferences>(API_ROUTES.NOTIFICATIONS.PREFERENCES);
+    const response = await apiClient.get<NotificationPreferences>(
+      API_ROUTES.NOTIFICATIONS.PREFERENCES,
+    );
     return response.data;
   }
 
-  async updatePreferences(preferences: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
-    const response = await apiClient.patch<NotificationPreferences>(API_ROUTES.NOTIFICATIONS.PREFERENCES, preferences);
+  async updatePreferences(
+    preferences: Partial<NotificationPreferences>,
+  ): Promise<NotificationPreferences> {
+    const response = await apiClient.patch<NotificationPreferences>(
+      API_ROUTES.NOTIFICATIONS.PREFERENCES,
+      preferences,
+    );
     return response.data;
   }
 

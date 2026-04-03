@@ -135,7 +135,7 @@ export default {
   noOrdersFound: 'Aucune commande trouvée',
   filterByDate: 'Filtrer par date',
   // Time
-  justNow: 'À l\'instant',
+  justNow: "À l'instant",
   minutesAgo: 'Il y a {minutes} min',
   hoursAgo: 'Il y a {hours} h',
   daysAgo: 'Il y a {days} j',

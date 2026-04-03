@@ -5,11 +5,11 @@ import { TenantModule } from '../tenant/tenant.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-    imports: [
-        TenantModule,   // provides TenantConnectionService
-        AuthModule,     // provides JwtService
-    ],
-    controllers: [OnboardingController],
-    providers: [OnboardingService],
+  imports: [
+    TenantModule, // provides TenantConnectionService
+    AuthModule, // provides JwtService
+  ],
+  controllers: [OnboardingController],
+  providers: [OnboardingService],
 })
-export class OnboardingModule { }
+export class OnboardingModule {}

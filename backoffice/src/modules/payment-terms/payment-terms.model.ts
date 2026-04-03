@@ -54,15 +54,15 @@ export class PaymentTermsConfiguration {
 
   constructor(data: IPaymentTermsConfig) {
     this.default = data.default;
-    this.terms = data.terms.map(t => new PaymentTerm(t));
+    this.terms = data.terms.map((t) => new PaymentTerm(t));
   }
 
   getDefaultTerm(): PaymentTerm | undefined {
-    return this.terms.find(t => t.isDefault);
+    return this.terms.find((t) => t.isDefault);
   }
 
   getTermByKey(key: string): PaymentTerm | undefined {
-    return this.terms.find(t => t.key === key);
+    return this.terms.find((t) => t.key === key);
   }
 
   get count(): number {
@@ -76,7 +76,7 @@ export class PaymentTermsConfiguration {
   toJSON(): IPaymentTermsConfig {
     return {
       default: this.default,
-      terms: this.terms.map(t => t.toJSON()),
+      terms: this.terms.map((t) => t.toJSON()),
     };
   }
 

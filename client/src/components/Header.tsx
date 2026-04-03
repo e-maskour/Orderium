@@ -67,13 +67,19 @@ export const Header = ({ onCartClick }: HeaderProps) => {
           <Link
             to="/my-orders"
             style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              padding: '0.45rem 0.875rem', borderRadius: '0.625rem',
-              textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem',
-              color: '#374151', transition: 'background 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.45rem 0.875rem',
+              borderRadius: '0.625rem',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              color: '#374151',
+              transition: 'background 0.15s',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             <ClipboardList size={16} />
             {t('myOrders')}
@@ -81,13 +87,19 @@ export const Header = ({ onCartClick }: HeaderProps) => {
           <Link
             to="/profile"
             style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              padding: '0.45rem 0.875rem', borderRadius: '0.625rem',
-              textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem',
-              color: '#374151', transition: 'background 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.45rem 0.875rem',
+              borderRadius: '0.625rem',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              color: '#374151',
+              transition: 'background 0.15s',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             <User size={16} />
             {t('profile')}
@@ -96,7 +108,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
         {/* Right actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          {user?.customerId && <NotificationBell customerId={user.customerId} />}
+          {user?.customerId && <NotificationBell userId={user.id} />}
           <LanguageToggle />
 
           {/* Cart button — desktop only (mobile uses bottom nav FAB) */}
@@ -118,10 +130,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            <ShoppingBag
-              size={20}
-              color={itemCount > 0 ? '#059669' : '#6b7280'}
-            />
+            <ShoppingBag size={20} color={itemCount > 0 ? '#059669' : '#6b7280'} />
             {itemCount > 0 && (
               <span
                 style={{

@@ -26,10 +26,7 @@ import {
   analyzeSelectionTool,
   searchHelpTool,
 } from '../services/tools/readTools';
-import {
-  getDataTool,
-  aggregateDataTool,
-} from '../services/tools/dataTools';
+import { getDataTool, aggregateDataTool } from '../services/tools/dataTools';
 
 // Register tools
 toolRegistry.register(getCurrentPageTool);
@@ -92,10 +89,7 @@ export function useAIAssistant() {
       permissions: ['read', 'write'],
     };
 
-    const safeContext = AppContextProvider.buildContext(
-      userState,
-      { pathname: location.pathname }
-    );
+    const safeContext = AppContextProvider.buildContext(userState, { pathname: location.pathname });
 
     return {
       userId: safeContext.user.id,
@@ -146,9 +140,9 @@ export function useAIAssistant() {
         const systemMessage = SystemMessageBuilder.build(
           AppContextProvider.buildContext(
             { uid: appContext.userId, role: appContext.userRole },
-            { pathname: appContext.currentRoute }
+            { pathname: appContext.currentRoute },
           ),
-          availableTools
+          availableTools,
         );
 
         // Convert to Ollama format using captured messages
@@ -272,13 +266,12 @@ export function useAIAssistant() {
             setIsStreaming(false);
           },
         });
-
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Unknown error'));
         setIsStreaming(false);
       }
     },
-    [messages, buildAppContext]
+    [messages, buildAppContext],
   );
 
   /**

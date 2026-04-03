@@ -9,8 +9,22 @@
 @import 'primeicons/primeicons.css';
 @import 'primeflex/primeflex.css';
 
-/* Google Fonts — Plus Jakarta Sans (French/Latin) + IBM Plex Arabic (Arabic) */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Arabic:wght@300;400;500;600;700&display=swap&subset=arabic,latin');
+/* Override PrimeIcons font-display from 'block' to 'swap' to prevent invisible text during load */
+@font-face {
+    font-family: 'primeicons';
+    font-display: swap;
+    src: url('primeicons/fonts/primeicons.eot');
+    src: url('primeicons/fonts/primeicons.eot?#iefix') format('embedded-opentype'),
+        url('primeicons/fonts/primeicons.woff2') format('woff2'),
+        url('primeicons/fonts/primeicons.woff') format('woff'),
+        url('primeicons/fonts/primeicons.ttf') format('truetype'),
+        url('primeicons/fonts/primeicons.svg?#primeicons') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Google Fonts — loaded via <link> in each app's index.html for parallel loading.
+   Do NOT use @import here — it blocks CSS parsing until the font CSS is fetched. */
 
 /* ============================================================
    Morocom Custom Theme Overrides

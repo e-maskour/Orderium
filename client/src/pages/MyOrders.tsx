@@ -3,6 +3,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/i18n';
 import { ordersService } from '@/modules/orders';
+import { API_ROUTES } from '@/common/api-routes';
 import { Order, OrderItem } from '@/modules/orders/orders.interface';
 import { partnersService } from '@/modules/partners';
 import { Dialog } from 'primereact/dialog';
@@ -11,19 +12,83 @@ import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { CartDrawer } from '@/components/CartDrawer';
 import { BottomNav } from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
-import { Package, MapPin, Calendar as CalendarIcon, FileText, ReceiptText, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, ShoppingBag, ClipboardList, type LucideIcon } from 'lucide-react';
+import {
+  Package,
+  MapPin,
+  Calendar as CalendarIcon,
+  FileText,
+  ReceiptText,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeft,
+  ArrowRight,
+  ShoppingBag,
+  ClipboardList,
+  type LucideIcon,
+} from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { notify } from '@orderium/ui';
 
-const STATUS_CONFIG: Record<string, { label_fr: string; label_ar: string; color: string; bg: string; stripe: string }> = {
-  pending: { label_fr: 'En attente', label_ar: 'قيد الانتظار', color: '#1d4ed8', bg: '#eff6ff', stripe: '#3b82f6' },
-  assigned: { label_fr: 'Assignée', label_ar: 'مُعيَّنة', color: '#7c3aed', bg: '#f5f3ff', stripe: '#8b5cf6' },
-  confirmed: { label_fr: 'Confirmée', label_ar: 'مؤكدة', color: '#0369a1', bg: '#e0f2fe', stripe: '#0ea5e9' },
-  picked_up: { label_fr: 'Récupérée', label_ar: 'تم الاستلام', color: '#0e7490', bg: '#cffafe', stripe: '#06b6d4' },
-  to_delivery: { label_fr: 'En préparation', label_ar: 'جاهز للتسليم', color: '#c2410c', bg: '#fff7ed', stripe: '#f97316' },
-  in_delivery: { label_fr: 'En livraison', label_ar: 'في الطريق', color: '#a16207', bg: '#fefce8', stripe: '#eab308' },
-  delivered: { label_fr: 'Livrée', label_ar: 'تم التسليم', color: '#15803d', bg: '#f0fdf4', stripe: '#22c55e' },
-  canceled: { label_fr: 'Annulée', label_ar: 'ملغاة', color: '#b91c1c', bg: '#fef2f2', stripe: '#ef4444' },
+const STATUS_CONFIG: Record<
+  string,
+  { label_fr: string; label_ar: string; color: string; bg: string; stripe: string }
+> = {
+  pending: {
+    label_fr: 'En attente',
+    label_ar: 'قيد الانتظار',
+    color: '#1d4ed8',
+    bg: '#eff6ff',
+    stripe: '#3b82f6',
+  },
+  assigned: {
+    label_fr: 'Assignée',
+    label_ar: 'مُعيَّنة',
+    color: '#7c3aed',
+    bg: '#f5f3ff',
+    stripe: '#8b5cf6',
+  },
+  confirmed: {
+    label_fr: 'Confirmée',
+    label_ar: 'مؤكدة',
+    color: '#0369a1',
+    bg: '#e0f2fe',
+    stripe: '#0ea5e9',
+  },
+  picked_up: {
+    label_fr: 'Récupérée',
+    label_ar: 'تم الاستلام',
+    color: '#0e7490',
+    bg: '#cffafe',
+    stripe: '#06b6d4',
+  },
+  to_delivery: {
+    label_fr: 'En préparation',
+    label_ar: 'جاهز للتسليم',
+    color: '#c2410c',
+    bg: '#fff7ed',
+    stripe: '#f97316',
+  },
+  in_delivery: {
+    label_fr: 'En livraison',
+    label_ar: 'في الطريق',
+    color: '#a16207',
+    bg: '#fefce8',
+    stripe: '#eab308',
+  },
+  delivered: {
+    label_fr: 'Livrée',
+    label_ar: 'تم التسليم',
+    color: '#15803d',
+    bg: '#f0fdf4',
+    stripe: '#22c55e',
+  },
+  canceled: {
+    label_fr: 'Annulée',
+    label_ar: 'ملغاة',
+    color: '#b91c1c',
+    bg: '#fef2f2',
+    stripe: '#ef4444',
+  },
 };
 
 export default function MyOrders() {
@@ -35,7 +100,10 @@ export default function MyOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
-  const [selectedOrderItems, setSelectedOrderItems] = useState<{ order: Order; items: OrderItem[] } | null>(null);
+  const [selectedOrderItems, setSelectedOrderItems] = useState<{
+    order: Order;
+    items: OrderItem[];
+  } | null>(null);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
@@ -47,7 +115,10 @@ export default function MyOrders() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user?.phoneNumber) { setIsLoading(false); return; }
+      if (!user?.phoneNumber) {
+        setIsLoading(false);
+        return;
+      }
       setIsLoading(true);
       try {
         let customerId = user.customerId;
@@ -55,9 +126,14 @@ export default function MyOrders() {
           const partner = await partnersService.getByPhone(user.phoneNumber);
           customerId = partner?.id;
         }
-        if (!customerId) { setIsLoading(false); return; }
+        if (!customerId) {
+          setIsLoading(false);
+          return;
+        }
         const response = await ordersService.getCustomerOrders(
-          customerId, currentPage, pageSize,
+          customerId,
+          currentPage,
+          pageSize,
           undefined,
           statusFilter !== 'all' ? statusFilter : undefined,
         );
@@ -79,7 +155,7 @@ export default function MyOrders() {
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: totalCount };
-    orders.forEach(o => {
+    orders.forEach((o) => {
       const s = o.deliveryStatus || 'pending';
       counts[s] = (counts[s] || 0) + 1;
     });
@@ -98,7 +174,9 @@ export default function MyOrders() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-MA', {
-      day: '2-digit', month: 'short', year: 'numeric',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
     });
   };
 
@@ -114,11 +192,15 @@ export default function MyOrders() {
   const handlePreview = async (documentType: 'receipt' | 'invoice') => {
     if (!selectedOrderItems) return;
     const orderId = selectedOrderItems.order.id;
-    if (!orderId) { notify.error(t('orderIdMissing')); return; }
+    if (!orderId) {
+      notify.error(t('orderIdMissing'));
+      return;
+    }
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    const endpoint = documentType === 'receipt'
-      ? `${apiBaseUrl}/api/pdf/receipt/${orderId}?mode=preview`
-      : `${apiBaseUrl}/api/pdf/delivery-note/${orderId}?mode=preview`;
+    const endpoint =
+      documentType === 'receipt'
+        ? `${apiBaseUrl}${API_ROUTES.PDF.RECEIPT(orderId)}`
+        : `${apiBaseUrl}${API_ROUTES.PDF.DELIVERY_NOTE(orderId)}`;
     const title = `${documentType === 'receipt' ? t('receipt') : t('deliveryNote')} ${selectedOrderItems.order.orderNumber}`;
     setSelectedOrderItems(null);
     try {
@@ -147,46 +229,115 @@ export default function MyOrders() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f3f4f6', fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif", paddingBottom: '5rem' }} dir={dir}>
-
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#f3f4f6',
+        fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        paddingBottom: '5rem',
+      }}
+      dir={dir}
+    >
       {/* Gradient header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #15803d 0%, #16a34a 60%, #22c55e 100%)',
-        padding: '1rem 1.25rem',
-        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #15803d 0%, #16a34a 60%, #22c55e 100%)',
+          padding: '1rem 1.25rem',
+          paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '0.875rem',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: 'white', flexShrink: 0, WebkitTapHighlightColor: 'transparent' as const }}>
+            <Link
+              to="/"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '2.25rem',
+                height: '2.25rem',
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.2)',
+                textDecoration: 'none',
+                color: 'white',
+                flexShrink: 0,
+                WebkitTapHighlightColor: 'transparent' as const,
+              }}
+            >
               <BackIcon size={18} />
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
               <ClipboardList size={26} strokeWidth={2.5} style={{ color: '#fff', flexShrink: 0 }} />
-              <h1 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>{t('myOrders')}</h1>
+              <h1
+                style={{
+                  color: '#fff',
+                  fontSize: '1.5rem',
+                  fontWeight: 900,
+                  margin: 0,
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                {t('myOrders')}
+              </h1>
             </div>
           </div>
           {totalCount > 0 && (
-            <span style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, borderRadius: '999px', padding: '0.3rem 0.75rem' }}>
-              <Package size={13} style={{ display: 'inline', verticalAlign: 'middle', marginInlineEnd: '0.25rem' }} />{totalCount}
+            <span
+              style={{
+                background: 'rgba(255,255,255,0.25)',
+                backdropFilter: 'blur(4px)',
+                color: '#fff',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                borderRadius: '999px',
+                padding: '0.3rem 0.75rem',
+              }}
+            >
+              <Package
+                size={13}
+                style={{ display: 'inline', verticalAlign: 'middle', marginInlineEnd: '0.25rem' }}
+              />
+              {totalCount}
             </span>
           )}
         </div>
 
         {/* Status chips (frosted glass) */}
-        <div style={{ display: 'flex', overflowX: 'auto', gap: '0.5rem', scrollbarWidth: 'none' as const }}>
-          {statusTabs.map(tab => {
+        <div
+          style={{
+            display: 'flex',
+            overflowX: 'auto',
+            gap: '0.5rem',
+            scrollbarWidth: 'none' as const,
+          }}
+        >
+          {statusTabs.map((tab) => {
             const isActive = statusFilter === tab.key;
             return (
               <button
                 key={tab.key}
-                onClick={() => { setStatusFilter(tab.key); setCurrentPage(1); }}
+                onClick={() => {
+                  setStatusFilter(tab.key);
+                  setCurrentPage(1);
+                }}
                 style={{
-                  flexShrink: 0, padding: '0.3rem 0.75rem',
-                  borderRadius: '999px', border: 'none',
+                  flexShrink: 0,
+                  padding: '0.3rem 0.75rem',
+                  borderRadius: '999px',
+                  border: 'none',
                   background: isActive ? '#fff' : 'rgba(255,255,255,0.2)',
                   color: isActive ? '#15803d' : '#fff',
                   fontWeight: isActive ? 700 : 600,
-                  fontSize: '0.8rem', cursor: 'pointer', whiteSpace: 'nowrap',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
                   WebkitTapHighlightColor: 'transparent',
                   transition: 'background 0.15s',
                 }}
@@ -199,28 +350,72 @@ export default function MyOrders() {
       </div>
 
       {/* Content — overlaps gradient header */}
-      <div style={{ padding: '0.875rem 1rem', marginTop: '-1.75rem', maxWidth: '48rem', marginLeft: 'auto', marginRight: 'auto' }}>
-
+      <div
+        style={{
+          padding: '0.875rem 1rem',
+          marginTop: '-1.75rem',
+          maxWidth: '48rem',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        }}
+      >
         {isLoading && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 0', gap: '1rem' }}>
-            <div style={{ width: '2.5rem', height: '2.5rem', border: '3px solid #e5e7eb', borderTopColor: '#059669', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite' }} />
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '4rem 0',
+              gap: '1rem',
+            }}
+          >
+            <div
+              style={{
+                width: '2.5rem',
+                height: '2.5rem',
+                border: '3px solid #e5e7eb',
+                borderTopColor: '#059669',
+                borderRadius: '50%',
+                animation: 'cl-spin 0.75s linear infinite',
+              }}
+            />
             <p style={{ color: '#6b7280', margin: 0 }}>{t('loading')}</p>
           </div>
         )}
 
         {!isLoading && orders.length === 0 && (
           <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-            <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+            <div
+              style={{
+                width: '5rem',
+                height: '5rem',
+                borderRadius: '50%',
+                background: '#f3f4f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.25rem',
+              }}
+            >
               <Package size={28} color="#d1d5db" />
             </div>
-            <h3 style={{ fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>{t('noOrdersFound')}</h3>
-            <p style={{ color: '#6b7280', margin: '0 0 1.5rem', fontSize: '0.875rem' }}>{t('noOrdersYet')}</p>
+            <h3 style={{ fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>
+              {t('noOrdersFound')}
+            </h3>
+            <p style={{ color: '#6b7280', margin: '0 0 1.5rem', fontSize: '0.875rem' }}>
+              {t('noOrdersYet')}
+            </p>
             <button
               onClick={() => navigate('/')}
               style={{
-                padding: '0.875rem 2rem', borderRadius: '0.875rem', border: 'none',
+                padding: '0.875rem 2rem',
+                borderRadius: '0.875rem',
+                border: 'none',
                 background: 'linear-gradient(135deg, #059669, #047857)',
-                color: 'white', fontWeight: 700, cursor: 'pointer',
+                color: 'white',
+                fontWeight: 700,
+                cursor: 'pointer',
               }}
             >
               {t('continueShopping')}
@@ -230,7 +425,7 @@ export default function MyOrders() {
 
         {!isLoading && orders.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-            {orders.map(order => {
+            {orders.map((order) => {
               const status = order.deliveryStatus || 'pending';
               const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
               const isActive = !['delivered', 'canceled'].includes(status);
@@ -253,39 +448,79 @@ export default function MyOrders() {
                   {/* Card body */}
                   <div style={{ flex: 1, padding: '1rem' }}>
                     {/* Top row */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.625rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: '0.5rem',
+                        marginBottom: '0.625rem',
+                      }}
+                    >
                       <div>
-                        <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', fontFamily: 'monospace' }}>
+                        <span
+                          style={{
+                            fontWeight: 800,
+                            fontSize: '1rem',
+                            color: '#0f172a',
+                            fontFamily: 'monospace',
+                          }}
+                        >
                           #{order.orderNumber}
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.25rem' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.375rem',
+                            marginTop: '0.25rem',
+                          }}
+                        >
                           <CalendarIcon size={12} color="#9ca3af" />
-                          <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{formatDate(order.dateCreated)}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                            {formatDate(order.dateCreated)}
+                          </span>
                         </div>
                       </div>
-                      <span style={{
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '9999px',
-                        background: cfg.bg,
-                        color: cfg.color,
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}>
+                      <span
+                        style={{
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '9999px',
+                          background: cfg.bg,
+                          color: cfg.color,
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}
+                      >
                         {getStatusLabel(status)}
                       </span>
                     </div>
 
                     {/* Total */}
-                    <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '0.625rem 0.75rem',
-                      background: '#f8fafc', borderRadius: '0.625rem',
-                      marginBottom: '0.75rem',
-                    }}>
-                      <span style={{ fontSize: '0.8125rem', color: '#6b7280', fontWeight: 500 }}>{t('totalAmount')}</span>
-                      <span style={{ fontWeight: 900, fontSize: '1.375rem', color: '#059669', letterSpacing: '-0.02em' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.625rem 0.75rem',
+                        background: '#f8fafc',
+                        borderRadius: '0.625rem',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
+                      <span style={{ fontSize: '0.8125rem', color: '#6b7280', fontWeight: 500 }}>
+                        {t('totalAmount')}
+                      </span>
+                      <span
+                        style={{
+                          fontWeight: 900,
+                          fontSize: '1.375rem',
+                          color: '#059669',
+                          letterSpacing: '-0.02em',
+                        }}
+                      >
                         {formatCurrency(order.total || 0, language)}
                       </span>
                     </div>
@@ -296,7 +531,10 @@ export default function MyOrders() {
                         onClick={() => handleViewItems(order)}
                         style={{
                           flex: 1,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.375rem',
                           padding: '0.75rem',
                           borderRadius: '0.75rem',
                           border: '1.5px solid #e5e7eb',
@@ -315,7 +553,10 @@ export default function MyOrders() {
                           onClick={() => setSelectedOrder(order.orderNumber)}
                           style={{
                             flex: 1,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.375rem',
                             padding: '0.75rem',
                             borderRadius: '0.75rem',
                             border: 'none',
@@ -339,14 +580,28 @@ export default function MyOrders() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', paddingTop: '0.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  paddingTop: '0.5rem',
+                }}
+              >
                 <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   style={{
-                    width: '2.75rem', height: '2.75rem', borderRadius: '50%',
-                    border: '1.5px solid #e5e7eb', background: 'white', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2.75rem',
+                    height: '2.75rem',
+                    borderRadius: '50%',
+                    border: '1.5px solid #e5e7eb',
+                    background: 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     opacity: currentPage === 1 ? 0.4 : 1,
                   }}
                 >
@@ -356,12 +611,18 @@ export default function MyOrders() {
                   {currentPage} / {totalPages}
                 </span>
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                   style={{
-                    width: '2.75rem', height: '2.75rem', borderRadius: '50%',
-                    border: '1.5px solid #e5e7eb', background: 'white', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2.75rem',
+                    height: '2.75rem',
+                    borderRadius: '50%',
+                    border: '1.5px solid #e5e7eb',
+                    background: 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     opacity: currentPage === totalPages ? 0.4 : 1,
                   }}
                 >
@@ -387,14 +648,35 @@ export default function MyOrders() {
             <span style={{ fontWeight: 700 }}>{t('trackOrder')}</span>
           </div>
         }
-        modal style={{ width: '95vw', maxWidth: '42rem' }}
+        modal
+        style={{ width: '95vw', maxWidth: '42rem' }}
         contentStyle={{ maxHeight: '80vh', overflow: 'auto' }}
       >
         {selectedOrder && user?.customerId && (
           <div style={{ marginTop: '0.75rem' }}>
-            <div style={{ background: '#f0fdf4', borderRadius: '0.75rem', padding: '0.875rem', marginBottom: '1rem', border: '1px solid #a7f3d0' }}>
-              <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>{t('orderNumber')}</p>
-              <p style={{ margin: 0, fontWeight: 800, color: '#059669', fontFamily: 'monospace', fontSize: '1.0625rem' }}>{selectedOrder}</p>
+            <div
+              style={{
+                background: '#f0fdf4',
+                borderRadius: '0.75rem',
+                padding: '0.875rem',
+                marginBottom: '1rem',
+                border: '1px solid #a7f3d0',
+              }}
+            >
+              <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
+                {t('orderNumber')}
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontWeight: 800,
+                  color: '#059669',
+                  fontFamily: 'monospace',
+                  fontSize: '1.0625rem',
+                }}
+              >
+                {selectedOrder}
+              </p>
             </div>
             <OrderTracking orderNumber={selectedOrder} customerId={user.customerId} />
           </div>
@@ -411,70 +693,149 @@ export default function MyOrders() {
             <span style={{ fontWeight: 700 }}>{t('orderDetails')}</span>
           </div>
         }
-        modal style={{ width: '95vw', maxWidth: '48rem' }}
+        modal
+        style={{ width: '95vw', maxWidth: '48rem' }}
         contentStyle={{ padding: 0 }}
-        footer={selectedOrderItems && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '0.75rem 1rem', background: '#f0fdf4', borderRadius: '0.75rem',
-            }}>
-              <span style={{ fontWeight: 700, color: '#374151' }}>{t('total')}</span>
-              <span style={{ fontWeight: 900, fontSize: '1.5rem', color: '#059669', letterSpacing: '-0.02em' }}>
-                {formatCurrency(selectedOrderItems.order.total || 0, language)}
-              </span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <button
-                onClick={() => handlePreview('receipt')}
+        footer={
+          selectedOrderItems && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div
                 style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  padding: '0.875rem', borderRadius: '0.875rem',
-                  border: '1.5px solid #e5e7eb', background: 'white',
-                  cursor: 'pointer', fontWeight: 700, fontSize: '0.875rem', color: '#374151',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.75rem 1rem',
+                  background: '#f0fdf4',
+                  borderRadius: '0.75rem',
                 }}
               >
-                <ReceiptText size={16} /> {t('receipt')}
-              </button>
-              <button
-                onClick={() => handlePreview('invoice')}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  padding: '0.875rem', borderRadius: '0.875rem',
-                  border: 'none', background: 'linear-gradient(135deg, #059669, #047857)',
-                  cursor: 'pointer', fontWeight: 700, fontSize: '0.875rem', color: 'white',
-                }}
-              >
-                <FileText size={16} /> {t('deliveryNote')}
-              </button>
+                <span style={{ fontWeight: 700, color: '#374151' }}>{t('total')}</span>
+                <span
+                  style={{
+                    fontWeight: 900,
+                    fontSize: '1.5rem',
+                    color: '#059669',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {formatCurrency(selectedOrderItems.order.total || 0, language)}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <button
+                  onClick={() => handlePreview('receipt')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    padding: '0.875rem',
+                    borderRadius: '0.875rem',
+                    border: '1.5px solid #e5e7eb',
+                    background: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    color: '#374151',
+                  }}
+                >
+                  <ReceiptText size={16} /> {t('receipt')}
+                </button>
+                <button
+                  onClick={() => handlePreview('invoice')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    padding: '0.875rem',
+                    borderRadius: '0.875rem',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #059669, #047857)',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    color: 'white',
+                  }}
+                >
+                  <FileText size={16} /> {t('deliveryNote')}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
       >
         {selectedOrderItems && (
           <div style={{ padding: '1rem' }}>
-            <div style={{ background: '#f8fafc', borderRadius: '0.75rem', padding: '0.875rem', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div
+              style={{
+                background: '#f8fafc',
+                borderRadius: '0.75rem',
+                padding: '0.875rem',
+                marginBottom: '1rem',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.75rem',
+              }}
+            >
               <div>
-                <p style={{ margin: '0 0 0.25rem', fontSize: '0.6875rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('orderNumber')}</p>
-                <p style={{ margin: 0, fontWeight: 800, color: '#059669', fontFamily: 'monospace' }}>#{selectedOrderItems.order.orderNumber}</p>
+                <p
+                  style={{
+                    margin: '0 0 0.25rem',
+                    fontSize: '0.6875rem',
+                    color: '#9ca3af',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {t('orderNumber')}
+                </p>
+                <p
+                  style={{ margin: 0, fontWeight: 800, color: '#059669', fontFamily: 'monospace' }}
+                >
+                  #{selectedOrderItems.order.orderNumber}
+                </p>
               </div>
               <div>
-                <p style={{ margin: '0 0 0.25rem', fontSize: '0.6875rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('date')}</p>
-                <p style={{ margin: 0, fontWeight: 600, color: '#0f172a', fontSize: '0.875rem' }}>{formatDate(selectedOrderItems.order.dateCreated)}</p>
+                <p
+                  style={{
+                    margin: '0 0 0.25rem',
+                    fontSize: '0.6875rem',
+                    color: '#9ca3af',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {t('date')}
+                </p>
+                <p style={{ margin: 0, fontWeight: 600, color: '#0f172a', fontSize: '0.875rem' }}>
+                  {formatDate(selectedOrderItems.order.dateCreated)}
+                </p>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {selectedOrderItems.items.map(item => (
+              {selectedOrderItems.items.map((item) => (
                 <div
                   key={item.id}
                   style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0.875rem', borderRadius: '0.75rem',
-                    border: '1px solid #f0f0f0', background: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.875rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid #f0f0f0',
+                    background: 'white',
                   }}
                 >
                   <div>
-                    <p style={{ margin: '0 0 0.25rem', fontWeight: 600, color: '#0f172a', fontSize: '0.9375rem' }}>
+                    <p
+                      style={{
+                        margin: '0 0 0.25rem',
+                        fontWeight: 600,
+                        color: '#0f172a',
+                        fontSize: '0.9375rem',
+                      }}
+                    >
                       {item.productName || `${t('cartProduct')} ${item.productId}`}
                     </p>
                     <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6b7280' }}>
@@ -491,8 +852,18 @@ export default function MyOrders() {
         )}
       </Dialog>
 
-      <PDFPreviewModal isOpen={showPDFPreview} onClose={() => { setShowPDFPreview(false); if (pdfUrl) { URL.revokeObjectURL(pdfUrl); setPdfUrl(''); } }} pdfUrl={pdfUrl} title={pdfTitle} />
+      <PDFPreviewModal
+        isOpen={showPDFPreview}
+        onClose={() => {
+          setShowPDFPreview(false);
+          if (pdfUrl) {
+            URL.revokeObjectURL(pdfUrl);
+            setPdfUrl('');
+          }
+        }}
+        pdfUrl={pdfUrl}
+        title={pdfTitle}
+      />
     </div>
   );
 }
-

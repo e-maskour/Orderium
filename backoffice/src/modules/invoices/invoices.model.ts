@@ -1,8 +1,4 @@
-import {
-  IInvoice,
-  IInvoiceItem,
-  IInvoiceWithDetails
-} from './invoices.interface';
+import { IInvoice, IInvoiceItem, IInvoiceWithDetails } from './invoices.interface';
 
 export class InvoiceItem implements IInvoiceItem {
   id: number;
@@ -310,7 +306,9 @@ export class InvoiceWithDetails implements IInvoiceWithDetails {
 
   constructor(data: IInvoiceWithDetails) {
     this.invoice = data.invoice instanceof Invoice ? data.invoice : new Invoice(data.invoice);
-    this.items = data.items.map(item => item instanceof InvoiceItem ? item : new InvoiceItem(item));
+    this.items = data.items.map((item) =>
+      item instanceof InvoiceItem ? item : new InvoiceItem(item),
+    );
   }
 
   // Getters

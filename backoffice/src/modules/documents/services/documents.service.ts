@@ -43,7 +43,7 @@ export class DocumentsService {
   async getDocuments(
     type: DocumentType,
     direction: DocumentDirection,
-    filters?: DocumentFilters
+    filters?: DocumentFilters,
   ): Promise<DocumentsResult> {
     if (type === 'facture') {
       const isVente = direction === 'vente';
@@ -52,7 +52,7 @@ export class DocumentsService {
         status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
         customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
         supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
-        direction: isVente ? 'VENTE' as const : 'ACHAT' as const,
+        direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
         dateFrom: filters?.dateFrom,
         dateTo: filters?.dateTo,
         page: filters?.page,
@@ -62,8 +62,8 @@ export class DocumentsService {
       const result = await invoicesService.getAll(invoiceFilters);
       const invoices = result.invoices || [];
 
-      const filtered = invoices.filter(inv =>
-        isVente ? inv.invoice.customerId : inv.invoice.supplierId
+      const filtered = invoices.filter((inv) =>
+        isVente ? inv.invoice.customerId : inv.invoice.supplierId,
       );
 
       const transformed = this.transformInvoicesToDocuments(filtered, isVente);
@@ -71,7 +71,7 @@ export class DocumentsService {
       return {
         documents: transformed,
         count: result.count,
-        totalCount: result.totalCount
+        totalCount: result.totalCount,
       };
     } else if (type === 'devis') {
       const isVente = direction === 'vente';
@@ -80,7 +80,7 @@ export class DocumentsService {
         status: (filters?.status !== 'all' ? filters?.status : undefined) as any,
         customerId: isVente && filters?.partnerId ? filters.partnerId : undefined,
         supplierId: !isVente && filters?.partnerId ? filters.partnerId : undefined,
-        direction: isVente ? 'VENTE' as const : 'ACHAT' as const,
+        direction: isVente ? ('VENTE' as const) : ('ACHAT' as const),
         dateFrom: filters?.dateFrom,
         dateTo: filters?.dateTo,
         page: filters?.page,
@@ -91,16 +91,14 @@ export class DocumentsService {
       const quotes = result.quotes || [];
 
       // Filter quotes based on direction
-      const filtered = quotes.filter(q =>
-        isVente ? q.quote.customerId : q.quote.supplierId
-      );
+      const filtered = quotes.filter((q) => (isVente ? q.quote.customerId : q.quote.supplierId));
 
       const transformed = this.transformQuotesToDocuments(filtered, isVente);
 
       return {
         documents: transformed,
         count: filtered.length,
-        totalCount: filtered.length
+        totalCount: filtered.length,
       };
     } else if (type === 'bon_livraison') {
       const isVente = direction === 'vente';
@@ -115,13 +113,13 @@ export class DocumentsService {
         undefined,
         filters?.page,
         filters?.pageSize,
-        isVente ? 'VENTE' : 'ACHAT'
+        isVente ? 'VENTE' : 'ACHAT',
       );
 
       // Filter orders based on direction
       const allOrders = result.orders || [];
       const filtered = allOrders.filter((order: any) =>
-        isVente ? order.customerId : order.supplierId
+        isVente ? order.customerId : order.supplierId,
       );
 
       const transformed = this.transformOrdersToDocuments(filtered, isVente);
@@ -129,7 +127,7 @@ export class DocumentsService {
       return {
         documents: transformed,
         count: filtered.length,
-        totalCount: filtered.length
+        totalCount: filtered.length,
       };
     }
 
@@ -168,9 +166,9 @@ export class DocumentsService {
 
   private transformInvoicesToDocuments(
     invoices: InvoiceWithDetails[],
-    isVente: boolean
+    isVente: boolean,
   ): DocumentItem[] {
-    return invoices.map(inv => ({
+    return invoices.map((inv) => ({
       id: inv.invoice.id,
       number: inv.invoice.invoiceNumber,
       date: inv.invoice.date,
@@ -184,12 +182,12 @@ export class DocumentsService {
       remainingAmount: inv.invoice.remainingAmount || 0,
       status: this.mapInvoiceStatus(inv.invoice.status, inv.invoice.dueDate),
       isValidated: inv.invoice.isValidated,
-      itemsCount: inv.items.length
+      itemsCount: inv.items.length,
     }));
   }
 
   private transformQuotesToDocuments(quotes: QuoteWithDetails[], isVente: boolean): DocumentItem[] {
-    return quotes.map(q => ({
+    return quotes.map((q) => ({
       id: q.quote.id,
       number: q.quote.quoteNumber,
       date: q.quote.date,
@@ -203,12 +201,12 @@ export class DocumentsService {
       remainingAmount: q.quote.total,
       status: q.quote.status,
       isValidated: q.quote.isValidated,
-      itemsCount: q.items.length
+      itemsCount: q.items.length,
     }));
   }
 
   private transformOrdersToDocuments(orders: Order[], isVente: boolean): DocumentItem[] {
-    return orders.map(order => ({
+    return orders.map((order) => ({
       id: order.id,
       number: order.orderNumber || `#${order.id}`,
       date: order.date || order.dateCreated,
@@ -222,7 +220,7 @@ export class DocumentsService {
       remainingAmount: order.total || 0,
       status: order.status || 'draft',
       isValidated: order.isValidated || false,
-      itemsCount: order.items?.length || 0
+      itemsCount: order.items?.length || 0,
     }));
   }
 
@@ -239,7 +237,7 @@ export class DocumentsService {
   async getAnalytics(
     type: DocumentType,
     direction: DocumentDirection,
-    year?: number
+    year?: number,
   ): Promise<any> {
     const currentYear = year || new Date().getFullYear();
 

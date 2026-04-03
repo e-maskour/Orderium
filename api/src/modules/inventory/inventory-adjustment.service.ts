@@ -19,13 +19,14 @@ import {
 } from './dto/inventory-adjustment.dto';
 import { StockService } from './stock.service';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { AdjustmentLineDto } from './dto/inventory-adjustment.dto';
 
 @Injectable()
 export class InventoryAdjustmentService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly stockService: StockService,
-  ) { }
+  ) {}
 
   private get adjustmentRepository(): Repository<InventoryAdjustment> {
     return this.tenantConnService.getRepository(InventoryAdjustment);
@@ -81,27 +82,7 @@ export class InventoryAdjustmentService {
     // Add lines if provided
     if (createDto.lines && createDto.lines.length > 0) {
       for (const lineDto of createDto.lines) {
-        // Validate product
-        const product = await this.productRepository.findOne({
-          where: { id: lineDto.productId },
-        });
-        if (!product) {
-          throw new NotFoundException(
-            `Product with ID ${lineDto.productId} not found`,
-          );
-        }
-
-        // Calculate difference
-        const difference =
-          lineDto.countedQuantity - lineDto.theoreticalQuantity;
-
-        const line = this.adjustmentLineRepository.create({
-          ...lineDto,
-          adjustmentId: saved.id,
-          difference,
-        });
-
-        await this.adjustmentLineRepository.save(line);
+        await this.saveAdjustmentLine(lineDto, saved.id);
       }
     }
 
@@ -187,31 +168,10 @@ export class InventoryAdjustmentService {
 
     // Update lines if provided
     if (updateDto.lines) {
-      // Delete existing lines
+      // Delete existing lines and add new ones
       await this.adjustmentLineRepository.delete({ adjustmentId: id });
-
-      // Add new lines
       for (const lineDto of updateDto.lines) {
-        // Validate product
-        const product = await this.productRepository.findOne({
-          where: { id: lineDto.productId },
-        });
-        if (!product) {
-          throw new NotFoundException(
-            `Product with ID ${lineDto.productId} not found`,
-          );
-        }
-
-        const difference =
-          lineDto.countedQuantity - lineDto.theoreticalQuantity;
-
-        const line = this.adjustmentLineRepository.create({
-          ...lineDto,
-          adjustmentId: id,
-          difference,
-        });
-
-        await this.adjustmentLineRepository.save(line);
+        await this.saveAdjustmentLine(lineDto, id);
       }
     }
 
@@ -233,9 +193,7 @@ export class InventoryAdjustmentService {
     }
 
     adjustment.status = AdjustmentStatus.IN_PROGRESS;
-    await this.adjustmentRepository.save(adjustment);
-
-    return this.findOne(id);
+    return this.adjustmentRepository.save(adjustment);
   }
 
   /**
@@ -335,7 +293,7 @@ export class InventoryAdjustmentService {
 
       await queryRunner.commitTransaction();
 
-      return this.findOne(adjustment.id);
+      return adjustment;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -355,9 +313,7 @@ export class InventoryAdjustmentService {
     }
 
     adjustment.status = AdjustmentStatus.CANCELLED;
-    await this.adjustmentRepository.save(adjustment);
-
-    return this.findOne(id);
+    return this.adjustmentRepository.save(adjustment);
   }
 
   /**
@@ -403,46 +359,53 @@ export class InventoryAdjustmentService {
 
   // ==================== HELPER METHODS ====================
 
-  /**
-   * Generate unique adjustment reference
-   */
-  private async generateAdjustmentReference(): Promise<string> {
-    const year = new Date().getFullYear();
-
-    const lastAdjustment = await this.adjustmentRepository.findOne({
-      order: { id: 'DESC' },
+  private async saveAdjustmentLine(
+    lineDto: AdjustmentLineDto,
+    adjustmentId: number,
+  ): Promise<void> {
+    const product = await this.productRepository.findOne({
+      where: { id: lineDto.productId },
     });
-
-    let sequence = 1;
-    if (lastAdjustment) {
-      const match = lastAdjustment.reference.match(/(\d+)$/);
-      if (match) {
-        sequence = parseInt(match[1]) + 1;
-      }
-    }
-
-    return `ADJ/${year}/${sequence.toString().padStart(5, '0')}`;
+    if (!product)
+      throw new NotFoundException(
+        `Product with ID ${lineDto.productId} not found`,
+      );
+    const difference = lineDto.countedQuantity - lineDto.theoreticalQuantity;
+    await this.adjustmentLineRepository.save(
+      this.adjustmentLineRepository.create({
+        ...lineDto,
+        adjustmentId,
+        difference,
+      }),
+    );
   }
 
-  /**
-   * Generate movement reference for adjustment
-   */
-  private async generateMovementReference(): Promise<string> {
+  private async generateRef(
+    prefix: string,
+    fetchLast: () => Promise<{ reference: string } | null>,
+  ): Promise<string> {
     const year = new Date().getFullYear();
-
-    const lastMovement = await this.stockMovementRepository.findOne({
-      where: { movementType: MovementType.ADJUSTMENT },
-      order: { id: 'DESC' },
-    });
-
+    const last = await fetchLast();
     let sequence = 1;
-    if (lastMovement) {
-      const match = lastMovement.reference.match(/(\d+)$/);
-      if (match) {
-        sequence = parseInt(match[1]) + 1;
-      }
+    if (last) {
+      const match = last.reference.match(/(\d+)$/);
+      if (match) sequence = parseInt(match[1]) + 1;
     }
+    return `${prefix}/${year}/${sequence.toString().padStart(5, '0')}`;
+  }
 
-    return `ADJ/${year}/${sequence.toString().padStart(5, '0')}`;
+  private generateAdjustmentReference(): Promise<string> {
+    return this.generateRef('ADJ', () =>
+      this.adjustmentRepository.findOne({ order: { id: 'DESC' } }),
+    );
+  }
+
+  private generateMovementReference(): Promise<string> {
+    return this.generateRef('ADJ', () =>
+      this.stockMovementRepository.findOne({
+        where: { movementType: MovementType.ADJUSTMENT },
+        order: { id: 'DESC' },
+      }),
+    );
   }
 }

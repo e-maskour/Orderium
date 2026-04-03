@@ -77,7 +77,12 @@ export class StockMovement {
   @Column({ type: 'int', nullable: true })
   destWarehouseId: number | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    transformer: numericTransformer,
+  })
   quantity: number;
 
   @ManyToOne(() => UnitOfMeasure, { nullable: true })

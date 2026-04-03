@@ -19,6 +19,7 @@ import { ConfigurationsService } from '../configurations/configurations.service'
 import { Order } from '../orders/entities/order.entity';
 import { MinioProvider } from '../images/providers/minio.provider';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { extractPartnerInfo, mapDocumentItems } from './pdf.helpers';
 
 type DocumentType = 'invoice' | 'quote' | 'delivery-note' | 'receipt';
 
@@ -89,7 +90,7 @@ export class PDFService implements OnModuleDestroy {
     private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
     private readonly minioProvider: MinioProvider,
-  ) { }
+  ) {}
 
   async onModuleDestroy(): Promise<void> {
     await this.closeBrowser();
@@ -110,7 +111,6 @@ export class PDFService implements OnModuleDestroy {
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--no-zygote',
-            '--single-process',
           ],
         })
         .then((b) => {
@@ -141,6 +141,34 @@ export class PDFService implements OnModuleDestroy {
     }
     this.browser = null;
     this.browserLaunchPromise = null;
+  }
+
+  /**
+   * Creates a new page, retrying once with a fresh browser if the current
+   * instance has been disconnected between getBrowser() and newPage().
+   */
+  private async getNewPage(
+    options: Parameters<Browser['newPage']>[0],
+  ): ReturnType<Browser['newPage']> {
+    try {
+      const browser = await this.getBrowser();
+      return await browser.newPage(options);
+    } catch (err: any) {
+      const msg: string = err?.message ?? '';
+      if (
+        msg.includes('closed') ||
+        msg.includes('disconnected') ||
+        msg.includes('Target closed')
+      ) {
+        this.logger.warn('Browser closed before newPage — forcing re-launch');
+        // Discard the stale reference so getBrowser re-launches
+        this.browser = null;
+        this.browserLaunchPromise = null;
+        const freshBrowser = await this.getBrowser();
+        return freshBrowser.newPage(options);
+      }
+      throw err;
+    }
   }
 
   private get invoiceRepository(): Repository<Invoice> {
@@ -260,21 +288,14 @@ export class PDFService implements OnModuleDestroy {
 
     const isDemandePrix = !!invoice.supplierId;
 
+    const partner = extractPartnerInfo(invoice, isDemandePrix);
     return {
       id: invoice.id,
       documentNumber: invoice.invoiceNumber,
       invoiceNumber: invoice.invoiceNumber,
       date: invoice.date,
       dueDate: invoice.dueDate || undefined,
-      customerName: isDemandePrix
-        ? invoice.supplierName || invoice.supplier?.name || 'Fournisseur'
-        : invoice.customerName || invoice.customer?.name || 'Client',
-      customerPhone: isDemandePrix
-        ? invoice.supplierPhone || invoice.supplier?.phoneNumber
-        : invoice.customerPhone || invoice.customer?.phoneNumber,
-      customerAddress: isDemandePrix
-        ? invoice.supplierAddress || invoice.supplier?.address
-        : invoice.customerAddress || invoice.customer?.address,
+      ...partner,
       subtotal: Number(invoice.subtotal) || 0,
       discount: Number(invoice.discount) || 0,
       discountType: Number(invoice.discountType) || 0,
@@ -283,17 +304,7 @@ export class PDFService implements OnModuleDestroy {
       notes: invoice.notes || undefined,
       status: invoice.status,
       isDemandePrix,
-      supplierName: isDemandePrix
-        ? invoice.supplierName || invoice.supplier?.name
-        : undefined,
-      items: invoice.items.map((item) => ({
-        description: item.description || item.product?.name || 'Article',
-        quantity: Number(item.quantity) || 0,
-        unitPrice: Number(item.unitPrice) || 0,
-        discount: Number(item.discount) || 0,
-        tax: Number(item.tax) || 0,
-        total: Number(item.total) || 0,
-      })),
+      items: mapDocumentItems(invoice.items),
     };
   }
 
@@ -309,21 +320,14 @@ export class PDFService implements OnModuleDestroy {
 
     const isDemandePrix = !!quote.supplierId;
 
+    const partner = extractPartnerInfo(quote, isDemandePrix);
     return {
       id: quote.id,
       documentNumber: quote.quoteNumber,
       quoteNumber: quote.quoteNumber,
       date: quote.date,
       expirationDate: quote.expirationDate || undefined,
-      customerName: isDemandePrix
-        ? quote.supplierName || quote.supplier?.name || 'Fournisseur'
-        : quote.customerName || quote.customer?.name || 'Client',
-      customerPhone: isDemandePrix
-        ? quote.supplierPhone || quote.supplier?.phoneNumber
-        : quote.customerPhone || quote.customer?.phoneNumber,
-      customerAddress: isDemandePrix
-        ? quote.supplierAddress || quote.supplier?.address
-        : quote.customerAddress || quote.customer?.address,
+      ...partner,
       subtotal: Number(quote.subtotal) || 0,
       discount: Number(quote.discount) || 0,
       discountType: Number(quote.discountType) || 0,
@@ -333,17 +337,7 @@ export class PDFService implements OnModuleDestroy {
       signedBy: quote.signedBy || undefined,
       signedDate: quote.signedDate || undefined,
       isDemandePrix,
-      supplierName: isDemandePrix
-        ? quote.supplierName || quote.supplier?.name
-        : undefined,
-      items: quote.items.map((item) => ({
-        description: item.description || item.product?.name || 'Article',
-        quantity: Number(item.quantity) || 0,
-        unitPrice: Number(item.unitPrice) || 0,
-        discount: Number(item.discount) || 0,
-        tax: Number(item.tax) || 0,
-        total: Number(item.total) || 0,
-      })),
+      items: mapDocumentItems(quote.items),
     };
   }
 
@@ -372,15 +366,7 @@ export class PDFService implements OnModuleDestroy {
       documentNumber,
       orderNumber: order.orderNumber,
       date: order.dateCreated,
-      customerName: isDemandePrix
-        ? order.supplierName || order.supplier?.name || 'Fournisseur'
-        : order.customerName || order.customer?.name || 'Client',
-      customerPhone: isDemandePrix
-        ? order.supplierPhone || order.supplier?.phoneNumber
-        : order.customerPhone || order.customer?.phoneNumber,
-      customerAddress: isDemandePrix
-        ? order.supplierAddress || order.supplier?.address
-        : order.customerAddress || order.customer?.address,
+      ...extractPartnerInfo(order, isDemandePrix),
       subtotal: Number(order.subtotal) || 0,
       discount: Number(order.discount) || 0,
       discountType: Number(order.discountType) || 0,
@@ -388,17 +374,7 @@ export class PDFService implements OnModuleDestroy {
       total: Number(order.total) || 0,
       fromPortal: order.fromPortal || false,
       isDemandePrix,
-      supplierName: isDemandePrix
-        ? order.supplierName || order.supplier?.name
-        : undefined,
-      items: order.items.map((item) => ({
-        description: item.description || item.product?.name || 'Article',
-        quantity: Number(item.quantity) || 0,
-        unitPrice: Number(item.unitPrice) || 0,
-        discount: Number(item.discount) || 0,
-        tax: Number(item.tax) || 0,
-        total: Number(item.total) || 0,
-      })),
+      items: mapDocumentItems(order.items),
     };
   }
 
@@ -425,8 +401,7 @@ export class PDFService implements OnModuleDestroy {
     documentType: DocumentType,
     data: DocumentData,
   ): Promise<Buffer> {
-    const browser = await this.getBrowser();
-    const page = await browser.newPage({
+    const page = await this.getNewPage({
       viewport: {
         width: 420,
         height: 595,
@@ -489,8 +464,7 @@ export class PDFService implements OnModuleDestroy {
   }
 
   private async generateReceiptPDF(data: DocumentData): Promise<Buffer> {
-    const browser = await this.getBrowser();
-    const page = await browser.newPage({
+    const page = await this.getNewPage({
       viewport: {
         width: 302,
         height: 3000,

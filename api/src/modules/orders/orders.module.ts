@@ -23,4 +23,4 @@ import { InventoryModule } from '../inventory/inventory.module';
   providers: [OrdersService, OrderPaymentsService],
   exports: [OrdersService, OrderPaymentsService],
 })
-export class OrdersModule { }
+export class OrdersModule {}

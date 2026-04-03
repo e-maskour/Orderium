@@ -26,7 +26,7 @@ import { TenantActivityLog } from '../tenant-lifecycle/entities/tenant-activity-
   providers: [TenantService, TenantConnectionService, SuperAdminGuard],
   exports: [TenantService, TenantConnectionService],
 })
-export class TenantModule { }
+export class TenantModule {}
 
 // Re-export the middleware so AppModule can import it cleanly
 export { TenantMiddleware };

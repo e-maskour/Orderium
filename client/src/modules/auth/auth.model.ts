@@ -10,8 +10,8 @@ export class PortalUser implements IPortalUser {
     public fullName?: string,
     public customerId?: number,
     public customerName?: string,
-    public deliveryId?: number
-  ) { }
+    public deliveryId?: number,
+  ) {}
 
   get displayName(): string {
     return this.fullName || this.customerName || this.phoneNumber;
@@ -58,7 +58,7 @@ export class PortalUser implements IPortalUser {
       data.fullName,
       data.customerId,
       data.customerName,
-      data.deliveryId
+      data.deliveryId,
     );
   }
 

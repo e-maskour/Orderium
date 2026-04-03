@@ -42,8 +42,8 @@ export default {
   invalidEmail: 'Email invalide',
   enterName: 'Entrez le nom',
   deliveryAddress: 'Adresse de livraison',
-  enterDeliveryAddress: 'Entrez l\'adresse de livraison',
-  enterAddress: 'Entrez l\'adresse',
+  enterDeliveryAddress: "Entrez l'adresse de livraison",
+  enterAddress: "Entrez l'adresse",
   tvaNumber: 'Numéro TVA',
   enterTvaNumber: 'Entrez le numéro TVA',
   ice: 'Numéro ICE',
@@ -58,7 +58,8 @@ export default {
   enterPatente: 'Entrez le numéro Patente',
   updatePartner: 'Mettre à jour le partenaire',
   createPartner: 'Créer un partenaire',
-  deletePartnerConfirmation: 'Êtes-vous sûr de vouloir supprimer ce partenaire ? Cette action ne peut pas être annulée.',
+  deletePartnerConfirmation:
+    'Êtes-vous sûr de vouloir supprimer ce partenaire ? Cette action ne peut pas être annulée.',
 
   // Tabs
   dashboard: 'Tableau de bord',

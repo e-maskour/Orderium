@@ -35,19 +35,49 @@ export class StockQuant {
   @Column({ type: 'int' })
   warehouseId: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericTransformer,
+  })
   quantity: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericTransformer,
+  })
   reservedQuantity: number; // Quantity reserved for orders
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericTransformer,
+  })
   availableQuantity: number; // quantity - reservedQuantity
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericTransformer,
+  })
   incomingQuantity: number; // Expected from purchase orders
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericTransformer,
+  })
   outgoingQuantity: number; // Expected for delivery orders
 
   @ManyToOne(() => UnitOfMeasure, { nullable: true })

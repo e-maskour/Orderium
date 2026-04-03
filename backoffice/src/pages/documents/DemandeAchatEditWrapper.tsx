@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function DemandeAchatEditWrapper() {
   const { t } = useLanguage();
   const config = getDocumentConfig('devis', 'achat', t);
-  
+
   return (
     <DocumentEditPage
       documentType="devis"

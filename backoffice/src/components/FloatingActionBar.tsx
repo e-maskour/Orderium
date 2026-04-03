@@ -380,12 +380,8 @@ export function FloatingActionBar({
           {/* Count badge */}
           <div className="fab-pill__badge">
             <span className="fab-pill__badge-num">{selectedCount}</span>
-            {totalCount != null && (
-              <span className="fab-pill__badge-of">/{totalCount}</span>
-            )}
-            <span className="fab-pill__badge-lbl">
-              {itemLabel ?? t('selected')}
-            </span>
+            {totalCount != null && <span className="fab-pill__badge-of">/{totalCount}</span>}
+            <span className="fab-pill__badge-lbl">{itemLabel ?? t('selected')}</span>
           </div>
 
           {/* Select-all icon-only toggle */}
@@ -426,12 +422,7 @@ export function FloatingActionBar({
           <div className="fab-pill__div" />
 
           {/* Close */}
-          <button
-            type="button"
-            className="fab-close"
-            onClick={onClearSelection}
-            title={t('close')}
-          >
+          <button type="button" className="fab-close" onClick={onClearSelection} title={t('close')}>
             <X style={{ width: '0.85rem', height: '0.85rem' }} />
           </button>
         </div>
@@ -443,9 +434,7 @@ export function FloatingActionBar({
           <span className="fab-sheet__count">{selectedCount}</span>
           <span className="fab-sheet__title">
             {selectedCount} {itemLabel ?? t('selected')}
-            {totalCount != null && (
-              <span className="fab-sheet__of"> / {totalCount}</span>
-            )}
+            {totalCount != null && <span className="fab-sheet__of"> / {totalCount}</span>}
           </span>
 
           {/* Select-all icon-only toggle */}
@@ -464,11 +453,7 @@ export function FloatingActionBar({
             </button>
           )}
 
-          <button
-            type="button"
-            className="fab-sheet__close"
-            onClick={onClearSelection}
-          >
+          <button type="button" className="fab-sheet__close" onClick={onClearSelection}>
             <X style={{ width: '0.875rem', height: '0.875rem' }} />
           </button>
         </div>

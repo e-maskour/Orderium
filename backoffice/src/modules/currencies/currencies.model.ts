@@ -54,15 +54,15 @@ export class CurrenciesConfiguration {
 
   constructor(data: ICurrenciesConfig) {
     this.default = data.default;
-    this.currencies = data.currencies.map(c => new Currency(c));
+    this.currencies = data.currencies.map((c) => new Currency(c));
   }
 
   getDefaultCurrency(): Currency | undefined {
-    return this.currencies.find(c => c.isDefault);
+    return this.currencies.find((c) => c.isDefault);
   }
 
   getCurrencyByCode(code: string): Currency | undefined {
-    return this.currencies.find(c => c.code === code);
+    return this.currencies.find((c) => c.code === code);
   }
 
   get count(): number {
@@ -70,7 +70,7 @@ export class CurrenciesConfiguration {
   }
 
   get currencyCodes(): string[] {
-    return this.currencies.map(c => c.code);
+    return this.currencies.map((c) => c.code);
   }
 
   static fromApiResponse(data: any): CurrenciesConfiguration {
@@ -83,7 +83,7 @@ export class CurrenciesConfiguration {
   toJSON(): ICurrenciesConfig {
     return {
       default: this.default,
-      currencies: this.currencies.map(c => c.toJSON()),
+      currencies: this.currencies.map((c) => c.toJSON()),
     };
   }
 }

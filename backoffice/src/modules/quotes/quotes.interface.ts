@@ -87,4 +87,4 @@ export interface CreateQuoteDTO {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateQuoteDTO extends Partial<CreateQuoteDTO> { }
+export interface UpdateQuoteDTO extends Partial<CreateQuoteDTO> {}

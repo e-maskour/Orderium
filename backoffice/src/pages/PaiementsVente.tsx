@@ -2,8 +2,20 @@ import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { KpiCard, KpiGrid } from '../components/KpiCard';
 import { useLanguage } from '../context/LanguageContext';
-import { useState, useEffect } from 'react';
-import { Wallet, Search, Edit2, Trash2, Calendar, CreditCard, Banknote, Building2, Smartphone, FileCheck } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import {
+  Wallet,
+  Search,
+  Edit2,
+  Trash2,
+  Calendar,
+  CreditCard,
+  Banknote,
+  Building2,
+  Smartphone,
+  FileCheck,
+  X,
+} from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
@@ -16,16 +28,41 @@ import { MobileList } from '../components/MobileList';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { formatAmount } from '@orderium/ui';
 import { EmptyState } from '../components/EmptyState';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function PaiementsVente() {
   const { t, language } = useLanguage();
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const queryClient = useQueryClient();
+
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => setDebouncedSearch(searchInput), 400);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchInput]);
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [invoices, setInvoices] = useState<any[]>([]);
   const [selectedRows, setSelectedRows] = useState<Payment[]>([]);
+
+  const { data: allPayments = [], isLoading: loading } = useQuery({
+    queryKey: ['payments-vente', debouncedSearch],
+    queryFn: () => paymentsService.getAll({ search: debouncedSearch || undefined }),
+  });
+
+  const { data: invoicesData } = useQuery({
+    queryKey: ['invoices-all'],
+    queryFn: () => invoicesService.getAll(),
+  });
+  const invoices: any[] = invoicesData?.invoices || [];
+
+  // Only show sales payments (customerId set)
+  const filteredPayments = allPayments.filter((p: Payment) => p.customerId != null);
 
   const clearSelection = () => setSelectedRows([]);
   const toggleSelectAll = () =>
@@ -33,31 +70,19 @@ export default function PaiementsVente() {
       ? setSelectedRows([])
       : setSelectedRows(filteredPayments);
 
-
-  useEffect(() => {
-    loadPayments();
-    loadInvoices();
-  }, []);
-
-  const loadPayments = async () => {
-    try {
-      setLoading(true);
-      const data = await paymentsService.getAll();
-      setPayments(data);
-    } catch (error) {
-      console.error('Error loading payments:', error);
-    } finally {
-      setLoading(false);
-    }
+  const getInvoiceNumber = (invoiceId: number) => {
+    const invoice = invoices.find((inv: any) => inv.invoice.id === invoiceId);
+    return invoice?.invoice.invoiceNumber || `#${invoiceId}`;
   };
 
-  const loadInvoices = async () => {
-    try {
-      const data = await invoicesService.getAll();
-      setInvoices(data.invoices);
-    } catch (error) {
-      console.error('Error loading invoices:', error);
-    }
+  const getCustomerName = (invoiceId: number) => {
+    const invoice = invoices.find((inv: any) => inv.invoice.id === invoiceId);
+    return invoice?.invoice.customerName || '-';
+  };
+
+  const getInvoiceTotal = (invoiceId: number) => {
+    const invoice = invoices.find((inv: any) => inv.invoice.id === invoiceId);
+    return invoice?.invoice.total || 0;
   };
 
   const handleDelete = async (id: number) => {
@@ -66,13 +91,13 @@ export default function PaiementsVente() {
       async () => {
         try {
           await paymentsService.delete(id);
-          await loadPayments();
+          queryClient.invalidateQueries({ queryKey: ['payments-vente'] });
         } catch (error) {
           console.error('Error deleting payment:', error);
           toastError(t('error'), { description: t('errorDeletingPayment') });
         }
       },
-      { description: t('confirmDeletePayment'), confirmLabel: t('delete') }
+      { description: t('confirmDeletePayment'), confirmLabel: t('delete') },
     );
   };
 
@@ -81,39 +106,10 @@ export default function PaiementsVente() {
     setShowPaymentModal(true);
   };
 
-  const getInvoiceNumber = (invoiceId: number) => {
-    const invoice = invoices.find(inv => inv.invoice.id === invoiceId);
-    return invoice?.invoice.invoiceNumber || `#${invoiceId}`;
-  };
-
-  const getCustomerName = (invoiceId: number) => {
-    const invoice = invoices.find(inv => inv.invoice.id === invoiceId);
-    return invoice?.invoice.customerName || '-';
-  };
-
-  const getInvoiceTotal = (invoiceId: number) => {
-    const invoice = invoices.find(inv => inv.invoice.id === invoiceId);
-    return invoice?.invoice.total || 0;
-  };
-
-  const filteredPayments = payments.filter(payment => {
-    // Only show sales payments (invoices with customerId)
-    const invoice = invoices.find(inv => inv.invoice.id === payment.invoiceId);
-    if (!invoice || !invoice.invoice.customerId) return false;
-
-    const invoiceNumber = getInvoiceNumber(payment.invoiceId);
-    const customerName = getCustomerName(payment.invoiceId);
-    const search = searchTerm.toLowerCase();
-    return (
-      invoiceNumber.toLowerCase().includes(search) ||
-      customerName.toLowerCase().includes(search) ||
-      payment.referenceNumber?.toLowerCase().includes(search)
-    );
-  });
-
   const totalAmount = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
-  const thisMonthPayments = filteredPayments.filter(p => {
-    const d = new Date(p.paymentDate); const n = new Date();
+  const thisMonthPayments = filteredPayments.filter((p) => {
+    const d = new Date(p.paymentDate);
+    const n = new Date();
     return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
   });
   const thisMonthAmount = thisMonthPayments.reduce((sum, p) => sum + p.amount, 0);
@@ -130,16 +126,17 @@ export default function PaiementsVente() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        <PageHeader
-          icon={Wallet}
-          title={t('salesPayments')}
-          subtitle={t('manageSalesPayments')}
-        />
+        <PageHeader icon={Wallet} title={t('salesPayments')} subtitle={t('manageSalesPayments')} />
 
         {/* KPI Cards */}
         <div style={{ marginBottom: '1.5rem' }}>
           <KpiGrid count={3}>
-            <KpiCard label={t('totalPayments')} value={filteredPayments.length} icon={CreditCard} color="blue" />
+            <KpiCard
+              label={t('totalPayments')}
+              value={filteredPayments.length}
+              icon={CreditCard}
+              color="blue"
+            />
             <KpiCard
               label={t('totalAmount')}
               value={`${formatAmount(totalAmount, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`}
@@ -157,25 +154,65 @@ export default function PaiementsVente() {
         </div>
 
         {/* Table Card */}
-        <div style={{ background: '#fff', borderRadius: '0.875rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-
-          {/* Toolbar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1.25rem', borderBottom: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative', flex: '1', minWidth: '14rem' }}>
-              <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '0.875rem', height: '0.875rem', color: '#94a3b8', pointerEvents: 'none' }} />
+        <div
+          style={{
+            background: '#fff',
+            borderRadius: '0.875rem',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Search Bar */}
+          <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid #f1f5f9' }}>
+            <div className="page-quick-search" style={{ marginBottom: 0 }}>
+              <Search
+                style={{
+                  position: 'absolute',
+                  left: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '0.875rem',
+                  height: '0.875rem',
+                  color: '#94a3b8',
+                  pointerEvents: 'none',
+                }}
+              />
               <InputText
                 id="search-sales-payments"
                 type="text"
                 placeholder={t('searchBySalesInvoice')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: '100%', paddingLeft: '2.25rem', height: '2.25rem', fontSize: '0.875rem', borderRadius: '0.5rem' }}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                style={{
+                  width: '100%',
+                  paddingLeft: '2.25rem',
+                  paddingRight: searchInput ? '2.5rem' : '0.875rem',
+                  height: '2.25rem',
+                  fontSize: '0.875rem',
+                  borderRadius: '0.5rem',
+                }}
               />
-            </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
-                {filteredPayments.length} résultat{filteredPayments.length !== 1 ? 's' : ''}
-              </span>
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => setSearchInput('')}
+                  style={{
+                    position: 'absolute',
+                    right: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    display: 'flex',
+                    padding: '0.25rem',
+                  }}
+                >
+                  <X style={{ width: '1rem', height: '1rem' }} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -190,9 +227,15 @@ export default function PaiementsVente() {
               emptyMessage="Aucun paiement trouvé"
               config={{
                 topLeft: (p: Payment) => getInvoiceNumber(p.invoiceId),
-                topRight: (p: Payment) => `+${formatAmount(p.amount, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`,
-                bottomLeft: (p: Payment) => `${getCustomerName(p.invoiceId)} · ${new Date(p.paymentDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
-                bottomRight: (p: Payment) => <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>{PAYMENT_TYPE_LABELS[p.paymentType]}</span>,
+                topRight: (p: Payment) =>
+                  `+${formatAmount(p.amount, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`,
+                bottomLeft: (p: Payment) =>
+                  `${getCustomerName(p.invoiceId)} · ${new Date(p.paymentDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+                bottomRight: (p: Payment) => (
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
+                    {PAYMENT_TYPE_LABELS[p.paymentType]}
+                  </span>
+                ),
               }}
             />
           </div>
@@ -210,87 +253,182 @@ export default function PaiementsVente() {
             rowsPerPageOptions={[10, 25, 50, 100]}
             removableSort
             loading={loading}
-            emptyMessage={<EmptyState icon={Wallet} title="Aucun paiement trouvé" description="Aucun paiement de vente ne correspond à votre recherche" />}
+            emptyMessage={
+              <EmptyState
+                icon={Wallet}
+                title="Aucun paiement trouvé"
+                description="Aucun paiement de vente ne correspond à votre recherche"
+              />
+            }
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
 
             {/* Date */}
-            <Column field="paymentDate" header={t('invoice.date')} sortable body={(p: Payment) => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '1.875rem', height: '1.875rem', borderRadius: '0.4rem', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Calendar style={{ width: '0.875rem', height: '0.875rem', color: '#3b82f6' }} />
+            <Column
+              field="paymentDate"
+              header={t('invoice.date')}
+              sortable
+              body={(p: Payment) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div
+                    style={{
+                      width: '1.875rem',
+                      height: '1.875rem',
+                      borderRadius: '0.4rem',
+                      background: '#eff6ff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Calendar style={{ width: '0.875rem', height: '0.875rem', color: '#3b82f6' }} />
+                  </div>
+                  <span style={{ fontWeight: 500, color: '#334155', whiteSpace: 'nowrap' }}>
+                    {new Date(p.paymentDate).toLocaleDateString('fr-FR', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
                 </div>
-                <span style={{ fontWeight: 500, color: '#334155', whiteSpace: 'nowrap' }}>
-                  {new Date(p.paymentDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </span>
-              </div>
-            )} />
+              )}
+            />
 
             {/* Invoice */}
-            <Column header={t('invoice')} body={(p: Payment) => (
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a',
-                borderRadius: '0.375rem', padding: '0.1875rem 0.5rem',
-                fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'monospace',
-                letterSpacing: '0.02em',
-              }}>
-                {getInvoiceNumber(p.invoiceId)}
-              </span>
-            )} />
+            <Column
+              header={t('invoice')}
+              body={(p: Payment) => (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    background: '#fffbeb',
+                    color: '#92400e',
+                    border: '1px solid #fde68a',
+                    borderRadius: '0.375rem',
+                    padding: '0.1875rem 0.5rem',
+                    fontSize: '0.8125rem',
+                    fontWeight: 700,
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {getInvoiceNumber(p.invoiceId)}
+                </span>
+              )}
+            />
 
             {/* Customer */}
-            <Column header={t('client')} body={(p: Payment) => {
-              const name = getCustomerName(p.invoiceId);
-              const initials = name !== '-'
-                ? name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-                : '?';
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: '1.875rem', height: '1.875rem', borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: '#fff', fontSize: '0.625rem', fontWeight: 700,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    {initials}
+            <Column
+              header={t('client')}
+              body={(p: Payment) => {
+                const name = getCustomerName(p.invoiceId);
+                const initials =
+                  name !== '-'
+                    ? name
+                        .split(' ')
+                        .map((n: string) => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2)
+                    : '?';
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div
+                      style={{
+                        width: '1.875rem',
+                        height: '1.875rem',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        color: '#fff',
+                        fontSize: '0.625rem',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {initials}
+                    </div>
+                    <span style={{ color: '#334155', fontWeight: 500 }}>{name}</span>
                   </div>
-                  <span style={{ color: '#334155', fontWeight: 500 }}>{name}</span>
-                </div>
-              );
-            }} />
+                );
+              }}
+            />
 
             {/* Payment Method */}
-            <Column field="paymentType" header={t('paymentMethod')} sortable body={(p: Payment) => {
-              const cfg = PAYMENT_METHOD_CONFIG[p.paymentType] || PAYMENT_METHOD_CONFIG.other;
-              const MethodIcon = cfg.icon;
-              return (
-                <span className={cfg.cls}>
-                  <MethodIcon />
-                  {PAYMENT_TYPE_LABELS[p.paymentType]}
-                </span>
-              );
-            }} />
+            <Column
+              field="paymentType"
+              header={t('paymentMethod')}
+              sortable
+              body={(p: Payment) => {
+                const cfg = PAYMENT_METHOD_CONFIG[p.paymentType] || PAYMENT_METHOD_CONFIG.other;
+                const MethodIcon = cfg.icon;
+                return (
+                  <span className={cfg.cls}>
+                    <MethodIcon />
+                    {PAYMENT_TYPE_LABELS[p.paymentType]}
+                  </span>
+                );
+              }}
+            />
 
             {/* Reference */}
-            <Column field="referenceNumber" header={t('reference')} sortable body={(p: Payment) => (
-              p.referenceNumber
-                ? <span style={{ fontFamily: 'monospace', fontSize: '0.8125rem', color: '#475569', background: '#f8fafc', padding: '0.125rem 0.4375rem', borderRadius: '0.25rem', border: '1px solid #e2e8f0' }}>{p.referenceNumber}</span>
-                : <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
-            )} />
+            <Column
+              field="referenceNumber"
+              header={t('reference')}
+              sortable
+              body={(p: Payment) =>
+                p.referenceNumber ? (
+                  <span
+                    style={{
+                      fontFamily: 'monospace',
+                      fontSize: '0.8125rem',
+                      color: '#475569',
+                      background: '#f8fafc',
+                      padding: '0.125rem 0.4375rem',
+                      borderRadius: '0.25rem',
+                      border: '1px solid #e2e8f0',
+                    }}
+                  >
+                    {p.referenceNumber}
+                  </span>
+                ) : (
+                  <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>—</span>
+                )
+              }
+            />
 
             {/* Amount */}
-            <Column field="amount" header={t('amount')} sortable align="right" headerStyle={{ textAlign: 'right' }} body={(p: Payment) => (
-              <div style={{ textAlign: 'right', lineHeight: 1.2 }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#059669' }}>
-                  +{formatAmount(p.amount, 2)}
-                  <span style={{ color: '#94a3b8', fontSize: '0.6875rem', fontWeight: 500, marginLeft: '0.25rem' }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
+            <Column
+              field="amount"
+              header={t('amount')}
+              sortable
+              align="right"
+              headerStyle={{ textAlign: 'right' }}
+              body={(p: Payment) => (
+                <div style={{ textAlign: 'right', lineHeight: 1.2 }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#059669' }}>
+                    +{formatAmount(p.amount, 2)}
+                    <span
+                      style={{
+                        color: '#94a3b8',
+                        fontSize: '0.6875rem',
+                        fontWeight: 500,
+                        marginLeft: '0.25rem',
+                      }}
+                    >
+                      {language === 'ar' ? 'د.م' : 'DH'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )} />
-
+              )}
+            />
           </DataTable>
         </div>
       </div>
@@ -299,26 +437,39 @@ export default function PaiementsVente() {
         selectedCount={selectedRows.length}
         onClearSelection={clearSelection}
         onSelectAll={toggleSelectAll}
-        isAllSelected={selectedRows.length === filteredPayments.length && filteredPayments.length > 0}
+        isAllSelected={
+          selectedRows.length === filteredPayments.length && filteredPayments.length > 0
+        }
         totalCount={filteredPayments.length}
         itemLabel="paiement"
         actions={[
-          ...(selectedRows.length === 1 ? [{
-            id: 'edit',
-            label: t('modify'),
-            icon: <Edit2 style={{ width: '0.875rem', height: '0.875rem' }} />,
-            onClick: () => handleEdit(selectedRows[0]),
-            variant: 'secondary' as const,
-          }] : []),
+          ...(selectedRows.length === 1
+            ? [
+                {
+                  id: 'edit',
+                  label: t('modify'),
+                  icon: <Edit2 style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => handleEdit(selectedRows[0]),
+                  variant: 'secondary' as const,
+                },
+              ]
+            : []),
           {
             id: 'delete',
             label: t('delete'),
             icon: <Trash2 style={{ width: '0.875rem', height: '0.875rem' }} />,
-            onClick: () => toastConfirm(
-              `${t('delete')} ${selectedRows.length} paiement(s)?`,
-              async () => { for (const p of selectedRows) { await paymentsService.delete(p.id); } await loadPayments(); clearSelection(); },
-              { confirmLabel: t('delete') }
-            ),
+            onClick: () =>
+              toastConfirm(
+                `${t('delete')} ${selectedRows.length} paiement(s)?`,
+                async () => {
+                  for (const p of selectedRows) {
+                    await paymentsService.delete(p.id);
+                  }
+                  queryClient.invalidateQueries({ queryKey: ['payments-vente'] });
+                  clearSelection();
+                },
+                { confirmLabel: t('delete') },
+              ),
             variant: 'danger' as const,
           },
         ]}
@@ -332,7 +483,7 @@ export default function PaiementsVente() {
             setSelectedPayment(null);
           }}
           onSuccess={() => {
-            loadPayments();
+            queryClient.invalidateQueries({ queryKey: ['payments-vente'] });
             setShowPaymentModal(false);
             setSelectedPayment(null);
           }}
@@ -341,7 +492,6 @@ export default function PaiementsVente() {
           payment={selectedPayment}
         />
       )}
-
     </AdminLayout>
   );
 }

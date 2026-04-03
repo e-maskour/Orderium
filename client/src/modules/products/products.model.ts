@@ -21,8 +21,8 @@ export class Product implements IProduct {
       code: string;
       category: string;
     },
-    public categories?: { id: number; name: string }[]
-  ) { }
+    public categories?: { id: number; name: string }[],
+  ) {}
 
   get displayPrice(): string {
     return `$${this.price.toFixed(2)}`;
@@ -58,7 +58,13 @@ export class Product implements IProduct {
   }
 
   get isLowStock(): boolean {
-    return !this.isService && this.stock !== null && this.stock !== undefined && this.stock > 0 && this.stock < 10;
+    return (
+      !this.isService &&
+      this.stock !== null &&
+      this.stock !== undefined &&
+      this.stock > 0 &&
+      this.stock < 10
+    );
   }
 
   get stockStatus(): string {
@@ -96,26 +102,35 @@ export class Product implements IProduct {
     return new Product(
       data.id as number,
       data.name as string,
-      data.price as number || 0,
-      data.cost as number || 0,
+      (data.price as number) || 0,
+      (data.cost as number) || 0,
       (data.isService as boolean) || false,
       data.isEnabled !== false,
       data.dateCreated as string,
       data.dateUpdated as string,
       (data.code as string) || null,
       (data.description as string) || null,
-      data.stock !== undefined ? (data.stock !== null ? parseInt(String(data.stock)) : null) : undefined,
+      data.stock !== undefined
+        ? data.stock !== null
+          ? parseInt(String(data.stock))
+          : null
+        : undefined,
       data.isPriceChangeAllowed as boolean | undefined,
       data.imageUrl as string | undefined,
-      uom ? {
-        id: uom.id as number,
-        name: uom.name as string,
-        code: uom.code as string,
-        category: uom.category as string
-      } : undefined,
+      uom
+        ? {
+            id: uom.id as number,
+            name: uom.name as string,
+            code: uom.code as string,
+            category: uom.category as string,
+          }
+        : undefined,
       Array.isArray(data.categories)
-        ? (data.categories as Record<string, unknown>[]).map((c) => ({ id: c.id as number, name: c.name as string }))
-        : undefined
+        ? (data.categories as Record<string, unknown>[]).map((c) => ({
+            id: c.id as number,
+            name: c.name as string,
+          }))
+        : undefined,
     );
   }
 

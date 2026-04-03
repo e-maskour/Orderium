@@ -1,5 +1,10 @@
 import { FileText, FileEdit, Truck } from 'lucide-react';
-import { DocumentType, DocumentDirection, DocumentFeatures, DocumentStatus } from './document.types';
+import {
+  DocumentType,
+  DocumentDirection,
+  DocumentFeatures,
+  DocumentStatus,
+} from './document.types';
 import type { TranslationKey } from '@/lib/i18n';
 
 export interface DocumentConfig {
@@ -19,36 +24,38 @@ const DOCUMENT_TRANSLATION_KEYS = {
   facture_vente: {
     title: 'salesInvoices',
     titleShort: 'salesInvoice',
-    partnerLabel: 'client'
+    partnerLabel: 'client',
   },
   facture_achat: {
     title: 'purchaseInvoices',
     titleShort: 'purchaseInvoice',
-    partnerLabel: 'supplier'
+    partnerLabel: 'supplier',
   },
   devis_vente: {
     title: 'quotes',
     titleShort: 'quote',
-    partnerLabel: 'client'
+    partnerLabel: 'client',
   },
   devis_achat: {
     title: 'priceRequests',
     titleShort: 'priceRequest',
-    partnerLabel: 'supplier'
+    partnerLabel: 'supplier',
   },
   bon_livraison_vente: {
     title: 'deliveryNotes',
     titleShort: 'deliveryNote',
-    partnerLabel: 'client'
+    partnerLabel: 'client',
   },
   bon_livraison_achat: {
     title: 'purchaseOrders',
     titleShort: 'purchaseOrder',
-    partnerLabel: 'supplier'
-  }
+    partnerLabel: 'supplier',
+  },
 };
 
-export function getDocumentConfigs(t: (key: TranslationKey) => string): Record<string, DocumentConfig> {
+export function getDocumentConfigs(
+  t: (key: TranslationKey) => string,
+): Record<string, DocumentConfig> {
   return {
     facture_vente: {
       type: 'facture',
@@ -64,9 +71,9 @@ export function getDocumentConfigs(t: (key: TranslationKey) => string): Record<s
         canDownloadPDF: true,
         affectsInventory: true,
         showTax: true,
-        showDiscount: true
+        showDiscount: true,
       },
-      statuses: ['draft', 'unpaid', 'partial', 'paid']
+      statuses: ['draft', 'unpaid', 'partial', 'paid'],
     },
     facture_achat: {
       type: 'facture',
@@ -82,9 +89,9 @@ export function getDocumentConfigs(t: (key: TranslationKey) => string): Record<s
         canDownloadPDF: true,
         affectsInventory: true,
         showTax: true,
-        showDiscount: true
+        showDiscount: true,
       },
-      statuses: ['draft', 'unpaid', 'partial', 'paid']
+      statuses: ['draft', 'unpaid', 'partial', 'paid'],
     },
     devis_vente: {
       type: 'devis',
@@ -100,9 +107,9 @@ export function getDocumentConfigs(t: (key: TranslationKey) => string): Record<s
         canConvertToInvoice: true,
         expirationDate: true,
         showTax: true,
-        showDiscount: true
+        showDiscount: true,
       },
-      statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced']
+      statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced'],
     },
     bon_livraison_vente: {
       type: 'bon_livraison',
@@ -118,9 +125,9 @@ export function getDocumentConfigs(t: (key: TranslationKey) => string): Record<s
         linkedToInvoice: true,
         requiresSignature: true,
         showTax: true,
-        showDiscount: true
+        showDiscount: true,
       },
-      statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled']
+      statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled'],
     },
     devis_achat: {
       type: 'devis',
@@ -136,9 +143,9 @@ export function getDocumentConfigs(t: (key: TranslationKey) => string): Record<s
         canConvertToInvoice: true,
         expirationDate: true,
         showTax: true,
-        showDiscount: true
+        showDiscount: true,
       },
-      statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced']
+      statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced'],
     },
     bon_livraison_achat: {
       type: 'bon_livraison',
@@ -154,10 +161,10 @@ export function getDocumentConfigs(t: (key: TranslationKey) => string): Record<s
         linkedToInvoice: true,
         requiresSignature: true,
         showTax: true,
-        showDiscount: true
+        showDiscount: true,
       },
-      statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled']
-    }
+      statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled'],
+    },
   };
 }
 
@@ -177,14 +184,14 @@ export const DOCUMENT_CONFIGS: Record<string, DocumentConfig> = {
       canDownloadPDF: true,
       affectsInventory: true,
       showTax: true,
-      showDiscount: true
+      showDiscount: true,
     },
-    statuses: ['draft', 'unpaid', 'partial', 'paid']
+    statuses: ['draft', 'unpaid', 'partial', 'paid'],
   },
   facture_achat: {
     type: 'facture',
     direction: 'achat',
-    title: 'Factures d\'Achat',
+    title: "Factures d'Achat",
     titleShort: 'Facture Fournisseur',
     prefix: 'FB',
     icon: FileText,
@@ -195,9 +202,9 @@ export const DOCUMENT_CONFIGS: Record<string, DocumentConfig> = {
       canDownloadPDF: true,
       affectsInventory: true,
       showTax: true,
-      showDiscount: true
+      showDiscount: true,
     },
-    statuses: ['draft', 'unpaid', 'partial', 'paid']
+    statuses: ['draft', 'unpaid', 'partial', 'paid'],
   },
   devis_vente: {
     type: 'devis',
@@ -213,9 +220,9 @@ export const DOCUMENT_CONFIGS: Record<string, DocumentConfig> = {
       canConvertToInvoice: true,
       expirationDate: true,
       showTax: true,
-      showDiscount: true
+      showDiscount: true,
     },
-    statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced']
+    statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced'],
   },
   bon_livraison_vente: {
     type: 'bon_livraison',
@@ -231,9 +238,9 @@ export const DOCUMENT_CONFIGS: Record<string, DocumentConfig> = {
       linkedToInvoice: true,
       requiresSignature: true,
       showTax: true,
-      showDiscount: true
+      showDiscount: true,
     },
-    statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled']
+    statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled'],
   },
   devis_achat: {
     type: 'devis',
@@ -249,15 +256,15 @@ export const DOCUMENT_CONFIGS: Record<string, DocumentConfig> = {
       canConvertToInvoice: true,
       expirationDate: true,
       showTax: true,
-      showDiscount: true
+      showDiscount: true,
     },
-    statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced']
+    statuses: ['draft', 'open', 'signed', 'closed', 'delivered', 'invoiced'],
   },
   bon_livraison_achat: {
     type: 'bon_livraison',
     direction: 'achat',
-    title: 'Bons d\'Achat',
-    titleShort: 'Bon d\'Achat',
+    title: "Bons d'Achat",
+    titleShort: "Bon d'Achat",
     prefix: 'BA',
     icon: Truck,
     partnerLabel: 'Fournisseur',
@@ -267,16 +274,16 @@ export const DOCUMENT_CONFIGS: Record<string, DocumentConfig> = {
       linkedToInvoice: true,
       requiresSignature: true,
       showTax: true,
-      showDiscount: true
+      showDiscount: true,
     },
-    statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled']
-  }
+    statuses: ['draft', 'validated', 'in_progress', 'delivered', 'cancelled'],
+  },
 };
 
 export function getDocumentConfig(
   type: DocumentType,
   direction: DocumentDirection = 'vente',
-  t?: (key: TranslationKey) => string
+  t?: (key: TranslationKey) => string,
 ): DocumentConfig {
   const key = `${type}_${direction}`;
 

@@ -9,7 +9,7 @@ export default {
   trackYourOrder: 'تتبع طلبك',
   placedOn: 'تاريخ الطلب',
   previousOrders: 'طلبية سابقة',
-  
+
   // Order Status
   statusPending: 'قيد الانتظار',
   statusAssigned: 'تم التعيين',
@@ -23,7 +23,7 @@ export default {
   statusindelivery: 'قيد التوصيل',
   statusdelivered: 'تم التسليم',
   statuscanceled: 'ملغي',
-  
+
   // Status Descriptions
   currentStatus: 'الحالة الحالية',
   orderReceived: 'تم استلام طلبك',
@@ -33,7 +33,7 @@ export default {
   deliveredSuccessfully: 'تم تسليم الطلب بنجاح',
   orderCanceled: 'تم إلغاء الطلب',
   orderWasCanceled: 'تم إلغاء هذا الطلب',
-  
+
   // Order Errors & Messages
   cannotLoadOrders: 'لا يمكن تحميل الطلبات',
   noCustomerId: 'لا يوجد معرف عميل مرتبط بحسابك',

@@ -25,9 +25,10 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
 
   const headerLabel = language === 'ar' ? `معاينة ${title}` : `Aperçu ${title}`;
   const openLabel = language === 'ar' ? 'فتح الملف PDF' : 'Ouvrir le PDF';
-  const mobileHintLabel = language === 'ar'
-    ? 'اضغط على الزر أدناه لفتح الملف'
-    : 'Appuyez sur le bouton ci-dessous pour ouvrir le PDF';
+  const mobileHintLabel =
+    language === 'ar'
+      ? 'اضغط على الزر أدناه لفتح الملف'
+      : 'Appuyez sur le bouton ci-dessous pour ouvrir le PDF';
 
   return (
     <Dialog
@@ -42,7 +43,10 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
       dir={dir}
     >
       {isLoading && !mobile && (
-        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: 'var(--surface-ground)', zIndex: 1 }}>
+        <div
+          className="flex align-items-center justify-content-center"
+          style={{ position: 'absolute', inset: 0, background: 'var(--surface-ground)', zIndex: 1 }}
+        >
           <div className="text-center">
             <ProgressSpinner style={{ width: '3rem', height: '3rem' }} />
             <p className="text-color-secondary font-medium mt-3">
@@ -62,7 +66,15 @@ export function PDFPreviewModal({ isOpen, onClose, pdfUrl, title }: PDFPreviewMo
       )}
 
       {mobile && pdfUrl && (
-        <div className="flex align-items-center justify-content-center" style={{ position: 'absolute', inset: 0, background: 'var(--surface-ground)', padding: '2rem' }}>
+        <div
+          className="flex align-items-center justify-content-center"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'var(--surface-ground)',
+            padding: '2rem',
+          }}
+        >
           <div className="text-center">
             <p className="text-color-secondary font-medium mb-4">{mobileHintLabel}</p>
             <a

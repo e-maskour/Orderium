@@ -45,7 +45,7 @@ export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly imageService: ImageService,
-  ) { }
+  ) {}
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new product' })
@@ -138,9 +138,12 @@ export class ProductsController {
     const isServiceBool =
       isService === 'true' ? true : isService === 'false' ? false : undefined;
 
+    // Convert offset/limit to page/perPage for the service
+    const pageNum = Math.floor(offsetNum / limitNum) + 1;
+
     const { products, totalCount } = await this.productsService.findAll(
+      pageNum,
       limitNum,
-      offsetNum,
       search,
       code,
       stockFilter,

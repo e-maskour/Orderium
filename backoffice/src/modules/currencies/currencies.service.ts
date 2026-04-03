@@ -18,11 +18,11 @@ export class CurrenciesService {
 
   async createCurrency(data: CreateCurrencyDTO): Promise<CurrenciesConfiguration> {
     const config = await this.getConfiguration();
-    const newCurrencies = [...config.currencies.map(c => c.toJSON())];
+    const newCurrencies = [...config.currencies.map((c) => c.toJSON())];
 
     // If setting as default, remove default from others
     if (data.isDefault) {
-      newCurrencies.forEach(c => c.isDefault = false);
+      newCurrencies.forEach((c) => (c.isDefault = false));
     }
 
     newCurrencies.push({
@@ -32,7 +32,7 @@ export class CurrenciesService {
       isDefault: data.isDefault || false,
     });
 
-    const newDefault = newCurrencies.find(c => c.isDefault)?.code || config.default;
+    const newDefault = newCurrencies.find((c) => c.isDefault)?.code || config.default;
 
     return this.updateConfiguration({
       currencies: newCurrencies,
@@ -42,7 +42,7 @@ export class CurrenciesService {
 
   async updateCurrency(index: number, data: UpdateCurrencyDTO): Promise<CurrenciesConfiguration> {
     const config = await this.getConfiguration();
-    const newCurrencies = config.currencies.map(c => c.toJSON());
+    const newCurrencies = config.currencies.map((c) => c.toJSON());
 
     if (index < 0 || index >= newCurrencies.length) {
       throw new Error('Invalid currency index');
@@ -50,7 +50,7 @@ export class CurrenciesService {
 
     // If setting as default, remove default from others
     if (data.isDefault) {
-      newCurrencies.forEach(c => c.isDefault = false);
+      newCurrencies.forEach((c) => (c.isDefault = false));
     }
 
     newCurrencies[index] = {
@@ -59,7 +59,7 @@ export class CurrenciesService {
       code: data.code ? data.code.toUpperCase() : newCurrencies[index].code,
     };
 
-    const newDefault = newCurrencies.find(c => c.isDefault)?.code || config.default;
+    const newDefault = newCurrencies.find((c) => c.isDefault)?.code || config.default;
 
     return this.updateConfiguration({
       currencies: newCurrencies,
@@ -69,9 +69,9 @@ export class CurrenciesService {
 
   async deleteCurrency(index: number): Promise<CurrenciesConfiguration> {
     const config = await this.getConfiguration();
-    const newCurrencies = config.currencies.map(c => c.toJSON()).filter((_, i) => i !== index);
+    const newCurrencies = config.currencies.map((c) => c.toJSON()).filter((_, i) => i !== index);
 
-    const newDefault = newCurrencies.find(c => c.isDefault)?.code || (newCurrencies[0]?.code || '');
+    const newDefault = newCurrencies.find((c) => c.isDefault)?.code || newCurrencies[0]?.code || '';
 
     return this.updateConfiguration({
       currencies: newCurrencies,
@@ -83,7 +83,9 @@ export class CurrenciesService {
     if (!this.configId) {
       await this.getConfiguration();
     }
-    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), { values });
+    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), {
+      values,
+    });
     return CurrenciesConfiguration.fromApiResponse(response.data.values);
   }
 }

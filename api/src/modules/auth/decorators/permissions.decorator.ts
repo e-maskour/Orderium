@@ -6,4 +6,4 @@ export const REQUIRE_PERMISSION_KEY = 'requirePermission';
  * @example @RequirePermission('invoices.create')
  */
 export const RequirePermission = (permission: string) =>
-    SetMetadata(REQUIRE_PERMISSION_KEY, permission);
+  SetMetadata(REQUIRE_PERMISSION_KEY, permission);

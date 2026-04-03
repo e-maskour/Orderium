@@ -6,7 +6,7 @@ export default {
   'invoice.number': 'N° facture',
   'invoice.customer': 'Client',
   'invoice.date': 'Date',
-  'invoice.dueDate': 'Date d\'échéance',
+  'invoice.dueDate': "Date d'échéance",
   'invoice.amount': 'Montant',
   'invoice.paid': 'Payé',
   'invoice.status': 'Statut',
@@ -15,7 +15,7 @@ export default {
   'invoice.noInvoices': 'Aucune facture trouvée',
 
   // Search & Filters
-  'invoice.searchPlaceholder': 'Rechercher par n° facture ou client...',
+  'invoice.searchPlaceholder': 'Rechercher par N° facture ou client...',
   'invoice.filterStatus': 'Filtrer par statut',
   'invoice.filterPayment': 'Filtrer par paiement',
   'invoice.allStatuses': 'Tous les statuts',
@@ -50,7 +50,7 @@ export default {
   'invoice.recordPayment': 'Enregistrer un paiement',
   'invoice.paymentAmount': 'Montant du paiement',
   'invoice.paymentRecorded': 'Paiement enregistré avec succès',
-  'invoice.paymentError': 'Échec de l\'enregistrement du paiement',
+  'invoice.paymentError': "Échec de l'enregistrement du paiement",
   'invoice.invalidAmount': 'Montant invalide',
   'invoice.quickAmounts': 'Montants rapides',
   'invoice.payInFull': 'Payer en entier',
@@ -67,7 +67,8 @@ export default {
   'invoice.deleteError': 'Échec de suppression de la facture',
   'invoice.confirmBulkDelete': 'Êtes-vous sûr de vouloir supprimer {count} factures ?',
   'invoice.deleteConfirm': 'Confirmer la suppression',
-  'invoice.deleteConfirmMessage': 'Êtes-vous sûr de vouloir supprimer cette facture ? Cette action ne peut pas être annulée.',
+  'invoice.deleteConfirmMessage':
+    'Êtes-vous sûr de vouloir supprimer cette facture ? Cette action ne peut pas être annulée.',
 
   // Status Updates
   'invoice.statusUpdated': 'Statut mis à jour avec succès',
@@ -162,7 +163,7 @@ export default {
 
   // Additional Fields
   'invoice.createdAt': 'Date de création',
-  'invoice.issueDate': 'Date d\'émission',
+  'invoice.issueDate': "Date d'émission",
   'invoice.taxRate': 'Taux de taxe',
   'invoice.notes': 'Notes',
   'invoice.information': 'Informations facture',
@@ -176,7 +177,7 @@ export default {
   'invoice.selectCustomer': 'Sélectionner le client',
   'invoice.addItem': 'Ajouter un article',
   'invoice.productName': 'Nom du produit',
-  'invoice.itemDescription': 'Description de l\'article',
+  'invoice.itemDescription': "Description de l'article",
   'invoice.notesPlaceholder': 'Notes ou instructions spéciales...',
   'invoice.createSuccess': 'Facture créée avec succès',
   'invoice.createError': 'Échec de la création de la facture',
@@ -204,7 +205,7 @@ export default {
   'invoice.iceLabel': 'ICE',
   'invoice.deliveryAddressLabel': 'Adresse de livraison',
   'invoice.dateRequired': 'Date *',
-  'invoice.dueDateLabel': 'Date d\'échéance',
+  'invoice.dueDateLabel': "Date d'échéance",
   'invoice.paymentTermsLabel': 'Conditions de paiement',
   'invoice.paymentTermsPlaceholder': 'Ex: Paiement à 30 jours',
   'invoice.articlesTitle': 'Articles',
@@ -214,7 +215,7 @@ export default {
   'invoice.unitPriceHeader': 'Prix unitaire',
   'invoice.discountHeader': 'Remise',
   'invoice.totalHeader': 'Total',
-  'invoice.itemDescriptionPlaceholder': 'Description de l\'article',
+  'invoice.itemDescriptionPlaceholder': "Description de l'article",
   'invoice.productSearchPlaceholder': 'Rechercher un produit...',
   'invoice.noProductsFound': 'Aucun produit trouvé',
   'invoice.percentage': 'Pourcentage',
@@ -254,7 +255,7 @@ export default {
   deliveryNoteMarkedDelivered: 'Bon de livraison marqué comme livré',
   errorMarkingDelivered: 'Erreur lors de la livraison',
   deliveryNoteCancelled: 'Bon de livraison annulé',
-  errorCancelling: 'Erreur lors de l\'annulation',
+  errorCancelling: "Erreur lors de l'annulation",
   invoiceCreatedQuoteUpdated: 'Facture créée avec succès et devis mis à jour',
   invoiceCreatedDeliveryUpdated: 'Facture créée avec succès et bon de livraison mis à jour',
   errorCreatingInvoice: 'Erreur lors de la création de la facture',
@@ -286,15 +287,19 @@ export default {
   invoicedStatus: 'Facturé',
 
   // Confirmation Messages
-  confirmValidateDocument: 'Êtes-vous sûr de vouloir valider ce document ? Il ne pourra plus être modifié.',
+  confirmValidateDocument:
+    'Êtes-vous sûr de vouloir valider ce document ? Il ne pourra plus être modifié.',
   confirmDevalidateDocument: 'Êtes-vous sûr de vouloir dévalider ce document ?',
   confirmCreateInvoice: 'Voulez-vous créer une facture à partir de ce document ?',
-  confirmCreateDeliveryNote: 'Voulez-vous créer un bon de livraison à partir de ce devis ? Toutes les données seront copiées.',
+  confirmCreateDeliveryNote:
+    'Voulez-vous créer un bon de livraison à partir de ce devis ? Toutes les données seront copiées.',
   confirmSignQuote: 'Voulez-vous marquer ce devis comme signé ?',
-  confirmRejectQuote: 'Voulez-vous vraiment refuser ce devis ? Le statut sera changé à \'Fermé\'.',
+  confirmRejectQuote: "Voulez-vous vraiment refuser ce devis ? Le statut sera changé à 'Fermé'.",
   confirmMarkDelivered: 'Êtes-vous sûr de vouloir marquer ce bon de livraison comme livré ?',
-  confirmCancelDelivery: 'Êtes-vous sûr de vouloir annuler ce bon de livraison ? Cette action peut être irréversible.',
-  confirmDeleteDocument: 'Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.',
+  confirmCancelDelivery:
+    'Êtes-vous sûr de vouloir annuler ce bon de livraison ? Cette action peut être irréversible.',
+  confirmDeleteDocument:
+    'Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.',
   confirmValidate: 'Êtes-vous sûr de vouloir valider ce document ?',
   confirmDevalidate: 'Êtes-vous sûr de vouloir dévalider ce document ?',
 
@@ -303,7 +308,7 @@ export default {
   documentValidated: 'Document validé avec succès',
   documentDevalidated: 'Document dévalidé avec succès',
 
-  // Error Messages  
+  // Error Messages
   errorDevalidatingInList: 'Erreur lors de la dévalidation du document',
   unsupportedDocumentType: 'Type de document non supporté',
 
@@ -333,7 +338,8 @@ export default {
   cancelDeliveryButton: 'Annuler le bon',
   rejectButton: 'Refuser',
   shareQuote: 'Partager le devis',
-  generateSecureLink: 'Générez un lien de partage sécurisé pour permettre à votre client de consulter et signer ce devis.',
+  generateSecureLink:
+    'Générez un lien de partage sécurisé pour permettre à votre client de consulter et signer ce devis.',
   downloadPDF: 'Télécharger PDF',
   errorGeneratingPDF: 'Erreur lors de la génération du PDF',
 
@@ -343,7 +349,7 @@ export default {
   new: 'Nouvelle',
   createNew: 'Créer une nouvelle',
   documentInformation: 'Informations du document',
-  expirationDate: 'Date d\'expiration',
+  expirationDate: "Date d'expiration",
   additionalNotes: 'Notes additionnelles...',
   drafts: 'Brouillons',
   subtotalHT: 'Sous-total HT',
@@ -367,7 +373,7 @@ export default {
   // Document Types & Titles
   salesInvoices: 'Factures de Vente',
   salesInvoice: 'Facture Client',
-  purchaseInvoices: 'Factures d\'Achat',
+  purchaseInvoices: "Factures d'Achat",
   purchaseInvoice: 'Facture Fournisseur',
   quote: 'Devis',
   deliveryNotes: 'Bons de Livraison',
@@ -432,7 +438,7 @@ export default {
   successQuoteRejected: 'Devis refusé et fermé avec succès',
 
   // Additional Error Messages
-  errorUnsigning: 'Erreur lors de l\'annulation de la signature',
+  errorUnsigning: "Erreur lors de l'annulation de la signature",
   errorUpdatingDocument: 'Erreur lors de la mise à jour',
   errorDelivering: 'Erreur lors de la livraison',
 
@@ -464,7 +470,8 @@ export default {
   saving: 'Enregistrement...',
 
   // Payment Modal & History
-  errorPaymentExceedsInvoice: 'Le montant total des paiements ne peut pas dépasser le total de la facture',
+  errorPaymentExceedsInvoice:
+    'Le montant total des paiements ne peut pas dépasser le total de la facture',
   errorOccurred: 'Une erreur est survenue',
   errorDeletingPayment: 'Erreur lors de la suppression du paiement',
   referenceNumberHint: '(N° chèque, transaction, etc.)',
@@ -485,7 +492,7 @@ export default {
   add: 'Ajouter',
 
   // Payment Pages
-  purchasePayments: 'Paiements d\'achat',
+  purchasePayments: "Paiements d'achat",
   managePurchasePayments: 'Gérer les paiements fournisseurs',
   salesPayments: 'Paiements de vente',
   manageSalesPayments: 'Gérer les paiements clients',

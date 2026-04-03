@@ -1,7 +1,7 @@
 import { Order } from '../types';
+import { API_ROUTES } from '../common/api-routes';
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
-const API_URL = `${BASE}/api/delivery`;
 
 const getAuthHeaders = (): Record<string, string> => {
   const token = localStorage.getItem('authToken');
@@ -40,7 +40,7 @@ interface OrderFilters {
 
 export const deliveryService = {
   async login(phoneNumber: string, password: string) {
-    const response = await fetch(`${API_URL}/login`, {
+    const response = await fetch(`${BASE}${API_ROUTES.DELIVERY.LOGIN}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -63,7 +63,7 @@ export const deliveryService = {
     if (filters.pageSize) params.append('pageSize', filters.pageSize.toString());
 
     const queryString = params.toString();
-    const url = `${API_URL}/person/${deliveryPersonId}/orders${queryString ? '?' + queryString : ''}`;
+    const url = `${BASE}${API_ROUTES.DELIVERY.PERSON_ORDERS(deliveryPersonId)}${queryString ? '?' + queryString : ''}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -91,12 +91,19 @@ export const deliveryService = {
     };
   },
 
-  async updateOrderStatus(orderId: number, status: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled', deliveryPersonId: number): Promise<void> {
-    const response = await fetch(`${API_URL}/person/${deliveryPersonId}/order/${orderId}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify({ status: status }),
-    });
+  async updateOrderStatus(
+    orderId: number,
+    status: 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled',
+    deliveryPersonId: number,
+  ): Promise<void> {
+    const response = await fetch(
+      `${BASE}${API_ROUTES.DELIVERY.UPDATE_ORDER_STATUS(deliveryPersonId, orderId)}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ status: status }),
+      },
+    );
     if (!response.ok) throw new Error('Failed to update order status');
   },
 };

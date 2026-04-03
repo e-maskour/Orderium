@@ -3,7 +3,16 @@ import { IStockMovement, IStockQuant } from './stock.interface';
 export class StockMovement implements IStockMovement {
   id: number;
   reference: string;
-  movementType: 'receipt' | 'delivery' | 'internal' | 'adjustment' | 'production_in' | 'production_out' | 'return_in' | 'return_out' | 'scrap';
+  movementType:
+    | 'receipt'
+    | 'delivery'
+    | 'internal'
+    | 'adjustment'
+    | 'production_in'
+    | 'production_out'
+    | 'return_in'
+    | 'return_out'
+    | 'scrap';
   productId: number;
   sourceWarehouseId?: number | null;
   destWarehouseId?: number | null;
@@ -80,11 +89,20 @@ export class StockMovement implements IStockMovement {
   }
 
   get isInbound(): boolean {
-    return this.movementType === 'receipt' || this.movementType === 'return_in' || this.movementType === 'production_in';
+    return (
+      this.movementType === 'receipt' ||
+      this.movementType === 'return_in' ||
+      this.movementType === 'production_in'
+    );
   }
 
   get isOutbound(): boolean {
-    return this.movementType === 'delivery' || this.movementType === 'return_out' || this.movementType === 'production_out' || this.movementType === 'scrap';
+    return (
+      this.movementType === 'delivery' ||
+      this.movementType === 'return_out' ||
+      this.movementType === 'production_out' ||
+      this.movementType === 'scrap'
+    );
   }
 
   get displayType(): string {

@@ -9,7 +9,7 @@ export default {
   trackYourOrder: 'Suivre votre commande',
   placedOn: 'Date de commande',
   previousOrders: 'commande(s) précédente(s)',
-  
+
   // Order Status
   statusPending: 'En attente',
   statusAssigned: 'Assigné',
@@ -23,7 +23,7 @@ export default {
   statusindelivery: 'En livraison',
   statusdelivered: 'Livré',
   statuscanceled: 'Annulé',
-  
+
   // Status Descriptions
   currentStatus: 'État actuel',
   orderReceived: 'Commande reçue',
@@ -33,7 +33,7 @@ export default {
   deliveredSuccessfully: 'Commande livrée avec succès',
   orderCanceled: 'Commande annulée',
   orderWasCanceled: 'Cette commande a été annulée',
-  
+
   // Order Errors & Messages
   cannotLoadOrders: 'Impossible de charger',
   noCustomerId: 'Aucun ID client associé à votre compte',

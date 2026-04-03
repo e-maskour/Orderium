@@ -3,11 +3,39 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useDocumentCalculation } from '../../modules/documents/hooks';
-import { Save, X, CheckCircle, XCircle, FileText, Truck, ArrowLeft, DollarSign, Clock, AlertCircle, Share2, PenTool, Ban, Receipt, History, Eye } from 'lucide-react';
-import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
+import {
+  Save,
+  X,
+  CheckCircle,
+  XCircle,
+  FileText,
+  Truck,
+  ArrowLeft,
+  DollarSign,
+  Clock,
+  AlertCircle,
+  Share2,
+  PenTool,
+  Ban,
+  Receipt,
+  History,
+  Eye,
+} from 'lucide-react';
+import {
+  DocumentType,
+  DocumentDirection,
+  DocumentConfig,
+  DocumentItem,
+} from '../../modules/documents/types';
 import { Partner, IPartner } from '../../modules/partners';
-import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
-import DocumentActionBar, { type DocumentAction } from '../../components/documents/DocumentActionBar';
+import {
+  DocumentPartnerBox,
+  DocumentItemsTable,
+  DocumentTotalsSection,
+} from '../../components/documents';
+import DocumentActionBar, {
+  type DocumentAction,
+} from '../../components/documents/DocumentActionBar';
 import { ShareDocumentDialog } from '../../components/documents/ShareDocumentDialog';
 import { PDFPreviewModal } from '../../components/PDFPreviewModal';
 import { invoicesService } from '../../modules/invoices/invoices.service';
@@ -15,7 +43,17 @@ import type { CreateInvoiceDTO } from '../../modules/invoices/invoices.interface
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { ordersService } from '../../modules/orders/orders.service';
 import { pdfService } from '../../services/pdf.service';
-import { toastSuccess, toastError, toastValidated, toastDevalidated, toastDelivered, toastCancelled, toastDocument, toastLinked, toastConfirm } from '../../services/toast.service';
+import {
+  toastSuccess,
+  toastError,
+  toastValidated,
+  toastDevalidated,
+  toastDelivered,
+  toastCancelled,
+  toastDocument,
+  toastLinked,
+  toastConfirm,
+} from '../../services/toast.service';
 import PaymentHistoryModal from '../../components/PaymentHistoryModal';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -34,7 +72,7 @@ export default function DocumentEditPage({
   documentType,
   direction,
   config,
-  listRoute
+  listRoute,
 }: DocumentEditPageProps) {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
@@ -69,9 +107,8 @@ export default function DocumentEditPage({
 
   const totalTTC = items.reduce((sum, item) => {
     const itemTotal = item.quantity * item.unitPrice;
-    const discountAmount = item.discountType === 1
-      ? itemTotal * (item.discount / 100)
-      : item.discount;
+    const discountAmount =
+      item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
     const afterDiscount = itemTotal - discountAmount;
     const tax = afterDiscount * (item.tax / 100);
     return sum + afterDiscount + tax;
@@ -87,7 +124,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #f0fdf4, #ecfdf5)',
           borderColor: '#bbf7d0',
           iconBgColor: '#22c55e',
-          textColor: '#15803d'
+          textColor: '#15803d',
         };
       case 'partial':
         return {
@@ -96,7 +133,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #eff6ff, #ecfeff)',
           borderColor: '#bfdbfe',
           iconBgColor: '#3b82f6',
-          textColor: '#1d4ed8'
+          textColor: '#1d4ed8',
         };
       case 'unpaid':
         return {
@@ -105,7 +142,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #fef2f2, #fff1f2)',
           borderColor: '#fecaca',
           iconBgColor: '#ef4444',
-          textColor: '#b91c1c'
+          textColor: '#b91c1c',
         };
       default: // draft
         return {
@@ -114,7 +151,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
           borderColor: '#cbd5e1',
           iconBgColor: '#64748b',
-          textColor: '#334155'
+          textColor: '#334155',
         };
     }
   };
@@ -129,7 +166,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #eff6ff, #f0f9ff)',
           borderColor: '#bfdbfe',
           iconBgColor: '#3b82f6',
-          textColor: '#1d4ed8'
+          textColor: '#1d4ed8',
         };
       case 'signed':
         return {
@@ -138,7 +175,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #f0fdf4, #ecfdf5)',
           borderColor: '#bbf7d0',
           iconBgColor: '#22c55e',
-          textColor: '#15803d'
+          textColor: '#15803d',
         };
       case 'closed':
         return {
@@ -147,7 +184,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #fef2f2, #fff1f2)',
           borderColor: '#fecaca',
           iconBgColor: '#ef4444',
-          textColor: '#b91c1c'
+          textColor: '#b91c1c',
         };
       case 'delivered':
         return {
@@ -156,7 +193,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #fff7ed, #fffbeb)',
           borderColor: '#fed7aa',
           iconBgColor: '#f97316',
-          textColor: '#c2410c'
+          textColor: '#c2410c',
         };
       case 'invoiced':
         return {
@@ -165,7 +202,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #faf5ff, #f5f3ff)',
           borderColor: '#e9d5ff',
           iconBgColor: '#a855f7',
-          textColor: '#7e22ce'
+          textColor: '#7e22ce',
         };
       default: // draft
         return {
@@ -174,7 +211,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
           borderColor: '#cbd5e1',
           iconBgColor: '#64748b',
-          textColor: '#334155'
+          textColor: '#334155',
         };
     }
   };
@@ -189,7 +226,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #f0f9ff, #eff6ff)',
           borderColor: '#bae6fd',
           iconBgColor: '#0ea5e9',
-          textColor: '#0369a1'
+          textColor: '#0369a1',
         };
       case 'in_progress':
         return {
@@ -198,7 +235,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #ecfeff, #f0fdfa)',
           borderColor: '#a5f3fc',
           iconBgColor: '#06b6d4',
-          textColor: '#0e7490'
+          textColor: '#0e7490',
         };
       case 'delivered':
         return {
@@ -207,7 +244,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #f0fdfa, #ecfdf5)',
           borderColor: '#99f6e4',
           iconBgColor: '#14b8a6',
-          textColor: '#0f766e'
+          textColor: '#0f766e',
         };
       case 'cancelled':
         return {
@@ -216,7 +253,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #fff1f2, #fef2f2)',
           borderColor: '#fecdd3',
           iconBgColor: '#f43f5e',
-          textColor: '#be123c'
+          textColor: '#be123c',
         };
       case 'invoiced':
         return {
@@ -225,7 +262,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #faf5ff, #f5f3ff)',
           borderColor: '#e9d5ff',
           iconBgColor: '#a855f7',
-          textColor: '#7e22ce'
+          textColor: '#7e22ce',
         };
       default: // draft
         return {
@@ -234,7 +271,7 @@ export default function DocumentEditPage({
           gradient: 'linear-gradient(to right, #f8fafc, #f9fafb)',
           borderColor: '#cbd5e1',
           iconBgColor: '#64748b',
-          textColor: '#334155'
+          textColor: '#334155',
         };
     }
   };
@@ -280,9 +317,12 @@ export default function DocumentEditPage({
       if (!data || !doc) return;
 
       // Set form values
-      const docNumber = documentType === 'facture' ? (doc as any).invoiceNumber :
-        documentType === 'devis' ? (doc as any).quoteNumber :
-          (doc as any).orderNumber;
+      const docNumber =
+        documentType === 'facture'
+          ? (doc as any).invoiceNumber
+          : documentType === 'devis'
+            ? (doc as any).quoteNumber
+            : (doc as any).orderNumber;
       setInvoiceNumber(docNumber);
 
       // Handle date fields based on document type and available data
@@ -309,9 +349,15 @@ export default function DocumentEditPage({
       }
 
       // Load share token for devis, facture, and bon_livraison
-      if (documentType === 'devis' || documentType === 'facture' || documentType === 'bon_livraison') {
+      if (
+        documentType === 'devis' ||
+        documentType === 'facture' ||
+        documentType === 'bon_livraison'
+      ) {
         setShareToken((doc as any).shareToken || null);
-        setShareTokenExpiry((doc as any).shareTokenExpiry ? new Date((doc as any).shareTokenExpiry) : null);
+        setShareTokenExpiry(
+          (doc as any).shareTokenExpiry ? new Date((doc as any).shareTokenExpiry) : null,
+        );
       }
       if (documentType === 'devis') {
         setSignedBy((doc as any).signedBy || '');
@@ -338,7 +384,7 @@ export default function DocumentEditPage({
           isCustomer: true,
           isSupplier: false,
           dateCreated: '',
-          dateUpdated: ''
+          dateUpdated: '',
         });
       } else if (!isVente && doc.supplierId) {
         setPartner({
@@ -353,7 +399,7 @@ export default function DocumentEditPage({
           isCustomer: false,
           isSupplier: true,
           dateCreated: '',
-          dateUpdated: ''
+          dateUpdated: '',
         });
       }
 
@@ -368,10 +414,9 @@ export default function DocumentEditPage({
         discount: item.discount || 0,
         discountType: item.discountType || 0,
         tax: item.tax || item.saleTax || 0,
-        total: item.total || 0
+        total: item.total || 0,
       }));
       setItems(mappedItems);
-
     } catch (error) {
       toastError(t('errorLoadingDocument'));
     } finally {
@@ -400,32 +445,35 @@ export default function DocumentEditPage({
       const isDemandePrix = documentType === 'devis' && direction === 'achat';
 
       // Calculate totals
-      const subtotal = isDemandePrix ? null : items.reduce((sum, item) => {
-        const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1
-          ? itemTotal * (item.discount / 100)
-          : item.discount;
-        const afterDiscount = itemTotal - discountAmount;
-        return sum + afterDiscount;
-      }, 0);
+      const subtotal = isDemandePrix
+        ? null
+        : items.reduce((sum, item) => {
+            const itemTotal = item.quantity * item.unitPrice;
+            const discountAmount =
+              item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
+            const afterDiscount = itemTotal - discountAmount;
+            return sum + afterDiscount;
+          }, 0);
 
-      const totalTax = isDemandePrix ? null : items.reduce((sum, item) => {
-        const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1
-          ? itemTotal * (item.discount / 100)
-          : item.discount;
-        const afterDiscount = itemTotal - discountAmount;
-        const tax = afterDiscount * (item.tax / 100);
-        return sum + tax;
-      }, 0);
+      const totalTax = isDemandePrix
+        ? null
+        : items.reduce((sum, item) => {
+            const itemTotal = item.quantity * item.unitPrice;
+            const discountAmount =
+              item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
+            const afterDiscount = itemTotal - discountAmount;
+            const tax = afterDiscount * (item.tax / 100);
+            return sum + tax;
+          }, 0);
 
-      const total = isDemandePrix ? null : (subtotal! + totalTax!);
+      const total = isDemandePrix ? null : subtotal! + totalTax!;
 
       // Update document data
       const documentData: any = {
         date,
         dueDate: dueDate || undefined,
-        expirationDate: config.features.expirationDate && expirationDate ? expirationDate : undefined,
+        expirationDate:
+          config.features.expirationDate && expirationDate ? expirationDate : undefined,
         customerId: isVente ? partner.id : undefined,
         supplierId: isVente ? undefined : partner.id,
         customerName: isVente ? partner.name : undefined,
@@ -440,15 +488,14 @@ export default function DocumentEditPage({
         discountType: 0,
         total,
         notes: notes || undefined,
-        items: items.map(item => {
+        items: items.map((item) => {
           // For demande de prix, send null for unitPrice and total
           const isDemandePrix = documentType === 'devis' && direction === 'achat';
 
           // Calculate item total (HT: before tax)
           const itemSubtotal = item.quantity * item.unitPrice;
-          const discountAmount = item.discountType === 1
-            ? itemSubtotal * (item.discount / 100)
-            : item.discount;
+          const discountAmount =
+            item.discountType === 1 ? itemSubtotal * (item.discount / 100) : item.discount;
           const itemTotal = itemSubtotal - discountAmount;
 
           return {
@@ -459,10 +506,10 @@ export default function DocumentEditPage({
             unitPrice: isDemandePrix ? null : item.unitPrice,
             discount: item.discount || 0,
             discountType: item.discountType || 0,
-            tax: isDemandePrix ? null : (item.tax || 0),
-            total: isDemandePrix ? null : itemTotal
+            tax: isDemandePrix ? null : item.tax || 0,
+            total: isDemandePrix ? null : itemTotal,
           };
-        })
+        }),
       };
 
       // Call appropriate service based on document type
@@ -478,10 +525,12 @@ export default function DocumentEditPage({
 
       // Reload document to get fresh data
       await loadDocument();
-
     } catch (error: any) {
       console.error('Error updating document:', error);
-      toastError(error.message || `${t('error')} lors de la mise à jour de la ${config.titleShort.toLowerCase()}`);
+      toastError(
+        error.message ||
+          `${t('error')} lors de la mise à jour de la ${config.titleShort.toLowerCase()}`,
+      );
     } finally {
       setSaving(false);
     }
@@ -566,18 +615,16 @@ export default function DocumentEditPage({
       // Calculate totals
       const subtotal = items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1
-          ? itemTotal * (item.discount / 100)
-          : item.discount;
+        const discountAmount =
+          item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         return sum + afterDiscount;
       }, 0);
 
       const totalTax = items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1
-          ? itemTotal * (item.discount / 100)
-          : item.discount;
+        const discountAmount =
+          item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         const tax = afterDiscount * (item.tax / 100);
         return sum + tax;
@@ -602,7 +649,7 @@ export default function DocumentEditPage({
         discountType: 0,
         total,
         notes: notes || undefined,
-        items: items.map(item => ({
+        items: items.map((item) => ({
           productId: item.productId,
           description: item.description,
           quantity: item.quantity,
@@ -610,7 +657,7 @@ export default function DocumentEditPage({
           discount: item.discount || 0,
           discountType: item.discountType || 0,
           tax: item.tax || 0,
-        }))
+        })),
       };
 
       // Create the invoice
@@ -634,7 +681,6 @@ export default function DocumentEditPage({
       setTimeout(() => {
         navigate(`/factures/${direction}/${createdInvoiceId}`);
       }, 1500);
-
     } catch (error: any) {
       console.error('Error creating invoice:', error);
       toastError(error.message || t('errorCreatingInvoice'));
@@ -644,7 +690,6 @@ export default function DocumentEditPage({
   };
 
   const handleCreateBon = async () => {
-
     if (!id || !partner) return;
 
     try {
@@ -655,18 +700,16 @@ export default function DocumentEditPage({
       // Calculate totals
       const subtotal = items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1
-          ? itemTotal * (item.discount / 100)
-          : item.discount;
+        const discountAmount =
+          item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         return sum + afterDiscount;
       }, 0);
 
       const totalTax = items.reduce((sum, item) => {
         const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1
-          ? itemTotal * (item.discount / 100)
-          : item.discount;
+        const discountAmount =
+          item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
         const afterDiscount = itemTotal - discountAmount;
         const tax = afterDiscount * (item.tax / 100);
         return sum + tax;
@@ -691,12 +734,11 @@ export default function DocumentEditPage({
         discount: 0,
         discountType: 0,
         total,
-        items: items.map(item => {
+        items: items.map((item) => {
           // Calculate item total (HT: before tax)
           const itemSubtotal = item.quantity * item.unitPrice;
-          const discountAmount = item.discountType === 1
-            ? itemSubtotal * (item.discount / 100)
-            : item.discount;
+          const discountAmount =
+            item.discountType === 1 ? itemSubtotal * (item.discount / 100) : item.discount;
           const itemTotal = itemSubtotal - discountAmount;
 
           return {
@@ -708,7 +750,7 @@ export default function DocumentEditPage({
             discount: item.discount || 0,
             discountType: item.discountType || 0,
             tax: item.tax || 0,
-            total: itemTotal
+            total: itemTotal,
           };
         }),
         note: notes || '',
@@ -727,12 +769,10 @@ export default function DocumentEditPage({
 
       // Navigate to the bon edit page after delay
       setTimeout(() => {
-        const bonRoute = direction === 'vente'
-          ? `/bons-livraison/${created.id}`
-          : `/bon-achat/${created.id}`;
+        const bonRoute =
+          direction === 'vente' ? `/bons-livraison/${created.id}` : `/bon-achat/${created.id}`;
         navigate(bonRoute);
       }, 1500);
-
     } catch (error: any) {
       console.error('Error creating bon:', error);
       toastError(error.message || t('errorCreatingDeliveryNote'));
@@ -807,17 +847,37 @@ export default function DocumentEditPage({
     return (
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '20rem', gap: '1rem' }}>
-            <div style={{
-              width: '3rem', height: '3rem',
-              background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-              borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(35,90,228,0.3)',
-              animation: 'pulse 1.5s ease-in-out infinite'
-            }}>
-              {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '20rem',
+              gap: '1rem',
+            }}
+          >
+            <div
+              style={{
+                width: '3rem',
+                height: '3rem',
+                background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                borderRadius: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(35,90,228,0.3)',
+                animation: 'pulse 1.5s ease-in-out infinite',
+              }}
+            >
+              {(() => {
+                const DocIcon = config.icon;
+                return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />;
+              })()}
             </div>
-            <p style={{ color: '#64748b', fontWeight: 500, fontSize: '0.9375rem' }}>{t('loading')}</p>
+            <p style={{ color: '#64748b', fontWeight: 500, fontSize: '0.9375rem' }}>
+              {t('loading')}
+            </p>
           </div>
         </div>
       </AdminLayout>
@@ -858,21 +918,52 @@ export default function DocumentEditPage({
           <Button
             icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
             onClick={() => navigate(listRoute)}
-            style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+            style={{
+              width: '2.25rem',
+              height: '2.25rem',
+              flexShrink: 0,
+              background: '#f8fafc',
+              border: '1.5px solid #e2e8f0',
+              color: '#64748b',
+              borderRadius: '0.625rem',
+              padding: 0,
+            }}
           />
           {/* Desktop only: document icon */}
           <div className="doc-detail-hdr__icon">
-            {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
+            {(() => {
+              const DocIcon = config.icon;
+              return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />;
+            })()}
           </div>
           {/* Title + breadcrumb */}
           <div className="doc-detail-hdr__body">
             <div className="doc-detail-hdr__crumb">
               <span
                 onClick={() => navigate(listRoute)}
-                style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', cursor: 'pointer' }}
-              >{config.titleShort}</span>
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  cursor: 'pointer',
+                }}
+              >
+                {config.titleShort}
+              </span>
               <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>›</span>
-              <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#235ae4', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{invoiceNumber}</span>
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  color: '#235ae4',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                }}
+              >
+                {invoiceNumber}
+              </span>
             </div>
             <h1 className="doc-detail-hdr__title">
               <span style={{ color: '#235ae4' }}>{invoiceNumber}</span>
@@ -880,92 +971,362 @@ export default function DocumentEditPage({
           </div>
           {/* Status badges */}
           <div className="doc-detail-hdr__badges">
-            {config.features.hasValidation && (
-              isValidated ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #ecfdf5, #f0fdfa)', border: '1.5px solid #a7f3d0', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: '#10b981', flexShrink: 0 }} strokeWidth={2.5} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#047857', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('validated')}</span>
+            {config.features.hasValidation &&
+              (isValidated ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4375rem',
+                    padding: '0.4375rem 0.875rem',
+                    borderRadius: '9999px',
+                    background: 'linear-gradient(135deg, #ecfdf5, #f0fdfa)',
+                    border: '1.5px solid #a7f3d0',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  <CheckCircle
+                    style={{
+                      width: '0.875rem',
+                      height: '0.875rem',
+                      color: '#10b981',
+                      flexShrink: 0,
+                    }}
+                    strokeWidth={2.5}
+                  />
+                  <span
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 700,
+                      color: '#047857',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    {t('validated')}
+                  </span>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #fffbeb, #fff7ed)', border: '1.5px solid #fcd34d', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <Clock style={{ width: '0.875rem', height: '0.875rem', color: '#f59e0b', flexShrink: 0 }} strokeWidth={2.5} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('notValidated')}</span>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4375rem',
+                    padding: '0.4375rem 0.875rem',
+                    borderRadius: '9999px',
+                    background: 'linear-gradient(135deg, #fffbeb, #fff7ed)',
+                    border: '1.5px solid #fcd34d',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Clock
+                    style={{
+                      width: '0.875rem',
+                      height: '0.875rem',
+                      color: '#f59e0b',
+                      flexShrink: 0,
+                    }}
+                    strokeWidth={2.5}
+                  />
+                  <span
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 700,
+                      color: '#b45309',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    {t('notValidated')}
+                  </span>
                 </div>
-              )
-            )}
-            {documentType === 'facture' && (() => {
-              const statusConfig = getPaymentStatusBadge(status);
-              const StatusIcon = statusConfig.icon;
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
-                </div>
-              );
-            })()}
-            {documentType === 'devis' && (() => {
-              const statusConfig = getDevisStatusBadge(status);
-              const StatusIcon = statusConfig.icon;
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
-                </div>
-              );
-            })()}
-            {documentType === 'bon_livraison' && (() => {
-              const statusConfig = getBonStatusBadge(status);
-              const StatusIcon = statusConfig.icon;
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: statusConfig.gradient, border: `1.5px solid ${statusConfig.borderColor}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <StatusIcon style={{ width: '0.875rem', height: '0.875rem', color: statusConfig.textColor, flexShrink: 0 }} strokeWidth={2.5} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: statusConfig.textColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{statusConfig.label}</span>
-                </div>
-              );
-            })()}
+              ))}
+            {documentType === 'facture' &&
+              (() => {
+                const statusConfig = getPaymentStatusBadge(status);
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4375rem',
+                      padding: '0.4375rem 0.875rem',
+                      borderRadius: '9999px',
+                      background: statusConfig.gradient,
+                      border: `1.5px solid ${statusConfig.borderColor}`,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <StatusIcon
+                      style={{
+                        width: '0.875rem',
+                        height: '0.875rem',
+                        color: statusConfig.textColor,
+                        flexShrink: 0,
+                      }}
+                      strokeWidth={2.5}
+                    />
+                    <span
+                      style={{
+                        fontSize: '0.6875rem',
+                        fontWeight: 700,
+                        color: statusConfig.textColor,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                      }}
+                    >
+                      {statusConfig.label}
+                    </span>
+                  </div>
+                );
+              })()}
+            {documentType === 'devis' &&
+              (() => {
+                const statusConfig = getDevisStatusBadge(status);
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4375rem',
+                      padding: '0.4375rem 0.875rem',
+                      borderRadius: '9999px',
+                      background: statusConfig.gradient,
+                      border: `1.5px solid ${statusConfig.borderColor}`,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <StatusIcon
+                      style={{
+                        width: '0.875rem',
+                        height: '0.875rem',
+                        color: statusConfig.textColor,
+                        flexShrink: 0,
+                      }}
+                      strokeWidth={2.5}
+                    />
+                    <span
+                      style={{
+                        fontSize: '0.6875rem',
+                        fontWeight: 700,
+                        color: statusConfig.textColor,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                      }}
+                    >
+                      {statusConfig.label}
+                    </span>
+                  </div>
+                );
+              })()}
+            {documentType === 'bon_livraison' &&
+              (() => {
+                const statusConfig = getBonStatusBadge(status);
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4375rem',
+                      padding: '0.4375rem 0.875rem',
+                      borderRadius: '9999px',
+                      background: statusConfig.gradient,
+                      border: `1.5px solid ${statusConfig.borderColor}`,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <StatusIcon
+                      style={{
+                        width: '0.875rem',
+                        height: '0.875rem',
+                        color: statusConfig.textColor,
+                        flexShrink: 0,
+                      }}
+                      strokeWidth={2.5}
+                    />
+                    <span
+                      style={{
+                        fontSize: '0.6875rem',
+                        fontWeight: 700,
+                        color: statusConfig.textColor,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                      }}
+                    >
+                      {statusConfig.label}
+                    </span>
+                  </div>
+                );
+              })()}
           </div>
         </div>
 
         {/* ── Payment Summary – validated invoices only ── */}
         {documentType === 'facture' && isValidated && status !== 'draft' && (
-          <div style={{ borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1.5px solid #bfdbfe', marginBottom: '1.5rem' }}>
-            <div style={{
-              padding: '0.75rem 1.25rem',
-              background: 'linear-gradient(to right, #eff6ff, #eef2ff)',
-              borderBottom: '1.5px solid #bfdbfe',
-              display: 'flex', alignItems: 'center', gap: '0.625rem'
-            }}>
-              <div style={{ width: '1.75rem', height: '1.75rem', background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              borderRadius: '1rem',
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              border: '1.5px solid #bfdbfe',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <div
+              style={{
+                padding: '0.75rem 1.25rem',
+                background: 'linear-gradient(to right, #eff6ff, #eef2ff)',
+                borderBottom: '1.5px solid #bfdbfe',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.625rem',
+              }}
+            >
+              <div
+                style={{
+                  width: '1.75rem',
+                  height: '1.75rem',
+                  background: '#3b82f6',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <Receipt style={{ width: '1rem', height: '1rem', color: '#ffffff' }} />
               </div>
-              <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e40af' }}>{t('paymentDetails')}</h3>
+              <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e40af' }}>
+                {t('paymentDetails')}
+              </h3>
             </div>
-            <div className="stat-strip-3" style={{ background: 'linear-gradient(to right, #eff6ff, #eef2ff)' }}>
+            <div
+              className="stat-strip-3"
+              style={{ background: 'linear-gradient(to right, #eff6ff, #eef2ff)' }}
+            >
               <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid #dbeafe' }}>
-                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('totalAmount')}</p>
-                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
-                  {formatAmount(totalTTC, 2)} <span style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
+                <p
+                  style={{
+                    margin: '0 0 0.375rem',
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                    color: '#64748b',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {t('totalAmount')}
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {formatAmount(totalTTC, 2)}{' '}
+                  <span style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 600 }}>
+                    {language === 'ar' ? 'د.م' : 'DH'}
+                  </span>
                 </p>
               </div>
-              <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid #dcfce7', background: 'linear-gradient(135deg, rgba(240,253,244,0.7), rgba(236,253,245,0.7))' }}>
-                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('paidAmount')}</p>
-                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#15803d', letterSpacing: '-0.01em' }}>
-                  {formatAmount(paidAmount, 2)} <span style={{ fontSize: '0.875rem', color: '#16a34a', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
+              <div
+                style={{
+                  padding: '1rem 1.25rem',
+                  borderRight: '1px solid #dcfce7',
+                  background:
+                    'linear-gradient(135deg, rgba(240,253,244,0.7), rgba(236,253,245,0.7))',
+                }}
+              >
+                <p
+                  style={{
+                    margin: '0 0 0.375rem',
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                    color: '#16a34a',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {t('paidAmount')}
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: '#15803d',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {formatAmount(paidAmount, 2)}{' '}
+                  <span style={{ fontSize: '0.875rem', color: '#16a34a', fontWeight: 600 }}>
+                    {language === 'ar' ? 'د.م' : 'DH'}
+                  </span>
                 </p>
               </div>
-              <div style={{ padding: '1rem 1.25rem', background: remainingAmount > 0 ? 'linear-gradient(135deg, rgba(255,237,213,0.7), rgba(254,242,242,0.7))' : 'transparent' }}>
-                <p style={{ margin: '0 0 0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: remainingAmount > 0 ? '#ea580c' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('remainingAmount')}</p>
-                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: remainingAmount > 0 ? '#c2410c' : '#16a34a', letterSpacing: '-0.01em' }}>
-                  {formatAmount(remainingAmount, 2)} <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{language === 'ar' ? 'د.م' : 'DH'}</span>
+              <div
+                style={{
+                  padding: '1rem 1.25rem',
+                  background:
+                    remainingAmount > 0
+                      ? 'linear-gradient(135deg, rgba(255,237,213,0.7), rgba(254,242,242,0.7))'
+                      : 'transparent',
+                }}
+              >
+                <p
+                  style={{
+                    margin: '0 0 0.375rem',
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                    color: remainingAmount > 0 ? '#ea580c' : '#64748b',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {t('remainingAmount')}
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: remainingAmount > 0 ? '#c2410c' : '#16a34a',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {formatAmount(remainingAmount, 2)}{' '}
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                    {language === 'ar' ? 'د.م' : 'DH'}
+                  </span>
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '1rem', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', border: '1.5px solid #e2e8f0', overflow: 'hidden' }}>
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '1rem',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+            border: '1.5px solid #e2e8f0',
+            overflow: 'hidden',
+          }}
+        >
           {/* Top accent bar */}
-          <div style={{ height: '3px', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }} />
+          <div
+            style={{ height: '3px', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}
+          />
           <div style={{ padding: '1.5rem' }}>
             {/* Two column layout: Partner on left, Document info on right */}
             <div className="doc-edit-grid">
@@ -980,12 +1341,16 @@ export default function DocumentEditPage({
                   partnerIce={partner?.ice || undefined}
                   deliveryAddress={partner?.deliveryAddress || undefined}
                   onPartnerChange={(updatedPartner) => {
-                    if ('id' in updatedPartner && 'name' in updatedPartner && 'phoneNumber' in updatedPartner) {
+                    if (
+                      'id' in updatedPartner &&
+                      'name' in updatedPartner &&
+                      'phoneNumber' in updatedPartner
+                    ) {
                       // Full partner object selected from dropdown
                       setPartner(updatedPartner as IPartner);
                     } else {
                       // Partial update (typing in field)
-                      setPartner(prev => prev ? { ...prev, ...updatedPartner } : null);
+                      setPartner((prev) => (prev ? { ...prev, ...updatedPartner } : null));
                     }
                   }}
                   readOnly={isValidated || (documentType === 'devis' && status === 'closed')}
@@ -993,31 +1358,84 @@ export default function DocumentEditPage({
               </div>
 
               {/* Document information - Right */}
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
-                <div style={{ padding: '0.875rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                  <div style={{
-                    width: '2rem', height: '2rem',
-                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-                    borderRadius: '0.5rem', flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(35,90,228,0.4)'
-                  }}>
+              <div
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '0.875rem',
+                  border: '1.5px solid #e2e8f0',
+                  overflow: 'hidden',
+                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '0.875rem 1.125rem',
+                    background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+                    borderBottom: '1.5px solid #e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.625rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '2rem',
+                      height: '2rem',
+                      background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                      borderRadius: '0.5rem',
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(35,90,228,0.4)',
+                    }}
+                  >
                     <FileText style={{ width: '1rem', height: '1rem', color: '#fff' }} />
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>{t('documentInformation')}</h3>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9375rem',
+                        fontWeight: 700,
+                        color: '#1e293b',
+                      }}
+                    >
+                      {t('documentInformation')}
+                    </h3>
                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
-                      {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}
+                      {documentType === 'facture'
+                        ? t('dateDeFacturation')
+                        : documentType === 'bon_livraison'
+                          ? t('dateDeBon')
+                          : t('dateDeDevis')}
                     </p>
                   </div>
                 </div>
-                <div style={{ padding: '1rem 1.125rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                <div
+                  style={{
+                    padding: '1rem 1.125rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.875rem',
+                  }}
+                >
                   <div>
-                    <label className="doc-field-label">{documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}</label>
+                    <label className="doc-field-label">
+                      {documentType === 'facture'
+                        ? t('dateDeFacturation')
+                        : documentType === 'bon_livraison'
+                          ? t('dateDeBon')
+                          : t('dateDeDevis')}
+                    </label>
                     <Calendar
                       value={date ? new Date(date) : null}
-                      onChange={(e) => setDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
-                      readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                      onChange={(e) =>
+                        setDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')
+                      }
+                      readOnlyInput={
+                        isValidated || (documentType === 'devis' && status === 'closed')
+                      }
                       disabled={false}
                       dateFormat="dd/mm/yy"
                       showIcon
@@ -1032,8 +1450,14 @@ export default function DocumentEditPage({
                       <label className="doc-field-label">{t('expirationDate')}</label>
                       <Calendar
                         value={expirationDate ? new Date(expirationDate) : null}
-                        onChange={(e) => setExpirationDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
-                        readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                        onChange={(e) =>
+                          setExpirationDate(
+                            e.value ? (e.value as Date).toISOString().split('T')[0] : '',
+                          )
+                        }
+                        readOnlyInput={
+                          isValidated || (documentType === 'devis' && status === 'closed')
+                        }
                         disabled={false}
                         dateFormat="dd/mm/yy"
                         showIcon
@@ -1048,8 +1472,12 @@ export default function DocumentEditPage({
                     <label className="doc-field-label">{t('dueDate')}</label>
                     <Calendar
                       value={dueDate ? new Date(dueDate) : null}
-                      onChange={(e) => setDueDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
-                      readOnlyInput={isValidated || (documentType === 'devis' && status === 'closed')}
+                      onChange={(e) =>
+                        setDueDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')
+                      }
+                      readOnlyInput={
+                        isValidated || (documentType === 'devis' && status === 'closed')
+                      }
                       disabled={false}
                       dateFormat="dd/mm/yy"
                       showIcon
@@ -1063,8 +1491,21 @@ export default function DocumentEditPage({
             </div>
 
             {/* Items Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.5rem 0 1rem' }}>
-              <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, #e2e8f0, transparent)' }} />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                margin: '1.5rem 0 1rem',
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  height: '1px',
+                  background: 'linear-gradient(to right, #e2e8f0, transparent)',
+                }}
+              />
             </div>
 
             {/* Items table */}
@@ -1083,11 +1524,47 @@ export default function DocumentEditPage({
             <div className="doc-notes-totals">
               {/* Notes - 60% */}
               <div style={{ minWidth: 0 }}>
-                <div style={{ backgroundColor: '#ffffff', borderRadius: '0.875rem', border: '1.5px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-                  <div style={{ padding: '0.75rem 1.125rem', background: 'linear-gradient(to right, #f8fafc, #eff6ff)', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #235ae4, #1a47b8)', borderRadius: '2px', flexShrink: 0 }} />
-                    <FileText style={{ width: '0.9375rem', height: '0.9375rem', color: '#3b82f6', flexShrink: 0 }} />
-                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('notes')}</h3>
+                <div
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '0.875rem',
+                    border: '1.5px solid #e2e8f0',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '0.75rem 1.125rem',
+                      background: 'linear-gradient(to right, #f8fafc, #eff6ff)',
+                      borderBottom: '1.5px solid #e2e8f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.625rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '0.25rem',
+                        height: '1.25rem',
+                        background: 'linear-gradient(to bottom, #235ae4, #1a47b8)',
+                        borderRadius: '2px',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <FileText
+                      style={{
+                        width: '0.9375rem',
+                        height: '0.9375rem',
+                        color: '#3b82f6',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <h3
+                      style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}
+                    >
+                      {t('notes')}
+                    </h3>
                   </div>
                   <div style={{ padding: '1rem 1.125rem' }}>
                     <InputTextarea
@@ -1103,20 +1580,73 @@ export default function DocumentEditPage({
 
                 {/* Signature card (devis only) */}
                 {documentType === 'devis' && status === 'signed' && signedBy && (
-                  <div style={{ marginTop: '1rem', backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 2px 10px rgba(22,163,74,0.1)' }}>
-                    <div style={{ padding: '0.625rem 1rem', background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', borderBottom: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle style={{ width: '1rem', height: '1rem', color: '#16a34a' }} /><h4 style={{ margin: 0, fontWeight: 700, color: '#14532d', fontSize: '0.875rem' }}>{t('signature')}</h4></div>
+                  <div
+                    style={{
+                      marginTop: '1rem',
+                      backgroundColor: '#f0fdf4',
+                      border: '1.5px solid #bbf7d0',
+                      borderRadius: '0.875rem',
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 10px rgba(22,163,74,0.1)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: '0.625rem 1rem',
+                        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                        borderBottom: '1px solid #bbf7d0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <CheckCircle style={{ width: '1rem', height: '1rem', color: '#16a34a' }} />
+                      <h4
+                        style={{
+                          margin: 0,
+                          fontWeight: 700,
+                          color: '#14532d',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        {t('signature')}
+                      </h4>
+                    </div>
                     <div style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <p style={{ fontSize: '0.875rem', color: '#166534' }}><span style={{ fontWeight: 500 }}>{t('signedBy')}</span> {signedBy}</p>
+                        <p style={{ fontSize: '0.875rem', color: '#166534' }}>
+                          <span style={{ fontWeight: 500 }}>{t('signedBy')}</span> {signedBy}
+                        </p>
                         {signedDate && (
                           <p style={{ fontSize: '0.875rem', color: '#15803d' }}>
                             <span style={{ fontWeight: 500 }}>{t('dateLabel')}</span>{' '}
-                            {new Date(signedDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            {new Date(signedDate).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
                           </p>
                         )}
                         {clientNotes && (
-                          <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #bbf7d0' }}>
-                            <p style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 500, marginBottom: '0.25rem' }}>{t('comment')}</p>
+                          <div
+                            style={{
+                              marginTop: '0.75rem',
+                              paddingTop: '0.75rem',
+                              borderTop: '1px solid #bbf7d0',
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: '0.75rem',
+                                color: '#15803d',
+                                fontWeight: 500,
+                                marginBottom: '0.25rem',
+                              }}
+                            >
+                              {t('comment')}
+                            </p>
                             <p style={{ fontSize: '0.875rem', color: '#334155' }}>{clientNotes}</p>
                           </div>
                         )}
@@ -1132,7 +1662,6 @@ export default function DocumentEditPage({
               </div>
             </div>
           </div>
-
         </div>
 
         {/* ── Document Action Bar ── */}
@@ -1153,15 +1682,26 @@ export default function DocumentEditPage({
                 id: 'deliver',
                 label: t('markAsDelivered'),
                 icon: <Truck size={16} />,
-                onClick: () => toastConfirm(t('confirmMarkDelivered'), handleDeliver, { confirmLabel: t('deliverButton') }),
+                onClick: () =>
+                  toastConfirm(t('confirmMarkDelivered'), handleDeliver, {
+                    confirmLabel: t('deliverButton'),
+                  }),
               };
             }
-            if (documentType === 'devis' && isValidated && status !== 'signed' && status !== 'closed') {
+            if (
+              documentType === 'devis' &&
+              isValidated &&
+              status !== 'signed' &&
+              status !== 'closed'
+            ) {
               return {
                 id: 'sign',
                 label: t('signQuote'),
                 icon: <PenTool size={16} />,
-                onClick: () => toastConfirm(t('confirmSignQuote'), handleSignQuote, { confirmLabel: t('signQuote') }),
+                onClick: () =>
+                  toastConfirm(t('confirmSignQuote'), handleSignQuote, {
+                    confirmLabel: t('signQuote'),
+                  }),
               };
             }
             if (config.features.hasValidation && !isValidated) {
@@ -1169,7 +1709,10 @@ export default function DocumentEditPage({
                 id: 'validate',
                 label: t('validateDocument'),
                 icon: <CheckCircle size={16} />,
-                onClick: () => toastConfirm(t('confirmValidateDocument'), handleValidate, { confirmLabel: t('validateDocument') }),
+                onClick: () =>
+                  toastConfirm(t('confirmValidateDocument'), handleValidate, {
+                    confirmLabel: t('validateDocument'),
+                  }),
               };
             }
             if (config.features.hasValidation && isValidated) {
@@ -1177,7 +1720,10 @@ export default function DocumentEditPage({
                 id: 'devalidate',
                 label: t('devalidateDocument'),
                 icon: <XCircle size={16} />,
-                onClick: () => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') }),
+                onClick: () =>
+                  toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, {
+                    confirmLabel: t('devalidateDocument'),
+                  }),
               };
             }
             return null;
@@ -1198,7 +1744,11 @@ export default function DocumentEditPage({
               label: t('pdfPreview'),
               icon: <Eye size={16} />,
               onClick: () => {
-                const url = pdfService.getPDFUrl(getPDFDocumentType(documentType), Number(id), 'preview');
+                const url = pdfService.getPDFUrl(
+                  getPDFDocumentType(documentType),
+                  Number(id),
+                  'preview',
+                );
                 setPdfPreviewUrl(url);
                 setShowPDFPreview(true);
               },
@@ -1209,15 +1759,27 @@ export default function DocumentEditPage({
               id: 'convert-invoice',
               label: t('convertToInvoice'),
               icon: <FileText size={16} />,
-              onClick: () => toastConfirm(`${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') }),
-              hidden: documentType !== 'bon_livraison' || (status !== 'delivered' && status !== 'in_progress'),
+              onClick: () =>
+                toastConfirm(
+                  `${t('createInvoiceMessage')} ${t('thisDeliveryNote')}${t('allDataWillBeCopied')}`,
+                  handleCreateInvoice,
+                  { confirmLabel: t('create') },
+                ),
+              hidden:
+                documentType !== 'bon_livraison' ||
+                (status !== 'delivered' && status !== 'in_progress'),
             },
             // Create Invoice from devis
             {
               id: 'create-invoice',
               label: t('createAnInvoice'),
               icon: <FileText size={16} />,
-              onClick: () => toastConfirm(`${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`, handleCreateInvoice, { confirmLabel: t('create') }),
+              onClick: () =>
+                toastConfirm(
+                  `${t('createInvoiceMessage')} ${t('thisQuote')}${t('allDataWillBeCopied')}`,
+                  handleCreateInvoice,
+                  { confirmLabel: t('create') },
+                ),
               hidden: documentType !== 'devis' || status !== 'signed',
             },
             // Create Delivery Note from devis
@@ -1225,7 +1787,10 @@ export default function DocumentEditPage({
               id: 'create-bon',
               label: t('createDeliveryNote'),
               icon: <Truck size={16} />,
-              onClick: () => toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, { confirmLabel: t('create') }),
+              onClick: () =>
+                toastConfirm(t('confirmCreateDeliveryNote'), handleCreateBon, {
+                  confirmLabel: t('create'),
+                }),
               hidden: documentType !== 'devis' || status !== 'signed',
             },
             // Devalidate (when secondary is occupied by a more urgent action)
@@ -1233,15 +1798,24 @@ export default function DocumentEditPage({
               id: 'devalidate',
               label: t('devalidateDocument'),
               icon: <XCircle size={16} />,
-              onClick: () => toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, { confirmLabel: t('devalidateDocument') }),
-              hidden: !isValidated || !config.features.hasValidation || secondaryAction?.id === 'devalidate',
+              onClick: () =>
+                toastConfirm(t('confirmDevalidateDocument'), handleDevalidate, {
+                  confirmLabel: t('devalidateDocument'),
+                }),
+              hidden:
+                !isValidated ||
+                !config.features.hasValidation ||
+                secondaryAction?.id === 'devalidate',
             },
             // Reject Quote (devis + validated + signed)
             {
               id: 'reject-quote',
               label: t('rejectQuote'),
               icon: <XCircle size={16} />,
-              onClick: () => toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, { confirmLabel: t('rejectButton') }),
+              onClick: () =>
+                toastConfirm(t('confirmRejectQuote'), handleUnsignQuote, {
+                  confirmLabel: t('rejectButton'),
+                }),
               hidden: documentType !== 'devis' || !isValidated || status !== 'signed',
               destructive: true,
             },
@@ -1250,20 +1824,24 @@ export default function DocumentEditPage({
               id: 'cancel-delivery',
               label: t('cancel'),
               icon: <Ban size={16} />,
-              onClick: () => toastConfirm(t('confirmCancelDelivery'), handleCancel, { confirmLabel: t('cancelDeliveryButton') }),
+              onClick: () =>
+                toastConfirm(t('confirmCancelDelivery'), handleCancel, {
+                  confirmLabel: t('cancelDeliveryButton'),
+                }),
               hidden: documentType !== 'bon_livraison' || status !== 'in_progress',
               destructive: true,
             },
           ];
 
-          const leftAction: DocumentAction | null = documentType === 'facture' && isValidated && status !== 'draft'
-            ? {
-              id: 'payment-history',
-              label: t('paymentHistory'),
-              icon: <History size={16} />,
-              onClick: () => setShowPaymentHistory(true),
-            }
-            : null;
+          const leftAction: DocumentAction | null =
+            documentType === 'facture' && isValidated && status !== 'draft'
+              ? {
+                  id: 'payment-history',
+                  label: t('paymentHistory'),
+                  icon: <History size={16} />,
+                  onClick: () => setShowPaymentHistory(true),
+                }
+              : null;
 
           return (
             <DocumentActionBar
@@ -1275,25 +1853,24 @@ export default function DocumentEditPage({
           );
         })()}
 
-
-
-        {isValidated && (documentType === 'devis' || documentType === 'facture' || documentType === 'bon_livraison') && (
-          <ShareDocumentDialog
-            isOpen={showShareDialog}
-            onClose={() => setShowShareDialog(false)}
-            documentType={documentType}
-            documentNumber={invoiceNumber}
-            partnerName={partner?.name}
-            partnerPhone={partner?.phoneNumber}
-            totalAmount={totalTTC}
-            shareToken={shareToken}
-            expiresAt={shareTokenExpiry}
-            onGenerateLink={handleGenerateShareLink}
-            onRevokeLink={documentType !== 'devis' ? handleRevokeShareLink : undefined}
-          />
-        )}
-
-
+        {isValidated &&
+          (documentType === 'devis' ||
+            documentType === 'facture' ||
+            documentType === 'bon_livraison') && (
+            <ShareDocumentDialog
+              isOpen={showShareDialog}
+              onClose={() => setShowShareDialog(false)}
+              documentType={documentType}
+              documentNumber={invoiceNumber}
+              partnerName={partner?.name}
+              partnerPhone={partner?.phoneNumber}
+              totalAmount={totalTTC}
+              shareToken={shareToken}
+              expiresAt={shareTokenExpiry}
+              onGenerateLink={handleGenerateShareLink}
+              onRevokeLink={documentType !== 'devis' ? handleRevokeShareLink : undefined}
+            />
+          )}
 
         {documentType === 'facture' && (
           <PaymentHistoryModal

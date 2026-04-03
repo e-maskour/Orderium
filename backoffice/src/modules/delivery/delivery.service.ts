@@ -3,8 +3,10 @@ import { DeliveryPerson } from './delivery.model';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class DeliveryPersonService {
-  async getAll(): Promise<DeliveryPerson[]> {
-    const response = await apiClient.get<any[]>(API_ROUTES.DELIVERY.LIST_PERSONS);
+  async getAll(search?: string): Promise<DeliveryPerson[]> {
+    const params: Record<string, string> = {};
+    if (search) params.search = search;
+    const response = await apiClient.get<any[]>(API_ROUTES.DELIVERY.LIST_PERSONS, { params });
     return (response.data || []).map((d: any) => DeliveryPerson.fromApiResponse(d));
   }
 

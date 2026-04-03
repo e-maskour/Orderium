@@ -2,16 +2,27 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { Modal } from '../components/Modal';
 import { FolderTree, Plus, Pencil, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
-import { categoriesService, Category, CreateCategoryDTO, UpdateCategoryDTO } from '../modules/categories';
-import { toastCreated, toastUpdated, toastDeleted, toastError, toastConfirm } from '../services/toast.service';
+import {
+  categoriesService,
+  Category,
+  CreateCategoryDTO,
+  UpdateCategoryDTO,
+} from '../modules/categories';
+import {
+  toastCreated,
+  toastUpdated,
+  toastDeleted,
+  toastError,
+  toastConfirm,
+} from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 
 export default function Categories() {
   const { t } = useLanguage();
@@ -146,13 +157,28 @@ export default function Categories() {
     return (
       <div key={category.id}>
         <div
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '0.5rem', paddingLeft: `${level * 24 + 12}px`, borderBottom: '1px solid #f1f5f9' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            paddingLeft: `${level * 24 + 12}px`,
+            borderBottom: '1px solid #f1f5f9',
+          }}
         >
           {hasChildren ? (
             <Button
-              icon={isExpanded ? <ChevronDown style={{ width: '1rem', height: '1rem' }} /> : <ChevronRight style={{ width: '1rem', height: '1rem' }} />}
+              icon={
+                isExpanded ? (
+                  <ChevronDown style={{ width: '1rem', height: '1rem' }} />
+                ) : (
+                  <ChevronRight style={{ width: '1rem', height: '1rem' }} />
+                )
+              }
               onClick={() => toggleExpand(category.id)}
-              text rounded
+              text
+              rounded
             />
           ) : (
             <div style={{ width: '1.5rem' }} />
@@ -162,11 +188,13 @@ export default function Categories() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <h4 style={{ fontWeight: 500, color: '#0f172a', margin: 0 }}>{category.name}</h4>
               {!category.isActive && (
-                <span className="erp-badge erp-badge--unpaid">Inactive</span>
+                <span className="erp-badge erp-badge--draft">{t('inactive')}</span>
               )}
             </div>
             {category.description && (
-              <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{category.description}</p>
+              <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>
+                {category.description}
+              </p>
             )}
           </div>
 
@@ -174,26 +202,30 @@ export default function Categories() {
             <Button
               icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => openCreateModal(category.id)}
-              text rounded severity="info"
+              text
+              rounded
+              severity="secondary"
               title={t('addSubcategory')}
             />
             <Button
               icon={<Pencil style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => openEditModal(category)}
-              text rounded severity="warning"
+              text
+              rounded
+              severity="secondary"
             />
             <Button
               icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => handleDelete(category.id, category.name)}
-              text rounded severity="danger"
+              text
+              rounded
+              severity="danger"
             />
           </div>
         </div>
 
         {hasChildren && isExpanded && (
-          <div>
-            {category.children!.map(child => renderCategory(child, level + 1))}
-          </div>
+          <div>{category.children!.map((child) => renderCategory(child, level + 1))}</div>
         )}
       </div>
     );
@@ -201,111 +233,177 @@ export default function Categories() {
 
   return (
     <AdminLayout>
-      <PageHeader
-        icon={FolderTree}
-        title={t('categories')}
-        subtitle={t('manageCategories')}
-        actions={
-          <Button
-            onClick={() => openCreateModal()}
-            severity="warning"
-            icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
-            label={t('addCategory')}
-          />
-        }
-      />
-
-      {/* Categories List */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-        {isLoading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>{t('loading')}</div>
-        ) : categories.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
-            {t('noCategoriesFound')}. {t('createFirstCategory')}.
-          </div>
-        ) : (
-          <div>
-            {categories.map(category => renderCategory(category))}
-          </div>
-        )}
-      </div>
-
-      {/* Create/Edit Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={closeModal}
-        title={editingCategory ? t('editCategory') : t('createCategory')}
-        footer={
-          <div className="flex justify-content-end gap-2">
-            <Button label={t('cancel')} onClick={closeModal} outlined />
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+        <PageHeader
+          icon={FolderTree}
+          title={t('categories')}
+          subtitle={t('manageCategories')}
+          actions={
             <Button
-              severity="warning"
-              onClick={handleSubmit}
-              loading={createMutation.isPending || updateMutation.isPending}
-              label={editingCategory ? t('update') : t('create')}
+              onClick={() => openCreateModal()}
+              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+              label={t('addCategory')}
             />
-          </div>
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label htmlFor="cat-name" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('categoryName')} <span style={{ color: '#ef4444' }}>*</span></label>
-            <InputText
-              id="cat-name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder={t('enterCategoryName')}
-              style={{ width: '100%' }}
-            />
-          </div>
+          }
+        />
 
-          <div>
-            <label htmlFor="cat-parent" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('parentCategory')}</label>
-            <Dropdown
-              id="cat-parent"
-              value={formData.parentId || ''}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  parentId: e.value ? Number(e.value) : undefined,
-                })
-              }
-              options={[
-                { label: 'No Parent (Root Category)', value: '' },
-                ...allCategories
-                  .filter(cat => !editingCategory || cat.id !== editingCategory.id)
-                  .map(cat => ({ label: cat.name, value: cat.id }))
-              ]}
-              optionLabel="label"
-              optionValue="value"
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="cat-desc" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Description</label>
-            <InputTextarea
-              id="cat-desc"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              placeholder="Optional description"
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Checkbox
-              inputId="isActive"
-              checked={formData.isActive ?? false}
-              onChange={(e) => setFormData({ ...formData, isActive: e.checked ?? false })}
-            />
-            <label htmlFor="isActive" style={{ fontSize: '0.875rem', color: '#334155' }}>Active</label>
-          </div>
+        {/* Categories List */}
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '0.75rem',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)',
+            overflow: 'hidden',
+          }}
+        >
+          {isLoading ? (
+            <div style={{ textAlign: 'center', paddingTop: '3rem', paddingBottom: '3rem' }}>
+              <div
+                style={{
+                  display: 'inline-block',
+                  width: '2rem',
+                  height: '2rem',
+                  border: '4px solid #235ae4',
+                  borderTopColor: 'transparent',
+                  borderRadius: '9999px',
+                }}
+                className="animate-spin"
+              />
+            </div>
+          ) : categories.length === 0 ? (
+            <div style={{ textAlign: 'center', paddingTop: '3rem', paddingBottom: '3rem' }}>
+              <FolderTree
+                style={{
+                  width: '4rem',
+                  height: '4rem',
+                  color: '#cbd5e1',
+                  margin: '0 auto',
+                  marginBottom: '1rem',
+                }}
+              />
+              <p style={{ color: '#64748b' }}>
+                {t('noCategoriesFound')}. {t('createFirstCategory')}.
+              </p>
+            </div>
+          ) : (
+            <div>{categories.map((category) => renderCategory(category))}</div>
+          )}
         </div>
 
-      </Modal>
+        {/* Create/Edit Dialog */}
+        <Dialog
+          visible={showModal}
+          onHide={closeModal}
+          header={editingCategory ? t('editCategory') : t('createCategory')}
+          modal
+          dismissableMask
+          style={{ width: '42rem', maxHeight: '90vh' }}
+          footer={
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <Button label={t('cancel')} onClick={closeModal} outlined />
+              <Button
+                onClick={handleSubmit}
+                loading={createMutation.isPending || updateMutation.isPending}
+                label={editingCategory ? t('update') : t('create')}
+              />
+            </div>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <label
+                htmlFor="cat-name"
+                style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#334155',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                {t('categoryName')} <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <InputText
+                id="cat-name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder={t('enterCategoryName')}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="cat-parent"
+                style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#334155',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                {t('parentCategory')}
+              </label>
+              <Dropdown
+                id="cat-parent"
+                value={formData.parentId || ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    parentId: e.value ? Number(e.value) : undefined,
+                  })
+                }
+                options={[
+                  { label: 'No Parent (Root Category)', value: '' },
+                  ...allCategories
+                    .filter((cat) => !editingCategory || cat.id !== editingCategory.id)
+                    .map((cat) => ({ label: cat.name, value: cat.id })),
+                ]}
+                optionLabel="label"
+                optionValue="value"
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="cat-desc"
+                style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#334155',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                {t('description')}
+              </label>
+              <InputTextarea
+                id="cat-desc"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                placeholder={t('optionalDescription')}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Checkbox
+                inputId="isActive"
+                checked={formData.isActive ?? false}
+                onChange={(e) => setFormData({ ...formData, isActive: e.checked ?? false })}
+              />
+              <label htmlFor="isActive" style={{ fontSize: '0.875rem', color: '#334155' }}>
+                {t('active')}
+              </label>
+            </div>
+          </div>
+        </Dialog>
+      </div>
     </AdminLayout>
   );
 }

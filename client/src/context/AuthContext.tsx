@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, PortalUser, LoginRequest, RegisterRequest } from '@/modules/auth';
+import { API_ROUTES } from '@/common/api-routes';
 
 interface AuthContextType {
   user: PortalUser | null;
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
-      const response = await fetch(`${apiBase}/api/portal/me`, { headers });
+      const response = await fetch(`${apiBase}${API_ROUTES.PORTAL.ME}`, { headers });
       const data = await response.json();
 
       if (data.success && data.data) {

@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Edit, Trash2, ChevronDown, ChevronUp, CreditCard, CheckCircle, Eye, FileText, Share2, MessageCircle } from 'lucide-react';
-import { Button } from 'primereact/button'; import { DataTable, DataTablePageEvent } from 'primereact/datatable';
+import {
+  Edit,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  CreditCard,
+  CheckCircle,
+  Eye,
+  FileText,
+  Share2,
+  MessageCircle,
+} from 'lucide-react';
+import { Button } from 'primereact/button';
+import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { FloatingActionBar } from '../FloatingActionBar';
 import { DocumentType } from '../../modules/documents/types';
@@ -23,7 +35,21 @@ interface Document {
   total: number;
   paidAmount: number;
   remainingAmount: number;
-  status: 'paid' | 'pending' | 'overdue' | 'draft' | 'partial' | 'unpaid' | 'open' | 'signed' | 'closed' | 'invoiced' | 'validated' | 'in_progress' | 'delivered' | 'cancelled';
+  status:
+    | 'paid'
+    | 'pending'
+    | 'overdue'
+    | 'draft'
+    | 'partial'
+    | 'unpaid'
+    | 'open'
+    | 'signed'
+    | 'closed'
+    | 'invoiced'
+    | 'validated'
+    | 'in_progress'
+    | 'delivered'
+    | 'cancelled';
   isValidated?: boolean;
   itemsCount?: number;
 }
@@ -77,11 +103,12 @@ export function DocumentTable({
   onPageChange,
   onPageSizeChange,
   onShare,
-  onWhatsApp, }: DocumentTableProps) {
+  onWhatsApp,
+}: DocumentTableProps) {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const [selectedRows, setSelectedRows] = useState<Document[]>([]);
-  const selectedDocuments = selectedRows.map(r => r.id);
+  const selectedDocuments = selectedRows.map((r) => r.id);
   const visibleColumns = { tax: false, paidAmount: false, remainingAmount: false };
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
@@ -98,10 +125,14 @@ export function DocumentTable({
 
   const getPDFDocumentType = (docType: DocumentType): 'invoice' | 'quote' | 'delivery-note' => {
     switch (docType) {
-      case 'facture': return 'invoice';
-      case 'devis': return 'quote';
-      case 'bon_livraison': return 'delivery-note';
-      default: return 'invoice';
+      case 'facture':
+        return 'invoice';
+      case 'devis':
+        return 'quote';
+      case 'bon_livraison':
+        return 'delivery-note';
+      default:
+        return 'invoice';
     }
   };
 
@@ -112,21 +143,34 @@ export function DocumentTable({
 
   const getStatusBadgeClass = (status: string): string => {
     switch (status) {
-      case 'paid': return 'status-badge status-badge--success';
+      case 'paid':
+        return 'status-badge status-badge--success';
       case 'partial':
-      case 'pending': return 'status-badge status-badge--warning';
-      case 'overdue': return 'status-badge status-badge--danger';
-      case 'unpaid': return 'status-badge status-badge--orange';
-      case 'open': return 'status-badge status-badge--primary';
-      case 'signed': return 'status-badge status-badge--success';
-      case 'closed': return 'status-badge status-badge--danger';
-      case 'invoiced': return 'status-badge status-badge--purple';
-      case 'validated': return 'status-badge status-badge--sky';
-      case 'in_progress': return 'status-badge status-badge--teal';
-      case 'delivered': return 'status-badge status-badge--emerald';
-      case 'cancelled': return 'status-badge status-badge--rose';
+      case 'pending':
+        return 'status-badge status-badge--warning';
+      case 'overdue':
+        return 'status-badge status-badge--danger';
+      case 'unpaid':
+        return 'status-badge status-badge--orange';
+      case 'open':
+        return 'status-badge status-badge--primary';
+      case 'signed':
+        return 'status-badge status-badge--success';
+      case 'closed':
+        return 'status-badge status-badge--danger';
+      case 'invoiced':
+        return 'status-badge status-badge--purple';
+      case 'validated':
+        return 'status-badge status-badge--sky';
+      case 'in_progress':
+        return 'status-badge status-badge--teal';
+      case 'delivered':
+        return 'status-badge status-badge--emerald';
+      case 'cancelled':
+        return 'status-badge status-badge--rose';
       case 'draft':
-      default: return 'status-badge status-badge--neutral';
+      default:
+        return 'status-badge status-badge--neutral';
     }
   };
 
@@ -184,9 +228,11 @@ export function DocumentTable({
         itemLabel={itemLabel}
         actions={(() => {
           // Check if selected documents have mixed validation states
-          const selectedDocumentsData = selectedDocuments.map(id => documents.find(d => d.id === id)).filter((d): d is Document => d !== undefined);
-          const hasValidated = selectedDocumentsData.some(d => d.isValidated);
-          const hasUnvalidated = selectedDocumentsData.some(d => !d.isValidated);
+          const selectedDocumentsData = selectedDocuments
+            .map((id) => documents.find((d) => d.id === id))
+            .filter((d): d is Document => d !== undefined);
+          const hasValidated = selectedDocumentsData.some((d) => d.isValidated);
+          const hasUnvalidated = selectedDocumentsData.some((d) => !d.isValidated);
           const hasMixedValidation = hasValidated && hasUnvalidated;
 
           return [
@@ -200,15 +246,15 @@ export function DocumentTable({
                   clearSelection();
                 }
               },
-              hidden: selectedDocuments.length !== 1
+              hidden: selectedDocuments.length !== 1,
             },
             {
               id: 'validate',
               label: t('validate'),
               icon: <CheckCircle style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
-                selectedDocuments.forEach(id => {
-                  const doc = documents.find(d => d.id === id);
+                selectedDocuments.forEach((id) => {
+                  const doc = documents.find((d) => d.id === id);
                   if (doc && !doc.isValidated) {
                     onValidate?.(id);
                   }
@@ -216,22 +262,22 @@ export function DocumentTable({
                 clearSelection();
               },
               variant: 'primary' as const,
-              hidden: hasMixedValidation || (selectedDocuments.length === 1 && hasValidated)
+              hidden: hasMixedValidation || (selectedDocuments.length === 1 && hasValidated),
             },
             {
               id: 'devalidate',
               label: t('devalidate'),
               icon: <Edit style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
-                selectedDocuments.forEach(id => {
-                  const doc = documents.find(d => d.id === id);
+                selectedDocuments.forEach((id) => {
+                  const doc = documents.find((d) => d.id === id);
                   if (doc && doc.isValidated) {
                     onDevalidate?.(id);
                   }
                 });
                 clearSelection();
               },
-              hidden: hasMixedValidation || (selectedDocuments.length === 1 && hasUnvalidated)
+              hidden: hasMixedValidation || (selectedDocuments.length === 1 && hasUnvalidated),
             },
             {
               id: 'payments',
@@ -243,9 +289,10 @@ export function DocumentTable({
                   clearSelection();
                 }
               },
-              hidden: !showPaymentColumns || selectedDocuments.length !== 1 || selectedDocumentsData.every(doc =>
-                !doc?.isValidated || doc?.status === 'draft'
-              )
+              hidden:
+                !showPaymentColumns ||
+                selectedDocuments.length !== 1 ||
+                selectedDocumentsData.every((doc) => !doc?.isValidated || doc?.status === 'draft'),
             },
             {
               id: 'pdf-preview',
@@ -255,7 +302,11 @@ export function DocumentTable({
                 if (selectedDocuments.length === 1) {
                   const doc = selectedDocumentsData[0];
                   if (doc && doc.isValidated && doc.status !== 'draft') {
-                    const url = pdfService.getPDFUrl(getPDFDocumentType(documentType), selectedDocuments[0], 'preview');
+                    const url = pdfService.getPDFUrl(
+                      getPDFDocumentType(documentType),
+                      selectedDocuments[0],
+                      'preview',
+                    );
                     const label = pdfService.getDocumentLabel(getPDFDocumentType(documentType));
                     setPdfUrl(url);
                     setPdfTitle(`${label} ${doc.number}`);
@@ -264,19 +315,19 @@ export function DocumentTable({
                   clearSelection();
                 }
               },
-              hidden: selectedDocuments.length !== 1 || selectedDocumentsData.every(doc =>
-                !doc?.isValidated || doc?.status === 'draft'
-              )
+              hidden:
+                selectedDocuments.length !== 1 ||
+                selectedDocumentsData.every((doc) => !doc?.isValidated || doc?.status === 'draft'),
             },
             {
               id: 'delete',
               label: t('delete'),
               icon: <Trash2 style={{ width: '1rem', height: '1rem' }} />,
               onClick: () => {
-                selectedDocuments.forEach(id => onDelete?.(id));
+                selectedDocuments.forEach((id) => onDelete?.(id));
                 clearSelection();
               },
-              variant: 'danger' as const
+              variant: 'danger' as const,
             },
             {
               id: 'share',
@@ -288,7 +339,10 @@ export function DocumentTable({
                   clearSelection();
                 }
               },
-              hidden: !onShare || selectedDocuments.length !== 1 || selectedDocumentsData.every(d => !d?.isValidated)
+              hidden:
+                !onShare ||
+                selectedDocuments.length !== 1 ||
+                selectedDocumentsData.every((d) => !d?.isValidated),
             },
             {
               id: 'whatsapp',
@@ -300,19 +354,31 @@ export function DocumentTable({
                   clearSelection();
                 }
               },
-              hidden: !onWhatsApp || selectedDocuments.length !== 1 || selectedDocumentsData.every(d => !d?.isValidated)
+              hidden:
+                !onWhatsApp ||
+                selectedDocuments.length !== 1 ||
+                selectedDocumentsData.every((d) => !d?.isValidated),
             },
           ];
         })()}
       />
 
       {/* DataTable — desktop only */}
-      <div className="responsive-table-desktop" style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      <div
+        className="responsive-table-desktop"
+        style={{
+          flex: 1,
+          backgroundColor: '#ffffff',
+          borderRadius: '0.75rem',
+          border: '1px solid #e2e8f0',
+          overflow: 'hidden',
+        }}
+      >
         <DataTable
           className="doc-datatable"
-          value={documents}
+          value={documents ?? []}
           lazy
-          totalRecords={totalCount}
+          totalRecords={totalCount ?? 0}
           first={(currentPage - 1) * pageSize}
           onPage={(e: DataTablePageEvent) => {
             onPageChange(Math.floor(e.first / e.rows) + 1);
@@ -323,13 +389,15 @@ export function DocumentTable({
           selectionMode="checkbox"
           onRowClick={(e) => {
             const target = e.originalEvent.target as HTMLElement;
-            if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+            if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox'))
+              return;
             onEdit?.((e.data as Document).id);
           }}
           rowClassName={() => 'ord-row-clickable'}
           dataKey="id"
           paginator
           paginatorPosition="top"
+          paginatorClassName="min-h-3rem"
           rows={pageSize}
           rowsPerPageOptions={[10, 25, 50, 100]}
           removableSort
@@ -347,8 +415,21 @@ export function DocumentTable({
               <Button
                 label={doc.number}
                 link
-                onClick={(e) => { e.stopPropagation(); onEdit?.(doc.id); }}
-                style={{ fontSize: '0.8125rem', fontWeight: 700, padding: '0.25rem 0.625rem', background: 'linear-gradient(135deg, #eff6ff, #eef2ff)', border: '1.5px solid rgba(35,90,228,0.18)', borderRadius: '9999px', color: '#235ae4', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(doc.id);
+                }}
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  padding: '0.25rem 0.625rem',
+                  background: 'linear-gradient(135deg, #eff6ff, #eef2ff)',
+                  border: '1.5px solid rgba(35,90,228,0.18)',
+                  borderRadius: '9999px',
+                  color: '#235ae4',
+                  letterSpacing: '0.02em',
+                  whiteSpace: 'nowrap',
+                }}
               />
             )}
           />
@@ -357,16 +438,28 @@ export function DocumentTable({
             header={partnerLabel}
             sortable
             body={(doc: Document) => (
-              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{doc.partnerName}</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                {doc.partnerName}
+              </span>
             )}
           />
           <Column
             field="date"
-            header={documentType === 'facture' ? t('invoiceDate') : documentType === 'devis' ? t('quoteDate') : t('deliveryDate')}
+            header={
+              documentType === 'facture'
+                ? t('invoiceDate')
+                : documentType === 'devis'
+                  ? t('quoteDate')
+                  : t('deliveryDate')
+            }
             sortable
             body={(doc: Document) => (
               <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                {new Date(doc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                {new Date(doc.date).toLocaleDateString('fr-FR', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })}
               </span>
             )}
           />
@@ -377,7 +470,13 @@ export function DocumentTable({
               sortable
               body={(doc: Document) => (
                 <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                  {doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                  {doc.dueDate
+                    ? new Date(doc.dueDate).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : '-'}
                 </span>
               )}
             />
@@ -389,7 +488,13 @@ export function DocumentTable({
               sortable
               body={(doc: Document) => (
                 <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                  {doc.validationDate ? new Date(doc.validationDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                  {doc.validationDate
+                    ? new Date(doc.validationDate).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : '-'}
                 </span>
               )}
             />
@@ -444,7 +549,13 @@ export function DocumentTable({
               header={t('remainingToPay')}
               sortable
               body={(doc: Document) => (
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: doc.remainingAmount > 0 ? '#b91c1c' : '#64748b' }}>
+                <span
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    color: doc.remainingAmount > 0 ? '#b91c1c' : '#64748b',
+                  }}
+                >
                   {formatAmount(doc.remainingAmount, 2)} {language === 'ar' ? 'د.م' : 'DH'}
                 </span>
               )}
@@ -454,9 +565,7 @@ export function DocumentTable({
             field="status"
             header={t('status')}
             body={(doc: Document) => (
-              <span className={getStatusBadgeClass(doc.status)}>
-                {getStatusLabel(doc.status)}
-              </span>
+              <span className={getStatusBadgeClass(doc.status)}>{getStatusLabel(doc.status)}</span>
             )}
           />
         </DataTable>
@@ -474,22 +583,32 @@ export function DocumentTable({
           emptyMessage={t('noDocumentFound')}
           config={{
             topLeft: (doc) => (
-              <span style={{ display: 'inline-block', padding: '0.1875rem 0.5rem', background: 'linear-gradient(135deg, #eff6ff, #eef2ff)', border: '1.5px solid rgba(35,90,228,0.18)', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, color: '#235ae4', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '0.1875rem 0.5rem',
+                  background: 'linear-gradient(135deg, #eff6ff, #eef2ff)',
+                  border: '1.5px solid rgba(35,90,228,0.18)',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#235ae4',
+                  letterSpacing: '0.02em',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {doc.number}
               </span>
             ),
             topRight: (doc) => (
               <span>
-                {formatAmount(doc.total, 2)}{' '}
-                {language === 'ar' ? 'د.م' : 'DH'}
+                {formatAmount(doc.total, 2)} {language === 'ar' ? 'د.م' : 'DH'}
               </span>
             ),
             bottomLeft: (doc) =>
               `${doc.partnerName} · ${new Date(doc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
             bottomRight: (doc) => (
-              <span className={getStatusBadgeClass(doc.status)}>
-                {getStatusLabel(doc.status)}
-              </span>
+              <span className={getStatusBadgeClass(doc.status)}>{getStatusLabel(doc.status)}</span>
             ),
           }}
           hasMore={currentPage * pageSize < totalCount}

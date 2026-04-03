@@ -5,6 +5,7 @@ import deliveryPortalConfig from './theme-preset';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { TenantStatusGuard } from './components/TenantStatusGuard';
 import { Toaster, ConfirmProvider } from '@orderium/ui';
 import { PushNotificationProvider } from './components/PushNotificationProvider';
 import Login from './pages/Login';
@@ -19,9 +20,8 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       staleTime: 30_000,
-      refetchInterval: 30000,
-      refetchIntervalInBackground: false,
-      retry: 3,
+      gcTime: 5 * 60 * 1000,
+      retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
@@ -35,57 +35,59 @@ function App() {
           <AuthProvider>
             <PushNotificationProvider />
             <ConfirmProvider>
-              <Toaster position="top-right" />
+              <Toaster position="bottom-right" />
               <BrowserRouter
                 future={{
                   v7_startTransition: true,
                   v7_relativeSplatPath: true,
                 }}
               >
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route
-                    path="/orders"
-                    element={
-                      <ProtectedRoute>
-                        <Orders />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/orders/:orderId"
-                    element={
-                      <ProtectedRoute>
-                        <OrderDetail />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/active"
-                    element={
-                      <ProtectedRoute>
-                        <ActiveOrders />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/delivered"
-                    element={
-                      <ProtectedRoute>
-                        <DeliveredOrders />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProtectedRoute>
-                        <Profile />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="/" element={<Navigate to="/orders" replace />} />
-                </Routes>
+                <TenantStatusGuard>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route
+                      path="/orders"
+                      element={
+                        <ProtectedRoute>
+                          <Orders />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/orders/:orderId"
+                      element={
+                        <ProtectedRoute>
+                          <OrderDetail />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/active"
+                      element={
+                        <ProtectedRoute>
+                          <ActiveOrders />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/delivered"
+                      element={
+                        <ProtectedRoute>
+                          <DeliveredOrders />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/" element={<Navigate to="/orders" replace />} />
+                  </Routes>
+                </TenantStatusGuard>
               </BrowserRouter>
             </ConfirmProvider>
           </AuthProvider>

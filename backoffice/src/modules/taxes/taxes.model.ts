@@ -46,15 +46,15 @@ export class TaxesConfiguration {
 
   constructor(data: ITaxesConfig) {
     this.defaultRate = data.defaultRate;
-    this.rates = data.rates.map(r => new TaxRate(r));
+    this.rates = data.rates.map((r) => new TaxRate(r));
   }
 
   getDefaultTaxRate(): TaxRate | undefined {
-    return this.rates.find(r => r.isDefault);
+    return this.rates.find((r) => r.isDefault);
   }
 
   getTaxRateByName(name: string): TaxRate | undefined {
-    return this.rates.find(r => r.name === name);
+    return this.rates.find((r) => r.name === name);
   }
 
   get count(): number {
@@ -64,7 +64,7 @@ export class TaxesConfiguration {
   toJSON(): ITaxesConfig {
     return {
       defaultRate: this.defaultRate,
-      rates: this.rates.map(r => r.toJSON()),
+      rates: this.rates.map((r) => r.toJSON()),
     };
   }
 

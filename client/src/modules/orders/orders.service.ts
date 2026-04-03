@@ -1,10 +1,11 @@
 import { http } from '@/services/httpClient';
 import { CreateOrderRequest, OrderResponse, OrdersListResponse } from './orders.interface';
 import { Order } from './orders.model';
+import { API_ROUTES } from '@/common/api-routes';
 
 export class OrdersService {
   async create(data: CreateOrderRequest): Promise<OrderResponse> {
-    const response = await http<OrderResponse>('/api/orders', {
+    const response = await http<OrderResponse>(API_ROUTES.ORDERS.CREATE, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -17,13 +18,13 @@ export class OrdersService {
   }
 
   async getById(id: number): Promise<Order> {
-    const response = await http<OrderResponse>(`/api/orders/${id}`);
+    const response = await http<OrderResponse>(API_ROUTES.ORDERS.DETAIL(id));
     return Order.fromApiResponse(response.data as unknown as Record<string, unknown>);
   }
 
   async getByOrderNumber(orderNumber: string, customerId: number): Promise<Order> {
     const response = await http<OrderResponse>(
-      `/api/orders/number/${orderNumber}?customerId=${customerId}`
+      API_ROUTES.ORDERS.BY_NUMBER(orderNumber, customerId),
     );
     return Order.fromApiResponse(response.data as unknown as Record<string, unknown>);
   }
@@ -46,11 +47,13 @@ export class OrdersService {
     if (endDate) params.append('endDate', endDate.toISOString());
 
     const response = await http<OrdersListResponse>(
-      `/api/orders/customer/${customerId}?${params.toString()}`
+      `${API_ROUTES.ORDERS.CUSTOMER(customerId)}?${params.toString()}`,
     );
 
     if (response.data) {
-      response.data = response.data.map((order) => Order.fromApiResponse(order as unknown as Record<string, unknown>));
+      response.data = response.data.map((order) =>
+        Order.fromApiResponse(order as unknown as Record<string, unknown>),
+      );
     }
 
     return response;

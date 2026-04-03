@@ -23,17 +23,42 @@ export const ProductGrid = ({
 }: ProductGridProps) => {
   const { t, dir } = useLanguage();
 
-  const handlePrev = () => { if (currentPage > 1) { onPageChange(currentPage - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
-  const handleNext = () => { if (currentPage < totalPages) { onPageChange(currentPage + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // Skeleton
   if (isLoading) {
     return (
       <div className="cl-product-grid" dir={dir}>
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} style={{ borderRadius: '0.75rem', overflow: 'hidden', background: 'white', border: '1.5px solid #e5e7eb' }}>
+          <div
+            key={i}
+            style={{
+              borderRadius: '0.75rem',
+              overflow: 'hidden',
+              background: 'white',
+              border: '1.5px solid #e5e7eb',
+            }}
+          >
             <div className="cl-skeleton" style={{ aspectRatio: '4/3' }} />
-            <div style={{ padding: '0.5rem 0.625rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+            <div
+              style={{
+                padding: '0.5rem 0.625rem 0.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.375rem',
+              }}
+            >
               <div className="cl-skeleton" style={{ height: '0.75rem', width: '80%' }} />
               <div className="cl-skeleton" style={{ height: '0.875rem', width: '50%' }} />
             </div>
@@ -48,15 +73,25 @@ export const ProductGrid = ({
     return (
       <div className="cl-empty" dir={dir}>
         <div className="cl-empty-icon">
-          {filters.search
-            ? <Search style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} />
-            : <Package style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} />
-          }
+          {filters.search ? (
+            <Search style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} />
+          ) : (
+            <Package style={{ width: '2.5rem', height: '2.5rem', color: '#d1d5db' }} />
+          )}
         </div>
-        <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.125rem', color: 'var(--text-color)' }}>
+        <h3
+          style={{ margin: 0, fontWeight: 700, fontSize: '1.125rem', color: 'var(--text-color)' }}
+        >
           {filters.search ? t('noResults') : t('noProductsInCategory')}
         </h3>
-        <p style={{ margin: '0.5rem 0 0', color: 'var(--text-color-secondary)', fontSize: '0.9375rem', maxWidth: '24rem' }}>
+        <p
+          style={{
+            margin: '0.5rem 0 0',
+            color: 'var(--text-color-secondary)',
+            fontSize: '0.9375rem',
+            maxWidth: '24rem',
+          }}
+        >
           {filters.search ? t('noResultsMessage') : t('tryDifferentCategory')}
         </p>
       </div>
@@ -81,28 +116,51 @@ export const ProductGrid = ({
     <div dir={dir} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Grid */}
       <div className="cl-product-grid">
-        {products.map((p, i) => <ProductCard key={`${p.id}-${i}`} product={p} />)}
+        {products.map((p, i) => (
+          <ProductCard key={`${p.id}-${i}`} product={p} index={i} />
+        ))}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="cl-pagination" dir={dir}>
-          <button className="cl-page-btn" onClick={handlePrev} disabled={currentPage === 1} aria-label={t('previous')}>
-            {dir === 'rtl' ? <ChevronRight style={{ width: '1rem', height: '1rem' }} /> : <ChevronLeft style={{ width: '1rem', height: '1rem' }} />}
+          <button
+            className="cl-page-btn"
+            onClick={handlePrev}
+            disabled={currentPage === 1}
+            aria-label={t('previous')}
+          >
+            {dir === 'rtl' ? (
+              <ChevronRight style={{ width: '1rem', height: '1rem' }} />
+            ) : (
+              <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
+            )}
           </button>
 
-          {pageNums.map(n => (
+          {pageNums.map((n) => (
             <button
               key={n}
               className={`cl-page-btn${n === currentPage ? ' active' : ''}`}
-              onClick={() => { onPageChange(n); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => {
+                onPageChange(n);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
             >
               {n}
             </button>
           ))}
 
-          <button className="cl-page-btn" onClick={handleNext} disabled={currentPage === totalPages} aria-label={t('next')}>
-            {dir === 'rtl' ? <ChevronLeft style={{ width: '1rem', height: '1rem' }} /> : <ChevronRight style={{ width: '1rem', height: '1rem' }} />}
+          <button
+            className="cl-page-btn"
+            onClick={handleNext}
+            disabled={currentPage === totalPages}
+            aria-label={t('next')}
+          >
+            {dir === 'rtl' ? (
+              <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
+            ) : (
+              <ChevronRight style={{ width: '1rem', height: '1rem' }} />
+            )}
           </button>
         </div>
       )}

@@ -49,7 +49,7 @@ export class PortalController {
     private readonly partnersService: PartnersService,
     private readonly categoriesService: CategoriesService,
     private readonly orderNotificationService: OrderNotificationService,
-  ) { }
+  ) {}
 
   @Public()
   @Throttle({ short: { limit: 5, ttl: 60000 } })
@@ -100,6 +100,7 @@ export class PortalController {
         isAdmin: user.isAdmin,
         isCustomer: user.isCustomer,
         roleId: user.roleId,
+        roleName: user.role?.name ?? null,
         isSuperAdmin: user.role?.isSuperAdmin ?? false,
         permissions: user.role?.permissions?.map((p) => p.key) ?? [],
       },
@@ -127,7 +128,9 @@ export class PortalController {
       throw new UnauthorizedException('Invalid credentials');
     }
     if (!user.isAdmin) {
-      throw new ForbiddenException('This login is restricted to admin accounts');
+      throw new ForbiddenException(
+        'This login is restricted to admin accounts',
+      );
     }
     const payload = {
       sub: user.id,
@@ -161,7 +164,10 @@ export class PortalController {
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Portal registration' })
-  @ApiResponse({ status: 200, description: 'Registration successful, pending approval' })
+  @ApiResponse({
+    status: 200,
+    description: 'Registration successful, pending approval',
+  })
   @ApiResponse({ status: 409, description: 'Phone number already registered' })
   async register(@Body() body: RegisterDto) {
     const existingUser = await this.portalService.findByPhoneNumber(
@@ -172,13 +178,11 @@ export class PortalController {
     }
 
     // Find or create partner (customer) for this phone number
-    const partner = await this.partnersService.upsert(
-      {
-        name: body.fullName,
-        phoneNumber: body.phoneNumber,
-        isCustomer: true,
-      },
-    );
+    const partner = await this.partnersService.upsert({
+      name: body.fullName,
+      phoneNumber: body.phoneNumber,
+      isCustomer: true,
+    });
 
     const user = await this.portalService.create({
       phoneNumber: body.phoneNumber,
@@ -212,12 +216,12 @@ export class PortalController {
   @Public()
   @Throttle({ short: { limit: 10, ttl: 60000 } })
   @Get('user/id/:id')
-  @ApiOperation({ summary: 'Get portal user by ID (public, includes partner details)' })
+  @ApiOperation({
+    summary: 'Get portal user by ID (public, includes partner details)',
+  })
   @ApiResponse({ status: 200, description: 'User details' })
   @ApiResponse({ status: 404, description: 'Portal user not found' })
-  async getUserById(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  async getUserById(@Param('id', ParseIntPipe) id: number) {
     const user = await this.portalService.findById(id);
     if (!user) {
       throw new NotFoundException('Portal user not found');
@@ -239,7 +243,9 @@ export class PortalController {
             email: partner.email ?? null,
           };
         }
-      } catch { /* partner may have been deleted */ }
+      } catch {
+        /* partner may have been deleted */
+      }
     }
 
     return ApiRes(PRT.USER_DETAIL, {
@@ -256,11 +262,12 @@ export class PortalController {
   @Public()
   @Throttle({ short: { limit: 10, ttl: 60000 } })
   @Get('user/:phoneNumber')
-  @ApiOperation({ summary: 'Check if a portal user exists by phone number (public, includes partner details)' })
+  @ApiOperation({
+    summary:
+      'Check if a portal user exists by phone number (public, includes partner details)',
+  })
   @ApiResponse({ status: 200, description: 'User existence check result' })
-  async getUserByPhone(
-    @Param('phoneNumber') phoneNumber: string,
-  ) {
+  async getUserByPhone(@Param('phoneNumber') phoneNumber: string) {
     const user = await this.portalService.findByPhoneNumber(phoneNumber);
 
     if (user) {
@@ -281,7 +288,9 @@ export class PortalController {
               email: partner.email ?? null,
             };
           }
-        } catch { /* partner may have been deleted */ }
+        } catch {
+          /* partner may have been deleted */
+        }
       }
       return ApiRes(PRT.USER_DETAIL, {
         exists: true,
@@ -334,7 +343,9 @@ export class PortalController {
       try {
         const partner = await this.partnersService.findOne(user.customerId);
         customerName = partner?.name ?? null;
-      } catch { /* partner may have been deleted */ }
+      } catch {
+        /* partner may have been deleted */
+      }
     }
     return ApiRes(PRT.USER_DETAIL, {
       id: user.id,
@@ -400,7 +411,9 @@ export class PortalController {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
     if (!user?.customerId) {
-      throw new ForbiddenException('Portal account is not linked to a customer');
+      throw new ForbiddenException(
+        'Portal account is not linked to a customer',
+      );
     }
     const result = await this.ordersService.getCustomerOrders(
       user.customerId,
@@ -415,9 +428,15 @@ export class PortalController {
   }
 
   @Get('me/orders/:id')
-  @ApiOperation({ summary: "Get a specific order by ID (must belong to authenticated customer)" })
+  @ApiOperation({
+    summary:
+      'Get a specific order by ID (must belong to authenticated customer)',
+  })
   @ApiResponse({ status: 200, description: 'Order details' })
-  @ApiResponse({ status: 403, description: 'Access denied or account not linked' })
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied or account not linked',
+  })
   @ApiResponse({ status: 404, description: 'Order not found' })
   async getMyOrder(
     @Request() req: { user: { id: number; sub: number } },
@@ -426,7 +445,9 @@ export class PortalController {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
     if (!user?.customerId) {
-      throw new ForbiddenException('Portal account is not linked to a customer');
+      throw new ForbiddenException(
+        'Portal account is not linked to a customer',
+      );
     }
     const order = await this.ordersService.getOrderById(id);
     if (!order) {
@@ -460,7 +481,9 @@ export class PortalController {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
     if (!user?.customerId) {
-      throw new ForbiddenException('Portal account is not linked to a customer');
+      throw new ForbiddenException(
+        'Portal account is not linked to a customer',
+      );
     }
     const result = await this.invoicesService.findAll(
       undefined,
@@ -477,9 +500,15 @@ export class PortalController {
   }
 
   @Get('me/invoices/:id')
-  @ApiOperation({ summary: "Get a specific invoice by ID (must belong to authenticated customer)" })
+  @ApiOperation({
+    summary:
+      'Get a specific invoice by ID (must belong to authenticated customer)',
+  })
   @ApiResponse({ status: 200, description: 'Invoice details' })
-  @ApiResponse({ status: 403, description: 'Access denied or account not linked' })
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied or account not linked',
+  })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
   async getMyInvoice(
     @Request() req: { user: { id: number; sub: number } },
@@ -488,7 +517,9 @@ export class PortalController {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
     if (!user?.customerId) {
-      throw new ForbiddenException('Portal account is not linked to a customer');
+      throw new ForbiddenException(
+        'Portal account is not linked to a customer',
+      );
     }
     const invoice = await this.invoicesService.findOne(id);
     if (!invoice) {
@@ -520,7 +551,9 @@ export class PortalController {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
     if (!user?.customerId) {
-      throw new ForbiddenException('Portal account is not linked to a customer');
+      throw new ForbiddenException(
+        'Portal account is not linked to a customer',
+      );
     }
     const result = await this.quotesService.findAll(
       undefined,
@@ -537,9 +570,15 @@ export class PortalController {
   }
 
   @Get('me/quotes/:id')
-  @ApiOperation({ summary: "Get a specific quote by ID (must belong to authenticated customer)" })
+  @ApiOperation({
+    summary:
+      'Get a specific quote by ID (must belong to authenticated customer)',
+  })
   @ApiResponse({ status: 200, description: 'Quote details' })
-  @ApiResponse({ status: 403, description: 'Access denied or account not linked' })
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied or account not linked',
+  })
   @ApiResponse({ status: 404, description: 'Quote not found' })
   async getMyQuote(
     @Request() req: { user: { id: number; sub: number } },
@@ -548,7 +587,9 @@ export class PortalController {
     const userId = req.user.sub ?? req.user.id;
     const user = await this.portalService.findById(userId);
     if (!user?.customerId) {
-      throw new ForbiddenException('Portal account is not linked to a customer');
+      throw new ForbiddenException(
+        'Portal account is not linked to a customer',
+      );
     }
     const quote = await this.quotesService.findOne(id);
     if (!quote) {
@@ -569,7 +610,11 @@ export class PortalController {
   @ApiResponse({ status: 200, description: 'List of portal users' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'approved', 'rejected'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'approved', 'rejected'],
+  })
   @ApiQuery({ name: 'search', required: false, type: String })
   async adminListUsers(
     @Query('page') page = '1',
@@ -592,9 +637,7 @@ export class PortalController {
   @ApiOperation({ summary: 'Approve a portal user account (admin only)' })
   @ApiResponse({ status: 200, description: 'User approved' })
   @ApiResponse({ status: 404, description: 'Portal user not found' })
-  async adminApproveUser(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  async adminApproveUser(@Param('id', ParseIntPipe) id: number) {
     const user = await this.portalService.updateStatus(id, 'approved');
     if (!user) {
       throw new NotFoundException('Portal user not found');
@@ -608,9 +651,7 @@ export class PortalController {
   @ApiOperation({ summary: 'Reject a portal user account (admin only)' })
   @ApiResponse({ status: 200, description: 'User rejected' })
   @ApiResponse({ status: 404, description: 'Portal user not found' })
-  async adminRejectUser(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  async adminRejectUser(@Param('id', ParseIntPipe) id: number) {
     const user = await this.portalService.updateStatus(id, 'rejected');
     if (!user) {
       throw new NotFoundException('Portal user not found');
@@ -622,7 +663,11 @@ export class PortalController {
 
   // Allowed entities that portal clients may read — never expose internal ones
   private static readonly ALLOWED_CONFIG_ENTITIES = new Set([
-    'my_company', 'taxes', 'currencies', 'uom', 'payment_terms',
+    'my_company',
+    'taxes',
+    'currencies',
+    'uom',
+    'payment_terms',
   ]);
 
   @Public()
@@ -636,9 +681,15 @@ export class PortalController {
 
   @Public()
   @Get('config/:entity')
-  @ApiOperation({ summary: 'Get a specific public configuration (taxes, currencies, uom, payment_terms)' })
+  @ApiOperation({
+    summary:
+      'Get a specific public configuration (taxes, currencies, uom, payment_terms)',
+  })
   @ApiResponse({ status: 200, description: 'Configuration entity' })
-  @ApiResponse({ status: 400, description: 'Unknown or restricted config entity' })
+  @ApiResponse({
+    status: 400,
+    description: 'Unknown or restricted config entity',
+  })
   async getConfig(@Param('entity') entity: string) {
     if (!PortalController.ALLOWED_CONFIG_ENTITIES.has(entity)) {
       throw new BadRequestException(

@@ -20,7 +20,10 @@ export interface ValidationErrors {
   [key: string]: string;
 }
 
-export const validateProductForm = (formData: ProductFormData, isCreating: boolean = false): ValidationErrors => {
+export const validateProductForm = (
+  formData: ProductFormData,
+  isCreating: boolean = false,
+): ValidationErrors => {
   const errors: ValidationErrors = {};
 
   // Name validation
@@ -74,7 +77,7 @@ export const validateProductForm = (formData: ProductFormData, isCreating: boole
   if (formData.minPrice && formData.minPrice.trim() !== '') {
     const minPriceValue = parseFloat(formData.minPrice);
     const priceValue = parseFloat(formData.price);
-    
+
     if (isNaN(minPriceValue)) {
       errors.minPrice = 'Minimum price must be a valid number';
     } else if (minPriceValue < 0) {
@@ -141,7 +144,7 @@ export const validateProductForm = (formData: ProductFormData, isCreating: boole
   if (!errors.price && formData.cost && formData.cost.trim() !== '') {
     const priceValue = parseFloat(formData.price);
     const costValue = parseFloat(formData.cost);
-    
+
     if (!isNaN(costValue) && costValue > priceValue) {
       errors.cost = 'Warning: Cost is higher than sale price (negative margin)';
     }

@@ -59,25 +59,115 @@ export interface NotificationTypeConfig {
 }
 
 export const NOTIFICATION_TYPE_CONFIG: Record<string, NotificationTypeConfig> = {
-  [NotificationType.NEW_ORDER]:           { emoji: '📦', bgClass: 'bg-blue-50',   colorClass: 'text-blue-600',   borderClass: 'border-blue-400' },
-  [NotificationType.ORDER_CANCELLED]:     { emoji: '❌', bgClass: 'bg-red-50',    colorClass: 'text-red-600',    borderClass: 'border-red-400' },
-  [NotificationType.ORDER_DELIVERED]:     { emoji: '✅', bgClass: 'bg-green-50',  colorClass: 'text-green-600',  borderClass: 'border-green-400' },
-  [NotificationType.LOW_STOCK]:           { emoji: '⚠️', bgClass: 'bg-orange-50', colorClass: 'text-orange-600', borderClass: 'border-orange-400' },
-  [NotificationType.OUT_OF_STOCK]:        { emoji: '🚨', bgClass: 'bg-red-100',   colorClass: 'text-red-700',    borderClass: 'border-red-500' },
-  [NotificationType.PAYMENT_RECEIVED]:    { emoji: '💰', bgClass: 'bg-green-50',  colorClass: 'text-green-600',  borderClass: 'border-green-400' },
-  [NotificationType.PAYMENT_FAILED]:      { emoji: '⛔', bgClass: 'bg-red-50',    colorClass: 'text-red-600',    borderClass: 'border-red-400' },
-  [NotificationType.NEW_USER]:            { emoji: '👤', bgClass: 'bg-purple-50', colorClass: 'text-purple-600', borderClass: 'border-purple-400' },
-  [NotificationType.USER_DEACTIVATED]:    { emoji: '🔒', bgClass: 'bg-gray-100',  colorClass: 'text-gray-600',   borderClass: 'border-gray-400' },
-  [NotificationType.SYSTEM_UPDATE]:       { emoji: '🔄', bgClass: 'bg-sky-50',    colorClass: 'text-sky-600',    borderClass: 'border-sky-400' },
-  [NotificationType.BACKUP_DONE]:         { emoji: '💾', bgClass: 'bg-teal-50',   colorClass: 'text-teal-600',   borderClass: 'border-teal-400' },
+  [NotificationType.NEW_ORDER]: {
+    emoji: '📦',
+    bgClass: 'bg-blue-50',
+    colorClass: 'text-blue-600',
+    borderClass: 'border-blue-400',
+  },
+  [NotificationType.ORDER_CANCELLED]: {
+    emoji: '❌',
+    bgClass: 'bg-red-50',
+    colorClass: 'text-red-600',
+    borderClass: 'border-red-400',
+  },
+  [NotificationType.ORDER_DELIVERED]: {
+    emoji: '✅',
+    bgClass: 'bg-green-50',
+    colorClass: 'text-green-600',
+    borderClass: 'border-green-400',
+  },
+  [NotificationType.LOW_STOCK]: {
+    emoji: '⚠️',
+    bgClass: 'bg-orange-50',
+    colorClass: 'text-orange-600',
+    borderClass: 'border-orange-400',
+  },
+  [NotificationType.OUT_OF_STOCK]: {
+    emoji: '🚨',
+    bgClass: 'bg-red-100',
+    colorClass: 'text-red-700',
+    borderClass: 'border-red-500',
+  },
+  [NotificationType.PAYMENT_RECEIVED]: {
+    emoji: '💰',
+    bgClass: 'bg-green-50',
+    colorClass: 'text-green-600',
+    borderClass: 'border-green-400',
+  },
+  [NotificationType.PAYMENT_FAILED]: {
+    emoji: '⛔',
+    bgClass: 'bg-red-50',
+    colorClass: 'text-red-600',
+    borderClass: 'border-red-400',
+  },
+  [NotificationType.NEW_USER]: {
+    emoji: '👤',
+    bgClass: 'bg-purple-50',
+    colorClass: 'text-purple-600',
+    borderClass: 'border-purple-400',
+  },
+  [NotificationType.USER_DEACTIVATED]: {
+    emoji: '🔒',
+    bgClass: 'bg-gray-100',
+    colorClass: 'text-gray-600',
+    borderClass: 'border-gray-400',
+  },
+  [NotificationType.SYSTEM_UPDATE]: {
+    emoji: '🔄',
+    bgClass: 'bg-sky-50',
+    colorClass: 'text-sky-600',
+    borderClass: 'border-sky-400',
+  },
+  [NotificationType.BACKUP_DONE]: {
+    emoji: '💾',
+    bgClass: 'bg-teal-50',
+    colorClass: 'text-teal-600',
+    borderClass: 'border-teal-400',
+  },
   // Legacy fallbacks
-  [NotificationType.ORDER_ASSIGNED]:      { emoji: '👤', bgClass: 'bg-blue-50',   colorClass: 'text-blue-600',   borderClass: 'border-blue-400' },
-  [NotificationType.ORDER_STATUS_CHANGED]:{ emoji: '📦', bgClass: 'bg-amber-50',  colorClass: 'text-amber-600',  borderClass: 'border-amber-400' },
-  [NotificationType.DELIVERY_STATUS_UPDATE]:{ emoji: '🚚', bgClass: 'bg-purple-50', colorClass: 'text-purple-600', borderClass: 'border-purple-400' },
-  [NotificationType.SYSTEM]:              { emoji: '⚙️', bgClass: 'bg-gray-100',  colorClass: 'text-gray-600',   borderClass: 'border-gray-400' },
-  [NotificationType.INFO]:               { emoji: 'ℹ️', bgClass: 'bg-sky-50',    colorClass: 'text-sky-600',    borderClass: 'border-sky-400' },
-  [NotificationType.WARNING]:            { emoji: '⚠️', bgClass: 'bg-amber-50',  colorClass: 'text-amber-600',  borderClass: 'border-amber-400' },
-  [NotificationType.ERROR]:              { emoji: '🚨', bgClass: 'bg-red-50',    colorClass: 'text-red-600',    borderClass: 'border-red-400' },
+  [NotificationType.ORDER_ASSIGNED]: {
+    emoji: '👤',
+    bgClass: 'bg-blue-50',
+    colorClass: 'text-blue-600',
+    borderClass: 'border-blue-400',
+  },
+  [NotificationType.ORDER_STATUS_CHANGED]: {
+    emoji: '📦',
+    bgClass: 'bg-amber-50',
+    colorClass: 'text-amber-600',
+    borderClass: 'border-amber-400',
+  },
+  [NotificationType.DELIVERY_STATUS_UPDATE]: {
+    emoji: '🚚',
+    bgClass: 'bg-purple-50',
+    colorClass: 'text-purple-600',
+    borderClass: 'border-purple-400',
+  },
+  [NotificationType.SYSTEM]: {
+    emoji: '⚙️',
+    bgClass: 'bg-gray-100',
+    colorClass: 'text-gray-600',
+    borderClass: 'border-gray-400',
+  },
+  [NotificationType.INFO]: {
+    emoji: 'ℹ️',
+    bgClass: 'bg-sky-50',
+    colorClass: 'text-sky-600',
+    borderClass: 'border-sky-400',
+  },
+  [NotificationType.WARNING]: {
+    emoji: '⚠️',
+    bgClass: 'bg-amber-50',
+    colorClass: 'text-amber-600',
+    borderClass: 'border-amber-400',
+  },
+  [NotificationType.ERROR]: {
+    emoji: '🚨',
+    bgClass: 'bg-red-50',
+    colorClass: 'text-red-600',
+    borderClass: 'border-red-400',
+  },
 };
 
 export interface INotification {
@@ -129,11 +219,11 @@ export interface NotificationPreferences {
 }
 
 export interface NotificationChannelSettings {
-  orders:   { inApp: boolean; email: boolean; sms: boolean };
-  stock:    { inApp: boolean; email: boolean; sms: boolean };
+  orders: { inApp: boolean; email: boolean; sms: boolean };
+  stock: { inApp: boolean; email: boolean; sms: boolean };
   payments: { inApp: boolean; email: boolean; sms: boolean };
-  team:     { inApp: boolean; email: boolean; sms: boolean };
-  system:   { inApp: boolean; email: boolean; sms: boolean };
+  team: { inApp: boolean; email: boolean; sms: boolean };
+  system: { inApp: boolean; email: boolean; sms: boolean };
 }
 
 export interface PaginationParams {

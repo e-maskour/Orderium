@@ -51,5 +51,4 @@ export class RegisterDto {
   @IsOptional()
   @IsBoolean()
   isCustomer?: boolean;
-
 }

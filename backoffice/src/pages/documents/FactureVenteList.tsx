@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function FactureVenteList() {
   const { t } = useLanguage();
   const config = getDocumentConfig('facture', 'vente', t);
-  
+
   return (
     <DocumentListPage
       documentType="facture"

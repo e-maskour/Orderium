@@ -84,9 +84,12 @@ export default {
   actions: 'Actions',
 
   // Empty States
-  noTaxRatesConfigured: 'Aucun taux de taxe configuré. Cliquez sur "Ajouter un taux de taxe" pour en créer un.',
-  noCurrenciesConfigured: 'Aucune devise configurée. Cliquez sur "Ajouter une devise" pour en créer une.',
-  noPaymentTermsConfigured: 'Aucune condition de paiement configurée. Cliquez sur "Ajouter une condition de paiement" pour en créer une.',
+  noTaxRatesConfigured:
+    'Aucun taux de taxe configuré. Cliquez sur "Ajouter un taux de taxe" pour en créer un.',
+  noCurrenciesConfigured:
+    'Aucune devise configurée. Cliquez sur "Ajouter une devise" pour en créer une.',
+  noPaymentTermsConfigured:
+    'Aucune condition de paiement configurée. Cliquez sur "Ajouter une condition de paiement" pour en créer une.',
 
   // Form Labels and Placeholders
   ratePercentage: 'Taux (%)',
@@ -132,7 +135,7 @@ export default {
   dateFormat: 'Format de date',
   prefix: 'Préfixe',
   suffix: 'Suffixe',
-  includeYearInPrefix: 'Inclure l\'année dans le préfixe',
+  includeYearInPrefix: "Inclure l'année dans le préfixe",
   includeMonthInPrefix: 'Inclure le mois dans le préfixe',
   includeDayInPrefix: 'Inclure le jour dans le préfixe',
   includeTrimesterInPrefix: 'Inclure le trimestre dans le préfixe',
@@ -144,11 +147,11 @@ export default {
 
   // Entity Types
   invoiceSale: 'Facture de vente',
-  invoicePurchase: 'Facture d\'achat',
+  invoicePurchase: "Facture d'achat",
   quote: 'Devis',
   deliveryNote: 'Bon de livraison',
   priceRequest: 'Demande de prix',
-  purchaseOrder: 'Bon d\'achat',
+  purchaseOrder: "Bon d'achat",
   payment: 'Paiement',
   creditNote: 'Avoir',
   receipt: 'Reçu',
@@ -166,7 +169,8 @@ export default {
   sequenceNamePlaceholder: 'Nom de la séquence',
 
   // Empty States
-  noSequencesConfigured: 'Aucune séquence configurée. Cliquez sur "Ajouter une séquence" pour en créer une.',
+  noSequencesConfigured:
+    'Aucune séquence configurée. Cliquez sur "Ajouter une séquence" pour en créer une.',
 
   // Confirmation Messages
   confirmDeleteSequence: 'Êtes-vous sûr de vouloir supprimer cette séquence ?',
@@ -178,9 +182,12 @@ export default {
   basedOnDatabaseRecords: 'Basé sur les enregistrements de base de données',
 
   // ISequence Protection
-  cannotEditUsedSequence: 'Cette séquence ne peut pas être modifiée car des factures ont déjà été créées avec',
-  sequenceInUseWarning: 'Cette séquence est utilisée et ne peut pas être modifiée. Veuillez créer une nouvelle séquence si vous avez besoin de modifications.',
-  sequenceInUseReadonly: 'Cette séquence est déjà utilisée par des factures et ne peut pas être modifiée. Les champs sont en lecture seule.',
+  cannotEditUsedSequence:
+    'Cette séquence ne peut pas être modifiée car des factures ont déjà été créées avec',
+  sequenceInUseWarning:
+    'Cette séquence est utilisée et ne peut pas être modifiée. Veuillez créer une nouvelle séquence si vous avez besoin de modifications.',
+  sequenceInUseReadonly:
+    'Cette séquence est déjà utilisée par des factures et ne peut pas être modifiée. Les champs sont en lecture seule.',
   edit: 'Modifier',
 
   // Warehouses
@@ -188,8 +195,8 @@ export default {
   warehouse: 'Entrepôt',
   manageWarehouses: 'Gérer les entrepôts',
   addWarehouse: 'Ajouter un entrepôt',
-  editWarehouse: 'Modifier l\'entrepôt',
-  deleteWarehouse: 'Supprimer l\'entrepôt',
+  editWarehouse: "Modifier l'entrepôt",
+  deleteWarehouse: "Supprimer l'entrepôt",
   mainWarehouse: 'Entrepôt principal',
   warehouseCreated: 'Entrepôt créé avec succès',
   warehouseUpdated: 'Entrepôt mis à jour avec succès',
@@ -218,13 +225,13 @@ export default {
   // Warehouses - English Labels
   manageWarehousesSubtitle: 'Gérez vos entrepôts et installations de stockage',
   searchWarehouses: 'Rechercher des entrepôts...',
-  deleteWarehouseTitle: 'Supprimer l\'entrepôt',
+  deleteWarehouseTitle: "Supprimer l'entrepôt",
   warehouseCode: 'WH-001',
   warehouseNamePlaceholder: 'Entrepôt principal',
   locationPlaceholder: 'Casablanca',
 
   // Inventory Adjustments
-  inventoryAdjustments: 'Ajustements d\'Inventaire',
+  inventoryAdjustments: "Ajustements d'Inventaire",
   manageInventoryAdjustments: 'Gérer les comptages et ajustements de stock',
   searchByReference: 'Rechercher par référence ou nom...',
   countingStartedSuccess: 'Comptage démarré avec succès',
@@ -234,7 +241,7 @@ export default {
   confirmDeleteAdjustment: 'Êtes-vous sûr de vouloir supprimer cet ajustement ?',
   newAdjustment: 'Nouvel Ajustement',
   noAdjustmentsFound: 'Aucun ajustement trouvé',
-  createFirstAdjustment: 'Créez votre premier ajustement d\'inventaire',
+  createFirstAdjustment: "Créez votre premier ajustement d'inventaire",
   draft: 'Brouillon',
   inProgress: 'En cours',
   validated: 'Validé',
@@ -242,9 +249,9 @@ export default {
 
   // Units of Measure
   unitsOfMeasure: 'Unités de mesure',
-  manageUomDescription: 'Gérer les unités de mesure pour l\'inventaire',
+  manageUomDescription: "Gérer les unités de mesure pour l'inventaire",
   addUom: 'Ajouter une UdM',
-  editUom: 'Modifier l\'unité de mesure',
+  editUom: "Modifier l'unité de mesure",
   searchUom: 'Rechercher par nom ou code...',
   noUomFound: 'Aucune unité de mesure trouvée',
   confirmDeleteUom: 'Êtes-vous sûr de vouloir supprimer cette unité de mesure ?',
@@ -255,11 +262,11 @@ export default {
   ratio: 'Ratio',
   ratioHelp: '1 cette unité = X unités de base',
   rounding: 'Arrondi',
-  roundingPrecision: 'Précision d\'arrondi',
+  roundingPrecision: "Précision d'arrondi",
   allCategories: 'Toutes les catégories',
 
   // Inventory Settings
-  inventorySettings: 'Paramètres d\'inventaire',
+  inventorySettings: "Paramètres d'inventaire",
   inventorySettingsSubtitle: 'Configurer les mouvements de stock automatiques',
   incrementStock: 'Incrémenter le stock',
   decrementStock: 'Décrémenter le stock',
@@ -267,12 +274,13 @@ export default {
   defaultWarehouse: 'Entrepôt par défaut',
   selectDefaultWarehouse: 'Sélectionner un entrepôt par défaut',
   stockMovementAutomation: 'Automatisation des mouvements de stock',
-  incrementOnInvoiceAchat: 'Incrémenter le stock lors de la validation d\'une facture d\'achat',
-  decrementOnInvoiceVente: 'Décrémenter le stock lors de la validation d\'une facture de vente',
-  incrementOnOrderAchat: 'Incrémenter le stock lors de la validation d\'un bon d\'achat',
-  decrementOnOrderVente: 'Décrémenter le stock lors de la validation d\'un bon de livraison',
-  inventorySettingsSaved: 'Paramètres d\'inventaire sauvegardés',
-  noWarehouseConfigured: 'Aucun entrepôt par défaut configuré. Les mouvements de stock ne seront pas créés.',
+  incrementOnInvoiceAchat: "Incrémenter le stock lors de la validation d'une facture d'achat",
+  decrementOnInvoiceVente: "Décrémenter le stock lors de la validation d'une facture de vente",
+  incrementOnOrderAchat: "Incrémenter le stock lors de la validation d'un bon d'achat",
+  decrementOnOrderVente: "Décrémenter le stock lors de la validation d'un bon de livraison",
+  inventorySettingsSaved: "Paramètres d'inventaire sauvegardés",
+  noWarehouseConfigured:
+    'Aucun entrepôt par défaut configuré. Les mouvements de stock ne seront pas créés.',
 
   originDestination: 'Origine → Destination',
 
@@ -286,10 +294,10 @@ export default {
 
   // Printers
   printers: 'Imprimantes',
-  printersDescription: 'Gérer les imprimantes et historique d\'impression',
+  printersDescription: "Gérer les imprimantes et historique d'impression",
   addPrinter: 'Ajouter une imprimante',
-  editPrinter: 'Modifier l\'imprimante',
-  printerName: 'Nom de l\'imprimante',
+  editPrinter: "Modifier l'imprimante",
+  printerName: "Nom de l'imprimante",
   printerBrand: 'Marque',
   connectionType: 'Type de connexion',
   paperWidth: 'Largeur du papier',
@@ -298,14 +306,14 @@ export default {
   ipAddress: 'Adresse IP',
   printerPort: 'Port',
   printerModel: 'Modèle',
-  testPrint: 'Test d\'impression',
-  printHistory: 'Historique d\'impression',
+  testPrint: "Test d'impression",
+  printHistory: "Historique d'impression",
   printStatus: 'Statut',
   printMethod: 'Méthode',
   printDuration: 'Durée',
   printedAt: 'Imprimé le',
   noprinters: 'Aucune imprimante configurée',
-  noPrintJobs: 'Aucun historique d\'impression',
+  noPrintJobs: "Aucun historique d'impression",
   printerCreated: 'Imprimante créée avec succès',
   printerUpdated: 'Imprimante mise à jour avec succès',
   printerDeleted: 'Imprimante supprimée avec succès',

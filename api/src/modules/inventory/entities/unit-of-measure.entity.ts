@@ -26,7 +26,13 @@ export class UnitOfMeasure {
   @Column({ type: 'varchar', length: 100 })
   category: string; // Weight, Volume, Length, Unit, etc.
 
-  @Column({ type: 'decimal', precision: 18, scale: 6, default: 1, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 6,
+    default: 1,
+    transformer: numericTransformer,
+  })
   ratio: number; // Conversion ratio to base unit
 
   @Column({ type: 'varchar', length: 10, nullable: true })

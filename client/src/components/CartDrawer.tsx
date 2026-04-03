@@ -21,7 +21,13 @@ const getImageUrl = (imageUrl?: string): string | undefined => {
   return `${minioPublicUrl}/orderium-media/${imageUrl}`;
 };
 
-const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item: CartItem) => void }) => {
+const CartItemRow = ({
+  item,
+  onItemClick,
+}: {
+  item: CartItem;
+  onItemClick: (item: CartItem) => void;
+}) => {
   const { t } = useLanguage();
   const { removeItem, updateQuantity } = useCart();
   const displayName = item.product.name;
@@ -43,21 +49,41 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
         }}
       >
         {/* Left accent stripe */}
-        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#059669', borderRadius: '12px 0 0 12px' }} />
-        <div style={{ width: '3px', flexShrink: 0 }} />{/* spacer for stripe */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: '3px',
+            background: '#059669',
+            borderRadius: '12px 0 0 12px',
+          }}
+        />
+        <div style={{ width: '3px', flexShrink: 0 }} />
+        {/* spacer for stripe */}
         {/* Thumbnail */}
         <div
           onClick={() => onItemClick(item)}
           style={{
-            flexShrink: 0, width: '3rem', height: '3rem',
-            borderRadius: '0.625rem', overflow: 'hidden',
+            flexShrink: 0,
+            width: '3rem',
+            height: '3rem',
+            borderRadius: '0.625rem',
+            overflow: 'hidden',
             background: '#f8fafc',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             cursor: 'pointer',
           }}
         >
           {item.product.imageUrl ? (
-            <img src={getImageUrl(item.product.imageUrl)} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img
+              src={getImageUrl(item.product.imageUrl)}
+              alt={displayName}
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
           ) : (
             <Package size={18} color="#d1d5db" />
           )}
@@ -65,17 +91,42 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
 
         {/* Info + controls */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.25rem' }}>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.8rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: '0.25rem',
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                color: '#0f172a',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1,
+              }}
+            >
               {displayName}
             </p>
             <button
               onClick={() => removeItem(item.product.id)}
               aria-label={t('removeFromCart')}
               style={{
-                flexShrink: 0, width: '1.625rem', height: '1.625rem', borderRadius: '50%',
-                border: 'none', background: '#fee2e2', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+                width: '1.625rem',
+                height: '1.625rem',
+                borderRadius: '50%',
+                border: 'none',
+                background: '#fee2e2',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 color: '#ef4444',
               }}
             >
@@ -83,30 +134,57 @@ const CartItemRow = ({ item, onItemClick }: { item: CartItem; onItemClick: (item
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.35rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: '0.35rem',
+            }}
+          >
             {/* Qty stepper */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
               <button
                 onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                 style={{
-                  width: '1.5rem', height: '1.5rem', borderRadius: '50%',
-                  border: '1.5px solid #e5e7eb', background: 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: '#374151',
+                  width: '1.5rem',
+                  height: '1.5rem',
+                  borderRadius: '50%',
+                  border: '1.5px solid #e5e7eb',
+                  background: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#374151',
                 }}
               >
                 <Minus size={10} />
               </button>
-              <span style={{ fontWeight: 800, fontSize: '0.875rem', color: '#059669', minWidth: '1.25rem', textAlign: 'center' }}>
+              <span
+                style={{
+                  fontWeight: 800,
+                  fontSize: '0.875rem',
+                  color: '#059669',
+                  minWidth: '1.25rem',
+                  textAlign: 'center',
+                }}
+              >
                 {item.quantity}
               </span>
               <button
                 onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                 style={{
-                  width: '1.5rem', height: '1.5rem', borderRadius: '50%',
-                  border: 'none', background: '#059669',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: 'white',
+                  width: '1.5rem',
+                  height: '1.5rem',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: '#059669',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: 'white',
                 }}
               >
                 <Plus size={10} />
@@ -133,7 +211,9 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
 
   useEffect(() => {
     if (isPanelMode || !isOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
     window.addEventListener('keydown', onKeyDown);
     document.body.style.overflow = 'hidden';
     return () => {
@@ -159,7 +239,13 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }} dir={dir}>
       {/* Panel header — desktop only */}
       {isPanelMode && (
-        <div style={{ background: 'linear-gradient(135deg, #059669, #047857)', padding: '1rem 1.25rem', flexShrink: 0 }}>
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #059669, #047857)',
+            padding: '1rem 1.25rem',
+            flexShrink: 0,
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <ShoppingBag size={18} color="white" />
@@ -174,8 +260,14 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
                 style={{
                   background: 'rgba(255,255,255,0.15)',
                   border: '1px solid rgba(255,255,255,0.25)',
-                  borderRadius: '0.5rem', cursor: 'pointer', color: 'white',
-                  width: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  color: 'white',
+                  width: '2rem',
+                  height: '2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 <Trash2 size={13} />
@@ -183,8 +275,15 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
             )}
           </div>
           {itemCount > 0 && (
-            <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.75)' }}>
-              {uniqueProductCount} {t(uniqueProductCount === 1 ? 'cartProduct' : 'cartProducts')} · {itemCount} {t(itemCount === 1 ? 'piece' : 'pieces')}
+            <p
+              style={{
+                margin: '0.375rem 0 0',
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.75)',
+              }}
+            >
+              {uniqueProductCount} {t(uniqueProductCount === 1 ? 'cartProduct' : 'cartProducts')} ·{' '}
+              {itemCount} {t(itemCount === 1 ? 'piece' : 'pieces')}
             </p>
           )}
         </div>
@@ -193,19 +292,56 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
       {/* Items list */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {items.length === 0 ? (
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 1.5rem', textAlign: 'center' }}>
-            <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '3rem 1.5rem',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '5rem',
+                height: '5rem',
+                borderRadius: '50%',
+                background: '#f3f4f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1.25rem',
+              }}
+            >
               <ShoppingBag size={28} color="#d1d5db" />
             </div>
-            <h3 style={{ fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem', fontSize: '1.0625rem' }}>{t('emptyCart')}</h3>
-            <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 1.5rem' }}>{t('emptyCartMessage')}</p>
+            <h3
+              style={{
+                fontWeight: 700,
+                color: '#0f172a',
+                margin: '0 0 0.5rem',
+                fontSize: '1.0625rem',
+              }}
+            >
+              {t('emptyCart')}
+            </h3>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 1.5rem' }}>
+              {t('emptyCartMessage')}
+            </p>
             {!isPanelMode && (
               <button
                 onClick={handleClose}
                 style={{
-                  padding: '0.75rem 2rem', borderRadius: '0.875rem', border: 'none',
+                  padding: '0.75rem 2rem',
+                  borderRadius: '0.875rem',
+                  border: 'none',
                   background: 'linear-gradient(135deg, #059669, #047857)',
-                  color: 'white', fontWeight: 700, fontSize: '0.9375rem', cursor: 'pointer',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.9375rem',
+                  cursor: 'pointer',
                 }}
               >
                 {t('continueShopping')}
@@ -213,8 +349,15 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
             )}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem', padding: '0.375rem 0' }}>
-            {items.map(item => (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.125rem',
+              padding: '0.375rem 0',
+            }}
+          >
+            {items.map((item) => (
               <CartItemRow key={item.product.id} item={item} onItemClick={handleItemClick} />
             ))}
           </div>
@@ -223,24 +366,64 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
 
       {/* Footer */}
       {items.length > 0 && (
-        <div style={{ flexShrink: 0, background: 'white', padding: '1rem 1.25rem', borderTop: '1px solid #f3f4f6' }}>
+        <div
+          style={{
+            flexShrink: 0,
+            background: 'white',
+            padding: '1rem 1.25rem',
+            borderTop: '1px solid #f3f4f6',
+          }}
+        >
           {/* Subtotal row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem', padding: '0.75rem 1rem', background: '#f0fdf4', borderRadius: '0.875rem' }}>
-            <span style={{ color: '#374151', fontWeight: 600, fontSize: '0.9375rem' }}>{t('totalAmount')}</span>
-            <span style={{ fontWeight: 900, fontSize: '1.5rem', color: '#059669', letterSpacing: '-0.02em' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '0.875rem',
+              padding: '0.75rem 1rem',
+              background: '#f0fdf4',
+              borderRadius: '0.875rem',
+            }}
+          >
+            <span style={{ color: '#374151', fontWeight: 600, fontSize: '0.9375rem' }}>
+              {t('totalAmount')}
+            </span>
+            <span
+              style={{
+                fontWeight: 900,
+                fontSize: '1.5rem',
+                color: '#059669',
+                letterSpacing: '-0.02em',
+              }}
+            >
               {formatCurrency(subtotal, language)}
             </span>
           </div>
-          <Link to="/checkout" onClick={isPanelMode ? undefined : handleClose} style={{ textDecoration: 'none', display: 'block' }}>
-            <button style={{
-              width: '100%', padding: '1rem', border: 'none',
-              borderRadius: '0.875rem',
-              background: 'linear-gradient(135deg, #059669, #047857)',
-              color: 'white', fontWeight: 800, fontSize: '1rem',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-              boxShadow: '0 4px 16px rgba(5,150,105,0.4)',
-              letterSpacing: '0.01em',
-            }}>
+          <Link
+            to="/checkout"
+            onClick={isPanelMode ? undefined : handleClose}
+            style={{ textDecoration: 'none', display: 'block' }}
+          >
+            <button
+              style={{
+                width: '100%',
+                padding: '1rem',
+                border: 'none',
+                borderRadius: '0.875rem',
+                background: 'linear-gradient(135deg, #059669, #047857)',
+                color: 'white',
+                fontWeight: 800,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 16px rgba(5,150,105,0.4)',
+                letterSpacing: '0.01em',
+              }}
+            >
               {t('checkout')}
               <ArrowIcon size={18} />
             </button>
@@ -282,7 +465,9 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
             aria-hidden="true"
             onClick={handleClose}
             style={{
-              position: 'fixed', inset: 0, zIndex: 10000,
+              position: 'fixed',
+              inset: 0,
+              zIndex: 10000,
               background: 'rgba(0,0,0,0.4)',
               backdropFilter: 'blur(2px)',
               WebkitBackdropFilter: 'blur(2px)',
@@ -297,37 +482,59 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
             aria-modal="true"
             aria-label={t('yourCart') as string}
             style={{
-              position: 'fixed', top: 0, bottom: 0,
+              position: 'fixed',
+              top: 0,
+              bottom: 0,
               [dir === 'rtl' ? 'left' : 'right']: 0,
               zIndex: 10001,
               width: 'min(440px, 100vw)',
               background: '#fff',
-              display: 'flex', flexDirection: 'column',
-              boxShadow: dir === 'rtl' ? '6px 0 40px rgba(0,0,0,0.10)' : '-6px 0 40px rgba(0,0,0,0.10)',
-              transform: isOpen ? 'translateX(0)' : `translateX(${dir === 'rtl' ? '-100%' : '100%'})`,
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow:
+                dir === 'rtl' ? '6px 0 40px rgba(0,0,0,0.10)' : '-6px 0 40px rgba(0,0,0,0.10)',
+              transform: isOpen
+                ? 'translateX(0)'
+                : `translateX(${dir === 'rtl' ? '-100%' : '100%'})`,
               transition: 'transform 0.32s cubic-bezier(0.16,1,0.3,1)',
             }}
           >
             {/* Header */}
-            <div style={{
-              padding: 'calc(1.125rem + env(safe-area-inset-top, 0)) 1.25rem 0.875rem',
-              borderBottom: '1px solid #f0f0f0',
-              flexShrink: 0,
-              background: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
+            <div
+              style={{
+                padding: 'calc(1.125rem + env(safe-area-inset-top, 0)) 1.25rem 0.875rem',
+                borderBottom: '1px solid #f0f0f0',
+                flexShrink: 0,
+                background: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <button
                   onClick={handleClose}
                   aria-label={t('close') as string}
                   style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    padding: '6px', borderRadius: '8px', color: '#6b7280',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '6px',
+                    borderRadius: '8px',
+                    color: '#6b7280',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#111827'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6b7280'; }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f3f4f6';
+                    e.currentTarget.style.color = '#111827';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'none';
+                    e.currentTarget.style.color = '#6b7280';
+                  }}
                 >
                   <X size={18} />
                 </button>
@@ -336,10 +543,16 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
                   {t('yourCart')}
                 </h2>
                 {itemCount > 0 && (
-                  <span style={{
-                    fontWeight: 700, fontSize: '0.8rem', color: '#059669',
-                    background: '#d1fae5', borderRadius: '9999px', padding: '0.125rem 0.5rem',
-                  }}>
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      color: '#059669',
+                      background: '#d1fae5',
+                      borderRadius: '9999px',
+                      padding: '0.125rem 0.5rem',
+                    }}
+                  >
                     {itemCount}
                   </span>
                 )}
@@ -349,9 +562,17 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
                   onClick={clearCart}
                   aria-label={t('clearCart')}
                   style={{
-                    background: '#fee2e2', border: 'none', borderRadius: '50%',
-                    width: '2rem', height: '2rem', cursor: 'pointer', color: '#ef4444',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    background: '#fee2e2',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '2rem',
+                    height: '2rem',
+                    cursor: 'pointer',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
                   }}
                 >
                   <Trash2 size={13} />
@@ -367,4 +588,3 @@ export const CartDrawer = ({ isOpen, onClose, isPanelMode = false }: CartDrawerP
     </>
   );
 };
-

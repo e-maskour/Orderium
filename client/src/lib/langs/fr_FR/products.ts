@@ -3,16 +3,16 @@ export default {
   products: 'Produits',
   allProducts: 'Tous les produits',
   services: 'Services',
-  
+
   // Product Actions
   addToCart: 'Ajouter au panier',
   updateQty: 'Modifier la quantité',
   addedToCart: 'Ajouté au panier',
   addMore: 'Ajouter plus',
-  
+
   // Product Status
   outOfStock: 'Rupture de stock',
-  
+
   // Search & Browse
   searchProducts: 'Rechercher des produits',
   noResults: 'Aucun résultat trouvé',

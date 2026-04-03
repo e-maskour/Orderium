@@ -15,7 +15,7 @@ export class WarehouseService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get warehouseRepository(): Repository<Warehouse> {
     return this.tenantConnService.getRepository(Warehouse);

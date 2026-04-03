@@ -93,13 +93,31 @@ export class AdjustmentLine {
   @Column({ type: 'int' })
   productId: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericTransformer,
+  })
   theoreticalQuantity: number; // System quantity
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericTransformer,
+  })
   countedQuantity: number; // Actual counted quantity
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericTransformer,
+  })
   difference: number; // countedQuantity - theoreticalQuantity
 
   @Column({ type: 'varchar', length: 100, nullable: true })

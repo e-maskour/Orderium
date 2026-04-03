@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function BonAchatEditWrapper() {
   const { t } = useLanguage();
   const config = getDocumentConfig('bon_livraison', 'achat', t);
-  
+
   return (
     <DocumentEditPage
       documentType="bon_livraison"

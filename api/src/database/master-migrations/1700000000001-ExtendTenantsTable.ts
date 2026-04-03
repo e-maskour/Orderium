@@ -5,10 +5,10 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * Run with: npm run migration:run:master
  */
 export class ExtendTenantsTable1700000000001 implements MigrationInterface {
-    name = 'ExtendTenantsTable1700000000001';
+  name = 'ExtendTenantsTable1700000000001';
 
-    async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             ALTER TABLE "tenants"
                 ADD COLUMN IF NOT EXISTS "logoUrl"          VARCHAR(500),
                 ADD COLUMN IF NOT EXISTS "primaryColor"     VARCHAR(7),
@@ -20,10 +20,10 @@ export class ExtendTenantsTable1700000000001 implements MigrationInterface {
                 ADD COLUMN IF NOT EXISTS "disabledAt"       TIMESTAMPTZ,
                 ADD COLUMN IF NOT EXISTS "deletedAt"        TIMESTAMPTZ
         `);
-    }
+  }
 
-    async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             ALTER TABLE "tenants"
                 DROP COLUMN IF EXISTS "logoUrl",
                 DROP COLUMN IF EXISTS "primaryColor",
@@ -35,5 +35,5 @@ export class ExtendTenantsTable1700000000001 implements MigrationInterface {
                 DROP COLUMN IF EXISTS "disabledAt",
                 DROP COLUMN IF EXISTS "deletedAt"
         `);
-    }
+  }
 }

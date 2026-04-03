@@ -20,15 +20,13 @@ export function ShareQuoteDialog({
   quoteNumber,
   shareToken,
   expiresAt,
-  onGenerateLink
+  onGenerateLink,
 }: ShareQuoteDialogProps) {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
 
-  const shareUrl = shareToken
-    ? `${window.location.origin}/preview/quote/${shareToken}`
-    : '';
+  const shareUrl = shareToken ? `${window.location.origin}/preview/quote/${shareToken}` : '';
 
   const handleCopyLink = async () => {
     if (shareUrl) {
@@ -50,7 +48,7 @@ export function ShareQuoteDialog({
   const handleEmailShare = () => {
     const subject = encodeURIComponent(`Devis ${quoteNumber}`);
     const body = encodeURIComponent(
-      `Bonjour,\n\nVeuillez trouver le devis ${quoteNumber} via le lien ci-dessous :\n\n${shareUrl}\n\nCordialement`
+      `Bonjour,\n\nVeuillez trouver le devis ${quoteNumber} via le lien ci-dessous :\n\n${shareUrl}\n\nCordialement`,
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -96,7 +94,9 @@ export function ShareQuoteDialog({
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {!shareToken ? (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-            <Share2 style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.75rem' }} />
+            <Share2
+              style={{ width: '3rem', height: '3rem', color: '#cbd5e1', margin: '0 auto 0.75rem' }}
+            />
             <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '1rem' }}>
               {t('generateSecureLink')}
             </p>
@@ -110,7 +110,15 @@ export function ShareQuoteDialog({
           <>
             {/* Share Link */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#334155', marginBottom: '0.5rem' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  color: '#334155',
+                  marginBottom: '0.5rem',
+                }}
+              >
                 Lien de partage
               </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -124,9 +132,12 @@ export function ShareQuoteDialog({
                   rounded
                   onClick={handleCopyLink}
                   tooltip="Copier"
-                  icon={copied
-                    ? <Check style={{ width: '1.25rem', height: '1.25rem', color: '#16a34a' }} />
-                    : <Copy style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
+                  icon={
+                    copied ? (
+                      <Check style={{ width: '1.25rem', height: '1.25rem', color: '#16a34a' }} />
+                    ) : (
+                      <Copy style={{ width: '1.25rem', height: '1.25rem', color: '#475569' }} />
+                    )
                   }
                   style={{ width: '2.5rem', height: '2.5rem' }}
                 />
@@ -135,24 +146,33 @@ export function ShareQuoteDialog({
 
             {/* Expiry Info */}
             {expiresAt && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.75rem',
-                color: '#475569',
-                backgroundColor: '#eff6ff',
-                border: '1px solid rgba(35,90,228,0.2)',
-                borderRadius: '0.5rem',
-                padding: '0.75rem',
-              }}>
-                <div style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', backgroundColor: '#235ae4' }} />
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.75rem',
+                  color: '#475569',
+                  backgroundColor: '#eff6ff',
+                  border: '1px solid rgba(35,90,228,0.2)',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem',
+                }}
+              >
+                <div
+                  style={{
+                    width: '0.375rem',
+                    height: '0.375rem',
+                    borderRadius: '50%',
+                    backgroundColor: '#235ae4',
+                  }}
+                />
                 <span>
                   Ce lien expire le{' '}
                   {new Date(expiresAt).toLocaleDateString('fr-FR', {
                     day: 'numeric',
                     month: 'long',
-                    year: 'numeric'
+                    year: 'numeric',
                   })}
                 </span>
               </div>

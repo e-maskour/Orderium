@@ -8,7 +8,11 @@ interface CategoryChipsProps {
   onCategoryChange: (id: number | null) => void;
 }
 
-export const CategoryChips = ({ categories, activeCategoryId, onCategoryChange }: CategoryChipsProps) => {
+export const CategoryChips = ({
+  categories,
+  activeCategoryId,
+  onCategoryChange,
+}: CategoryChipsProps) => {
   const { t, dir } = useLanguage();
 
   return (

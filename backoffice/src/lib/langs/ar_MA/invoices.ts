@@ -67,7 +67,8 @@ export default {
   'invoice.deleteError': 'فشل حذف الفاتورة',
   'invoice.confirmBulkDelete': 'هل أنت متأكد من حذف {count} فاتورة؟',
   'invoice.deleteConfirm': 'تأكيد الحذف',
-  'invoice.deleteConfirmMessage': 'هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء.',
+  'invoice.deleteConfirmMessage':
+    'هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء.',
 
   // Status Updates
   'invoice.statusUpdated': 'تم تحديث الحالة بنجاح',
@@ -281,14 +282,16 @@ export default {
   invoicedStatus: 'تم الفوترة',
 
   // Confirmation Messages
-  confirmValidateDocument: 'هل أنت متأكد من أنك تريد التحقق من هذا المستند؟ لن يمكن تعديله بعد ذلك.',
+  confirmValidateDocument:
+    'هل أنت متأكد من أنك تريد التحقق من هذا المستند؟ لن يمكن تعديله بعد ذلك.',
   confirmDevalidateDocument: 'هل أنت متأكد من أنك تريد إلغاء التحقق من هذا المستند؟',
   confirmCreateInvoice: 'هل تريد إنشاء فاتورة من هذا المستند؟',
   confirmCreateDeliveryNote: 'هل تريد إنشاء وصل تسليم من هذا العرض؟ سيتم نسخ جميع البيانات.',
   confirmSignQuote: 'هل تريد تحديد هذا العرض كموقع؟',
-  confirmRejectQuote: 'هل تريد حقًا رفض هذا العرض؟ سيتغير الحالة إلى \'مغلق\'.',
+  confirmRejectQuote: "هل تريد حقًا رفض هذا العرض؟ سيتغير الحالة إلى 'مغلق'.",
   confirmMarkDelivered: 'هل أنت متأكد من أنك تريد تحديد وصل التسليم هذا كمسلم؟',
-  confirmCancelDelivery: 'هل أنت متأكد من أنك تريد إلغاء وصل التسليم هذا؟ قد يكون هذا الإجراء غير قابل للإلغاء.',
+  confirmCancelDelivery:
+    'هل أنت متأكد من أنك تريد إلغاء وصل التسليم هذا؟ قد يكون هذا الإجراء غير قابل للإلغاء.',
   confirmDeleteDocument: 'هل أنت متأكد من أنك تريد حذف هذا المستند؟ هذا الإجراء لا رجعة فيه.',
   confirmValidate: 'هل أنت متأكد من أنك تريد التحقق من هذا المستند؟',
   confirmDevalidate: 'هل أنت متأكد من أنك تريد إلغاء التحقق من هذا المستند؟',

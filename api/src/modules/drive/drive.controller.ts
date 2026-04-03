@@ -15,7 +15,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiConsumes,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 import { ApiRes } from '../../common/api-response';
 import { DRV } from '../../common/response-codes';
@@ -29,7 +34,7 @@ import { SearchDriveDto } from './dto/search-drive.dto';
 @ApiTags('Drive')
 @Controller('drive')
 export class DriveController {
-  constructor(private readonly driveService: DriveService) { }
+  constructor(private readonly driveService: DriveService) {}
 
   // ──────────────────────────────────────────────────────────────────────────
   //  Stats
@@ -79,7 +84,9 @@ export class DriveController {
   }
 
   @Get('raw-url')
-  @ApiOperation({ summary: 'Get a presigned download URL for a raw storage key' })
+  @ApiOperation({
+    summary: 'Get a presigned download URL for a raw storage key',
+  })
   @ApiResponse({ status: 200, description: 'Presigned URL generated' })
   async getRawUrl(@Query('key') key: string) {
     const data = await this.driveService.getRawPresignedUrl(key);

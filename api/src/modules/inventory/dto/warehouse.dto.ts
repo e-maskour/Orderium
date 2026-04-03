@@ -58,4 +58,4 @@ export class CreateWarehouseDto {
   isActive?: boolean;
 }
 
-export class UpdateWarehouseDto extends PartialType(CreateWarehouseDto) { }
+export class UpdateWarehouseDto extends PartialType(CreateWarehouseDto) {}

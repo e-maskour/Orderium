@@ -27,7 +27,21 @@ export class Product implements IProduct {
   warehouseId?: number | null;
   warehouse?: any;
 
-  constructor(data: IProduct & { categories?: any[], saleUnit?: string, purchaseUnit?: string, saleUnitId?: number | null, purchaseUnitId?: number | null, saleUnitOfMeasure?: any, purchaseUnitOfMeasure?: any, saleTax?: number, purchaseTax?: number, warehouseId?: number | null, warehouse?: any }) {
+  constructor(
+    data: IProduct & {
+      categories?: any[];
+      saleUnit?: string;
+      purchaseUnit?: string;
+      saleUnitId?: number | null;
+      purchaseUnitId?: number | null;
+      saleUnitOfMeasure?: any;
+      purchaseUnitOfMeasure?: any;
+      saleTax?: number;
+      purchaseTax?: number;
+      warehouseId?: number | null;
+      warehouse?: any;
+    },
+  ) {
     this.id = data.id;
     this.name = data.name;
     this.code = data.code;
@@ -70,7 +84,7 @@ export class Product implements IProduct {
 
   get marginPercentage(): number {
     if (this.cost === 0) return 0;
-    return ((this.margin / this.cost) * 100);
+    return (this.margin / this.cost) * 100;
   }
 
   get displayMargin(): string {
@@ -90,7 +104,13 @@ export class Product implements IProduct {
   }
 
   get isLowStock(): boolean {
-    return !this.isService && this.stock !== null && this.stock !== undefined && this.stock > 0 && this.stock < 10;
+    return (
+      !this.isService &&
+      this.stock !== null &&
+      this.stock !== undefined &&
+      this.stock > 0 &&
+      this.stock < 10
+    );
   }
 
   get stockStatus(): 'in-stock' | 'low-stock' | 'out-of-stock' | 'service' {
@@ -103,11 +123,16 @@ export class Product implements IProduct {
   get stockStatusText(): string {
     const status = this.stockStatus;
     switch (status) {
-      case 'service': return 'Service';
-      case 'out-of-stock': return 'Out of Stock';
-      case 'low-stock': return `Low Stock (${this.stock})`;
-      case 'in-stock': return `In Stock (${this.stock})`;
-      default: return 'Unknown';
+      case 'service':
+        return 'Service';
+      case 'out-of-stock':
+        return 'Out of Stock';
+      case 'low-stock':
+        return `Low Stock (${this.stock})`;
+      case 'in-stock':
+        return `In Stock (${this.stock})`;
+      default:
+        return 'Unknown';
     }
   }
 

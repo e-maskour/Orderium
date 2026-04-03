@@ -1,21 +1,21 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react';
 
-const KEY = 'admin_key'
+const KEY = 'admin_key';
 
 export function useAuth() {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
-        () => Boolean(localStorage.getItem(KEY)),
-    )
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
+    Boolean(localStorage.getItem(KEY)),
+  );
 
-    const login = useCallback((key: string) => {
-        localStorage.setItem(KEY, key)
-        setIsAuthenticated(true)
-    }, [])
+  const login = useCallback((key: string) => {
+    localStorage.setItem(KEY, key);
+    setIsAuthenticated(true);
+  }, []);
 
-    const logout = useCallback(() => {
-        localStorage.removeItem(KEY)
-        setIsAuthenticated(false)
-    }, [])
+  const logout = useCallback(() => {
+    localStorage.removeItem(KEY);
+    setIsAuthenticated(false);
+  }, []);
 
-    return { isAuthenticated, login, logout }
+  return { isAuthenticated, login, logout };
 }

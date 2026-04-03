@@ -1,9 +1,5 @@
-import { type ReactNode, createElement } from 'react';
-import { notify } from '@orderium/ui';
-import { AlertTriangle } from 'lucide-react';
-
-const icon = (Icon: typeof AlertTriangle, color?: string) =>
-  createElement(Icon, { size: 18, color });
+import { type ReactNode } from 'react';
+import { notify, confirmAction as _confirmAction, type ConfirmVariant } from '@orderium/ui';
 
 interface ToastOptions {
   description?: ReactNode;
@@ -85,14 +81,62 @@ export function toastLinked(message: string, options?: ToastOptions) {
   notify.linked(message, options);
 }
 
-// ── Confirm toast ────────────────────────────────────────
+// ── Confirm dialog ───────────────────────────────────────
+/**
+ * Opens the global ConfirmDialog modal.
+ * Maps the legacy toastConfirm() signature — callers need no changes.
+ *
+ * Variant heuristic:
+ *   - "delete" / "supprimer" / "annuler" / "cancel" / "reject" in the message → 'destructive'
+ *   - "désactiver" / "bloquer" / "revert" / "devalidate" in the message → 'warning'
+ *   - otherwise → 'info'
+ */
 export function toastConfirm(
-  message: string,
+  title: string,
   onConfirm: () => void,
-  options?: { confirmLabel?: string; description?: ReactNode; icon?: ReactNode },
+  options?: {
+    confirmLabel?: string;
+    description?: ReactNode;
+    detail?: string;
+    variant?: ConfirmVariant;
+  },
 ) {
-  notify.action(message, options?.confirmLabel ?? 'Confirmer', onConfirm, {
-    description: options?.description,
-    icon: options?.icon ?? icon(AlertTriangle, '#d97706'),
+  // Infer variant from title when not explicitly provided
+  const inferredVariant: ConfirmVariant = options?.variant ?? inferVariant(title);
+  _confirmAction({
+    title,
+    description: typeof options?.description === 'string' ? options.description : undefined,
+    detail: options?.detail,
+    confirmLabel: options?.confirmLabel ?? 'Confirmer',
+    cancelLabel: 'Annuler',
+    variant: inferredVariant,
+    onConfirm,
   });
+}
+
+function inferVariant(title: string): ConfirmVariant {
+  const lower = title.toLowerCase();
+  if (
+    lower.includes('supprim') ||
+    lower.includes('delet') ||
+    lower.includes('annul') ||
+    lower.includes('cancel') ||
+    lower.includes('reject') ||
+    lower.includes('refus') ||
+    lower.includes('void') ||
+    lower.includes('invalide')
+  ) {
+    return 'destructive';
+  }
+  if (
+    lower.includes('désactiv') ||
+    lower.includes('bloquer') ||
+    lower.includes('revert') ||
+    lower.includes('dévalid') ||
+    lower.includes('désassign') ||
+    lower.includes('unassign')
+  ) {
+    return 'warning';
+  }
+  return 'info';
 }

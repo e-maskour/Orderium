@@ -11,7 +11,8 @@ import { apiClient } from '../../common';
  */
 export const getDataTool: ToolDefinition = {
   name: 'get_data',
-  description: 'Get information from the system (orders, products, invoices, partners, inventory, statistics). Can filter by date, status, customer, etc.',
+  description:
+    'Get information from the system (orders, products, invoices, partners, inventory, statistics). Can filter by date, status, customer, etc.',
   category: 'read',
 
   parameters: {
@@ -20,7 +21,17 @@ export const getDataTool: ToolDefinition = {
       module: {
         type: 'string',
         description: 'Data module to query',
-        enum: ['orders', 'products', 'partners', 'invoices', 'quotes', 'statistics', 'inventory', 'payments', 'notifications'],
+        enum: [
+          'orders',
+          'products',
+          'partners',
+          'invoices',
+          'quotes',
+          'statistics',
+          'inventory',
+          'payments',
+          'notifications',
+        ],
       },
       action: {
         type: 'string',
@@ -170,9 +181,10 @@ export const getDataTool: ToolDefinition = {
 
       // Execute API call with auth and the custom tool-execution marker
       const toolConfig = { headers: { 'X-Tool-Execution': 'true' } };
-      const data = method === 'GET'
-        ? await apiClient.get<any>(fullUrl, toolConfig)
-        : await apiClient.post<any>(fullUrl, body, toolConfig);
+      const data =
+        method === 'GET'
+          ? await apiClient.get<any>(fullUrl, toolConfig)
+          : await apiClient.post<any>(fullUrl, body, toolConfig);
 
       return {
         tool_call_id: '',
@@ -195,7 +207,17 @@ export const getDataTool: ToolDefinition = {
       return { valid: false, error: 'Module is required' };
     }
 
-    const validModules = ['orders', 'products', 'partners', 'invoices', 'quotes', 'statistics', 'inventory', 'payments', 'notifications'];
+    const validModules = [
+      'orders',
+      'products',
+      'partners',
+      'invoices',
+      'quotes',
+      'statistics',
+      'inventory',
+      'payments',
+      'notifications',
+    ];
     if (!validModules.includes(params.module)) {
       return { valid: false, error: `Invalid module. Must be one of: ${validModules.join(', ')}` };
     }
@@ -209,7 +231,8 @@ export const getDataTool: ToolDefinition = {
  */
 export const aggregateDataTool: ToolDefinition = {
   name: 'aggregate_data',
-  description: 'Calculate totals, averages, counts, or group data by category (e.g., count orders by status, sum revenue by month, etc.)',
+  description:
+    'Calculate totals, averages, counts, or group data by category (e.g., count orders by status, sum revenue by month, etc.)',
   category: 'analyze',
 
   parameters: {
@@ -253,7 +276,7 @@ export const aggregateDataTool: ToolDefinition = {
       // First fetch the raw data
       const dataResponse = await getDataTool.handler(
         { module: params.module, filters: params.filters },
-        context
+        context,
       );
 
       if (!dataResponse.success) {
@@ -280,7 +303,10 @@ export const aggregateDataTool: ToolDefinition = {
             };
           }
           result = {
-            sum: items.reduce((acc: number, item: any) => acc + (parseFloat(item[params.field]) || 0), 0),
+            sum: items.reduce(
+              (acc: number, item: any) => acc + (parseFloat(item[params.field]) || 0),
+              0,
+            ),
           };
           break;
 
@@ -292,7 +318,10 @@ export const aggregateDataTool: ToolDefinition = {
               success: false,
             };
           }
-          const sum = items.reduce((acc: number, item: any) => acc + (parseFloat(item[params.field]) || 0), 0);
+          const sum = items.reduce(
+            (acc: number, item: any) => acc + (parseFloat(item[params.field]) || 0),
+            0,
+          );
           result = { average: items.length > 0 ? sum / items.length : 0 };
           break;
         }
@@ -337,7 +366,9 @@ export const aggregateDataTool: ToolDefinition = {
     } catch (error) {
       return {
         tool_call_id: '',
-        content: JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+        content: JSON.stringify({
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
         success: false,
       };
     }

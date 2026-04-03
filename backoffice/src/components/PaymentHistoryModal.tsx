@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Edit2, Calendar, CreditCard, FileText, Hash, Plus, AlertCircle } from 'lucide-react';
+import {
+  Trash2,
+  Edit2,
+  Calendar,
+  CreditCard,
+  FileText,
+  Hash,
+  Plus,
+  AlertCircle,
+} from 'lucide-react';
 import { Payment, PAYMENT_TYPE_LABELS, paymentsService } from '../modules/payments';
 import PaymentModal from './PaymentModal';
 import { toastConfirm, toastError } from '../services/toast.service';
@@ -58,16 +67,20 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   };
 
   const handleDelete = async (id: number) => {
-    toastConfirm(t('deleteTitle'), async () => {
-      try {
-        await paymentsService.delete(id);
-        await fetchPayments();
-        onPaymentUpdate();
-      } catch (error) {
-        console.error('Error deleting payment:', error);
-        toastError(t('error'), { description: t('errorDeletingPayment') });
-      }
-    }, { description: t('confirmDeletePayment'), confirmLabel: t('delete') });
+    toastConfirm(
+      t('deleteTitle'),
+      async () => {
+        try {
+          await paymentsService.delete(id);
+          await fetchPayments();
+          onPaymentUpdate();
+        } catch (error) {
+          console.error('Error deleting payment:', error);
+          toastError(t('error'), { description: t('errorDeletingPayment') });
+        }
+      },
+      { description: t('confirmDeletePayment'), confirmLabel: t('delete') },
+    );
   };
 
   const handleEdit = (payment: Payment) => {
@@ -92,13 +105,13 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   const headerContent = (
     <div>
       <div style={{ fontWeight: 600, fontSize: '1.25rem' }}>{t('invoice.paymentHistory')}</div>
-      <div style={{ fontSize: '0.875rem', color: '#475569', marginTop: '0.25rem' }}>{t('invoice')} {invoiceNumber}</div>
+      <div style={{ fontSize: '0.875rem', color: '#475569', marginTop: '0.25rem' }}>
+        {t('invoice')} {invoiceNumber}
+      </div>
     </div>
   );
 
-  const footerContent = (
-    <Button label={t('close')} outlined onClick={onClose} />
-  );
+  const footerContent = <Button label={t('close')} outlined onClick={onClose} />;
 
   return (
     <>
@@ -113,26 +126,64 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
         contentStyle={{ padding: '1.5rem', overflowY: 'auto' }}
       >
         {/* Payment Summary */}
-        <div style={{ background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', padding: '1.5rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(10rem, 1fr))', gap: '1rem' }}>
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+            padding: '1.5rem',
+            borderRadius: '0.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(10rem, 1fr))',
+              gap: '1rem',
+            }}
+          >
             <div>
-              <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('totalInvoice')}</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{formatAmount(invoiceTotal, 2)} {currency}</div>
+              <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>
+                {t('totalInvoice')}
+              </div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
+                {formatAmount(invoiceTotal, 2)} {currency}
+              </div>
             </div>
             <div>
-              <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('totalPaid')}</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669' }}>{formatAmount(totalPaid, 2)} {currency}</div>
+              <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>
+                {t('totalPaid')}
+              </div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669' }}>
+                {formatAmount(totalPaid, 2)} {currency}
+              </div>
             </div>
             <div>
-              <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{t('remainingToPay')}</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: isFullyPaid ? '#059669' : '#d97706' }}>
+              <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>
+                {t('remainingToPay')}
+              </div>
+              <div
+                style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  color: isFullyPaid ? '#059669' : '#d97706',
+                }}
+              >
                 {formatAmount(remainingAmount, 2)} {currency}
               </div>
             </div>
           </div>
 
           {isFullyPaid && (
-            <div className="flex align-items-center gap-2" style={{ marginTop: '1rem', background: '#ecfdf5', padding: '0.5rem 1rem', borderRadius: '0.5rem', color: '#047857' }}>
+            <div
+              className="flex align-items-center gap-2"
+              style={{
+                marginTop: '1rem',
+                background: '#ecfdf5',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                color: '#047857',
+              }}
+            >
               <AlertCircle style={{ width: 20, height: 20 }} />
               <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{t('invoiceFullyPaid')}</span>
             </div>
@@ -153,12 +204,17 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
 
         {/* Payments List */}
         {loading ? (
-          <div className="flex align-items-center justify-content-center" style={{ padding: '2rem 0' }}>
+          <div
+            className="flex align-items-center justify-content-center"
+            style={{ padding: '2rem 0' }}
+          >
             <ProgressSpinner style={{ width: '2rem', height: '2rem' }} />
           </div>
         ) : payments.length === 0 ? (
           <div className="flex flex-column align-items-center" style={{ padding: '3rem 0' }}>
-            <CreditCard style={{ width: 48, height: 48, color: '#cbd5e1', marginBottom: '0.75rem' }} />
+            <CreditCard
+              style={{ width: 48, height: 48, color: '#cbd5e1', marginBottom: '0.75rem' }}
+            />
             <span style={{ color: '#64748b' }}>{t('noPaymentsRecorded')}</span>
           </div>
         ) : (
@@ -166,18 +222,38 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
             {payments.map((p) => (
               <div
                 key={p.id}
-                style={{ border: '1px solid #e2e8f0', borderRadius: '0.5rem', padding: '1rem', transition: 'box-shadow 0.2s' }}
+                style={{
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '0.5rem',
+                  padding: '1rem',
+                  transition: 'box-shadow 0.2s',
+                }}
               >
                 <div className="flex align-items-start justify-content-between">
-                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '1rem' }}>
+                  <div
+                    style={{
+                      flex: 1,
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))',
+                      gap: '1rem',
+                    }}
+                  >
                     <div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>{t('amount')}</div>
+                      <div
+                        style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}
+                      >
+                        {t('amount')}
+                      </div>
                       <div style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}>
                         {formatAmount(p.amount, 2)} {currency}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>{t('invoice.date')}</div>
+                      <div
+                        style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}
+                      >
+                        {t('invoice.date')}
+                      </div>
                       <div className="flex align-items-center gap-2">
                         <Calendar style={{ width: 16, height: 16, color: '#94a3b8' }} />
                         <span style={{ fontSize: '0.875rem', color: '#334155' }}>
@@ -186,7 +262,11 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>{t('paymentMethod')}</div>
+                      <div
+                        style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}
+                      >
+                        {t('paymentMethod')}
+                      </div>
                       <div className="flex align-items-center gap-2">
                         <CreditCard style={{ width: 16, height: 16, color: '#94a3b8' }} />
                         <span style={{ fontSize: '0.875rem', color: '#334155' }}>
@@ -196,10 +276,16 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                     </div>
                     {p.referenceNumber && (
                       <div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>{t('reference')}</div>
+                        <div
+                          style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}
+                        >
+                          {t('reference')}
+                        </div>
                         <div className="flex align-items-center gap-2">
                           <Hash style={{ width: 16, height: 16, color: '#94a3b8' }} />
-                          <span style={{ fontSize: '0.875rem', color: '#334155' }}>{p.referenceNumber}</span>
+                          <span style={{ fontSize: '0.875rem', color: '#334155' }}>
+                            {p.referenceNumber}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -224,7 +310,14 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                   </div>
                 </div>
                 {p.notes && (
-                  <div className="flex align-items-start gap-2" style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #f1f5f9' }}>
+                  <div
+                    className="flex align-items-start gap-2"
+                    style={{
+                      marginTop: '0.75rem',
+                      paddingTop: '0.75rem',
+                      borderTop: '1px solid #f1f5f9',
+                    }}
+                  >
                     <FileText style={{ width: 16, height: 16, color: '#94a3b8', marginTop: 2 }} />
                     <span style={{ fontSize: '0.875rem', color: '#475569' }}>{p.notes}</span>
                   </div>

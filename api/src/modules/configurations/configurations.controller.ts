@@ -107,7 +107,10 @@ export class ConfigurationsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new configuration' })
-  @ApiResponse({ status: 201, description: 'Configuration created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Configuration created successfully',
+  })
   async create(@Body() createDto: CreateConfigurationDto) {
     const configuration = await this.configurationsService.create(createDto);
     return ApiRes(CFG.CREATED, configuration);
@@ -115,7 +118,10 @@ export class ConfigurationsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a configuration' })
-  @ApiResponse({ status: 200, description: 'Configuration updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Configuration updated successfully',
+  })
   @ApiResponse({ status: 404, description: 'Configuration not found' })
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -131,7 +137,10 @@ export class ConfigurationsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a configuration' })
-  @ApiResponse({ status: 204, description: 'Configuration deleted successfully' })
+  @ApiResponse({
+    status: 204,
+    description: 'Configuration deleted successfully',
+  })
   @ApiResponse({ status: 404, description: 'Configuration not found' })
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.configurationsService.delete(id);

@@ -10,7 +10,15 @@ export interface Order {
   wazeUrl?: string;
   totalAmount: number;
   status?: string; // Main order status
-  deliveryStatus: 'pending' | 'assigned' | 'confirmed' | 'picked_up' | 'to_delivery' | 'in_delivery' | 'delivered' | 'canceled';
+  deliveryStatus:
+    | 'pending'
+    | 'assigned'
+    | 'confirmed'
+    | 'picked_up'
+    | 'to_delivery'
+    | 'in_delivery'
+    | 'delivered'
+    | 'canceled';
   pendingAt?: string;
   assignedAt?: string;
   confirmedAt?: string;

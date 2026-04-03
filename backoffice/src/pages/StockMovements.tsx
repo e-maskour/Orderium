@@ -2,7 +2,17 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { ArrowLeftRight, Search, Eye, CheckCircle2, XCircle, Package, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  Search,
+  Eye,
+  CheckCircle2,
+  XCircle,
+  Package,
+  TrendingUp,
+  TrendingDown,
+  RefreshCw,
+} from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
@@ -10,7 +20,12 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { stockMovementService } from '../modules/inventory/stock-movements.service';
 import { StockMovement } from '../modules/inventory/inventory.model';
-import { toastValidated, toastCancelled, toastError, toastConfirm } from '../services/toast.service';
+import {
+  toastValidated,
+  toastCancelled,
+  toastError,
+  toastConfirm,
+} from '../services/toast.service';
 import { useLanguage } from '../context/LanguageContext';
 import { MobileList } from '../components/MobileList';
 import { EmptyState } from '../components/EmptyState';
@@ -28,10 +43,11 @@ export default function StockMovements() {
 
   const { data: movements = [], isLoading } = useQuery({
     queryKey: ['stock-movements', statusFilter, typeFilter],
-    queryFn: () => stockMovementService.getAll({
-      status: statusFilter !== 'all' ? statusFilter : undefined,
-      movementType: typeFilter !== 'all' ? typeFilter : undefined,
-    }),
+    queryFn: () =>
+      stockMovementService.getAll({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        movementType: typeFilter !== 'all' ? typeFilter : undefined,
+      }),
   });
 
   const validateMutation = useMutation({
@@ -56,9 +72,10 @@ export default function StockMovements() {
     },
   });
 
-  const filteredMovements = movements.filter(mov =>
-    mov.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (mov.productName && mov.productName.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredMovements = movements.filter(
+    (mov) =>
+      mov.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (mov.productName && mov.productName.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const clearSelection = () => setSelectedRows([]);
@@ -82,11 +99,16 @@ export default function StockMovements() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'receipt': return <TrendingUp style={{ width: '1rem', height: '1rem', color: '#059669' }} />;
-      case 'delivery': return <TrendingDown style={{ width: '1rem', height: '1rem', color: '#dc2626' }} />;
-      case 'internal': return <RefreshCw style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />;
-      case 'adjustment': return <Package style={{ width: '1rem', height: '1rem', color: '#d97706' }} />;
-      default: return <ArrowLeftRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />;
+      case 'receipt':
+        return <TrendingUp style={{ width: '1rem', height: '1rem', color: '#059669' }} />;
+      case 'delivery':
+        return <TrendingDown style={{ width: '1rem', height: '1rem', color: '#dc2626' }} />;
+      case 'internal':
+        return <RefreshCw style={{ width: '1rem', height: '1rem', color: '#2563eb' }} />;
+      case 'adjustment':
+        return <Package style={{ width: '1rem', height: '1rem', color: '#d97706' }} />;
+      default:
+        return <ArrowLeftRight style={{ width: '1rem', height: '1rem', color: '#475569' }} />;
     }
   };
 
@@ -138,11 +160,31 @@ export default function StockMovements() {
         />
 
         {/* Filters and Actions Bar */}
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', padding: '1rem', marginBottom: '1rem' }}>
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '0.75rem',
+            border: '1px solid #e2e8f0',
+            padding: '1rem',
+            marginBottom: '1rem',
+          }}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Search */}
             <div style={{ flex: 1, position: 'relative' }}>
-              <Search style={{ width: '1rem', height: '1rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none', zIndex: 1 }} />
+              <Search
+                style={{
+                  width: '1rem',
+                  height: '1rem',
+                  position: 'absolute',
+                  left: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#94a3b8',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                }}
+              />
               <InputText
                 type="text"
                 placeholder={t('searchByReferenceOrProduct')}
@@ -188,13 +230,22 @@ export default function StockMovements() {
             emptyMessage={t('noMovementsFound' as any)}
             config={{
               topLeft: (m: StockMovement) => m.reference,
-              topRight: (m: StockMovement) => `${parseFloat(m.quantity.toString()).toFixed(2)} ${m.unitOfMeasureCode || 'U'}`,
+              topRight: (m: StockMovement) =>
+                `${parseFloat(m.quantity.toString()).toFixed(2)} ${m.unitOfMeasureCode || 'U'}`,
               bottomLeft: (m: StockMovement) => m.productName || `Produit #${m.productId}`,
               bottomRight: (m: StockMovement) => getStatusBadge(m.status),
             }}
           />
         </div>
-        <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div
+          className="responsive-table-desktop"
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '0.75rem',
+            border: '1px solid #e2e8f0',
+            overflow: 'hidden',
+          }}
+        >
           <DataTable
             className="sm-datatable"
             value={filteredMovements}
@@ -208,44 +259,132 @@ export default function StockMovements() {
             rowsPerPageOptions={[10, 25, 50, 100]}
             removableSort
             loading={isLoading}
-            emptyMessage={<EmptyState icon={ArrowLeftRight} title={t('noMovementsFound' as any)} compact />}
+            emptyMessage={
+              <EmptyState icon={ArrowLeftRight} title={t('noMovementsFound' as any)} compact />
+            }
             paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
             currentPageReportTemplate={t('pageReportTemplate')}
           >
             <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-            <Column field="reference" header={t('reference')} sortable body={(mov: StockMovement) => (
-              <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{mov.reference}</span>
-            )} />
-            <Column field="movementType" header={t('type')} sortable body={(mov: StockMovement) => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                {getTypeIcon(mov.movementType)}
-                <span style={{ fontSize: '0.875rem', color: '#334155' }}>{getTypeLabel(mov.movementType)}</span>
-              </div>
-            )} />
-            <Column field="productName" header={t('product')} sortable body={(mov: StockMovement) => (
-              <div>
-                <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', margin: 0 }}>{mov.productName || `#${mov.productId}`}</p>
-                {mov.productCode && <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>{mov.productCode}</p>}
-              </div>
-            )} />
-            <Column header={t('originDestination' as any)} body={(mov: StockMovement) => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569' }}>
-                <span>{mov.sourceWarehouseName || (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-')}</span>
-                <ArrowLeftRight style={{ width: '0.75rem', height: '0.75rem' }} />
-                <span>{mov.destWarehouseName || (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-')}</span>
-              </div>
-            )} />
-            <Column field="quantity" header={t('quantity')} sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => (
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>
-                {parseFloat(mov.quantity.toString()).toFixed(2)} {mov.unitOfMeasureCode || 'U'}
-              </span>
-            )} />
-            <Column field="dateDone" header={t('date')} sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => (
-              <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                {mov.dateDone ? new Date(mov.dateDone).toLocaleDateString('fr-FR') : mov.dateScheduled ? new Date(mov.dateScheduled).toLocaleDateString('fr-FR') : '-'}
-              </span>
-            )} />
-            <Column field="status" header={t('status')} sortable align="center" headerStyle={{ textAlign: 'center' }} body={(mov: StockMovement) => getStatusBadge(mov.status)} />
+            <Column
+              field="reference"
+              header={t('reference')}
+              sortable
+              body={(mov: StockMovement) => (
+                <span
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#1e293b',
+                  }}
+                >
+                  {mov.reference}
+                </span>
+              )}
+            />
+            <Column
+              field="movementType"
+              header={t('type')}
+              sortable
+              body={(mov: StockMovement) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {getTypeIcon(mov.movementType)}
+                  <span style={{ fontSize: '0.875rem', color: '#334155' }}>
+                    {getTypeLabel(mov.movementType)}
+                  </span>
+                </div>
+              )}
+            />
+            <Column
+              field="productName"
+              header={t('product')}
+              sortable
+              body={(mov: StockMovement) => (
+                <div>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', margin: 0 }}>
+                    {mov.productName || `#${mov.productId}`}
+                  </p>
+                  {mov.productCode && (
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
+                      {mov.productCode}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+            <Column
+              header={t('originDestination' as any)}
+              body={(mov: StockMovement) => (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.875rem',
+                    color: '#475569',
+                  }}
+                >
+                  <span>
+                    {mov.sourceWarehouseName ||
+                      (mov.sourceWarehouseId ? `${t('warehouse')} ${mov.sourceWarehouseId}` : '-')}
+                  </span>
+                  <ArrowLeftRight style={{ width: '0.75rem', height: '0.75rem' }} />
+                  <span>
+                    {mov.destWarehouseName ||
+                      (mov.destWarehouseId ? `${t('warehouse')} ${mov.destWarehouseId}` : '-')}
+                  </span>
+                </div>
+              )}
+            />
+            <Column
+              field="quantity"
+              header={t('quantity')}
+              sortable
+              align="center"
+              headerStyle={{ textAlign: 'center' }}
+              body={(mov: StockMovement) => (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#fef3c7',
+                    color: '#b45309',
+                    fontWeight: 700,
+                    padding: '0.25rem 0.625rem',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {parseFloat(mov.quantity.toString()).toFixed(2)} {mov.unitOfMeasureCode || 'U'}
+                </span>
+              )}
+            />
+            <Column
+              field="dateDone"
+              header={t('date')}
+              sortable
+              align="center"
+              headerStyle={{ textAlign: 'center' }}
+              body={(mov: StockMovement) => (
+                <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                  {mov.dateDone
+                    ? new Date(mov.dateDone).toLocaleDateString('fr-FR')
+                    : mov.dateScheduled
+                      ? new Date(mov.dateScheduled).toLocaleDateString('fr-FR')
+                      : '-'}
+                </span>
+              )}
+            />
+            <Column
+              field="status"
+              header={t('status')}
+              sortable
+              align="center"
+              headerStyle={{ textAlign: 'center' }}
+              body={(mov: StockMovement) => getStatusBadge(mov.status)}
+            />
           </DataTable>
         </div>
 
@@ -253,7 +392,9 @@ export default function StockMovements() {
           selectedCount={selectedRows.length}
           onClearSelection={clearSelection}
           onSelectAll={toggleSelectAll}
-          isAllSelected={selectedRows.length === filteredMovements.length && filteredMovements.length > 0}
+          isAllSelected={
+            selectedRows.length === filteredMovements.length && filteredMovements.length > 0
+          }
           totalCount={filteredMovements.length}
           itemLabel="mouvement"
           actions={(() => {
@@ -265,7 +406,12 @@ export default function StockMovements() {
                   id: 'validate',
                   label: t('validate'),
                   icon: <CheckCircle2 style={{ width: '0.875rem', height: '0.875rem' }} />,
-                  onClick: () => validateMutation.mutate(mov.id),
+                  onClick: () =>
+                    toastConfirm(
+                      t('confirmValidateMovement') || 'Valider ce mouvement ?',
+                      () => validateMutation.mutate(mov.id),
+                      { variant: 'info', confirmLabel: t('validate') || 'Valider' },
+                    ),
                   variant: 'primary' as const,
                 });
               }
@@ -280,28 +426,48 @@ export default function StockMovements() {
                   id: 'cancel',
                   label: t('cancel'),
                   icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
-                  onClick: () => toastConfirm(t('confirmCancelMovement'), () => { cancelMutation.mutate(mov.id); clearSelection(); }),
+                  onClick: () =>
+                    toastConfirm(t('confirmCancelMovement'), () => {
+                      cancelMutation.mutate(mov.id);
+                      clearSelection();
+                    }),
                   variant: 'danger' as const,
                 });
               }
             } else {
-              const validatable = selectedRows.filter(r => ['draft', 'waiting', 'confirmed'].includes(r.status));
+              const validatable = selectedRows.filter((r) =>
+                ['draft', 'waiting', 'confirmed'].includes(r.status),
+              );
               if (validatable.length > 0) {
                 acts.push({
                   id: 'validate',
                   label: `${t('validate')} (${validatable.length})`,
                   icon: <CheckCircle2 style={{ width: '0.875rem', height: '0.875rem' }} />,
-                  onClick: () => { validatable.forEach(r => validateMutation.mutate(r.id)); clearSelection(); },
+                  onClick: () =>
+                    toastConfirm(
+                      `${t('validate') || 'Valider'} (${validatable.length}) ?`,
+                      () => {
+                        validatable.forEach((r) => validateMutation.mutate(r.id));
+                        clearSelection();
+                      },
+                      { variant: 'info', confirmLabel: t('validate') || 'Valider' },
+                    ),
                   variant: 'primary' as const,
                 });
               }
-              const cancellable = selectedRows.filter(r => r.status !== 'done' && r.status !== 'cancelled');
+              const cancellable = selectedRows.filter(
+                (r) => r.status !== 'done' && r.status !== 'cancelled',
+              );
               if (cancellable.length > 0) {
                 acts.push({
                   id: 'cancel',
                   label: `${t('cancel')} (${cancellable.length})`,
                   icon: <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />,
-                  onClick: () => toastConfirm(t('confirmCancelMovement'), () => { cancellable.forEach(r => cancelMutation.mutate(r.id)); clearSelection(); }),
+                  onClick: () =>
+                    toastConfirm(t('confirmCancelMovement'), () => {
+                      cancellable.forEach((r) => cancelMutation.mutate(r.id));
+                      clearSelection();
+                    }),
                   variant: 'danger' as const,
                 });
               }

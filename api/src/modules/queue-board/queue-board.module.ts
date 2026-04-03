@@ -34,4 +34,4 @@ import { createQueueBoardAuthMiddleware } from './queue-board-auth.factory';
     }),
   ],
 })
-export class QueueBoardModule { }
+export class QueueBoardModule {}

@@ -1,87 +1,110 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Save, CheckCircle, XCircle, MoreHorizontal, ChevronDown, Eye, FileDown, PenTool, Truck, Ban, Share2, FileText, Trash2, History, X } from 'lucide-react';
+import {
+  Save,
+  CheckCircle,
+  XCircle,
+  MoreHorizontal,
+  ChevronDown,
+  Eye,
+  FileDown,
+  PenTool,
+  Truck,
+  Ban,
+  Share2,
+  FileText,
+  Trash2,
+  History,
+  X,
+} from 'lucide-react';
 import { Button } from 'primereact/button';
 import { useLanguage } from '../../context/LanguageContext';
 
 export interface DocumentAction {
-    id: string;
-    label: string;
-    icon: React.ReactNode;
-    onClick: () => void;
-    disabled?: boolean;
-    loading?: boolean;
-    destructive?: boolean;
-    /** hide the action entirely */
-    hidden?: boolean;
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  destructive?: boolean;
+  /** hide the action entirely */
+  hidden?: boolean;
 }
 
 export interface DocumentActionBarProps {
-    /** Primary action (rightmost solid button) — typically Save */
-    primary?: DocumentAction | null;
-    /** Secondary action (outlined) — typically Validate/Devalidate/Sign */
-    secondary?: DocumentAction | null;
-    /** Overflow actions shown in "More" menu */
-    overflow?: DocumentAction[];
-    /** Left-side action (e.g. Payment History for invoices) */
-    leftAction?: DocumentAction | null;
+  /** Primary action (rightmost solid button) — typically Save */
+  primary?: DocumentAction | null;
+  /** Secondary action (outlined) — typically Validate/Devalidate/Sign */
+  secondary?: DocumentAction | null;
+  /** Overflow actions shown in "More" menu */
+  overflow?: DocumentAction[];
+  /** Left-side action (e.g. Payment History for invoices) */
+  leftAction?: DocumentAction | null;
 }
 
-export default function DocumentActionBar({ primary, secondary, overflow = [], leftAction }: DocumentActionBarProps) {
-    const { t } = useLanguage();
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const sheetRef = useRef<HTMLDivElement>(null);
+export default function DocumentActionBar({
+  primary,
+  secondary,
+  overflow = [],
+  leftAction,
+}: DocumentActionBarProps) {
+  const { t } = useLanguage();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
-    const visibleOverflow = overflow.filter(a => !a.hidden);
-    const hasOverflow = visibleOverflow.length > 0;
+  const visibleOverflow = overflow.filter((a) => !a.hidden);
+  const hasOverflow = visibleOverflow.length > 0;
 
-    // Close desktop popover on outside click
-    useEffect(() => {
-        if (!menuOpen) return;
-        const handler = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-                setMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [menuOpen]);
+  // Close desktop popover on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
 
-    // Close on Escape
-    useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                setMenuOpen(false);
-                setSheetOpen(false);
-            }
-        };
-        document.addEventListener('keydown', handler);
-        return () => document.removeEventListener('keydown', handler);
-    }, []);
-
-    // Lock body scroll when sheet is open
-    useEffect(() => {
-        if (sheetOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
-    }, [sheetOpen]);
-
-    const handleOverflowClick = useCallback((action: DocumentAction) => {
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         setMenuOpen(false);
         setSheetOpen(false);
-        action.onClick();
-    }, []);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
-    const normalActions = visibleOverflow.filter(a => !a.destructive);
-    const destructiveActions = visibleOverflow.filter(a => a.destructive);
+  // Lock body scroll when sheet is open
+  useEffect(() => {
+    if (sheetOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sheetOpen]);
 
-    return (
-        <>
-            <style>{`
+  const handleOverflowClick = useCallback((action: DocumentAction) => {
+    setMenuOpen(false);
+    setSheetOpen(false);
+    action.onClick();
+  }, []);
+
+  const normalActions = visibleOverflow.filter((a) => !a.destructive);
+  const destructiveActions = visibleOverflow.filter((a) => a.destructive);
+
+  return (
+    <>
+      <style>{`
         .doc-action-bar{position:fixed;bottom:0;left:var(--sidebar-width,0px);right:0;background:#fff;box-shadow:0 -1px 3px rgba(0,0,0,0.08);z-index:40;transition:left 0.25s cubic-bezier(0.4,0,0.2,1),right 0.25s cubic-bezier(0.4,0,0.2,1)}
         [dir="rtl"] .doc-action-bar{left:0;right:var(--sidebar-width,0px)}
         .doc-action-bar__inner{max-width:1600px;margin:0 auto;padding:0.625rem 1.5rem;display:flex;align-items:center;justify-content:space-between;min-height:56px;max-height:56px}
@@ -141,152 +164,158 @@ export default function DocumentActionBar({ primary, secondary, overflow = [], l
         }
       `}</style>
 
-            {/* ══ Sticky Bar ══ */}
-            <div className="doc-action-bar">
-                <div className="doc-action-bar__inner">
-                    {/* Left side */}
-                    <div className="doc-action-bar__left">
-                        {leftAction && !leftAction.hidden && (
-                            <Button
-                                icon={leftAction.icon}
-                                label={leftAction.label}
-                                onClick={leftAction.onClick}
-                                severity="info"
-                                className="doc-action-bar__left-action-label"
-                            />
-                        )}
-                    </div>
-
-                    {/* Right side */}
-                    <div className="doc-action-bar__right">
-                        {/* Overflow trigger */}
-                        {hasOverflow && (
-                            <div style={{ position: 'relative' }} ref={menuRef}>
-                                <Button
-                                    className="doc-btn-ghost"
-                                    onClick={() => {
-                                        // Desktop: popover, Mobile: bottom sheet
-                                        if (window.innerWidth >= 768) {
-                                            setMenuOpen(v => !v);
-                                        } else {
-                                            setSheetOpen(true);
-                                        }
-                                    }}
-                                    aria-haspopup="true"
-                                    aria-expanded={menuOpen}
-                                >
-                                    <span className="doc-overflow-dots"><MoreHorizontal size={18} /></span>
-                                    <span className="doc-overflow-label" style={{ marginRight: '0.25rem' }}>{t('moreActions')}</span>
-                                    <span className="doc-overflow-chevron"><ChevronDown size={14} /></span>
-                                </Button>
-
-                                {/* Desktop popover */}
-                                {menuOpen && (
-                                    <div className="doc-overflow-popover" role="menu">
-                                        {normalActions.map(action => (
-                                            <button
-                                                key={action.id}
-                                                className="doc-overflow-item"
-                                                role="menuitem"
-                                                disabled={action.disabled}
-                                                onClick={() => handleOverflowClick(action)}
-                                            >
-                                                {action.icon}
-                                                {action.label}
-                                            </button>
-                                        ))}
-                                        {destructiveActions.length > 0 && normalActions.length > 0 && (
-                                            <div className="doc-overflow-divider" />
-                                        )}
-                                        {destructiveActions.map(action => (
-                                            <button
-                                                key={action.id}
-                                                className="doc-overflow-item doc-overflow-item--destructive"
-                                                role="menuitem"
-                                                disabled={action.disabled}
-                                                onClick={() => handleOverflowClick(action)}
-                                            >
-                                                {action.icon}
-                                                {action.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Secondary */}
-                        {secondary && !secondary.hidden && (
-                            <Button
-                                className="doc-btn-secondary"
-                                icon={secondary.icon}
-                                label={secondary.label}
-                                onClick={secondary.onClick}
-                                disabled={secondary.disabled}
-                                loading={secondary.loading}
-                            />
-                        )}
-
-                        {/* Primary */}
-                        {primary && !primary.hidden && (
-                            <Button
-                                className="doc-btn-primary"
-                                icon={primary.icon}
-                                label={primary.label}
-                                onClick={primary.onClick}
-                                disabled={primary.disabled}
-                                loading={primary.loading}
-                            />
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* ══ Mobile Bottom Sheet ══ */}
-            {sheetOpen && (
-                <div
-                    className={`doc-sheet-backdrop ${sheetOpen ? 'doc-sheet-backdrop--open' : ''}`}
-                    onClick={() => setSheetOpen(false)}
-                >
-                    <div
-                        className={`doc-sheet ${sheetOpen ? 'doc-sheet--open' : ''}`}
-                        ref={sheetRef}
-                        onClick={e => e.stopPropagation()}
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <div className="doc-sheet__handle" />
-                        {normalActions.map(action => (
-                            <button
-                                key={action.id}
-                                className="doc-sheet-item"
-                                disabled={action.disabled}
-                                onClick={() => handleOverflowClick(action)}
-                            >
-                                {action.icon}
-                                {action.label}
-                            </button>
-                        ))}
-                        {destructiveActions.length > 0 && normalActions.length > 0 && (
-                            <div className="doc-sheet-divider" />
-                        )}
-                        {destructiveActions.map(action => (
-                            <button
-                                key={action.id}
-                                className="doc-sheet-item doc-sheet-item--destructive"
-                                disabled={action.disabled}
-                                onClick={() => handleOverflowClick(action)}
-                            >
-                                {action.icon}
-                                {action.label}
-                            </button>
-                        ))}
-                        <button className="doc-sheet-cancel" onClick={() => setSheetOpen(false)}>
-                            {t('cancel')}
-                        </button>
-                    </div>
-                </div>
+      {/* ══ Sticky Bar ══ */}
+      <div className="doc-action-bar">
+        <div className="doc-action-bar__inner">
+          {/* Left side */}
+          <div className="doc-action-bar__left">
+            {leftAction && !leftAction.hidden && (
+              <Button
+                icon={leftAction.icon}
+                label={leftAction.label}
+                onClick={leftAction.onClick}
+                severity="info"
+                className="doc-action-bar__left-action-label"
+              />
             )}
-        </>
-    );
+          </div>
+
+          {/* Right side */}
+          <div className="doc-action-bar__right">
+            {/* Overflow trigger */}
+            {hasOverflow && (
+              <div style={{ position: 'relative' }} ref={menuRef}>
+                <Button
+                  className="doc-btn-ghost"
+                  onClick={() => {
+                    // Desktop: popover, Mobile: bottom sheet
+                    if (window.innerWidth >= 768) {
+                      setMenuOpen((v) => !v);
+                    } else {
+                      setSheetOpen(true);
+                    }
+                  }}
+                  aria-haspopup="true"
+                  aria-expanded={menuOpen}
+                >
+                  <span className="doc-overflow-dots">
+                    <MoreHorizontal size={18} />
+                  </span>
+                  <span className="doc-overflow-label" style={{ marginRight: '0.25rem' }}>
+                    {t('moreActions')}
+                  </span>
+                  <span className="doc-overflow-chevron">
+                    <ChevronDown size={14} />
+                  </span>
+                </Button>
+
+                {/* Desktop popover */}
+                {menuOpen && (
+                  <div className="doc-overflow-popover" role="menu">
+                    {normalActions.map((action) => (
+                      <button
+                        key={action.id}
+                        className="doc-overflow-item"
+                        role="menuitem"
+                        disabled={action.disabled}
+                        onClick={() => handleOverflowClick(action)}
+                      >
+                        {action.icon}
+                        {action.label}
+                      </button>
+                    ))}
+                    {destructiveActions.length > 0 && normalActions.length > 0 && (
+                      <div className="doc-overflow-divider" />
+                    )}
+                    {destructiveActions.map((action) => (
+                      <button
+                        key={action.id}
+                        className="doc-overflow-item doc-overflow-item--destructive"
+                        role="menuitem"
+                        disabled={action.disabled}
+                        onClick={() => handleOverflowClick(action)}
+                      >
+                        {action.icon}
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Secondary */}
+            {secondary && !secondary.hidden && (
+              <Button
+                className="doc-btn-secondary"
+                icon={secondary.icon}
+                label={secondary.label}
+                onClick={secondary.onClick}
+                disabled={secondary.disabled}
+                loading={secondary.loading}
+              />
+            )}
+
+            {/* Primary */}
+            {primary && !primary.hidden && (
+              <Button
+                className="doc-btn-primary"
+                icon={primary.icon}
+                label={primary.label}
+                onClick={primary.onClick}
+                disabled={primary.disabled}
+                loading={primary.loading}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ══ Mobile Bottom Sheet ══ */}
+      {sheetOpen && (
+        <div
+          className={`doc-sheet-backdrop ${sheetOpen ? 'doc-sheet-backdrop--open' : ''}`}
+          onClick={() => setSheetOpen(false)}
+        >
+          <div
+            className={`doc-sheet ${sheetOpen ? 'doc-sheet--open' : ''}`}
+            ref={sheetRef}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="doc-sheet__handle" />
+            {normalActions.map((action) => (
+              <button
+                key={action.id}
+                className="doc-sheet-item"
+                disabled={action.disabled}
+                onClick={() => handleOverflowClick(action)}
+              >
+                {action.icon}
+                {action.label}
+              </button>
+            ))}
+            {destructiveActions.length > 0 && normalActions.length > 0 && (
+              <div className="doc-sheet-divider" />
+            )}
+            {destructiveActions.map((action) => (
+              <button
+                key={action.id}
+                className="doc-sheet-item doc-sheet-item--destructive"
+                disabled={action.disabled}
+                onClick={() => handleOverflowClick(action)}
+              >
+                {action.icon}
+                {action.label}
+              </button>
+            ))}
+            <button className="doc-sheet-cancel" onClick={() => setSheetOpen(false)}>
+              {t('cancel')}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

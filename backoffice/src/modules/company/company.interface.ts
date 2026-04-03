@@ -24,4 +24,4 @@ export interface ICompany {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateCompanyDTO extends Partial<ICompany> { }
+export interface UpdateCompanyDTO extends Partial<ICompany> {}

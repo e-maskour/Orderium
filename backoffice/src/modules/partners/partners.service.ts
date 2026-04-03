@@ -3,12 +3,20 @@ import { Partner } from './partners.model';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class PartnersService {
-  async getAll(): Promise<PartnersResponse> {
-    const response = await apiClient.get<Partner[]>(API_ROUTES.PARTNERS.LIST);
+  async getAll(params?: {
+    search?: string;
+    type?: 'customer' | 'supplier';
+  }): Promise<PartnersResponse> {
+    const queryParams: Record<string, string> = {};
+    if (params?.search) queryParams.search = params.search;
+    if (params?.type) queryParams.type = params.type;
+    const response = await apiClient.get<Partner[]>(API_ROUTES.PARTNERS.LIST, {
+      params: queryParams,
+    });
     const partners = response.data || [];
     return {
       partners: partners.map((p: any) => Partner.fromApiResponse(p)),
-      total: (response.metadata as any)?.total || 0
+      total: (response.metadata as any)?.total || 0,
     };
   }
 

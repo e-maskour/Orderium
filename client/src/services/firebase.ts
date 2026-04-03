@@ -1,11 +1,5 @@
 import { initializeApp, FirebaseApp, getApps } from 'firebase/app';
-import {
-  getMessaging,
-  getToken,
-  onMessage,
-  Messaging,
-  MessagePayload,
-} from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, Messaging, MessagePayload } from 'firebase/messaging';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -76,11 +70,7 @@ export function getFirebaseMessaging(): Messaging | null {
  * Check if notifications are supported
  */
 export function isNotificationSupported(): boolean {
-  return (
-    'Notification' in window &&
-    'serviceWorker' in navigator &&
-    'PushManager' in window
-  );
+  return 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
 }
 
 /**
@@ -115,10 +105,9 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register(
-      '/firebase-messaging-sw.js',
-      { scope: '/' }
-    );
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: '/',
+    });
     console.log('Service worker registered:', registration);
     return registration;
   } catch (error) {
@@ -167,7 +156,7 @@ export async function getFCMToken(): Promise<string | null> {
  * Subscribe to foreground messages
  */
 export function onForegroundMessage(
-  callback: (payload: MessagePayload) => void
+  callback: (payload: MessagePayload) => void,
 ): (() => void) | null {
   const fcmMessaging = getFirebaseMessaging();
   if (!fcmMessaging) {
@@ -229,16 +218,16 @@ export function getDeviceInfo(): {
  */
 export function getPlatform(): 'web' | 'android' | 'ios' {
   const userAgent = navigator.userAgent;
-  
+
   // Check if running as PWA on mobile
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-  
+
   if (userAgent.includes('Android')) {
     return 'android';
   } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
     return 'ios';
   }
-  
+
   return 'web';
 }
 

@@ -11,7 +11,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
 import { ApiRes } from '../../common/api-response';
@@ -33,14 +33,17 @@ export class PaymentsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all payments or payments by invoice' })
+  @ApiQuery({ name: 'invoiceId', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Payments retrieved' })
   async findAll(
     @Query('invoiceId', new ParseIntPipe({ optional: true }))
     invoiceId?: number,
+    @Query('search') search?: string,
   ) {
     const payments = invoiceId
       ? await this.paymentsService.findByInvoice(invoiceId)
-      : await this.paymentsService.findAll();
+      : await this.paymentsService.findAll(search);
     return ApiRes(PAY.LIST, payments);
   }
 

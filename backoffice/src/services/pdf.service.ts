@@ -22,11 +22,7 @@ class PDFService {
   /**
    * Get PDF URL for a document
    */
-  getPDFUrl(
-    documentType: DocumentType,
-    documentId: number,
-    mode: PDFMode = 'download'
-  ): string {
+  getPDFUrl(documentType: DocumentType, documentId: number, mode: PDFMode = 'download'): string {
     const endpoint = this.getEndpoint(documentType);
     return `${API_URL}/api/pdf/${endpoint}/${documentId}?mode=${mode}`;
   }
@@ -54,7 +50,7 @@ class PDFService {
     const win = window.open(url, '_blank');
     if (!win) {
       throw new Error(
-        'Le bloqueur de pop-ups a empêché l\'ouverture du PDF. Veuillez autoriser les pop-ups pour ce site.'
+        "Le bloqueur de pop-ups a empêché l'ouverture du PDF. Veuillez autoriser les pop-ups pour ce site.",
       );
     }
   }

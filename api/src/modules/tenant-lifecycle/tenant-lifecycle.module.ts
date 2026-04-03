@@ -10,16 +10,16 @@ import { TenantLifecycleController } from './tenant-lifecycle.controller';
 import { TenantModule } from '../tenant/tenant.module';
 
 @Module({
-    imports: [
-        ScheduleModule.forRoot(),
-        TypeOrmModule.forFeature(
-            [Tenant, Payment, SubscriptionPlan, TenantActivityLog],
-            'master',
-        ),
-        TenantModule,
-    ],
-    controllers: [TenantLifecycleController],
-    providers: [TenantLifecycleService],
-    exports: [TenantLifecycleService],
+  imports: [
+    ScheduleModule.forRoot(),
+    TypeOrmModule.forFeature(
+      [Tenant, Payment, SubscriptionPlan, TenantActivityLog],
+      'master',
+    ),
+    TenantModule,
+  ],
+  controllers: [TenantLifecycleController],
+  providers: [TenantLifecycleService],
+  exports: [TenantLifecycleService],
 })
-export class TenantLifecycleModule { }
+export class TenantLifecycleModule {}

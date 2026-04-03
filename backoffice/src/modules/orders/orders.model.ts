@@ -3,7 +3,7 @@ import {
   IOrderItem,
   OrderStatus,
   DeliveryStatus,
-  IOrderWithDetails
+  IOrderWithDetails,
 } from './orders.interface';
 
 export class OrderItem implements IOrderItem {
@@ -155,7 +155,9 @@ export class Order implements IOrder {
     this.remainingAmount = data.remainingAmount ?? 0;
     this.dateCreated = data.dateCreated;
     this.dateUpdated = data.dateUpdated;
-    this.items = data.items ? (data.items.map(item => item instanceof OrderItem ? item : new OrderItem(item))) : undefined;
+    this.items = data.items
+      ? data.items.map((item) => (item instanceof OrderItem ? item : new OrderItem(item)))
+      : undefined;
   }
 
   // Getters
@@ -221,14 +223,22 @@ export class Order implements IOrder {
 
   get statusLabel(): string {
     switch (this.status) {
-      case 'draft': return 'Brouillon';
-      case 'validated': return 'Validée';
-      case 'in_progress': return 'En cours';
-      case 'confirmed': return 'Confirmé';
-      case 'picked_up': return 'Récupéré';
-      case 'delivered': return 'Livrée';
-      case 'cancelled': return 'Annulée';
-      default: return 'Inconnu';
+      case 'draft':
+        return 'Brouillon';
+      case 'validated':
+        return 'Validée';
+      case 'in_progress':
+        return 'En cours';
+      case 'confirmed':
+        return 'Confirmé';
+      case 'picked_up':
+        return 'Récupéré';
+      case 'delivered':
+        return 'Livrée';
+      case 'cancelled':
+        return 'Annulée';
+      default:
+        return 'Inconnu';
     }
   }
 
@@ -364,7 +374,7 @@ export class OrderWithDetails implements IOrderWithDetails {
 
   constructor(data: IOrderWithDetails) {
     this.order = data.order instanceof Order ? data.order : new Order(data.order);
-    this.items = data.items.map(item => item instanceof OrderItem ? item : new OrderItem(item));
+    this.items = data.items.map((item) => (item instanceof OrderItem ? item : new OrderItem(item)));
   }
 
   get totalItems(): number {

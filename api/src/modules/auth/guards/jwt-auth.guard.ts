@@ -32,7 +32,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       [context.getHandler(), context.getClass()],
     );
 
-    const { user } = context.switchToHttp().getRequest<{ user: { scope?: string } }>();
+    const { user } = context
+      .switchToHttp()
+      .getRequest<{ user: { scope?: string } }>();
     const scope = user?.scope;
 
     if (isPortalRoute && scope !== 'portal') {

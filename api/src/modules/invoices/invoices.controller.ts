@@ -25,7 +25,7 @@ import { Public } from '../auth/decorators/public.decorator';
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) { }
+  constructor(private readonly invoicesService: InvoicesService) {}
 
   @Post('list')
   @ApiOperation({ summary: 'Get all invoices with filters (POST method)' })
@@ -150,10 +150,7 @@ export class InvoicesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateInvoiceDto: UpdateInvoiceDto,
   ) {
-    const invoice = await this.invoicesService.update(
-      id,
-      updateInvoiceDto,
-    );
+    const invoice = await this.invoicesService.update(id, updateInvoiceDto);
     return ApiRes(INV.UPDATED, invoice);
   }
 
@@ -195,7 +192,9 @@ export class InvoicesController {
 
   @Public()
   @Get('shared/:token')
-  @ApiOperation({ summary: 'Get invoice by share token (public, no auth required)' })
+  @ApiOperation({
+    summary: 'Get invoice by share token (public, no auth required)',
+  })
   @ApiResponse({ status: 200, description: 'Invoice retrieved' })
   async getByShareToken(@Param('token') token: string) {
     const invoice = await this.invoicesService.getByShareToken(token);

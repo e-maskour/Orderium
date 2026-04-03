@@ -23,7 +23,11 @@ export class DeliveryOrderResponseDto {
   @ApiProperty({ required: false }) deliveredAt?: string;
   @ApiProperty({ required: false }) canceledAt?: string;
   @ApiProperty({ required: false }) createdAt?: string;
-  @ApiProperty({ required: false }) items?: { productName: string; quantity: number; price: number }[];
+  @ApiProperty({ required: false }) items?: {
+    productName: string;
+    quantity: number;
+    price: number;
+  }[];
 
   static fromOrderDelivery(od: OrderDelivery): DeliveryOrderResponseDto {
     const customer = od.order?.customer as Partner | undefined;

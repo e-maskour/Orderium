@@ -74,7 +74,7 @@ export function AddressInput({
               headers: {
                 'User-Agent': 'Morocom POS',
               },
-            }
+            },
           );
 
           if (!response.ok) {
@@ -90,7 +90,7 @@ export function AddressInput({
 
             if (data.address.neighbourhood || data.address.suburb || data.address.quarter) {
               addressParts.push(
-                data.address.neighbourhood || data.address.suburb || data.address.quarter
+                data.address.neighbourhood || data.address.suburb || data.address.quarter,
               );
             }
 
@@ -138,7 +138,7 @@ export function AddressInput({
 
         notify.error(errorMessage);
       },
-      options
+      options,
     );
   };
 
@@ -158,10 +158,32 @@ export function AddressInput({
           onClick={handleDetectLocation}
           disabled={isDetectingLocation}
           title={t('detectMyLocation')}
-          style={{ width: '3rem', height: '3rem', flexShrink: 0, background: 'white', border: '1px solid #d1d5db', borderRadius: '0.5rem', cursor: isDetectingLocation ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isDetectingLocation ? 0.7 : 1 }}
+          style={{
+            width: '3rem',
+            height: '3rem',
+            flexShrink: 0,
+            background: 'white',
+            border: '1px solid #d1d5db',
+            borderRadius: '0.5rem',
+            cursor: isDetectingLocation ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isDetectingLocation ? 0.7 : 1,
+          }}
         >
           {isDetectingLocation ? (
-            <span style={{ width: '1.25rem', height: '1.25rem', border: '2px solid rgba(5,150,105,0.3)', borderTopColor: '#059669', borderRadius: '50%', animation: 'cl-spin 0.75s linear infinite', display: 'inline-block' }} />
+            <span
+              style={{
+                width: '1.25rem',
+                height: '1.25rem',
+                border: '2px solid rgba(5,150,105,0.3)',
+                borderTopColor: '#059669',
+                borderRadius: '50%',
+                animation: 'cl-spin 0.75s linear infinite',
+                display: 'inline-block',
+              }}
+            />
           ) : (
             <MapPin style={{ width: '1.25rem', height: '1.25rem', color: '#059669' }} />
           )}
@@ -185,8 +207,14 @@ export function AddressInput({
                 className="flex-1 flex align-items-center justify-content-center gap-2 surface-card border-1 surface-border border-round-lg px-3 no-underline"
                 style={{ padding: '0.625rem', transition: 'background 0.2s' }}
               >
-                <div className="flex align-items-center justify-content-center border-circle" style={{ width: '2rem', height: '2rem', background: '#4285F4' }}>
-                  <i className="pi pi-map-marker" style={{ color: 'white', fontSize: '0.875rem' }} />
+                <div
+                  className="flex align-items-center justify-content-center border-circle"
+                  style={{ width: '2rem', height: '2rem', background: '#4285F4' }}
+                >
+                  <i
+                    className="pi pi-map-marker"
+                    style={{ color: 'white', fontSize: '0.875rem' }}
+                  />
                 </div>
                 <span className="text-sm font-medium text-color">{t('googleMaps')}</span>
               </a>
@@ -199,8 +227,14 @@ export function AddressInput({
                 className="flex-1 flex align-items-center justify-content-center gap-2 surface-card border-1 surface-border border-round-lg px-3 no-underline"
                 style={{ padding: '0.625rem', transition: 'background 0.2s' }}
               >
-                <div className="flex align-items-center justify-content-center border-circle" style={{ width: '2rem', height: '2rem', background: '#33CCFF' }}>
-                  <i className="pi pi-directions" style={{ color: 'white', fontSize: '0.875rem' }} />
+                <div
+                  className="flex align-items-center justify-content-center border-circle"
+                  style={{ width: '2rem', height: '2rem', background: '#33CCFF' }}
+                >
+                  <i
+                    className="pi pi-directions"
+                    style={{ color: 'white', fontSize: '0.875rem' }}
+                  />
                 </div>
                 <span className="text-sm font-medium text-color">{t('waze')}</span>
               </a>

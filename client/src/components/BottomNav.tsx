@@ -81,10 +81,7 @@ export const BottomNav = () => {
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <ClipboardList
-          size={22}
-          strokeWidth={location.pathname === '/my-orders' ? 2.5 : 2}
-        />
+        <ClipboardList size={22} strokeWidth={location.pathname === '/my-orders' ? 2.5 : 2} />
         <span>{tabs[1].label}</span>
       </Link>
 
@@ -109,8 +106,8 @@ export const BottomNav = () => {
             WebkitTapHighlightColor: 'transparent',
             transition: 'transform 0.15s, box-shadow 0.15s',
           }}
-          onTouchStart={e => (e.currentTarget.style.transform = 'translateY(-6px) scale(0.95)')}
-          onTouchEnd={e => (e.currentTarget.style.transform = 'translateY(-8px) scale(1)')}
+          onTouchStart={(e) => (e.currentTarget.style.transform = 'translateY(-6px) scale(0.95)')}
+          onTouchEnd={(e) => (e.currentTarget.style.transform = 'translateY(-8px) scale(1)')}
         >
           <ShoppingBag size={22} color="white" />
           {itemCount > 0 && (
@@ -160,10 +157,7 @@ export const BottomNav = () => {
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <Settings
-          size={22}
-          strokeWidth={location.pathname === '/settings' ? 2.5 : 2}
-        />
+        <Settings size={22} strokeWidth={location.pathname === '/settings' ? 2.5 : 2} />
         <span>{t('settings')}</span>
       </Link>
 
@@ -187,10 +181,7 @@ export const BottomNav = () => {
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <User
-          size={22}
-          strokeWidth={location.pathname === '/profile' ? 2.5 : 2}
-        />
+        <User size={22} strokeWidth={location.pathname === '/profile' ? 2.5 : 2} />
         <span>{t('profile') || 'Profil'}</span>
       </Link>
     </nav>

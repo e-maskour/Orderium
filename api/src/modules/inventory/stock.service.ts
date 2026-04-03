@@ -20,12 +20,11 @@ import {
   InternalTransferDto,
 } from './dto/stock-movement.dto';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { calcAvailableQty } from './stock.helpers';
 
 @Injectable()
 export class StockService {
-  constructor(
-    private readonly tenantConnService: TenantConnectionService,
-  ) { }
+  constructor(private readonly tenantConnService: TenantConnectionService) {}
 
   private get stockQuantRepository(): Repository<StockQuant> {
     return this.tenantConnService.getRepository(StockQuant);
@@ -187,9 +186,10 @@ export class StockService {
     }
 
     // Calculate available quantity (ensure numeric operation)
-    const qty = parseFloat(stockQuant.quantity.toString() || '0');
-    const reserved = parseFloat(stockQuant.reservedQuantity.toString() || '0');
-    stockQuant.availableQuantity = qty - reserved;
+    stockQuant.availableQuantity = calcAvailableQty(
+      stockQuant.quantity,
+      stockQuant.reservedQuantity,
+    );
 
     return this.stockQuantRepository.save(stockQuant);
   }
@@ -202,51 +202,41 @@ export class StockService {
   async createMovement(
     createDto: CreateStockMovementDto,
   ): Promise<StockMovement> {
-    // Validate product
-    const product = await this.productRepository.findOne({
-      where: { id: createDto.productId },
-    });
-    if (!product) {
+    // Validate all referenced entities in parallel
+    const [product, sourceWarehouse, destWarehouse, uom] = await Promise.all([
+      this.productRepository.findOne({ where: { id: createDto.productId } }),
+      createDto.sourceWarehouseId
+        ? this.warehouseRepository.findOne({
+            where: { id: createDto.sourceWarehouseId },
+          })
+        : null,
+      createDto.destWarehouseId
+        ? this.warehouseRepository.findOne({
+            where: { id: createDto.destWarehouseId },
+          })
+        : null,
+      createDto.unitOfMeasureId
+        ? this.uomRepository.findOne({
+            where: { id: createDto.unitOfMeasureId },
+          })
+        : null,
+    ]);
+    if (!product)
       throw new NotFoundException(
         `Product with ID ${createDto.productId} not found`,
       );
-    }
-
-    // Validate source warehouse if provided
-    if (createDto.sourceWarehouseId) {
-      const sourceWarehouse = await this.warehouseRepository.findOne({
-        where: { id: createDto.sourceWarehouseId },
-      });
-      if (!sourceWarehouse) {
-        throw new NotFoundException(
-          `Source warehouse with ID ${createDto.sourceWarehouseId} not found`,
-        );
-      }
-    }
-
-    // Validate destination warehouse if provided
-    if (createDto.destWarehouseId) {
-      const destWarehouse = await this.warehouseRepository.findOne({
-        where: { id: createDto.destWarehouseId },
-      });
-      if (!destWarehouse) {
-        throw new NotFoundException(
-          `Destination warehouse with ID ${createDto.destWarehouseId} not found`,
-        );
-      }
-    }
-
-    // Validate unit of measure if provided
-    if (createDto.unitOfMeasureId) {
-      const uom = await this.uomRepository.findOne({
-        where: { id: createDto.unitOfMeasureId },
-      });
-      if (!uom) {
-        throw new NotFoundException(
-          `Unit of measure with ID ${createDto.unitOfMeasureId} not found`,
-        );
-      }
-    }
+    if (createDto.sourceWarehouseId && !sourceWarehouse)
+      throw new NotFoundException(
+        `Source warehouse with ID ${createDto.sourceWarehouseId} not found`,
+      );
+    if (createDto.destWarehouseId && !destWarehouse)
+      throw new NotFoundException(
+        `Destination warehouse with ID ${createDto.destWarehouseId} not found`,
+      );
+    if (createDto.unitOfMeasureId && !uom)
+      throw new NotFoundException(
+        `Unit of measure with ID ${createDto.unitOfMeasureId} not found`,
+      );
 
     // Generate reference number
     const reference = await this.generateMovementReference(
@@ -302,7 +292,7 @@ export class StockService {
       if (stockQuant.availableQuantity < movement.quantity) {
         throw new BadRequestException(
           `Insufficient stock at ${movement.sourceWarehouse?.name}. ` +
-          `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
+            `Available: ${stockQuant.availableQuantity}, Required: ${movement.quantity}`,
         );
       }
     }
@@ -350,7 +340,7 @@ export class StockService {
 
       await queryRunner.commitTransaction();
 
-      return this.findMovement(movement.id);
+      return movement;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -558,8 +548,10 @@ export class StockService {
     }
 
     stockQuant.reservedQuantity += quantity;
-    stockQuant.availableQuantity =
-      stockQuant.quantity - stockQuant.reservedQuantity;
+    stockQuant.availableQuantity = calcAvailableQty(
+      stockQuant.quantity,
+      stockQuant.reservedQuantity,
+    );
 
     return this.stockQuantRepository.save(stockQuant);
   }
@@ -578,8 +570,10 @@ export class StockService {
       0,
       stockQuant.reservedQuantity - quantity,
     );
-    stockQuant.availableQuantity =
-      stockQuant.quantity - stockQuant.reservedQuantity;
+    stockQuant.availableQuantity = calcAvailableQty(
+      stockQuant.quantity,
+      stockQuant.reservedQuantity,
+    );
 
     return this.stockQuantRepository.save(stockQuant);
   }

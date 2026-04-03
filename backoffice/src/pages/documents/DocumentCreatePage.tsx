@@ -6,9 +6,18 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Calendar } from 'primereact/calendar';
-import { DocumentType, DocumentDirection, DocumentConfig, DocumentItem } from '../../modules/documents/types';
+import {
+  DocumentType,
+  DocumentDirection,
+  DocumentConfig,
+  DocumentItem,
+} from '../../modules/documents/types';
 import { Partner, IPartner } from '../../modules/partners';
-import { DocumentPartnerBox, DocumentItemsTable, DocumentTotalsSection } from '../../components/documents';
+import {
+  DocumentPartnerBox,
+  DocumentItemsTable,
+  DocumentTotalsSection,
+} from '../../components/documents';
 import { invoicesService } from '../../modules/invoices/invoices.service';
 import { quotesService } from '../../modules/quotes/quotes.service';
 import { ordersService } from '../../modules/orders/orders.service';
@@ -26,7 +35,7 @@ export default function DocumentCreatePage({
   documentType,
   direction,
   config,
-  listRoute
+  listRoute,
 }: DocumentCreatePageProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,7 +46,9 @@ export default function DocumentCreatePage({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   // Expiration date is 1 month from now by default for quotes
-  const [expirationDate, setExpirationDate] = useState(new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]);
+  const [expirationDate, setExpirationDate] = useState(
+    new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
+  );
   const [partner, setPartner] = useState<IPartner | null>(null);
   const [items, setItems] = useState<DocumentItem[]>([]);
   const [notes, setNotes] = useState('');
@@ -48,7 +59,13 @@ export default function DocumentCreatePage({
   useEffect(() => {
     const state = location.state as any;
     if (state?.fromDevis && state?.devisData) {
-      const { partner: devisPartner, date: devisDate, dueDate: devisDueDate, items: devisItems, notes: devisNotes } = state.devisData;
+      const {
+        partner: devisPartner,
+        date: devisDate,
+        dueDate: devisDueDate,
+        items: devisItems,
+        notes: devisNotes,
+      } = state.devisData;
       if (devisPartner) setPartner(devisPartner);
       if (devisDate) setDate(devisDate);
       if (devisDueDate) setDueDate(devisDueDate);
@@ -81,26 +98,28 @@ export default function DocumentCreatePage({
       const isDemandePrix = documentType === 'devis' && direction === 'achat';
 
       // Calculate totals
-      const subtotal = isDemandePrix ? null : items.reduce((sum, item) => {
-        const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1
-          ? itemTotal * (item.discount / 100)
-          : item.discount;
-        const afterDiscount = itemTotal - discountAmount;
-        return sum + afterDiscount;
-      }, 0);
+      const subtotal = isDemandePrix
+        ? null
+        : items.reduce((sum, item) => {
+            const itemTotal = item.quantity * item.unitPrice;
+            const discountAmount =
+              item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
+            const afterDiscount = itemTotal - discountAmount;
+            return sum + afterDiscount;
+          }, 0);
 
-      const totalTax = isDemandePrix ? null : items.reduce((sum, item) => {
-        const itemTotal = item.quantity * item.unitPrice;
-        const discountAmount = item.discountType === 1
-          ? itemTotal * (item.discount / 100)
-          : item.discount;
-        const afterDiscount = itemTotal - discountAmount;
-        const tax = afterDiscount * (item.tax / 100);
-        return sum + tax;
-      }, 0);
+      const totalTax = isDemandePrix
+        ? null
+        : items.reduce((sum, item) => {
+            const itemTotal = item.quantity * item.unitPrice;
+            const discountAmount =
+              item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
+            const afterDiscount = itemTotal - discountAmount;
+            const tax = afterDiscount * (item.tax / 100);
+            return sum + tax;
+          }, 0);
 
-      const total = isDemandePrix ? null : (subtotal! + totalTax!);
+      const total = isDemandePrix ? null : subtotal! + totalTax!;
 
       // Create document data
       const documentData: any = {
@@ -115,22 +134,22 @@ export default function DocumentCreatePage({
         supplierAddress: isVente ? undefined : partner.address,
         date,
         dueDate: dueDate || undefined,
-        expirationDate: config.features.expirationDate && expirationDate ? expirationDate : undefined,
+        expirationDate:
+          config.features.expirationDate && expirationDate ? expirationDate : undefined,
         subtotal,
         tax: totalTax,
         discount: 0,
         discountType: 0,
         total,
         notes: notes || undefined,
-        items: items.map(item => {
+        items: items.map((item) => {
           // For demande de prix, send null for unitPrice and total
           const isDemandePrix = documentType === 'devis' && direction === 'achat';
 
           // Calculate item total (HT: before tax)
           const itemSubtotal = item.quantity * item.unitPrice;
-          const discountAmount = item.discountType === 1
-            ? itemSubtotal * (item.discount / 100)
-            : item.discount;
+          const discountAmount =
+            item.discountType === 1 ? itemSubtotal * (item.discount / 100) : item.discount;
           const itemTotal = itemSubtotal - discountAmount;
 
           return {
@@ -140,10 +159,10 @@ export default function DocumentCreatePage({
             unitPrice: isDemandePrix ? null : item.unitPrice,
             discount: item.discount || 0,
             discountType: item.discountType || 0,
-            tax: isDemandePrix ? null : (item.tax || 0),
-            total: isDemandePrix ? null : itemTotal
+            tax: isDemandePrix ? null : item.tax || 0,
+            total: isDemandePrix ? null : itemTotal,
           };
-        })
+        }),
       };
 
       // Call appropriate service based on document type
@@ -197,25 +216,24 @@ export default function DocumentCreatePage({
       } else if (documentType === 'devis') {
         const createdId = (created as any).quote?.id ?? (created as any).id;
         // For vente devis use /devis/:id, for achat devis (demande de prix) use /demande-prix/:id
-        editRoute = direction === 'vente'
-          ? `/devis/${createdId}`
-          : `/demande-prix/${createdId}`;
+        editRoute = direction === 'vente' ? `/devis/${createdId}` : `/demande-prix/${createdId}`;
       } else if (documentType === 'bon_livraison') {
         const createdId = (created as any).id;
         // For vente bon use /bons-livraison/:id, for achat bon use /bon-achat/:id
-        editRoute = direction === 'vente'
-          ? `/bons-livraison/${createdId}`
-          : `/bon-achat/${createdId}`;
+        editRoute =
+          direction === 'vente' ? `/bons-livraison/${createdId}` : `/bon-achat/${createdId}`;
       }
 
       // Navigate to edit page after a short delay
       setTimeout(() => {
         navigate(editRoute);
       }, 1000);
-
     } catch (error: any) {
       console.error('Error creating document:', error);
-      toastError(error.message || `${t('error')} lors de la création de la ${config.titleShort.toLowerCase()}`);
+      toastError(
+        error.message ||
+          `${t('error')} lors de la création de la ${config.titleShort.toLowerCase()}`,
+      );
     } finally {
       setSaving(false);
     }
@@ -257,28 +275,58 @@ export default function DocumentCreatePage({
         }
       `}</style>
       <div style={{ maxWidth: '1600px', margin: '0 auto', paddingBottom: '6rem' }}>
-
         {/* ── Page Header ── */}
         <div className="doc-detail-hdr">
           {/* Back button */}
           <Button
             icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
             onClick={() => navigate(listRoute)}
-            style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+            style={{
+              width: '2.25rem',
+              height: '2.25rem',
+              flexShrink: 0,
+              background: '#f8fafc',
+              border: '1.5px solid #e2e8f0',
+              color: '#64748b',
+              borderRadius: '0.625rem',
+              padding: 0,
+            }}
           />
           {/* Desktop only: document icon */}
           <div className="doc-detail-hdr__icon">
-            {(() => { const DocIcon = config.icon; return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />; })()}
+            {(() => {
+              const DocIcon = config.icon;
+              return <DocIcon style={{ width: '1.5rem', height: '1.5rem', color: '#fff' }} />;
+            })()}
           </div>
           {/* Title + breadcrumb */}
           <div className="doc-detail-hdr__body">
             <div className="doc-detail-hdr__crumb">
               <span
                 onClick={() => navigate(listRoute)}
-                style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', cursor: 'pointer' }}
-              >{config.titleShort}</span>
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  cursor: 'pointer',
+                }}
+              >
+                {config.titleShort}
+              </span>
               <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>›</span>
-              <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#235ae4', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{t('new')}</span>
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  color: '#235ae4',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                }}
+              >
+                {t('new')}
+              </span>
             </div>
             <h1 className="doc-detail-hdr__title">
               {t('new')}&nbsp;{config.titleShort}
@@ -286,23 +334,57 @@ export default function DocumentCreatePage({
           </div>
           {/* Badges */}
           <div className="doc-detail-hdr__badges">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4375rem', padding: '0.4375rem 0.875rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #eff6ff, #eef2ff)', border: '1.5px solid rgba(35,90,228,0.18)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              <div style={{ width: '0.4375rem', height: '0.4375rem', borderRadius: '9999px', background: '#235ae4', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#235ae4', textTransform: 'uppercase', letterSpacing: '0.07em' }}>NOUVEAU</span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4375rem',
+                padding: '0.4375rem 0.875rem',
+                borderRadius: '9999px',
+                background: 'linear-gradient(135deg, #eff6ff, #eef2ff)',
+                border: '1.5px solid rgba(35,90,228,0.18)',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  width: '0.4375rem',
+                  height: '0.4375rem',
+                  borderRadius: '9999px',
+                  background: '#235ae4',
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  color: '#235ae4',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                }}
+              >
+                NOUVEAU
+              </span>
             </div>
           </div>
         </div>
 
         {/* ── Main Content Card ── */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '1rem',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
-          border: '1.5px solid #e2e8f0',
-          overflow: 'hidden'
-        }}>
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '1rem',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+            border: '1.5px solid #e2e8f0',
+            overflow: 'hidden',
+          }}
+        >
           {/* Top accent bar */}
-          <div style={{ height: '3px', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }} />
+          <div
+            style={{ height: '3px', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}
+          />
 
           <div style={{ padding: '1.5rem' }}>
             {/* Two column layout: Partner on left, Document info on right */}
@@ -317,53 +399,96 @@ export default function DocumentCreatePage({
                 partnerIce={partner?.ice || undefined}
                 deliveryAddress={partner?.deliveryAddress || undefined}
                 onPartnerChange={(updatedPartner) => {
-                  if ('id' in updatedPartner && 'name' in updatedPartner && 'phoneNumber' in updatedPartner) {
+                  if (
+                    'id' in updatedPartner &&
+                    'name' in updatedPartner &&
+                    'phoneNumber' in updatedPartner
+                  ) {
                     setPartner(updatedPartner as IPartner);
                   } else {
-                    setPartner(prev => prev ? { ...prev, ...updatedPartner } : null);
+                    setPartner((prev) => (prev ? { ...prev, ...updatedPartner } : null));
                   }
                 }}
               />
 
               {/* Document information */}
-              <div style={{
-                backgroundColor: '#ffffff', borderRadius: '0.875rem',
-                border: '1.5px solid #e2e8f0', overflow: 'hidden',
-                boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
-              }}>
+              <div
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '0.875rem',
+                  border: '1.5px solid #e2e8f0',
+                  overflow: 'hidden',
+                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                }}
+              >
                 {/* Section header */}
-                <div style={{
-                  padding: '0.875rem 1.125rem',
-                  background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
-                  borderBottom: '1.5px solid #e2e8f0',
-                  display: 'flex', alignItems: 'center', gap: '0.625rem'
-                }}>
-                  <div style={{
-                    width: '2rem', height: '2rem',
-                    background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
-                    borderRadius: '0.5rem', flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(35,90,228,0.4)'
-                  }}>
+                <div
+                  style={{
+                    padding: '0.875rem 1.125rem',
+                    background: 'linear-gradient(to right, #f8fafc, #f1f5f9)',
+                    borderBottom: '1.5px solid #e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.625rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '2rem',
+                      height: '2rem',
+                      background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                      borderRadius: '0.5rem',
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(35,90,228,0.4)',
+                    }}
+                  >
                     <FileText style={{ width: '1rem', height: '1rem', color: '#fff' }} />
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: '#1e293b' }}>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9375rem',
+                        fontWeight: 700,
+                        color: '#1e293b',
+                      }}
+                    >
                       {t('documentInformation')}
                     </h3>
                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
-                      {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')}
+                      {documentType === 'facture'
+                        ? t('dateDeFacturation')
+                        : documentType === 'bon_livraison'
+                          ? t('dateDeBon')
+                          : t('dateDeDevis')}
                     </p>
                   </div>
                 </div>
-                <div style={{ padding: '1rem 1.125rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                <div
+                  style={{
+                    padding: '1rem 1.125rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.875rem',
+                  }}
+                >
                   <div>
                     <label className="doc-field-label">
-                      {documentType === 'facture' ? t('dateDeFacturation') : documentType === 'bon_livraison' ? t('dateDeBon') : t('dateDeDevis')} <span style={{ color: '#ef4444' }}>*</span>
+                      {documentType === 'facture'
+                        ? t('dateDeFacturation')
+                        : documentType === 'bon_livraison'
+                          ? t('dateDeBon')
+                          : t('dateDeDevis')}{' '}
+                      <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <Calendar
                       value={date ? new Date(date) : null}
-                      onChange={(e) => setDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                      onChange={(e) =>
+                        setDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')
+                      }
                       dateFormat="dd/mm/yy"
                       showIcon
                       className="doc-cal"
@@ -377,7 +502,11 @@ export default function DocumentCreatePage({
                       <label className="doc-field-label">{t('expirationDate')}</label>
                       <Calendar
                         value={expirationDate ? new Date(expirationDate) : null}
-                        onChange={(e) => setExpirationDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                        onChange={(e) =>
+                          setExpirationDate(
+                            e.value ? (e.value as Date).toISOString().split('T')[0] : '',
+                          )
+                        }
                         dateFormat="dd/mm/yy"
                         showIcon
                         className="doc-cal"
@@ -391,7 +520,9 @@ export default function DocumentCreatePage({
                     <label className="doc-field-label">{t('dueDate')}</label>
                     <Calendar
                       value={dueDate ? new Date(dueDate) : null}
-                      onChange={(e) => setDueDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')}
+                      onChange={(e) =>
+                        setDueDate(e.value ? (e.value as Date).toISOString().split('T')[0] : '')
+                      }
                       dateFormat="dd/mm/yy"
                       showIcon
                       className="doc-cal"
@@ -404,8 +535,21 @@ export default function DocumentCreatePage({
             </div>
 
             {/* Items Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.5rem 0 1rem' }}>
-              <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, #e2e8f0, transparent)' }} />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                margin: '1.5rem 0 1rem',
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  height: '1px',
+                  background: 'linear-gradient(to right, #e2e8f0, transparent)',
+                }}
+              />
             </div>
 
             {/* Items table */}
@@ -423,20 +567,47 @@ export default function DocumentCreatePage({
             <div className="doc-notes-totals">
               {/* Notes */}
               <div style={{ minWidth: 0 }}>
-                <div style={{
-                  backgroundColor: '#ffffff', borderRadius: '0.875rem',
-                  border: '1.5px solid #e2e8f0', overflow: 'hidden',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.06)'
-                }}>
-                  <div style={{
-                    padding: '0.75rem 1.125rem',
-                    background: 'linear-gradient(to right, #f8fafc, #eff6ff)',
-                    borderBottom: '1.5px solid #e2e8f0',
-                    display: 'flex', alignItems: 'center', gap: '0.625rem'
-                  }}>
-                    <div style={{ width: '0.25rem', height: '1.25rem', background: 'linear-gradient(to bottom, #235ae4, #1a47b8)', borderRadius: '2px', flexShrink: 0 }} />
-                    <FileText style={{ width: '0.9375rem', height: '0.9375rem', color: '#3b82f6', flexShrink: 0 }} />
-                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{t('notes')}</h3>
+                <div
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '0.875rem',
+                    border: '1.5px solid #e2e8f0',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '0.75rem 1.125rem',
+                      background: 'linear-gradient(to right, #f8fafc, #eff6ff)',
+                      borderBottom: '1.5px solid #e2e8f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.625rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '0.25rem',
+                        height: '1.25rem',
+                        background: 'linear-gradient(to bottom, #235ae4, #1a47b8)',
+                        borderRadius: '2px',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <FileText
+                      style={{
+                        width: '0.9375rem',
+                        height: '0.9375rem',
+                        color: '#3b82f6',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <h3
+                      style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}
+                    >
+                      {t('notes')}
+                    </h3>
                   </div>
                   <div style={{ padding: '1rem 1.125rem' }}>
                     <InputTextarea
@@ -461,7 +632,14 @@ export default function DocumentCreatePage({
         {/* ── Sticky Bottom Action Bar ── */}
         <div className="doc-sticky-bar">
           <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.875rem 1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.75rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: '0.75rem',
+              }}
+            >
               <Button
                 label={t('cancel')}
                 onClick={() => navigate(listRoute)}
@@ -476,13 +654,16 @@ export default function DocumentCreatePage({
                 disabled={saving}
                 loading={saving}
                 icon={<Save style={{ width: '1rem', height: '1rem' }} />}
-                style={{ background: 'linear-gradient(135deg, #235ae4, #1a47b8)', border: 'none', boxShadow: '0 2px 10px rgba(35,90,228,0.35)' }}
+                style={{
+                  background: 'linear-gradient(135deg, #235ae4, #1a47b8)',
+                  border: 'none',
+                  boxShadow: '0 2px 10px rgba(35,90,228,0.35)',
+                }}
               />
             </div>
           </div>
         </div>
       </div>
-
     </AdminLayout>
   );
 }

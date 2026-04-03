@@ -11,7 +11,9 @@ export class CompanyService {
   async updateCompanyInfo(data: UpdateCompanyDTO): Promise<Company> {
     const getResponse = await apiClient.get<any>(API_ROUTES.CONFIGURATIONS.BY_ENTITY('my_company'));
     const configId = getResponse.data.id;
-    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(configId), { values: data });
+    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(configId), {
+      values: data,
+    });
     return Company.fromApiResponse(response.data.values);
   }
 }

@@ -14,11 +14,7 @@ interface InputAreaProps {
   onCancel?: () => void;
 }
 
-export const InputArea: React.FC<InputAreaProps> = ({
-  onSend,
-  disabled = false,
-  onCancel,
-}) => {
+export const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled = false, onCancel }) => {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

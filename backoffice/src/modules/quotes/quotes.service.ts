@@ -1,14 +1,11 @@
-import {
-  QuoteFilters,
-  CreateQuoteDTO,
-  UpdateQuoteDTO
-} from './quotes.interface';
+import { QuoteFilters, CreateQuoteDTO, UpdateQuoteDTO } from './quotes.interface';
 import { QuoteWithDetails } from './quotes.model';
 import { apiClient, API_ROUTES } from '../../common';
 
-
 export class QuotesService {
-  async getAll(filters?: QuoteFilters): Promise<{ quotes: QuoteWithDetails[]; count: number; totalCount: number }> {
+  async getAll(
+    filters?: QuoteFilters,
+  ): Promise<{ quotes: QuoteWithDetails[]; count: number; totalCount: number }> {
     const body: any = {};
     if (filters?.status) body.status = filters.status;
     if (filters?.customerId) body.customerId = filters.customerId;
@@ -22,7 +19,9 @@ export class QuotesService {
     if (filters?.pageSize) queryParams.pageSize = filters.pageSize;
     if (filters?.direction) queryParams.direction = filters.direction;
 
-    const response = await apiClient.post<any[]>(API_ROUTES.QUOTES.LIST, body, { params: queryParams });
+    const response = await apiClient.post<any[]>(API_ROUTES.QUOTES.LIST, body, {
+      params: queryParams,
+    });
     const quotes = response.data || [];
     return {
       quotes: quotes.map((quote: any) => QuoteWithDetails.fromApiResponse(quote)),
@@ -83,8 +82,15 @@ export class QuotesService {
     return QuoteWithDetails.fromApiResponse(response.data);
   }
 
-  async signQuote(token: string, signedBy: string, clientNotes?: string): Promise<QuoteWithDetails> {
-    const response = await apiClient.post<any>(API_ROUTES.QUOTES.SHARED_SIGN(token), { signedBy, clientNotes });
+  async signQuote(
+    token: string,
+    signedBy: string,
+    clientNotes?: string,
+  ): Promise<QuoteWithDetails> {
+    const response = await apiClient.post<any>(API_ROUTES.QUOTES.SHARED_SIGN(token), {
+      signedBy,
+      clientNotes,
+    });
     return QuoteWithDetails.fromApiResponse(response.data);
   }
 
@@ -99,12 +105,16 @@ export class QuotesService {
   }
 
   async convertToInvoice(id: number, invoiceId: number): Promise<QuoteWithDetails> {
-    const response = await apiClient.put<any>(API_ROUTES.QUOTES.CONVERT_TO_INVOICE(id), { invoiceId });
+    const response = await apiClient.put<any>(API_ROUTES.QUOTES.CONVERT_TO_INVOICE(id), {
+      invoiceId,
+    });
     return QuoteWithDetails.fromApiResponse(response.data);
   }
 
   async getAnalytics(direction: 'vente' | 'achat', year: number): Promise<any> {
-    const response = await apiClient.get<any>(API_ROUTES.QUOTES.ANALYTICS(direction), { params: { year } });
+    const response = await apiClient.get<any>(API_ROUTES.QUOTES.ANALYTICS(direction), {
+      params: { year },
+    });
     return response.data;
   }
 

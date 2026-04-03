@@ -34,7 +34,7 @@ export const ProductQuantityModal = ({
   onClose,
   onAddToCart,
   initialQuantity = 0,
-  t
+  t,
 }: ProductQuantityModalProps) => {
   const [quantity, setQuantity] = useState('');
 
@@ -47,13 +47,25 @@ export const ProductQuantityModal = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = ''; };
+      return () => {
+        document.body.style.overflow = '';
+      };
     }
   }, [isOpen]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') { handleClose(); }
-  }, [isOpen]);
+  const handleClose = useCallback(() => {
+    setQuantity('');
+    onClose();
+  }, [onClose]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    },
+    [handleClose],
+  );
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -98,23 +110,30 @@ export const ProductQuantityModal = ({
   };
 
   const handleAddToCart = () => {
-    if (qty > 0) { onAddToCart(qty); setQuantity(''); onClose(); }
+    if (qty > 0) {
+      onAddToCart(qty);
+      setQuantity('');
+      onClose();
+    }
   };
-
-  const handleClose = () => { setQuantity(''); onClose(); };
 
   const modal = (
     <div
       className="pos-modal-overlay"
       style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        display: 'flex', justifyContent: 'center',
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        justifyContent: 'center',
         background: 'rgba(15, 23, 42, 0.6)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
         animation: 'posOverlayIn 0.18s ease',
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
     >
       <style>{`
         @keyframes posOverlayIn { from { opacity: 0; } to { opacity: 1; } }
@@ -148,84 +167,175 @@ export const ProductQuantityModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-          padding: '1.25rem 1.25rem 1rem',
-          position: 'relative',
-        }}>
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            padding: '1.25rem 1.25rem 1rem',
+            position: 'relative',
+          }}
+        >
           {/* Close */}
           <button
             onClick={handleClose}
             className="pos-key"
             style={{
-              position: 'absolute', top: '0.875rem', right: '0.875rem',
-              width: '1.875rem', height: '1.875rem', borderRadius: '50%',
+              position: 'absolute',
+              top: '0.875rem',
+              right: '0.875rem',
+              width: '1.875rem',
+              height: '1.875rem',
+              borderRadius: '50%',
               background: 'rgba(255,255,255,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <X style={{ width: '0.9rem', height: '0.9rem', color: 'rgba(255,255,255,0.7)' }} />
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', paddingRight: '2rem' }}>
-            <div style={{
-              width: '3rem', height: '3rem', borderRadius: '0.875rem', flexShrink: 0,
-              background: 'rgba(35,90,228,0.25)',
-              border: '1px solid rgba(35,90,228,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <ShoppingCart style={{ width: '1.375rem', height: '1.375rem', color: '#93b4f8' }} strokeWidth={2} />
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', paddingRight: '2rem' }}
+          >
+            <div
+              style={{
+                width: '3rem',
+                height: '3rem',
+                borderRadius: '0.875rem',
+                flexShrink: 0,
+                background: 'rgba(35,90,228,0.25)',
+                border: '1px solid rgba(35,90,228,0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ShoppingCart
+                style={{ width: '1.375rem', height: '1.375rem', color: '#93b4f8' }}
+                strokeWidth={2}
+              />
             </div>
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 0.2rem' }}>
+              <p
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.45)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  margin: '0 0 0.2rem',
+                }}
+              >
                 {t('quantity')}
               </p>
-              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <h2
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  color: '#fff',
+                  margin: 0,
+                  lineHeight: 1.25,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {product.name}
               </h2>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', marginTop: '0.3rem' }}>
-                <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#93b4f8', letterSpacing: '-0.01em' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: '0.3rem',
+                  marginTop: '0.3rem',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 800,
+                    color: '#93b4f8',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
                   {formatAmount(product.price, 2)} {t('currency')}
                 </span>
-                <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>/ {unitCode}</span>
+                <span
+                  style={{
+                    fontSize: '0.6875rem',
+                    color: 'rgba(255,255,255,0.35)',
+                    fontWeight: 500,
+                  }}
+                >
+                  / {unitCode}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Stock pill */}
           {product.stock != null && (
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-              marginTop: '0.875rem',
-              padding: '0.25rem 0.625rem',
-              background: 'rgba(255,255,255,0.07)',
-              borderRadius: '2rem',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}>
-              <Package style={{ width: '0.7rem', height: '0.7rem', color: 'rgba(255,255,255,0.4)' }} />
-              <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
-                {t('available')}: <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{maxQuantity}</strong>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                marginTop: '0.875rem',
+                padding: '0.25rem 0.625rem',
+                background: 'rgba(255,255,255,0.07)',
+                borderRadius: '2rem',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              <Package
+                style={{ width: '0.7rem', height: '0.7rem', color: 'rgba(255,255,255,0.4)' }}
+              />
+              <span
+                style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}
+              >
+                {t('available')}:{' '}
+                <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{maxQuantity}</strong>
               </span>
             </div>
           )}
         </div>
 
         {/* ── Body ── */}
-        <div style={{ padding: '1.25rem', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-          {/* Display */}
-          <div style={{
-            background: '#fff',
-            border: '1.5px solid #e2e8f0',
-            borderRadius: '0.875rem',
-            padding: '0.75rem 1rem',
+        <div
+          style={{
+            padding: '1.25rem',
+            background: '#f8fafc',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-          }}>
+            flexDirection: 'column',
+            gap: '1rem',
+          }}
+        >
+          {/* Display */}
+          <div
+            style={{
+              background: '#fff',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '0.875rem',
+              padding: '0.75rem 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            }}
+          >
             <div>
-              <p style={{ margin: 0, fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('quantity')}</p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                {t('quantity')}
+              </p>
               <input
                 type="text"
                 inputMode="decimal"
@@ -234,18 +344,44 @@ export const ProductQuantityModal = ({
                 placeholder="0"
                 className="pos-qty-field"
                 style={{
-                  fontSize: '2.5rem', fontWeight: 800,
+                  fontSize: '2.5rem',
+                  fontWeight: 800,
                   color: hasQuantity ? '#0f172a' : '#cbd5e1',
-                  background: 'transparent', border: 'none',
-                  width: '100%', outline: 'none', padding: 0, margin: '0.1rem 0 0',
-                  letterSpacing: '-0.03em', lineHeight: 1, fontFamily: 'inherit',
+                  background: 'transparent',
+                  border: 'none',
+                  width: '100%',
+                  outline: 'none',
+                  padding: 0,
+                  margin: '0.1rem 0 0',
+                  letterSpacing: '-0.03em',
+                  lineHeight: 1,
+                  fontFamily: 'inherit',
                 }}
               />
             </div>
             {hasQuantity && (
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <p style={{ margin: 0, fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('total')}</p>
-                <p style={{ margin: '0.1rem 0 0', fontSize: '1.25rem', fontWeight: 800, color: '#235ae4', letterSpacing: '-0.02em' }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '0.6875rem',
+                    fontWeight: 600,
+                    color: '#94a3b8',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  {t('total')}
+                </p>
+                <p
+                  style={{
+                    margin: '0.1rem 0 0',
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: '#235ae4',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
                   {formatAmount(totalPrice, 2)} {t('currency')}
                 </p>
               </div>
@@ -268,16 +404,8 @@ export const ProductQuantityModal = ({
                     fontWeight: isClear ? 700 : 600,
                     borderRadius: '0.75rem',
                     fontFamily: 'inherit',
-                    background: isClear
-                      ? '#fee2e2'
-                      : isDot
-                        ? '#dbeafe'
-                        : '#fff',
-                    color: isClear
-                      ? '#dc2626'
-                      : isDot
-                        ? '#1d4ed8'
-                        : '#0f172a',
+                    background: isClear ? '#fee2e2' : isDot ? '#dbeafe' : '#fff',
+                    color: isClear ? '#dc2626' : isDot ? '#1d4ed8' : '#0f172a',
                     border: isClear
                       ? '1.5px solid #fca5a5'
                       : isDot
@@ -305,17 +433,25 @@ export const ProductQuantityModal = ({
             disabled={!hasQuantity}
             className="pos-add-btn"
             style={{
-              width: '100%', height: '3rem',
+              width: '100%',
+              height: '3rem',
               background: hasQuantity
                 ? 'linear-gradient(135deg, #235ae4 0%, #1a47b8 100%)'
                 : '#e2e8f0',
-              border: 'none', borderRadius: '0.875rem',
-              fontSize: '0.9375rem', fontWeight: 700,
+              border: 'none',
+              borderRadius: '0.875rem',
+              fontSize: '0.9375rem',
+              fontWeight: 700,
               color: hasQuantity ? '#fff' : '#94a3b8',
               cursor: hasQuantity ? 'pointer' : 'default',
               boxShadow: hasQuantity ? '0 4px 14px rgba(35,90,228,0.35)' : 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-              fontFamily: 'inherit', letterSpacing: '-0.01em', transition: 'background 0.2s, box-shadow 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              fontFamily: 'inherit',
+              letterSpacing: '-0.01em',
+              transition: 'background 0.2s, box-shadow 0.2s',
             }}
           >
             <ShoppingCart style={{ width: '1rem', height: '1rem' }} strokeWidth={2.5} />

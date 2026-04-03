@@ -1,10 +1,14 @@
-import { IDeliveryPerson, CreateDeliveryPersonDTO, UpdateDeliveryPersonDTO } from './delivery.interface';
+import {
+  IDeliveryPerson,
+  CreateDeliveryPersonDTO,
+  UpdateDeliveryPersonDTO,
+} from './delivery.interface';
 
 export class DeliveryPerson implements IDeliveryPerson {
   id: number;
   name: string;
   phoneNumber: string;
-  email: string;
+  email?: string | null;
   isActive: boolean;
   dateCreated: string;
   dateUpdated: string;

@@ -61,7 +61,7 @@ Your goal: Help the user accomplish their task quickly and clearly.`;
     }
 
     return tools
-      .map(tool => {
+      .map((tool) => {
         const params = Object.keys(tool.parameters.properties).join(', ');
         const category = tool.category === 'write' ? '[Can modify data]' : '[View only]';
         return `- ${category} ${tool.name}: ${tool.description}`;
@@ -87,11 +87,11 @@ Your goal: Help the user accomplish their task quickly and clearly.`;
 
   private static formatRecentActivity(context: SafeAppContext): string {
     const errors = context.recentErrors
-      .map(err => `- [${err.severity}] ${err.component}: ${err.message}`)
+      .map((err) => `- [${err.severity}] ${err.component}: ${err.message}`)
       .join('\n');
 
     const apiCalls = context.recentApiCalls
-      .map(call => `- ${call.method} ${call.endpoint} → ${call.status}`)
+      .map((call) => `- ${call.method} ${call.endpoint} → ${call.status}`)
       .join('\n');
 
     return `Errors:\n${errors || '(none)'}\n\nAPI Calls:\n${apiCalls || '(none)'}`;

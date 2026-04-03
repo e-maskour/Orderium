@@ -1,16 +1,38 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { productsService } from '../modules/products';
 import { categoriesService } from '../modules/categories';
 import type { IProduct } from '../modules/products/products.interface';
-import { Plus, Eye, Trash2, Search, Package, X, Filter, ChevronDown, ChevronLeft, ChevronRight, Download, Upload, FileSpreadsheet, CheckSquare } from 'lucide-react';
+import {
+  Plus,
+  Eye,
+  Trash2,
+  Search,
+  Package,
+  X,
+  Filter,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Upload,
+  FileSpreadsheet,
+  CheckSquare,
+} from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { MobileList } from '../components/MobileList';
-import { toastExported, toastImported, toastError, toastWarning, toastInfo, toastConfirm } from '../services/toast.service';
+import {
+  toastExported,
+  toastImported,
+  toastError,
+  toastWarning,
+  toastInfo,
+  toastConfirm,
+} from '../services/toast.service';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
@@ -37,17 +59,6 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
   const [quickSearch, setQuickSearch] = useState('');
   const quickSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
-    quickSearchDebounceRef.current = setTimeout(() => {
-      setAppliedFilters(prev => ({ ...prev, name: quickSearch }));
-      setCurrentPage(1);
-    }, 500);
-    return () => {
-      if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
-    };
-  }, [quickSearch]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
@@ -68,6 +79,17 @@ export default function Products() {
     isService: undefined as boolean | undefined,
   });
 
+  useEffect(() => {
+    if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    quickSearchDebounceRef.current = setTimeout(() => {
+      setAppliedFilters((prev) => ({ ...prev, name: quickSearch }));
+      setCurrentPage(1);
+    }, 500);
+    return () => {
+      if (quickSearchDebounceRef.current) clearTimeout(quickSearchDebounceRef.current);
+    };
+  }, [quickSearch]);
+
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesService.getAll(),
@@ -77,15 +99,17 @@ export default function Products() {
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', appliedFilters, currentPage, pageSize],
-    queryFn: () => productsService.getProducts({
-      search: appliedFilters.name,
-      code: appliedFilters.code,
-      stockFilter: appliedFilters.stockFilter,
-      categoryIds: appliedFilters.categoryIds,
-      isService: appliedFilters.isService,
-      page: currentPage,
-      limit: pageSize
-    }),
+    queryFn: () =>
+      productsService.getProducts({
+        search: appliedFilters.name,
+        code: appliedFilters.code,
+        stockFilter: appliedFilters.stockFilter,
+        categoryIds: appliedFilters.categoryIds,
+        isService: appliedFilters.isService,
+        page: currentPage,
+        limit: pageSize,
+      }),
+    placeholderData: keepPreviousData,
   });
 
   const productsList = products?.products || [];
@@ -115,13 +139,13 @@ export default function Products() {
     setCategorySearchSuggestions(
       query
         ? (categoriesList as any[]).filter((c: any) => c.name.toLowerCase().includes(query))
-        : [...(categoriesList as any[])]
+        : [...(categoriesList as any[])],
     );
   };
 
   const toggleSelectProduct = (id: number) => {
     setSelectedProducts((prev) =>
-      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id],
     );
   };
 
@@ -156,7 +180,10 @@ export default function Products() {
           clearSelection();
         }
       },
-      { description: t('confirmBulkDelete').replace('{{count}}', String(selectedProducts.length)), confirmLabel: t('delete') },
+      {
+        description: t('confirmBulkDelete').replace('{{count}}', String(selectedProducts.length)),
+        confirmLabel: t('delete'),
+      },
     );
   };
 
@@ -250,12 +277,17 @@ export default function Products() {
 
         if (result.success) {
           toastImported(
-            t('importSuccess').replace('{{created}}', String(result.imported)).replace('{{updated}}', String(result.updated))
+            t('importSuccess')
+              .replace('{{created}}', String(result.imported))
+              .replace('{{updated}}', String(result.updated)),
           );
           queryClient.invalidateQueries({ queryKey: ['products'] });
         } else {
           toastWarning(
-            t('importPartial').replace('{{created}}', String(result.imported)).replace('{{updated}}', String(result.updated)).replace('{{failed}}', String(result.failed))
+            t('importPartial')
+              .replace('{{created}}', String(result.imported))
+              .replace('{{updated}}', String(result.updated))
+              .replace('{{failed}}', String(result.failed)),
           );
           if (result.errors.length > 0) {
             console.error('Import errors:', result.errors);
@@ -286,7 +318,9 @@ export default function Products() {
 
   return (
     <AdminLayout>
-      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto' }}>
+      <div
+        style={{ display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto' }}
+      >
         {/* Page Header */}
         <PageHeader
           icon={Package}
@@ -305,7 +339,24 @@ export default function Products() {
                   label={t('filters')}
                 />
                 {activeFiltersCount > 0 && (
-                  <span style={{ position: 'absolute', top: '-0.35rem', right: '-0.35rem', backgroundColor: '#235ae4', color: 'white', fontSize: '0.7rem', fontWeight: 700, borderRadius: '9999px', width: '1.2rem', height: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-0.35rem',
+                      right: '-0.35rem',
+                      backgroundColor: '#235ae4',
+                      color: 'white',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      borderRadius: '9999px',
+                      width: '1.2rem',
+                      height: '1.2rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      pointerEvents: 'none',
+                    }}
+                  >
                     {activeFiltersCount}
                   </span>
                 )}
@@ -349,8 +400,19 @@ export default function Products() {
         />
 
         {/* Quick Search Bar */}
-        <div style={{ position: 'relative', marginBottom: '1rem' }}>
-          <span style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center' }}>
+        <div className="page-quick-search">
+          <span
+            style={{
+              position: 'absolute',
+              left: '0.875rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+              color: '#94a3b8',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
             <Search style={{ width: '1rem', height: '1rem' }} />
           </span>
           <InputText
@@ -358,13 +420,29 @@ export default function Products() {
             value={quickSearch}
             onChange={(e) => setQuickSearch(e.target.value)}
             placeholder={t('searchProducts')}
-            style={{ width: '100%', paddingLeft: '2.25rem', paddingRight: quickSearch ? '2.5rem' : '0.875rem' }}
+            style={{
+              width: '100%',
+              paddingLeft: '2.25rem',
+              paddingRight: quickSearch ? '2.5rem' : '0.875rem',
+            }}
           />
           {quickSearch && (
             <button
               type="button"
               onClick={() => setQuickSearch('')}
-              style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#94a3b8', padding: '0.25rem' }}
+              style={{
+                position: 'absolute',
+                right: '0.5rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#94a3b8',
+                padding: '0.25rem',
+              }}
             >
               <X style={{ width: '1rem', height: '1rem' }} />
             </button>
@@ -384,15 +462,22 @@ export default function Products() {
               countLabel={t('products')}
               emptyMessage={t('noProductsFound')}
               hasMore={currentPage < totalPages}
-              onLoadMore={() => setCurrentPage(prev => prev + 1)}
+              onLoadMore={() => setCurrentPage((prev) => prev + 1)}
               config={{
                 topLeft: (p: IProduct) => p.name,
                 topRight: (p: IProduct) => `${formatAmount(p.price || 0, 2)} ${t('currency')}`,
-                bottomLeft: (p: IProduct) => [p.code, p.stock != null ? `Stock: ${p.stock}` : null].filter(Boolean).join(' · '),
+                bottomLeft: (p: IProduct) =>
+                  [p.code, p.stock != null ? `Stock: ${p.stock}` : null]
+                    .filter(Boolean)
+                    .join(' · '),
                 bottomRight: (p: IProduct) => {
                   if (p.stock == null) return null;
-                  if (p.stock < 0) return <span className="erp-badge erp-badge--unpaid">{t('negativeStock')}</span>;
-                  if (p.stock === 0) return <span className="erp-badge erp-badge--draft">{t('zeroStock')}</span>;
+                  if (p.stock < 0)
+                    return (
+                      <span className="erp-badge erp-badge--unpaid">{t('negativeStock')}</span>
+                    );
+                  if (p.stock === 0)
+                    return <span className="erp-badge erp-badge--draft">{t('zeroStock')}</span>;
                   return <span className="erp-badge erp-badge--paid">{t('inStock')}</span>;
                 },
               }}
@@ -401,23 +486,80 @@ export default function Products() {
 
           {/* ── Desktop DataTable ── */}
           {isLoading ? (
-            <div className="responsive-table-desktop animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div
+              className="responsive-table-desktop animate-pulse"
+              style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+            >
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+                <div
+                  key={i}
+                  style={{
+                    backgroundColor: 'white',
+                    borderRadius: '0.75rem',
+                    padding: '1rem',
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ height: '3rem', width: '3rem', backgroundColor: '#e2e8f0', borderRadius: '0.5rem' }} />
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <div style={{ height: '1rem', width: '10rem', backgroundColor: '#e2e8f0', borderRadius: '0.25rem' }} />
-                      <div style={{ height: '0.75rem', width: '6rem', backgroundColor: '#e2e8f0', borderRadius: '0.25rem' }} />
+                    <div
+                      style={{
+                        height: '3rem',
+                        width: '3rem',
+                        backgroundColor: '#e2e8f0',
+                        borderRadius: '0.5rem',
+                      }}
+                    />
+                    <div
+                      style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+                    >
+                      <div
+                        style={{
+                          height: '1rem',
+                          width: '10rem',
+                          backgroundColor: '#e2e8f0',
+                          borderRadius: '0.25rem',
+                        }}
+                      />
+                      <div
+                        style={{
+                          height: '0.75rem',
+                          width: '6rem',
+                          backgroundColor: '#e2e8f0',
+                          borderRadius: '0.25rem',
+                        }}
+                      />
                     </div>
-                    <div style={{ height: '1.5rem', width: '4rem', backgroundColor: '#e2e8f0', borderRadius: '9999px' }} />
-                    <div style={{ height: '1rem', width: '5rem', backgroundColor: '#e2e8f0', borderRadius: '0.25rem' }} />
+                    <div
+                      style={{
+                        height: '1.5rem',
+                        width: '4rem',
+                        backgroundColor: '#e2e8f0',
+                        borderRadius: '9999px',
+                      }}
+                    />
+                    <div
+                      style={{
+                        height: '1rem',
+                        width: '5rem',
+                        backgroundColor: '#e2e8f0',
+                        borderRadius: '0.25rem',
+                      }}
+                    />
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="responsive-table-desktop" style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div
+              className="responsive-table-desktop"
+              style={{
+                flex: 1,
+                backgroundColor: '#ffffff',
+                borderRadius: '0.75rem',
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden',
+              }}
+            >
               <DataTable
                 className="prod-datatable"
                 value={productsList}
@@ -429,11 +571,18 @@ export default function Products() {
                   setPageSize(e.rows);
                 }}
                 selection={productsList.filter((p: IProduct) => selectedProducts.includes(p.id))}
-                onSelectionChange={(e) => setSelectedProducts((e.value as IProduct[]).map((p) => p.id))}
+                onSelectionChange={(e) =>
+                  setSelectedProducts((e.value as IProduct[]).map((p) => p.id))
+                }
                 selectionMode="checkbox"
                 onRowClick={(e) => {
                   const target = e.originalEvent.target as HTMLElement;
-                  if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+                  if (
+                    target.closest('button') ||
+                    target.closest('a') ||
+                    target.closest('.p-checkbox')
+                  )
+                    return;
                   handleViewProduct((e.data as IProduct).id);
                 }}
                 rowClassName={() => 'ord-row-clickable'}
@@ -456,15 +605,54 @@ export default function Products() {
                   body={(product: IProduct) => (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       {product.imageUrl ? (
-                        <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', borderRadius: '0.5rem', flexShrink: 0 }} />
+                        <img
+                          src={getImageUrl(product.imageUrl)}
+                          alt={product.name}
+                          style={{
+                            width: '2.5rem',
+                            height: '2.5rem',
+                            objectFit: 'contain',
+                            borderRadius: '0.5rem',
+                            flexShrink: 0,
+                          }}
+                        />
                       ) : (
-                        <div style={{ width: '2.5rem', height: '2.5rem', background: 'linear-gradient(to bottom right, #f1f5f9, #e2e8f0)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <Package style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8' }} />
+                        <div
+                          style={{
+                            width: '2.5rem',
+                            height: '2.5rem',
+                            background: 'linear-gradient(to bottom right, #f1f5f9, #e2e8f0)',
+                            borderRadius: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Package
+                            style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8' }}
+                          />
                         </div>
                       )}
                       <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{product.name}</p>
-                        {product.code && <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>{product.code}</p>}
+                        <p
+                          style={{
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: '#1e293b',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            margin: 0,
+                          }}
+                        >
+                          {product.name}
+                        </p>
+                        {product.code && (
+                          <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
+                            {product.code}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -475,7 +663,8 @@ export default function Products() {
                   sortField="price"
                   body={(product: IProduct) => (
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#235ae4' }}>
-                      {formatAmount(product.price || 0, 2)} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
+                      {formatAmount(product.price || 0, 2)}{' '}
+                      <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('currency')}</span>
                     </span>
                   )}
                 />
@@ -485,7 +674,8 @@ export default function Products() {
                   sortField="cost"
                   body={(product: IProduct) => (
                     <span style={{ fontSize: '0.875rem', color: '#475569' }}>
-                      {formatAmount(product.cost || 0, 2)} <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
+                      {formatAmount(product.cost || 0, 2)}{' '}
+                      <span style={{ fontSize: '0.75rem' }}>{t('currency')}</span>
                     </span>
                   )}
                 />
@@ -517,14 +707,14 @@ export default function Products() {
         actions={[
           ...(selectedProducts.length === 1
             ? [
-              {
-                id: 'view',
-                label: t('details'),
-                icon: <Eye style={{ width: '0.875rem', height: '0.875rem' }} />,
-                onClick: () => handleViewProduct(selectedProducts[0]),
-                variant: 'secondary' as const,
-              },
-            ]
+                {
+                  id: 'view',
+                  label: t('details'),
+                  icon: <Eye style={{ width: '0.875rem', height: '0.875rem' }} />,
+                  onClick: () => handleViewProduct(selectedProducts[0]),
+                  variant: 'secondary' as const,
+                },
+              ]
             : []),
           {
             id: 'delete',
@@ -545,15 +735,53 @@ export default function Products() {
         style={{ width: '560px' }}
         showCloseIcon={false}
         blockScroll
-        pt={{ header: { style: { display: 'none' } }, content: { style: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } } }}
+        pt={{
+          header: { style: { display: 'none' } },
+          content: {
+            style: {
+              padding: 0,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            },
+          },
+        }}
       >
         {/* Panel Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '1.5rem', paddingRight: '1.5rem', paddingTop: 'calc(1rem + env(safe-area-inset-top, 0))', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0', background: 'linear-gradient(to right, #235ae4, #1a47b8)' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem',
+            paddingTop: 'calc(1rem + env(safe-area-inset-top, 0))',
+            paddingBottom: '1rem',
+            borderBottom: '1px solid #e2e8f0',
+            background: 'linear-gradient(to right, #235ae4, #1a47b8)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Filter style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-            <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>{t('filters')}</h2>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>
+              {t('filters')}
+            </h2>
             {activeFiltersCount > 0 && (
-              <span style={{ backgroundColor: 'white', color: '#235ae4', fontSize: '0.75rem', fontWeight: 700, borderRadius: '9999px', width: '1.25rem', height: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span
+                style={{
+                  backgroundColor: 'white',
+                  color: '#235ae4',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  borderRadius: '9999px',
+                  width: '1.25rem',
+                  height: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 {activeFiltersCount}
               </span>
             )}
@@ -568,16 +796,43 @@ export default function Products() {
         </div>
 
         {/* Panel Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.5rem',
+          }}
+        >
           {/* Search Filters Section */}
           <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
+            <label
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: '#334155',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '1rem',
+                display: 'block',
+              }}
+            >
               {t('search')}
             </label>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
               <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
+                <label
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#475569',
+                    marginBottom: '0.5rem',
+                    display: 'block',
+                  }}
+                >
                   {t('name')}
                 </label>
                 <InputText
@@ -590,7 +845,15 @@ export default function Products() {
               </div>
 
               <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
+                <label
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#475569',
+                    marginBottom: '0.5rem',
+                    display: 'block',
+                  }}
+                >
                   {t('code')}
                 </label>
                 <InputText
@@ -606,7 +869,17 @@ export default function Products() {
 
           {/* Stock Filter */}
           <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
+            <label
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: '#334155',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '1rem',
+                display: 'block',
+              }}
+            >
               {t('stock')}
             </label>
             <Dropdown
@@ -620,7 +893,17 @@ export default function Products() {
 
           {/* Category Filter */}
           <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
-            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
+            <label
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: '#334155',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '1rem',
+                display: 'block',
+              }}
+            >
               {t('categories')}
             </label>
             <AutoComplete
@@ -640,22 +923,57 @@ export default function Products() {
 
           {/* Is Service Filter */}
           <div>
-            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'block' }}>
+            <label
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: '#334155',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '1rem',
+                display: 'block',
+              }}
+            >
               Type
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
               {[
                 { key: undefined, label: t('all') },
                 { key: true, label: 'Service' },
-                { key: false, label: t('product') }
+                { key: false, label: t('product') },
               ].map((filter) => (
                 <Button
                   key={String(filter.key)}
                   onClick={() => setIsServiceFilter(filter.key as boolean | undefined)}
                   label={filter.label}
-                  style={isServiceFilter === filter.key
-                    ? { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#235ae4', color: 'white', boxShadow: '0 10px 15px -3px rgba(35,90,228,0.3)', border: 'none' }
-                    : { paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#f8fafc', color: '#334155', border: '2px solid #e2e8f0' }}
+                  style={
+                    isServiceFilter === filter.key
+                      ? {
+                          paddingLeft: '0.75rem',
+                          paddingRight: '0.75rem',
+                          paddingTop: '0.5rem',
+                          paddingBottom: '0.5rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          backgroundColor: '#235ae4',
+                          color: 'white',
+                          boxShadow: '0 10px 15px -3px rgba(35,90,228,0.3)',
+                          border: 'none',
+                        }
+                      : {
+                          paddingLeft: '0.75rem',
+                          paddingRight: '0.75rem',
+                          paddingTop: '0.5rem',
+                          paddingBottom: '0.5rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          backgroundColor: '#f8fafc',
+                          color: '#334155',
+                          border: '2px solid #e2e8f0',
+                        }
+                  }
                   text={isServiceFilter !== filter.key}
                 />
               ))}
@@ -664,18 +982,17 @@ export default function Products() {
         </div>
 
         {/* Panel Footer */}
-        <div style={{ borderTop: '1px solid #e2e8f0', padding: '1rem', backgroundColor: '#f8fafc', display: 'flex', gap: '0.75rem' }}>
-          <Button
-            outlined
-            onClick={handleClearFilters}
-            label={t('reset')}
-            style={{ flex: 1 }}
-          />
-          <Button
-            onClick={handleApplyFilters}
-            label={t('apply')}
-            style={{ flex: 1 }}
-          />
+        <div
+          style={{
+            borderTop: '1px solid #e2e8f0',
+            padding: '1rem',
+            backgroundColor: '#f8fafc',
+            display: 'flex',
+            gap: '0.75rem',
+          }}
+        >
+          <Button outlined onClick={handleClearFilters} label={t('reset')} style={{ flex: 1 }} />
+          <Button onClick={handleApplyFilters} label={t('apply')} style={{ flex: 1 }} />
         </div>
       </Sidebar>
     </AdminLayout>

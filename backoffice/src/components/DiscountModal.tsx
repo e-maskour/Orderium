@@ -24,7 +24,7 @@ export const DiscountModal = ({
   isOpen,
   onClose,
   onApply,
-  t
+  t,
 }: DiscountModalProps) => {
   const [discount, setDiscount] = useState('');
   const [discountType, setDiscountType] = useState<number>(0);
@@ -39,13 +39,23 @@ export const DiscountModal = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = ''; };
+      return () => {
+        document.body.style.overflow = '';
+      };
     }
   }, [isOpen]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') handleClose();
-  }, [isOpen]);
+  const handleClose = useCallback(() => {
+    setDiscount('');
+    onClose();
+  }, [onClose]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    },
+    [handleClose],
+  );
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -57,7 +67,8 @@ export const DiscountModal = ({
   const discountAmount = discountType === 1 ? (subtotal * discountValue) / 100 : discountValue;
   const total = subtotal - discountAmount;
   const maxDiscount = discountType === 1 ? 100 : subtotal;
-  const discountPct = discountType === 1 ? discountValue : subtotal > 0 ? (discountValue / subtotal) * 100 : 0;
+  const discountPct =
+    discountType === 1 ? discountValue : subtotal > 0 ? (discountValue / subtotal) * 100 : 0;
 
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
@@ -93,8 +104,6 @@ export const DiscountModal = ({
     onClose();
   };
 
-  const handleClose = () => { setDiscount(''); onClose(); };
-
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '.'];
 
   if (!isOpen) return null;
@@ -103,14 +112,19 @@ export const DiscountModal = ({
     <div
       className="pos-modal-overlay"
       style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        display: 'flex', justifyContent: 'center',
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        justifyContent: 'center',
         background: 'rgba(15, 23, 42, 0.6)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
         animation: 'posOverlayIn 0.18s ease',
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
     >
       <style>{`
         @keyframes posOverlayIn { from { opacity: 0; } to { opacity: 1; } }
@@ -147,55 +161,114 @@ export const DiscountModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-          padding: '1.25rem 1.25rem 1rem',
-          position: 'relative',
-          flexShrink: 0,
-        }}>
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            padding: '1.25rem 1.25rem 1rem',
+            position: 'relative',
+            flexShrink: 0,
+          }}
+        >
           <button
             onClick={handleClose}
             className="pos-key"
             style={{
-              position: 'absolute', top: '0.875rem', right: '0.875rem',
-              width: '1.875rem', height: '1.875rem', borderRadius: '50%',
+              position: 'absolute',
+              top: '0.875rem',
+              right: '0.875rem',
+              width: '1.875rem',
+              height: '1.875rem',
+              borderRadius: '50%',
               background: 'rgba(255,255,255,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <X style={{ width: '0.9rem', height: '0.9rem', color: 'rgba(255,255,255,0.7)' }} />
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', paddingRight: '2rem' }}>
-            <div style={{
-              width: '3rem', height: '3rem', borderRadius: '0.875rem', flexShrink: 0,
-              background: 'rgba(35,90,228,0.25)',
-              border: '1px solid rgba(35,90,228,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Tag style={{ width: '1.375rem', height: '1.375rem', color: '#ffffff' }} strokeWidth={2} />
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', paddingRight: '2rem' }}
+          >
+            <div
+              style={{
+                width: '3rem',
+                height: '3rem',
+                borderRadius: '0.875rem',
+                flexShrink: 0,
+                background: 'rgba(35,90,228,0.25)',
+                border: '1px solid rgba(35,90,228,0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Tag
+                style={{ width: '1.375rem', height: '1.375rem', color: '#ffffff' }}
+                strokeWidth={2}
+              />
             </div>
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 0.2rem' }}>
+              <p
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.45)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  margin: '0 0 0.2rem',
+                }}
+              >
                 {t('applyDiscount')}
               </p>
-              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <h2
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  color: '#fff',
+                  margin: 0,
+                  lineHeight: 1.25,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {productName}
               </h2>
             </div>
           </div>
 
           {/* Subtotal row */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.875rem', alignItems: 'stretch' }}>
-            <div style={{
-              flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.625rem',
-              background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex', flexDirection: 'column', gap: '0.15rem',
-            }}>
-              <span style={{ fontSize: '0.625rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div
+            style={{ display: 'flex', gap: '0.5rem', marginTop: '0.875rem', alignItems: 'stretch' }}
+          >
+            <div
+              style={{
+                flex: 1,
+                padding: '0.5rem 0.75rem',
+                borderRadius: '0.625rem',
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.15rem',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '0.625rem',
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.4)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
                 {t('subtotal')}
               </span>
-              <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'rgba(255,255,255,0.9)' }}>
+              <span
+                style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'rgba(255,255,255,0.9)' }}
+              >
                 {formatAmount(subtotal, 2)} {t('currency')}
               </span>
               <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)' }}>
@@ -206,26 +279,58 @@ export const DiscountModal = ({
         </div>
 
         {/* ── Body ── */}
-        <div style={{ padding: '1.25rem', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
+        <div
+          style={{
+            padding: '1.25rem',
+            background: '#f8fafc',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}
+        >
           {/* Type segmented control */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.375rem',
-            background: '#e2e8f0', padding: '0.25rem', borderRadius: '0.75rem',
-          }} className="disc-type-seg">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.375rem',
+              background: '#e2e8f0',
+              padding: '0.25rem',
+              borderRadius: '0.75rem',
+            }}
+            className="disc-type-seg"
+          >
             {[
-              { value: 0, label: t('amount'), icon: <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{t('currency')}</span> },
-              { value: 1, label: t('percentage'), icon: <Percent style={{ width: '0.875rem', height: '0.875rem' }} strokeWidth={2.5} /> },
+              {
+                value: 0,
+                label: t('amount'),
+                icon: <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{t('currency')}</span>,
+              },
+              {
+                value: 1,
+                label: t('percentage'),
+                icon: (
+                  <Percent style={{ width: '0.875rem', height: '0.875rem' }} strokeWidth={2.5} />
+                ),
+              },
             ].map(({ value, label, icon }) => (
               <button
                 key={value}
-                onClick={() => { setDiscountType(value); setDiscount(''); }}
+                onClick={() => {
+                  setDiscountType(value);
+                  setDiscount('');
+                }}
                 className="pos-key"
                 style={{
                   height: '2.5rem',
                   borderRadius: '0.5rem',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
-                  fontFamily: 'inherit', fontWeight: 700, fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.375rem',
+                  fontFamily: 'inherit',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
                   background: discountType === value ? '#fff' : 'transparent',
                   color: discountType === value ? '#235ae4' : '#64748b',
                   boxShadow: discountType === value ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
@@ -239,14 +344,25 @@ export const DiscountModal = ({
           </div>
 
           {/* Display */}
-          <div style={{
-            background: '#fff',
-            border: '1.5px solid #e2e8f0',
-            borderRadius: '0.875rem',
-            padding: '0.75rem 1rem',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-          }}>
-            <p style={{ margin: '0 0 0.25rem', fontSize: '0.6875rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div
+            style={{
+              background: '#fff',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '0.875rem',
+              padding: '0.75rem 1rem',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            }}
+          >
+            <p
+              style={{
+                margin: '0 0 0.25rem',
+                fontSize: '0.6875rem',
+                fontWeight: 600,
+                color: '#94a3b8',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}
+            >
               {t('discount')} {discountType === 1 ? '(%)' : `(${t('currency')})`}
             </p>
             <input
@@ -257,11 +373,17 @@ export const DiscountModal = ({
               placeholder={discountType === 1 ? '0' : '0.00'}
               className="disc-field"
               style={{
-                fontSize: '2.5rem', fontWeight: 800,
+                fontSize: '2.5rem',
+                fontWeight: 800,
                 color: discountValue > 0 ? '#235ae4' : '#cbd5e1',
-                background: 'transparent', border: 'none',
-                width: '100%', outline: 'none', padding: 0,
-                letterSpacing: '-0.03em', lineHeight: 1, fontFamily: 'inherit',
+                background: 'transparent',
+                border: 'none',
+                width: '100%',
+                outline: 'none',
+                padding: 0,
+                letterSpacing: '-0.03em',
+                lineHeight: 1,
+                fontFamily: 'inherit',
               }}
             />
           </div>
@@ -284,8 +406,16 @@ export const DiscountModal = ({
                     fontFamily: 'inherit',
                     background: isClear ? '#fee2e2' : isDot ? '#dbeafe' : '#fff',
                     color: isClear ? '#dc2626' : isDot ? '#1d4ed8' : '#0f172a',
-                    border: isClear ? '1.5px solid #fca5a5' : isDot ? '1.5px solid #93c5fd' : '1.5px solid #e2e8f0',
-                    boxShadow: isClear ? '0 1px 3px rgba(220,38,38,0.1)' : isDot ? '0 1px 3px rgba(29,78,216,0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    border: isClear
+                      ? '1.5px solid #fca5a5'
+                      : isDot
+                        ? '1.5px solid #93c5fd'
+                        : '1.5px solid #e2e8f0',
+                    boxShadow: isClear
+                      ? '0 1px 3px rgba(220,38,38,0.1)'
+                      : isDot
+                        ? '0 1px 3px rgba(29,78,216,0.1)'
+                        : '0 1px 3px rgba(0,0,0,0.05)',
                     lineHeight: 1,
                   }}
                 >
@@ -297,29 +427,67 @@ export const DiscountModal = ({
 
           {/* Live summary */}
           {discountValue > 0 && (
-            <div style={{
-              background: '#fff',
-              border: '1.5px solid #e2e8f0',
-              borderRadius: '0.875rem',
-              overflow: 'hidden',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.875rem', borderBottom: '1px solid #f1f5f9' }}>
-                <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>{t('subtotal')}</span>
+            <div
+              style={{
+                background: '#fff',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '0.875rem',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.6rem 0.875rem',
+                  borderBottom: '1px solid #f1f5f9',
+                }}
+              >
+                <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>
+                  {t('subtotal')}
+                </span>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#374151' }}>
                   {formatAmount(subtotal, 2)} {t('currency')}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.875rem', borderBottom: '1px solid #f1f5f9' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.6rem 0.875rem',
+                  borderBottom: '1px solid #f1f5f9',
+                }}
+              >
                 <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>
-                  {t('discount')} {discountType === 1 ? `(${discountValue}%)` : `(${discountPct.toFixed(1)}%)`}
+                  {t('discount')}{' '}
+                  {discountType === 1 ? `(${discountValue}%)` : `(${discountPct.toFixed(1)}%)`}
                 </span>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#235ae4' }}>
                   −{formatAmount(discountAmount, 2)} {t('currency')}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.875rem', background: '#f8fafc' }}>
-                <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a' }}>{t('total')}</span>
-                <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#235ae4', letterSpacing: '-0.02em' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.6rem 0.875rem',
+                  background: '#f8fafc',
+                }}
+              >
+                <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0f172a' }}>
+                  {t('total')}
+                </span>
+                <span
+                  style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 800,
+                    color: '#235ae4',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
                   {formatAmount(total, 2)} {t('currency')}
                 </span>
               </div>
@@ -333,14 +501,22 @@ export const DiscountModal = ({
             onClick={handleApply}
             className="pos-apply-btn"
             style={{
-              width: '100%', height: '3rem',
+              width: '100%',
+              height: '3rem',
               background: 'linear-gradient(135deg, #235ae4 0%, #1a47b8 100%)',
-              border: 'none', borderRadius: '0.875rem',
-              fontSize: '0.9375rem', fontWeight: 700, color: '#fff',
+              border: 'none',
+              borderRadius: '0.875rem',
+              fontSize: '0.9375rem',
+              fontWeight: 700,
+              color: '#fff',
               cursor: 'pointer',
               boxShadow: '0 4px 14px rgba(35,90,228,0.35)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-              fontFamily: 'inherit', letterSpacing: '-0.01em',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              fontFamily: 'inherit',
+              letterSpacing: '-0.01em',
             }}
           >
             <Tag style={{ width: '1rem', height: '1rem' }} strokeWidth={2.5} />

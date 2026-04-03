@@ -14,19 +14,24 @@ export const LanguageToggle = () => {
       title={language === 'ar' ? t('switchToFrench') : t('switchToArabic')}
       aria-label={language === 'ar' ? t('switchToFrench') : t('switchToArabic')}
       style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: '2.75rem', height: '2.75rem', borderRadius: '50%',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '2.75rem',
+        height: '2.75rem',
+        borderRadius: '50%',
         border: '2px solid rgba(99,102,241,0.25)',
         background: 'rgba(99,102,241,0.07)',
-        cursor: 'pointer', transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
+        cursor: 'pointer',
+        transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
         outline: 'none',
       }}
-      onMouseEnter={e => {
+      onMouseEnter={(e) => {
         (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.16)';
         (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.5)';
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)';
       }}
-      onMouseLeave={e => {
+      onMouseLeave={(e) => {
         (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.07)';
         (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.25)';
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';

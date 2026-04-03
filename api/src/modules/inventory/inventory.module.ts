@@ -36,4 +36,4 @@ import { InventoryAdjustmentController } from './inventory-adjustment.controller
     InventoryAdjustmentService,
   ],
 })
-export class InventoryModule { }
+export class InventoryModule {}

@@ -45,7 +45,8 @@ export class FilterOrdersDto {
 
   @ApiProperty({
     required: false,
-    description: 'Order status filter (confirmed, picked_up, delivered, cancelled)',
+    description:
+      'Order status filter (confirmed, picked_up, delivered, cancelled)',
     type: [String],
   })
   @IsOptional()
@@ -88,7 +89,10 @@ export class FilterOrdersDto {
   @IsBoolean()
   fromClient?: boolean;
 
-  @ApiProperty({ required: false, description: 'Free-text search: customer name, phone, or order number' })
+  @ApiProperty({
+    required: false,
+    description: 'Free-text search: customer name, phone, or order number',
+  })
   @IsOptional()
   @IsString()
   search?: string;

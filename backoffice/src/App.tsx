@@ -19,9 +19,7 @@ function OnboardingGate({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const checked = useRef(false);
-  const [ready, setReady] = useState(
-    location.pathname.startsWith('/onboarding'),
-  );
+  const [ready, setReady] = useState(location.pathname.startsWith('/onboarding'));
 
   useEffect(() => {
     if (location.pathname.startsWith('/onboarding')) {
@@ -40,7 +38,9 @@ function OnboardingGate({ children }: { children: ReactNode }) {
           navigate('/onboarding', { replace: true });
         }
       })
-      .catch(() => { /* fail open — don't block the app */ })
+      .catch(() => {
+        /* fail open — don't block the app */
+      })
       .finally(() => setReady(true));
   }, []);
 
@@ -127,7 +127,15 @@ const DemandeAchatEdit = lazy(() => import('./pages/documents/DemandeAchatEditWr
 const BonAchatCreate = lazy(() => import('./pages/documents/BonAchatCreateWrapper'));
 const BonAchatEdit = lazy(() => import('./pages/documents/BonAchatEditWrapper'));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 const ENABLE_CHAT_AI_AGENT = import.meta.env.VITE_ENABLE_CHAT_AI_AGENT === 'true';
 
 function App() {
@@ -155,13 +163,26 @@ function App() {
           <AuthProvider>
             <PushNotificationProvider />
             <ConfirmProvider>
+              <Toaster position="bottom-right" />
               <BrowserRouter
                 future={{
                   v7_startTransition: true,
                   v7_relativeSplatPath: true,
                 }}
               >
-                <Suspense fallback={<div className="flex align-items-center justify-content-center" style={{ height: '100vh' }}><i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem', color: 'var(--primary-color)' }} /></div>}>
+                <Suspense
+                  fallback={
+                    <div
+                      className="flex align-items-center justify-content-center"
+                      style={{ height: '100vh' }}
+                    >
+                      <i
+                        className="pi pi-spin pi-spinner"
+                        style={{ fontSize: '2rem', color: 'var(--primary-color)' }}
+                      />
+                    </div>
+                  }
+                >
                   <OnboardingGate>
                     <Routes>
                       {/* Public Routes - No Authentication Required */}
@@ -365,7 +386,10 @@ function App() {
                         }
                       />
                       {/* Legacy route redirect */}
-                      <Route path="/bon-livraison" element={<Navigate to="/bons-livraison" replace />} />
+                      <Route
+                        path="/bon-livraison"
+                        element={<Navigate to="/bons-livraison" replace />}
+                      />
 
                       {/* Factures de Vente - New Unified System */}
                       <Route
@@ -641,7 +665,6 @@ function App() {
                     </Routes>
                   </OnboardingGate>
                 </Suspense>
-                <Toaster position="top-right" />
 
                 {/* AI Assistant - Available on all pages */}
                 {ENABLE_CHAT_AI_AGENT && (

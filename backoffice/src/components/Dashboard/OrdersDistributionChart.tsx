@@ -100,21 +100,31 @@ export const OrdersDistributionChart: React.FC<OrdersDistributionChartProps> = (
     <div className="db-chart-card">
       <div className="db-chart-header">
         <div className="db-chart-header-left">
-          <div className="db-chart-icon" style={{
-            background: 'linear-gradient(135deg,#f59e0b,#d97706)',
-            boxShadow: '0 4px 10px rgba(217,119,6,0.28)',
-          }}>
-            <PieChart style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          <div
+            className="db-chart-icon"
+            style={{
+              background: 'linear-gradient(135deg,#f59e0b,#d97706)',
+              boxShadow: '0 4px 10px rgba(217,119,6,0.28)',
+            }}
+          >
+            <PieChart
+              style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }}
+              strokeWidth={2}
+            />
           </div>
           <div>
             <h3 className="db-chart-title">{t('ordersDistribution')}</h3>
             <p className="db-chart-subtitle">{t('byStatus')}</p>
           </div>
         </div>
-        <span className="db-chart-badge" style={{
-          background: '#fffbeb', color: '#d97706',
-          border: '1px solid #fde68a',
-        }}>
+        <span
+          className="db-chart-badge"
+          style={{
+            background: '#fffbeb',
+            color: '#d97706',
+            border: '1px solid #fde68a',
+          }}
+        >
           {total} {t('orders').toLowerCase()}
         </span>
       </div>

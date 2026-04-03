@@ -6,13 +6,9 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TenantModule,
-    forwardRef(() => NotificationsModule),
-    AuthModule,
-  ],
+  imports: [TenantModule, forwardRef(() => NotificationsModule), AuthModule],
   controllers: [DeliveryController],
   providers: [DeliveryService],
   exports: [DeliveryService],
 })
-export class DeliveryModule { }
+export class DeliveryModule {}

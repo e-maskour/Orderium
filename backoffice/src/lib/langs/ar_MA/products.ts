@@ -66,6 +66,7 @@ export default {
 
   // Product Create/Edit Placeholders
   createNewProduct: 'إنشاء منتج جديد',
+  newProductLabel: 'منتج جديد',
   addNewProductToInventory: 'إضافة منتج جديد إلى مخزونك',
   enterProductName: 'أدخل اسم المنتج',
   selectOrSearchWarehouse: 'اختر أو ابحث عن مستودع',

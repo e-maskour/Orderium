@@ -16,18 +16,9 @@ interface AIAssistantOverlayProps {
   onClose: () => void;
 }
 
-export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({
-  isOpen,
-  onClose,
-}) => {
-  const {
-    messages,
-    isStreaming,
-    error,
-    sendMessage,
-    cancelStream,
-    clearConversation,
-  } = useAIAssistant();
+export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({ isOpen, onClose }) => {
+  const { messages, isStreaming, error, sendMessage, cancelStream, clearConversation } =
+    useAIAssistant();
 
   const [panelState, setPanelState] = useState<PanelState>('open');
   const [size, setSize] = useState({ width: 400, height: 600 });
@@ -66,7 +57,7 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = startX - e.clientX;
       const newWidth = Math.max(320, Math.min(800, startWidth + deltaX));
-      setSize(prev => ({ ...prev, width: newWidth }));
+      setSize((prev) => ({ ...prev, width: newWidth }));
     };
 
     const handleMouseUp = () => {
@@ -150,9 +141,7 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <MessageSquare style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
-            <h2 style={{ fontWeight: 600, color: '#111827', margin: 0 }}>
-              AI Assistant
-            </h2>
+            <h2 style={{ fontWeight: 600, color: '#111827', margin: 0 }}>AI Assistant</h2>
             {isStreaming && (
               <span className="animate-pulse" style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                 Thinking...
@@ -167,9 +156,12 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({
               rounded
               onClick={toggleExpanded}
               tooltip={panelState === 'expanded' ? 'Minimize' : 'Expand'}
-              icon={panelState === 'expanded'
-                ? <Minimize2 style={{ width: '1rem', height: '1rem' }} />
-                : <Maximize2 style={{ width: '1rem', height: '1rem' }} />
+              icon={
+                panelState === 'expanded' ? (
+                  <Minimize2 style={{ width: '1rem', height: '1rem' }} />
+                ) : (
+                  <Maximize2 style={{ width: '1rem', height: '1rem' }} />
+                )
               }
               style={{ width: '2rem', height: '2rem', padding: 0 }}
             />
@@ -205,11 +197,7 @@ export const AIAssistantOverlay: React.FC<AIAssistantOverlayProps> = ({
         <MessageThread messages={messages} isStreaming={isStreaming} />
 
         {/* Input */}
-        <InputArea
-          onSend={sendMessage}
-          disabled={isStreaming}
-          onCancel={cancelStream}
-        />
+        <InputArea onSend={sendMessage} disabled={isStreaming} onCancel={cancelStream} />
       </div>
     </>
   );

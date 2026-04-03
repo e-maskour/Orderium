@@ -7,7 +7,13 @@ import { Checkbox } from 'primereact/checkbox';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Link, useNavigate } from 'react-router-dom';
-import { taxesService, TaxRate, ITaxRate, CreateTaxRateDTO, UpdateTaxRateDTO } from '../../modules/taxes';
+import {
+  taxesService,
+  TaxRate,
+  ITaxRate,
+  CreateTaxRateDTO,
+  UpdateTaxRateDTO,
+} from '../../modules/taxes';
 import { EmptyState } from '../../components/EmptyState';
 import { Modal } from '../../components/Modal';
 import { AdminLayout } from '../../components/AdminLayout';
@@ -17,213 +23,320 @@ import { toastConfirm } from '../../services/toast.service';
 import { MobileList } from '../../components/MobileList';
 
 export default function Taxes() {
-    const { t } = useLanguage();
-    const navigate = useNavigate();
-    const queryClient = useQueryClient();
-    const [showModal, setShowModal] = useState(false);
-    const [editingIndex, setEditingIndex] = useState<number | null>(null);
-    const [selectedRows, setSelectedRows] = useState<(TaxRate & { _idx: number })[]>([]);
-    const [formData, setFormData] = useState<ITaxRate>({
-        name: '',
-        rate: 0,
-        isDefault: false,
-    });
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showModal, setShowModal] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [selectedRows, setSelectedRows] = useState<(TaxRate & { _idx: number })[]>([]);
+  const [formData, setFormData] = useState<ITaxRate>({
+    name: '',
+    rate: 0,
+    isDefault: false,
+  });
 
-    const { data: config, isLoading } = useQuery({
-        queryKey: ['taxes', 'configuration'],
-        queryFn: () => taxesService.getConfiguration(),
-    });
+  const { data: config, isLoading } = useQuery({
+    queryKey: ['taxes', 'configuration'],
+    queryFn: () => taxesService.getConfiguration(),
+  });
 
-    const createMutation = useMutation({
-        mutationFn: (data: CreateTaxRateDTO) => taxesService.createRate(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['taxes'] });
-            closeModal();
-        },
-    });
+  const createMutation = useMutation({
+    mutationFn: (data: CreateTaxRateDTO) => taxesService.createRate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taxes'] });
+      closeModal();
+    },
+  });
 
-    const updateMutation = useMutation({
-        mutationFn: ({ index, data }: { index: number; data: UpdateTaxRateDTO }) =>
-            taxesService.updateRate(index, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['taxes'] });
-            closeModal();
-        },
-    });
+  const updateMutation = useMutation({
+    mutationFn: ({ index, data }: { index: number; data: UpdateTaxRateDTO }) =>
+      taxesService.updateRate(index, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taxes'] });
+      closeModal();
+    },
+  });
 
-    const deleteMutation = useMutation({
-        mutationFn: (index: number) => taxesService.deleteRate(index),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['taxes'] });
-        },
-    });
+  const deleteMutation = useMutation({
+    mutationFn: (index: number) => taxesService.deleteRate(index),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taxes'] });
+    },
+  });
 
-    const rates: TaxRate[] = config?.rates || [];
-    const defaultRate = config?.defaultRate || 0;
+  const rates: TaxRate[] = config?.rates || [];
+  const defaultRate = config?.defaultRate || 0;
 
-    const openCreateModal = () => {
-        setEditingIndex(null);
-        setFormData({ name: '', rate: 0, isDefault: false });
-        setShowModal(true);
-    };
+  const openCreateModal = () => {
+    setEditingIndex(null);
+    setFormData({ name: '', rate: 0, isDefault: false });
+    setShowModal(true);
+  };
 
-    const closeModal = () => {
-        setShowModal(false);
-        setEditingIndex(null);
-        setFormData({ name: '', rate: 0, isDefault: false });
-    };
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingIndex(null);
+    setFormData({ name: '', rate: 0, isDefault: false });
+  };
 
-    const openEditModal = (index: number) => {
-        setEditingIndex(index);
-        setFormData(rates[index]);
-        setShowModal(true);
-    };
+  const openEditModal = (index: number) => {
+    setEditingIndex(index);
+    setFormData(rates[index]);
+    setShowModal(true);
+  };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-        if (editingIndex !== null) {
-            updateMutation.mutate({ index: editingIndex, data: formData });
-        } else {
-            createMutation.mutate(formData);
-        }
-    };
-
-    const handleDelete = (index: number) => {
-        toastConfirm(t('confirmDeleteTaxRate'), () => {
-            deleteMutation.mutate(index);
-        });
-    };
-
-    if (isLoading) {
-        return (
-            <AdminLayout>
-                <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-                    <div style={{ color: '#475569' }}>{t('loading')}</div>
-                </div>
-            </AdminLayout>
-        );
+    if (editingIndex !== null) {
+      updateMutation.mutate({ index: editingIndex, data: formData });
+    } else {
+      createMutation.mutate(formData);
     }
+  };
 
+  const handleDelete = (index: number) => {
+    toastConfirm(t('confirmDeleteTaxRate'), () => {
+      deleteMutation.mutate(index);
+    });
+  };
+
+  if (isLoading) {
     return (
-        <AdminLayout>
-            <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-                <PageHeader
-                    icon={Percent}
-                    title={t('taxRates')}
-                    subtitle={t('manageTaxRatesAndSettings')}
-                    actions={
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Button
-                                onClick={openCreateModal}
-                                icon={<Plus style={{ width: 16, height: 16 }} />}
-                                label={t('addTaxRate')}
-                                size="small"
-                            />
-                        </div>
-                    }
-                />
-
-                <div className="responsive-table-mobile">
-                    <MobileList
-                        items={rates}
-                        keyExtractor={(r: TaxRate) => String(r.name)}
-                        loading={isLoading}
-                        totalCount={rates.length}
-                        countLabel="taux"
-                        emptyMessage="Aucun taux configuré"
-                        config={{
-                            topLeft: (r: TaxRate) => r.name,
-                            topRight: (r: TaxRate) => `${r.rate}%`,
-                            bottomRight: (r: TaxRate) => r.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null,
-                        }}
-                    />
-                </div>
-                <div className="responsive-table-desktop" style={{ background: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                    <DataTable
-                        className="tax-datatable"
-                        value={rates.map((r, i) => ({ ...r, _idx: i }))}
-                        selection={selectedRows}
-                        onSelectionChange={(e) => setSelectedRows(e.value as (TaxRate & { _idx: number })[])}
-                        selectionMode="checkbox"
-                        dataKey="_idx"
-                        paginator
-                        paginatorPosition="top"
-                        rows={25}
-                        rowsPerPageOptions={[10, 25, 50, 100]}
-                        removableSort
-                        emptyMessage={<EmptyState icon={Percent} title={t('noTaxRatesConfigured')} compact />}
-                        paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
-                        currentPageReportTemplate={t('pageReportTemplate')}
-                    >
-                        <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                        <Column field="name" header={t('name')} sortable body={(row) => <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{row.name}</span>} />
-                        <Column field="rate" header={t('ratePercentage')} sortable body={(row) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.rate}%</span>} />
-                        <Column field="isDefault" header={t('status')} body={(row) => row.isDefault ? <span className="erp-badge erp-badge--paid">{t('default')}</span> : null} />
-                        <Column header={t('actions')} headerStyle={{ textAlign: 'right' }} body={(row) => (
-                            <div style={{ textAlign: 'right' }}>
-                                <Button icon={<Pencil style={{ width: '1rem', height: '1rem' }} />} onClick={() => openEditModal(row._idx)} text rounded severity="info" />
-                                <Button icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />} onClick={() => handleDelete(row._idx)} text rounded severity="danger" />
-                            </div>
-                        )} />
-                    </DataTable>
-                </div>
-                <Modal
-                    isOpen={showModal}
-                    onClose={closeModal}
-                    title={editingIndex !== null ? t('editTaxRate') : t('addTaxRate')}
-                    footer={
-                        <div className="flex justify-content-end gap-2">
-                            <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
-                            <Button
-                                form="taxes-modal-form"
-                                type="submit"
-                                loading={updateMutation.isPending}
-                                label={t('save')}
-                            />
-                        </div>
-                    }
-                >
-                    <form id="taxes-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('name')} <span style={{ color: '#ef4444' }}>*</span></label>
-                            <InputText
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                required
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('ratePercentage')} <span style={{ color: '#ef4444' }}>*</span></label>
-                            <span style={{ position: 'relative', display: 'block', width: '100%' }}>
-                                <InputText
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    max="100"
-                                    value={String(formData.rate)}
-                                    onChange={(e) => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
-                                    required
-                                    style={{ width: '100%', paddingRight: '2.5rem' }}
-                                />
-                                <Percent style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                            </span>
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Checkbox
-                                checked={formData.isDefault}
-                                onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
-                            />
-                            <label style={{ fontSize: '0.875rem', color: '#334155' }}>{t('setAsDefaultTaxRate')}</label>
-                        </div>
-
-                    </form>
-                </Modal>
-            </div>
-        </AdminLayout>
+      <AdminLayout>
+        <div
+          style={{
+            padding: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '16rem',
+          }}
+        >
+          <div style={{ color: '#475569' }}>{t('loading')}</div>
+        </div>
+      </AdminLayout>
     );
+  }
+
+  return (
+    <AdminLayout>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+        <PageHeader
+          icon={Percent}
+          title={t('taxRates')}
+          subtitle={t('manageTaxRatesAndSettings')}
+          backButton={
+            <Button
+              icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
+              onClick={() => navigate('/configurations')}
+              style={{
+                width: '2.25rem',
+                height: '2.25rem',
+                flexShrink: 0,
+                background: '#f8fafc',
+                border: '1.5px solid #e2e8f0',
+                color: '#64748b',
+                borderRadius: '0.625rem',
+                padding: 0,
+              }}
+            />
+          }
+          actions={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Button
+                onClick={openCreateModal}
+                icon={<Plus style={{ width: 16, height: 16 }} />}
+                label={t('addTaxRate')}
+                size="small"
+              />
+            </div>
+          }
+        />
+
+        <div className="responsive-table-mobile">
+          <MobileList
+            items={rates}
+            keyExtractor={(r: TaxRate) => String(r.name)}
+            loading={isLoading}
+            totalCount={rates.length}
+            countLabel="taux"
+            emptyMessage="Aucun taux configuré"
+            config={{
+              topLeft: (r: TaxRate) => r.name,
+              topRight: (r: TaxRate) => `${r.rate}%`,
+              bottomRight: (r: TaxRate) =>
+                r.isDefault ? (
+                  <span className="erp-badge erp-badge--paid">{t('default')}</span>
+                ) : null,
+            }}
+          />
+        </div>
+        <div
+          className="responsive-table-desktop"
+          style={{
+            background: '#ffffff',
+            borderRadius: '0.75rem',
+            border: '1px solid #e2e8f0',
+            overflow: 'hidden',
+          }}
+        >
+          <DataTable
+            className="tax-datatable"
+            value={rates.map((r, i) => ({ ...r, _idx: i }))}
+            dataKey="_idx"
+            paginator
+            paginatorPosition="top"
+            rows={25}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            removableSort
+            emptyMessage={<EmptyState icon={Percent} title={t('noTaxRatesConfigured')} compact />}
+            paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
+            currentPageReportTemplate={t('pageReportTemplate')}
+          >
+            <Column
+              field="name"
+              header={t('name')}
+              sortable
+              body={(row) => (
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                  {row.name}
+                </span>
+              )}
+            />
+            <Column
+              field="rate"
+              header={t('ratePercentage')}
+              sortable
+              body={(row) => (
+                <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.rate}%</span>
+              )}
+            />
+            <Column
+              field="isDefault"
+              header={t('status')}
+              body={(row) =>
+                row.isDefault ? (
+                  <span className="erp-badge erp-badge--paid">{t('default')}</span>
+                ) : null
+              }
+            />
+            <Column
+              header={t('actions')}
+              headerStyle={{ textAlign: 'right' }}
+              body={(row) => (
+                <div style={{ textAlign: 'right' }}>
+                  <Button
+                    icon={<Pencil style={{ width: '1rem', height: '1rem' }} />}
+                    onClick={() => openEditModal(row._idx)}
+                    text
+                    rounded
+                    severity="info"
+                  />
+                  <Button
+                    icon={<Trash2 style={{ width: '1rem', height: '1rem' }} />}
+                    onClick={() => handleDelete(row._idx)}
+                    text
+                    rounded
+                    severity="danger"
+                  />
+                </div>
+              )}
+            />
+          </DataTable>
+        </div>
+        <Modal
+          isOpen={showModal}
+          onClose={closeModal}
+          title={editingIndex !== null ? t('editTaxRate') : t('addTaxRate')}
+          footer={
+            <div className="flex justify-content-end gap-2">
+              <Button type="button" label={t('cancel')} onClick={closeModal} outlined />
+              <Button
+                form="taxes-modal-form"
+                type="submit"
+                loading={updateMutation.isPending}
+                label={t('save')}
+              />
+            </div>
+          }
+        >
+          <form
+            id="taxes-modal-form"
+            onSubmit={handleSubmit}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          >
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#334155',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                {t('name')} <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <InputText
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#334155',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                {t('ratePercentage')} <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <span style={{ position: 'relative', display: 'block', width: '100%' }}>
+                <InputText
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={String(formData.rate)}
+                  onChange={(e) => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
+                  required
+                  style={{ width: '100%', paddingRight: '2.5rem' }}
+                />
+                <Percent
+                  style={{
+                    position: 'absolute',
+                    right: '0.75rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '1rem',
+                    height: '1rem',
+                    color: '#94a3b8',
+                    pointerEvents: 'none',
+                  }}
+                />
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Checkbox
+                checked={formData.isDefault}
+                onChange={(e) => setFormData({ ...formData, isDefault: e.checked ?? false })}
+              />
+              <label style={{ fontSize: '0.875rem', color: '#334155' }}>
+                {t('setAsDefaultTaxRate')}
+              </label>
+            </div>
+          </form>
+        </Modal>
+      </div>
+    </AdminLayout>
+  );
 }

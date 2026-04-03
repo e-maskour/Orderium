@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { productsService, Product } from "@/modules/products";
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { productsService, Product } from '@/modules/products';
 
 interface UseProductsParams {
   page?: number;
@@ -16,24 +16,23 @@ interface UseProductsResult {
 }
 
 export function useProducts(params: UseProductsParams = {}): UseProductsResult {
-  const { page = 1, pageSize = 24, search = '' } = params;
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [totalCount, setTotalCount] = useState(0);
+  const { page = 1, pageSize = 50, search = '' } = params;
 
-  useEffect(() => {
-    setLoading(true);
-    productsService.getAll({ page, pageSize, ...(search && { search }) })
-      .then(({ products: items, total }) => {
-        setProducts(items);
-        setTotalCount(total ?? items.length);
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [page, pageSize, search]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['products', page, pageSize, search],
+    queryFn: () => productsService.getAll({ page, pageSize, ...(search && { search }) }),
+    placeholderData: keepPreviousData,
+  });
 
+  const products = data?.products ?? [];
+  const totalCount = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  return { products, loading, error, totalCount, totalPages };
+  return {
+    products,
+    loading: isLoading,
+    error: error ? (error as Error).message : null,
+    totalCount,
+    totalPages,
+  };
 }

@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { FileText, Calendar, User, Phone, MapPin, CreditCard, CheckCircle, XCircle, AlertCircle, PenTool } from 'lucide-react';
+import {
+  FileText,
+  Calendar,
+  User,
+  Phone,
+  MapPin,
+  CreditCard,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  PenTool,
+} from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -85,9 +96,26 @@ export default function QuotePreviewPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#f8fafc',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <div style={{ textAlign: 'center' }}>
-          <div className="animate-spin" style={{ borderRadius: '9999px', height: '3rem', width: '3rem', borderBottom: '2px solid #2563eb', margin: '0 auto 1rem' }}></div>
+          <div
+            className="animate-spin"
+            style={{
+              borderRadius: '9999px',
+              height: '3rem',
+              width: '3rem',
+              borderBottom: '2px solid #2563eb',
+              margin: '0 auto 1rem',
+            }}
+          ></div>
           <p style={{ color: '#475569' }}>Chargement du devis...</p>
         </div>
       </div>
@@ -96,10 +124,40 @@ export default function QuotePreviewPage() {
 
   if (error || !quote) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '2rem', maxWidth: '28rem', width: '100%', textAlign: 'center' }}>
-          <AlertCircle style={{ width: '4rem', height: '4rem', color: '#ef4444', margin: '0 auto 1rem' }} />
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>Erreur</h2>
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#f8fafc',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '0.5rem',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+            padding: '2rem',
+            maxWidth: '28rem',
+            width: '100%',
+            textAlign: 'center',
+          }}
+        >
+          <AlertCircle
+            style={{ width: '4rem', height: '4rem', color: '#ef4444', margin: '0 auto 1rem' }}
+          />
+          <h2
+            style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#0f172a',
+              marginBottom: '0.5rem',
+            }}
+          >
+            Erreur
+          </h2>
           <p style={{ color: '#475569', marginBottom: '1.5rem' }}>{error || 'Devis introuvable'}</p>
         </div>
       </div>
@@ -112,36 +170,66 @@ export default function QuotePreviewPage() {
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', padding: '2rem 1rem' }}>
       <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '0.5rem',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            border: '1px solid #e2e8f0',
+            padding: '1.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '1rem',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ padding: '0.75rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem' }}>
+              <div
+                style={{ padding: '0.75rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem' }}
+              >
                 <FileText style={{ width: '1.5rem', height: '1.5rem', color: '#2563eb' }} />
               </div>
               <div>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Devis {q.quoteNumber}</h1>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                  Devis {q.quoteNumber}
+                </h1>
                 <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
                   {new Date(q.date).toLocaleDateString('fr-FR', {
                     day: 'numeric',
                     month: 'long',
-                    year: 'numeric'
+                    year: 'numeric',
                   })}
                 </p>
               </div>
             </div>
 
             {/* Status Badge */}
-            <div style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '9999px',
-              backgroundColor: q.status === 'signed' ? '#f0fdf4' : q.status === 'closed' ? '#fef2f2' : '#eff6ff',
-              border: `1px solid ${q.status === 'signed' ? '#bbf7d0' : q.status === 'closed' ? '#fecaca' : '#bfdbfe'}`,
-            }}>
-              <span style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: q.status === 'signed' ? '#15803d' : q.status === 'closed' ? '#b91c1c' : '#1d4ed8',
-              }}>
+            <div
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '9999px',
+                backgroundColor:
+                  q.status === 'signed' ? '#f0fdf4' : q.status === 'closed' ? '#fef2f2' : '#eff6ff',
+                border: `1px solid ${q.status === 'signed' ? '#bbf7d0' : q.status === 'closed' ? '#fecaca' : '#bfdbfe'}`,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color:
+                    q.status === 'signed'
+                      ? '#15803d'
+                      : q.status === 'closed'
+                        ? '#b91c1c'
+                        : '#1d4ed8',
+                }}
+              >
                 {q.status === 'signed'
                   ? t('signedStatus')
                   : q.status === 'closed'
@@ -153,14 +241,26 @@ export default function QuotePreviewPage() {
 
           {/* Expiration Date */}
           {q.expirationDate && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', padding: '0.75rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.875rem',
+                color: '#475569',
+                backgroundColor: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: '0.5rem',
+                padding: '0.75rem',
+              }}
+            >
               <Calendar style={{ width: '1rem', height: '1rem', color: '#235ae4' }} />
               <span>
                 Valable jusqu'au{' '}
                 {new Date(q.expirationDate).toLocaleDateString('fr-FR', {
                   day: 'numeric',
                   month: 'long',
-                  year: 'numeric'
+                  year: 'numeric',
                 })}
               </span>
             </div>
@@ -168,11 +268,36 @@ export default function QuotePreviewPage() {
         </div>
 
         {/* Customer Info */}
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Informations Client</h3>
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '0.5rem',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            border: '1px solid #e2e8f0',
+            padding: '1.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          <h3
+            style={{
+              fontSize: '1.125rem',
+              fontWeight: 700,
+              color: '#0f172a',
+              marginBottom: '1rem',
+            }}
+          >
+            Informations Client
+          </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-              <User style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8', marginTop: '0.125rem' }} />
+              <User
+                style={{
+                  width: '1.25rem',
+                  height: '1.25rem',
+                  color: '#94a3b8',
+                  marginTop: '0.125rem',
+                }}
+              />
               <div>
                 <p style={{ fontWeight: 600, color: '#0f172a', margin: 0 }}>{q.customerName}</p>
               </div>
@@ -185,7 +310,14 @@ export default function QuotePreviewPage() {
             )}
             {q.customerAddress && (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                <MapPin style={{ width: '1.25rem', height: '1.25rem', color: '#94a3b8', marginTop: '0.125rem' }} />
+                <MapPin
+                  style={{
+                    width: '1.25rem',
+                    height: '1.25rem',
+                    color: '#94a3b8',
+                    marginTop: '0.125rem',
+                  }}
+                />
                 <p style={{ color: '#334155', margin: 0 }}>{q.customerAddress}</p>
               </div>
             )}
@@ -193,34 +325,100 @@ export default function QuotePreviewPage() {
         </div>
 
         {/* Items Table */}
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: '1rem' }}>Articles</h3>
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '0.5rem',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            border: '1px solid #e2e8f0',
+            padding: '1.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          <h3
+            style={{
+              fontSize: '1.125rem',
+              fontWeight: 700,
+              color: '#0f172a',
+              marginBottom: '1rem',
+            }}
+          >
+            Articles
+          </h3>
           <div style={{ overflowX: 'auto' }}>
             <DataTable value={quote.items} size="small" tableStyle={{ width: '100%' }}>
               <Column
                 field="description"
                 header="Description"
-                headerStyle={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
+                headerStyle={{
+                  textAlign: 'left',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  background: '#f8fafc',
+                  borderBottom: '1px solid #e2e8f0',
+                }}
                 bodyStyle={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#0f172a' }}
               />
               <Column
                 field="quantity"
                 header="Quantité"
-                headerStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
-                bodyStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155' }}
+                headerStyle={{
+                  textAlign: 'center',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  background: '#f8fafc',
+                  borderBottom: '1px solid #e2e8f0',
+                }}
+                bodyStyle={{
+                  textAlign: 'center',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  color: '#334155',
+                }}
               />
               <Column
                 field="unitPrice"
                 header="Prix unitaire"
-                headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
-                bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#334155' }}
+                headerStyle={{
+                  textAlign: 'right',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  background: '#f8fafc',
+                  borderBottom: '1px solid #e2e8f0',
+                }}
+                bodyStyle={{
+                  textAlign: 'right',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  color: '#334155',
+                }}
                 body={(item: any) => `${formatAmount(item.unitPrice, 2)} DH`}
               />
               <Column
                 field="total"
                 header="Total"
-                headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
-                bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}
+                headerStyle={{
+                  textAlign: 'right',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  background: '#f8fafc',
+                  borderBottom: '1px solid #e2e8f0',
+                }}
+                bodyStyle={{
+                  textAlign: 'right',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#0f172a',
+                }}
                 body={(item: any) => `${formatAmount(item.total, 2)} DH`}
               />
             </DataTable>
@@ -228,13 +426,36 @@ export default function QuotePreviewPage() {
 
           {/* Signature Details and Totals Side by Side */}
           <div style={{ marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', justifyContent: 'space-between' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.5rem',
+                justifyContent: 'space-between',
+              }}
+            >
               {/* Signature Details or Status - Left Side */}
               <div style={{ flex: 1 }}>
                 {q.status === 'signed' && q.signedBy && (
-                  <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.5rem', padding: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <CheckCircle style={{ width: '1.25rem', height: '1.25rem', color: '#16a34a' }} />
+                  <div
+                    style={{
+                      backgroundColor: '#f0fdf4',
+                      border: '1px solid #bbf7d0',
+                      borderRadius: '0.5rem',
+                      padding: '1rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      <CheckCircle
+                        style={{ width: '1.25rem', height: '1.25rem', color: '#16a34a' }}
+                      />
                       <h4 style={{ fontWeight: 700, color: '#14532d', margin: 0 }}>Signature</h4>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -249,22 +470,53 @@ export default function QuotePreviewPage() {
                             month: 'long',
                             year: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
                           })}
                         </p>
                       )}
                       {(q as any).clientNotes && (
-                        <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #bbf7d0' }}>
-                          <p style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 500, marginBottom: '0.25rem' }}>Commentaire:</p>
-                          <p style={{ fontSize: '0.875rem', color: '#334155', margin: 0 }}>{(q as any).clientNotes}</p>
+                        <div
+                          style={{
+                            marginTop: '0.5rem',
+                            paddingTop: '0.5rem',
+                            borderTop: '1px solid #bbf7d0',
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: '0.75rem',
+                              color: '#15803d',
+                              fontWeight: 500,
+                              marginBottom: '0.25rem',
+                            }}
+                          >
+                            Commentaire:
+                          </p>
+                          <p style={{ fontSize: '0.875rem', color: '#334155', margin: 0 }}>
+                            {(q as any).clientNotes}
+                          </p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
                 {q.status === 'closed' && (
-                  <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', padding: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div
+                    style={{
+                      backgroundColor: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      borderRadius: '0.5rem',
+                      padding: '1rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
                       <XCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
                       <h4 style={{ fontWeight: 700, color: '#991b1b', margin: 0 }}>Devis fermé</h4>
                     </div>
@@ -274,10 +526,26 @@ export default function QuotePreviewPage() {
                   </div>
                 )}
                 {q.status !== 'signed' && q.status !== 'closed' && (
-                  <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', padding: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <div
+                    style={{
+                      backgroundColor: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      borderRadius: '0.5rem',
+                      padding: '1rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
                       <PenTool style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
-                      <h4 style={{ fontWeight: 700, color: '#1e3a5a', margin: 0 }}>Détails de signature</h4>
+                      <h4 style={{ fontWeight: 700, color: '#1e3a5a', margin: 0 }}>
+                        Détails de signature
+                      </h4>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <p style={{ fontSize: '0.875rem', color: '#1e40af', margin: 0 }}>
@@ -285,12 +553,22 @@ export default function QuotePreviewPage() {
                         {new Date().toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'long',
-                          year: 'numeric'
+                          year: 'numeric',
                         })}
                       </p>
                       <div>
                         <div>
-                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>{t('signedByLabel')}</label>
+                          <label
+                            style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 500,
+                              color: '#334155',
+                              marginBottom: '0.25rem',
+                            }}
+                          >
+                            {t('signedByLabel')}
+                          </label>
                           <InputText
                             type="text"
                             value={signedBy}
@@ -302,7 +580,17 @@ export default function QuotePreviewPage() {
                       </div>
                       <div>
                         <div>
-                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#334155', marginBottom: '0.25rem' }}>Note:</label>
+                          <label
+                            style={{
+                              display: 'block',
+                              fontSize: '0.875rem',
+                              fontWeight: 500,
+                              color: '#334155',
+                              marginBottom: '0.25rem',
+                            }}
+                          >
+                            Note:
+                          </label>
                           <InputTextarea
                             value={clientNotes}
                             onChange={(e) => setClientNotes(e.target.value)}
@@ -318,20 +606,41 @@ export default function QuotePreviewPage() {
               </div>
 
               {/* Totals - Right Side */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', maxWidth: '20rem', marginLeft: 'auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  width: '100%',
+                  maxWidth: '20rem',
+                  marginLeft: 'auto',
+                }}
+              >
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}
+                >
                   <span style={{ color: '#475569' }}>Sous-total HT:</span>
                   <span style={{ fontWeight: 600, color: '#0f172a' }}>
                     {formatAmount(q.subtotal, 2)} DH
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}
+                >
                   <span style={{ color: '#475569' }}>TVA:</span>
                   <span style={{ fontWeight: 600, color: '#0f172a' }}>
                     {formatAmount(q.tax, 2)} DH
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.125rem', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '1.125rem',
+                    borderTop: '1px solid #e2e8f0',
+                    paddingTop: '0.5rem',
+                  }}
+                >
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>Total TTC:</span>
                   <span style={{ fontWeight: 700, color: '#2563eb' }}>
                     {formatAmount(q.total, 2)} DH
@@ -344,36 +653,65 @@ export default function QuotePreviewPage() {
 
         {/* Notes */}
         {q.notes && (
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.75rem' }}>Notes</h3>
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '0.5rem',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              border: '1px solid #e2e8f0',
+              padding: '1.5rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '1.125rem',
+                fontWeight: 700,
+                color: '#0f172a',
+                marginBottom: '0.75rem',
+              }}
+            >
+              Notes
+            </h3>
             <p style={{ color: '#334155', whiteSpace: 'pre-wrap', margin: 0 }}>{q.notes}</p>
           </div>
         )}
 
         {/* Action Buttons */}
-        {q.status !== 'signed' && q.status !== 'closed' && q.status !== 'delivered' && q.status !== 'invoiced' && (
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <Button
-                label={signing ? 'Signature...' : 'Signer le devis'}
-                icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
-                onClick={handleSign}
-                disabled={signing || !signedBy.trim()}
-                loading={signing}
-                style={{ flex: 1 }}
-              />
-              <Button
-                label={rejecting ? 'Refus...' : 'Refuser le devis'}
-                icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
-                onClick={handleReject}
-                disabled={rejecting || !signedBy.trim()}
-                severity="danger"
-                loading={rejecting}
-                style={{ flex: 1 }}
-              />
+        {q.status !== 'signed' &&
+          q.status !== 'closed' &&
+          q.status !== 'delivered' &&
+          q.status !== 'invoiced' && (
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '0.5rem',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                border: '1px solid #e2e8f0',
+                padding: '1.5rem',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <Button
+                  label={signing ? 'Signature...' : 'Signer le devis'}
+                  icon={<PenTool style={{ width: '1rem', height: '1rem' }} />}
+                  onClick={handleSign}
+                  disabled={signing || !signedBy.trim()}
+                  loading={signing}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  label={rejecting ? 'Refus...' : 'Refuser le devis'}
+                  icon={<XCircle style={{ width: '1rem', height: '1rem' }} />}
+                  onClick={handleReject}
+                  disabled={rejecting || !signedBy.trim()}
+                  severity="danger"
+                  loading={rejecting}
+                  style={{ flex: 1 }}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

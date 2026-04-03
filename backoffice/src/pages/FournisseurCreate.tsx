@@ -46,12 +46,26 @@ export default function FournisseurCreate() {
             <Button
               icon={<ArrowLeft style={{ width: '1rem', height: '1rem' }} />}
               onClick={() => navigate('/fournisseurs')}
-              style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#64748b', borderRadius: '0.625rem', padding: 0 }}
+              style={{
+                width: '2.25rem',
+                height: '2.25rem',
+                flexShrink: 0,
+                background: '#f8fafc',
+                border: '1.5px solid #e2e8f0',
+                color: '#64748b',
+                borderRadius: '0.625rem',
+                padding: 0,
+              }}
             />
           }
           actions={
             <div style={{ display: 'flex', gap: '0.625rem' }}>
-              <Button type="button" label={t('cancel')} outlined onClick={() => navigate('/fournisseurs')} />
+              <Button
+                type="button"
+                label={t('cancel')}
+                outlined
+                onClick={() => navigate('/fournisseurs')}
+              />
               <Button
                 type="submit"
                 form="partner-form"

@@ -31,21 +31,21 @@ import { orderiumPrimeConfig } from '@orderium/ui/theme';
 
 // App-specific brand tokens — kept in sync with theme.css
 export const brandTokens = {
-    primary: '#059669',
-    primaryDark: '#047857',
-    primaryDeep: '#064e3b',
-    palette: {
-        50: '#ecfdf5',
-        100: '#d1fae5',
-        200: '#a7f3d0',
-        300: '#6ee7b7',
-        400: '#34d399',
-        500: '#059669',
-        600: '#047857',
-        700: '#065f46',
-        800: '#064e3b',
-        900: '#022c22',
-    },
+  primary: '#059669',
+  primaryDark: '#047857',
+  primaryDeep: '#064e3b',
+  palette: {
+    50: '#ecfdf5',
+    100: '#d1fae5',
+    200: '#a7f3d0',
+    300: '#6ee7b7',
+    400: '#34d399',
+    500: '#059669',
+    600: '#047857',
+    700: '#065f46',
+    800: '#064e3b',
+    900: '#022c22',
+  },
 } as const;
 
 /**
@@ -53,7 +53,7 @@ export const brandTokens = {
  * Use as: <PrimeReactProvider value={clientConfig}>
  */
 export const clientConfig = {
-    ...orderiumPrimeConfig,
+  ...orderiumPrimeConfig,
 } as const;
 
 export default clientConfig;

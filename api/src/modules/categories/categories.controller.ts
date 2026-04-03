@@ -72,10 +72,7 @@ export class CategoriesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    const category = await this.categoriesService.update(
-      id,
-      updateCategoryDto,
-    );
+    const category = await this.categoriesService.update(id, updateCategoryDto);
     return ApiRes(CAT.UPDATED, category);
   }
 

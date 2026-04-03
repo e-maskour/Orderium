@@ -4,7 +4,7 @@ export default {
   locationDetected: 'تم تحديد الموقع',
   googleMaps: 'خرائط جوجل',
   waze: 'ويز',
-  
+
   // Location Errors
   geolocationNotSupported: 'المتصفح لا يدعم تحديد الموقع',
   locationDetectionFailed: 'فشل تحديد الموقع',

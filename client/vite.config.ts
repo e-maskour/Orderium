@@ -1,6 +1,7 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
+import compression from 'vite-plugin-compression';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -29,14 +30,29 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_API_BASE_URL': JSON.stringify(apiBaseUrl),
     },
-    plugins: [react()],
+    plugins: [
+      react(),
+      compression({ algorithm: 'gzip' }),
+      compression({ algorithm: 'brotliCompress', ext: '.br' }),
+    ],
     resolve: {
       dedupe: ['react', 'react-dom'],
       alias: {
-        "@": path.resolve(__dirname, "./src"),
-        "@orderium/ui": path.resolve(__dirname, "../shared/ui/src"),
-        "@shared-logo": path.resolve(__dirname, "../shared/logo"),
-        "@shared-print": path.resolve(__dirname, "../shared/components"),
+        '@': path.resolve(__dirname, './src'),
+        '@orderium/ui': path.resolve(__dirname, '../shared/ui/src'),
+        '@shared-logo': path.resolve(__dirname, '../shared/logo'),
+        '@shared-print': path.resolve(__dirname, '../shared/components'),
+      },
+    },
+    build: {
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom'],
+            router: ['react-router-dom'],
+          },
+        },
       },
     },
   };

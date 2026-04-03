@@ -21,7 +21,7 @@ export class DriveStorageService implements OnModuleInit {
   private client: Minio.Client;
   private ready = false;
 
-  constructor(private readonly config: ConfigService) { }
+  constructor(private readonly config: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
     const endpoint = this.config.get<string>('MINIO_ENDPOINT', 'localhost');
@@ -49,7 +49,9 @@ export class DriveStorageService implements OnModuleInit {
       });
       await this.ensureBucketReady();
       this.ready = true;
-      this.logger.log(`✅ DriveStorage ready — fallback bucket: ${DRIVE_BUCKET_FALLBACK}`);
+      this.logger.log(
+        `✅ DriveStorage ready — fallback bucket: ${DRIVE_BUCKET_FALLBACK}`,
+      );
     } catch (error) {
       this.logger.error('❌ DriveStorage initialisation failed', error);
     }
@@ -83,10 +85,10 @@ export class DriveStorageService implements OnModuleInit {
     const safeFolder = folder.replace(/[^a-z0-9/_-]/gi, '_').toLowerCase();
     const ext = file.originalname.includes('.')
       ? file.originalname
-        .split('.')
-        .pop()!
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '')
+          .split('.')
+          .pop()!
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '')
       : 'bin';
     const storageKey = `${safeFolder}/${uuidv4()}.${ext}`;
     const checksumSha256 = crypto
@@ -95,16 +97,10 @@ export class DriveStorageService implements OnModuleInit {
       .digest('hex');
     const bucket = this.getTenantBucket();
 
-    await this.client.putObject(
-      bucket,
-      storageKey,
-      file.buffer,
-      file.size,
-      {
-        'Content-Type': file.mimetype,
-        'x-amz-checksum-sha256': checksumSha256,
-      },
-    );
+    await this.client.putObject(bucket, storageKey, file.buffer, file.size, {
+      'Content-Type': file.mimetype,
+      'x-amz-checksum-sha256': checksumSha256,
+    });
 
     this.logger.log(`📤  Drive: [${bucket}] ${storageKey} (${file.size} B)`);
     return {
@@ -146,9 +142,18 @@ export class DriveStorageService implements OnModuleInit {
    * Lists objects at a given prefix level (non-recursive, one level deep).
    * Returns common-prefix "folders" and actual file objects separately.
    */
-  async listObjects(prefix: string, storageBucket?: string): Promise<{
+  async listObjects(
+    prefix: string,
+    storageBucket?: string,
+  ): Promise<{
     folders: Array<{ prefix: string; name: string }>;
-    files: Array<{ key: string; name: string; sizeBytes: number; lastModified: Date; etag: string }>;
+    files: Array<{
+      key: string;
+      name: string;
+      sizeBytes: number;
+      lastModified: Date;
+      etag: string;
+    }>;
   }> {
     if (!this.ready) return { folders: [], files: [] };
     if (prefix && (prefix.includes('..') || prefix.startsWith('/'))) {
@@ -159,20 +164,29 @@ export class DriveStorageService implements OnModuleInit {
     const stream = this.client.listObjectsV2(bucket, prefix, false);
     const result: {
       folders: Array<{ prefix: string; name: string }>;
-      files: Array<{ key: string; name: string; sizeBytes: number; lastModified: Date; etag: string }>;
+      files: Array<{
+        key: string;
+        name: string;
+        sizeBytes: number;
+        lastModified: Date;
+        etag: string;
+      }>;
     } = { folders: [], files: [] };
 
     await new Promise<void>((resolve, reject) => {
       stream.on('data', (item) => {
         if (item.prefix) {
           // Common prefix — a virtual "folder"
-          const folderPrefix = item.prefix as string;
+          const folderPrefix = item.prefix;
           const name = folderPrefix.endsWith('/')
             ? folderPrefix.slice(prefix.length, -1)
             : folderPrefix.slice(prefix.length);
-          result.folders.push({ prefix: folderPrefix, name: name || folderPrefix });
+          result.folders.push({
+            prefix: folderPrefix,
+            name: name || folderPrefix,
+          });
         } else if (item.name) {
-          const key = item.name as string;
+          const key = item.name;
           const name = key.slice(prefix.length);
           if (name) {
             result.files.push({

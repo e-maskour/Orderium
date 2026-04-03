@@ -96,10 +96,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         // Delete the previous image from storage before uploading the new one
         const previousPublicId = uploadStatus.imageData?.publicId;
         if (previousPublicId) {
-          try { await imagesService.delete(previousPublicId); } catch { /* non-fatal */ }
+          try {
+            await imagesService.delete(previousPublicId);
+          } catch {
+            /* non-fatal */
+          }
         }
         const result = await imagesService.upload(file, folder);
-        imageData = { url: result.url, publicId: result.publicId, size: result.size, format: result.format };
+        imageData = {
+          url: result.url,
+          publicId: result.publicId,
+          size: result.size,
+          format: result.format,
+        };
       }
 
       const relativePath = imageData.url;
@@ -111,11 +120,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       setUploadStatus({
         state: 'success',
         message: t('imageUploadedSuccessfully'),
-        imageData: { url: fullImageUrl, publicId: imagePublicId, size: imageData.size ?? 0, format: imageData.format || 'image' },
+        imageData: {
+          url: fullImageUrl,
+          publicId: imagePublicId,
+          size: imageData.size ?? 0,
+          format: imageData.format || 'image',
+        },
       });
       onImageUpload(fullImageUrl, imagePublicId);
     } catch (error: any) {
-      setUploadStatus({ state: 'error', message: error.message || `${t('uploadFailed')}. ${t('pleaseTryAgain')}.` });
+      setUploadStatus({
+        state: 'error',
+        message: error.message || `${t('uploadFailed')}. ${t('pleaseTryAgain')}.`,
+      });
     }
   };
 
@@ -151,12 +168,23 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const displayImage = localPreview || getFullImageUrl(currentImage);
 
   const getDropZoneStyle = (): React.CSSProperties => {
-    const base: React.CSSProperties = { position: 'relative', borderRadius: '0.5rem', transition: 'all 0.2s', height: '148px' };
+    const base: React.CSSProperties = {
+      position: 'relative',
+      borderRadius: '0.5rem',
+      transition: 'all 0.2s',
+      height: '148px',
+    };
     if (displayImage) {
       return { ...base, border: '2px solid #cbd5e1', background: '#fff', overflow: 'hidden' };
     }
     if (disabled || isLoading) {
-      return { ...base, border: '2px dashed #e2e8f0', background: '#f8fafc', opacity: 0.5, cursor: 'not-allowed' };
+      return {
+        ...base,
+        border: '2px dashed #e2e8f0',
+        background: '#f8fafc',
+        opacity: 0.5,
+        cursor: 'not-allowed',
+      };
     }
     if (dragActive) {
       return { ...base, border: '2px dashed #235ae4', background: '#eff6ff' };
@@ -188,7 +216,15 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         />
 
         {displayImage ? (
-          <div style={{ position: 'relative', width: '100%', height: '100%', background: '#f1f5f9', overflow: 'visible' }}>
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              background: '#f1f5f9',
+              overflow: 'visible',
+            }}
+          >
             {!imageLoadError ? (
               <img
                 src={displayImage}
@@ -201,10 +237,17 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 }}
               />
             ) : (
-              <div className="flex flex-column align-items-center justify-content-center" style={{ width: '100%', height: '100%', background: '#e2e8f0' }}>
-                <ImageIcon style={{ width: 32, height: 32, color: '#94a3b8', marginBottom: '0.5rem' }} />
+              <div
+                className="flex flex-column align-items-center justify-content-center"
+                style={{ width: '100%', height: '100%', background: '#e2e8f0' }}
+              >
+                <ImageIcon
+                  style={{ width: 32, height: 32, color: '#94a3b8', marginBottom: '0.5rem' }}
+                />
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Failed to load image</span>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>{displayImage}</span>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                  {displayImage}
+                </span>
               </div>
             )}
 
@@ -212,8 +255,21 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             {!isLoading && (
               <Button
                 text
-                onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
-                style={{ position: 'absolute', top: 8, right: 8, padding: '0.375rem', background: '#ef4444', color: '#fff', borderRadius: '0.5rem', zIndex: 50, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveImage();
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  padding: '0.375rem',
+                  background: '#ef4444',
+                  color: '#fff',
+                  borderRadius: '0.5rem',
+                  zIndex: 50,
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                }}
                 title={t('removeImage')}
               >
                 <X style={{ width: 16, height: 16 }} />
@@ -222,8 +278,20 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
             {/* Image info overlay */}
             {uploadStatus.imageData?.size && (
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)', padding: '0.5rem', zIndex: 10 }}>
-                <span style={{ fontSize: '0.75rem', color: '#fff' }}>{(uploadStatus.imageData.size / 1024 / 1024).toFixed(2)}MB</span>
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)',
+                  padding: '0.5rem',
+                  zIndex: 10,
+                }}
+              >
+                <span style={{ fontSize: '0.75rem', color: '#fff' }}>
+                  {(uploadStatus.imageData.size / 1024 / 1024).toFixed(2)}MB
+                </span>
               </div>
             )}
 
@@ -232,25 +300,50 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="flex align-items-center justify-content-center"
-                style={{ position: 'absolute', inset: 0, background: 'transparent', cursor: 'pointer', zIndex: 20, opacity: 0 }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(0,0,0,0.2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; e.currentTarget.style.background = 'transparent'; }}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  zIndex: 20,
+                  opacity: 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.background = 'rgba(0,0,0,0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '0';
+                  e.currentTarget.style.background = 'transparent';
+                }}
               >
-                <span style={{ color: '#fff', fontSize: '0.875rem', fontWeight: 500 }}>Click to change image</span>
+                <span style={{ color: '#fff', fontSize: '0.875rem', fontWeight: 500 }}>
+                  Click to change image
+                </span>
               </div>
             )}
           </div>
         ) : (
-          <div className="flex flex-column align-items-center justify-content-center gap-2" style={{ width: '100%', height: '100%' }}>
+          <div
+            className="flex flex-column align-items-center justify-content-center gap-2"
+            style={{ width: '100%', height: '100%' }}
+          >
             {isLoading ? (
               <>
-                <Loader className="animate-spin" style={{ width: 24, height: 24, color: '#235ae4' }} />
-                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>Uploading...</span>
+                <Loader
+                  className="animate-spin"
+                  style={{ width: 24, height: 24, color: '#235ae4' }}
+                />
+                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#334155' }}>
+                  Uploading...
+                </span>
               </>
             ) : (
               <>
                 <Upload style={{ width: 24, height: 24, color: '#94a3b8' }} />
-                <span style={{ fontSize: '0.6875rem', color: '#64748b', textAlign: 'center' }}>Click or drag</span>
+                <span style={{ fontSize: '0.6875rem', color: '#64748b', textAlign: 'center' }}>
+                  Click or drag
+                </span>
               </>
             )}
           </div>
@@ -259,14 +352,32 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {/* Status Messages */}
       {uploadStatus.state === 'success' && uploadStatus.message && (
-        <div className="flex align-items-center gap-2" style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '0.5rem' }}>
+        <div
+          className="flex align-items-center gap-2"
+          style={{
+            marginTop: '0.75rem',
+            padding: '0.75rem',
+            background: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            borderRadius: '0.5rem',
+          }}
+        >
           <CheckCircle style={{ width: 16, height: 16, color: '#059669' }} />
           <span style={{ fontSize: '0.875rem', color: '#047857' }}>{uploadStatus.message}</span>
         </div>
       )}
 
       {uploadStatus.state === 'error' && uploadStatus.message && (
-        <div className="flex align-items-center gap-2" style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem' }}>
+        <div
+          className="flex align-items-center gap-2"
+          style={{
+            marginTop: '0.75rem',
+            padding: '0.75rem',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '0.5rem',
+          }}
+        >
           <AlertCircle style={{ width: 16, height: 16, color: '#dc2626' }} />
           <span style={{ fontSize: '0.875rem', color: '#b91c1c' }}>{uploadStatus.message}</span>
         </div>

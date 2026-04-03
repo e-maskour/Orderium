@@ -7,7 +7,6 @@ import {
 import { InventoryAdjustment } from './inventory-adjustments.model';
 import { apiClient, API_ROUTES } from '../../common';
 
-
 export class InventoryAdjustmentsService {
   async getAll(filters?: AdjustmentFilters): Promise<InventoryAdjustment[]> {
     const params = new URLSearchParams();
@@ -60,7 +59,9 @@ export class InventoryAdjustmentsService {
   }
 
   async generateCountingList(locationId: number): Promise<any[]> {
-    const data = await apiClient.get<any[]>(API_ROUTES.INVENTORY_ADJUSTMENTS.COUNTING_LIST(locationId));
+    const data = await apiClient.get<any[]>(
+      API_ROUTES.INVENTORY_ADJUSTMENTS.COUNTING_LIST(locationId),
+    );
     return data.data || [];
   }
 }

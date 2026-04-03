@@ -37,7 +37,7 @@ export class TenantMiddleware implements NestMiddleware {
   constructor(
     private readonly tenantService: TenantService,
     private readonly tenantConnectionService: TenantConnectionService,
-  ) { }
+  ) {}
 
   async use(req: Request, res: Response, next: NextFunction): Promise<void> {
     // Use originalUrl (full path before any prefix stripping) for exclusion checks
@@ -69,7 +69,11 @@ export class TenantMiddleware implements NestMiddleware {
     }
 
     // Deleted / archived tenants → 404
-    if (tenant.status === 'deleted' || tenant.status === 'archived' || tenant.deletedAt) {
+    if (
+      tenant.status === 'deleted' ||
+      tenant.status === 'archived' ||
+      tenant.deletedAt
+    ) {
       throw new NotFoundException(`This organization does not exist.`);
     }
 
@@ -78,7 +82,8 @@ export class TenantMiddleware implements NestMiddleware {
       if (tenant.trialEndsAt && tenant.trialEndsAt < new Date()) {
         throw new ForbiddenException({
           error: 'TRIAL_EXPIRED',
-          message: 'Your free trial has ended. Please contact your administrator to activate your subscription.',
+          message:
+            'Your free trial has ended. Please contact your administrator to activate your subscription.',
           trialEndedAt: tenant.trialEndsAt,
         });
       }
@@ -88,7 +93,8 @@ export class TenantMiddleware implements NestMiddleware {
     if (tenant.status === 'expired') {
       throw new ForbiddenException({
         error: 'SUBSCRIPTION_EXPIRED',
-        message: 'Your subscription has expired. Please renew to continue using the service.',
+        message:
+          'Your subscription has expired. Please renew to continue using the service.',
       });
     }
 

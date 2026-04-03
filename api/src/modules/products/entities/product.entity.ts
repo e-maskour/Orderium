@@ -18,6 +18,7 @@ import { numericTransformer } from '../../../common/transformers/numeric.transfo
 @Entity('products')
 @Index(['name'])
 @Index(['code'])
+@Index(['isEnabled', 'name'])
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
@@ -26,15 +27,27 @@ export class Product {
   name: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
-  code: string;
+  code: string | null;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description: string | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   price: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   cost: number;
 
   @Column({ type: 'boolean', default: false })
@@ -56,16 +69,39 @@ export class Product {
   stock: number;
 
   /** Stock alert threshold — notify admin when stock drops to or below this value */
-  @Column({ type: 'int', nullable: true, default: 5, name: 'stock_alert_threshold' })
+  @Column({
+    type: 'int',
+    nullable: true,
+    default: 5,
+    name: 'stock_alert_threshold',
+  })
   stockAlertThreshold: number | null;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   saleTax: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   purchaseTax: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   minPrice: number;
 
   @Column({ type: 'int', nullable: true })

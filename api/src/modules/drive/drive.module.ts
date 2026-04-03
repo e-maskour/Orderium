@@ -10,4 +10,4 @@ import { TenantModule } from '../tenant/tenant.module';
   providers: [DriveService, DriveStorageService],
   exports: [DriveService],
 })
-export class DriveModule { }
+export class DriveModule {}

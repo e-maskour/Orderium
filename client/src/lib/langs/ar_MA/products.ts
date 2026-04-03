@@ -3,16 +3,16 @@ export default {
   products: 'المنتجات',
   allProducts: 'جميع المنتجات',
   services: 'الخدمات',
-  
+
   // Product Actions
   addToCart: 'أضف للسلة',
   updateQty: 'تحديث الكمية',
   addedToCart: 'تمت الإضافة إلى السلة',
   addMore: 'إضافة المزيد',
-  
+
   // Product Status
   outOfStock: 'غير متوفر',
-  
+
   // Search & Browse
   searchProducts: 'ابحث عن المنتجات',
   noResults: 'لا توجد نتائج',

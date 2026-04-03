@@ -26,7 +26,17 @@ export const QuantityStepper = ({
         <button
           onClick={onRemove}
           aria-label="Remove"
-          style={{ background: 'none', border: 'none', borderRadius: '50%', padding: btnPx, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderRadius: '50%',
+            padding: btnPx,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#dc2626',
+          }}
         >
           <Trash2 style={{ width: iconSize, height: iconSize }} />
         </button>
@@ -35,20 +45,47 @@ export const QuantityStepper = ({
           onClick={onDecrement}
           disabled={quantity <= 1 && !showRemove}
           aria-label="Decrease"
-          style={{ background: 'none', border: 'none', borderRadius: '50%', padding: btnPx, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', opacity: quantity <= 1 && !showRemove ? 0.4 : 1 }}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderRadius: '50%',
+            padding: btnPx,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#6b7280',
+            opacity: quantity <= 1 && !showRemove ? 0.4 : 1,
+          }}
         >
           <Minus style={{ width: iconSize, height: iconSize }} />
         </button>
       )}
 
-      <span className="font-bold text-color text-center" style={{ minWidth: size === 'lg' ? '3rem' : '2rem', fontSize: size === 'lg' ? '1.125rem' : undefined }}>
+      <span
+        className="font-bold text-color text-center"
+        style={{
+          minWidth: size === 'lg' ? '3rem' : '2rem',
+          fontSize: size === 'lg' ? '1.125rem' : undefined,
+        }}
+      >
         {quantity}
       </span>
 
       <button
         onClick={onIncrement}
         aria-label="Increase"
-        style={{ background: 'none', border: 'none', borderRadius: '50%', padding: btnPx, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}
+        style={{
+          background: 'none',
+          border: 'none',
+          borderRadius: '50%',
+          padding: btnPx,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#059669',
+        }}
       >
         <Plus style={{ width: iconSize, height: iconSize }} />
       </button>

@@ -56,7 +56,6 @@ export class OllamaService {
 
         onComplete?.();
         return; // Success
-
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
           throw error; // User cancelled, don't retry
@@ -153,7 +152,6 @@ export class OllamaService {
               await onToolCall(toolCall);
             }
           }
-
         } catch (parseError) {
           console.warn('Failed to parse chunk:', line, parseError);
           // Continue processing other chunks
@@ -166,31 +164,33 @@ export class OllamaService {
    * Format messages for Ollama API, injecting tool results
    */
   private formatMessages(messages: OllamaChatMessage[]): any[] {
-    return messages.map(msg => {
-      const formatted: any = {
-        role: msg.role,
-        content: msg.content,
-      };
+    return messages
+      .map((msg) => {
+        const formatted: any = {
+          role: msg.role,
+          content: msg.content,
+        };
 
-      if (msg.tool_calls) {
-        formatted.tool_calls = msg.tool_calls;
-      }
+        if (msg.tool_calls) {
+          formatted.tool_calls = msg.tool_calls;
+        }
 
-      if (msg.tool_results) {
-        // Inject tool results as separate messages
-        // (Ollama expects tool results as role: 'tool')
-        return [
-          formatted,
-          ...msg.tool_results.map(result => ({
-            role: 'tool',
-            content: result.content,
-            tool_call_id: result.tool_call_id,
-          }))
-        ];
-      }
+        if (msg.tool_results) {
+          // Inject tool results as separate messages
+          // (Ollama expects tool results as role: 'tool')
+          return [
+            formatted,
+            ...msg.tool_results.map((result) => ({
+              role: 'tool',
+              content: result.content,
+              tool_call_id: result.tool_call_id,
+            })),
+          ];
+        }
 
-      return formatted;
-    }).flat();
+        return formatted;
+      })
+      .flat();
   }
 
   private createCombinedSignal(signal1: AbortSignal, signal2: AbortSignal): AbortSignal {
@@ -204,7 +204,7 @@ export class OllamaService {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**

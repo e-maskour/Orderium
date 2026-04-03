@@ -3,7 +3,7 @@ import { Payment } from './payments.model';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class PaymentsService {
-  async getAll(filters?: PaymentFilters): Promise<Payment[]> {
+  async getAll(filters?: PaymentFilters & { search?: string }): Promise<Payment[]> {
     const params: Record<string, string | number | boolean | undefined> = {};
     if (filters?.invoiceId) params.invoiceId = filters.invoiceId;
     if (filters?.customerId) params.customerId = filters.customerId;
@@ -11,13 +11,16 @@ export class PaymentsService {
     if (filters?.paymentType) params.paymentType = filters.paymentType;
     if (filters?.dateFrom) params.dateFrom = filters.dateFrom;
     if (filters?.dateTo) params.dateTo = filters.dateTo;
+    if (filters?.search) params.search = filters.search;
 
     const response = await apiClient.get<any[]>(API_ROUTES.PAYMENTS.LIST, { params });
     return (response.data || []).map((p: any) => Payment.fromApiResponse(p));
   }
 
   async getByInvoice(invoiceId: number): Promise<Payment[]> {
-    const response = await apiClient.get<any[]>(API_ROUTES.PAYMENTS.LIST, { params: { invoiceId } });
+    const response = await apiClient.get<any[]>(API_ROUTES.PAYMENTS.LIST, {
+      params: { invoiceId },
+    });
     return (response.data || []).map((p: any) => Payment.fromApiResponse(p));
   }
 

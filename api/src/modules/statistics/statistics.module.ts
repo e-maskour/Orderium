@@ -8,4 +8,4 @@ import { TenantModule } from '../tenant/tenant.module';
   controllers: [StatisticsController],
   providers: [StatisticsService],
 })
-export class StatisticsModule { }
+export class StatisticsModule {}

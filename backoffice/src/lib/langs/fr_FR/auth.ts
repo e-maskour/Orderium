@@ -14,7 +14,8 @@ export default {
   secureAdminAccess: 'Accès Administrateur Sécurisé',
   loginHeroTitle: 'Gérez votre activité',
   loginHeroSubtitle: 'en toute confiance.',
-  loginHeroDesc: 'Votre suite tout-en-un pour les commandes, le stock, les clients et les analyses.',
+  loginHeroDesc:
+    'Votre suite tout-en-un pour les commandes, le stock, les clients et les analyses.',
   loginSignInDesc: 'Connectez-vous à votre backoffice pour continuer.',
   loginFeatureAnalytics: 'Analyses & Rapports',
   loginFeatureInventory: 'Gestion des Stocks',

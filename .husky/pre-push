@@ -1,0 +1,102 @@
+#!/usr/bin/env sh
+
+# ─────────────────────────────────────────────────────────────────────────────
+# pre-push: Lint + auto-fix all apps with changed files.
+# Rejects push if any ESLint ERROR remains after auto-fix.
+# Warnings are reported but do NOT block the push.
+# ─────────────────────────────────────────────────────────────────────────────
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Collect files changed in this push vs the upstream branch
+CHANGED_FILES=$(git diff --name-only "@{u}" HEAD 2>/dev/null || git diff --name-only HEAD~ HEAD 2>/dev/null || git diff --name-only HEAD)
+
+APPS="backoffice client delivery-portal tenant-dashboard api"
+FAILED=0
+WARNED=0
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Pre-push lint check"
+echo "  Errors  → push rejected"
+echo "  Warnings → reported only (run pnpm lint:fix to clean)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+for APP in $APPS; do
+  # Only lint apps that have changed files
+  if ! echo "$CHANGED_FILES" | grep -q "^$APP/"; then
+    echo "  –  $APP — no changes, skipping"
+    continue
+  fi
+
+  echo "  🔍  $APP — running lint:fix ..."
+  cd "$REPO_ROOT/$APP" || exit 1
+
+  if [ "$APP" = "api" ]; then
+    # API: auto-fix then check for errors only (many pre-existing warnings)
+    pnpm lint > /dev/null 2>&1
+    CHECK_RESULT=$(pnpm lint:check 2>&1)
+    # Count only errors (not warnings) — exit non-zero only if errors > 0
+    ERROR_COUNT=$(echo "$CHECK_RESULT" | grep -c " error ")
+    if [ "$ERROR_COUNT" -gt 0 ]; then
+      echo ""
+      echo "  ✖  $APP — $ERROR_COUNT error(s) found:"
+      echo "$CHECK_RESULT" | grep " error " | grep -v "prettier/prettier" | head -10
+      echo ""
+      FAILED=1
+    else
+      WARN_COUNT=$(echo "$CHECK_RESULT" | grep -c " warning ")
+      if [ "$WARN_COUNT" -gt 0 ]; then
+        echo "  ⚠  $APP — passed (${WARN_COUNT} warning(s))"
+        WARNED=1
+      else
+        echo "  ✔  $APP — clean"
+      fi
+    fi
+  else
+    # Frontend apps: auto-fix then check (errors block, warnings just report)
+    pnpm lint:fix > /dev/null 2>&1
+    CHECK_RESULT=$(pnpm lint 2>&1)
+    # Check if there are non-prettier errors
+    ERROR_COUNT=$(echo "$CHECK_RESULT" | grep " error " | grep -v "prettier/prettier" | grep -v "potentially" | wc -l | tr -d ' ')
+    WARN_COUNT=$(echo "$CHECK_RESULT" | grep " warning " | grep -v "potentially" | wc -l | tr -d ' ')
+
+    if [ "$ERROR_COUNT" -gt 0 ]; then
+      echo ""
+      echo "  ✖  $APP — ${ERROR_COUNT} error(s) found:"
+      echo "$CHECK_RESULT" | grep " error " | grep -v "prettier/prettier\|potentially" | head -10
+      echo ""
+      FAILED=1
+    elif [ "$WARN_COUNT" -gt 0 ]; then
+      echo "  ⚠  $APP — passed (${WARN_COUNT} warning(s))"
+      WARNED=1
+    else
+      echo "  ✔  $APP — clean"
+    fi
+  fi
+
+  cd "$REPO_ROOT" || exit 1
+done
+
+echo ""
+
+if [ $FAILED -ne 0 ]; then
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  ✖  Push REJECTED — fix the errors above first"
+  echo "  Run: pnpm lint:fix  (inside the failing app)"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  exit 1
+fi
+
+if [ $WARNED -ne 0 ]; then
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  ⚠  Push allowed — warnings exist (clean them soon)"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+else
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  ✔  All checks passed — pushing ..."
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+fi
+echo ""

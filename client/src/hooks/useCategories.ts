@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { http } from '@/services/httpClient';
+import { API_ROUTES } from '@/common/api-routes';
 
 export interface Category {
   id: number;
@@ -11,9 +12,11 @@ export function useCategories() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    http<{ data: { id: number; name: string }[] }>('/api/portal/categories')
+    http<{ data: { id: number; name: string }[] }>(API_ROUTES.PORTAL.CATEGORIES)
       .then((res) => {
-        const items = Array.isArray(res.data) ? res.data.map((c) => ({ id: c.id, name: c.name })) : [];
+        const items = Array.isArray(res.data)
+          ? res.data.map((c) => ({ id: c.id, name: c.name }))
+          : [];
         setCategories(items);
       })
       .catch(() => setCategories([]))

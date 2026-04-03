@@ -235,9 +235,11 @@ export default {
   templateDownloadError: 'خطأ أثناء تحميل النموذج',
   importInProgress: 'جاري الاستيراد...',
   importSuccess: 'تم الاستيراد: {{created}} تم إنشاؤها، {{updated}} تم تحديثها',
-  importPartial: 'اكتمل الاستيراد مع أخطاء: {{created}} تم إنشاؤها، {{updated}} تم تحديثها، {{failed}} فشلت',
+  importPartial:
+    'اكتمل الاستيراد مع أخطاء: {{created}} تم إنشاؤها، {{updated}} تم تحديثها، {{failed}} فشلت',
   importError: 'خطأ أثناء الاستيراد',
-  confirmBulkDelete: 'هل أنت متأكد من حذف {{count}} عنصر(عناصر) محدد(ة)؟ لا يمكن التراجع عن هذا الإجراء.',
+  confirmBulkDelete:
+    'هل أنت متأكد من حذف {{count}} عنصر(عناصر) محدد(ة)؟ لا يمكن التراجع عن هذا الإجراء.',
   deleteProducts: 'حذف المنتجات',
   unsupportedDocumentType: 'نوع المستند غير مدعوم',
   confirmDeleteCategory: 'هل أنت متأكد من حذف "{{name}}"؟',
@@ -261,6 +263,9 @@ export default {
   deleteWarehouseTitle: 'حذف المستودع',
   confirmDeleteWarehouse: 'هل أنت متأكد من حذف هذا المستودع؟ لا يمكن التراجع عن هذا الإجراء.',
   noWarehousesFound: 'لا توجد مستودعات',
+  noAddress: 'لا يوجد عنوان',
+  createFirstWarehouse: 'أنشئ أول مستودع للبدء',
+  tryDifferentSearch: 'جرب بحثاً مختلفاً',
   errorCreatingDocument: 'خطأ أثناء إنشاء المستند',
   errorUpdatingDocument: 'خطأ أثناء تحديث المستند',
   loadingQuote: 'جاري تحميل العرض...',
@@ -394,6 +399,7 @@ export default {
   navCollapse: 'طي',
   navTeam: 'الفريق',
   navPos: 'نقطة البيع',
+  rolesPermissions: 'الأدوار والصلاحيات',
 
   // Stock / inventory
   negativeStock: 'مخزون سالب',

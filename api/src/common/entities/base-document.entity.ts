@@ -23,10 +23,22 @@ export abstract class BaseEntity {
   @Column({ type: 'date' })
   date: Date;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   total: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   discount: number;
 
   @Column({ type: 'int', default: 0 })
@@ -67,10 +79,22 @@ export abstract class BaseDocument extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   customerAddress: string;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   subtotal: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   tax: number;
 
   @Column({ type: 'boolean', default: false })
@@ -88,16 +112,34 @@ export abstract class BaseDocumentItem {
   @Column({ type: 'int', nullable: true })
   productId: number | null;
 
-  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 3,
+    default: 0,
+    transformer: numericTransformer,
+  })
   quantity: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   discount: number;
 
   @Column({ type: 'int', default: 0 })
   discountType: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   total: number;
 
   @ManyToOne(() => Product, { nullable: true, onDelete: 'SET NULL' })
@@ -110,9 +152,21 @@ export abstract class BaseStandardItem extends BaseDocumentItem {
   @Column({ type: 'varchar', length: 255 })
   description: string;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   unitPrice: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, transformer: numericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
   tax: number;
 }

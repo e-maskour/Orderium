@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { API_ROUTES } from '../common/api-routes';
 
 interface DeliveryPerson {
   id: number;
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (credentials: { phoneNumber: string; password: string }) => {
-    const response = await fetch('/api/delivery/login', {
+    const response = await fetch(API_ROUTES.DELIVERY.LOGIN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

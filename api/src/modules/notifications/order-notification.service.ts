@@ -2,6 +2,7 @@ import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Order, DeliveryStatus } from '../orders/entities/order.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
+import { tenantStorage } from '../tenant/tenant.context';
 import { NotificationTemplateService } from './notification-template.service';
 import { NotificationsQueueService } from './notifications.queue.service';
 import { Product } from '../products/entities/product.entity';
@@ -23,7 +24,7 @@ export class OrderNotificationService {
     @Inject(forwardRef(() => NotificationTemplateService))
     private readonly templateService: NotificationTemplateService,
     private readonly notificationsQueueService: NotificationsQueueService,
-  ) { }
+  ) {}
 
   private get orderRepository(): Repository<Order> {
     return this.tenantConnService.getRepository(Order);
@@ -436,6 +437,35 @@ export class OrderNotificationService {
 
   // ─── Internal Helper ─────────────────────────────────────────────────────────
 
+  /**
+   * Build a deterministic deduplication key to prevent the same notification
+   * from being enqueued more than once (e.g. from multiple API instances or a
+   * queue-write-then-error race condition).
+   *
+   * - Entity-based events use the first available entity ID from metadata so
+   *   each distinct event has its own queue slot.
+   * - Scheduled/aggregate notifications (no single entity ID) use the current
+   *   UTC date so a daily job can only be queued once per day.
+   */
+  private buildDeduplicationKey(
+    key: string,
+    metadata: Record<string, unknown>,
+  ): string {
+    const tenant = tenantStorage.getStore()?.tenantSlug ?? 'unknown';
+    const entityId =
+      metadata.orderId ??
+      metadata.invoiceId ??
+      metadata.productId ??
+      metadata.deliveryPersonId ??
+      metadata.portalUserId ??
+      null;
+    if (entityId !== null) {
+      return `${key}-${tenant}-${entityId as number | string}`;
+    }
+    const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    return `${key}-${tenant}-${date}`;
+  }
+
   private async fire(
     key: string,
     variables: Record<string, string>,
@@ -447,17 +477,26 @@ export class OrderNotificationService {
     metadata: Record<string, unknown>,
   ): Promise<void> {
     try {
+      const deduplicationKey = this.buildDeduplicationKey(key, metadata);
       const queued = await this.notificationsQueueService.enqueue({
         key,
         variables,
         recipients,
         metadata,
+        deduplicationKey,
       });
       if (!queued) {
         // No tenant context — fall back to synchronous send
-        await this.templateService.send({ key, variables, recipients, metadata });
+        await this.templateService.send({
+          key,
+          variables,
+          recipients,
+          metadata,
+        });
       }
     } catch (err) {
+      // Redis error: the job may already be in the queue, so do NOT fall back
+      // to a direct send here — that would cause duplicate notifications.
       this.logger.error(
         `Notification '${key}' failed: ${(err as Error)?.message}`,
         (err as Error)?.stack,

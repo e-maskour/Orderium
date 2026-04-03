@@ -1,6 +1,7 @@
 import { http } from '@/services/httpClient';
 import { LoginRequest, RegisterRequest, AuthResponse, PhoneCheckResponse } from './auth.interface';
 import { PortalUser } from './auth.model';
+import { API_ROUTES } from '@/common/api-routes';
 
 const TOKEN_KEY = 'orderium_token';
 const USER_KEY = 'orderium_user';
@@ -25,7 +26,7 @@ export class AuthService {
           wazeUrl?: string;
           email?: string;
         };
-      }>(`/api/portal/user/${encodeURIComponent(phoneNumber)}`);
+      }>(API_ROUTES.PORTAL.USER_BY_PHONE(phoneNumber));
 
       const d = response.data;
       return {
@@ -68,7 +69,7 @@ export class AuthService {
           wazeUrl?: string;
           email?: string;
         };
-      }>(`/api/portal/user/id/${id}`);
+      }>(API_ROUTES.PORTAL.USER_BY_ID(id));
 
       const d = response.data;
       return {
@@ -93,7 +94,7 @@ export class AuthService {
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const raw = await http<{ data: AuthResponse }>('/api/portal/login', {
+    const raw = await http<{ data: AuthResponse }>(API_ROUTES.PORTAL.LOGIN, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -121,7 +122,7 @@ export class AuthService {
   }
 
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const raw = await http<{ data: AuthResponse }>('/api/portal/register', {
+    const raw = await http<{ data: AuthResponse }>(API_ROUTES.PORTAL.REGISTER, {
       method: 'POST',
       body: JSON.stringify({
         ...data,

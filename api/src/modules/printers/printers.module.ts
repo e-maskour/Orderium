@@ -6,9 +6,9 @@ import { PrintJobsService } from './print-jobs.service';
 import { TenantModule } from '../tenant/tenant.module';
 
 @Module({
-    imports: [TenantModule],
-    controllers: [PrintersController, PrintJobsController],
-    providers: [PrintersService, PrintJobsService],
-    exports: [PrintersService],
+  imports: [TenantModule],
+  controllers: [PrintersController, PrintJobsController],
+  providers: [PrintersService, PrintJobsService],
+  exports: [PrintersService],
 })
-export class PrintersModule { }
+export class PrintersModule {}

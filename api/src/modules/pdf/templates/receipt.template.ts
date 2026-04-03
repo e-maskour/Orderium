@@ -340,14 +340,15 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
   <!-- ── Summary ── -->
   <div class="rcp-summary">
     <span><b>${data.totalProducts}</b> article${data.totalProducts > 1 ? 's' : ''}</span>
-    <span>Qté totale : <b>${data.totalQty}</b></span>
+    <span>Qté totale : <b>${data.totalQty}</b></span>
   </div>
 
   <!-- ── Totals ── -->
   <table class="rcp-totals-table">
     <tbody>
-      ${!data.hideVAT
-      ? `<tr class="t-sub">
+      ${
+        !data.hideVAT
+          ? `<tr class="t-sub">
              <td class="t-label">Sous-total</td>
              <td class="t-amount">${data.subtotal} DH</td>
            </tr>
@@ -356,8 +357,8 @@ export function renderReceiptTemplate(data: ReceiptTemplateData): string {
              <td class="t-label">TVA (20%)</td>
              <td class="t-amount">${data.tax} DH</td>
            </tr>`
-      : discountRowHtml
-    }
+          : discountRowHtml
+      }
       <tr class="t-grand">
         <td class="t-label">Total</td>
         <td class="t-amount">${data.total} DH</td>

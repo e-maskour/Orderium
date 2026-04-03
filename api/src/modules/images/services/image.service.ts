@@ -103,7 +103,7 @@ export class ImageService {
    * Return a thumbnail URL.  MinIO stores pre-optimised images; the same
    * URL is used for all sizes.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   getThumbnailUrl(url: string, _size = 300): string {
     return url;
   }

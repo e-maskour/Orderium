@@ -18,11 +18,11 @@ export class PaymentTermsService {
 
   async createTerm(data: CreatePaymentTermDTO): Promise<PaymentTermsConfiguration> {
     const config = await this.getConfiguration();
-    const newTerms = [...config.terms.map(t => t.toJSON())];
+    const newTerms = [...config.terms.map((t) => t.toJSON())];
 
     // If setting as default, remove default from others
     if (data.isDefault) {
-      newTerms.forEach(t => t.isDefault = false);
+      newTerms.forEach((t) => (t.isDefault = false));
     }
 
     newTerms.push({
@@ -32,7 +32,7 @@ export class PaymentTermsService {
       isDefault: data.isDefault || false,
     });
 
-    const newDefault = newTerms.find(t => t.isDefault)?.key || config.default;
+    const newDefault = newTerms.find((t) => t.isDefault)?.key || config.default;
 
     return this.updateConfiguration({
       terms: newTerms,
@@ -42,7 +42,7 @@ export class PaymentTermsService {
 
   async updateTerm(index: number, data: UpdatePaymentTermDTO): Promise<PaymentTermsConfiguration> {
     const config = await this.getConfiguration();
-    const newTerms = config.terms.map(t => t.toJSON());
+    const newTerms = config.terms.map((t) => t.toJSON());
 
     if (index < 0 || index >= newTerms.length) {
       throw new Error('Invalid payment term index');
@@ -50,7 +50,7 @@ export class PaymentTermsService {
 
     // If setting as default, remove default from others
     if (data.isDefault) {
-      newTerms.forEach(t => t.isDefault = false);
+      newTerms.forEach((t) => (t.isDefault = false));
     }
 
     newTerms[index] = {
@@ -59,7 +59,7 @@ export class PaymentTermsService {
       key: data.key ? data.key.toLowerCase().replace(/\s+/g, '_') : newTerms[index].key,
     };
 
-    const newDefault = newTerms.find(t => t.isDefault)?.key || config.default;
+    const newDefault = newTerms.find((t) => t.isDefault)?.key || config.default;
 
     return this.updateConfiguration({
       terms: newTerms,
@@ -69,9 +69,9 @@ export class PaymentTermsService {
 
   async deleteTerm(index: number): Promise<PaymentTermsConfiguration> {
     const config = await this.getConfiguration();
-    const newTerms = config.terms.map(t => t.toJSON()).filter((_, i) => i !== index);
+    const newTerms = config.terms.map((t) => t.toJSON()).filter((_, i) => i !== index);
 
-    const newDefault = newTerms.find(t => t.isDefault)?.key || (newTerms[0]?.key || '');
+    const newDefault = newTerms.find((t) => t.isDefault)?.key || newTerms[0]?.key || '';
 
     return this.updateConfiguration({
       terms: newTerms,
@@ -83,7 +83,9 @@ export class PaymentTermsService {
     if (!this.configId) {
       await this.getConfiguration();
     }
-    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), { values });
+    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), {
+      values,
+    });
     return PaymentTermsConfiguration.fromApiResponse(response.data.values);
   }
 }

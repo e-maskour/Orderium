@@ -56,7 +56,14 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
         value={value}
         onChange={handleInput}
         className="w-full"
-        style={{ paddingInlineStart: '2.75rem', height: '2.875rem', borderRadius: '9999px', border: '1.5px solid var(--surface-border)', background: 'var(--surface-50)', fontSize: '0.9375rem' }}
+        style={{
+          paddingInlineStart: '2.75rem',
+          height: '2.875rem',
+          borderRadius: '9999px',
+          border: '1.5px solid var(--surface-border)',
+          background: 'var(--surface-50)',
+          fontSize: '0.9375rem',
+        }}
       />
     </div>
   );

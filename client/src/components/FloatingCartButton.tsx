@@ -16,12 +16,22 @@ export const FloatingCartButton = ({ onClick }: FloatingCartButtonProps) => {
   if (itemCount === 0) return null;
 
   return (
-    <div className="lg:hidden" style={{ position: 'fixed', bottom: '5rem', insetInlineEnd: '1rem', zIndex: 45 }} dir={dir}>
+    <div
+      className="lg:hidden"
+      style={{ position: 'fixed', bottom: '5rem', insetInlineEnd: '1rem', zIndex: 45 }}
+      dir={dir}
+    >
       <button
         onClick={onClick}
         className="cl-bottom-cart-btn"
         aria-label={t('cart') || 'Cart'}
-        style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', position: 'relative', boxShadow: '0 6px 20px rgba(5,150,105,0.45)' }}
+        style={{
+          width: '3.5rem',
+          height: '3.5rem',
+          borderRadius: '50%',
+          position: 'relative',
+          boxShadow: '0 6px 20px rgba(5,150,105,0.45)',
+        }}
       >
         <ShoppingBag style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
         <span className="cl-bottom-cart-badge">{uniqueProductCount}</span>

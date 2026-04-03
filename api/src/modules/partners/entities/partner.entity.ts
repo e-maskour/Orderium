@@ -51,10 +51,22 @@ export class Partner {
   @Column({ type: 'boolean', default: false })
   isCompany: boolean;
 
-  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true, transformer: nullableNumericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 7,
+    nullable: true,
+    transformer: nullableNumericTransformer,
+  })
   latitude: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true, transformer: nullableNumericTransformer })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 7,
+    nullable: true,
+    transformer: nullableNumericTransformer,
+  })
   longitude: number;
 
   @Column({ type: 'varchar', length: 500, nullable: true })

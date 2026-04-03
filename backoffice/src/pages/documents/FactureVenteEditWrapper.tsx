@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function FactureVenteEditWrapper() {
   const { t } = useLanguage();
   const config = getDocumentConfig('facture', 'vente', t);
-  
+
   return (
     <DocumentEditPage
       documentType="facture"

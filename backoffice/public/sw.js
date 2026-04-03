@@ -3,22 +3,25 @@ const CACHE_NAME = 'orderium-backoffice-v2';
 
 // Do NOT pre-cache index.html — always fetch it from network
 // so the browser always gets the latest Vite entry point.
-const STATIC_ASSETS = [
-  '/manifest.json',
-  '/Eo_circle_deep-orange_white_letter-o.svg',
-];
+const STATIC_ASSETS = ['/manifest.json', '/Eo_circle_deep-orange_white_letter-o.svg'];
 
 // Only cache safe static file types (Vite hashed assets)
 const ALLOWED_EXTENSIONS = [
-  '.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.woff', '.woff2'
+  '.js',
+  '.css',
+  '.svg',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.ico',
+  '.woff',
+  '.woff2',
 ];
 
 // Hostnames that should NEVER be intercepted by the SW.
 // In production the API & storage live on separate subdomains.
-const BYPASS_HOSTS = [
-  'orderium-api.mar-nova.com',
-  'storage.mar-nova.com',
-];
+const BYPASS_HOSTS = ['orderium-api.mar-nova.com', 'storage.mar-nova.com'];
 
 // Install
 self.addEventListener('install', (event) => {
@@ -27,7 +30,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS).catch((err) => {
         console.warn('[SW] Failed to cache static assets:', err);
       });
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -39,9 +42,9 @@ self.addEventListener('activate', (event) => {
       Promise.all(
         names.map((name) => {
           if (name !== CACHE_NAME) return caches.delete(name);
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
   self.clients.claim();
 });
@@ -73,13 +76,13 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.endsWith('.ts') || url.pathname.endsWith('.tsx')) return;
 
   // Only cache SAFE static file extensions (Vite hashed bundles)
-  const shouldCache = ALLOWED_EXTENSIONS.some(ext => url.pathname.endsWith(ext));
+  const shouldCache = ALLOWED_EXTENSIONS.some((ext) => url.pathname.endsWith(ext));
 
   if (!shouldCache) return;
 
   // Network-first for cacheable assets, with a 5-second timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   event.respondWith(
     fetch(req, { signal: controller.signal })
@@ -96,13 +99,15 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         clearTimeout(timeoutId);
         // Offline fallback — serve from cache if available
-        return caches.match(req).then((cached) =>
-          cached || new Response('Offline - Resource not available', {
-            status: 503,
-            statusText: 'Service Unavailable',
-          })
+        return caches.match(req).then(
+          (cached) =>
+            cached ||
+            new Response('Offline - Resource not available', {
+              status: 503,
+              statusText: 'Service Unavailable',
+            }),
         );
-      })
+      }),
   );
 });
 

@@ -1,11 +1,12 @@
 import { http } from '@/services/httpClient';
 import { PartnerFormData, PartnerSearchResponse, PartnerResponse } from './partners.interface';
 import { Partner } from './partners.model';
+import { API_ROUTES } from '@/common/api-routes';
 
 export class PartnersService {
   async searchByPhone(phone: string): Promise<Partner[]> {
     const response = await http<PartnerSearchResponse>(
-      `/api/partners/search?phone=${encodeURIComponent(phone)}`
+      `${API_ROUTES.PARTNERS.SEARCH}?phone=${encodeURIComponent(phone)}`,
     );
 
     if (response.data) {
@@ -16,19 +17,17 @@ export class PartnersService {
   }
 
   async getByPhone(phone: string): Promise<Partner> {
-    const response = await http<PartnerResponse>(
-      `/api/partners/phone/${encodeURIComponent(phone)}`
-    );
+    const response = await http<PartnerResponse>(API_ROUTES.PARTNERS.BY_PHONE(phone));
     return Partner.fromApiResponse(response.data as Record<string, unknown>);
   }
 
   async getById(id: number): Promise<Partner> {
-    const response = await http<PartnerResponse>(`/api/partners/${id}`);
+    const response = await http<PartnerResponse>(API_ROUTES.PARTNERS.DETAIL(id));
     return Partner.fromApiResponse(response.data as Record<string, unknown>);
   }
 
   async upsert(data: PartnerFormData & { portalPhoneNumber?: string }): Promise<Partner> {
-    const response = await http<PartnerResponse>(`/api/partners/upsert`, {
+    const response = await http<PartnerResponse>(API_ROUTES.PARTNERS.UPSERT, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -36,12 +35,9 @@ export class PartnersService {
   }
 
   async incrementOrderCount(phone: string): Promise<void> {
-    await http<void>(
-      `/api/partners/${encodeURIComponent(phone)}/increment-order`,
-      {
-        method: 'POST',
-      }
-    );
+    await http<void>(API_ROUTES.PARTNERS.INCREMENT_ORDER(phone), {
+      method: 'POST',
+    });
   }
 }
 

@@ -45,20 +45,25 @@ export default {
   'notification.title.error': 'Erreur',
 
   // Notification type messages (with interpolation)
-  'notification.message.new_order': 'Commande {{reference}} reçue de {{client}} pour un montant de {{amount}}',
+  'notification.message.new_order':
+    'Commande {{reference}} reçue de {{client}} pour un montant de {{amount}}',
   'notification.message.order_cancelled': 'La commande {{reference}} a été annulée par {{client}}',
   'notification.message.order_delivered': 'La commande {{reference}} a été livrée avec succès',
-  'notification.message.low_stock': 'Le produit {{product}} est en stock faible : {{quantity}} restant(s)',
+  'notification.message.low_stock':
+    'Le produit {{product}} est en stock faible : {{quantity}} restant(s)',
   'notification.message.out_of_stock': 'Le produit {{product}} est en rupture de stock',
-  'notification.message.payment_received': 'Paiement de {{amount}} reçu pour la commande {{reference}}',
+  'notification.message.payment_received':
+    'Paiement de {{amount}} reçu pour la commande {{reference}}',
   'notification.message.payment_failed': 'Échec du paiement pour la commande {{reference}}',
   'notification.message.new_user': "{{name}} a rejoint l'équipe en tant que {{role}}",
   'notification.message.user_deactivated': 'Le compte de {{name}} a été désactivé',
   'notification.message.system_update': 'La version {{version}} de Morocom est disponible',
   'notification.message.backup_done': 'Sauvegarde automatique effectuée le {{date}}',
   'notification.message.order_assigned': 'La commande {{orderNumber}} vous a été assignée',
-  'notification.message.order_status_changed': 'Le statut de la commande {{orderNumber}} a été mis à jour à {{status}}',
-  'notification.message.delivery_status_update': 'Mise à jour de livraison pour la commande {{orderNumber}}: {{status}}',
+  'notification.message.order_status_changed':
+    'Le statut de la commande {{orderNumber}} a été mis à jour à {{status}}',
+  'notification.message.delivery_status_update':
+    'Mise à jour de livraison pour la commande {{orderNumber}}: {{status}}',
   'notification.message.system': '{{message}}',
 
   // Relative time
@@ -92,7 +97,8 @@ export default {
   categoryPayments: 'Paiements',
   categoryTeam: 'Équipe',
   categorySystem: 'Système',
-  criticalCannotDisable: "Les notifications urgentes dans l'application ne peuvent pas être désactivées",
+  criticalCannotDisable:
+    "Les notifications urgentes dans l'application ne peuvent pas être désactivées",
   settingsSaved: 'Paramètres enregistrés',
 
   // Status translations
@@ -103,7 +109,8 @@ export default {
 
   // Bulk/misc
   deleteNotifications: 'Supprimer les notifications',
-  confirmDeleteMessage: 'Êtes-vous sûr de vouloir supprimer {{count}} notification(s) ? Cette action ne peut pas être annulée.',
+  confirmDeleteMessage:
+    'Êtes-vous sûr de vouloir supprimer {{count}} notification(s) ? Cette action ne peut pas être annulée.',
   notificationsMarkedAsRead: '{{count}} notifications marquées comme lues',
   notificationsDeleted: '{{count}} notifications supprimées',
   notifyWhenSomethingHappens: 'Nous vous préviendrons quand quelque chose se produit',

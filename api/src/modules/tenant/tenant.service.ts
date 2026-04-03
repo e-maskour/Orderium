@@ -18,6 +18,7 @@ import { Tenant } from './tenant.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { ListTenantsDto } from './dto/list-tenants.dto';
+import { UpdateTenantModulesDto } from './dto/update-tenant-modules.dto';
 import { TenantConnectionService } from './tenant-connection.service';
 import { runTenantSeeders } from '../../database/seeders';
 import { runTenantInitScripts } from '../../database/init-scripts';
@@ -80,7 +81,7 @@ export class TenantService implements OnModuleInit {
 
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
-  ) { }
+  ) {}
 
   // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -257,9 +258,10 @@ export class TenantService implements OnModuleInit {
       status: (dto.trialDays === 0 ? 'active' : 'trial') as any,
       trialStartedAt: new Date(),
       trialDays: dto.trialDays ?? 30,
-      trialEndsAt: dto.trialDays === 0
-        ? null
-        : new Date(Date.now() + (dto.trialDays ?? 30) * 24 * 60 * 60 * 1000),
+      trialEndsAt:
+        dto.trialDays === 0
+          ? null
+          : new Date(Date.now() + (dto.trialDays ?? 30) * 24 * 60 * 60 * 1000),
     });
     const saved = await this.tenantRepo.save(tenant);
     this.cache.set(saved.slug, saved);
@@ -290,32 +292,37 @@ export class TenantService implements OnModuleInit {
     return updated;
   }
 
-  async activate(id: number): Promise<Tenant> {
+  private async setTenantActiveState(
+    id: number,
+    isActive: boolean,
+  ): Promise<Tenant> {
     const tenant = await this.findOne(id);
-    if (tenant.deletedAt) {
-      throw new BadRequestException('Cannot activate a deleted tenant');
-    }
-    tenant.isActive = true;
-    tenant.disabledAt = null;
+    if (tenant.deletedAt)
+      throw new BadRequestException(
+        `Cannot ${isActive ? 'activate' : 'disable'} a deleted tenant`,
+      );
+    tenant.isActive = isActive;
+    tenant.disabledAt = isActive ? null : new Date();
     const updated = await this.tenantRepo.save(tenant);
-    this.cache.set(updated.slug, updated);
-    await this.setTenantRedisStatus(updated.slug, 'active');
-    this.logger.log(`Tenant '${updated.slug}' activated`);
+    if (isActive) {
+      this.cache.set(updated.slug, updated);
+      await this.setTenantRedisStatus(updated.slug, 'active');
+    } else {
+      this.cache.delete(updated.slug);
+      await this.setTenantRedisStatus(updated.slug, 'disabled');
+    }
+    this.logger.log(
+      `Tenant '${updated.slug}' ${isActive ? 'activated' : 'disabled'}`,
+    );
     return updated;
   }
 
+  async activate(id: number): Promise<Tenant> {
+    return this.setTenantActiveState(id, true);
+  }
+
   async disable(id: number): Promise<Tenant> {
-    const tenant = await this.findOne(id);
-    if (tenant.deletedAt) {
-      throw new BadRequestException('Cannot disable a deleted tenant');
-    }
-    tenant.isActive = false;
-    tenant.disabledAt = new Date();
-    const updated = await this.tenantRepo.save(tenant);
-    this.cache.delete(updated.slug);
-    await this.setTenantRedisStatus(updated.slug, 'disabled');
-    this.logger.log(`Tenant '${updated.slug}' disabled`);
-    return updated;
+    return this.setTenantActiveState(id, false);
   }
 
   async softDelete(id: number): Promise<Tenant> {
@@ -549,6 +556,76 @@ export class TenantService implements OnModuleInit {
         `Failed to clear Redis keys for tenant '${slug}': ${(err as Error).message}`,
       );
     }
+  }
+
+  // ─── Module configuration ─────────────────────────────────────────────────
+
+  static readonly DEFAULT_MODULES = {
+    commandes: true,
+    pos: false,
+    caisse: false,
+    devis: false,
+    factures: false,
+    bonLivraison: false,
+    paiements: false,
+    clients: true,
+    fournisseurs: true,
+    livreurs: false,
+    factureAchat: false,
+    demandeDesPrix: false,
+    bonAchat: false,
+    paiementsAchat: false,
+    products: true,
+    warehouse: true,
+    category: true,
+    portals: {
+      clientPortal: false,
+      deliveryPortal: false,
+    },
+  };
+
+  async getModules(id: number): Promise<typeof TenantService.DEFAULT_MODULES> {
+    const tenant = await this.findOne(id);
+    const saved = (tenant.settings as Record<string, unknown>)?.modules;
+    return {
+      ...TenantService.DEFAULT_MODULES,
+      ...((saved as object | null) ?? {}),
+      portals: {
+        ...TenantService.DEFAULT_MODULES.portals,
+        ...(((saved as Record<string, unknown>)?.portals as object | null) ??
+          {}),
+      },
+    } as typeof TenantService.DEFAULT_MODULES;
+  }
+
+  async updateModules(
+    id: number,
+    dto: UpdateTenantModulesDto,
+  ): Promise<typeof TenantService.DEFAULT_MODULES> {
+    const tenant = await this.findOne(id);
+    const current =
+      ((tenant.settings as Record<string, unknown>)?.modules as Record<
+        string,
+        unknown
+      >) ?? {};
+    const { portals: dtoPortals, ...moduleFlags } = dto;
+    const merged = {
+      ...TenantService.DEFAULT_MODULES,
+      ...current,
+      ...moduleFlags,
+      portals: {
+        ...TenantService.DEFAULT_MODULES.portals,
+        ...((current.portals as object | null) ?? {}),
+        ...(dtoPortals ?? {}),
+      },
+    };
+    tenant.settings = {
+      ...((tenant.settings as Record<string, unknown>) ?? {}),
+      modules: merged,
+    };
+    const saved = await this.tenantRepo.save(tenant);
+    this.cache.set(saved.slug, saved);
+    return merged as typeof TenantService.DEFAULT_MODULES;
   }
 
   // ─── Utility ───────────────────────────────────────────────────────────────

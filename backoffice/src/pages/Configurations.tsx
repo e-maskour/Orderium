@@ -1,5 +1,16 @@
 import { Link } from 'react-router-dom';
-import { Settings, Percent, DollarSign, Calendar, Hash, Ruler, ArrowLeft, Building2, Package, Printer } from 'lucide-react';
+import {
+  Settings,
+  Percent,
+  DollarSign,
+  Calendar,
+  Hash,
+  Ruler,
+  ArrowLeft,
+  Building2,
+  Package,
+  Printer,
+} from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
@@ -89,15 +100,37 @@ export default function Configurations() {
                   <Icon style={{ width: '1.5rem', height: '1.5rem', color: '#ffffff' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem', margin: '0 0 0.25rem' }}>
+                  <h3
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      marginBottom: '0.25rem',
+                      margin: '0 0 0.25rem',
+                    }}
+                  >
                     {module.name}
                   </h3>
-                  <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+                  <p
+                    style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}
+                  >
                     {module.description}
                   </p>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ color: '#cbd5e1', flexShrink: 0, marginTop: '0.25rem' }}>
-                  <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  style={{ color: '#cbd5e1', flexShrink: 0, marginTop: '0.25rem' }}
+                >
+                  <path
+                    d="M6 12l4-4-4-4"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </Link>
             );
@@ -122,6 +155,7 @@ export default function Configurations() {
           text-decoration: none;
           transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
           box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+          height: 100%;
           min-height: 5.5rem;
         }
         .config-module-card:hover {

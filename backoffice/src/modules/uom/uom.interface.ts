@@ -46,4 +46,4 @@ export const UOM_CATEGORIES = [
   'Other',
 ] as const;
 
-export type UomCategory = typeof UOM_CATEGORIES[number];
+export type UomCategory = (typeof UOM_CATEGORIES)[number];

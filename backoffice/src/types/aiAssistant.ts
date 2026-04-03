@@ -57,14 +57,14 @@ export interface ToolDefinition {
   name: string;
   description: string;
   category: 'read' | 'write' | 'analyze';
-  
+
   // JSON schema for parameters
   parameters: {
     type: 'object';
     properties: Record<string, any>;
     required?: string[];
   };
-  
+
   // Permissions and safety
   permissions: {
     requiresAuth: boolean;
@@ -73,13 +73,13 @@ export interface ToolDefinition {
     requiresConfirmation: boolean; // For write operations
     rateLimitPerMinute?: number;
   };
-  
+
   // Execution
   handler: (params: any, context: AppContext) => Promise<ToolResult>;
-  
+
   // Validation
   validator?: (params: any) => { valid: boolean; error?: string };
-  
+
   // Rollback (for write operations)
   rollback?: (params: any, context: AppContext) => Promise<void>;
 }
@@ -176,27 +176,27 @@ export interface SafeAppContext {
     displayName: string;
     permissions: string[];
   };
-  
+
   navigation: {
     currentRoute: string;
     moduleName: string;
     pageTitle: string;
     breadcrumbs: string[];
   };
-  
+
   selection: {
     type: 'text' | 'item' | 'record' | 'none';
     value?: string;
     metadata?: Record<string, any>;
   };
-  
+
   recentErrors: {
     timestamp: number;
     message: string;
     component: string;
     severity: 'error' | 'warning';
   }[];
-  
+
   recentApiCalls: {
     endpoint: string;
     method: string;
@@ -204,7 +204,7 @@ export interface SafeAppContext {
     timestamp: number;
     responseSummary?: string;
   }[];
-  
+
   appState: {
     theme: 'light' | 'dark';
     language: string;
@@ -221,7 +221,7 @@ export interface AuditEvent {
   timestamp: number;
   userId: string;
   sessionId: string;
-  
+
   data: {
     toolName?: string;
     parameters?: any;
@@ -230,13 +230,13 @@ export interface AuditEvent {
     errorMessage?: string;
     messageContent?: string;
   };
-  
+
   context: {
     route: string;
     userAgent: string;
     ipAddress: string;
   };
-  
+
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   flagged: boolean;
   flagReason?: string;
@@ -246,13 +246,13 @@ export interface AuditEvent {
 
 export type PanelState = 'closed' | 'minimized' | 'open' | 'expanded';
 
-export type MessageStatus = 
-  | 'pending' 
-  | 'streaming' 
-  | 'complete' 
-  | 'error' 
-  | 'tool-pending' 
-  | 'tool-complete' 
+export type MessageStatus =
+  | 'pending'
+  | 'streaming'
+  | 'complete'
+  | 'error'
+  | 'tool-pending'
+  | 'tool-complete'
   | 'awaiting-confirmation';
 
 export interface AssistantMessage {

@@ -2,7 +2,7 @@ export interface IDeliveryPerson {
   id: number;
   name: string;
   phoneNumber: string;
-  email: string;
+  email?: string | null;
   isActive: boolean;
   dateCreated: string;
   dateUpdated: string;
@@ -11,7 +11,7 @@ export interface IDeliveryPerson {
 export interface CreateDeliveryPersonDTO {
   name: string;
   phoneNumber: string;
-  email: string;
+  email?: string;
   password: string;
   isActive: boolean;
 }

@@ -1,6 +1,6 @@
 /**
  * Example: How to integrate PDF Action Buttons in Invoice Detail Page
- * 
+ *
  * This shows how to use the full-sized PDF buttons on a detail page
  * where there's more space available.
  */
@@ -57,9 +57,7 @@ export default function InvoiceDetailExample() {
             className="p-button-plain"
           />
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Facture {invoice.invoiceNumber}
-            </h1>
+            <h1 className="text-2xl font-bold text-slate-900">Facture {invoice.invoiceNumber}</h1>
             <p className="text-sm text-slate-500">
               Créée le {new Date(invoice.dateCreated).toLocaleDateString('fr-FR')}
             </p>
@@ -89,14 +87,15 @@ export default function InvoiceDetailExample() {
       {/* Status Badge */}
       <div className="mb-6">
         <span
-          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${invoice.status === 'paid'
-            ? 'bg-green-100 text-green-700'
-            : invoice.status === 'partial'
-              ? 'bg-yellow-100 text-yellow-700'
-              : invoice.status === 'unpaid'
-                ? 'bg-orange-100 text-orange-700'
-                : 'bg-slate-100 text-slate-700'
-            }`}
+          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+            invoice.status === 'paid'
+              ? 'bg-green-100 text-green-700'
+              : invoice.status === 'partial'
+                ? 'bg-yellow-100 text-yellow-700'
+                : invoice.status === 'unpaid'
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-slate-100 text-slate-700'
+          }`}
         >
           {invoice.status === 'paid'
             ? '✓ Payée'
@@ -114,9 +113,7 @@ export default function InvoiceDetailExample() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-slate-600">Client</label>
-            <div className="font-semibold text-slate-900">
-              {invoice.customerName || 'N/A'}
-            </div>
+            <div className="font-semibold text-slate-900">{invoice.customerName || 'N/A'}</div>
           </div>
           <div>
             <label className="text-sm text-slate-600">Date de facture</label>
@@ -126,16 +123,12 @@ export default function InvoiceDetailExample() {
           </div>
           <div>
             <label className="text-sm text-slate-600">Téléphone</label>
-            <div className="font-semibold text-slate-900">
-              {invoice.customerPhone || 'N/A'}
-            </div>
+            <div className="font-semibold text-slate-900">{invoice.customerPhone || 'N/A'}</div>
           </div>
           <div>
             <label className="text-sm text-slate-600">Date d'échéance</label>
             <div className="font-semibold text-slate-900">
-              {invoice.dueDate
-                ? new Date(invoice.dueDate).toLocaleDateString('fr-FR')
-                : 'N/A'}
+              {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('fr-FR') : 'N/A'}
             </div>
           </div>
           {invoice.customerAddress && (
@@ -156,28 +149,62 @@ export default function InvoiceDetailExample() {
           <Column
             field="description"
             header="Description"
-            headerStyle={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
+            headerStyle={{
+              textAlign: 'left',
+              padding: '0.75rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#334155',
+            }}
             bodyStyle={{ padding: '0.75rem 1rem', color: '#0f172a' }}
             body={(item: any) => item.description || item.product?.name || 'N/A'}
           />
           <Column
             field="quantity"
             header="Quantité"
-            headerStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
-            bodyStyle={{ textAlign: 'center', padding: '0.75rem 1rem', fontWeight: 600, color: '#0f172a' }}
+            headerStyle={{
+              textAlign: 'center',
+              padding: '0.75rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#334155',
+            }}
+            bodyStyle={{
+              textAlign: 'center',
+              padding: '0.75rem 1rem',
+              fontWeight: 600,
+              color: '#0f172a',
+            }}
           />
           <Column
             field="unitPrice"
             header="Prix Unitaire"
-            headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
+            headerStyle={{
+              textAlign: 'right',
+              padding: '0.75rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#334155',
+            }}
             bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', color: '#334155' }}
             body={(item: any) => `${NumberformatAmount(item.unitPrice, 2)} DH`}
           />
           <Column
             field="total"
             header="Total"
-            headerStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}
-            bodyStyle={{ textAlign: 'right', padding: '0.75rem 1rem', fontWeight: 600, color: '#0f172a' }}
+            headerStyle={{
+              textAlign: 'right',
+              padding: '0.75rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#334155',
+            }}
+            bodyStyle={{
+              textAlign: 'right',
+              padding: '0.75rem 1rem',
+              fontWeight: 600,
+              color: '#0f172a',
+            }}
             body={(item: any) => `${NumberformatAmount(item.total, 2)} DH`}
           />
         </DataTable>
@@ -189,22 +216,19 @@ export default function InvoiceDetailExample() {
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">Sous-total HT:</span>
             <span className="font-semibold text-slate-900">
-              {formatAmount(Number(invoice.subtotal), 2)}{' '}
-              DH
+              {formatAmount(Number(invoice.subtotal), 2)} DH
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">TVA (20%):</span>
             <span className="font-semibold text-slate-900">
-              {formatAmount(Number(invoice.tax), 2)}{' '}
-              DH
+              {formatAmount(Number(invoice.tax), 2)} DH
             </span>
           </div>
           <div className="flex justify-between pt-3 border-t border-slate-200">
             <span className="font-bold text-slate-900">Total TTC:</span>
             <span className="font-bold text-xl text-blue-600">
-              {formatAmount(Number(invoice.total), 2)}{' '}
-              DH
+              {formatAmount(Number(invoice.total), 2)} DH
             </span>
           </div>
           {invoice.status !== 'draft' && (
@@ -212,15 +236,13 @@ export default function InvoiceDetailExample() {
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Montant payé:</span>
                 <span className="font-semibold text-green-600">
-                  {formatAmount(Number(invoice.paidAmount || 0), 2)}{' '}
-                  DH
+                  {formatAmount(Number(invoice.paidAmount || 0), 2)} DH
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Montant restant:</span>
                 <span className="font-semibold text-orange-600">
-                  {formatAmount(Number(invoice.remainingAmount || invoice.total), 2)}{' '}
-                  DH
+                  {formatAmount(Number(invoice.remainingAmount || invoice.total), 2)} DH
                 </span>
               </div>
             </>
@@ -238,12 +260,7 @@ export default function InvoiceDetailExample() {
 
       {/* Action Buttons at Bottom */}
       <div className="flex justify-between items-center">
-        <Button
-          severity="danger"
-          outlined
-          label="Supprimer"
-          icon={<Trash2 size={16} />}
-        />
+        <Button severity="danger" outlined label="Supprimer" icon={<Trash2 size={16} />} />
 
         {/* Alternative: Large PDF Buttons at bottom */}
         <PDFActionButtons
@@ -259,15 +276,15 @@ export default function InvoiceDetailExample() {
 
 /**
  * INTEGRATION TIPS FOR DETAIL PAGES:
- * 
+ *
  * 1. Use size="md" or size="lg" for better visibility
  * 2. Place buttons in header for quick access
  * 3. Can also place at bottom for secondary action
  * 4. showPreview and showDownload both true gives users choice
  * 5. documentNumber improves user feedback in toast messages
- * 
+ *
  * VARIATIONS:
- * 
+ *
  * // Only preview button (e.g., for quotes that shouldn't be downloaded yet)
  * <PDFActionButtons
  *   documentType="quote"
@@ -276,7 +293,7 @@ export default function InvoiceDetailExample() {
  *   showDownload={false}
  *   size="md"
  * />
- * 
+ *
  * // Only download button (e.g., for finalized invoices)
  * <PDFActionButtons
  *   documentType="invoice"
@@ -285,7 +302,7 @@ export default function InvoiceDetailExample() {
  *   showPreview={false}
  *   size="md"
  * />
- * 
+ *
  * // Custom styling
  * <PDFActionButtons
  *   documentType="delivery-note"

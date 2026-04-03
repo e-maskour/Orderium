@@ -28,7 +28,7 @@ import { Public } from '../auth/decorators/public.decorator';
 @PortalRoute()
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) { }
+  constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new order' })
@@ -70,7 +70,9 @@ export class OrdersController {
     // Allowed page sizes capped at 100 for standard queries
     const allowedPageSizes = [10, 50, 100];
     const parsedPerPage = perPage ? parseInt(perPage, 10) || 50 : 50;
-    const pageSize = allowedPageSizes.includes(parsedPerPage) ? parsedPerPage : 50;
+    const pageSize = allowedPageSizes.includes(parsedPerPage)
+      ? parsedPerPage
+      : 50;
 
     const result = await this.ordersService.filterOrders(
       startDateObj,
@@ -299,14 +301,20 @@ export class OrdersController {
   }
 
   @Patch(':id/update-validated')
-  @ApiOperation({ summary: 'Update an order even if validated — devalidates, updates and re-validates in one transaction' })
+  @ApiOperation({
+    summary:
+      'Update an order even if validated — devalidates, updates and re-validates in one transaction',
+  })
   @ApiResponse({ status: 200, description: 'Order updated successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   async updateValidated(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrderDto: Partial<CreateOrderDto>,
   ) {
-    const order = await this.ordersService.updateValidatedOrder(id, updateOrderDto);
+    const order = await this.ordersService.updateValidatedOrder(
+      id,
+      updateOrderDto,
+    );
     return ApiRes(ORD.UPDATE_VALIDATED, order);
   }
 
@@ -361,8 +369,14 @@ export class OrdersController {
   }
 
   @Patch(':id/status')
-  @ApiOperation({ summary: 'Change order status via workflow (confirmed → picked_up | delivered | cancelled)' })
-  @ApiResponse({ status: 200, description: 'Order status changed successfully' })
+  @ApiOperation({
+    summary:
+      'Change order status via workflow (confirmed → picked_up | delivered | cancelled)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Order status changed successfully',
+  })
   @ApiResponse({ status: 400, description: 'Invalid status transition' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   async changeStatus(
@@ -398,7 +412,9 @@ export class OrdersController {
 
   @Public()
   @Get('shared/:token')
-  @ApiOperation({ summary: 'Get order by share token (public, no auth required)' })
+  @ApiOperation({
+    summary: 'Get order by share token (public, no auth required)',
+  })
   @ApiResponse({ status: 200, description: 'Order retrieved' })
   async getByShareToken(@Param('token') token: string) {
     const order = await this.ordersService.getByShareToken(token);

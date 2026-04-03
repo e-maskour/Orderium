@@ -2,7 +2,7 @@ export default {
   // Document Types
   receipt: 'وصل',
   deliveryNote: 'وصل التسليم',
-  
+
   // Document Actions
   downloadReceipt: 'تحميل الوصل',
   downloadDeliveryNote: 'تحميل وصل التسليم',
@@ -13,7 +13,7 @@ export default {
   download: 'تحميل',
   shareWhatsApp: 'مشاركة عبر واتساب',
   downloadStarted: 'تم بدء التنزيل',
-  
+
   // Invoice Fields
   billTo: 'الفاتورة إلى:',
   invoiceNo: 'رقم الفاتورة:',
@@ -25,7 +25,7 @@ export default {
   item: 'المنتج',
   unitPrice: 'سعر الوحدة',
   customer: 'العميل',
-  
+
   // Receipt Fields
   receiptNo: 'رقم الوصل:',
   user: 'العميل:',

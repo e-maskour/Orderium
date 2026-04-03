@@ -16,7 +16,7 @@ export { notify } from './notify';
 // Confirm dialog
 export { ConfirmDialog } from './ConfirmDialog';
 export type { ConfirmVariant, ConfirmDialogProps } from './ConfirmDialog';
-export { ConfirmProvider, useConfirm } from './ConfirmContext';
+export { ConfirmProvider, useConfirm, confirmAction } from './ConfirmContext';
 export type { ConfirmOptions, ConfirmFn } from './ConfirmContext';
 
 // Usage:

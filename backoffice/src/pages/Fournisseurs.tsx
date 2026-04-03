@@ -1,6 +1,6 @@
 import { AdminLayout } from '../components/AdminLayout';
 import { PageHeader } from '../components/PageHeader';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Users, Eye, Edit2, Trash2, Search, X } from 'lucide-react';
 import { InputText } from 'primereact/inputtext';
@@ -19,7 +19,18 @@ import { MobileList } from '../components/MobileList';
 export default function Fournisseurs() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => setDebouncedSearch(searchInput), 400);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchInput]);
+
   const [selectedSuppliers, setSelectedSuppliers] = useState<number[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingPartnerId, setDeletingPartnerId] = useState<number | null>(null);
@@ -27,8 +38,8 @@ export default function Fournisseurs() {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['partners'],
-    queryFn: partnersService.getAll,
+    queryKey: ['partners-suppliers', debouncedSearch],
+    queryFn: () => partnersService.getAll({ search: debouncedSearch || undefined }),
   });
 
   const suppliers = data?.partners?.filter((p: Partner) => p.isSupplier) || [];
@@ -36,7 +47,7 @@ export default function Fournisseurs() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => partnersService.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['partners'] });
+      queryClient.invalidateQueries({ queryKey: ['partners-suppliers'] });
       toastDeleted(t('supplierDeleted'));
       setShowDeleteConfirm(false);
       setDeletingPartnerId(null);
@@ -48,28 +59,22 @@ export default function Fournisseurs() {
   });
 
   const toggleSelectSupplier = (id: number) => {
-    setSelectedSuppliers(prev =>
-      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+    setSelectedSuppliers((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
     );
   };
 
   const toggleSelectAll = () => {
-    if (selectedSuppliers.length === filteredSuppliers.length) {
+    if (selectedSuppliers.length === suppliers.length) {
       setSelectedSuppliers([]);
     } else {
-      setSelectedSuppliers(filteredSuppliers.map((s: Partner) => s.id));
+      setSelectedSuppliers(suppliers.map((s: Partner) => s.id));
     }
   };
 
   const clearSelection = () => {
     setSelectedSuppliers([]);
   };
-
-  const filteredSuppliers = suppliers.filter((supplier: Partner) =>
-    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.phoneNumber?.includes(searchTerm) ||
-    supplier.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleViewSupplier = (supplier: Partner) => {
     navigate(`/fournisseurs/${supplier.id}`); // unified edit+detail page
@@ -99,13 +104,17 @@ export default function Fournisseurs() {
           id: 'view',
           label: t('view'),
           icon: <Eye style={{ width: '1rem', height: '1rem' }} />,
-          onClick: () => { if (supplier) handleViewSupplier(supplier); },
+          onClick: () => {
+            if (supplier) handleViewSupplier(supplier);
+          },
         },
         {
           id: 'edit',
           label: t('edit'),
           icon: <Edit2 style={{ width: '1rem', height: '1rem' }} />,
-          onClick: () => { if (supplier) handleEditSupplier(supplier); },
+          onClick: () => {
+            if (supplier) handleEditSupplier(supplier);
+          },
         },
       );
     }
@@ -120,7 +129,10 @@ export default function Fournisseurs() {
         } else {
           toastConfirm(
             `${t('delete')} ${selectedSuppliers.length} ${t('suppliers').toLowerCase()}?`,
-            () => { selectedSuppliers.forEach(id => deleteMutation.mutate(id)); clearSelection(); }
+            () => {
+              selectedSuppliers.forEach((id) => deleteMutation.mutate(id));
+              clearSelection();
+            },
           );
         }
       },
@@ -137,31 +149,65 @@ export default function Fournisseurs() {
           title={t('suppliers')}
           subtitle={t('manageSuppliers')}
           actions={
-            <Button onClick={() => navigate('/fournisseurs/create')} icon={<Plus style={{ width: '1rem', height: '1rem' }} />} label="Ajouter fournisseur" />
+            <Button
+              onClick={() => navigate('/fournisseurs/create')}
+              icon={<Plus style={{ width: '1rem', height: '1rem' }} />}
+              label="Ajouter fournisseur"
+            />
           }
         />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          {/* Toolbar */}
-          <div className="partner-list-toolbar">
-            <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-              <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '0.9rem', height: '0.9rem', color: '#94a3b8', pointerEvents: 'none' }} />
-              <InputText id="search-suppliers" type="text" placeholder={t('searchSuppliersPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', paddingLeft: '2.25rem' }} aria-label={t('searchSuppliersPlaceholder')} />
-              {searchTerm && (
-                <Button text rounded onClick={() => setSearchTerm('')} icon={<X style={{ width: '1rem', height: '1rem' }} />} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 10 }} />
-              )}
-            </div>
+          {/* Search */}
+          <div className="page-quick-search">
+            <Search
+              style={{
+                position: 'absolute',
+                left: '0.875rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#94a3b8',
+                width: '1rem',
+                height: '1rem',
+              }}
+            />
+            <InputText
+              id="search-suppliers"
+              type="text"
+              placeholder={t('searchSuppliersPlaceholder')}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              style={{ width: '100%', paddingLeft: '2.5rem' }}
+              aria-label={t('searchSuppliersPlaceholder')}
+            />
+            {searchInput && (
+              <Button
+                text
+                rounded
+                onClick={() => setSearchInput('')}
+                icon={<X style={{ width: '1rem', height: '1rem' }} />}
+                style={{
+                  position: 'absolute',
+                  right: '0.5rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#94a3b8',
+                  zIndex: 10,
+                  padding: '0.25rem',
+                }}
+              />
+            )}
           </div>
 
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
             {/* Mobile cards */}
             <div className="responsive-table-mobile">
               <MobileList
-                items={filteredSuppliers}
+                items={suppliers}
                 keyExtractor={(s: Partner) => s.id}
                 onTap={(s: Partner) => handleViewSupplier(s)}
                 loading={isLoading}
-                totalCount={filteredSuppliers.length}
+                totalCount={suppliers.length}
                 countLabel={t('suppliers')}
                 emptyMessage="Aucun fournisseur trouvé"
                 config={{
@@ -169,7 +215,18 @@ export default function Fournisseurs() {
                   topRight: (s: Partner) => s.phoneNumber || '',
                   bottomLeft: (s: Partner) => s.email || '',
                   bottomRight: (s: Partner) => (
-                    <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(s.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        padding: '0.25rem 0.625rem',
+                        borderRadius: '9999px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        ...(s.isEnabled
+                          ? { backgroundColor: '#dcfce7', color: '#166534' }
+                          : { backgroundColor: '#fee2e2', color: '#991b1b' }),
+                      }}
+                    >
                       {s.isEnabled ? t('active') : t('inactive')}
                     </span>
                   ),
@@ -178,21 +235,43 @@ export default function Fournisseurs() {
             </div>
 
             {/* Desktop DataTable */}
-            {filteredSuppliers.length === 0 ? (
-              <div className="responsive-table-desktop" style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+            {suppliers.length === 0 ? (
+              <div
+                className="responsive-table-desktop"
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #e2e8f0',
+                }}
+              >
                 <EmptyState icon={Users} title="Aucun fournisseur trouvé" />
               </div>
             ) : (
-              <div className="responsive-table-desktop" style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+              <div
+                className="responsive-table-desktop"
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '0.75rem',
+                  border: '1px solid #e2e8f0',
+                  overflow: 'hidden',
+                }}
+              >
                 <DataTable
                   className="fourn-datatable"
-                  value={filteredSuppliers}
-                  selection={filteredSuppliers.filter((s: Partner) => selectedSuppliers.includes(s.id))}
-                  onSelectionChange={(e) => setSelectedSuppliers((e.value as Partner[]).map((s) => s.id))}
+                  value={suppliers}
+                  selection={suppliers.filter((s: Partner) => selectedSuppliers.includes(s.id))}
+                  onSelectionChange={(e) =>
+                    setSelectedSuppliers((e.value as Partner[]).map((s) => s.id))
+                  }
                   selectionMode="checkbox"
                   onRowClick={(e) => {
                     const target = e.originalEvent.target as HTMLElement;
-                    if (target.closest('button') || target.closest('a') || target.closest('.p-checkbox')) return;
+                    if (
+                      target.closest('button') ||
+                      target.closest('a') ||
+                      target.closest('.p-checkbox')
+                    )
+                      return;
                     handleViewSupplier(e.data as Partner);
                   }}
                   rowClassName={() => 'ord-row-clickable'}
@@ -202,27 +281,79 @@ export default function Fournisseurs() {
                   rows={25}
                   rowsPerPageOptions={[10, 25, 50, 100]}
                   removableSort
-                  emptyMessage={<EmptyState icon={Users} title="Aucun fournisseur trouvé" compact />}
+                  emptyMessage={
+                    <EmptyState icon={Users} title="Aucun fournisseur trouvé" compact />
+                  }
                   paginatorTemplate="CurrentPageReport PrevPageLink NextPageLink RowsPerPageDropdown"
                   currentPageReportTemplate={t('pageReportTemplate')}
                 >
                   <Column selectionMode="multiple" headerStyle={{ width: '2.5rem' }} />
-                  <Column field="name" header={t('name')} sortable body={(row: Partner) => (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
+                  <Column
+                    field="name"
+                    header={t('name')}
+                    sortable
+                    body={(row: Partner) => (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div
+                          style={{
+                            width: '2rem',
+                            height: '2rem',
+                            background: 'linear-gradient(to bottom right, #235ae4, #1a47b8)',
+                            borderRadius: '0.375rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Users style={{ width: '1rem', height: '1rem', color: 'white' }} />
+                        </div>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                          {row.name}
+                        </span>
                       </div>
-                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{row.name}</span>
-                    </div>
-                  )} />
-                  <Column field="phoneNumber" header={t('phone')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.phoneNumber || '-'}</span>} />
-                  <Column field="email" header={t('email')} sortable body={(row: Partner) => <span style={{ fontSize: '0.875rem', color: '#475569' }}>{row.email || '-'}</span>} />
-                  <Column field="isEnabled" header={t('status')} body={(row: Partner) => (
-                    <span style={{ display: 'inline-flex', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, ...(row.isEnabled ? { backgroundColor: '#dcfce7', color: '#166534' } : { backgroundColor: '#fee2e2', color: '#991b1b' }) }}>
-                      {row.isEnabled ? t('active') : t('inactive')}
-                    </span>
-                  )} />
-
+                    )}
+                  />
+                  <Column
+                    field="phoneNumber"
+                    header={t('phone')}
+                    sortable
+                    body={(row: Partner) => (
+                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                        {row.phoneNumber || '-'}
+                      </span>
+                    )}
+                  />
+                  <Column
+                    field="email"
+                    header={t('email')}
+                    sortable
+                    body={(row: Partner) => (
+                      <span style={{ fontSize: '0.875rem', color: '#475569' }}>
+                        {row.email || '-'}
+                      </span>
+                    )}
+                  />
+                  <Column
+                    field="isEnabled"
+                    header={t('status')}
+                    body={(row: Partner) => (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          padding: '0.25rem 0.625rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          ...(row.isEnabled
+                            ? { backgroundColor: '#dcfce7', color: '#166534' }
+                            : { backgroundColor: '#fee2e2', color: '#991b1b' }),
+                        }}
+                      >
+                        {row.isEnabled ? t('active') : t('inactive')}
+                      </span>
+                    )}
+                  />
                 </DataTable>
               </div>
             )}
@@ -236,19 +367,65 @@ export default function Fournisseurs() {
           onSelectAll={toggleSelectAll}
           onClearSelection={clearSelection}
           actions={getFloatingActions()}
-          isAllSelected={selectedSuppliers.length === filteredSuppliers.length}
-          totalCount={filteredSuppliers.length}
+          isAllSelected={selectedSuppliers.length === suppliers.length}
+          totalCount={suppliers.length}
         />
       )}
 
       {showDeleteConfirm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', maxWidth: '28rem', width: '100%', padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a', marginBottom: '0.5rem' }}>{t('confirmDelete')}</h3>
-            <p style={{ color: '#475569', marginBottom: '1.5rem' }}>Êtes-vous sûr de vouloir supprimer ce fournisseur ?</p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.75rem' }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '0.5rem',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+              maxWidth: '28rem',
+              width: '100%',
+              padding: '1.5rem',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '1.125rem',
+                fontWeight: 600,
+                color: '#0f172a',
+                marginBottom: '0.5rem',
+              }}
+            >
+              {t('confirmDelete')}
+            </h3>
+            <p style={{ color: '#475569', marginBottom: '1.5rem' }}>
+              Êtes-vous sûr de vouloir supprimer ce fournisseur ?
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: '0.75rem',
+              }}
+            >
               <Button outlined onClick={() => setShowDeleteConfirm(false)} label={t('cancel')} />
-              <Button severity="danger" onClick={confirmDelete} loading={deleteMutation.isPending} label={t('delete')} />
+              <Button
+                severity="danger"
+                onClick={confirmDelete}
+                loading={deleteMutation.isPending}
+                label={t('delete')}
+              />
             </div>
           </div>
         </div>

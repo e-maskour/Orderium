@@ -5,10 +5,10 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * Run with: npm run migration:run:master
  */
 export class CreateTenantsTable1700000000000 implements MigrationInterface {
-    name = 'CreateTenantsTable1700000000000';
+  name = 'CreateTenantsTable1700000000000';
 
-    async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
       CREATE TABLE "tenants" (
         "id"               SERIAL PRIMARY KEY,
         "name"             VARCHAR(100)  NOT NULL,
@@ -32,13 +32,13 @@ export class CreateTenantsTable1700000000000 implements MigrationInterface {
       )
     `);
 
-        await queryRunner.query(`
+    await queryRunner.query(`
       CREATE UNIQUE INDEX "UQ_tenants_slug" ON "tenants" ("slug")
     `);
-    }
+  }
 
-    async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP INDEX IF EXISTS "UQ_tenants_slug"`);
-        await queryRunner.query(`DROP TABLE IF EXISTS "tenants"`);
-    }
+  async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP INDEX IF EXISTS "UQ_tenants_slug"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "tenants"`);
+  }
 }

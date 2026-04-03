@@ -8,7 +8,10 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   if (isLoading) {
     return (
-      <div className="flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+      <div
+        className="flex align-items-center justify-content-center"
+        style={{ minHeight: '100vh' }}
+      >
         <ProgressSpinner />
       </div>
     );

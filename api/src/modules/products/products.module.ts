@@ -5,12 +5,9 @@ import { TenantModule } from '../tenant/tenant.module';
 import { ImagesModule } from '../images/images.module';
 
 @Module({
-  imports: [
-    TenantModule,
-    ImagesModule,
-  ],
+  imports: [TenantModule, ImagesModule],
   controllers: [ProductsController],
   providers: [ProductsService],
   exports: [ProductsService],
 })
-export class ProductsModule { }
+export class ProductsModule {}

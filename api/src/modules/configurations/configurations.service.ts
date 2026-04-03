@@ -16,7 +16,7 @@ export class ConfigurationsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get configRepository(): Repository<Configuration> {
     return this.tenantConnService.getRepository(Configuration);

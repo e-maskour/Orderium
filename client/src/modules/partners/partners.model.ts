@@ -31,8 +31,8 @@ export class Partner implements IPartner {
     public googleMapsUrl?: string,
     public wazeUrl?: string,
     public deliveryAddress?: string,
-    public totalOrders?: number
-  ) { }
+    public totalOrders?: number,
+  ) {}
 
   get displayName(): string {
     return this.name;
@@ -126,7 +126,7 @@ export class Partner implements IPartner {
       data.googleMapsUrl as string | undefined,
       data.wazeUrl as string | undefined,
       data.deliveryAddress as string | undefined,
-      data.totalOrders ? parseInt(String(data.totalOrders)) : undefined
+      data.totalOrders ? parseInt(String(data.totalOrders)) : undefined,
     );
   }
 

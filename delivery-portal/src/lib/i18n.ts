@@ -199,6 +199,12 @@ export const translations = {
     available: 'متاح',
     unavailable: 'غير متاح',
 
+    // Validation
+    validationPhoneRequired: 'رقم الهاتف مطلوب',
+    validationPasswordRequired: 'كلمة المرور مطلوبة',
+    validationCheckFields: 'يرجى مراجعة حقول النموذج',
+    validationUnexpectedError: 'حدث خطأ غير متوقع',
+    validationServerError: 'خطأ في الخادم',
   },
   fr: {
     // App
@@ -260,7 +266,7 @@ export const translations = {
     selectDates: 'Sélectionner les dates',
     selectDateRange: 'Sélectionner une plage',
     predefinedPeriod: 'Période prédéfinie',
-    today: 'Aujourd\'hui',
+    today: "Aujourd'hui",
     yesterday: 'Hier',
     thisWeek: 'Cette semaine',
     lastWeek: 'Semaine dernière',
@@ -340,7 +346,8 @@ export const translations = {
     deliveryDriverAccess: 'Accès Livreur',
     loginHeroTitle: 'Sur la route,',
     loginHeroSubtitle: 'tout sous contrôle.',
-    loginHeroDesc: 'Gérez vos livraisons, naviguez sur les itinéraires et confirmez les commandes en déplacement.',
+    loginHeroDesc:
+      'Gérez vos livraisons, naviguez sur les itinéraires et confirmez les commandes en déplacement.',
     loginSignInDesc: 'Chargez vos missions du jour et prenez la route — chaque livraison compte.',
     loginFeatureRoute: 'Navigation GPS',
     loginFeatureOrderMgmt: 'Gestion des Commandes',
@@ -352,15 +359,17 @@ export const translations = {
     noNotifications: 'Aucune notification',
     markAllRead: 'Tout marquer comme lu',
     allNotificationsMarkedAsRead: 'Toutes les notifications marquées comme lues',
-    justNow: 'À l\'instant',
+    justNow: "À l'instant",
     minutesAgo: 'min',
     hoursAgo: 'h',
-    daysAgo: 'j', earlier: 'Plus tôt',
+    daysAgo: 'j',
+    earlier: 'Plus tôt',
     clearAll: 'Tout effacer',
     notificationsUpToDate: 'Aucune alerte pour le moment',
     noNotificationsFiltered: 'Aucun résultat',
     newNotification: 'Nouvelle notification',
-    filterAlerts: 'Alertes', 'notifications.newOrder': 'Nouvelle commande',
+    filterAlerts: 'Alertes',
+    'notifications.newOrder': 'Nouvelle commande',
     'notifications.orderAssigned': 'Commande assignée',
     'notifications.statusChanged': 'Mise à jour statut',
     'notifications.orderCancelled': 'Commande annulée',
@@ -394,6 +403,13 @@ export const translations = {
 
     // Currency
     currency: 'DH',
+
+    // Validation
+    validationPhoneRequired: 'Le numéro de téléphone est requis',
+    validationPasswordRequired: 'Le mot de passe est requis',
+    validationCheckFields: 'Veuillez vérifier les champs du formulaire',
+    validationUnexpectedError: "Une erreur inattendue s'est produite",
+    validationServerError: 'Erreur du serveur',
   },
 };
 

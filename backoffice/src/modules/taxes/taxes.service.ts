@@ -18,11 +18,11 @@ export class TaxesService {
 
   async createRate(data: CreateTaxRateDTO): Promise<TaxesConfiguration> {
     const config = await this.getConfiguration();
-    const newRates = [...config.rates.map(r => r.toJSON())];
+    const newRates = [...config.rates.map((r) => r.toJSON())];
 
     // If setting as default, remove default from others
     if (data.isDefault) {
-      newRates.forEach(r => r.isDefault = false);
+      newRates.forEach((r) => (r.isDefault = false));
     }
 
     newRates.push({
@@ -31,7 +31,7 @@ export class TaxesService {
       isDefault: data.isDefault || false,
     });
 
-    const newDefaultRate = newRates.find(r => r.isDefault)?.rate || config.defaultRate;
+    const newDefaultRate = newRates.find((r) => r.isDefault)?.rate || config.defaultRate;
 
     return this.updateConfiguration({
       rates: newRates,
@@ -41,7 +41,7 @@ export class TaxesService {
 
   async updateRate(index: number, data: UpdateTaxRateDTO): Promise<TaxesConfiguration> {
     const config = await this.getConfiguration();
-    const newRates = config.rates.map(r => r.toJSON());
+    const newRates = config.rates.map((r) => r.toJSON());
 
     if (index < 0 || index >= newRates.length) {
       throw new Error('Invalid tax rate index');
@@ -49,7 +49,7 @@ export class TaxesService {
 
     // If setting as default, remove default from others
     if (data.isDefault) {
-      newRates.forEach(r => r.isDefault = false);
+      newRates.forEach((r) => (r.isDefault = false));
     }
 
     newRates[index] = {
@@ -57,7 +57,7 @@ export class TaxesService {
       ...data,
     };
 
-    const newDefaultRate = newRates.find(r => r.isDefault)?.rate || config.defaultRate;
+    const newDefaultRate = newRates.find((r) => r.isDefault)?.rate || config.defaultRate;
 
     return this.updateConfiguration({
       rates: newRates,
@@ -67,9 +67,9 @@ export class TaxesService {
 
   async deleteRate(index: number): Promise<TaxesConfiguration> {
     const config = await this.getConfiguration();
-    const newRates = config.rates.map(r => r.toJSON()).filter((_, i) => i !== index);
+    const newRates = config.rates.map((r) => r.toJSON()).filter((_, i) => i !== index);
 
-    const newDefaultRate = newRates.find(r => r.isDefault)?.rate || (newRates[0]?.rate || 0);
+    const newDefaultRate = newRates.find((r) => r.isDefault)?.rate || newRates[0]?.rate || 0;
 
     return this.updateConfiguration({
       rates: newRates,
@@ -81,7 +81,9 @@ export class TaxesService {
     if (!this.configId) {
       await this.getConfiguration();
     }
-    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), { values });
+    const response = await apiClient.patch<any>(API_ROUTES.CONFIGURATIONS.UPDATE(this.configId!), {
+      values,
+    });
     return TaxesConfiguration.fromApiResponse(response.data.values);
   }
 }

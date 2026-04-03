@@ -7,6 +7,8 @@ export interface ConfirmDialogProps {
     open: boolean;
     title: string;
     description?: string;
+    /** Optional secondary detail line — e.g. record name, reference, or affected count */
+    detail?: string;
     confirmLabel?: string;
     cancelLabel?: string;
     variant?: ConfirmVariant;
@@ -14,25 +16,52 @@ export interface ConfirmDialogProps {
     onCancel: () => void;
 }
 
-const VARIANT_CONFIG: Record<ConfirmVariant, {
+interface VariantTokens {
     icon: typeof Trash2;
-    className: string;
-}> = {
+    accentGradient: string;
+    ringColor: string;         // outer ring background
+    iconBg: string;            // inner icon circle background
+    iconColor: string;         // icon stroke color
+    confirmBg: string;         // confirm button background
+    confirmHoverBg: string;    // confirm button hover background
+}
+
+const VARIANTS: Record<ConfirmVariant, VariantTokens> = {
     destructive: {
         icon: Trash2,
-        className: 'ord-confirm--destructive',
+        accentGradient: 'linear-gradient(90deg, #ef4444, #dc2626)',
+        ringColor: 'rgba(239, 68, 68, 0.12)',
+        iconBg: '#fef2f2',
+        iconColor: '#dc2626',
+        confirmBg: '#dc2626',
+        confirmHoverBg: '#b91c1c',
     },
     warning: {
         icon: ShieldAlert,
-        className: 'ord-confirm--warning',
+        accentGradient: 'linear-gradient(90deg, #f59e0b, #d97706)',
+        ringColor: 'rgba(245, 158, 11, 0.12)',
+        iconBg: '#fffbeb',
+        iconColor: '#d97706',
+        confirmBg: '#d97706',
+        confirmHoverBg: '#b45309',
     },
     neutral: {
         icon: CheckCircle,
-        className: 'ord-confirm--neutral',
+        accentGradient: 'linear-gradient(90deg, #10b981, #059669)',
+        ringColor: 'rgba(16, 185, 129, 0.12)',
+        iconBg: '#ecfdf5',
+        iconColor: '#059669',
+        confirmBg: '#059669',
+        confirmHoverBg: '#047857',
     },
     info: {
         icon: Info,
-        className: 'ord-confirm--info',
+        accentGradient: 'linear-gradient(90deg, #3b82f6, #2563eb)',
+        ringColor: 'rgba(59, 130, 246, 0.12)',
+        iconBg: '#eff6ff',
+        iconColor: '#2563eb',
+        confirmBg: '#2563eb',
+        confirmHoverBg: '#1d4ed8',
     },
 };
 
@@ -40,6 +69,7 @@ export function ConfirmDialog({
     open,
     title,
     description,
+    detail,
     confirmLabel = 'Confirmer',
     cancelLabel = 'Annuler',
     variant = 'neutral',
@@ -48,8 +78,8 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
     const dialogRef = useRef<HTMLDivElement>(null);
     const confirmBtnRef = useRef<HTMLButtonElement>(null);
-    const config = VARIANT_CONFIG[variant];
-    const Icon = config.icon;
+    const tokens = VARIANTS[variant];
+    const Icon = tokens.icon;
 
     useEffect(() => {
         if (!open) return;
@@ -99,7 +129,14 @@ export function ConfirmDialog({
             aria-labelledby="ord-confirm-title"
             aria-describedby={description ? 'ord-confirm-desc' : undefined}
         >
-            <div className={`ord-confirm-panel ${config.className}`} ref={dialogRef}>
+            <div className="ord-confirm-panel" ref={dialogRef}>
+                {/* Accent bar — inline so PrimeReact ::before resets can't touch it */}
+                <div
+                    className="ord-confirm-accent"
+                    style={{ background: tokens.accentGradient }}
+                    aria-hidden="true"
+                />
+
                 <button
                     className="ord-confirm-close"
                     onClick={onCancel}
@@ -109,15 +146,26 @@ export function ConfirmDialog({
                     <X size={20} />
                 </button>
 
-                <div className="ord-confirm-icon-ring">
-                    <div className="ord-confirm-icon">
+                {/* Icon ring */}
+                <div
+                    className="ord-confirm-icon-ring"
+                    style={{ background: tokens.ringColor }}
+                >
+                    <div
+                        className="ord-confirm-icon"
+                        style={{ background: tokens.iconBg, color: tokens.iconColor }}
+                    >
                         <Icon size={28} strokeWidth={2} />
                     </div>
                 </div>
 
                 <h2 id="ord-confirm-title" className="ord-confirm-title">{title}</h2>
+
                 {description && (
                     <p id="ord-confirm-desc" className="ord-confirm-desc">{description}</p>
+                )}
+                {detail && (
+                    <p className="ord-confirm-detail">{detail}</p>
                 )}
 
                 <div className="ord-confirm-divider" />
@@ -127,6 +175,7 @@ export function ConfirmDialog({
                         className="ord-confirm-btn ord-confirm-btn--cancel"
                         onClick={onCancel}
                         type="button"
+                        style={{ minHeight: '48px' }}
                     >
                         {cancelLabel}
                     </button>
@@ -135,6 +184,18 @@ export function ConfirmDialog({
                         className="ord-confirm-btn ord-confirm-btn--confirm"
                         onClick={onConfirm}
                         type="button"
+                        style={{
+                            background: tokens.confirmBg,
+                            color: '#ffffff',
+                            border: 'none',
+                            minHeight: '48px',
+                        }}
+                        onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLButtonElement).style.background = tokens.confirmHoverBg;
+                        }}
+                        onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLButtonElement).style.background = tokens.confirmBg;
+                        }}
                     >
                         {confirmLabel}
                     </button>

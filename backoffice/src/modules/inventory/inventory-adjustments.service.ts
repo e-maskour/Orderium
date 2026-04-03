@@ -1,9 +1,6 @@
 import { apiClient, API_ROUTES } from '../../common';
 import { InventoryAdjustment } from './inventory.model';
-import type {
-  CreateAdjustmentDto,
-  ValidateAdjustmentDto,
-} from './inventory.interface';
+import type { CreateAdjustmentDto, ValidateAdjustmentDto } from './inventory.interface';
 
 export type { CreateAdjustmentDto, ValidateAdjustmentDto };
 
@@ -39,7 +36,9 @@ export class InventoryAdjustmentService {
   }
 
   async generateCountingList(warehouseId: number): Promise<any> {
-    const result = await apiClient.get<any>(API_ROUTES.INVENTORY_ADJUSTMENTS.GENERATE_LIST(warehouseId));
+    const result = await apiClient.get<any>(
+      API_ROUTES.INVENTORY_ADJUSTMENTS.GENERATE_LIST(warehouseId),
+    );
     return result.data;
   }
 

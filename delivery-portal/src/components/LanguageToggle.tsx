@@ -25,19 +25,24 @@ export const LanguageToggle = ({ variant = 'light' }: LanguageToggleProps) => {
       title={language === 'ar' ? t('switchToFrench') : t('switchToArabic')}
       aria-label={language === 'ar' ? t('switchToFrench') : t('switchToArabic')}
       style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: '2.75rem', height: '2.75rem', borderRadius: '50%',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '2.75rem',
+        height: '2.75rem',
+        borderRadius: '50%',
         border: `2px solid ${borderBase}`,
         background: bgBase,
-        cursor: 'pointer', transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
+        cursor: 'pointer',
+        transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
         outline: 'none',
       }}
-      onMouseEnter={e => {
+      onMouseEnter={(e) => {
         (e.currentTarget as HTMLButtonElement).style.background = bgHover;
         (e.currentTarget as HTMLButtonElement).style.borderColor = borderHover;
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)';
       }}
-      onMouseLeave={e => {
+      onMouseLeave={(e) => {
         (e.currentTarget as HTMLButtonElement).style.background = bgBase;
         (e.currentTarget as HTMLButtonElement).style.borderColor = borderBase;
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';

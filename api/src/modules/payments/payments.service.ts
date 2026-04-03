@@ -11,7 +11,7 @@ export class PaymentsService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get paymentsRepository(): Repository<Payment> {
     return this.tenantConnService.getRepository(Payment);
@@ -42,7 +42,24 @@ export class PaymentsService {
     return savedPayment;
   }
 
-  async findAll(): Promise<Payment[]> {
+  async findAll(search?: string): Promise<Payment[]> {
+    if (search) {
+      const q = `%${search.toLowerCase()}%`;
+      return this.paymentsRepository
+        .createQueryBuilder('payment')
+        .leftJoinAndSelect('payment.invoice', 'invoice')
+        .where(
+          `(LOWER(invoice.documentNumber) LIKE :q
+           OR LOWER(invoice.customerName) LIKE :q
+           OR LOWER(invoice.customerPhone) LIKE :q
+           OR LOWER(invoice.supplierName) LIKE :q
+           OR LOWER(invoice.supplierPhone) LIKE :q)`,
+          { q },
+        )
+        .orderBy('payment.paymentDate', 'DESC')
+        .addOrderBy('payment.createdAt', 'DESC')
+        .getMany();
+    }
     return this.paymentsRepository.find({
       relations: ['invoice'],
       order: { paymentDate: 'DESC', createdAt: 'DESC' },

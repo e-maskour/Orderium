@@ -19,7 +19,12 @@ interface DocumentAnalysisChartProps {
 type MeasureType = 'subtotal' | 'total' | 'margin' | 'count' | 'status';
 type ChartType = 'bar' | 'line';
 
-export function DocumentAnalysisChart({ documents, documentType, analytics, onYearChange }: DocumentAnalysisChartProps) {
+export function DocumentAnalysisChart({
+  documents,
+  documentType,
+  analytics,
+  onYearChange,
+}: DocumentAnalysisChartProps) {
   const { t, language } = useLanguage();
   const currentYear = new Date().getFullYear();
 
@@ -45,7 +50,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
 
     // Otherwise, get years from documents
     const years = new Set<number>();
-    documents.forEach(doc => {
+    documents.forEach((doc) => {
       const year = new Date(doc.date).getFullYear();
       if (!isNaN(year)) {
         years.add(year);
@@ -58,7 +63,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
   const statusData = useMemo(() => {
     const statusCounts: Record<string, number> = {};
 
-    documents.forEach(doc => {
+    documents.forEach((doc) => {
       const docDate = new Date(doc.date);
       const year = docDate.getFullYear();
 
@@ -74,22 +79,28 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
   // Calculate monthly data
   const monthlyData = useMemo(() => {
     // If analytics data is available and showing total/count, use it
-    if (analytics && analytics.chartData && (selectedMeasure === 'total' || selectedMeasure === 'count')) {
+    if (
+      analytics &&
+      analytics.chartData &&
+      (selectedMeasure === 'total' || selectedMeasure === 'count')
+    ) {
       return analytics.chartData.map((data: any) => ({
         month: data.month - 1, // Convert from 1-based to 0-based
         value: selectedMeasure === 'count' ? data.count : data.amount,
-        count: data.count
+        count: data.count,
       }));
     }
 
     // Otherwise, calculate from documents (fallback)
-    const monthsData = Array(12).fill(0).map((_, index) => ({
-      month: index,
-      value: 0,
-      count: 0
-    }));
+    const monthsData = Array(12)
+      .fill(0)
+      .map((_, index) => ({
+        month: index,
+        value: 0,
+        count: 0,
+      }));
 
-    documents.forEach(doc => {
+    documents.forEach((doc) => {
       const docDate = new Date(doc.date);
       const year = docDate.getFullYear();
       const month = docDate.getMonth();
@@ -108,7 +119,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           case 'margin':
             // Margin = Total - (paid amount for invoices) or Total - Subtotal (tax)
             if (documentType === 'facture') {
-              monthData.value += (doc.total - (doc.paidAmount || 0));
+              monthData.value += doc.total - (doc.paidAmount || 0);
             } else {
               monthData.value += doc.tax || 0;
             }
@@ -141,25 +152,23 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
   const measureOptions = useMemo(() => {
     const options: { value: MeasureType; label: string }[] = [
       { value: 'count', label: t('count') || 'Nombre' },
-      { value: 'status', label: t('status') || 'Statut' }
+      { value: 'status', label: t('status') || 'Statut' },
     ];
 
     if (documentType === 'facture') {
       options.push(
         { value: 'subtotal', label: t('amountHT') || 'Total HT' },
         { value: 'total', label: t('amountTTC') || 'Total TTC' },
-        { value: 'margin', label: t('remaining') || 'Reste à payer' }
+        { value: 'margin', label: t('remaining') || 'Reste à payer' },
       );
     } else if (documentType === 'devis') {
       options.push(
         { value: 'subtotal', label: t('amountHT') || 'Total HT' },
         { value: 'total', label: t('amountTTC') || 'Total TTC' },
-        { value: 'margin', label: t('taxAmount') || 'Montant TVA' }
+        { value: 'margin', label: t('taxAmount') || 'Montant TVA' },
       );
     } else if (documentType === 'bon_livraison') {
-      options.push(
-        { value: 'total', label: t('totalValue') || 'Valeur totale' }
-      );
+      options.push({ value: 'total', label: t('totalValue') || 'Valeur totale' });
     }
 
     return options;
@@ -177,7 +186,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
     t('september') || 'Sep',
     t('october') || 'Oct',
     t('november') || 'Nov',
-    t('december') || 'Déc'
+    t('december') || 'Déc',
   ];
 
   // Prepare series and labels based on measure
@@ -186,7 +195,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
       // For status measure, show status breakdown
       const statuses = Object.keys(statusData);
       const values = Object.values(statusData);
-      const statusLabels = statuses.map(s => {
+      const statusLabels = statuses.map((s) => {
         // Translate status labels
         const statusTranslations: Record<string, string> = {
           draft: t('draft') || 'Brouillon',
@@ -200,26 +209,30 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           invoiced: t('invoiced') || 'Facturé',
           validated: t('validated') || 'Validé',
           in_progress: t('inProgress') || 'En cours',
-          cancelled: t('cancelled') || 'Annulé'
+          cancelled: t('cancelled') || 'Annulé',
         };
         return statusTranslations[s] || s;
       });
 
       return {
-        series: [{
-          name: t('status') || 'Statut',
-          data: values
-        }],
-        labels: statusLabels
+        series: [
+          {
+            name: t('status') || 'Statut',
+            data: values,
+          },
+        ],
+        labels: statusLabels,
       };
     } else {
       // For other measures, show monthly data
       return {
-        series: [{
-          name: measureOptions.find(m => m.value === selectedMeasure)?.label || '',
-          data: monthlyData.map((m: any) => m.value)
-        }],
-        labels: monthNames
+        series: [
+          {
+            name: measureOptions.find((m) => m.value === selectedMeasure)?.label || '',
+            data: monthlyData.map((m: any) => m.value),
+          },
+        ],
+        labels: monthNames,
       };
     }
   }, [selectedMeasure, monthlyData, statusData, monthNames, measureOptions, t]);
@@ -237,21 +250,21 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           zoomin: false,
           zoomout: false,
           pan: false,
-          reset: false
-        }
+          reset: false,
+        },
       },
       fontFamily: 'inherit',
       animations: {
         enabled: true,
-        speed: 800
-      }
+        speed: 800,
+      },
     },
     dataLabels: {
-      enabled: false
+      enabled: false,
     },
     stroke: {
       curve: chartType === 'line' || chartType === 'bar' ? 'smooth' : 'straight',
-      width: chartType === 'line' ? 3 : chartType === 'bar' ? 0 : 1
+      width: chartType === 'line' ? 3 : chartType === 'bar' ? 0 : 1,
     },
     colors: ['#235ae4'],
     fill: {
@@ -261,49 +274,54 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
           shadeIntensity: 1,
           opacityFrom: 0.35,
           opacityTo: 0.05,
-          stops: [0, 90, 100]
-        }
-      })
+          stops: [0, 90, 100],
+        },
+      }),
     },
     plotOptions: {
       bar: {
         borderRadius: 8,
-        columnWidth: '60%'
-      }
+        columnWidth: '60%',
+      },
     },
     legend: {
-      show: false
+      show: false,
     },
     xaxis: {
       categories: labels,
       labels: {
         style: {
           colors: '#64748b',
-          fontSize: '12px'
-        }
-      }
+          fontSize: '12px',
+        },
+      },
     },
     yaxis: {
       labels: {
         style: {
           colors: '#64748b',
-          fontSize: '12px'
+          fontSize: '12px',
         },
         formatter: (value) => {
           if (selectedMeasure === 'count' || selectedMeasure === 'status') {
             return value.toFixed(0);
           }
           return formatAmount(value, 0);
-        }
+        },
       },
       title: {
-        text: (selectedMeasure === 'count' || selectedMeasure === 'status') ? t('count') || 'Nombre' : language === 'ar' ? 'د.م' : 'DH',
+        text:
+          selectedMeasure === 'count' || selectedMeasure === 'status'
+            ? t('count') || 'Nombre'
+            : language === 'ar'
+              ? 'د.م'
+              : 'DH',
         style: {
           color: '#64748b',
           fontSize: '12px',
-          fontWeight: 600
-        }
-      }
+          fontWeight: 600,
+        },
+      },
     },
     tooltip: {
       theme: 'light',
@@ -313,20 +331,20 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
             return `${value} ${documentType === 'facture' ? t('invoices') || 'factures' : documentType === 'devis' ? t('quotes') || 'devis' : t('deliveries') || 'bons'}`;
           }
           return `${formatAmount(value, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`;
-        }
+        },
       },
       x: {
-        show: true
-      }
+        show: true,
+      },
     },
     grid: {
       borderColor: '#e2e8f0',
       strokeDashArray: 4,
       xaxis: {
         lines: {
-          show: false
-        }
-      }
+          show: false,
+        },
+      },
     },
     markers: {
       size: 4,
@@ -334,9 +352,9 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
       strokeColors: '#fff',
       strokeWidth: 2,
       hover: {
-        size: 6
-      }
-    }
+        size: 6,
+      },
+    },
   };
 
   // Calculate total for selected year
@@ -352,21 +370,50 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
   }
 
   return (
-    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #e2e8f0' }}>
+    <div
+      style={{
+        backgroundColor: '#ffffff',
+        borderRadius: '0.75rem',
+        padding: '1.25rem',
+        border: '1px solid #e2e8f0',
+      }}
+    >
       {/* Header with controls */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div
+        style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: '#eff3ff', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div
+              style={{
+                width: '2.5rem',
+                height: '2.5rem',
+                backgroundColor: '#eff3ff',
+                borderRadius: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
               <TrendingUp style={{ width: '1.25rem', height: '1.25rem', color: '#235ae4' }} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{chartTitle}</h3>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>
+                {chartTitle}
+              </h3>
               <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
-                {(selectedMeasure === 'count' || selectedMeasure === 'status')
+                {selectedMeasure === 'count' || selectedMeasure === 'status'
                   ? `${yearTotal} ${t('documents') || 'documents'}`
-                  : `${formatAmount(yearTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`
-                }
+                  : `${formatAmount(yearTotal, 2)} ${language === 'ar' ? 'د.م' : 'DH'}`}
               </p>
             </div>
           </div>
@@ -417,7 +464,7 @@ export function DocumentAnalysisChart({ documents, documentType, analytics, onYe
             {/* Year selector */}
             <Dropdown
               value={selectedYear}
-              options={availableYears.map(y => ({ label: String(y), value: y }))}
+              options={availableYears.map((y) => ({ label: String(y), value: y }))}
               onChange={(e) => handleYearChange(e.value)}
               optionLabel="label"
               optionValue="value"

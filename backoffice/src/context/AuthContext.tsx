@@ -10,6 +10,7 @@ interface Admin {
   isDelivery: boolean;
   isAdmin: boolean;
   roleId?: number | null;
+  roleName?: string | null;
   isSuperAdmin?: boolean;
   permissions?: string[];
 }
@@ -31,6 +32,7 @@ const normalizeAdmin = (raw: any): Admin | null => {
     isCustomer: Boolean(isCustomer),
     isDelivery: Boolean(isDelivery),
     roleId: raw.roleId ?? null,
+    roleName: raw.roleName ?? null,
     isSuperAdmin: Boolean(raw.isSuperAdmin),
     permissions: Array.isArray(raw.permissions) ? raw.permissions : [],
   };
@@ -113,7 +115,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ admin, login, logout, isAuthenticated, isLoading, hasPermission }}>
+    <AuthContext.Provider
+      value={{ admin, login, logout, isAuthenticated, isLoading, hasPermission }}
+    >
       {children}
     </AuthContext.Provider>
   );

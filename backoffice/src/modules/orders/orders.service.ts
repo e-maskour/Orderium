@@ -23,9 +23,14 @@ export class OrdersService {
     const filters: any = {};
     let remainingSearch = search || '';
     if (search) {
-      search.split(' ').forEach(part => {
-        if (part.startsWith('customerId:')) { filters.customerId = parseInt(part.split(':')[1]); remainingSearch = remainingSearch.replace(part, '').trim(); }
-        else if (part.startsWith('deliveryPersonId:')) { filters.deliveryPersonId = parseInt(part.split(':')[1]); remainingSearch = remainingSearch.replace(part, '').trim(); }
+      search.split(' ').forEach((part) => {
+        if (part.startsWith('customerId:')) {
+          filters.customerId = parseInt(part.split(':')[1]);
+          remainingSearch = remainingSearch.replace(part, '').trim();
+        } else if (part.startsWith('deliveryPersonId:')) {
+          filters.deliveryPersonId = parseInt(part.split(':')[1]);
+          remainingSearch = remainingSearch.replace(part, '').trim();
+        }
       });
     }
 
@@ -44,7 +49,9 @@ export class OrdersService {
     if (filters.deliveryPersonId) body.deliveryPersonId = filters.deliveryPersonId;
     if (fromClient !== undefined) body.fromClient = fromClient;
 
-    const response = await apiClient.post<any[]>(API_ROUTES.ORDERS.FILTER, body, { params: queryParams });
+    const response = await apiClient.post<any[]>(API_ROUTES.ORDERS.FILTER, body, {
+      params: queryParams,
+    });
 
     const orders = response.data || [];
     if (Array.isArray(orders)) {
@@ -70,12 +77,18 @@ export class OrdersService {
   }
 
   async updateValidated(orderId: number, orderData: any): Promise<Order> {
-    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.UPDATE_VALIDATED(orderId), orderData);
+    const response = await apiClient.patch<any>(
+      API_ROUTES.ORDERS.UPDATE_VALIDATED(orderId),
+      orderData,
+    );
     return Order.fromApiResponse(response.data);
   }
 
   async assignToDelivery(orderId: number, deliveryPersonId: number): Promise<void> {
-    await apiClient.post(API_ROUTES.DELIVERY.ASSIGN, { OrderId: orderId, DeliveryPersonId: deliveryPersonId });
+    await apiClient.post(API_ROUTES.DELIVERY.ASSIGN, {
+      OrderId: orderId,
+      DeliveryPersonId: deliveryPersonId,
+    });
   }
 
   async unassignOrder(orderId: number): Promise<void> {
@@ -103,12 +116,16 @@ export class OrdersService {
   }
 
   async changeStatus(orderId: number, status: string): Promise<Order> {
-    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.CHANGE_STATUS(orderId), { status });
+    const response = await apiClient.patch<any>(API_ROUTES.ORDERS.CHANGE_STATUS(orderId), {
+      status,
+    });
     return Order.fromApiResponse(response.data);
   }
 
   async markAsInvoiced(orderId: number, invoiceId: number): Promise<Order> {
-    const response = await apiClient.put<any>(API_ROUTES.ORDERS.MARK_INVOICED(orderId), { invoiceId });
+    const response = await apiClient.put<any>(API_ROUTES.ORDERS.MARK_INVOICED(orderId), {
+      invoiceId,
+    });
     return Order.fromApiResponse(response.data);
   }
 
@@ -124,7 +141,9 @@ export class OrdersService {
   }
 
   async getAnalytics(direction: 'vente' | 'achat', year: number): Promise<any> {
-    const response = await apiClient.get<any>(API_ROUTES.ORDERS.ANALYTICS(direction), { params: { year } });
+    const response = await apiClient.get<any>(API_ROUTES.ORDERS.ANALYTICS(direction), {
+      params: { year },
+    });
     return response.data;
   }
 

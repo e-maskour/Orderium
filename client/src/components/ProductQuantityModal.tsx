@@ -44,7 +44,12 @@ interface ProductQuantityModalProps {
   initialQuantity?: number;
 }
 
-export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity = 0 }: ProductQuantityModalProps) => {
+export const ProductQuantityModal = ({
+  product,
+  isOpen,
+  onClose,
+  initialQuantity = 0,
+}: ProductQuantityModalProps) => {
   const { language, t, dir } = useLanguage();
   const { addItem, updateQuantity, getItemQuantity } = useCart();
   const [quantity, setQuantity] = useState('');
@@ -138,42 +143,87 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
   const unitCode = product.saleUnitOfMeasure?.code || 'UNIT';
 
   const modalContent = (
-    <div className="fixed flex align-items-center justify-content-center" style={{ inset: 0, zIndex: 50, pointerEvents: 'none' }} dir={dir}>
+    <div
+      className="fixed flex align-items-center justify-content-center"
+      style={{ inset: 0, zIndex: 50, pointerEvents: 'none' }}
+      dir={dir}
+    >
       <div
         className="absolute"
         onClick={handleClose}
-        style={{ inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 0, pointerEvents: 'auto', animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards' }}
+        style={{
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 0,
+          pointerEvents: 'auto',
+          animation: 'backdropFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+        }}
       />
       <div
         className="relative surface-card border-round-2xl shadow-8 overflow-hidden"
-        style={{ maxWidth: '32rem', width: '95vw', margin: '0 1rem', zIndex: 10, pointerEvents: 'auto', animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
+        style={{
+          maxWidth: '32rem',
+          width: '95vw',
+          margin: '0 1rem',
+          zIndex: 10,
+          pointerEvents: 'auto',
+          animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        }}
       >
-        <div className="relative p-3 border-bottom-1 surface-border" style={{ background: 'linear-gradient(to bottom right, rgba(var(--primary-color-rgb, 16,185,129), 0.1), rgba(var(--primary-color-rgb, 16,185,129), 0.05))' }}>
+        <div
+          className="relative p-3 border-bottom-1 surface-border"
+          style={{
+            background:
+              'linear-gradient(to bottom right, rgba(var(--primary-color-rgb, 16,185,129), 0.1), rgba(var(--primary-color-rgb, 16,185,129), 0.05))',
+          }}
+        >
           <button
             type="button"
             onClick={handleClose}
             aria-label="Close"
             style={{
-              position: 'absolute', top: '0.75rem', [dir === 'rtl' ? 'left' : 'right']: '0.75rem',
-              width: '2rem', height: '2rem', borderRadius: '50%',
-              border: '1px solid var(--surface-border)', background: 'var(--surface-card)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'absolute',
+              top: '0.75rem',
+              [dir === 'rtl' ? 'left' : 'right']: '0.75rem',
+              width: '2rem',
+              height: '2rem',
+              borderRadius: '50%',
+              border: '1px solid var(--surface-border)',
+              background: 'var(--surface-card)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               transition: 'transform 0.2s',
             }}
           >
             <X style={{ width: '1rem', height: '1rem', color: 'var(--text-color)' }} />
           </button>
           <div style={{ [dir === 'rtl' ? 'paddingLeft' : 'paddingRight']: '2.5rem' }}>
-            <h2 className="text-base font-bold text-color mb-1" style={{ lineHeight: '1.25' }}>{displayName}</h2>
+            <h2 className="text-base font-bold text-color mb-1" style={{ lineHeight: '1.25' }}>
+              {displayName}
+            </h2>
             <div className="flex align-items-baseline gap-2">
-              <span className="text-lg font-bold text-primary">{formatCurrency(product.price, language)}</span>
+              <span className="text-lg font-bold text-primary">
+                {formatCurrency(product.price, language)}
+              </span>
               <span className="text-xs text-color-secondary">/ {unitCode}</span>
             </div>
-            {product.code && <p className="text-xs text-color-secondary mt-1 mb-0">{t('code')}: {product.code}</p>}
+            {product.code && (
+              <p className="text-xs text-color-secondary mt-1 mb-0">
+                {t('code')}: {product.code}
+              </p>
+            )}
           </div>
         </div>
-        <div className="p-3 flex flex-column gap-3" style={{ animation: 'contentStagger 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards' }}>
+        <div
+          className="p-3 flex flex-column gap-3"
+          style={{
+            animation: 'contentStagger 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s backwards',
+          }}
+        >
           <div className="flex flex-column gap-2">
             <label className="text-xs font-semibold text-color-secondary">{t('quantity')}</label>
             <InputText
@@ -183,7 +233,13 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
               value={quantity}
               onChange={handleInputChange}
               className="w-full text-center font-bold border-round-xl border-2 surface-border"
-              style={{ height: '3.5rem', fontSize: '1.5rem', background: 'var(--surface-50)', outline: 'none', transition: 'border-color 0.2s' }}
+              style={{
+                height: '3.5rem',
+                fontSize: '1.5rem',
+                background: 'var(--surface-50)',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+              }}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.375rem' }}>
@@ -199,9 +255,19 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
             ))}
           </div>
           {hasQuantity && (
-            <div className="flex align-items-center justify-content-between p-3 border-round-xl border-1" style={{ background: 'linear-gradient(to right, rgba(var(--primary-color-rgb, 16,185,129), 0.05), rgba(var(--primary-color-rgb, 16,185,129), 0.1))', borderColor: 'rgba(var(--primary-color-rgb, 16,185,129), 0.2)', animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards' }}>
+            <div
+              className="flex align-items-center justify-content-between p-3 border-round-xl border-1"
+              style={{
+                background:
+                  'linear-gradient(to right, rgba(var(--primary-color-rgb, 16,185,129), 0.05), rgba(var(--primary-color-rgb, 16,185,129), 0.1))',
+                borderColor: 'rgba(var(--primary-color-rgb, 16,185,129), 0.2)',
+                animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+              }}
+            >
               <span className="text-sm font-semibold text-color-secondary">{t('total')}</span>
-              <span className="text-xl font-bold text-primary">{formatCurrency(totalPrice, language)}</span>
+              <span className="text-xl font-bold text-primary">
+                {formatCurrency(totalPrice, language)}
+              </span>
             </div>
           )}
           {hasQuantity && (
@@ -209,7 +275,17 @@ export const ProductQuantityModal = ({ product, isOpen, onClose, initialQuantity
               type="button"
               onClick={handleAddToCart}
               className="cl-btn-primary"
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.875rem 1.5rem', fontSize: '1rem', animation: 'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards' }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                padding: '0.875rem 1.5rem',
+                fontSize: '1rem',
+                animation:
+                  'contentStagger 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s backwards',
+              }}
             >
               <ShoppingCart style={{ width: '1.125rem', height: '1.125rem' }} />
               {currentCartQuantity > 0 ? t('updateQty') : t('addToCart')}

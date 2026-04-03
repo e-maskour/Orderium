@@ -12,10 +12,7 @@ interface MessageThreadProps {
   isStreaming: boolean;
 }
 
-export const MessageThread: React.FC<MessageThreadProps> = ({
-  messages,
-  isStreaming,
-}) => {
+export const MessageThread: React.FC<MessageThreadProps> = ({ messages, isStreaming }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages

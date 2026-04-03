@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function BonLivraisonList() {
   const { t } = useLanguage();
   const config = getDocumentConfig('bon_livraison', 'vente', t);
-  
+
   return (
     <DocumentListPage
       documentType="bon_livraison"

@@ -103,6 +103,12 @@
     border-bottom: 1px solid #f1f5f9;
     transition: background-color 0.1s ease;
     background: #ffffff;
+    height: 3.5rem;
+}
+
+.p-datatable.p-component .p-datatable-tbody>tr.cursor-pointer,
+.p-datatable.p-component .p-datatable-tbody>tr.cursor-pointer>td {
+    cursor: pointer;
 }
 
 .p-datatable.p-component .p-datatable-tbody>tr>td {
@@ -245,6 +251,13 @@
     gap: 0.5rem !important;
     flex-wrap: wrap;
     min-height: 2.5rem;
+}
+
+/* Reserve paginator space to prevent CLS (layout shift) on data load */
+.p-datatable.p-component .p-datatable-header+.p-paginator-top,
+.p-datatable.p-component .p-paginator-top:first-child {
+    min-height: 2.5rem;
+    visibility: visible;
 }
 
 /* Top paginator — border below */

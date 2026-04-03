@@ -41,13 +41,32 @@ interface MobileListProps<T> {
 function CardSkeleton() {
   return (
     <div className="ml-card ml-card--skeleton">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-        <div className="erp-skeleton" style={{ height: '1rem', width: '55%', borderRadius: '0.375rem' }} />
-        <div className="erp-skeleton" style={{ height: '1rem', width: '25%', borderRadius: '0.375rem' }} />
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '0.5rem',
+        }}
+      >
+        <div
+          className="erp-skeleton"
+          style={{ height: '1rem', width: '55%', borderRadius: '0.375rem' }}
+        />
+        <div
+          className="erp-skeleton"
+          style={{ height: '1rem', width: '25%', borderRadius: '0.375rem' }}
+        />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="erp-skeleton" style={{ height: '0.75rem', width: '40%', borderRadius: '0.375rem' }} />
-        <div className="erp-skeleton" style={{ height: '1.25rem', width: '20%', borderRadius: '9999px' }} />
+        <div
+          className="erp-skeleton"
+          style={{ height: '0.75rem', width: '40%', borderRadius: '0.375rem' }}
+        />
+        <div
+          className="erp-skeleton"
+          style={{ height: '1.25rem', width: '20%', borderRadius: '9999px' }}
+        />
       </div>
     </div>
   );
@@ -122,15 +141,21 @@ export function MobileList<T>({
                   <span className="ml-card__secondary">{config.bottomLeft?.(item)}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                     {config.bottomRight?.(item)}
-                    {onTap && (
-                      <ChevronRight className="ml-card__chevron" />
-                    )}
+                    {onTap && <ChevronRight className="ml-card__chevron" />}
                   </div>
                 </div>
               )}
               {/* Show chevron alone if no bottom content */}
               {!config.bottomLeft && !config.bottomRight && onTap && (
-                <ChevronRight className="ml-card__chevron" style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <ChevronRight
+                  className="ml-card__chevron"
+                  style={{
+                    position: 'absolute',
+                    right: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                  }}
+                />
               )}
             </>
           );
@@ -143,31 +168,58 @@ export function MobileList<T>({
                 onTap ? 'ml-card--tappable' : '',
                 hasSelect ? 'ml-card--selectable' : '',
                 isSelected ? 'ml-card--selected' : '',
-              ].filter(Boolean).join(' ')}
+              ]
+                .filter(Boolean)
+                .join(' ')}
               onClick={onTap ? () => onTap(item) : undefined}
               role={onTap ? 'button' : undefined}
               tabIndex={onTap ? 0 : undefined}
-              onKeyDown={onTap ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(item); } } : undefined}
+              onKeyDown={
+                onTap
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onTap(item);
+                      }
+                    }
+                  : undefined
+              }
             >
               {/* Selection circle */}
               {hasSelect && (
                 <button
                   type="button"
                   className={`ml-card__select-btn${isSelected ? ' ml-card__select-btn--checked' : ''}`}
-                  onClick={(e) => { e.stopPropagation(); onToggleSelect!(itemKey); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleSelect!(itemKey);
+                  }}
                   role="checkbox"
                   aria-checked={isSelected}
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); onToggleSelect!(itemKey); } }}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onToggleSelect!(itemKey);
+                    }
+                  }}
                 >
-                  {isSelected && <Check style={{ width: '0.625rem', height: '0.625rem', color: '#fff', strokeWidth: 3 }} />}
+                  {isSelected && (
+                    <Check
+                      style={{
+                        width: '0.625rem',
+                        height: '0.625rem',
+                        color: '#fff',
+                        strokeWidth: 3,
+                      }}
+                    />
+                  )}
                 </button>
               )}
 
               {/* Card body */}
-              {hasSelect ? (
-                <div className="ml-card__body">{rowContent}</div>
-              ) : rowContent}
+              {hasSelect ? <div className="ml-card__body">{rowContent}</div> : rowContent}
             </div>
           );
         })}

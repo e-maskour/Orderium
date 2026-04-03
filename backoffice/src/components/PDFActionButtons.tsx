@@ -37,7 +37,7 @@ export default function PDFActionButtons({
       } else {
         await pdfService.download({ documentType, documentId, mode });
         toastExported(
-          `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloaded')}`
+          `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloaded')}`,
         );
       }
     } catch (error: any) {
@@ -100,7 +100,7 @@ export function PDFIconButtons({
       } else {
         await pdfService.download({ documentType, documentId, mode });
         toastExported(
-          `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloadedShort')}`
+          `${pdfService.getDocumentLabel(documentType)} ${documentNumber || ''} ${t('pdfDownloadedShort')}`,
         );
       }
     } catch (error: any) {

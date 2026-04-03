@@ -15,7 +15,9 @@ export default {
   manageSalesPayments: 'إدارة المدفوعات المستلمة من العملاء',
   searchByInvoice: 'البحث بالفاتورة، المورد، المرجع...',
   searchBySalesInvoice: 'البحث بالفاتورة، العميل، المرجع...',
-  deletePayment: 'حذف الدفعة', confirmDeletePayment: 'هل أنت متأكد من أنك تريد حذف هذا الدفع؟ هذا الإجراء لا رجعة فيه.', deletePaymentError: 'خطأ في حذف الدفعة',
+  deletePayment: 'حذف الدفعة',
+  confirmDeletePayment: 'هل أنت متأكد من أنك تريد حذف هذا الدفع؟ هذا الإجراء لا رجعة فيه.',
+  deletePaymentError: 'خطأ في حذف الدفعة',
 
   // Company Settings
   companyInformation: 'معلومات الشركة',

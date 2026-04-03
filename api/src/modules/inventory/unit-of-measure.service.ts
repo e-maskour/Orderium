@@ -18,7 +18,7 @@ export class UnitOfMeasureService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
 
   private get uomRepository(): Repository<UnitOfMeasure> {
     return this.tenantConnService.getRepository(UnitOfMeasure);

@@ -1,8 +1,4 @@
-import {
-  IQuote,
-  IQuoteItem,
-  IQuoteWithDetails
-} from './quotes.interface';
+import { IQuote, IQuoteItem, IQuoteWithDetails } from './quotes.interface';
 
 export class QuoteItem implements IQuoteItem {
   id: number;
@@ -231,13 +227,20 @@ export class Quote implements IQuote {
 
   get statusLabel(): string {
     switch (this.status) {
-      case 'draft': return 'Brouillon';
-      case 'open': return 'Ouvert';
-      case 'signed': return 'Signée';
-      case 'closed': return 'Fermée';
-      case 'delivered': return 'À livrer';
-      case 'invoiced': return 'Facturée';
-      default: return 'Inconnu';
+      case 'draft':
+        return 'Brouillon';
+      case 'open':
+        return 'Ouvert';
+      case 'signed':
+        return 'Signée';
+      case 'closed':
+        return 'Fermée';
+      case 'delivered':
+        return 'À livrer';
+      case 'invoiced':
+        return 'Facturée';
+      default:
+        return 'Inconnu';
     }
   }
 
@@ -322,7 +325,7 @@ export class QuoteWithDetails implements IQuoteWithDetails {
 
   constructor(data: IQuoteWithDetails) {
     this.quote = data.quote instanceof Quote ? data.quote : new Quote(data.quote);
-    this.items = data.items.map(item => item instanceof QuoteItem ? item : new QuoteItem(item));
+    this.items = data.items.map((item) => (item instanceof QuoteItem ? item : new QuoteItem(item)));
   }
 
   get totalItems(): number {

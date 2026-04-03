@@ -29,11 +29,14 @@ export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationService: PushNotificationService,
-  ) { }
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get notifications with filters and pagination' })
-  @ApiResponse({ status: 200, description: 'Notifications retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notifications retrieved successfully',
+  })
   async getNotifications(
     @Query('userType') userType?: string,
     @Query('customerId') customerId?: string,
@@ -85,7 +88,10 @@ export class NotificationsController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get notification statistics' })
-  @ApiResponse({ status: 200, description: 'Notification statistics retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification statistics retrieved successfully',
+  })
   async getStats(
     @Query('userId') userId?: string,
     @Query('customerId') customerId?: string,
@@ -101,7 +107,10 @@ export class NotificationsController {
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notifications count' })
-  @ApiResponse({ status: 200, description: 'Unread count retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Unread count retrieved successfully',
+  })
   async getUnreadCount(
     @Query('userType') userType?: string,
     @Query('customerId') customerId?: string,
@@ -120,7 +129,10 @@ export class NotificationsController {
 
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get user notifications' })
-  @ApiResponse({ status: 200, description: 'User notifications retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User notifications retrieved successfully',
+  })
   async findByUser(
     @Param('userId', ParseIntPipe) userId: number,
     @Query('limit') limit?: string,
@@ -135,7 +147,10 @@ export class NotificationsController {
 
   @Get('preferences')
   @ApiOperation({ summary: 'Get notification preferences' })
-  @ApiResponse({ status: 200, description: 'Notification preferences retrieved' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification preferences retrieved',
+  })
   getPreferences() {
     // Placeholder - implement user preferences later
     return ApiRes(NOT.PREFS_DETAIL, {
@@ -164,7 +179,10 @@ export class NotificationsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get notification by ID' })
-  @ApiResponse({ status: 200, description: 'Notification retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   async getNotification(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.findOne(id);

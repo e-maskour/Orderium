@@ -114,7 +114,7 @@ describe('InventoryAdjustmentService', () => {
   let adjustmentLineRepo: ReturnType<typeof mockRepository>;
   let warehouseRepo: ReturnType<typeof mockRepository>;
   let productRepo: ReturnType<typeof mockRepository>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   let _stockMovementRepo: ReturnType<typeof mockRepository>;
 
   beforeEach(async () => {

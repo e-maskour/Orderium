@@ -1,4 +1,8 @@
-import { CreateSequenceDTO, UpdateSequenceDTO, SequencePreview } from '../interfaces/Sequence.interface';
+import {
+  CreateSequenceDTO,
+  UpdateSequenceDTO,
+  SequencePreview,
+} from '../interfaces/Sequence.interface';
 import { Sequence } from '../sequences.model';
 import { apiClient, API_ROUTES } from '../../../common';
 

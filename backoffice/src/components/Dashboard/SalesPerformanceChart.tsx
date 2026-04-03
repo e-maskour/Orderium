@@ -130,21 +130,31 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({ da
     <div className="db-chart-card">
       <div className="db-chart-header">
         <div className="db-chart-header-left">
-          <div className="db-chart-icon" style={{
-            background: 'linear-gradient(135deg,#3b82f6,#2563eb)',
-            boxShadow: '0 4px 10px rgba(59,130,246,0.28)',
-          }}>
-            <BarChart2 style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }} strokeWidth={2} />
+          <div
+            className="db-chart-icon"
+            style={{
+              background: 'linear-gradient(135deg,#3b82f6,#2563eb)',
+              boxShadow: '0 4px 10px rgba(59,130,246,0.28)',
+            }}
+          >
+            <BarChart2
+              style={{ width: '1.125rem', height: '1.125rem', color: '#fff' }}
+              strokeWidth={2}
+            />
           </div>
           <div>
             <h3 className="db-chart-title">{t('salesComparison')}</h3>
             <p className="db-chart-subtitle">{t('currentVsPrevious')}</p>
           </div>
         </div>
-        <span className="db-chart-badge" style={{
-          background: '#eff6ff', color: '#2563eb',
-          border: '1px solid #bfdbfe',
-        }}>
+        <span
+          className="db-chart-badge"
+          style={{
+            background: '#eff6ff',
+            color: '#2563eb',
+            border: '1px solid #bfdbfe',
+          }}
+        >
           {t('currentPeriod')} vs {t('previousPeriod')}
         </span>
       </div>

@@ -1,5 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useEffect,
+} from 'react';
 import { Product } from '@/types/database';
 
 export interface CartItem {
@@ -82,13 +89,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items]);
 
   const addItem = useCallback((product: Product, quantity = 1) => {
-    setItems(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
+    setItems((prev) => {
+      const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
-        return prev.map(item =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
+        return prev.map((item) =>
+          item.product.id === product.id ? { ...item, quantity: item.quantity + quantity } : item,
         );
       }
       return [...prev, { product, quantity }];
@@ -96,37 +101,36 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const removeItem = useCallback((productId: number) => {
-    setItems(prev => prev.filter(item => item.product.id !== productId));
+    setItems((prev) => prev.filter((item) => item.product.id !== productId));
   }, []);
 
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(productId);
-      return;
-    }
+  const updateQuantity = useCallback(
+    (productId: number, quantity: number) => {
+      if (quantity <= 0) {
+        removeItem(productId);
+        return;
+      }
 
-    setItems(prev =>
-      prev.map(item =>
-        item.product.id === productId
-          ? { ...item, quantity }
-          : item
-      )
-    );
-  }, [removeItem]);
+      setItems((prev) =>
+        prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item)),
+      );
+    },
+    [removeItem],
+  );
 
   const clearCart = useCallback(() => {
     setItems([]);
   }, []);
 
-  const getItemQuantity = useCallback((productId: number): number => {
-    const item = items.find(item => item.product.id === productId);
-    return item?.quantity || 0;
-  }, [items]);
-
-  const subtotal = items.reduce(
-    (sum, item) => sum + (item.product.price || 0) * item.quantity,
-    0
+  const getItemQuantity = useCallback(
+    (productId: number): number => {
+      const item = items.find((item) => item.product.id === productId);
+      return item?.quantity || 0;
+    },
+    [items],
   );
+
+  const subtotal = items.reduce((sum, item) => sum + (item.product.price || 0) * item.quantity, 0);
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 

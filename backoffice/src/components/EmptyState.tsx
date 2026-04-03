@@ -2,16 +2,16 @@ import React from 'react';
 import { Inbox } from 'lucide-react';
 
 export interface EmptyStateProps {
-    /** Lucide or any SVG-compatible icon component */
-    icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-    /** Main title line */
-    title: string;
-    /** Optional subtitle / hint text */
-    description?: string;
-    /** Optional action element (button, link…) placed below the description */
-    action?: React.ReactNode;
-    /** Reduces vertical padding — use inside cards, drawers, or modals */
-    compact?: boolean;
+  /** Lucide or any SVG-compatible icon component */
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  /** Main title line */
+  title: string;
+  /** Optional subtitle / hint text */
+  description?: string;
+  /** Optional action element (button, link…) placed below the description */
+  action?: React.ReactNode;
+  /** Reduces vertical padding — use inside cards, drawers, or modals */
+  compact?: boolean;
 }
 
 /**
@@ -28,20 +28,20 @@ export interface EmptyStateProps {
  * />
  */
 export function EmptyState({
-    icon: Icon = Inbox,
-    title,
-    description,
-    action,
-    compact = false,
+  icon: Icon = Inbox,
+  title,
+  description,
+  action,
+  compact = false,
 }: EmptyStateProps) {
-    return (
-        <div className={`es-root${compact ? ' es-root--compact' : ''}`}>
-            <div className="es-icon-wrap">
-                <Icon className="es-icon" aria-hidden="true" />
-            </div>
-            <p className="es-title">{title}</p>
-            {description && <p className="es-desc">{description}</p>}
-            {action && <div className="es-action">{action}</div>}
-        </div>
-    );
+  return (
+    <div className={`es-root${compact ? ' es-root--compact' : ''}`}>
+      <div className="es-icon-wrap">
+        <Icon className="es-icon" aria-hidden="true" />
+      </div>
+      <p className="es-title">{title}</p>
+      {description && <p className="es-desc">{description}</p>}
+      {action && <div className="es-action">{action}</div>}
+    </div>
+  );
 }

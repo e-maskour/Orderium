@@ -73,7 +73,9 @@ export class StockService {
   }
 
   async getStockValue(): Promise<{ totalValue: number; productCount: number }> {
-    const response = await apiClient.get<{ totalValue: number; productCount: number }>(API_ROUTES.STOCK.VALUE);
+    const response = await apiClient.get<{ totalValue: number; productCount: number }>(
+      API_ROUTES.STOCK.VALUE,
+    );
     return response.data;
   }
 }

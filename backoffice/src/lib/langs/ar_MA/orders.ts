@@ -64,7 +64,7 @@ export default {
   failedToCancelDelivery: 'فشل إلغاء التوصيل',
 
   // Search & Filter
-  searchPlaceholder: 'ابحث برقم الطلب، اسم العميل، الهاتف، أو مندوب التوصيل...',
+  searchPlaceholder: 'ابحث برقم الطلب، اسم العميل، الهاتف،...',
   filterByStatus: 'تصفية حسب الحالة',
   filters: 'الفلاتر',
   dateRange: 'نطاق التاريخ',

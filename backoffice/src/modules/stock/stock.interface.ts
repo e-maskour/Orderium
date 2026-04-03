@@ -1,21 +1,15 @@
-export type MovementType = 
-  | 'receipt' 
-  | 'delivery' 
-  | 'internal' 
-  | 'adjustment' 
-  | 'production_in' 
-  | 'production_out' 
-  | 'return_in' 
-  | 'return_out' 
+export type MovementType =
+  | 'receipt'
+  | 'delivery'
+  | 'internal'
+  | 'adjustment'
+  | 'production_in'
+  | 'production_out'
+  | 'return_in'
+  | 'return_out'
   | 'scrap';
 
-export type MovementStatus = 
-  | 'draft' 
-  | 'waiting' 
-  | 'confirmed' 
-  | 'assigned' 
-  | 'done' 
-  | 'cancelled';
+export type MovementStatus = 'draft' | 'waiting' | 'confirmed' | 'assigned' | 'done' | 'cancelled';
 
 export interface IStockMovement {
   id: number;

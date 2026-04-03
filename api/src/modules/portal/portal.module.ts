@@ -12,9 +12,19 @@ import { CategoriesModule } from '../categories/categories.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TenantModule, AuthModule, OrdersModule, InvoicesModule, QuotesModule, ConfigurationsModule, PartnersModule, CategoriesModule, NotificationsModule],
+  imports: [
+    TenantModule,
+    AuthModule,
+    OrdersModule,
+    InvoicesModule,
+    QuotesModule,
+    ConfigurationsModule,
+    PartnersModule,
+    CategoriesModule,
+    NotificationsModule,
+  ],
   controllers: [PortalController],
   providers: [PortalService],
   exports: [PortalService],
 })
-export class PortalModule { }
+export class PortalModule {}

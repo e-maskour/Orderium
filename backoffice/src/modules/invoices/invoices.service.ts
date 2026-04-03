@@ -2,13 +2,15 @@ import {
   InvoiceFilters,
   InvoiceStatistics,
   CreateInvoiceDTO,
-  UpdateInvoiceDTO
+  UpdateInvoiceDTO,
 } from './invoices.interface';
 import { InvoiceWithDetails } from './invoices.model';
 import { apiClient, API_ROUTES } from '../../common';
 
 export class InvoicesService {
-  async getAll(filters?: InvoiceFilters): Promise<{ invoices: InvoiceWithDetails[]; count: number; totalCount: number }> {
+  async getAll(
+    filters?: InvoiceFilters,
+  ): Promise<{ invoices: InvoiceWithDetails[]; count: number; totalCount: number }> {
     const body: any = {};
     if (filters?.status) body.status = filters.status;
     if (filters?.customerId) body.customerId = filters.customerId;
@@ -22,7 +24,9 @@ export class InvoicesService {
     if (filters?.pageSize) queryParams.pageSize = filters.pageSize;
     if (filters?.direction) queryParams.direction = filters.direction;
 
-    const response = await apiClient.post<any[]>(API_ROUTES.INVOICES.LIST, body, { params: queryParams });
+    const response = await apiClient.post<any[]>(API_ROUTES.INVOICES.LIST, body, {
+      params: queryParams,
+    });
     const invoices = response.data || [];
     return {
       invoices: invoices.map((inv: any) => InvoiceWithDetails.fromApiResponse(inv)),
@@ -58,7 +62,9 @@ export class InvoicesService {
     if (filters?.dateFrom) params.dateFrom = filters.dateFrom;
     if (filters?.dateTo) params.dateTo = filters.dateTo;
 
-    const response = await apiClient.get<InvoiceStatistics>(API_ROUTES.INVOICES.STATISTICS, { params });
+    const response = await apiClient.get<InvoiceStatistics>(API_ROUTES.INVOICES.STATISTICS, {
+      params,
+    });
     return response.data;
   }
 
@@ -78,7 +84,9 @@ export class InvoicesService {
   }
 
   async getAnalytics(direction: 'vente' | 'achat', year: number): Promise<any> {
-    const response = await apiClient.get<any>(API_ROUTES.INVOICES.ANALYTICS(direction), { params: { year } });
+    const response = await apiClient.get<any>(API_ROUTES.INVOICES.ANALYTICS(direction), {
+      params: { year },
+    });
     return response.data;
   }
 

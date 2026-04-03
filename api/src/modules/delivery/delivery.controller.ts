@@ -27,9 +27,7 @@ import { DLV } from '../../common/response-codes';
 @Controller('delivery')
 @PortalRoute()
 export class DeliveryController {
-  constructor(
-    private readonly deliveryService: DeliveryService,
-  ) { }
+  constructor(private readonly deliveryService: DeliveryService) {}
 
   @Public()
   @Post('login')
@@ -47,9 +45,11 @@ export class DeliveryController {
 
   @Get('persons')
   @ApiOperation({ summary: 'Get all delivery persons' })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @ApiResponse({ status: 200, description: 'List of delivery persons' })
-  async getAllDeliveryPersons() {
-    const deliveryPersons = await this.deliveryService.getAllDeliveryPersons();
+  async getAllDeliveryPersons(@Query('search') search?: string) {
+    const deliveryPersons =
+      await this.deliveryService.getAllDeliveryPersons(search);
     return ApiRes(DLV.PERSONS_LIST, deliveryPersons);
   }
 
@@ -64,7 +64,10 @@ export class DeliveryController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new delivery person' })
-  @ApiResponse({ status: 201, description: 'Delivery person created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Delivery person created successfully',
+  })
   async createDeliveryPerson(@Body() createDto: CreateDeliveryPersonDto) {
     const deliveryPerson =
       await this.deliveryService.createDeliveryPerson(createDto);
@@ -73,7 +76,10 @@ export class DeliveryController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a delivery person' })
-  @ApiResponse({ status: 200, description: 'Delivery person updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Delivery person updated successfully',
+  })
   @ApiResponse({ status: 404, description: 'Delivery person not found' })
   async updateDeliveryPerson(
     @Param('id', ParseIntPipe) id: number,
@@ -89,7 +95,10 @@ export class DeliveryController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a delivery person' })
-  @ApiResponse({ status: 200, description: 'Delivery person deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Delivery person deleted successfully',
+  })
   @ApiResponse({ status: 404, description: 'Delivery person not found' })
   async deleteDeliveryPerson(@Param('id', ParseIntPipe) id: number) {
     await this.deliveryService.deleteDeliveryPerson(id);
@@ -110,7 +119,10 @@ export class DeliveryController {
 
   @Post('person/:id/orders')
   @ApiOperation({ summary: 'Get orders for a delivery person' })
-  @ApiResponse({ status: 200, description: 'List of orders for delivery person' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of orders for delivery person',
+  })
   @ApiResponse({ status: 404, description: 'Delivery person not found' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
@@ -142,7 +154,9 @@ export class DeliveryController {
       filters?.endDate ? new Date(filters.endDate) : undefined,
     );
 
-    const orders = result.orderDeliveries.map(DeliveryOrderResponseDto.fromOrderDelivery);
+    const orders = result.orderDeliveries.map((o) =>
+      DeliveryOrderResponseDto.fromOrderDelivery(o),
+    );
 
     const offset = (pageNum - 1) * pageSizeNum;
     return ApiRes(DLV.PERSON_ORDERS, orders, {
@@ -177,7 +191,10 @@ export class DeliveryController {
 
   @Put('person/:deliveryPersonId/order/:orderId/status')
   @ApiOperation({ summary: 'Update order delivery status' })
-  @ApiResponse({ status: 200, description: 'Order status updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Order status updated successfully',
+  })
   async updateOrderStatus(
     @Param('orderId', ParseIntPipe) orderId: number,
     @Param('deliveryPersonId', ParseIntPipe) deliveryPersonId: number,

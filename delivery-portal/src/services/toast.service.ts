@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { notify } from '@orderium/ui';
+import { notify, confirmAction as _confirmAction, type ConfirmVariant } from '@orderium/ui';
 
 interface ToastOptions {
   description?: ReactNode;
@@ -23,13 +23,26 @@ export function toastInfo(message: string, options?: ToastOptions) {
   notify.info(message, options);
 }
 
+/**
+ * Opens the global ConfirmDialog modal imperatively.
+ */
 export function toastConfirm(
-  message: string,
+  title: string,
   onConfirm: () => void,
-  options?: { confirmLabel?: string; description?: ReactNode; icon?: ReactNode },
+  options?: {
+    confirmLabel?: string;
+    description?: ReactNode;
+    detail?: string;
+    variant?: ConfirmVariant;
+  },
 ) {
-  notify.action(message, options?.confirmLabel ?? 'Confirm', onConfirm, {
-    description: options?.description,
-    icon: options?.icon,
+  _confirmAction({
+    title,
+    description: typeof options?.description === 'string' ? options.description : undefined,
+    detail: options?.detail,
+    confirmLabel: options?.confirmLabel ?? 'Confirmer',
+    cancelLabel: 'Annuler',
+    variant: options?.variant ?? 'destructive',
+    onConfirm,
   });
 }
