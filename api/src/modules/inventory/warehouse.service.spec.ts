@@ -1,9 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { WarehouseService } from './warehouse.service';
 import { Warehouse } from './entities/warehouse.entity';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 // ─── Mock Factory ──────────────────────────────────────────────────────────
 
@@ -13,8 +12,6 @@ const mockRepository = () => ({
   create: jest.fn(),
   save: jest.fn(),
 });
-
-const mockDataSource = { query: jest.fn() };
 
 // ─── Test Data Factory ────────────────────────────────────────────────────────
 
@@ -36,16 +33,24 @@ describe('WarehouseService', () => {
   let warehouseRepo: ReturnType<typeof mockRepository>;
 
   beforeEach(async () => {
+    warehouseRepo = mockRepository();
+    const mockDataSource = { query: jest.fn() };
+    const mockTenantConnService = {
+      getRepository: jest.fn((entity: any) => {
+        if (entity === Warehouse) return warehouseRepo;
+        return mockRepository();
+      }),
+      getCurrentDataSource: jest.fn(() => mockDataSource),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WarehouseService,
-        { provide: getRepositoryToken(Warehouse), useFactory: mockRepository },
-        { provide: DataSource, useValue: mockDataSource },
+        { provide: TenantConnectionService, useValue: mockTenantConnService },
       ],
     }).compile();
 
     service = module.get<WarehouseService>(WarehouseService);
-    warehouseRepo = module.get(getRepositoryToken(Warehouse));
 
     jest.clearAllMocks();
   });

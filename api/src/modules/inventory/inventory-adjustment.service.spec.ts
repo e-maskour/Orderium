@@ -1,6 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { InventoryAdjustmentService } from './inventory-adjustment.service';
 import {
@@ -12,6 +10,7 @@ import { Warehouse } from './entities/warehouse.entity';
 import { Product } from '../products/entities/product.entity';
 import { StockMovement } from './entities/stock-movement.entity';
 import { StockService } from './stock.service';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 // ─── Mock Factories ───────────────────────────────────────────────────────────
 
@@ -50,11 +49,6 @@ const mockQueryRunner = {
   rollbackTransaction: jest.fn(),
   release: jest.fn(),
   manager: { save: jest.fn() },
-};
-
-const mockDataSource = {
-  createQueryRunner: jest.fn(() => mockQueryRunner),
-  query: jest.fn(),
 };
 
 // ─── Test Data Factories ─────────────────────────────────────────────────────
@@ -118,36 +112,39 @@ describe('InventoryAdjustmentService', () => {
   let _stockMovementRepo: ReturnType<typeof mockRepository>;
 
   beforeEach(async () => {
+    adjustmentRepo = mockRepository();
+    adjustmentLineRepo = mockRepository();
+    warehouseRepo = mockRepository();
+    productRepo = mockRepository();
+    _stockMovementRepo = mockRepository();
+
+    const mockDataSource = {
+      createQueryRunner: jest.fn(() => mockQueryRunner),
+      query: jest.fn(),
+    };
+    const mockTenantConnService = {
+      getRepository: jest.fn((entity: any) => {
+        if (entity === InventoryAdjustment) return adjustmentRepo;
+        if (entity === AdjustmentLine) return adjustmentLineRepo;
+        if (entity === Warehouse) return warehouseRepo;
+        if (entity === Product) return productRepo;
+        if (entity === StockMovement) return _stockMovementRepo;
+        return mockRepository();
+      }),
+      getCurrentDataSource: jest.fn(() => mockDataSource),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InventoryAdjustmentService,
-        {
-          provide: getRepositoryToken(InventoryAdjustment),
-          useFactory: mockRepository,
-        },
-        {
-          provide: getRepositoryToken(AdjustmentLine),
-          useFactory: mockRepository,
-        },
-        { provide: getRepositoryToken(Warehouse), useFactory: mockRepository },
-        { provide: getRepositoryToken(Product), useFactory: mockRepository },
-        {
-          provide: getRepositoryToken(StockMovement),
-          useFactory: mockRepository,
-        },
+        { provide: TenantConnectionService, useValue: mockTenantConnService },
         { provide: StockService, useValue: mockStockService },
-        { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
 
     service = module.get<InventoryAdjustmentService>(
       InventoryAdjustmentService,
     );
-    adjustmentRepo = module.get(getRepositoryToken(InventoryAdjustment));
-    adjustmentLineRepo = module.get(getRepositoryToken(AdjustmentLine));
-    warehouseRepo = module.get(getRepositoryToken(Warehouse));
-    productRepo = module.get(getRepositoryToken(Product));
-    _stockMovementRepo = module.get(getRepositoryToken(StockMovement));
 
     jest.clearAllMocks();
   });

@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ProductsService } from './products.service';
@@ -7,6 +6,7 @@ import { Product } from './entities/product.entity';
 import { Category } from '../categories/entities/category.entity';
 import { UnitOfMeasure } from '../inventory/entities/unit-of-measure.entity';
 import { Warehouse } from '../inventory/entities/warehouse.entity';
+import { TenantConnectionService } from '../tenant/tenant-connection.service';
 
 // ─── Repository & Cache Mock Factories ───────────────────────────────────────
 
@@ -19,6 +19,7 @@ const makeQueryBuilderMock = () => ({
   take: jest.fn().mockReturnThis(),
   getMany: jest.fn(),
   getCount: jest.fn(),
+  getManyAndCount: jest.fn(),
 });
 
 const mockRepository = () => {
@@ -69,25 +70,31 @@ describe('ProductsService', () => {
   let categoryRepo: ReturnType<typeof mockRepository>;
 
   beforeEach(async () => {
+    productRepo = mockRepository();
+    categoryRepo = mockRepository();
+    const uomRepo = mockRepository();
+    const warehouseRepo = mockRepository();
+
+    const mockTenantConnService = {
+      getRepository: jest.fn((entity: any) => {
+        if (entity === Product) return productRepo;
+        if (entity === Category) return categoryRepo;
+        if (entity === UnitOfMeasure) return uomRepo;
+        if (entity === Warehouse) return warehouseRepo;
+        return mockRepository();
+      }),
+      getCurrentDataSource: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductsService,
-        { provide: getRepositoryToken(Product), useFactory: mockRepository },
-        { provide: getRepositoryToken(Category), useFactory: mockRepository },
-        {
-          provide: getRepositoryToken(UnitOfMeasure),
-          useFactory: mockRepository,
-        },
-        { provide: getRepositoryToken(Warehouse), useFactory: mockRepository },
+        { provide: TenantConnectionService, useValue: mockTenantConnService },
         { provide: CACHE_MANAGER, useValue: mockCacheManager },
       ],
     }).compile();
 
     service = module.get<ProductsService>(ProductsService);
-    productRepo = module.get(getRepositoryToken(Product));
-    categoryRepo = module.get(getRepositoryToken(Category));
-    module.get(getRepositoryToken(UnitOfMeasure));
-    module.get(getRepositoryToken(Warehouse));
 
     jest.clearAllMocks();
   });
@@ -205,8 +212,7 @@ describe('ProductsService', () => {
 
   describe('findAll', () => {
     beforeEach(() => {
-      productRepo._qb.getCount.mockResolvedValue(10);
-      productRepo._qb.getMany.mockResolvedValue([makeProduct()]);
+      productRepo._qb.getManyAndCount.mockResolvedValue([[makeProduct()], 10]);
     });
 
     it('returns paginated products', async () => {
@@ -220,7 +226,7 @@ describe('ProductsService', () => {
       await service.findAll(1, 10, 'widget');
 
       expect(productRepo._qb.andWhere).toHaveBeenCalledWith(
-        'product.name ILIKE :search',
+        '(product.name ILIKE :search OR product.code ILIKE :search OR categories.name ILIKE :search)',
         { search: '%widget%' },
       );
     });
@@ -386,7 +392,7 @@ describe('ProductsService', () => {
 
       await expect(service.remove(1)).rejects.toThrow(ConflictException);
       await expect(service.remove(1)).rejects.toThrow(
-        'Cannot delete product that is used in invoices',
+        'PRODUCT_IN_INVOICES',
       );
     });
 

@@ -35,6 +35,7 @@ export const ProductQuantityModal = ({
   onClose,
   onAddToCart,
   initialQuantity = 0,
+  language,
   t,
 }: ProductQuantityModalProps) => {
   const [quantity, setQuantity] = useState('');
