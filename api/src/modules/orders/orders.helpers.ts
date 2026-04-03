@@ -14,8 +14,9 @@ import { DeliveryPerson } from '../delivery/entities/delivery.entity';
 
 export interface OrderResponseDto {
   id: number;
-  orderNumber: string;
-  receiptNumber: string | null;
+  orderNumber: string | null;   // CLIENT_POS / ADMIN_POS sequence (CMD-xxx)
+  documentNumber: string;       // BACKOFFICE delivery-note / purchase-order number
+  receiptNumber: string | null; // POS receipt number
   date: Date;
   dueDate: Date | null;
   validationDate: Date | null;
@@ -114,7 +115,8 @@ export function formatOrderDetail(
 ): OrderResponseDto {
   return {
     id: order.id,
-    orderNumber: order.documentNumber,
+    orderNumber: order.orderNumber ?? null,
+    documentNumber: order.documentNumber,
     receiptNumber: order.receiptNumber,
     date: order.date,
     dueDate: order.dueDate,
@@ -160,7 +162,8 @@ export function formatOrderDetail(
 export function formatOrderListItem(order: Order): OrderResponseDto {
   return {
     id: order.id,
-    orderNumber: order.documentNumber,
+    orderNumber: order.orderNumber ?? null,
+    documentNumber: order.documentNumber,
     receiptNumber: order.receiptNumber,
     date: order.date,
     dueDate: order.dueDate,
@@ -310,8 +313,10 @@ export function getDeliveryStatusLabel(status: DeliveryStatus): string {
 
 export function buildOrderExportBaseRow(order: Order) {
   const isBonAchat = !!order.supplierId;
+  const docRef = order.orderNumber ?? order.documentNumber;
   return {
-    Numéro: order.documentNumber,
+    Numéro: docRef,
+    'N° reçu': order.receiptNumber ?? '',
     Date: order.date ? new Date(order.date).toLocaleDateString('fr-FR') : '',
     'Date échéance': order.dueDate
       ? new Date(order.dueDate).toLocaleDateString('fr-FR')

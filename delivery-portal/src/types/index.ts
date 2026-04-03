@@ -1,6 +1,9 @@
 export interface Order {
   orderId: number;
+  /** CMD-xxx for POS orders; falls back to documentNumber for BACKOFFICE. */
   orderNumber: string;
+  /** BL-xxx / BA-xxx or same as orderNumber for POS. Always populated. */
+  documentNumber?: string;
   customerName: string;
   customerPhone: string;
   customerAddress?: string;
@@ -11,14 +14,14 @@ export interface Order {
   totalAmount: number;
   status?: string; // Main order status
   deliveryStatus:
-    | 'pending'
-    | 'assigned'
-    | 'confirmed'
-    | 'picked_up'
-    | 'to_delivery'
-    | 'in_delivery'
-    | 'delivered'
-    | 'canceled';
+  | 'pending'
+  | 'assigned'
+  | 'confirmed'
+  | 'picked_up'
+  | 'to_delivery'
+  | 'in_delivery'
+  | 'delivered'
+  | 'canceled';
   pendingAt?: string;
   assignedAt?: string;
   confirmedAt?: string;

@@ -33,7 +33,7 @@ export class DeliveryOrderResponseDto {
     const customer = od.order?.customer as Partner | undefined;
     return {
       orderId: od.order.id,
-      orderNumber: od.order.orderNumber,
+      orderNumber: od.order.orderNumber ?? od.order.documentNumber,
       customerName: customer?.name ?? 'N/A',
       customerPhone: customer?.phoneNumber ?? 'N/A',
       customerAddress: (customer as any)?.deliveryAddress ?? customer?.address,

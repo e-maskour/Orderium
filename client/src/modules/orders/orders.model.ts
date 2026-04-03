@@ -15,7 +15,7 @@ export class OrderItem implements IOrderItem {
     public description?: string,
     public price?: number,
     public tax?: number,
-  ) {}
+  ) { }
 
   get displayPrice(): string {
     return `$${this.unitPrice.toFixed(2)}`;
@@ -56,7 +56,8 @@ export class OrderItem implements IOrderItem {
 export class Order implements IOrder {
   constructor(
     public id: number,
-    public orderNumber: string, // Changed from 'number' to 'orderNumber'
+    public orderNumber: string | null,
+    public documentNumber: string,
     public customerId: number,
     public items: OrderItem[],
     public subtotal: number,
@@ -73,7 +74,7 @@ export class Order implements IOrder {
     public internalNote?: string,
     public date?: string,
     public isValidated?: boolean,
-  ) {}
+  ) { }
 
   get displayTotal(): string {
     return `$${this.total.toFixed(2)}`;
@@ -141,7 +142,8 @@ export class Order implements IOrder {
 
     return new Order(
       data.id as number,
-      data.orderNumber as string,
+      (data.orderNumber as string | null) ?? null,
+      (data.documentNumber as string) ?? (data.orderNumber as string) ?? '',
       data.customerId as number,
       items,
       (data.subtotal as number) || 0,
@@ -165,6 +167,7 @@ export class Order implements IOrder {
     return {
       id: this.id,
       orderNumber: this.orderNumber,
+      documentNumber: this.documentNumber,
       customerId: this.customerId,
       customerName: this.customerName,
       customerPhone: this.customerPhone,

@@ -87,7 +87,9 @@ export class OrderItem implements IOrderItem {
 
 export class Order implements IOrder {
   id: number;
-  orderNumber: string;
+  orderNumber: string | null;
+  documentNumber: string;
+  receiptNumber?: string | null;
   direction: 'ACHAT' | 'VENTE';
   customerId?: number | null;
   customerName?: string | null;
@@ -122,7 +124,9 @@ export class Order implements IOrder {
 
   constructor(data: IOrder) {
     this.id = data.id;
-    this.orderNumber = data.orderNumber;
+    this.orderNumber = data.orderNumber ?? null;
+    this.documentNumber = data.documentNumber ?? data.orderNumber ?? '';
+    this.receiptNumber = data.receiptNumber;
     this.direction = data.direction;
     this.customerId = data.customerId;
     this.customerName = data.customerName;
@@ -200,7 +204,7 @@ export class Order implements IOrder {
   }
 
   get displayOrderNumber(): string {
-    return this.orderNumber || `#${this.id}`;
+    return this.orderNumber ?? this.documentNumber ?? `#${this.id}`;
   }
 
   get deliveryPersonDisplayName(): string {
@@ -296,7 +300,8 @@ export class Order implements IOrder {
   static fromApiResponse(data: any): Order {
     return new Order({
       id: data.id,
-      orderNumber: data.orderNumber || data.documentNumber,
+      orderNumber: data.orderNumber ?? null,
+      documentNumber: data.documentNumber ?? data.orderNumber ?? '',
       direction: data.direction || (data.supplierId ? 'ACHAT' : 'VENTE'),
       customerId: data.customerId,
       customerName: data.customerName,
@@ -335,6 +340,8 @@ export class Order implements IOrder {
     return {
       id: this.id,
       orderNumber: this.orderNumber,
+      documentNumber: this.documentNumber,
+      receiptNumber: this.receiptNumber,
       direction: this.direction,
       customerId: this.customerId,
       customerName: this.customerName,

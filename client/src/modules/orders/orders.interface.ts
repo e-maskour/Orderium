@@ -27,7 +27,12 @@ export interface CreateOrderRequest {
 
 export interface Order {
   id: number;
-  orderNumber: string; // API returns 'orderNumber' not 'number'
+  /** CMD-xxx for CLIENT_POS / ADMIN_POS. NULL for BACKOFFICE. */
+  orderNumber: string | null;
+  /** BL-xxx / BA-xxx for BACKOFFICE. Same as orderNumber for POS (backward compat). */
+  documentNumber: string;
+  /** POS receipt number. NULL for BACKOFFICE. */
+  receiptNumber?: string | null;
   customerId: number;
   customerName?: string;
   customerPhone?: string;

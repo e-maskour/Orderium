@@ -45,6 +45,7 @@ export enum OrderOriginType {
 
 @Entity('orders')
 @Index(['documentNumber'])
+@Index(['orderNumber'])
 @Index(['customerId'])
 @Index(['supplierId'])
 @Index(['date'])
@@ -52,14 +53,13 @@ export enum OrderOriginType {
 @Index(['deliveryStatus'])
 @Index(['originType'])
 export class Order extends BaseDocument {
-  // Override documentNumber to use orderNumber for backwards compatibility
-  get orderNumber(): string {
-    return this.documentNumber;
-  }
-
-  set orderNumber(value: string) {
-    this.documentNumber = value;
-  }
+  /**
+   * Sequence number for CLIENT_POS and ADMIN_POS orders (e.g. CMD-2026-01-0001).
+   * documentNumber holds the backoffice/delivery-note number (BL-xxx, BA-xxx, PROV-xxx).
+   * NULL for BACKOFFICE orders.
+   */
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'order_number' })
+  orderNumber: string | null;
 
   // Supplier fields for purchase orders (bon d'achat)
   @Column({ type: 'int', nullable: true })

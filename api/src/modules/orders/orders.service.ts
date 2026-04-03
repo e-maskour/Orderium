@@ -105,6 +105,7 @@ export class OrdersService {
       if (!sequence) {
         const now = new Date();
         const prefixMap: Record<string, string> = {
+          order: 'CMD',
           delivery_note: 'BL',
           purchase_order: 'BA',
           receipt: '',
@@ -137,6 +138,7 @@ export class OrdersService {
       return sequence;
     } catch {
       const prefixMap: Record<string, string> = {
+        order: 'CMD',
         delivery_note: 'BL',
         purchase_order: 'BA',
         receipt: '',
@@ -166,19 +168,33 @@ export class OrdersService {
     try {
       const pattern = buildSequencePattern(sequence, documentDate);
       const isReceipt = sequence.entityType === 'receipt';
-      const orders = await this.orderRepository
+      const isOrder = sequence.entityType === 'order';
+
+      // Column mapping:
+      //   receipt       → receiptNumber  (POS receipt)
+      //   order         → orderNumber    (CLIENT_POS / ADMIN_POS)
+      //   delivery_note / purchase_order → documentNumber (BACKOFFICE)
+      let columnExpr: string;
+      if (isReceipt) {
+        columnExpr = 'order.receiptNumber';
+      } else if (isOrder) {
+        columnExpr = 'order.orderNumber';
+      } else {
+        columnExpr = 'order.documentNumber';
+      }
+
+      const qb = this.orderRepository
         .createQueryBuilder('order')
-        .where(
-          isReceipt
-            ? 'order.receiptNumber LIKE :pattern'
-            : 'order.documentNumber LIKE :pattern',
-          { pattern: `${pattern}%` },
-        )
-        .andWhere(
-          isReceipt ? '1=1' : 'order.documentNumber NOT LIKE :provisional',
-          { provisional: 'PROV%' },
-        )
-        .getMany();
+        .where(`${columnExpr} LIKE :pattern`, { pattern: `${pattern}%` });
+
+      if (!isReceipt && !isOrder) {
+        // Exclude provisional numbers from count
+        qb.andWhere('order.documentNumber NOT LIKE :provisional', {
+          provisional: 'PROV%',
+        });
+      }
+
+      const orders = await qb.getMany();
 
       if (!orders.length) {
         sequence.nextNumber = 1;
@@ -187,7 +203,11 @@ export class OrdersService {
 
       const numbers = orders
         .map((order) => {
-          const field = isReceipt ? order.receiptNumber : order.documentNumber;
+          const field = isReceipt
+            ? order.receiptNumber
+            : isOrder
+              ? order.orderNumber
+              : order.documentNumber;
           const num = parseInt(
             (field || '')
               .replace(pattern, '')
@@ -355,14 +375,17 @@ export class OrdersService {
         originType === OrderOriginType.ADMIN_POS;
 
       let documentNumber: string;
+      let orderNumber: string | null = null;
       let receiptNumber: string | null = null;
 
       if (isPortalOrigin) {
+        // POS orders: CMD sequence → orderNumber (and documentNumber for backward compat)
         const seq = await this.getOrCreateSequence(
-          'delivery_note',
+          'order',
           createOrderDto.date,
         );
-        documentNumber = generateSequenceNumber(seq, createOrderDto.date);
+        orderNumber = generateSequenceNumber(seq, createOrderDto.date);
+        documentNumber = orderNumber; // keep documentNumber populated for backward compat
         const receiptSeq = await this.getOrCreateSequence(
           'receipt',
           createOrderDto.date,
@@ -374,6 +397,7 @@ export class OrdersService {
 
       const order = new Order();
       order.documentNumber = documentNumber;
+      order.orderNumber = orderNumber;
       order.receiptNumber = receiptNumber;
       order.customerId = customerId ?? null;
       order.supplierId = createOrderDto.supplierId ?? null;
@@ -418,10 +442,10 @@ export class OrdersService {
 
       if (isPortalOrigin) {
         const seq = await this.getOrCreateSequence(
-          'delivery_note',
+          'order',
           createOrderDto.date,
         );
-        await this.updateSequenceNextNumber('delivery_note', seq);
+        await this.updateSequenceNextNumber('order', seq);
         const receiptSeq = await this.getOrCreateSequence(
           'receipt',
           createOrderDto.date,

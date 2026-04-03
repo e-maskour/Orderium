@@ -12,6 +12,7 @@ import { Order } from './entities/order.entity';
 export const ORDER_LIST_FIELDS = [
   'order.id',
   'order.documentNumber',
+  'order.orderNumber',
   'order.receiptNumber',
   'order.date',
   'order.dueDate',
@@ -115,16 +116,17 @@ export function applyOrderFilters(
 
   if (filters.search) {
     qb.andWhere(
-      '(LOWER(customer.name) LIKE LOWER(:search) OR LOWER(customer.phoneNumber) LIKE LOWER(:search) OR LOWER(order.documentNumber) LIKE LOWER(:search))',
+      '(LOWER(customer.name) LIKE LOWER(:search) OR LOWER(customer.phoneNumber) LIKE LOWER(:search) OR LOWER(order.documentNumber) LIKE LOWER(:search) OR LOWER(order.orderNumber) LIKE LOWER(:search))',
       { search: `%${filters.search}%` },
     );
     // In search mode the remaining filter-panel conditions are skipped
     return qb;
   }
   if (filters.orderNumber) {
-    qb.andWhere('order.documentNumber = :orderNumber', {
-      orderNumber: filters.orderNumber,
-    });
+    qb.andWhere(
+      '(order.documentNumber = :orderNumber OR order.orderNumber = :orderNumber)',
+      { orderNumber: filters.orderNumber },
+    );
   }
   if (filters.deliveryStatus) {
     const statuses = Array.isArray(filters.deliveryStatus)

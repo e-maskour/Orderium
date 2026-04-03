@@ -203,11 +203,11 @@ export default function Orders() {
 
   const { data: deliveryPersons = [] } = useQuery({
     queryKey: ['deliveryPersons'],
-    queryFn: deliveryPersonService.getAll,
+    queryFn: () => deliveryPersonService.getAll(),
   });
   const { data: partnersData } = useQuery({
     queryKey: ['partners'],
-    queryFn: partnersService.getAll,
+    queryFn: () => partnersService.getAll(),
   });
   const partners = partnersData?.partners || [];
 

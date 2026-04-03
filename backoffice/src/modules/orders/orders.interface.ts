@@ -18,7 +18,12 @@ export type DeliveryStatus =
 
 export interface IOrder {
   id: number;
-  orderNumber: string;
+  /** CMD-xxx for CLIENT_POS / ADMIN_POS orders. NULL for BACKOFFICE. */
+  orderNumber: string | null;
+  /** BL-xxx / BA-xxx / PROV-xxx for BACKOFFICE. Same as orderNumber for POS (backward compat). */
+  documentNumber: string;
+  /** POS receipt number. NULL for BACKOFFICE orders. */
+  receiptNumber?: string | null;
   direction: 'ACHAT' | 'VENTE';
   customerId?: number | null;
   customerName?: string | null;
