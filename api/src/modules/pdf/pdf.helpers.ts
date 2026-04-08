@@ -7,12 +7,14 @@ export interface PartnerableEntity {
     name?: string | null;
     phoneNumber?: string | null;
     address?: string | null;
+    ice?: string | null;
   } | null;
   supplierName?: string | null;
   supplier?: {
     name?: string | null;
     phoneNumber?: string | null;
     address?: string | null;
+    ice?: string | null;
   } | null;
   customerPhone?: string | null;
   supplierPhone?: string | null;
@@ -24,6 +26,7 @@ export interface PartnerInfo {
   customerName: string;
   customerPhone: string | undefined;
   customerAddress: string | undefined;
+  customerIce: string | undefined;
   supplierName: string | undefined;
 }
 
@@ -43,6 +46,10 @@ export function extractPartnerInfo(
       (isDemandePrix
         ? entity.supplierAddress || entity.supplier?.address
         : entity.customerAddress || entity.customer?.address) ?? undefined,
+    customerIce:
+      (isDemandePrix
+        ? entity.supplier?.ice
+        : entity.customer?.ice) ?? undefined,
     supplierName: isDemandePrix
       ? entity.supplierName || entity.supplier?.name || undefined
       : undefined,

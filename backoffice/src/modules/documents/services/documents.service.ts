@@ -207,7 +207,9 @@ export class DocumentsService {
   private transformOrdersToDocuments(orders: Order[], isVente: boolean): DocumentItem[] {
     return orders.map((order) => ({
       id: order.id,
-      number: order.orderNumber || `#${order.id}`,
+      // These are always BACKOFFICE orders — use documentNumber (BL-xxx / PROV-xxx).
+      // orderNumber is null for BACKOFFICE; do not fall back to it.
+      number: order.documentNumber || `#${order.id}`,
       date: order.date || order.dateCreated,
       dueDate: order.dueDate || undefined,
       validationDate: order.validationDate || null,

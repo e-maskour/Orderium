@@ -246,6 +246,18 @@ export class UpdateInvoiceDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  subtotal?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  total?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
   notes?: string;
 

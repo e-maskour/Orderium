@@ -94,7 +94,7 @@ export default function CustomerEdit() {
     );
   }
 
-  if (!partner || !analytics) {
+  if (!partner) {
     return (
       <AdminLayout>
         <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
@@ -106,15 +106,13 @@ export default function CustomerEdit() {
     );
   }
 
-  const { kpis } = analytics;
-  const {
-    totalInvoices,
-    totalRevenue,
-    unpaidAmount,
-    totalOrders,
-    totalOrderRevenue,
-    unpaidOrderAmount,
-  } = kpis;
+  const kpis = analytics?.kpis;
+  const totalInvoices = kpis?.totalInvoices ?? 0;
+  const totalRevenue = kpis?.totalRevenue ?? 0;
+  const unpaidAmount = kpis?.unpaidAmount ?? 0;
+  const totalOrders = kpis?.totalOrders ?? 0;
+  const totalOrderRevenue = kpis?.totalOrderRevenue ?? 0;
+  const unpaidOrderAmount = kpis?.unpaidOrderAmount ?? 0;
 
   return (
     <AdminLayout>

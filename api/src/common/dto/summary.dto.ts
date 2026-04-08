@@ -44,6 +44,10 @@ export class PartnerSummaryDto {
   @ApiPropertyOptional()
   @Expose()
   phoneNumber: string | null;
+
+  @ApiPropertyOptional()
+  @Expose()
+  ice: string | null;
 }
 
 /**

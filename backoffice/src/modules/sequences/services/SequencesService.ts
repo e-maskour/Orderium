@@ -6,6 +6,31 @@ import {
 import { Sequence } from '../sequences.model';
 import { apiClient, API_ROUTES } from '../../../common';
 
+/**
+ * Translate UI DTO field names (yearInPrefix, …) → API field names (yearInFormat, …)
+ * before sending create / update requests.
+ */
+function toApiDto(dto: Partial<CreateSequenceDTO>): Record<string, unknown> {
+  const mapped: Record<string, unknown> = { ...dto };
+  if ('yearInPrefix' in dto) {
+    mapped['yearInFormat'] = dto.yearInPrefix;
+    delete mapped['yearInPrefix'];
+  }
+  if ('monthInPrefix' in dto) {
+    mapped['monthInFormat'] = dto.monthInPrefix;
+    delete mapped['monthInPrefix'];
+  }
+  if ('dayInPrefix' in dto) {
+    mapped['dayInFormat'] = dto.dayInPrefix;
+    delete mapped['dayInPrefix'];
+  }
+  if ('trimesterInPrefix' in dto) {
+    mapped['trimesterInFormat'] = dto.trimesterInPrefix;
+    delete mapped['trimesterInPrefix'];
+  }
+  return mapped;
+}
+
 export class SequencesService {
   private static instance: SequencesService;
 
@@ -16,23 +41,15 @@ export class SequencesService {
     return SequencesService.instance;
   }
 
-  async getConfiguration(): Promise<any> {
-    return apiClient.get<any>(API_ROUTES.SEQUENCES.CONFIG);
-  }
-
   async getAll(): Promise<Sequence[]> {
-    const response = await this.getConfiguration();
-    const sequences = response?.data?.values?.sequences || [];
-    return sequences.map((s: any) => Sequence.fromApiResponse(s));
+    const response = await apiClient.get<any[]>(API_ROUTES.SEQUENCES.LIST);
+    const items = response?.data || [];
+    return items.map((s: any) => Sequence.fromApiResponse(s));
   }
 
   async getById(id: string): Promise<Sequence> {
-    const sequences = await this.getAll();
-    const sequence = sequences.find((seq) => seq.id === id);
-    if (!sequence) {
-      throw new Error(`ISequence with id ${id} not found`);
-    }
-    return sequence;
+    const response = await apiClient.get<any>(API_ROUTES.SEQUENCES.DETAIL(id));
+    return Sequence.fromApiResponse(response.data);
   }
 
   async getByEntityType(entityType: string): Promise<Sequence | null> {
@@ -41,27 +58,31 @@ export class SequencesService {
   }
 
   async create(data: CreateSequenceDTO): Promise<Sequence> {
-    const response = await apiClient.post<any>(API_ROUTES.SEQUENCES.CREATE, data);
+    const response = await apiClient.post<any>(API_ROUTES.SEQUENCES.CREATE, toApiDto(data));
     return Sequence.fromApiResponse(response.data);
   }
 
   async update(id: string, data: UpdateSequenceDTO): Promise<Sequence> {
-    const response = await apiClient.put<any>(API_ROUTES.SEQUENCES.UPDATE(id), data);
+    const response = await apiClient.patch<any>(API_ROUTES.SEQUENCES.UPDATE(id), toApiDto(data));
     return Sequence.fromApiResponse(response.data);
   }
 
-  async delete(id: string): Promise<void> {
-    await apiClient.delete(API_ROUTES.SEQUENCES.DELETE(id));
+  async delete(_id: string): Promise<void> {
+    // Hard delete is not supported on the new API — deactivate instead.
+    await apiClient.patch(API_ROUTES.SEQUENCES.UPDATE(_id), { isActive: false });
   }
 
   async generatePreview(data: Partial<CreateSequenceDTO>): Promise<SequencePreview> {
-    const response = await apiClient.post<SequencePreview>(API_ROUTES.SEQUENCES.PREVIEW, data);
-    return response.data;
+    const entityType = (data as any).entityType;
+    if (!entityType) return { preview: '' };
+    const response = await apiClient.get<any>(API_ROUTES.SEQUENCES.PREVIEW(entityType));
+    return { preview: response?.data?.preview ?? '' };
   }
 
-  async resetSequence(id: string): Promise<void> {
-    await apiClient.post(API_ROUTES.SEQUENCES.RESET(id));
+  async resetSequence(entityType: string): Promise<void> {
+    await apiClient.post(API_ROUTES.SEQUENCES.RESET(entityType));
   }
 }
 
 export const sequencesService = SequencesService.getInstance();
+

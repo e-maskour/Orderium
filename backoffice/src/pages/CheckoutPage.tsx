@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   ShoppingBag,
@@ -31,6 +31,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, language, dir } = useLanguage();
+  const queryClient = useQueryClient();
   const state = location.state as ICheckoutState;
 
   const [globalDiscount, setGlobalDiscount] = useState(0);
@@ -54,6 +55,7 @@ export default function CheckoutPage() {
     onSuccess: (data: any) => {
       const orderNumber = data?.order?.orderNumber || data?.orderNumber || data?.documentNumber;
       const orderId = data?.order?.id || data?.id;
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
       navigate('/checkout/success', {
         state: {
           orderNumber,
@@ -125,6 +127,8 @@ export default function CheckoutPage() {
 
     const orderData = {
       customerId: state.customer.id,
+      customerName: state.customer.name || undefined,
+      customerPhone: state.customer.phone || undefined,
       originType: 'ADMIN_POS',
       deliveryStatus: 'pending',
       date: new Date().toISOString(),

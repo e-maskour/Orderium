@@ -155,12 +155,29 @@ export default {
   payment: 'Paiement',
   creditNote: 'Avoir',
   receipt: 'Reçu',
+  posOrder: 'Commande POS',
 
   // Reset Periods
   never: 'Jamais',
   yearly: 'Annuellement',
   monthly: 'Mensuellement',
   daily: 'Quotidiennement',
+  resetNever: 'Jamais',
+  resetYearly: 'Annuellement',
+  resetMonthly: 'Mensuellement',
+  resetDaily: 'Quotidiennement',
+
+  // Sequence Modal Sections
+  identity: 'Identité',
+  numbering: 'Numérotation',
+  dateComponents: 'Composantes de date',
+  year: 'Année',
+  trimester: 'Trimestre',
+  month: 'Mois',
+  day: 'Jour',
+  sequenceActiveDescription: 'La séquence est utilisée pour générer les numéros de documents',
+  digitCount: 'chiffres',
+  sequenceCountLabel: 'séquences',
 
   // Date Formats
   none: 'Aucun',

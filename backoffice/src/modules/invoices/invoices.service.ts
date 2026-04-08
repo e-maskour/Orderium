@@ -46,7 +46,7 @@ export class InvoicesService {
   }
 
   async update(id: number, data: UpdateInvoiceDTO): Promise<InvoiceWithDetails> {
-    const response = await apiClient.put<any>(API_ROUTES.INVOICES.UPDATE(id), data);
+    const response = await apiClient.patch<any>(API_ROUTES.INVOICES.UPDATE(id), data);
     return InvoiceWithDetails.fromApiResponse(response.data);
   }
 

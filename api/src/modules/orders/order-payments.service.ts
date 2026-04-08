@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { OrderPayment } from './entities/order-payment.entity';
-import { Order } from './entities/order.entity';
+import { Order, OrderOriginType } from './entities/order.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import {
   CreateOrderPaymentDto,
@@ -10,7 +10,7 @@ import {
 
 @Injectable()
 export class OrderPaymentsService {
-  constructor(private readonly tenantConnService: TenantConnectionService) {}
+  constructor(private readonly tenantConnService: TenantConnectionService) { }
 
   private get repo(): Repository<OrderPayment> {
     return this.tenantConnService.getRepository(OrderPayment);
@@ -53,7 +53,10 @@ export class OrderPaymentsService {
         'o.date',
         'o.dateCreated',
       ])
+      .leftJoin('o.customer', 'customer')
+      .addSelect(['customer.id', 'customer.name', 'customer.phoneNumber'])
       .where('o.direction = :dir', { dir: 'VENTE' })
+      .andWhere('o.originType != :origin', { origin: OrderOriginType.BACKOFFICE })
       .orderBy('o.dateCreated', 'DESC')
       .getMany();
 
@@ -68,7 +71,7 @@ export class OrderPaymentsService {
       return {
         id: o.id,
         orderNumber: o.documentNumber,
-        customerName: o.customerName,
+        customerName: o.customer?.name || o.customerName || null,
         customerId: o.customerId,
         total,
         paidAmount: paid,

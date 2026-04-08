@@ -27,7 +27,6 @@ import {
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PartnersService } from '../partners/partners.service';
 import { ConfigurationsService } from '../configurations/configurations.service';
-import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { OrderNotificationService } from '../notifications/order-notification.service';
 import { PDFService } from '../pdf/pdf.service';
 import { PdfQueueService } from '../pdf/pdf.queue.service';
@@ -37,11 +36,7 @@ import {
   SourceDocumentType,
 } from '../inventory/entities/stock-movement.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
-import {
-  buildSequencePattern,
-  generateSequenceNumber,
-  generateSequenceId,
-} from '../../common/helpers/sequence.helpers';
+import { SequencesService } from '../sequences/sequences.service';
 import {
   formatOrderDetail,
   formatOrderListItem,
@@ -69,6 +64,7 @@ export class OrdersService {
     private readonly partnersService: PartnersService,
     private readonly configService: ConfigService,
     private readonly configurationsService: ConfigurationsService,
+    private readonly sequencesService: SequencesService,
     @Inject(forwardRef(() => OrderNotificationService))
     private readonly orderNotificationService: OrderNotificationService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -87,164 +83,6 @@ export class OrdersService {
 
   private get dataSource(): DataSource {
     return this.tenantConnService.getCurrentDataSource();
-  }
-
-  // ── Sequence helpers (DB access required) ──────────────────────────────────
-
-  private async getOrCreateSequence(
-    entityType: string,
-    documentDate?: string | Date,
-  ): Promise<SequenceConfig> {
-    try {
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      let sequence = sequences.find(
-        (seq) => seq.entityType === entityType && seq.isActive,
-      );
-
-      if (!sequence) {
-        const now = new Date();
-        const prefixMap: Record<string, string> = {
-          order: 'CMD',
-          delivery_note: 'BL',
-          purchase_order: 'BA',
-          receipt: '',
-        };
-        const prefix = prefixMap[entityType] ?? 'CMD';
-        const defaultSequence: SequenceConfig = {
-          id: generateSequenceId(),
-          name: `Sequence ${entityType}`,
-          entityType,
-          prefix,
-          suffix: '',
-          nextNumber: 1,
-          numberLength: 4,
-          isActive: true,
-          yearInPrefix: true,
-          monthInPrefix: true,
-          dayInPrefix: entityType === 'receipt',
-          trimesterInPrefix: false,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
-        };
-        sequences.push(defaultSequence);
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-        sequence = defaultSequence;
-      }
-
-      await this.syncSequenceWithDatabase(sequence, documentDate);
-      return sequence;
-    } catch {
-      const prefixMap: Record<string, string> = {
-        order: 'CMD',
-        delivery_note: 'BL',
-        purchase_order: 'BA',
-        receipt: '',
-      };
-      const prefix = prefixMap[entityType] ?? 'CMD';
-      return {
-        id: 'fallback',
-        name: 'Default Sequence',
-        entityType,
-        prefix,
-        suffix: '',
-        nextNumber: 1,
-        numberLength: 4,
-        isActive: true,
-        yearInPrefix: true,
-        monthInPrefix: true,
-        dayInPrefix: entityType === 'receipt',
-        trimesterInPrefix: false,
-      };
-    }
-  }
-
-  private async syncSequenceWithDatabase(
-    sequence: SequenceConfig,
-    documentDate?: string | Date,
-  ): Promise<void> {
-    try {
-      const pattern = buildSequencePattern(sequence, documentDate);
-      const isReceipt = sequence.entityType === 'receipt';
-      const isOrder = sequence.entityType === 'order';
-
-      // Column mapping:
-      //   receipt       → receiptNumber  (POS receipt)
-      //   order         → orderNumber    (CLIENT_POS / ADMIN_POS)
-      //   delivery_note / purchase_order → documentNumber (BACKOFFICE)
-      let columnExpr: string;
-      if (isReceipt) {
-        columnExpr = 'order.receiptNumber';
-      } else if (isOrder) {
-        columnExpr = 'order.orderNumber';
-      } else {
-        columnExpr = 'order.documentNumber';
-      }
-
-      const qb = this.orderRepository
-        .createQueryBuilder('order')
-        .where(`${columnExpr} LIKE :pattern`, { pattern: `${pattern}%` });
-
-      if (!isReceipt && !isOrder) {
-        // Exclude provisional numbers from count
-        qb.andWhere('order.documentNumber NOT LIKE :provisional', {
-          provisional: 'PROV%',
-        });
-      }
-
-      const orders = await qb.getMany();
-
-      if (!orders.length) {
-        sequence.nextNumber = 1;
-        return;
-      }
-
-      const numbers = orders
-        .map((order) => {
-          const field = isReceipt
-            ? order.receiptNumber
-            : isOrder
-              ? order.orderNumber
-              : order.documentNumber;
-          const num = parseInt(
-            (field || '')
-              .replace(pattern, '')
-              .replace(sequence.suffix || '', ''),
-            10,
-          );
-          return num;
-        })
-        .filter((n) => !isNaN(n));
-
-      sequence.nextNumber = numbers.length ? Math.max(...numbers) + 1 : 1;
-    } catch (error) {
-      this.logger.error('Failed to sync sequence', (error as Error)?.stack);
-    }
-  }
-
-  private async updateSequenceNextNumber(
-    _entityType: string,
-    sequence: SequenceConfig,
-  ): Promise<void> {
-    try {
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      const idx = sequences.findIndex((s) => s.id === sequence.id);
-      if (idx !== -1) {
-        sequences[idx].nextNumber = sequence.nextNumber + 1;
-        sequences[idx].updatedAt = new Date().toISOString();
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        'Failed to update sequence next number',
-        (error as Error)?.stack,
-      );
-    }
   }
 
   // ── Provisional number helper ──────────────────────────────────────────────
@@ -380,17 +218,16 @@ export class OrdersService {
 
       if (isPortalOrigin) {
         // POS orders: CMD sequence → orderNumber (and documentNumber for backward compat)
-        const seq = await this.getOrCreateSequence(
-          'order',
-          createOrderDto.date,
-        );
-        orderNumber = generateSequenceNumber(seq, createOrderDto.date);
+        const orderDate = createOrderDto.date
+          ? new Date(createOrderDto.date)
+          : now;
+        orderNumber = await this.sequencesService.generateNext('order', {
+          date: orderDate,
+        });
         documentNumber = orderNumber; // keep documentNumber populated for backward compat
-        const receiptSeq = await this.getOrCreateSequence(
-          'receipt',
-          createOrderDto.date,
-        );
-        receiptNumber = generateSequenceNumber(receiptSeq, createOrderDto.date);
+        receiptNumber = await this.sequencesService.generateNext('receipt', {
+          date: orderDate,
+        });
       } else {
         documentNumber = await this.getNextProvNumber();
       }
@@ -439,19 +276,6 @@ export class OrdersService {
       }
 
       const savedOrder = await manager.save(Order, order);
-
-      if (isPortalOrigin) {
-        const seq = await this.getOrCreateSequence(
-          'order',
-          createOrderDto.date,
-        );
-        await this.updateSequenceNextNumber('order', seq);
-        const receiptSeq = await this.getOrCreateSequence(
-          'receipt',
-          createOrderDto.date,
-        );
-        await this.updateSequenceNextNumber('receipt', receiptSeq);
-      }
 
       // Batch-validate product IDs
       const productIds = createOrderDto.items
@@ -821,15 +645,15 @@ export class OrdersService {
 
     if (order.documentNumber.startsWith('PROV')) {
       const seqType = order.supplierId ? 'purchase_order' : 'delivery_note';
-      const sequence = await this.getOrCreateSequence(seqType, order.date);
-      const finalNumber = generateSequenceNumber(sequence, order.date);
+      const finalNumber = await this.sequencesService.generateNext(seqType, {
+        date: order.date ? new Date(order.date) : new Date(),
+      });
       await this.orderRepository.update(id, {
         documentNumber: finalNumber,
         isValidated: true,
         validationDate: new Date(),
         status: OrderStatus.IN_PROGRESS,
       });
-      await this.updateSequenceNextNumber(seqType, sequence);
     } else {
       await this.orderRepository.update(id, {
         isValidated: true,
@@ -880,7 +704,10 @@ export class OrdersService {
       const isAchat = orderWithItems.direction === DocumentDirection.ACHAT;
 
       const items = (orderWithItems.items ?? [])
-        .filter((i): i is typeof i & { productId: number } => !!i.productId && i.quantity > 0)
+        .filter(
+          (i): i is typeof i & { productId: number } =>
+            !!i.productId && i.quantity > 0,
+        )
         .map((i) => ({ productId: i.productId, quantity: i.quantity }));
 
       if (items.length === 0) return;
@@ -950,9 +777,7 @@ export class OrdersService {
       const invConfig =
         await this.configurationsService.findByEntity('inventory');
       const invValues = invConfig?.values as Record<string, unknown> | null;
-      const defaultWarehouseId = invValues?.defaultWarehouseId as
-        | number
-        | null;
+      const defaultWarehouseId = invValues?.defaultWarehouseId as number | null;
 
       if (!defaultWarehouseId) return;
 
@@ -1000,40 +825,10 @@ export class OrdersService {
     if (!order.isValidated)
       throw new BadRequestException('Order is not validated');
 
-    try {
-      const seqType = order.supplierId ? 'purchase_order' : 'delivery_note';
-      const sequence = await this.getOrCreateSequence(seqType, order.date);
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      const idx = sequences.findIndex((s) => s.id === sequence.id);
-
-      if (idx !== -1) {
-        const pattern = buildSequencePattern(sequence, order.date);
-        const lastOrder = await this.orderRepository
-          .createQueryBuilder('order')
-          .where('order.documentNumber LIKE :pattern', {
-            pattern: pattern + '%',
-          })
-          .andWhere('order.isValidated = :validated', { validated: true })
-          .orderBy(
-            "CAST(SUBSTRING(order.documentNumber FROM '[0-9]+$') AS INTEGER)",
-            'DESC',
-          )
-          .limit(1)
-          .getOne();
-
-        const match = lastOrder?.documentNumber.match(/(\d+)$/);
-        sequences[idx].nextNumber = match ? parseInt(match[1]) : 1;
-        sequences[idx].updatedAt = new Date().toISOString();
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        'Error updating sequence during devalidation',
-        (error as Error)?.stack,
-      );
+    // Roll back the sequence counter if this was the last issued number in the period.
+    if (!order.documentNumber.startsWith('PROV')) {
+      const seqTypeForRelease = order.supplierId ? 'purchase_order' : 'delivery_note';
+      await this.sequencesService.releaseNumber(seqTypeForRelease, order.documentNumber);
     }
 
     let nextProvNumber: string;

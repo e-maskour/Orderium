@@ -33,6 +33,7 @@ import {
   Truck,
   Calendar,
   ShoppingBag,
+  RefreshCw,
 } from 'lucide-react';
 
 // ─── Status config ──────────────────────────────────────────────────────────
@@ -266,9 +267,9 @@ export default function OrderDetailPage() {
   const computedItems = editMode ? editItems : items;
   const computedSubtotal = editMode
     ? editItems.reduce(
-        (s: number, i: any) => s + (parseFloat(i.quantity) || 0) * (parseFloat(i.unitPrice) || 0),
-        0,
-      )
+      (s: number, i: any) => s + (parseFloat(i.quantity) || 0) * (parseFloat(i.unitPrice) || 0),
+      0,
+    )
     : (order?.subtotal ?? order?.total ?? 0);
   const computedTotal = editMode
     ? Math.max(0, computedSubtotal - globalDiscount)
@@ -300,16 +301,16 @@ export default function OrderDetailPage() {
       ...editItems,
       ...(newItem && newItem.description
         ? [
-            {
-              description: newItem.description,
-              quantity: newItem.quantity,
-              unitPrice: newItem.unitPrice,
-              productId: newItem.productId,
-              discount: 0,
-              discountType: 0,
-              tax: 0,
-            },
-          ]
+          {
+            description: newItem.description,
+            quantity: newItem.quantity,
+            unitPrice: newItem.unitPrice,
+            productId: newItem.productId,
+            discount: 0,
+            discountType: 0,
+            tax: 0,
+          },
+        ]
         : []),
     ];
     const mappedItems = allItems.map((item: any) => ({
@@ -374,13 +375,28 @@ export default function OrderDetailPage() {
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfTitle, setPdfTitle] = useState('');
   const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [regeneratingPdf, setRegeneratingPdf] = useState(false);
 
   const handlePrint = (type: 'receipt' | 'delivery-note') => {
     const url = pdfService.getPDFUrl(type, Number(id), 'preview');
     const label = pdfService.getDocumentLabel(type);
     setPdfUrl(url);
-    setPdfTitle(`${label} ${order?.orderNumber || ''}`.trim());
+    setPdfTitle(`${label} ${order?.displayOrderNumber || ''}`.trim());
     setShowPDFPreview(true);
+  };
+
+  const handleRegeneratePdf = async () => {
+    if (!id) return;
+    try {
+      setRegeneratingPdf(true);
+      await pdfService.regeneratePdf('delivery-note', Number(id));
+      toastSuccess(isAr ? 'تم إعادة توليد PDF بنجاح' : 'PDF régénéré avec succès');
+    } catch (error) {
+      console.error('Error regenerating PDF:', error);
+      toastError(isAr ? 'خطأ أثناء إعادة توليد PDF' : 'Erreur lors de la génération du PDF');
+    } finally {
+      setRegeneratingPdf(false);
+    }
   };
 
   // ── Loading / error ────────────────────────────────────────
@@ -451,6 +467,7 @@ export default function OrderDetailPage() {
   return (
     <AdminLayout>
       <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .ord-detail-grid {
           display: grid;
           grid-template-columns: 1fr 22rem;
@@ -602,11 +619,11 @@ export default function OrderDetailPage() {
                   letterSpacing: '0.07em',
                 }}
               >
-                #{order.orderNumber}
+                {order.displayOrderNumber}
               </span>
             </div>
             <h1 className="doc-detail-hdr__title">
-              <span style={{ color: '#235ae4' }}>#{order.orderNumber}</span>
+              <span style={{ color: '#235ae4' }}>{order.displayOrderNumber}</span>
             </h1>
           </div>
           {/* Badges */}
@@ -1190,11 +1207,11 @@ export default function OrderDetailPage() {
                                     setNewItem((prev) =>
                                       prev
                                         ? {
-                                            ...prev,
-                                            description: p.name,
-                                            unitPrice: String(p.price),
-                                            productId: p.id,
-                                          }
+                                          ...prev,
+                                          description: p.name,
+                                          unitPrice: String(p.price),
+                                          productId: p.id,
+                                        }
                                         : null,
                                     );
                                     setShowSuggestions(false);
@@ -1971,6 +1988,40 @@ export default function OrderDetailPage() {
                   {isAr ? 'بون التسليم' : 'Bon de livraison'}
                 </span>
               </button>
+              {order.isValidated && (
+                <button
+                  type="button"
+                  onClick={handleRegeneratePdf}
+                  disabled={regeneratingPdf}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.625rem',
+                    padding: '0.625rem 0.75rem',
+                    borderRadius: '0.5rem',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    cursor: regeneratingPdf ? 'not-allowed' : 'pointer',
+                    opacity: regeneratingPdf ? 0.6 : 1,
+                    width: '100%',
+                    textAlign: 'left',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <RefreshCw
+                    style={{
+                      width: '1.125rem',
+                      height: '1.125rem',
+                      color: '#64748b',
+                      flexShrink: 0,
+                      animation: regeneratingPdf ? 'spin 1s linear infinite' : 'none',
+                    }}
+                  />
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                    {isAr ? 'إعادة توليد PDF' : 'Régénérer le PDF'}
+                  </span>
+                </button>
+              )}
             </div>
 
             {/* Meta info */}

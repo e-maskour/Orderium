@@ -238,7 +238,7 @@ export class Invoice implements IInvoice {
 
   // Static factory method
   static fromApiResponse(data: any): Invoice {
-    return new Invoice({
+    const inv = new Invoice({
       id: data.id,
       invoiceNumber: data.invoiceNumber || data.documentNumber,
       direction: data.direction || (data.supplierId ? 'ACHAT' : 'VENTE'),
@@ -266,6 +266,10 @@ export class Invoice implements IInvoice {
       dateCreated: data.dateCreated,
       dateUpdated: data.dateUpdated,
     });
+    // Preserve nested partner objects so consumers can access ice, etc.
+    (inv as any).customer = data.customer ?? null;
+    (inv as any).supplier = data.supplier ?? null;
+    return inv;
   }
 
   toJSON(): IInvoice {

@@ -73,7 +73,7 @@ const DIT_STYLES = `
   .dit-ig .p-inputtext[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .dit-ig .p-inputtext[type=number] { -moz-appearance: textfield; }
   .dit-dg .p-dropdown { height: 2.5rem !important; }
-  .dit-dg .p-dropdown .p-dropdown-label { display: flex !important; align-items: center !important; text-align: center !important; justify-content: center !important; color: #1e293b !important; font-weight: 600 !important; font-size: 0.875rem !important; }
+  .dit-dg .p-dropdown .p-dropdown-label { display: flex !important; align-items: center !important; text-align: left !important; justify-content: flex-start !important; color: #1e293b !important; font-weight: 600 !important; font-size: 0.875rem !important; padding-left: 0.5rem !important; }
   .dit-dsc {
     display: flex; align-items: center; justify-content: center; overflow: hidden;
     border: 1.5px solid transparent; border-radius: 6px; background: transparent;
@@ -353,7 +353,7 @@ export function DocumentItemsTable({
             {/* Description */}
             <Column
               field="description"
-              style={{ width: '22%' }}
+              style={{ width: '30%', minWidth: '180px' }}
               headerClassName="dit-al"
               headerStyle={{
                 padding: '0.625rem 0.75rem',

@@ -48,6 +48,7 @@ import { PrintersModule } from './modules/printers/printers.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 import { BulkModule } from './modules/bulk/bulk.module';
 import { QueueBoardModule } from './modules/queue-board/queue-board.module';
+import { SequencesModule } from './modules/sequences/sequences.module';
 
 // Multi-tenancy
 import { TenantModule, TenantMiddleware } from './modules/tenant/tenant.module';
@@ -180,6 +181,7 @@ import { MigrationRunLog } from './modules/super-admin/entities/migration-log.en
     SuperAdminModule,
     BulkModule,
     QueueBoardModule,
+    SequencesModule,
   ],
   controllers: [AppController],
   providers: [

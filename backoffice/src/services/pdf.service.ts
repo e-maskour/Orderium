@@ -3,6 +3,7 @@
  * Handles PDF preview and download for all document types (invoices, quotes, delivery notes)
  */
 
+import { apiClient, API_ROUTES } from '../common/api';
 import { API_BASE_URL_VALUE } from '../common/api';
 
 // In dev, VITE_API_BASE_URL is not set so this falls back to localhost:3000 (proxied via Vite).
@@ -100,6 +101,19 @@ class PDFService {
       receipt: 'Recu',
     };
     return `${typeNames[documentType]}_${documentId}.pdf`;
+  }
+
+  /**
+   * Regenerate a stored PDF (delete old from MinIO, generate new, upload and persist URL)
+   */
+  async regeneratePdf(
+    documentType: DocumentType,
+    documentId: number,
+  ): Promise<string> {
+    const response = await apiClient.post<{ pdfUrl: string }>(
+      API_ROUTES.PDF.REGENERATE(documentType as 'invoice' | 'quote' | 'delivery-note', documentId),
+    );
+    return response.data.pdfUrl;
   }
 
   /**

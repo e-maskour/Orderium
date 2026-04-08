@@ -862,6 +862,8 @@ export const PDF = {
   },
   /** GET /pdf/receipt/:orderId            → binary PDF stream */
   RECEIPT: { code: 'PDF200_04', status: 200, message: 'Receipt PDF Generated' },
+  /** POST /pdf/regenerate/:type/:id       → regenerate & re-upload to MinIO */
+  REGENERATED: { code: 'PDF200_05', status: 200, message: 'PDF regenerated and stored successfully' },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────
@@ -1333,6 +1335,54 @@ export const PJB = {
   LIST: { code: 'PJB200_01', status: 200, message: 'Print Jobs Retrieved' },
   /** POST /print-jobs                 → data: PrintJob             | metadata: null */
   CREATED: { code: 'PJB201_01', status: 201, message: 'Print Job Logged' },
+} as const satisfies Record<string, ResponseDef>;
+
+// ─────────────────────────────────────────────────────────────
+//  SEQ  (SequencesController)
+// ─────────────────────────────────────────────────────────────
+export const SEQ = {
+  /** GET  /sequences                  → data: Sequence[]           | metadata: null */
+  LIST: {
+    code: 'SEQ200_01',
+    status: 200,
+    message: 'Sequences retrieved successfully',
+  },
+  /** GET  /sequences/:id              → data: Sequence             | metadata: null */
+  DETAIL: {
+    code: 'SEQ200_02',
+    status: 200,
+    message: 'Sequence retrieved successfully',
+  },
+  /** POST /sequences                  → data: Sequence             | metadata: null */
+  CREATED: {
+    code: 'SEQ201_01',
+    status: 201,
+    message: 'Sequence created successfully',
+  },
+  /** PATCH /sequences/:id             → data: Sequence             | metadata: null */
+  UPDATED: {
+    code: 'SEQ200_03',
+    status: 200,
+    message: 'Sequence updated successfully',
+  },
+  /** POST /sequences/:entityType/reset → data: null               | metadata: null */
+  RESET: {
+    code: 'SEQ200_04',
+    status: 200,
+    message: 'Sequence counter reset successfully',
+  },
+  /** GET  /sequences/:entityType/preview → data: { preview: string } | metadata: null */
+  PREVIEW: {
+    code: 'SEQ200_05',
+    status: 200,
+    message: 'Sequence preview generated',
+  },
+  /** POST /sequences/seed             → data: null                 | metadata: null */
+  SEEDED: {
+    code: 'SEQ200_06',
+    status: 200,
+    message: 'Default sequences seeded',
+  },
 } as const satisfies Record<string, ResponseDef>;
 
 /**

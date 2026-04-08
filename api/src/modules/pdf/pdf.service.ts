@@ -35,6 +35,7 @@ interface DocumentData {
   customerName: string;
   customerPhone?: string;
   customerAddress?: string;
+  customerIce?: string;
   subtotal: number;
   discount?: number;
   discountType?: number;
@@ -258,6 +259,62 @@ export class PDFService implements OnModuleDestroy {
     }
   }
 
+  /**
+   * Delete the existing stored PDF (if any), regenerate it, upload to MinIO,
+   * and persist the new URL on the entity. Returns the new URL.
+   * Throws on failure (unlike generateAndUploadPDF which swallows errors).
+   */
+  async regeneratePDF(
+    documentType: DocumentType,
+    documentId: number,
+  ): Promise<string> {
+    // Fetch current entity to get the old pdfUrl
+    const entityRepo = this.getEntityRepository(documentType);
+    if (!entityRepo) {
+      throw new Error(`Unsupported document type: ${documentType}`);
+    }
+
+    const entity = await entityRepo.findOne({ where: { id: documentId } });
+    if (!entity) {
+      throw new NotFoundException(`Document #${documentId} not found`);
+    }
+
+    // Delete old PDF from MinIO (best-effort)
+    await this.deletePDF((entity as { pdfUrl?: string | null }).pdfUrl);
+
+    // Generate and upload new PDF
+    const { pdfBuffer, fileName } = await this.generateDocumentPDF(
+      documentType,
+      documentId,
+    );
+    const newUrl = await this.minioProvider.uploadBuffer(
+      pdfBuffer,
+      'pdfs',
+      fileName,
+      'application/pdf',
+    );
+
+    // Persist new URL
+    await entityRepo.update(documentId, { pdfUrl: newUrl } as Record<string, unknown>);
+
+    this.logger.log(`🔄 PDF regenerated for ${documentType} #${documentId}: ${newUrl}`);
+    return newUrl;
+  }
+
+  private getEntityRepository(documentType: string): Repository<any> | null {
+    switch (documentType) {
+      case 'invoice':
+        return this.invoiceRepository;
+      case 'quote':
+        return this.quoteRepository;
+      case 'delivery-note':
+      case 'receipt':
+        return this.orderRepository;
+      default:
+        return null;
+    }
+  }
+
   private async fetchDocumentData(
     documentType: DocumentType,
     documentId: number,
@@ -357,14 +414,14 @@ export class PDFService implements OnModuleDestroy {
     const documentNumber =
       documentType === 'receipt' && order.receiptNumber
         ? order.receiptNumber
-        : order.orderNumber;
+        : order.orderNumber ?? order.documentNumber;
 
     const isDemandePrix = !!order.supplierId;
 
     return {
       id: order.id,
-      documentNumber,
-      orderNumber: order.orderNumber,
+      documentNumber: documentNumber ?? '',
+      orderNumber: order.orderNumber ?? undefined,
       date: order.dateCreated,
       ...extractPartnerInfo(order, isDemandePrix),
       subtotal: Number(order.subtotal) || 0,
@@ -567,6 +624,7 @@ export class PDFService implements OnModuleDestroy {
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       customerAddress: data.customerAddress,
+      customerIce: data.customerIce,
       documentType,
       signedBy: data.signedBy,
       itemsHtml,

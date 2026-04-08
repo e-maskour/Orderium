@@ -5,6 +5,7 @@ import { seedUnitOfMeasures } from './uom.seeder';
 import { seedPartners } from './partners.seeder';
 import { seedPortal } from './portal.seeder';
 import { seedNotificationTemplates } from './notification-templates.seeder';
+import { seedSequences } from './sequences.seeder';
 
 export async function runSeeders(dataSource: DataSource) {
   console.log('🌱 Running database seeders...\n');
@@ -15,6 +16,7 @@ export async function runSeeders(dataSource: DataSource) {
     await seedPartners(dataSource);
     await seedPortal(dataSource);
     await seedConfigurations(dataSource);
+    await seedSequences(dataSource);
     await seedNotificationTemplates(dataSource);
 
     console.log('\n✅ All seeders completed successfully');
@@ -37,6 +39,7 @@ export async function runTenantSeeders(dataSource: DataSource) {
     await seedUnitOfMeasures(dataSource);
     await seedPartners(dataSource);
     await seedConfigurations(dataSource);
+    await seedSequences(dataSource);
     await seedNotificationTemplates(dataSource);
 
     console.log('\n✅ Tenant seeders completed successfully');

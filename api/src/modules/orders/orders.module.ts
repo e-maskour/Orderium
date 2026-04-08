@@ -9,6 +9,7 @@ import { ConfigurationsModule } from '../configurations/configurations.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PDFModule } from '../pdf/pdf.module';
 import { InventoryModule } from '../inventory/inventory.module';
+import { SequencesModule } from '../sequences/sequences.module';
 
 @Module({
   imports: [
@@ -18,9 +19,10 @@ import { InventoryModule } from '../inventory/inventory.module';
     forwardRef(() => NotificationsModule),
     PDFModule,
     InventoryModule,
+    SequencesModule,
   ],
   controllers: [OrdersController, OrderPaymentsController],
   providers: [OrdersService, OrderPaymentsService],
   exports: [OrdersService, OrderPaymentsService],
 })
-export class OrdersModule {}
+export class OrdersModule { }

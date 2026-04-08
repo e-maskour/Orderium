@@ -501,6 +501,9 @@ importers:
 
   tenant-dashboard:
     dependencies:
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.72.1(react@18.3.1))
       '@tanstack/react-query':
         specifier: ^5.56.2
         version: 5.96.1(react@18.3.1)
@@ -516,6 +519,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      react-hook-form:
+        specifier: ^7.72.1
+        version: 7.72.1(react@18.3.1)
       react-hot-toast:
         specifier: ^2.4.1
         version: 2.6.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -5246,6 +5252,12 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
 
+  react-hook-form@7.72.1:
+    resolution: {integrity: sha512-RhwBoy2ygeVZje+C+bwJ8g0NjTdBmDlJvAUHTxRjTmSUKPYsKfMphkS2sgEMotsY03bP358yEYlnUeZy//D9Ig==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+
   react-hot-toast@2.6.0:
     resolution: {integrity: sha512-bH+2EBMZ4sdyou/DPrfgIouFpcRLCJ+HoCA32UoAYHn6T3Ur5yfcDCeSr5mwldl6pFOsiocmrXMuoCJ1vV8bWg==}
     engines: {node: '>=10'}
@@ -7168,6 +7180,11 @@ snapshots:
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.72.0(react@18.3.1)
+
+  '@hookform/resolvers@5.2.2(react-hook-form@7.72.1(react@18.3.1))':
+    dependencies:
+      '@standard-schema/utils': 0.3.0
+      react-hook-form: 7.72.1(react@18.3.1)
 
   '@humanfs/core@0.19.1': {}
 
@@ -11611,6 +11628,10 @@ snapshots:
       scheduler: 0.23.2
 
   react-hook-form@7.72.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+
+  react-hook-form@7.72.1(react@18.3.1):
     dependencies:
       react: 18.3.1
 

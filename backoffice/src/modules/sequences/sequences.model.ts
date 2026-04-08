@@ -13,14 +13,17 @@ export class Sequence implements ISequence {
   monthInPrefix: boolean;
   dayInPrefix: boolean;
   trimesterInPrefix: boolean;
+  resetPeriod: string;
+  formatTemplate?: string;
+  currentPeriodKey?: string;
+  lastGeneratedAt?: string | null;
+  lastResetAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
-  realTimeNextNumber?: number;
-  format?: string;
   nextDocumentNumber?: string;
 
   constructor(data: ISequence) {
-    this.id = data.id;
+    this.id = String(data.id);
     this.name = data.name;
     this.entityType = data.entityType;
     this.prefix = data.prefix;
@@ -32,26 +35,57 @@ export class Sequence implements ISequence {
     this.monthInPrefix = data.monthInPrefix;
     this.dayInPrefix = data.dayInPrefix;
     this.trimesterInPrefix = data.trimesterInPrefix;
+    this.resetPeriod = data.resetPeriod;
+    this.formatTemplate = data.formatTemplate;
+    this.currentPeriodKey = data.currentPeriodKey;
+    this.lastGeneratedAt = data.lastGeneratedAt;
+    this.lastResetAt = data.lastResetAt;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
-    this.realTimeNextNumber = data.realTimeNextNumber;
-    this.format = data.format;
     this.nextDocumentNumber = data.nextDocumentNumber;
   }
 
-  // Getters
   get displayName(): string {
     return this.name;
   }
 
   get effectiveNextNumber(): number {
-    return this.realTimeNextNumber ?? this.nextNumber;
+    return this.nextNumber;
   }
 
+  /**
+   * Computes the next document number by substituting tokens in formatTemplate.
+   * Tokens: YYYY → year, MM → month, DD → day, QQ → trimester (T1-T4),
+   *         X...X (numberLength X's) → zero-padded nextNumber.
+   */
   get nextFormattedNumber(): string {
-    if (this.nextDocumentNumber) return this.nextDocumentNumber;
-    const num = String(this.effectiveNextNumber).padStart(this.numberLength, '0');
-    return `${this.prefix}${num}${this.suffix}`;
+    if (!this.formatTemplate) return String(this.nextNumber).padStart(this.numberLength, '0');
+
+    // Derive date from currentPeriodKey when available
+    let now = new Date();
+    if (this.currentPeriodKey) {
+      const parts = this.currentPeriodKey.split('-');
+      const year = parseInt(parts[0], 10);
+      if (!isNaN(year)) {
+        const monthPart = parts[1] && !/^T/.test(parts[1]) ? parseInt(parts[1], 10) - 1 : now.getMonth();
+        const dayPart = parts[2] ? parseInt(parts[2], 10) : 1;
+        now = new Date(year, monthPart, dayPart);
+      }
+    }
+
+    const year = String(now.getFullYear());
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const trimester = `T${Math.ceil((now.getMonth() + 1) / 3)}`;
+    const counter = String(this.nextNumber).padStart(this.numberLength, '0');
+    const counterToken = 'X'.repeat(this.numberLength);
+
+    return this.formatTemplate
+      .replace('YYYY', year)
+      .replace('QQ', trimester)
+      .replace('MM', month)
+      .replace('DD', day)
+      .replace(counterToken, counter);
   }
 
   get formattedPrefix(): string {
@@ -81,16 +115,19 @@ export class Sequence implements ISequence {
       price_request: 'Price Request',
       purchase_order: 'Purchase Order',
       payment: 'Payment',
-      credit_note: 'Credit Note',
       receipt: 'Receipt',
+      order: 'POS Order',
     };
     return labels[this.entityType] ?? this.entityType;
   }
 
-  // Static factory method
+  /**
+   * Map new API response shape (yearInFormat, monthInFormat, …) to the UI's
+   * field names (yearInPrefix, monthInPrefix, …) for backward compatibility.
+   */
   static fromApiResponse(data: any): Sequence {
     return new Sequence({
-      id: data.id,
+      id: String(data.id),
       name: data.name,
       entityType: data.entityType,
       prefix: data.prefix ?? '',
@@ -98,15 +135,18 @@ export class Sequence implements ISequence {
       nextNumber: data.nextNumber ?? 1,
       numberLength: data.numberLength ?? 4,
       isActive: data.isActive ?? true,
-      yearInPrefix: data.yearInPrefix ?? false,
-      monthInPrefix: data.monthInPrefix ?? false,
-      dayInPrefix: data.dayInPrefix ?? false,
-      trimesterInPrefix: data.trimesterInPrefix ?? false,
+      yearInPrefix: data.yearInFormat ?? data.yearInPrefix ?? false,
+      monthInPrefix: data.monthInFormat ?? data.monthInPrefix ?? false,
+      dayInPrefix: data.dayInFormat ?? data.dayInPrefix ?? false,
+      trimesterInPrefix: data.trimesterInFormat ?? data.trimesterInPrefix ?? false,
+      resetPeriod: data.resetPeriod ?? 'yearly',
+      formatTemplate: data.formatTemplate,
+      currentPeriodKey: data.currentPeriodKey,
+      lastGeneratedAt: data.lastGeneratedAt ?? null,
+      lastResetAt: data.lastResetAt ?? null,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
-      realTimeNextNumber: data.realTimeNextNumber,
-      format: data.format,
-      nextDocumentNumber: data.nextDocumentNumber,
+      nextDocumentNumber: data.previewNextNumber ?? data.nextDocumentNumber,
     });
   }
 
@@ -124,10 +164,13 @@ export class Sequence implements ISequence {
       monthInPrefix: this.monthInPrefix,
       dayInPrefix: this.dayInPrefix,
       trimesterInPrefix: this.trimesterInPrefix,
+      resetPeriod: this.resetPeriod,
+      formatTemplate: this.formatTemplate,
+      currentPeriodKey: this.currentPeriodKey,
+      lastGeneratedAt: this.lastGeneratedAt,
+      lastResetAt: this.lastResetAt,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
-      realTimeNextNumber: this.realTimeNextNumber,
-      format: this.format,
       nextDocumentNumber: this.nextDocumentNumber,
     };
   }
@@ -143,6 +186,7 @@ export class Sequence implements ISequence {
       monthInPrefix: this.monthInPrefix,
       dayInPrefix: this.dayInPrefix,
       trimesterInPrefix: this.trimesterInPrefix,
+      resetPeriod: this.resetPeriod,
     };
   }
 }

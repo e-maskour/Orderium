@@ -21,7 +21,7 @@ export class DeliveryPersonService {
   }
 
   async update(id: number, data: UpdateDeliveryPersonDTO): Promise<DeliveryPerson> {
-    const response = await apiClient.put<any>(API_ROUTES.DELIVERY.UPDATE(id), data);
+    const response = await apiClient.patch<any>(API_ROUTES.DELIVERY.UPDATE(id), data);
     return DeliveryPerson.fromApiResponse(response.data);
   }
 

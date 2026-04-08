@@ -150,12 +150,29 @@ export default {
   payment: 'دفعة',
   creditNote: 'إشعار دائن',
   receipt: 'إيصال',
+  posOrder: 'طلب نقطة البيع',
 
   // Reset Periods
   never: 'أبداً',
   yearly: 'سنوياً',
   monthly: 'شهرياً',
   daily: 'يومياً',
+  resetNever: 'أبداً',
+  resetYearly: 'سنوياً',
+  resetMonthly: 'شهرياً',
+  resetDaily: 'يومياً',
+
+  // Sequence Modal Sections
+  identity: 'الهوية',
+  numbering: 'الترقيم',
+  dateComponents: 'مكونات التاريخ',
+  year: 'السنة',
+  trimester: 'الربع',
+  month: 'الشهر',
+  day: 'اليوم',
+  sequenceActiveDescription: 'التسلسل مستخدم لإنشاء أرقام المستندات',
+  digitCount: 'أرقام',
+  sequenceCountLabel: 'تسلسلات',
 
   // Date Formats
   none: 'لا شيء',

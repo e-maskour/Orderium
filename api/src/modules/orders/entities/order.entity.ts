@@ -58,7 +58,7 @@ export class Order extends BaseDocument {
    * documentNumber holds the backoffice/delivery-note number (BL-xxx, BA-xxx, PROV-xxx).
    * NULL for BACKOFFICE orders.
    */
-  @Column({ type: 'varchar', length: 100, nullable: true, name: 'order_number' })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   orderNumber: string | null;
 
   // Supplier fields for purchase orders (bon d'achat)

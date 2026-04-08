@@ -457,7 +457,7 @@ export default function Orders() {
     const label = pdfService.getDocumentLabel(documentType);
     const url = pdfService.getPDFUrl(documentType, orderId, 'preview');
     setPdfUrl(url);
-    setPdfTitle(`${label} ${order?.orderNumber || ''}`.trim());
+    setPdfTitle(`${label} ${order?.displayOrderNumber || ''}`.trim());
     setShowPDFPreview(true);
   };
 
@@ -1273,7 +1273,7 @@ export default function Orders() {
             selectedKeys={new Set(selectedOrders)}
             onToggleSelect={(key) => toggleSelectOrder(key as number)}
             config={{
-              topLeft: (o: any) => `#${o.orderNumber}`,
+              topLeft: (o: any) => `${o.displayOrderNumber}`,  // uses displayOrderNumber getter (orderNumber ?? documentNumber ?? #id)
               topRight: (o: any) => `${formatAmount(o.total || 0, 2)} ${t('currency')}`,
               bottomLeft: (o: any) => [o.customerName, o.customerPhone].filter(Boolean).join(' · '),
               bottomRight: (o: any) => {
@@ -1494,8 +1494,13 @@ export default function Orders() {
                 body={(order: any) => (
                   <div>
                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>
-                      #{order.orderNumber}
+                      {order.displayOrderNumber}
                     </span>
+                    {order.receiptNumber && (
+                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
+                        {order.receiptNumber}
+                      </p>
+                    )}
                     <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
                       {formatOrderDate(order.dateCreated)}
                     </p>
@@ -2036,7 +2041,7 @@ export default function Orders() {
                 {t('addPayment')}
               </p>
               <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>
-                {t('orderNumber')} #{orders.find((o: any) => o.id === paymentOrderId)?.orderNumber}
+                {t('orderNumber')} {orders.find((o: any) => o.id === paymentOrderId)?.displayOrderNumber}
               </p>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { AdminLayout } from '../../components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../context/LanguageContext';
 import { useDocumentCalculation } from '../../modules/documents/hooks';
 import {
@@ -20,6 +21,7 @@ import {
   Receipt,
   History,
   Eye,
+  RefreshCw,
 } from 'lucide-react';
 import {
   DocumentType,
@@ -76,9 +78,11 @@ export default function DocumentEditPage({
 }: DocumentEditPageProps) {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [regeneratingPdf, setRegeneratingPdf] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
@@ -322,7 +326,7 @@ export default function DocumentEditPage({
           ? (doc as any).invoiceNumber
           : documentType === 'devis'
             ? (doc as any).quoteNumber
-            : (doc as any).orderNumber;
+            : ((doc as any).documentNumber || (doc as any).orderNumber);
       setInvoiceNumber(docNumber);
 
       // Handle date fields based on document type and available data
@@ -376,7 +380,7 @@ export default function DocumentEditPage({
           id: customerId,
           name: customerName || '',
           phoneNumber: customerPhone || '',
-          ice: doc.customerIce || null,
+          ice: doc.customer?.ice || doc.customerIce || null,
           address: customerAddress || null,
           deliveryAddress: '',
           isCompany: false,
@@ -391,7 +395,7 @@ export default function DocumentEditPage({
           id: doc.supplierId,
           name: doc.supplierName || '',
           phoneNumber: doc.supplierPhone || '',
-          ice: doc.supplierIce || null,
+          ice: doc.supplier?.ice || doc.supplierIce || null,
           address: doc.supplierAddress || null,
           deliveryAddress: '',
           isCompany: false,
@@ -448,23 +452,23 @@ export default function DocumentEditPage({
       const subtotal = isDemandePrix
         ? null
         : items.reduce((sum, item) => {
-            const itemTotal = item.quantity * item.unitPrice;
-            const discountAmount =
-              item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
-            const afterDiscount = itemTotal - discountAmount;
-            return sum + afterDiscount;
-          }, 0);
+          const itemTotal = item.quantity * item.unitPrice;
+          const discountAmount =
+            item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
+          const afterDiscount = itemTotal - discountAmount;
+          return sum + afterDiscount;
+        }, 0);
 
       const totalTax = isDemandePrix
         ? null
         : items.reduce((sum, item) => {
-            const itemTotal = item.quantity * item.unitPrice;
-            const discountAmount =
-              item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
-            const afterDiscount = itemTotal - discountAmount;
-            const tax = afterDiscount * (item.tax / 100);
-            return sum + tax;
-          }, 0);
+          const itemTotal = item.quantity * item.unitPrice;
+          const discountAmount =
+            item.discountType === 1 ? itemTotal * (item.discount / 100) : item.discount;
+          const afterDiscount = itemTotal - discountAmount;
+          const tax = afterDiscount * (item.tax / 100);
+          return sum + tax;
+        }, 0);
 
       const total = isDemandePrix ? null : subtotal! + totalTax!;
 
@@ -522,6 +526,7 @@ export default function DocumentEditPage({
       }
 
       toastSuccess(`${config.titleShort} ${t('successUpdated')}`);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
 
       // Reload document to get fresh data
       await loadDocument();
@@ -529,7 +534,7 @@ export default function DocumentEditPage({
       console.error('Error updating document:', error);
       toastError(
         error.message ||
-          `${t('error')} lors de la mise à jour de la ${config.titleShort.toLowerCase()}`,
+        `${t('error')} lors de la mise à jour de la ${config.titleShort.toLowerCase()}`,
       );
     } finally {
       setSaving(false);
@@ -538,6 +543,13 @@ export default function DocumentEditPage({
 
   const handleValidate = async () => {
     if (!id) return;
+
+    // For invoices, require the partner to have an ICE number
+    if (documentType === 'facture' && partner && !partner.ice) {
+      const partnerLabel = isVente ? t('invoice.customer') : t('invoice.supplier');
+      toastError(t('errorPartnerMissingIce').replace('{partner}', partnerLabel.toLowerCase()));
+      return;
+    }
 
     try {
       // Call appropriate service based on document type
@@ -551,6 +563,7 @@ export default function DocumentEditPage({
 
       setIsValidated(true);
       toastValidated(`${config.titleShort} ${t('successValidated')}`);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
       await loadDocument();
     } catch (error) {
       console.error('Error validating document:', error);
@@ -573,6 +586,7 @@ export default function DocumentEditPage({
 
       setIsValidated(false);
       toastDevalidated(`${config.titleShort} ${t('successDevalidated')}`);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
       await loadDocument();
     } catch (error) {
       console.error('Error devalidating document:', error);
@@ -586,6 +600,7 @@ export default function DocumentEditPage({
     try {
       await ordersService.deliver(Number(id));
       toastDelivered(t('successDelivered'));
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
       await loadDocument();
     } catch (error) {
       console.error('Error delivering order:', error);
@@ -599,10 +614,38 @@ export default function DocumentEditPage({
     try {
       await ordersService.cancel(Number(id));
       toastCancelled(t('successCancelled'));
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
       await loadDocument();
     } catch (error) {
       console.error('Error canceling order:', error);
       toastError(t('errorCancelling'));
+    }
+  };
+
+  const handleRegeneratePdf = async () => {
+    if (!id) return;
+
+    const pdfDocumentType = (() => {
+      if (documentType === 'facture') return 'invoice';
+      if (documentType === 'devis') return 'quote';
+      if (documentType === 'bon_livraison') return 'delivery-note';
+      return null;
+    })();
+
+    if (!pdfDocumentType) return;
+
+    try {
+      setRegeneratingPdf(true);
+      await pdfService.regeneratePdf(
+        pdfDocumentType as 'invoice' | 'quote' | 'delivery-note',
+        Number(id),
+      );
+      toastSuccess(t('regeneratePdf'));
+    } catch (error) {
+      console.error('Error regenerating PDF:', error);
+      toastError(t('errorGenerating') || 'Erreur lors de la génération du PDF');
+    } finally {
+      setRegeneratingPdf(false);
     }
   };
 
@@ -676,6 +719,7 @@ export default function DocumentEditPage({
 
       // Reload document to get updated status
       await loadDocument();
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
 
       // Navigate to the invoice edit page after delay
       setTimeout(() => {
@@ -766,6 +810,7 @@ export default function DocumentEditPage({
 
       // Update local status
       setStatus('delivered');
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
 
       // Navigate to the bon edit page after delay
       setTimeout(() => {
@@ -1831,16 +1876,26 @@ export default function DocumentEditPage({
               hidden: documentType !== 'bon_livraison' || status !== 'in_progress',
               destructive: true,
             },
+            // Regenerate PDF (any validated document)
+            {
+              id: 'regenerate-pdf',
+              label: t('regeneratePdf'),
+              icon: <RefreshCw size={16} />,
+              onClick: () => handleRegeneratePdf(),
+              disabled: regeneratingPdf,
+              loading: regeneratingPdf,
+              hidden: !isValidated,
+            },
           ];
 
           const leftAction: DocumentAction | null =
             documentType === 'facture' && isValidated && status !== 'draft'
               ? {
-                  id: 'payment-history',
-                  label: t('paymentHistory'),
-                  icon: <History size={16} />,
-                  onClick: () => setShowPaymentHistory(true),
-                }
+                id: 'payment-history',
+                label: t('paymentHistory'),
+                icon: <History size={16} />,
+                onClick: () => setShowPaymentHistory(true),
+              }
               : null;
 
           return (

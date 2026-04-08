@@ -1,14 +1,16 @@
-import { Controller, Get, Param, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PDFService } from './pdf.service';
 import { PortalRoute } from '../auth/decorators/portal-route.decorator';
+import { ApiRes } from '../../common/api-response';
+import { PDF } from '../../common/response-codes';
 
 @ApiTags('PDF')
 @PortalRoute()
 @Controller('pdf')
 export class PDFController {
-  constructor(private readonly pdfService: PDFService) {}
+  constructor(private readonly pdfService: PDFService) { }
 
   /**
    * Generate PDF for invoice
@@ -159,5 +161,31 @@ export class PDFController {
         message: error.message,
       });
     }
+  }
+
+  /**
+   * Regenerate PDF for a document: delete old MinIO object, generate new PDF,
+   * upload to MinIO and persist the new URL on the entity.
+   */
+  @Post('regenerate/:type/:id')
+  @ApiOperation({ summary: 'Regenerate and re-store PDF for a document' })
+  @ApiResponse({ status: 200, description: 'PDF regenerated successfully' })
+  @ApiResponse({ status: 404, description: 'Document not found' })
+  async regeneratePDF(
+    @Param('type') type: string,
+    @Param('id') id: string,
+  ) {
+    const validTypes = ['invoice', 'quote', 'delivery-note'];
+    if (!validTypes.includes(type)) {
+      return ApiRes(
+        { code: 'PDF400_01', status: 400, message: 'Invalid document type' },
+        null,
+      );
+    }
+    const newUrl = await this.pdfService.regeneratePDF(
+      type as 'invoice' | 'quote' | 'delivery-note',
+      parseInt(id),
+    );
+    return ApiRes(PDF.REGENERATED, { pdfUrl: newUrl });
   }
 }

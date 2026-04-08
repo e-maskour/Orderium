@@ -13,7 +13,6 @@ import { Invoice, InvoiceItem, InvoiceStatus } from './entities/invoice.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
-import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { PDFService } from '../pdf/pdf.service';
 import { PdfQueueService } from '../pdf/pdf.queue.service';
 import { StockService } from '../inventory/stock.service';
@@ -23,11 +22,7 @@ import {
 } from '../inventory/entities/stock-movement.entity';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { CreateInvoiceDto } from './dto/invoice.dto';
-import {
-  buildSequencePattern,
-  generateSequenceNumber,
-  generateSequenceId,
-} from '../../common/helpers/sequence.helpers';
+import { SequencesService } from '../sequences/sequences.service';
 import {
   MinPriceCheckItem,
   findMinPriceViolation,
@@ -43,6 +38,7 @@ export class InvoicesService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
+    private readonly sequencesService: SequencesService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
@@ -136,126 +132,6 @@ export class InvoicesService {
     );
     const error = findMinPriceViolation(items, productMap);
     if (error) throw new BadRequestException(error);
-  }
-
-  // ─── Sequence helpers ─────────────────────────────────────────────────────
-
-  private async getOrCreateSequence(
-    entityType: string,
-    documentDate?: string | Date,
-  ): Promise<SequenceConfig> {
-    try {
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      let sequence = sequences.find(
-        (seq) => seq.entityType === entityType && seq.isActive,
-      );
-
-      if (!sequence) {
-        const prefix = entityType === 'invoice_purchase' ? 'FB' : 'FA';
-        const now = new Date();
-        const defaultSequence: SequenceConfig = {
-          id: generateSequenceId(),
-          name: `Sequence ${entityType}`,
-          entityType,
-          prefix,
-          suffix: '',
-          nextNumber: 1,
-          numberLength: 4,
-          isActive: true,
-          yearInPrefix: true,
-          monthInPrefix: true,
-          dayInPrefix: false,
-          trimesterInPrefix: false,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
-        };
-        sequences.push(defaultSequence);
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-        sequence = defaultSequence;
-      }
-
-      await this.syncSequenceWithDatabase(sequence, documentDate);
-      return sequence;
-    } catch {
-      const prefix = entityType === 'invoice_purchase' ? 'FB' : 'FA';
-      return {
-        id: 'fallback',
-        name: 'Default Sequence',
-        entityType,
-        prefix,
-        suffix: '',
-        nextNumber: 1,
-        numberLength: 4,
-        isActive: true,
-        yearInPrefix: true,
-        monthInPrefix: true,
-        dayInPrefix: false,
-        trimesterInPrefix: false,
-      };
-    }
-  }
-
-  private async syncSequenceWithDatabase(
-    sequence: SequenceConfig,
-    documentDate?: string | Date,
-  ): Promise<void> {
-    try {
-      const pattern = buildSequencePattern(sequence, documentDate);
-      const invoices = await this.invoiceRepository
-        .createQueryBuilder('invoice')
-        .where('invoice.documentNumber LIKE :pattern', {
-          pattern: `${pattern}%`,
-        })
-        .andWhere('invoice.documentNumber NOT LIKE :provisional', {
-          provisional: 'PROV%',
-        })
-        .getMany();
-
-      if (invoices.length === 0) {
-        sequence.nextNumber = 1;
-        return;
-      }
-
-      const numbers = invoices
-        .map((inv) => {
-          const numberPart = inv.documentNumber.replace(pattern, '');
-          return parseInt(numberPart.replace(sequence.suffix || '', ''), 10);
-        })
-        .filter((n) => !isNaN(n));
-
-      sequence.nextNumber = numbers.length ? Math.max(...numbers) + 1 : 1;
-    } catch (error) {
-      this.logger.error(
-        'Failed to sync sequence with database',
-        (error as Error)?.stack,
-      );
-    }
-  }
-
-  private async updateSequenceNextNumber(
-    entityType: string,
-    sequence: SequenceConfig,
-  ): Promise<void> {
-    try {
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      const idx = sequences.findIndex((seq) => seq.id === sequence.id);
-      if (idx !== -1) {
-        sequences[idx].nextNumber = sequence.nextNumber + 1;
-        sequences[idx].updatedAt = new Date().toISOString();
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        'Failed to update sequence next number',
-        (error as Error)?.stack,
-      );
-    }
   }
 
   // ─── CRUD ─────────────────────────────────────────────────────────────────
@@ -362,6 +238,7 @@ export class InvoicesService {
       discount: dto.discount,
       discountType: dto.discountType,
       total: dto.total,
+      paidAmount: 0,
       remainingAmount: dto.total || 0,
       notes: dto.notes,
       status: InvoiceStatus.DRAFT,
@@ -510,18 +387,25 @@ export class InvoicesService {
     if (invoice.isValidated)
       throw new BadRequestException('Invoice is already validated');
 
+    // Require ICE on the partner before validating
+    const isAchat = invoice.direction === DocumentDirection.ACHAT;
+    const partner = isAchat ? invoice.supplier : invoice.customer;
+    const partnerLabel = isAchat ? 'Fournisseur' : 'Client';
+    if (!partner?.ice) {
+      throw new BadRequestException(
+        `${partnerLabel} doit avoir un numéro ICE pour valider la facture`,
+      );
+    }
+
     let finalNumber = invoice.documentNumber;
 
     if (invoice.documentNumber.startsWith('PROV')) {
       const sequenceType = invoice.supplierId
         ? 'invoice_purchase'
         : 'invoice_sale';
-      const sequence = await this.getOrCreateSequence(
-        sequenceType,
-        invoice.date,
-      );
-      finalNumber = generateSequenceNumber(sequence, invoice.date);
-      await this.updateSequenceNextNumber(sequenceType, sequence);
+      finalNumber = await this.sequencesService.generateNext(sequenceType, {
+        date: invoice.date ? new Date(invoice.date) : new Date(),
+      });
     }
 
     await this.invoiceRepository.update(id, {
@@ -557,7 +441,10 @@ export class InvoicesService {
           });
 
           const items = (withItems?.items ?? [])
-            .filter((i): i is typeof i & { productId: number } => !!i.productId && i.quantity > 0)
+            .filter(
+              (i): i is typeof i & { productId: number } =>
+                !!i.productId && i.quantity > 0,
+            )
             .map((i) => ({ productId: i.productId, quantity: i.quantity }));
 
           if (items.length > 0) {
@@ -600,50 +487,10 @@ export class InvoicesService {
     if (!invoice.isValidated)
       throw new BadRequestException('Invoice is not validated');
 
-    try {
-      const sequenceType = invoice.supplierId
-        ? 'invoice_purchase'
-        : 'invoice_sale';
-      const sequence = await this.getOrCreateSequence(
-        sequenceType,
-        invoice.date,
-      );
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      const idx = sequences.findIndex((seq) => seq.id === sequence.id);
-
-      if (idx !== -1) {
-        const pattern = buildSequencePattern(sequence, invoice.date);
-        const lastInvoice = await this.invoiceRepository
-          .createQueryBuilder('invoice')
-          .where('invoice.documentNumber LIKE :pattern', {
-            pattern: `${pattern}%`,
-          })
-          .andWhere('invoice.isValidated = :validated', { validated: true })
-          .orderBy(
-            "CAST(SUBSTRING(invoice.documentNumber FROM '[0-9]+$') AS INTEGER)",
-            'DESC',
-          )
-          .limit(1)
-          .getOne();
-
-        let nextNumber = 1;
-        if (lastInvoice) {
-          const match = lastInvoice.documentNumber.match(/(\d+)$/);
-          if (match) nextNumber = parseInt(match[1]);
-        }
-
-        sequences[idx].nextNumber = nextNumber;
-        sequences[idx].updatedAt = new Date().toISOString();
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        'Error updating sequence during devalidation',
-        (error as Error)?.stack,
-      );
+    // Roll back the sequence counter if this was the last issued number in the period.
+    if (!invoice.documentNumber.startsWith('PROV')) {
+      const seqTypeForRelease = invoice.supplierId ? 'invoice_purchase' : 'invoice_sale';
+      await this.sequencesService.releaseNumber(seqTypeForRelease, invoice.documentNumber);
     }
 
     const nextProvNumber = invoice.documentNumber.startsWith('PROV')

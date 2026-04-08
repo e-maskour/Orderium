@@ -12,16 +12,11 @@ import { Quote, QuoteItem, QuoteStatus } from './entities/quote.entity';
 import { DocumentDirection } from '../../common/entities/base-document.entity';
 import { Product } from '../products/entities/product.entity';
 import { ConfigurationsService } from '../configurations/configurations.service';
-import { SequenceConfig } from '../../common/types/sequence-config.interface';
 import { PDFService } from '../pdf/pdf.service';
 import { PdfQueueService } from '../pdf/pdf.queue.service';
 import { TenantConnectionService } from '../tenant/tenant-connection.service';
 import { CreateQuoteDto } from './dto/quote.dto';
-import {
-  buildSequencePattern,
-  generateSequenceNumber,
-  generateSequenceId,
-} from '../../common/helpers/sequence.helpers';
+import { SequencesService } from '../sequences/sequences.service';
 import {
   findMinPriceViolation,
   getQuoteStatusLabel,
@@ -36,6 +31,7 @@ export class QuotesService {
   constructor(
     private readonly tenantConnService: TenantConnectionService,
     private readonly configurationsService: ConfigurationsService,
+    private readonly sequencesService: SequencesService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
@@ -51,131 +47,6 @@ export class QuotesService {
 
   private get productRepository(): Repository<Product> {
     return this.tenantConnService.getRepository(Product);
-  }
-
-  // ── Sequence helpers (DB access required) ──────────────────────────────────
-
-  private async getOrCreateSequence(
-    entityType: string,
-    documentDate?: string | Date,
-  ): Promise<SequenceConfig> {
-    try {
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      let sequence = sequences.find(
-        (seq) => seq.entityType === entityType && seq.isActive,
-      );
-
-      if (!sequence) {
-        const now = new Date();
-        const prefix = entityType === 'price_request' ? 'DP' : 'DV';
-        const defaultSequence: SequenceConfig = {
-          id: generateSequenceId(),
-          name: `Sequence ${entityType}`,
-          entityType,
-          prefix,
-          suffix: '',
-          nextNumber: 1,
-          numberLength: 4,
-          isActive: true,
-          yearInPrefix: true,
-          monthInPrefix: true,
-          dayInPrefix: false,
-          trimesterInPrefix: false,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
-        };
-        sequences.push(defaultSequence);
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-        sequence = defaultSequence;
-      }
-
-      await this.syncSequenceWithDatabase(sequence, documentDate);
-      return sequence;
-    } catch {
-      const prefix = entityType === 'price_request' ? 'DP' : 'DV';
-      return {
-        id: 'fallback',
-        name: 'Default Sequence',
-        entityType,
-        prefix,
-        suffix: '',
-        nextNumber: 1,
-        numberLength: 4,
-        isActive: true,
-        yearInPrefix: true,
-        monthInPrefix: true,
-        dayInPrefix: false,
-        trimesterInPrefix: false,
-      };
-    }
-  }
-
-  private async syncSequenceWithDatabase(
-    sequence: SequenceConfig,
-    documentDate?: string | Date,
-  ): Promise<void> {
-    try {
-      const pattern = buildSequencePattern(sequence, documentDate);
-      const quotes = await this.quoteRepository
-        .createQueryBuilder('quote')
-        .where('quote.documentNumber LIKE :pattern', {
-          pattern: `${pattern}%`,
-        })
-        .andWhere('quote.documentNumber NOT LIKE :provisional', {
-          provisional: 'PROV%',
-        })
-        .getMany();
-
-      if (!quotes.length) {
-        sequence.nextNumber = 1;
-        return;
-      }
-
-      const numbers = quotes
-        .map((q) => {
-          const n = parseInt(
-            q.documentNumber
-              .replace(pattern, '')
-              .replace(sequence.suffix || '', ''),
-            10,
-          );
-          return n;
-        })
-        .filter((n) => !isNaN(n));
-
-      sequence.nextNumber = numbers.length ? Math.max(...numbers) + 1 : 1;
-    } catch (error) {
-      this.logger.error(
-        'Failed to sync sequence with database',
-        (error as Error)?.stack,
-      );
-    }
-  }
-
-  private async updateSequenceNextNumber(
-    _entityType: string,
-    sequence: SequenceConfig,
-  ): Promise<void> {
-    try {
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      const idx = sequences.findIndex((s) => s.id === sequence.id);
-      if (idx !== -1) {
-        sequences[idx].nextNumber = sequence.nextNumber + 1;
-        sequences[idx].updatedAt = new Date().toISOString();
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        'Failed to update sequence next number',
-        (error as Error)?.stack,
-      );
-    }
   }
 
   private async invalidateQuoteCache(id?: number): Promise<void> {
@@ -453,9 +324,9 @@ export class QuotesService {
 
     if (quote.documentNumber.startsWith('PROV')) {
       const seqType = quote.supplierId ? 'price_request' : 'quote';
-      const sequence = await this.getOrCreateSequence(seqType, quote.date);
-      finalNumber = generateSequenceNumber(sequence, quote.date);
-      await this.updateSequenceNextNumber(seqType, sequence);
+      finalNumber = await this.sequencesService.generateNext(seqType, {
+        date: quote.date ? new Date(quote.date) : new Date(),
+      });
     }
 
     await this.quoteRepository.update(id, {
@@ -484,40 +355,10 @@ export class QuotesService {
       );
     }
 
-    try {
-      const seqType = quote.supplierId ? 'price_request' : 'quote';
-      const sequence = await this.getOrCreateSequence(seqType, quote.date);
-      const config = await this.configurationsService.findByEntity('sequences');
-      const sequences = (config?.values?.sequences as SequenceConfig[]) || [];
-      const idx = sequences.findIndex((s) => s.id === sequence.id);
-
-      if (idx !== -1) {
-        const pattern = buildSequencePattern(sequence, quote.date);
-        const last = await this.quoteRepository
-          .createQueryBuilder('quote')
-          .where('quote.documentNumber LIKE :pattern', {
-            pattern: pattern + '%',
-          })
-          .andWhere('quote.isValidated = :validated', { validated: true })
-          .orderBy(
-            "CAST(SUBSTRING(quote.documentNumber FROM '[0-9]+$') AS INTEGER)",
-            'DESC',
-          )
-          .limit(1)
-          .getOne();
-
-        const match = last?.documentNumber.match(/(\d+)$/);
-        sequences[idx].nextNumber = match ? parseInt(match[1]) : 1;
-        sequences[idx].updatedAt = new Date().toISOString();
-        await this.configurationsService.update(config.id, {
-          values: { sequences },
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        'Error updating sequence during devalidation',
-        (error as Error)?.stack,
-      );
+    // Roll back the sequence counter if this was the last issued number in the period.
+    if (!quote.documentNumber.startsWith('PROV')) {
+      const seqTypeForRelease = quote.supplierId ? 'price_request' : 'quote';
+      await this.sequencesService.releaseNumber(seqTypeForRelease, quote.documentNumber);
     }
 
     let nextProvNumber: string;

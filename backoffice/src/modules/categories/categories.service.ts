@@ -33,7 +33,7 @@ export class CategoriesService {
   }
 
   async update(id: number, data: UpdateCategoryDTO): Promise<Category> {
-    const response = await apiClient.put<any>(API_ROUTES.CATEGORIES.UPDATE(id), data);
+    const response = await apiClient.patch<any>(API_ROUTES.CATEGORIES.UPDATE(id), data);
     return Category.fromApiResponse(response.data);
   }
 

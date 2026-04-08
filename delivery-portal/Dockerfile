@@ -8,7 +8,7 @@ FROM node:20-alpine AS dependencies
 WORKDIR /app
 
 # Enable pnpm via corepack
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 
 # 1. Copy package files FIRST — this layer is only invalidated when deps change
 COPY delivery-portal/package.json delivery-portal/pnpm-lock.yaml ./
@@ -25,7 +25,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Enable pnpm via corepack
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 
 COPY shared/ui /shared/ui
 COPY shared/components /shared/components
@@ -63,7 +63,7 @@ FROM node:20-alpine AS development
 WORKDIR /app
 
 # Enable pnpm via corepack
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 
 # Copy shared UI package (file:../shared/ui resolves to /shared/ui from WORKDIR /app)
 COPY shared/ui /shared/ui
@@ -83,7 +83,7 @@ EXPOSE 3003
 
 # Start Vite dev server
 # --host 0.0.0.0 allows external access from Docker
-CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["sh", "-c", "CI=true pnpm install --frozen-lockfile && pnpm run dev -- --host 0.0.0.0"]
 
 # ============ Stage 4: Production with Nginx ============
 FROM nginx:1.25-alpine AS production

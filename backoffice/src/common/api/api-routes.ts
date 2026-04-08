@@ -156,12 +156,13 @@ export const API_ROUTES = {
 
   // ─── Sequences ─────────────────────────────────────────────
   SEQUENCES: {
-    CONFIG: '/api/configurations/entity/sequences',
-    CREATE: '/api/configurations/entity/sequences',
-    UPDATE: (id: string) => `/api/configurations/entity/sequences/${id}`,
-    DELETE: (id: string) => `/api/configurations/entity/sequences/${id}`,
-    PREVIEW: '/api/configurations/entity/sequences/preview',
-    RESET: (id: string) => `/api/configurations/entity/sequences/${id}/reset`,
+    LIST: '/api/sequences',
+    CREATE: '/api/sequences',
+    DETAIL: (id: string) => `/api/sequences/${id}`,
+    UPDATE: (id: string) => `/api/sequences/${id}`,
+    PREVIEW: (entityType: string) => `/api/sequences/${entityType}/preview`,
+    RESET: (entityType: string) => `/api/sequences/${entityType}/reset`,
+    SEED: '/api/sequences/seed',
   },
 
   // ─── Statistics ────────────────────────────────────────────
@@ -359,5 +360,11 @@ export const API_ROUTES = {
   PRINT_JOBS: {
     LIST: '/api/print-jobs',
     CREATE: '/api/print-jobs',
+  },
+
+  // ─── PDF ───────────────────────────────────────────────────
+  PDF: {
+    REGENERATE: (type: 'invoice' | 'quote' | 'delivery-note', id: number) =>
+      `/api/pdf/regenerate/${type}/${id}`,
   },
 } as const;

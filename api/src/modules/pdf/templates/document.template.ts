@@ -8,6 +8,7 @@ interface DocumentTemplateData {
   customerName: string;
   customerPhone?: string;
   customerAddress?: string;
+  customerIce?: string;
   documentType: string;
   signedBy?: string;
   itemsHtml: string;
@@ -221,8 +222,9 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                             <div class="section-label">${data.isPurchaseDocument ? 'Fournisseur' : 'Client'}</div>
                             <div class="info-box">
                                 <div dir="auto" class="customer-name">${data.customerName}</div>
-                                ${data.customerPhone ? `<div dir="auto" class="customer-detail">Tél: ${data.customerPhone}</div>` : ''}
-                                ${data.customerAddress ? `<div dir="auto" class="customer-detail">${data.customerAddress}</div>` : ''}
+                                ${data.customerPhone ? `<div dir="auto" class="customer-detail"><strong>Tél:</strong> ${data.customerPhone}</div>` : ''}
+                                ${data.customerAddress ? `<div dir="auto" class="customer-detail"><strong>Adresse:</strong> ${data.customerAddress}</div>` : ''}
+                                ${data.customerIce ? `<div dir="auto" class="customer-detail"><strong>ICE:</strong> ${data.customerIce}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -233,13 +235,12 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                     <table class="invoice-table">
                         <thead class="table-header">
                             <tr>
-                                ${
-                                  data.isDemandePrix
-                                    ? `
+                                ${data.isDemandePrix
+      ? `
                                 <th style="text-align: left; width: 70%;">Description</th>
                                 <th style="text-align: center; width: 30%;">Qté</th>
                                 `
-                                    : `
+      : `
                                 <th style="text-align: left; width: ${data.hideVAT ? '48%' : '40%'};">Description</th>
                                 <th style="text-align: center; width: ${data.hideVAT ? '13%' : '10%'};">Qté</th>
                                 <th style="text-align: right; width: ${data.hideVAT ? '13%' : '12%'};">P.U.</th>
@@ -247,7 +248,7 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                                 ${!data.hideVAT ? '<th style="text-align: right; width: 12%;">TVA</th>' : ''}
                                 <th style="text-align: right; width: ${data.hideVAT ? '13%' : '14%'};">Total</th>
                                 `
-                                }
+    }
                             </tr>
                         </thead>
                         <tbody>
@@ -257,16 +258,15 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
 
                     <!-- Totals -->
                     <div class="totals-section">
-                      ${
-                        data.isDemandePrix
-                          ? `
+                      ${data.isDemandePrix
+      ? `
                       <div class="totals-row totals-grand">
                         <span class="totals-label">Total Quantité Demandée</span>
                         <span class="totals-value">${data.totalQuantity || '0'}</span>
                       </div>
                       `
-                          : !data.hideVAT
-                            ? `
+      : !data.hideVAT
+        ? `
                       <div class="totals-row">
                         <span class="totals-label">Sous-total HT</span>
                         <span class="totals-value">${data.subtotal} DH</span>
@@ -281,27 +281,26 @@ export function renderDocumentTemplate(data: DocumentTemplateData): string {
                         <span class="totals-value">${data.total} DH</span>
                       </div>
                       `
-                            : `
+        : `
                       ${discountRowHtml}
                       <div class="totals-row totals-grand">
                         <span class="totals-label">Total</span>
                         <span class="totals-value">${data.total} DH</span>
                       </div>
                       `
-                      }
+    }
                     </div>
 
                     <!-- Notes -->
-                    ${
-                      data.notes
-                        ? `
+                    ${data.notes
+      ? `
                     <div class="notes-block">
                       <div class="notes-title">Notes</div>
                       <div dir="auto" class="notes-body">${data.notes}</div>
                     </div>
                     `
-                        : ''
-                    }
+      : ''
+    }
                 </section>
             </main>
         </div>
