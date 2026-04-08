@@ -131,6 +131,10 @@ export class OrdersService {
     await apiClient.delete(API_ROUTES.ORDERS.DELETE(orderId));
   }
 
+  async bulkDelete(ids: number[]): Promise<void> {
+    await apiClient.delete(API_ROUTES.ORDERS.BULK_DELETE, { ids });
+  }
+
   async getOrderNumbers(search?: string): Promise<any[]> {
     const response = await apiClient.get<any[]>(API_ROUTES.ORDERS.SEARCH_ORDER_NUMBERS, {
       params: { ...(search ? { search } : {}), limit: 50 },

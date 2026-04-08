@@ -50,6 +50,7 @@ export const API_ROUTES = {
     UPDATE: (id: number) => `/api/orders/${id}`,
     UPDATE_VALIDATED: (id: number) => `/api/orders/${id}/update-validated`,
     DELETE: (id: number) => `/api/orders/${id}`,
+    BULK_DELETE: '/api/orders/bulk',
     VALIDATE: (id: number) => `/api/orders/${id}/validate`,
     DEVALIDATE: (id: number) => `/api/orders/${id}/devalidate`,
     DELIVER: (id: number) => `/api/orders/${id}/deliver`,

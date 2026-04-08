@@ -192,6 +192,12 @@ export const ORD = {
     status: 200,
     message: 'Order Updated',
   },
+  /** DELETE /orders/bulk                 → data: null                | metadata: null */
+  BULK_DELETED: {
+    code: 'ORD200_21',
+    status: 200,
+    message: 'Orders Deleted',
+  },
 } as const satisfies Record<string, ResponseDef>;
 
 // ─────────────────────────────────────────────────────────────

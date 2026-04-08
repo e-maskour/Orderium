@@ -250,12 +250,7 @@ export default function Orders() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (orderIds: number[]) =>
-      Promise.all(
-        orderIds.map(async (id) => {
-          await ordersService.delete(id);
-        }),
-      ),
+    mutationFn: async (orderIds: number[]) => ordersService.bulkDelete(orderIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toastDeleted(t('ordersDeleted'));
@@ -1414,11 +1409,11 @@ export default function Orders() {
                 }}
               >
                 {appliedFilters.search ||
-                appliedFilters.orderNumber ||
-                appliedFilters.deliveryStatus?.length > 0 ||
-                appliedFilters.originType !== 'all' ||
-                appliedFilters.dateRange.start ||
-                appliedFilters.dateRange.end
+                  appliedFilters.orderNumber ||
+                  appliedFilters.deliveryStatus?.length > 0 ||
+                  appliedFilters.originType !== 'all' ||
+                  appliedFilters.dateRange.start ||
+                  appliedFilters.dateRange.end
                   ? t('noOrdersMatchFilter')
                   : t('noOrdersYet')}
               </p>
@@ -1428,12 +1423,12 @@ export default function Orders() {
                 appliedFilters.originType !== 'all' ||
                 appliedFilters.dateRange.start ||
                 appliedFilters.dateRange.end) && (
-                <Button
-                  label={t('resetFilters')}
-                  onClick={resetFilters}
-                  style={{ marginTop: '1.5rem' }}
-                />
-              )}
+                  <Button
+                    label={t('resetFilters')}
+                    onClick={resetFilters}
+                    style={{ marginTop: '1.5rem' }}
+                  />
+                )}
             </div>
           </div>
         ) : (
@@ -1821,6 +1816,14 @@ export default function Orders() {
                 confirmLabel: t('delete'),
               }),
             variant: 'danger' as const,
+            hidden: !selectedOrders.every((id) => {
+              const order = orders.find((o: any) => o.id === id);
+              if (!order) return false;
+              const isPosOrder =
+                order.originType === 'CLIENT_POS' || order.originType === 'ADMIN_POS';
+              if (isPosOrder) return true;
+              return !order.isValidated;
+            }),
           },
         ]}
       />
@@ -1988,18 +1991,18 @@ export default function Orders() {
                 !deliveryModalSearch ||
                 p.name.toLowerCase().includes(deliveryModalSearch.toLowerCase()),
             ).length === 0 && (
-            <p
-              style={{
-                textAlign: 'center',
-                color: '#94a3b8',
-                fontSize: '0.875rem',
-                padding: '1.5rem 0',
-                margin: 0,
-              }}
-            >
-              {t('noDeliveryPersons')}
-            </p>
-          )}
+              <p
+                style={{
+                  textAlign: 'center',
+                  color: '#94a3b8',
+                  fontSize: '0.875rem',
+                  padding: '1.5rem 0',
+                  margin: 0,
+                }}
+              >
+                {t('noDeliveryPersons')}
+              </p>
+            )}
         </div>
       </Dialog>
 

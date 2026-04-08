@@ -71,7 +71,7 @@ export class OrdersService {
     private readonly pdfService: PDFService,
     private readonly pdfQueueService: PdfQueueService,
     private readonly stockService: StockService,
-  ) {}
+  ) { }
 
   private get orderRepository(): Repository<Order> {
     return this.tenantConnService.getRepository(Order);
@@ -1079,11 +1079,15 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({ where: { id } });
     if (!order) throw new NotFoundException('Order not found');
 
-    if (order.isValidated) {
+    const isPosOrder =
+      order.originType === OrderOriginType.CLIENT_POS ||
+      order.originType === OrderOriginType.ADMIN_POS;
+
+    if (!isPosOrder && order.isValidated) {
       throw new BadRequestException('ORDER_VALIDATED');
     }
 
-    if (order.originType === 'CLIENT_POS' || order.originType === 'ADMIN_POS') {
+    if (isPosOrder) {
       const paymentRows = await this.orderRepository.manager.query(
         `SELECT COUNT(*) as count FROM order_payments WHERE "orderId" = $1`,
         [id],
@@ -1097,6 +1101,59 @@ export class OrdersService {
     await this.pdfService.deletePDF(order.pdfUrl);
     await this.orderRepository.delete(id);
     await this.invalidateOrderCache(id);
+  }
+
+  async bulkRemove(ids: number[]): Promise<void> {
+    if (ids.length === 0) return;
+
+    const orders = await this.orderRepository.findBy({ id: In(ids) });
+
+    if (orders.length !== ids.length) {
+      const foundIds = orders.map((o) => o.id);
+      const missing = ids.filter((id) => !foundIds.includes(id));
+      throw new NotFoundException(`Orders not found: ${missing.join(', ')}`);
+    }
+
+    for (const order of orders) {
+      const isPosOrder =
+        order.originType === OrderOriginType.CLIENT_POS ||
+        order.originType === OrderOriginType.ADMIN_POS;
+
+      if (!isPosOrder && order.isValidated) {
+        const ref = order.documentNumber || `#${order.id}`;
+        throw new BadRequestException(`Order ${ref} is validated and cannot be deleted`);
+      }
+    }
+
+    const posOrderIds = orders
+      .filter(
+        (o) =>
+          o.originType === OrderOriginType.CLIENT_POS ||
+          o.originType === OrderOriginType.ADMIN_POS,
+      )
+      .map((o) => o.id);
+
+    if (posOrderIds.length > 0) {
+      const paymentRows = await this.orderRepository.manager.query(
+        `SELECT "orderId", COUNT(*) as count FROM order_payments WHERE "orderId" = ANY($1) GROUP BY "orderId"`,
+        [posOrderIds],
+      );
+      if (paymentRows.length > 0) {
+        const withPaymentIds: number[] = paymentRows.map((r: any) => Number(r.orderId));
+        const refs = withPaymentIds.map((pid) => {
+          const o = orders.find((ord) => ord.id === pid);
+          return o?.orderNumber || `#${pid}`;
+        });
+        throw new ConflictException(
+          `Orders ${refs.join(', ')} have payments and cannot be deleted`,
+        );
+      }
+    }
+
+    await this.orderItemRepository.delete({ orderId: In(ids) });
+    await Promise.all(orders.map((o) => this.pdfService.deletePDF(o.pdfUrl)));
+    await this.orderRepository.delete(ids);
+    await Promise.all(ids.map((id) => this.invalidateOrderCache(id)));
   }
 
   // ── Queries ───────────────────────────────────────────────────────────────

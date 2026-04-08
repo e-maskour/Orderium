@@ -33,7 +33,7 @@ import { Serialize } from '../../common/decorators/serialize.decorator';
 @PortalRoute()
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @Post()
   @Serialize(OrderDetailResponseDto)
@@ -316,6 +316,14 @@ export class OrdersController {
       updateOrderDto,
     );
     return ApiRes(ORD.UPDATE_VALIDATED, order);
+  }
+
+  @Delete('bulk')
+  @ApiOperation({ summary: 'Bulk delete orders' })
+  @ApiResponse({ status: 200, description: 'Orders deleted successfully' })
+  async bulkRemove(@Body() dto: { ids: number[] }) {
+    await this.ordersService.bulkRemove(dto.ids);
+    return ApiRes(ORD.BULK_DELETED, null);
   }
 
   @Delete(':id')
